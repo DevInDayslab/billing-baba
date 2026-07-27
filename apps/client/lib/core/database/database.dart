@@ -7,6 +7,8 @@ import 'package:billing_baba/core/database/tables/items_table.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
 import 'package:billing_baba/core/database/tables/parties_table.dart';
 import 'package:billing_baba/core/database/tables/pos_sales_tables.dart';
+import 'package:billing_baba/core/database/tables/purchase_document_tables.dart';
+import 'package:billing_baba/core/database/tables/sales_document_tables.dart';
 import 'package:billing_baba/core/database/tables/sync_queue_table.dart';
 import 'package:billing_baba/core/database/tables/tax_rates_table.dart';
 import 'package:billing_baba/core/database/tables/unit_definitions_table.dart';
@@ -34,13 +36,18 @@ part 'database.g.dart';
     TaxRatesLocal,
     GodownsLocal,
     BusinessSettingsLocal,
+    SalesDocumentsLocal,
+    SalesDocumentLinesLocal,
+    PurchaseDocumentsLocal,
+    PurchaseDocumentLinesLocal,
+    LocalDocumentCounters,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -113,6 +120,13 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(taxRatesLocal);
         await m.createTable(godownsLocal);
         await m.createTable(businessSettingsLocal);
+      }
+      if (from < 14) {
+        await m.createTable(salesDocumentsLocal);
+        await m.createTable(salesDocumentLinesLocal);
+        await m.createTable(purchaseDocumentsLocal);
+        await m.createTable(purchaseDocumentLinesLocal);
+        await m.createTable(localDocumentCounters);
       }
     },
   );

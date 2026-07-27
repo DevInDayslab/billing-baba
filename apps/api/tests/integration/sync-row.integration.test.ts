@@ -55,7 +55,7 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
   });
 
   test(
-    'create → pull → update → conflict → delete → duplicate replay → command NOT_IMPLEMENTED',
+    'create → pull → update → conflict → delete → duplicate replay → unsupported command payload',
     async () => {
       const categoryId = randomUUID();
       const mutationCreate = randomUUID();
@@ -296,9 +296,7 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
         data: { errors: Array<{ code: string }> };
       };
       expect(cmdBody.data.errors).toHaveLength(1);
-      expect(cmdBody.data.errors.every((e) => e.code === 'NOT_IMPLEMENTED')).toBe(
-        true,
-      );
+      expect(cmdBody.data.errors[0]?.code).toBe('VALIDATION_FAILED');
 
       const emptyPull = await app.inject({
         method: 'GET',

@@ -1,9 +1,11 @@
 import 'package:billing_baba/shared/documents/document_line_sync.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
@@ -19,6 +21,7 @@ import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 export 'sales_error_mapper.dart' show SalesException, SalesOfflineException;
@@ -41,12 +44,14 @@ class CreateAndFinalizeSaleResult {
 Future<SalesService> salesService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
+  final commandRepo = await ref.watch(salesInvoiceCommandRepositoryProvider.future);
   return SalesService(
     repository: SalesRepository(
       remote: SalesRemoteDataSource(api.dio),
-      local: const SalesLocalDataSource(),
+      local: SalesLocalDataSource(ref.watch(appDatabaseProvider)),
     ),
     partyService: partyService,
+    commandRepository: commandRepo,
   );
 }
 
@@ -54,10 +59,12 @@ class SalesService {
   SalesService({
     required this._repository,
     required this._partyService,
+    this._commandRepository,
   });
 
   final SalesRepository _repository;
   final PartyService _partyService;
+  final SalesInvoiceCommandRepository? _commandRepository;
 
   SalesRepository get repository => _repository;
 
@@ -73,6 +80,33 @@ class SalesService {
     SalesDocumentListQuery query, {
     Map<String, String>? partyNames,
   }) async {
+    if (query.documentType == SalesDocumentType.taxInvoice.apiValue &&
+        _commandRepository != null &&
+        query.page == 1) {
+      try {
+        final resolvedPartyNames = partyNames ?? await _partyNameMap();
+        final localDocs = await _commandRepository.listTaxInvoices();
+        final items = localDocs
+            .map(
+              (dto) => SalesDocumentMapper.toInvoiceModel(
+                dto,
+                partyName: dto.partyId != null
+                    ? (resolvedPartyNames[dto.partyId] ?? '')
+                    : '',
+              ),
+            )
+            .toList();
+        return PaginatedSaleInvoices(
+          items: items,
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: items.length,
+        );
+      } on Object {
+        // Fall through to remote when local read fails.
+      }
+    }
+
     try {
       final resolvedPartyNames = partyNames ?? await _partyNameMap();
       final response = await _repository.listDocuments(query);
@@ -206,6 +240,11 @@ class SalesService {
     SalesDocumentDraftInput input, {
     required Map<String, String> itemNameToId,
   }) async {
+    if (input.documentType == SalesDocumentType.taxInvoice &&
+        _commandRepository != null) {
+      return _commandRepository.saveDraft(input, itemNameToId: itemNameToId);
+    }
+
     try {
       final document = input.documentId == null
           ? await _repository.createDocument(
@@ -267,6 +306,20 @@ class SalesService {
   }) async {
     if (input.partyId == null || input.partyId!.isEmpty) {
       throw const SalesException('Party is required');
+    }
+
+    if (input.documentType == SalesDocumentType.taxInvoice &&
+        _commandRepository != null) {
+      final draft = await _commandRepository.saveDraft(
+        input,
+        itemNameToId: itemNameToId,
+      );
+      await _commandRepository.finalize(
+        documentId: draft.id,
+        localDocumentNumber: draft.documentNumber,
+        godownId: godownId ?? input.godownId,
+      );
+      return draft;
     }
 
     final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);

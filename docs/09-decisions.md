@@ -39,6 +39,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-024: Invoice Artifact System](#adr-024-invoice-artifact-system)
 - [ADR-025: Sync Contract (Hybrid + LOCAL Remap + Command Idempotency)](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
 - [ADR-026: MVP Sync Simplicity (No Client Registry)](#adr-026-mvp-sync-simplicity-no-client-registry)
+- [ADR-027: Phase 2 Command Sync Foundation](#adr-027-phase-2-command-sync-foundation)
 
 ---
 
@@ -71,6 +72,8 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-023 | Provider-Agnostic Object Storage | July 2026 | Accepted |
 | ADR-024 | Invoice Artifact System | July 2026 | Accepted |
 | ADR-025 | Sync Contract (Hybrid + LOCAL Remap + Command Idempotency) | July 2026 | Accepted |
+| ADR-026 | MVP Sync Simplicity (No Client Registry) | July 2026 | Accepted |
+| ADR-027 | Phase 2 Command Sync Foundation | July 2026 | Accepted |
 
 ---
 
@@ -1546,6 +1549,36 @@ For Billing Baba MVP:
 | Client SyncEntityRegistry / adapters | Premature for <10 entities |
 | Chunked bootstrap jobs | Speculative; pull-from-epoch is enough |
 | Silent LWW without version check | Unsafe for multi-device edits |
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md), [ADR-025](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
+
+---
+
+## ADR-027: Phase 2 Command Sync Foundation
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+Phase 2 requires offline-capable sales and purchase invoices without redesigning the frozen Row Sync engine. Transactional finalize operations (number allocation, stock, ledger) must remain server-authoritative and idempotent.
+
+### Decision
+
+1. **Hybrid ADR-025 model** for Phase 2 scope: `tax_invoice` and `purchase_bill` drafts sync as **row** mutations; `finalize_sale` and `finalize_purchase` sync as **commands**.
+2. **Command layer outside `core/sync/`** — `CommandSyncRunner` composes after row sync; uses existing `SyncQueue.enqueueCommand` without queue redesign.
+3. **`sync_command_acks`** stores `(business_id, command_id)` with request-hash mismatch detection.
+4. **LOCAL-###### numbering** on client; server returns `document_number_remap` on finalize ack.
+5. **Projection pull deferred** — stock/ledger projections remain a follow-up; finalize ack + document row pull is sufficient for foundation.
+
+### Consequences
+
+- Row Sync engine stays frozen; document entities register via established coordinator switches only.
+- Client `SalesInvoiceCommandRepository` / `PurchaseBillCommandRepository` never call REST for draft/finalize enqueue.
+- Full offline stock display awaits projection pull milestone.
 
 **References:** [11-sync-api-contract.md](11-sync-api-contract.md), [ADR-025](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
 

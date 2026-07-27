@@ -1,5 +1,8 @@
-/** MVP: no sync commands implemented yet. */
-export const SUPPORTED_SYNC_COMMANDS = [] as const;
+/** MVP: finalize commands for Phase 2 transactional documents. */
+export const SUPPORTED_SYNC_COMMANDS = [
+  'finalize_sale',
+  'finalize_purchase',
+] as const;
 
 export type SupportedSyncCommand = string;
 
@@ -12,6 +15,10 @@ export const SUPPORTED_ROW_ENTITY_TYPES = [
   'tax_rates',
   'godowns',
   'business_settings',
+  'sales_documents',
+  'sales_document_lines',
+  'purchase_documents',
+  'purchase_document_lines',
 ] as const;
 
 export type SupportedRowEntityType =

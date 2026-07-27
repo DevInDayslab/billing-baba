@@ -93,7 +93,7 @@ export function createSyncController() {
 
     push: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const { businessId } = requireSyncAuthContext(request);
+        const { businessId, userId } = requireSyncAuthContext(request);
         const headers = parseSyncHeaders(request);
         const body = pushBodySchema.parse(request.body);
         assertDeviceIdMatch(headers[SYNC_HEADER_DEVICE_ID], body.device_id);
@@ -102,7 +102,7 @@ export function createSyncController() {
           businessId,
           body.device_id,
         );
-        const data = await pushService.process(businessId, body);
+        const data = await pushService.process(businessId, body, userId);
         return sendData(reply, data);
       } catch (error) {
         throw mapZod(error);

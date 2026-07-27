@@ -38,6 +38,30 @@ export const onlineOrders = pgTable(
   ],
 );
 
+/** Idempotent push acknowledgements for sync command_id replay. */
+export const syncCommandAcks = pgTable(
+  'sync_command_acks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    businessId: uuid('business_id')
+      .notNull()
+      .references(() => businesses.id),
+    commandId: uuid('command_id').notNull(),
+    command: text('command').notNull(),
+    requestHash: text('request_hash').notNull(),
+    resultJson: jsonb('result_json').notNull(),
+    deviceId: uuid('device_id'),
+    processedAt: timestamptz('processed_at').notNull().defaultNow(),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('uq_sync_command_acks_business_command').on(
+      table.businessId,
+      table.commandId,
+    ),
+  ],
+);
+
 /** Idempotent push acknowledgements for sync mutation_id replay. */
 export const syncMutationAcks = pgTable(
   'sync_mutation_acks',

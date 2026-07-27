@@ -3,6 +3,9 @@ import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_remote_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
@@ -100,12 +103,15 @@ class PaginatedPurchaseDocuments {
 Future<PurchaseService> purchaseService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
+  final commandRepo =
+      await ref.watch(purchaseBillCommandRepositoryProvider.future);
   return PurchaseService(
     repository: PurchaseRepository(
       remote: PurchaseRemoteDataSource(api.dio),
-      local: const PurchaseLocalDataSource(),
+      local: PurchaseLocalDataSource(ref.watch(appDatabaseProvider)),
     ),
     partyService: partyService,
+    commandRepository: commandRepo,
   );
 }
 
@@ -113,10 +119,12 @@ class PurchaseService {
   PurchaseService({
     required this._repository,
     required this._partyService,
+    this._commandRepository,
   });
 
   final PurchaseRepository _repository;
   final PartyService _partyService;
+  final PurchaseBillCommandRepository? _commandRepository;
 
   Future<Map<String, String>> _partyNameMap() async {
     final parties = await _partyService.fetchParties();
@@ -311,6 +319,11 @@ class PurchaseService {
     PurchaseDocumentDraftInput input, {
     required Map<String, String> itemNameToId,
   }) async {
+    if (input.documentType == PurchaseDocumentType.purchaseBill &&
+        _commandRepository != null) {
+      return _commandRepository.saveDraft(input, itemNameToId: itemNameToId);
+    }
+
     try {
       final document = input.documentId == null
           ? await _repository.createDocument(
@@ -350,6 +363,20 @@ class PurchaseService {
   }) async {
     if (input.partyId == null || input.partyId!.isEmpty) {
       throw const PurchaseException('Please select a supplier');
+    }
+
+    if (input.documentType == PurchaseDocumentType.purchaseBill &&
+        _commandRepository != null) {
+      final draft = await _commandRepository.saveDraft(
+        input,
+        itemNameToId: itemNameToId,
+      );
+      await _commandRepository.finalize(
+        documentId: draft.id,
+        localDocumentNumber: draft.documentNumber,
+        godownId: godownId ?? input.godownId,
+      );
+      return draft;
     }
 
     final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);

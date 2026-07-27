@@ -14066,6 +14066,5341 @@ class BusinessSettingsLocalCompanion
   }
 }
 
+class $SalesDocumentsLocalTable extends SalesDocumentsLocal
+    with TableInfo<$SalesDocumentsLocalTable, SalesDocumentLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SalesDocumentsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentTypeMeta = const VerificationMeta(
+    'documentType',
+  );
+  @override
+  late final GeneratedColumn<String> documentType = GeneratedColumn<String>(
+    'document_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('draft'),
+  );
+  static const VerificationMeta _documentNumberMeta = const VerificationMeta(
+    'documentNumber',
+  );
+  @override
+  late final GeneratedColumn<String> documentNumber = GeneratedColumn<String>(
+    'document_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentSeriesMeta = const VerificationMeta(
+    'documentSeries',
+  );
+  @override
+  late final GeneratedColumn<String> documentSeries = GeneratedColumn<String>(
+    'document_series',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _partyIdMeta = const VerificationMeta(
+    'partyId',
+  );
+  @override
+  late final GeneratedColumn<String> partyId = GeneratedColumn<String>(
+    'party_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isGstFormalMeta = const VerificationMeta(
+    'isGstFormal',
+  );
+  @override
+  late final GeneratedColumn<bool> isGstFormal = GeneratedColumn<bool>(
+    'is_gst_formal',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_gst_formal" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _partyStateCodeMeta = const VerificationMeta(
+    'partyStateCode',
+  );
+  @override
+  late final GeneratedColumn<String> partyStateCode = GeneratedColumn<String>(
+    'party_state_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _subtotalMeta = const VerificationMeta(
+    'subtotal',
+  );
+  @override
+  late final GeneratedColumn<String> subtotal = GeneratedColumn<String>(
+    'subtotal',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _discountTotalMeta = const VerificationMeta(
+    'discountTotal',
+  );
+  @override
+  late final GeneratedColumn<String> discountTotal = GeneratedColumn<String>(
+    'discount_total',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _taxAmountMeta = const VerificationMeta(
+    'taxAmount',
+  );
+  @override
+  late final GeneratedColumn<String> taxAmount = GeneratedColumn<String>(
+    'tax_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _totalAmountMeta = const VerificationMeta(
+    'totalAmount',
+  );
+  @override
+  late final GeneratedColumn<String> totalAmount = GeneratedColumn<String>(
+    'total_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _documentDateMeta = const VerificationMeta(
+    'documentDate',
+  );
+  @override
+  late final GeneratedColumn<String> documentDate = GeneratedColumn<String>(
+    'document_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _convertedFromIdMeta = const VerificationMeta(
+    'convertedFromId',
+  );
+  @override
+  late final GeneratedColumn<String> convertedFromId = GeneratedColumn<String>(
+    'converted_from_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _godownIdMeta = const VerificationMeta(
+    'godownId',
+  );
+  @override
+  late final GeneratedColumn<String> godownId = GeneratedColumn<String>(
+    'godown_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    documentType,
+    status,
+    documentNumber,
+    documentSeries,
+    partyId,
+    isGstFormal,
+    partyStateCode,
+    subtotal,
+    discountTotal,
+    taxAmount,
+    totalAmount,
+    documentDate,
+    convertedFromId,
+    notes,
+    godownId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sales_documents_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SalesDocumentLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('document_type')) {
+      context.handle(
+        _documentTypeMeta,
+        documentType.isAcceptableOrUnknown(
+          data['document_type']!,
+          _documentTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentTypeMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('document_number')) {
+      context.handle(
+        _documentNumberMeta,
+        documentNumber.isAcceptableOrUnknown(
+          data['document_number']!,
+          _documentNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_series')) {
+      context.handle(
+        _documentSeriesMeta,
+        documentSeries.isAcceptableOrUnknown(
+          data['document_series']!,
+          _documentSeriesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentSeriesMeta);
+    }
+    if (data.containsKey('party_id')) {
+      context.handle(
+        _partyIdMeta,
+        partyId.isAcceptableOrUnknown(data['party_id']!, _partyIdMeta),
+      );
+    }
+    if (data.containsKey('is_gst_formal')) {
+      context.handle(
+        _isGstFormalMeta,
+        isGstFormal.isAcceptableOrUnknown(
+          data['is_gst_formal']!,
+          _isGstFormalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('party_state_code')) {
+      context.handle(
+        _partyStateCodeMeta,
+        partyStateCode.isAcceptableOrUnknown(
+          data['party_state_code']!,
+          _partyStateCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('subtotal')) {
+      context.handle(
+        _subtotalMeta,
+        subtotal.isAcceptableOrUnknown(data['subtotal']!, _subtotalMeta),
+      );
+    }
+    if (data.containsKey('discount_total')) {
+      context.handle(
+        _discountTotalMeta,
+        discountTotal.isAcceptableOrUnknown(
+          data['discount_total']!,
+          _discountTotalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_amount')) {
+      context.handle(
+        _taxAmountMeta,
+        taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta),
+      );
+    }
+    if (data.containsKey('total_amount')) {
+      context.handle(
+        _totalAmountMeta,
+        totalAmount.isAcceptableOrUnknown(
+          data['total_amount']!,
+          _totalAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_date')) {
+      context.handle(
+        _documentDateMeta,
+        documentDate.isAcceptableOrUnknown(
+          data['document_date']!,
+          _documentDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentDateMeta);
+    }
+    if (data.containsKey('converted_from_id')) {
+      context.handle(
+        _convertedFromIdMeta,
+        convertedFromId.isAcceptableOrUnknown(
+          data['converted_from_id']!,
+          _convertedFromIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('godown_id')) {
+      context.handle(
+        _godownIdMeta,
+        godownId.isAcceptableOrUnknown(data['godown_id']!, _godownIdMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SalesDocumentLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SalesDocumentLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      documentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_type'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      documentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_number'],
+      ),
+      documentSeries: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_series'],
+      )!,
+      partyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_id'],
+      ),
+      isGstFormal: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_gst_formal'],
+      )!,
+      partyStateCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_state_code'],
+      ),
+      subtotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subtotal'],
+      )!,
+      discountTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_total'],
+      )!,
+      taxAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_amount'],
+      )!,
+      totalAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}total_amount'],
+      )!,
+      documentDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_date'],
+      )!,
+      convertedFromId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}converted_from_id'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      godownId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}godown_id'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $SalesDocumentsLocalTable createAlias(String alias) {
+    return $SalesDocumentsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class SalesDocumentLocalData extends DataClass
+    implements Insertable<SalesDocumentLocalData> {
+  final String id;
+  final String businessId;
+  final String documentType;
+  final String status;
+  final String? documentNumber;
+  final String documentSeries;
+  final String? partyId;
+  final bool isGstFormal;
+  final String? partyStateCode;
+  final String subtotal;
+  final String discountTotal;
+  final String taxAmount;
+  final String totalAmount;
+  final String documentDate;
+  final String? convertedFromId;
+  final String? notes;
+  final String? godownId;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const SalesDocumentLocalData({
+    required this.id,
+    required this.businessId,
+    required this.documentType,
+    required this.status,
+    this.documentNumber,
+    required this.documentSeries,
+    this.partyId,
+    required this.isGstFormal,
+    this.partyStateCode,
+    required this.subtotal,
+    required this.discountTotal,
+    required this.taxAmount,
+    required this.totalAmount,
+    required this.documentDate,
+    this.convertedFromId,
+    this.notes,
+    this.godownId,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['document_type'] = Variable<String>(documentType);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || documentNumber != null) {
+      map['document_number'] = Variable<String>(documentNumber);
+    }
+    map['document_series'] = Variable<String>(documentSeries);
+    if (!nullToAbsent || partyId != null) {
+      map['party_id'] = Variable<String>(partyId);
+    }
+    map['is_gst_formal'] = Variable<bool>(isGstFormal);
+    if (!nullToAbsent || partyStateCode != null) {
+      map['party_state_code'] = Variable<String>(partyStateCode);
+    }
+    map['subtotal'] = Variable<String>(subtotal);
+    map['discount_total'] = Variable<String>(discountTotal);
+    map['tax_amount'] = Variable<String>(taxAmount);
+    map['total_amount'] = Variable<String>(totalAmount);
+    map['document_date'] = Variable<String>(documentDate);
+    if (!nullToAbsent || convertedFromId != null) {
+      map['converted_from_id'] = Variable<String>(convertedFromId);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || godownId != null) {
+      map['godown_id'] = Variable<String>(godownId);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  SalesDocumentsLocalCompanion toCompanion(bool nullToAbsent) {
+    return SalesDocumentsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      documentType: Value(documentType),
+      status: Value(status),
+      documentNumber: documentNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(documentNumber),
+      documentSeries: Value(documentSeries),
+      partyId: partyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyId),
+      isGstFormal: Value(isGstFormal),
+      partyStateCode: partyStateCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyStateCode),
+      subtotal: Value(subtotal),
+      discountTotal: Value(discountTotal),
+      taxAmount: Value(taxAmount),
+      totalAmount: Value(totalAmount),
+      documentDate: Value(documentDate),
+      convertedFromId: convertedFromId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(convertedFromId),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      godownId: godownId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(godownId),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory SalesDocumentLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SalesDocumentLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      documentType: serializer.fromJson<String>(json['documentType']),
+      status: serializer.fromJson<String>(json['status']),
+      documentNumber: serializer.fromJson<String?>(json['documentNumber']),
+      documentSeries: serializer.fromJson<String>(json['documentSeries']),
+      partyId: serializer.fromJson<String?>(json['partyId']),
+      isGstFormal: serializer.fromJson<bool>(json['isGstFormal']),
+      partyStateCode: serializer.fromJson<String?>(json['partyStateCode']),
+      subtotal: serializer.fromJson<String>(json['subtotal']),
+      discountTotal: serializer.fromJson<String>(json['discountTotal']),
+      taxAmount: serializer.fromJson<String>(json['taxAmount']),
+      totalAmount: serializer.fromJson<String>(json['totalAmount']),
+      documentDate: serializer.fromJson<String>(json['documentDate']),
+      convertedFromId: serializer.fromJson<String?>(json['convertedFromId']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      godownId: serializer.fromJson<String?>(json['godownId']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'documentType': serializer.toJson<String>(documentType),
+      'status': serializer.toJson<String>(status),
+      'documentNumber': serializer.toJson<String?>(documentNumber),
+      'documentSeries': serializer.toJson<String>(documentSeries),
+      'partyId': serializer.toJson<String?>(partyId),
+      'isGstFormal': serializer.toJson<bool>(isGstFormal),
+      'partyStateCode': serializer.toJson<String?>(partyStateCode),
+      'subtotal': serializer.toJson<String>(subtotal),
+      'discountTotal': serializer.toJson<String>(discountTotal),
+      'taxAmount': serializer.toJson<String>(taxAmount),
+      'totalAmount': serializer.toJson<String>(totalAmount),
+      'documentDate': serializer.toJson<String>(documentDate),
+      'convertedFromId': serializer.toJson<String?>(convertedFromId),
+      'notes': serializer.toJson<String?>(notes),
+      'godownId': serializer.toJson<String?>(godownId),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  SalesDocumentLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? documentType,
+    String? status,
+    Value<String?> documentNumber = const Value.absent(),
+    String? documentSeries,
+    Value<String?> partyId = const Value.absent(),
+    bool? isGstFormal,
+    Value<String?> partyStateCode = const Value.absent(),
+    String? subtotal,
+    String? discountTotal,
+    String? taxAmount,
+    String? totalAmount,
+    String? documentDate,
+    Value<String?> convertedFromId = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<String?> godownId = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => SalesDocumentLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    documentType: documentType ?? this.documentType,
+    status: status ?? this.status,
+    documentNumber: documentNumber.present
+        ? documentNumber.value
+        : this.documentNumber,
+    documentSeries: documentSeries ?? this.documentSeries,
+    partyId: partyId.present ? partyId.value : this.partyId,
+    isGstFormal: isGstFormal ?? this.isGstFormal,
+    partyStateCode: partyStateCode.present
+        ? partyStateCode.value
+        : this.partyStateCode,
+    subtotal: subtotal ?? this.subtotal,
+    discountTotal: discountTotal ?? this.discountTotal,
+    taxAmount: taxAmount ?? this.taxAmount,
+    totalAmount: totalAmount ?? this.totalAmount,
+    documentDate: documentDate ?? this.documentDate,
+    convertedFromId: convertedFromId.present
+        ? convertedFromId.value
+        : this.convertedFromId,
+    notes: notes.present ? notes.value : this.notes,
+    godownId: godownId.present ? godownId.value : this.godownId,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  SalesDocumentLocalData copyWithCompanion(SalesDocumentsLocalCompanion data) {
+    return SalesDocumentLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      documentType: data.documentType.present
+          ? data.documentType.value
+          : this.documentType,
+      status: data.status.present ? data.status.value : this.status,
+      documentNumber: data.documentNumber.present
+          ? data.documentNumber.value
+          : this.documentNumber,
+      documentSeries: data.documentSeries.present
+          ? data.documentSeries.value
+          : this.documentSeries,
+      partyId: data.partyId.present ? data.partyId.value : this.partyId,
+      isGstFormal: data.isGstFormal.present
+          ? data.isGstFormal.value
+          : this.isGstFormal,
+      partyStateCode: data.partyStateCode.present
+          ? data.partyStateCode.value
+          : this.partyStateCode,
+      subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
+      discountTotal: data.discountTotal.present
+          ? data.discountTotal.value
+          : this.discountTotal,
+      taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
+      totalAmount: data.totalAmount.present
+          ? data.totalAmount.value
+          : this.totalAmount,
+      documentDate: data.documentDate.present
+          ? data.documentDate.value
+          : this.documentDate,
+      convertedFromId: data.convertedFromId.present
+          ? data.convertedFromId.value
+          : this.convertedFromId,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      godownId: data.godownId.present ? data.godownId.value : this.godownId,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesDocumentLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('documentType: $documentType, ')
+          ..write('status: $status, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('documentSeries: $documentSeries, ')
+          ..write('partyId: $partyId, ')
+          ..write('isGstFormal: $isGstFormal, ')
+          ..write('partyStateCode: $partyStateCode, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('discountTotal: $discountTotal, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('documentDate: $documentDate, ')
+          ..write('convertedFromId: $convertedFromId, ')
+          ..write('notes: $notes, ')
+          ..write('godownId: $godownId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    documentType,
+    status,
+    documentNumber,
+    documentSeries,
+    partyId,
+    isGstFormal,
+    partyStateCode,
+    subtotal,
+    discountTotal,
+    taxAmount,
+    totalAmount,
+    documentDate,
+    convertedFromId,
+    notes,
+    godownId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SalesDocumentLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.documentType == this.documentType &&
+          other.status == this.status &&
+          other.documentNumber == this.documentNumber &&
+          other.documentSeries == this.documentSeries &&
+          other.partyId == this.partyId &&
+          other.isGstFormal == this.isGstFormal &&
+          other.partyStateCode == this.partyStateCode &&
+          other.subtotal == this.subtotal &&
+          other.discountTotal == this.discountTotal &&
+          other.taxAmount == this.taxAmount &&
+          other.totalAmount == this.totalAmount &&
+          other.documentDate == this.documentDate &&
+          other.convertedFromId == this.convertedFromId &&
+          other.notes == this.notes &&
+          other.godownId == this.godownId &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class SalesDocumentsLocalCompanion
+    extends UpdateCompanion<SalesDocumentLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> documentType;
+  final Value<String> status;
+  final Value<String?> documentNumber;
+  final Value<String> documentSeries;
+  final Value<String?> partyId;
+  final Value<bool> isGstFormal;
+  final Value<String?> partyStateCode;
+  final Value<String> subtotal;
+  final Value<String> discountTotal;
+  final Value<String> taxAmount;
+  final Value<String> totalAmount;
+  final Value<String> documentDate;
+  final Value<String?> convertedFromId;
+  final Value<String?> notes;
+  final Value<String?> godownId;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const SalesDocumentsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.documentType = const Value.absent(),
+    this.status = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    this.documentSeries = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.isGstFormal = const Value.absent(),
+    this.partyStateCode = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.discountTotal = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    this.documentDate = const Value.absent(),
+    this.convertedFromId = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.godownId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SalesDocumentsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String documentType,
+    this.status = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    required String documentSeries,
+    this.partyId = const Value.absent(),
+    this.isGstFormal = const Value.absent(),
+    this.partyStateCode = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.discountTotal = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    required String documentDate,
+    this.convertedFromId = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.godownId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       documentType = Value(documentType),
+       documentSeries = Value(documentSeries),
+       documentDate = Value(documentDate),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<SalesDocumentLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? documentType,
+    Expression<String>? status,
+    Expression<String>? documentNumber,
+    Expression<String>? documentSeries,
+    Expression<String>? partyId,
+    Expression<bool>? isGstFormal,
+    Expression<String>? partyStateCode,
+    Expression<String>? subtotal,
+    Expression<String>? discountTotal,
+    Expression<String>? taxAmount,
+    Expression<String>? totalAmount,
+    Expression<String>? documentDate,
+    Expression<String>? convertedFromId,
+    Expression<String>? notes,
+    Expression<String>? godownId,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (documentType != null) 'document_type': documentType,
+      if (status != null) 'status': status,
+      if (documentNumber != null) 'document_number': documentNumber,
+      if (documentSeries != null) 'document_series': documentSeries,
+      if (partyId != null) 'party_id': partyId,
+      if (isGstFormal != null) 'is_gst_formal': isGstFormal,
+      if (partyStateCode != null) 'party_state_code': partyStateCode,
+      if (subtotal != null) 'subtotal': subtotal,
+      if (discountTotal != null) 'discount_total': discountTotal,
+      if (taxAmount != null) 'tax_amount': taxAmount,
+      if (totalAmount != null) 'total_amount': totalAmount,
+      if (documentDate != null) 'document_date': documentDate,
+      if (convertedFromId != null) 'converted_from_id': convertedFromId,
+      if (notes != null) 'notes': notes,
+      if (godownId != null) 'godown_id': godownId,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SalesDocumentsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? documentType,
+    Value<String>? status,
+    Value<String?>? documentNumber,
+    Value<String>? documentSeries,
+    Value<String?>? partyId,
+    Value<bool>? isGstFormal,
+    Value<String?>? partyStateCode,
+    Value<String>? subtotal,
+    Value<String>? discountTotal,
+    Value<String>? taxAmount,
+    Value<String>? totalAmount,
+    Value<String>? documentDate,
+    Value<String?>? convertedFromId,
+    Value<String?>? notes,
+    Value<String?>? godownId,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return SalesDocumentsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      documentType: documentType ?? this.documentType,
+      status: status ?? this.status,
+      documentNumber: documentNumber ?? this.documentNumber,
+      documentSeries: documentSeries ?? this.documentSeries,
+      partyId: partyId ?? this.partyId,
+      isGstFormal: isGstFormal ?? this.isGstFormal,
+      partyStateCode: partyStateCode ?? this.partyStateCode,
+      subtotal: subtotal ?? this.subtotal,
+      discountTotal: discountTotal ?? this.discountTotal,
+      taxAmount: taxAmount ?? this.taxAmount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      documentDate: documentDate ?? this.documentDate,
+      convertedFromId: convertedFromId ?? this.convertedFromId,
+      notes: notes ?? this.notes,
+      godownId: godownId ?? this.godownId,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (documentType.present) {
+      map['document_type'] = Variable<String>(documentType.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (documentNumber.present) {
+      map['document_number'] = Variable<String>(documentNumber.value);
+    }
+    if (documentSeries.present) {
+      map['document_series'] = Variable<String>(documentSeries.value);
+    }
+    if (partyId.present) {
+      map['party_id'] = Variable<String>(partyId.value);
+    }
+    if (isGstFormal.present) {
+      map['is_gst_formal'] = Variable<bool>(isGstFormal.value);
+    }
+    if (partyStateCode.present) {
+      map['party_state_code'] = Variable<String>(partyStateCode.value);
+    }
+    if (subtotal.present) {
+      map['subtotal'] = Variable<String>(subtotal.value);
+    }
+    if (discountTotal.present) {
+      map['discount_total'] = Variable<String>(discountTotal.value);
+    }
+    if (taxAmount.present) {
+      map['tax_amount'] = Variable<String>(taxAmount.value);
+    }
+    if (totalAmount.present) {
+      map['total_amount'] = Variable<String>(totalAmount.value);
+    }
+    if (documentDate.present) {
+      map['document_date'] = Variable<String>(documentDate.value);
+    }
+    if (convertedFromId.present) {
+      map['converted_from_id'] = Variable<String>(convertedFromId.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (godownId.present) {
+      map['godown_id'] = Variable<String>(godownId.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesDocumentsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('documentType: $documentType, ')
+          ..write('status: $status, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('documentSeries: $documentSeries, ')
+          ..write('partyId: $partyId, ')
+          ..write('isGstFormal: $isGstFormal, ')
+          ..write('partyStateCode: $partyStateCode, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('discountTotal: $discountTotal, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('documentDate: $documentDate, ')
+          ..write('convertedFromId: $convertedFromId, ')
+          ..write('notes: $notes, ')
+          ..write('godownId: $godownId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SalesDocumentLinesLocalTable extends SalesDocumentLinesLocal
+    with TableInfo<$SalesDocumentLinesLocalTable, SalesDocumentLineLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SalesDocumentLinesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _salesDocumentIdMeta = const VerificationMeta(
+    'salesDocumentId',
+  );
+  @override
+  late final GeneratedColumn<String> salesDocumentId = GeneratedColumn<String>(
+    'sales_document_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<String> quantity = GeneratedColumn<String>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitPriceMeta = const VerificationMeta(
+    'unitPrice',
+  );
+  @override
+  late final GeneratedColumn<String> unitPrice = GeneratedColumn<String>(
+    'unit_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _marketPriceMeta = const VerificationMeta(
+    'marketPrice',
+  );
+  @override
+  late final GeneratedColumn<String> marketPrice = GeneratedColumn<String>(
+    'market_price',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _discountAmountMeta = const VerificationMeta(
+    'discountAmount',
+  );
+  @override
+  late final GeneratedColumn<String> discountAmount = GeneratedColumn<String>(
+    'discount_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _taxTypeMeta = const VerificationMeta(
+    'taxType',
+  );
+  @override
+  late final GeneratedColumn<String> taxType = GeneratedColumn<String>(
+    'tax_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _taxRateMeta = const VerificationMeta(
+    'taxRate',
+  );
+  @override
+  late final GeneratedColumn<String> taxRate = GeneratedColumn<String>(
+    'tax_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _cgstAmountMeta = const VerificationMeta(
+    'cgstAmount',
+  );
+  @override
+  late final GeneratedColumn<String> cgstAmount = GeneratedColumn<String>(
+    'cgst_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _sgstAmountMeta = const VerificationMeta(
+    'sgstAmount',
+  );
+  @override
+  late final GeneratedColumn<String> sgstAmount = GeneratedColumn<String>(
+    'sgst_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _igstAmountMeta = const VerificationMeta(
+    'igstAmount',
+  );
+  @override
+  late final GeneratedColumn<String> igstAmount = GeneratedColumn<String>(
+    'igst_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _lineTotalMeta = const VerificationMeta(
+    'lineTotal',
+  );
+  @override
+  late final GeneratedColumn<String> lineTotal = GeneratedColumn<String>(
+    'line_total',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    salesDocumentId,
+    itemId,
+    quantity,
+    unit,
+    unitPrice,
+    marketPrice,
+    discountAmount,
+    taxType,
+    taxRate,
+    cgstAmount,
+    sgstAmount,
+    igstAmount,
+    lineTotal,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sales_document_lines_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SalesDocumentLineLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('sales_document_id')) {
+      context.handle(
+        _salesDocumentIdMeta,
+        salesDocumentId.isAcceptableOrUnknown(
+          data['sales_document_id']!,
+          _salesDocumentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_salesDocumentIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    if (data.containsKey('unit_price')) {
+      context.handle(
+        _unitPriceMeta,
+        unitPrice.isAcceptableOrUnknown(data['unit_price']!, _unitPriceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitPriceMeta);
+    }
+    if (data.containsKey('market_price')) {
+      context.handle(
+        _marketPriceMeta,
+        marketPrice.isAcceptableOrUnknown(
+          data['market_price']!,
+          _marketPriceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discount_amount')) {
+      context.handle(
+        _discountAmountMeta,
+        discountAmount.isAcceptableOrUnknown(
+          data['discount_amount']!,
+          _discountAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_type')) {
+      context.handle(
+        _taxTypeMeta,
+        taxType.isAcceptableOrUnknown(data['tax_type']!, _taxTypeMeta),
+      );
+    }
+    if (data.containsKey('tax_rate')) {
+      context.handle(
+        _taxRateMeta,
+        taxRate.isAcceptableOrUnknown(data['tax_rate']!, _taxRateMeta),
+      );
+    }
+    if (data.containsKey('cgst_amount')) {
+      context.handle(
+        _cgstAmountMeta,
+        cgstAmount.isAcceptableOrUnknown(data['cgst_amount']!, _cgstAmountMeta),
+      );
+    }
+    if (data.containsKey('sgst_amount')) {
+      context.handle(
+        _sgstAmountMeta,
+        sgstAmount.isAcceptableOrUnknown(data['sgst_amount']!, _sgstAmountMeta),
+      );
+    }
+    if (data.containsKey('igst_amount')) {
+      context.handle(
+        _igstAmountMeta,
+        igstAmount.isAcceptableOrUnknown(data['igst_amount']!, _igstAmountMeta),
+      );
+    }
+    if (data.containsKey('line_total')) {
+      context.handle(
+        _lineTotalMeta,
+        lineTotal.isAcceptableOrUnknown(data['line_total']!, _lineTotalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lineTotalMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SalesDocumentLineLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SalesDocumentLineLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      salesDocumentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sales_document_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quantity'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      unitPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit_price'],
+      )!,
+      marketPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}market_price'],
+      ),
+      discountAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_amount'],
+      )!,
+      taxType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_type'],
+      )!,
+      taxRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_rate'],
+      )!,
+      cgstAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cgst_amount'],
+      )!,
+      sgstAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sgst_amount'],
+      )!,
+      igstAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}igst_amount'],
+      )!,
+      lineTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}line_total'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $SalesDocumentLinesLocalTable createAlias(String alias) {
+    return $SalesDocumentLinesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class SalesDocumentLineLocalData extends DataClass
+    implements Insertable<SalesDocumentLineLocalData> {
+  final String id;
+  final String businessId;
+  final String salesDocumentId;
+  final String itemId;
+  final String quantity;
+  final String unit;
+  final String unitPrice;
+  final String? marketPrice;
+  final String discountAmount;
+  final String taxType;
+  final String taxRate;
+  final String cgstAmount;
+  final String sgstAmount;
+  final String igstAmount;
+  final String lineTotal;
+  final int sortOrder;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const SalesDocumentLineLocalData({
+    required this.id,
+    required this.businessId,
+    required this.salesDocumentId,
+    required this.itemId,
+    required this.quantity,
+    required this.unit,
+    required this.unitPrice,
+    this.marketPrice,
+    required this.discountAmount,
+    required this.taxType,
+    required this.taxRate,
+    required this.cgstAmount,
+    required this.sgstAmount,
+    required this.igstAmount,
+    required this.lineTotal,
+    required this.sortOrder,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['sales_document_id'] = Variable<String>(salesDocumentId);
+    map['item_id'] = Variable<String>(itemId);
+    map['quantity'] = Variable<String>(quantity);
+    map['unit'] = Variable<String>(unit);
+    map['unit_price'] = Variable<String>(unitPrice);
+    if (!nullToAbsent || marketPrice != null) {
+      map['market_price'] = Variable<String>(marketPrice);
+    }
+    map['discount_amount'] = Variable<String>(discountAmount);
+    map['tax_type'] = Variable<String>(taxType);
+    map['tax_rate'] = Variable<String>(taxRate);
+    map['cgst_amount'] = Variable<String>(cgstAmount);
+    map['sgst_amount'] = Variable<String>(sgstAmount);
+    map['igst_amount'] = Variable<String>(igstAmount);
+    map['line_total'] = Variable<String>(lineTotal);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  SalesDocumentLinesLocalCompanion toCompanion(bool nullToAbsent) {
+    return SalesDocumentLinesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      salesDocumentId: Value(salesDocumentId),
+      itemId: Value(itemId),
+      quantity: Value(quantity),
+      unit: Value(unit),
+      unitPrice: Value(unitPrice),
+      marketPrice: marketPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(marketPrice),
+      discountAmount: Value(discountAmount),
+      taxType: Value(taxType),
+      taxRate: Value(taxRate),
+      cgstAmount: Value(cgstAmount),
+      sgstAmount: Value(sgstAmount),
+      igstAmount: Value(igstAmount),
+      lineTotal: Value(lineTotal),
+      sortOrder: Value(sortOrder),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory SalesDocumentLineLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SalesDocumentLineLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      salesDocumentId: serializer.fromJson<String>(json['salesDocumentId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      quantity: serializer.fromJson<String>(json['quantity']),
+      unit: serializer.fromJson<String>(json['unit']),
+      unitPrice: serializer.fromJson<String>(json['unitPrice']),
+      marketPrice: serializer.fromJson<String?>(json['marketPrice']),
+      discountAmount: serializer.fromJson<String>(json['discountAmount']),
+      taxType: serializer.fromJson<String>(json['taxType']),
+      taxRate: serializer.fromJson<String>(json['taxRate']),
+      cgstAmount: serializer.fromJson<String>(json['cgstAmount']),
+      sgstAmount: serializer.fromJson<String>(json['sgstAmount']),
+      igstAmount: serializer.fromJson<String>(json['igstAmount']),
+      lineTotal: serializer.fromJson<String>(json['lineTotal']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'salesDocumentId': serializer.toJson<String>(salesDocumentId),
+      'itemId': serializer.toJson<String>(itemId),
+      'quantity': serializer.toJson<String>(quantity),
+      'unit': serializer.toJson<String>(unit),
+      'unitPrice': serializer.toJson<String>(unitPrice),
+      'marketPrice': serializer.toJson<String?>(marketPrice),
+      'discountAmount': serializer.toJson<String>(discountAmount),
+      'taxType': serializer.toJson<String>(taxType),
+      'taxRate': serializer.toJson<String>(taxRate),
+      'cgstAmount': serializer.toJson<String>(cgstAmount),
+      'sgstAmount': serializer.toJson<String>(sgstAmount),
+      'igstAmount': serializer.toJson<String>(igstAmount),
+      'lineTotal': serializer.toJson<String>(lineTotal),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  SalesDocumentLineLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? salesDocumentId,
+    String? itemId,
+    String? quantity,
+    String? unit,
+    String? unitPrice,
+    Value<String?> marketPrice = const Value.absent(),
+    String? discountAmount,
+    String? taxType,
+    String? taxRate,
+    String? cgstAmount,
+    String? sgstAmount,
+    String? igstAmount,
+    String? lineTotal,
+    int? sortOrder,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => SalesDocumentLineLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    salesDocumentId: salesDocumentId ?? this.salesDocumentId,
+    itemId: itemId ?? this.itemId,
+    quantity: quantity ?? this.quantity,
+    unit: unit ?? this.unit,
+    unitPrice: unitPrice ?? this.unitPrice,
+    marketPrice: marketPrice.present ? marketPrice.value : this.marketPrice,
+    discountAmount: discountAmount ?? this.discountAmount,
+    taxType: taxType ?? this.taxType,
+    taxRate: taxRate ?? this.taxRate,
+    cgstAmount: cgstAmount ?? this.cgstAmount,
+    sgstAmount: sgstAmount ?? this.sgstAmount,
+    igstAmount: igstAmount ?? this.igstAmount,
+    lineTotal: lineTotal ?? this.lineTotal,
+    sortOrder: sortOrder ?? this.sortOrder,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  SalesDocumentLineLocalData copyWithCompanion(
+    SalesDocumentLinesLocalCompanion data,
+  ) {
+    return SalesDocumentLineLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      salesDocumentId: data.salesDocumentId.present
+          ? data.salesDocumentId.value
+          : this.salesDocumentId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      marketPrice: data.marketPrice.present
+          ? data.marketPrice.value
+          : this.marketPrice,
+      discountAmount: data.discountAmount.present
+          ? data.discountAmount.value
+          : this.discountAmount,
+      taxType: data.taxType.present ? data.taxType.value : this.taxType,
+      taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
+      cgstAmount: data.cgstAmount.present
+          ? data.cgstAmount.value
+          : this.cgstAmount,
+      sgstAmount: data.sgstAmount.present
+          ? data.sgstAmount.value
+          : this.sgstAmount,
+      igstAmount: data.igstAmount.present
+          ? data.igstAmount.value
+          : this.igstAmount,
+      lineTotal: data.lineTotal.present ? data.lineTotal.value : this.lineTotal,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesDocumentLineLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('salesDocumentId: $salesDocumentId, ')
+          ..write('itemId: $itemId, ')
+          ..write('quantity: $quantity, ')
+          ..write('unit: $unit, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('marketPrice: $marketPrice, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('taxType: $taxType, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('cgstAmount: $cgstAmount, ')
+          ..write('sgstAmount: $sgstAmount, ')
+          ..write('igstAmount: $igstAmount, ')
+          ..write('lineTotal: $lineTotal, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    salesDocumentId,
+    itemId,
+    quantity,
+    unit,
+    unitPrice,
+    marketPrice,
+    discountAmount,
+    taxType,
+    taxRate,
+    cgstAmount,
+    sgstAmount,
+    igstAmount,
+    lineTotal,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SalesDocumentLineLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.salesDocumentId == this.salesDocumentId &&
+          other.itemId == this.itemId &&
+          other.quantity == this.quantity &&
+          other.unit == this.unit &&
+          other.unitPrice == this.unitPrice &&
+          other.marketPrice == this.marketPrice &&
+          other.discountAmount == this.discountAmount &&
+          other.taxType == this.taxType &&
+          other.taxRate == this.taxRate &&
+          other.cgstAmount == this.cgstAmount &&
+          other.sgstAmount == this.sgstAmount &&
+          other.igstAmount == this.igstAmount &&
+          other.lineTotal == this.lineTotal &&
+          other.sortOrder == this.sortOrder &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class SalesDocumentLinesLocalCompanion
+    extends UpdateCompanion<SalesDocumentLineLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> salesDocumentId;
+  final Value<String> itemId;
+  final Value<String> quantity;
+  final Value<String> unit;
+  final Value<String> unitPrice;
+  final Value<String?> marketPrice;
+  final Value<String> discountAmount;
+  final Value<String> taxType;
+  final Value<String> taxRate;
+  final Value<String> cgstAmount;
+  final Value<String> sgstAmount;
+  final Value<String> igstAmount;
+  final Value<String> lineTotal;
+  final Value<int> sortOrder;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const SalesDocumentLinesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.salesDocumentId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.unitPrice = const Value.absent(),
+    this.marketPrice = const Value.absent(),
+    this.discountAmount = const Value.absent(),
+    this.taxType = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.cgstAmount = const Value.absent(),
+    this.sgstAmount = const Value.absent(),
+    this.igstAmount = const Value.absent(),
+    this.lineTotal = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SalesDocumentLinesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String salesDocumentId,
+    required String itemId,
+    required String quantity,
+    required String unit,
+    required String unitPrice,
+    this.marketPrice = const Value.absent(),
+    this.discountAmount = const Value.absent(),
+    this.taxType = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.cgstAmount = const Value.absent(),
+    this.sgstAmount = const Value.absent(),
+    this.igstAmount = const Value.absent(),
+    required String lineTotal,
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       salesDocumentId = Value(salesDocumentId),
+       itemId = Value(itemId),
+       quantity = Value(quantity),
+       unit = Value(unit),
+       unitPrice = Value(unitPrice),
+       lineTotal = Value(lineTotal),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<SalesDocumentLineLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? salesDocumentId,
+    Expression<String>? itemId,
+    Expression<String>? quantity,
+    Expression<String>? unit,
+    Expression<String>? unitPrice,
+    Expression<String>? marketPrice,
+    Expression<String>? discountAmount,
+    Expression<String>? taxType,
+    Expression<String>? taxRate,
+    Expression<String>? cgstAmount,
+    Expression<String>? sgstAmount,
+    Expression<String>? igstAmount,
+    Expression<String>? lineTotal,
+    Expression<int>? sortOrder,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (salesDocumentId != null) 'sales_document_id': salesDocumentId,
+      if (itemId != null) 'item_id': itemId,
+      if (quantity != null) 'quantity': quantity,
+      if (unit != null) 'unit': unit,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (marketPrice != null) 'market_price': marketPrice,
+      if (discountAmount != null) 'discount_amount': discountAmount,
+      if (taxType != null) 'tax_type': taxType,
+      if (taxRate != null) 'tax_rate': taxRate,
+      if (cgstAmount != null) 'cgst_amount': cgstAmount,
+      if (sgstAmount != null) 'sgst_amount': sgstAmount,
+      if (igstAmount != null) 'igst_amount': igstAmount,
+      if (lineTotal != null) 'line_total': lineTotal,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SalesDocumentLinesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? salesDocumentId,
+    Value<String>? itemId,
+    Value<String>? quantity,
+    Value<String>? unit,
+    Value<String>? unitPrice,
+    Value<String?>? marketPrice,
+    Value<String>? discountAmount,
+    Value<String>? taxType,
+    Value<String>? taxRate,
+    Value<String>? cgstAmount,
+    Value<String>? sgstAmount,
+    Value<String>? igstAmount,
+    Value<String>? lineTotal,
+    Value<int>? sortOrder,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return SalesDocumentLinesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      salesDocumentId: salesDocumentId ?? this.salesDocumentId,
+      itemId: itemId ?? this.itemId,
+      quantity: quantity ?? this.quantity,
+      unit: unit ?? this.unit,
+      unitPrice: unitPrice ?? this.unitPrice,
+      marketPrice: marketPrice ?? this.marketPrice,
+      discountAmount: discountAmount ?? this.discountAmount,
+      taxType: taxType ?? this.taxType,
+      taxRate: taxRate ?? this.taxRate,
+      cgstAmount: cgstAmount ?? this.cgstAmount,
+      sgstAmount: sgstAmount ?? this.sgstAmount,
+      igstAmount: igstAmount ?? this.igstAmount,
+      lineTotal: lineTotal ?? this.lineTotal,
+      sortOrder: sortOrder ?? this.sortOrder,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (salesDocumentId.present) {
+      map['sales_document_id'] = Variable<String>(salesDocumentId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<String>(quantity.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (unitPrice.present) {
+      map['unit_price'] = Variable<String>(unitPrice.value);
+    }
+    if (marketPrice.present) {
+      map['market_price'] = Variable<String>(marketPrice.value);
+    }
+    if (discountAmount.present) {
+      map['discount_amount'] = Variable<String>(discountAmount.value);
+    }
+    if (taxType.present) {
+      map['tax_type'] = Variable<String>(taxType.value);
+    }
+    if (taxRate.present) {
+      map['tax_rate'] = Variable<String>(taxRate.value);
+    }
+    if (cgstAmount.present) {
+      map['cgst_amount'] = Variable<String>(cgstAmount.value);
+    }
+    if (sgstAmount.present) {
+      map['sgst_amount'] = Variable<String>(sgstAmount.value);
+    }
+    if (igstAmount.present) {
+      map['igst_amount'] = Variable<String>(igstAmount.value);
+    }
+    if (lineTotal.present) {
+      map['line_total'] = Variable<String>(lineTotal.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesDocumentLinesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('salesDocumentId: $salesDocumentId, ')
+          ..write('itemId: $itemId, ')
+          ..write('quantity: $quantity, ')
+          ..write('unit: $unit, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('marketPrice: $marketPrice, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('taxType: $taxType, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('cgstAmount: $cgstAmount, ')
+          ..write('sgstAmount: $sgstAmount, ')
+          ..write('igstAmount: $igstAmount, ')
+          ..write('lineTotal: $lineTotal, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
+    with TableInfo<$PurchaseDocumentsLocalTable, PurchaseDocumentLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PurchaseDocumentsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentTypeMeta = const VerificationMeta(
+    'documentType',
+  );
+  @override
+  late final GeneratedColumn<String> documentType = GeneratedColumn<String>(
+    'document_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('draft'),
+  );
+  static const VerificationMeta _documentNumberMeta = const VerificationMeta(
+    'documentNumber',
+  );
+  @override
+  late final GeneratedColumn<String> documentNumber = GeneratedColumn<String>(
+    'document_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentSeriesMeta = const VerificationMeta(
+    'documentSeries',
+  );
+  @override
+  late final GeneratedColumn<String> documentSeries = GeneratedColumn<String>(
+    'document_series',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _partyIdMeta = const VerificationMeta(
+    'partyId',
+  );
+  @override
+  late final GeneratedColumn<String> partyId = GeneratedColumn<String>(
+    'party_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isGstFormalMeta = const VerificationMeta(
+    'isGstFormal',
+  );
+  @override
+  late final GeneratedColumn<bool> isGstFormal = GeneratedColumn<bool>(
+    'is_gst_formal',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_gst_formal" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _partyStateCodeMeta = const VerificationMeta(
+    'partyStateCode',
+  );
+  @override
+  late final GeneratedColumn<String> partyStateCode = GeneratedColumn<String>(
+    'party_state_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _subtotalMeta = const VerificationMeta(
+    'subtotal',
+  );
+  @override
+  late final GeneratedColumn<String> subtotal = GeneratedColumn<String>(
+    'subtotal',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _discountTotalMeta = const VerificationMeta(
+    'discountTotal',
+  );
+  @override
+  late final GeneratedColumn<String> discountTotal = GeneratedColumn<String>(
+    'discount_total',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _taxAmountMeta = const VerificationMeta(
+    'taxAmount',
+  );
+  @override
+  late final GeneratedColumn<String> taxAmount = GeneratedColumn<String>(
+    'tax_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _totalAmountMeta = const VerificationMeta(
+    'totalAmount',
+  );
+  @override
+  late final GeneratedColumn<String> totalAmount = GeneratedColumn<String>(
+    'total_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _documentDateMeta = const VerificationMeta(
+    'documentDate',
+  );
+  @override
+  late final GeneratedColumn<String> documentDate = GeneratedColumn<String>(
+    'document_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _convertedFromIdMeta = const VerificationMeta(
+    'convertedFromId',
+  );
+  @override
+  late final GeneratedColumn<String> convertedFromId = GeneratedColumn<String>(
+    'converted_from_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _supplierInvoiceNumberMeta =
+      const VerificationMeta('supplierInvoiceNumber');
+  @override
+  late final GeneratedColumn<String> supplierInvoiceNumber =
+      GeneratedColumn<String>(
+        'supplier_invoice_number',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _dueDateMeta = const VerificationMeta(
+    'dueDate',
+  );
+  @override
+  late final GeneratedColumn<String> dueDate = GeneratedColumn<String>(
+    'due_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _godownIdMeta = const VerificationMeta(
+    'godownId',
+  );
+  @override
+  late final GeneratedColumn<String> godownId = GeneratedColumn<String>(
+    'godown_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    documentType,
+    status,
+    documentNumber,
+    documentSeries,
+    partyId,
+    isGstFormal,
+    partyStateCode,
+    subtotal,
+    discountTotal,
+    taxAmount,
+    totalAmount,
+    documentDate,
+    convertedFromId,
+    supplierInvoiceNumber,
+    dueDate,
+    notes,
+    godownId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'purchase_documents_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PurchaseDocumentLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('document_type')) {
+      context.handle(
+        _documentTypeMeta,
+        documentType.isAcceptableOrUnknown(
+          data['document_type']!,
+          _documentTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentTypeMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('document_number')) {
+      context.handle(
+        _documentNumberMeta,
+        documentNumber.isAcceptableOrUnknown(
+          data['document_number']!,
+          _documentNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_series')) {
+      context.handle(
+        _documentSeriesMeta,
+        documentSeries.isAcceptableOrUnknown(
+          data['document_series']!,
+          _documentSeriesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentSeriesMeta);
+    }
+    if (data.containsKey('party_id')) {
+      context.handle(
+        _partyIdMeta,
+        partyId.isAcceptableOrUnknown(data['party_id']!, _partyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_partyIdMeta);
+    }
+    if (data.containsKey('is_gst_formal')) {
+      context.handle(
+        _isGstFormalMeta,
+        isGstFormal.isAcceptableOrUnknown(
+          data['is_gst_formal']!,
+          _isGstFormalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('party_state_code')) {
+      context.handle(
+        _partyStateCodeMeta,
+        partyStateCode.isAcceptableOrUnknown(
+          data['party_state_code']!,
+          _partyStateCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('subtotal')) {
+      context.handle(
+        _subtotalMeta,
+        subtotal.isAcceptableOrUnknown(data['subtotal']!, _subtotalMeta),
+      );
+    }
+    if (data.containsKey('discount_total')) {
+      context.handle(
+        _discountTotalMeta,
+        discountTotal.isAcceptableOrUnknown(
+          data['discount_total']!,
+          _discountTotalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_amount')) {
+      context.handle(
+        _taxAmountMeta,
+        taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta),
+      );
+    }
+    if (data.containsKey('total_amount')) {
+      context.handle(
+        _totalAmountMeta,
+        totalAmount.isAcceptableOrUnknown(
+          data['total_amount']!,
+          _totalAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_date')) {
+      context.handle(
+        _documentDateMeta,
+        documentDate.isAcceptableOrUnknown(
+          data['document_date']!,
+          _documentDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentDateMeta);
+    }
+    if (data.containsKey('converted_from_id')) {
+      context.handle(
+        _convertedFromIdMeta,
+        convertedFromId.isAcceptableOrUnknown(
+          data['converted_from_id']!,
+          _convertedFromIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('supplier_invoice_number')) {
+      context.handle(
+        _supplierInvoiceNumberMeta,
+        supplierInvoiceNumber.isAcceptableOrUnknown(
+          data['supplier_invoice_number']!,
+          _supplierInvoiceNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('due_date')) {
+      context.handle(
+        _dueDateMeta,
+        dueDate.isAcceptableOrUnknown(data['due_date']!, _dueDateMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('godown_id')) {
+      context.handle(
+        _godownIdMeta,
+        godownId.isAcceptableOrUnknown(data['godown_id']!, _godownIdMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PurchaseDocumentLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PurchaseDocumentLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      documentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_type'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      documentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_number'],
+      ),
+      documentSeries: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_series'],
+      )!,
+      partyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_id'],
+      )!,
+      isGstFormal: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_gst_formal'],
+      )!,
+      partyStateCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_state_code'],
+      ),
+      subtotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subtotal'],
+      )!,
+      discountTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_total'],
+      )!,
+      taxAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_amount'],
+      )!,
+      totalAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}total_amount'],
+      )!,
+      documentDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_date'],
+      )!,
+      convertedFromId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}converted_from_id'],
+      ),
+      supplierInvoiceNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supplier_invoice_number'],
+      ),
+      dueDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}due_date'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      godownId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}godown_id'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $PurchaseDocumentsLocalTable createAlias(String alias) {
+    return $PurchaseDocumentsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class PurchaseDocumentLocalData extends DataClass
+    implements Insertable<PurchaseDocumentLocalData> {
+  final String id;
+  final String businessId;
+  final String documentType;
+  final String status;
+  final String? documentNumber;
+  final String documentSeries;
+  final String partyId;
+  final bool isGstFormal;
+  final String? partyStateCode;
+  final String subtotal;
+  final String discountTotal;
+  final String taxAmount;
+  final String totalAmount;
+  final String documentDate;
+  final String? convertedFromId;
+  final String? supplierInvoiceNumber;
+  final String? dueDate;
+  final String? notes;
+  final String? godownId;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const PurchaseDocumentLocalData({
+    required this.id,
+    required this.businessId,
+    required this.documentType,
+    required this.status,
+    this.documentNumber,
+    required this.documentSeries,
+    required this.partyId,
+    required this.isGstFormal,
+    this.partyStateCode,
+    required this.subtotal,
+    required this.discountTotal,
+    required this.taxAmount,
+    required this.totalAmount,
+    required this.documentDate,
+    this.convertedFromId,
+    this.supplierInvoiceNumber,
+    this.dueDate,
+    this.notes,
+    this.godownId,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['document_type'] = Variable<String>(documentType);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || documentNumber != null) {
+      map['document_number'] = Variable<String>(documentNumber);
+    }
+    map['document_series'] = Variable<String>(documentSeries);
+    map['party_id'] = Variable<String>(partyId);
+    map['is_gst_formal'] = Variable<bool>(isGstFormal);
+    if (!nullToAbsent || partyStateCode != null) {
+      map['party_state_code'] = Variable<String>(partyStateCode);
+    }
+    map['subtotal'] = Variable<String>(subtotal);
+    map['discount_total'] = Variable<String>(discountTotal);
+    map['tax_amount'] = Variable<String>(taxAmount);
+    map['total_amount'] = Variable<String>(totalAmount);
+    map['document_date'] = Variable<String>(documentDate);
+    if (!nullToAbsent || convertedFromId != null) {
+      map['converted_from_id'] = Variable<String>(convertedFromId);
+    }
+    if (!nullToAbsent || supplierInvoiceNumber != null) {
+      map['supplier_invoice_number'] = Variable<String>(supplierInvoiceNumber);
+    }
+    if (!nullToAbsent || dueDate != null) {
+      map['due_date'] = Variable<String>(dueDate);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || godownId != null) {
+      map['godown_id'] = Variable<String>(godownId);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  PurchaseDocumentsLocalCompanion toCompanion(bool nullToAbsent) {
+    return PurchaseDocumentsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      documentType: Value(documentType),
+      status: Value(status),
+      documentNumber: documentNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(documentNumber),
+      documentSeries: Value(documentSeries),
+      partyId: Value(partyId),
+      isGstFormal: Value(isGstFormal),
+      partyStateCode: partyStateCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyStateCode),
+      subtotal: Value(subtotal),
+      discountTotal: Value(discountTotal),
+      taxAmount: Value(taxAmount),
+      totalAmount: Value(totalAmount),
+      documentDate: Value(documentDate),
+      convertedFromId: convertedFromId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(convertedFromId),
+      supplierInvoiceNumber: supplierInvoiceNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplierInvoiceNumber),
+      dueDate: dueDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDate),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      godownId: godownId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(godownId),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory PurchaseDocumentLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PurchaseDocumentLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      documentType: serializer.fromJson<String>(json['documentType']),
+      status: serializer.fromJson<String>(json['status']),
+      documentNumber: serializer.fromJson<String?>(json['documentNumber']),
+      documentSeries: serializer.fromJson<String>(json['documentSeries']),
+      partyId: serializer.fromJson<String>(json['partyId']),
+      isGstFormal: serializer.fromJson<bool>(json['isGstFormal']),
+      partyStateCode: serializer.fromJson<String?>(json['partyStateCode']),
+      subtotal: serializer.fromJson<String>(json['subtotal']),
+      discountTotal: serializer.fromJson<String>(json['discountTotal']),
+      taxAmount: serializer.fromJson<String>(json['taxAmount']),
+      totalAmount: serializer.fromJson<String>(json['totalAmount']),
+      documentDate: serializer.fromJson<String>(json['documentDate']),
+      convertedFromId: serializer.fromJson<String?>(json['convertedFromId']),
+      supplierInvoiceNumber: serializer.fromJson<String?>(
+        json['supplierInvoiceNumber'],
+      ),
+      dueDate: serializer.fromJson<String?>(json['dueDate']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      godownId: serializer.fromJson<String?>(json['godownId']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'documentType': serializer.toJson<String>(documentType),
+      'status': serializer.toJson<String>(status),
+      'documentNumber': serializer.toJson<String?>(documentNumber),
+      'documentSeries': serializer.toJson<String>(documentSeries),
+      'partyId': serializer.toJson<String>(partyId),
+      'isGstFormal': serializer.toJson<bool>(isGstFormal),
+      'partyStateCode': serializer.toJson<String?>(partyStateCode),
+      'subtotal': serializer.toJson<String>(subtotal),
+      'discountTotal': serializer.toJson<String>(discountTotal),
+      'taxAmount': serializer.toJson<String>(taxAmount),
+      'totalAmount': serializer.toJson<String>(totalAmount),
+      'documentDate': serializer.toJson<String>(documentDate),
+      'convertedFromId': serializer.toJson<String?>(convertedFromId),
+      'supplierInvoiceNumber': serializer.toJson<String?>(
+        supplierInvoiceNumber,
+      ),
+      'dueDate': serializer.toJson<String?>(dueDate),
+      'notes': serializer.toJson<String?>(notes),
+      'godownId': serializer.toJson<String?>(godownId),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  PurchaseDocumentLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? documentType,
+    String? status,
+    Value<String?> documentNumber = const Value.absent(),
+    String? documentSeries,
+    String? partyId,
+    bool? isGstFormal,
+    Value<String?> partyStateCode = const Value.absent(),
+    String? subtotal,
+    String? discountTotal,
+    String? taxAmount,
+    String? totalAmount,
+    String? documentDate,
+    Value<String?> convertedFromId = const Value.absent(),
+    Value<String?> supplierInvoiceNumber = const Value.absent(),
+    Value<String?> dueDate = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<String?> godownId = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => PurchaseDocumentLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    documentType: documentType ?? this.documentType,
+    status: status ?? this.status,
+    documentNumber: documentNumber.present
+        ? documentNumber.value
+        : this.documentNumber,
+    documentSeries: documentSeries ?? this.documentSeries,
+    partyId: partyId ?? this.partyId,
+    isGstFormal: isGstFormal ?? this.isGstFormal,
+    partyStateCode: partyStateCode.present
+        ? partyStateCode.value
+        : this.partyStateCode,
+    subtotal: subtotal ?? this.subtotal,
+    discountTotal: discountTotal ?? this.discountTotal,
+    taxAmount: taxAmount ?? this.taxAmount,
+    totalAmount: totalAmount ?? this.totalAmount,
+    documentDate: documentDate ?? this.documentDate,
+    convertedFromId: convertedFromId.present
+        ? convertedFromId.value
+        : this.convertedFromId,
+    supplierInvoiceNumber: supplierInvoiceNumber.present
+        ? supplierInvoiceNumber.value
+        : this.supplierInvoiceNumber,
+    dueDate: dueDate.present ? dueDate.value : this.dueDate,
+    notes: notes.present ? notes.value : this.notes,
+    godownId: godownId.present ? godownId.value : this.godownId,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  PurchaseDocumentLocalData copyWithCompanion(
+    PurchaseDocumentsLocalCompanion data,
+  ) {
+    return PurchaseDocumentLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      documentType: data.documentType.present
+          ? data.documentType.value
+          : this.documentType,
+      status: data.status.present ? data.status.value : this.status,
+      documentNumber: data.documentNumber.present
+          ? data.documentNumber.value
+          : this.documentNumber,
+      documentSeries: data.documentSeries.present
+          ? data.documentSeries.value
+          : this.documentSeries,
+      partyId: data.partyId.present ? data.partyId.value : this.partyId,
+      isGstFormal: data.isGstFormal.present
+          ? data.isGstFormal.value
+          : this.isGstFormal,
+      partyStateCode: data.partyStateCode.present
+          ? data.partyStateCode.value
+          : this.partyStateCode,
+      subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
+      discountTotal: data.discountTotal.present
+          ? data.discountTotal.value
+          : this.discountTotal,
+      taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
+      totalAmount: data.totalAmount.present
+          ? data.totalAmount.value
+          : this.totalAmount,
+      documentDate: data.documentDate.present
+          ? data.documentDate.value
+          : this.documentDate,
+      convertedFromId: data.convertedFromId.present
+          ? data.convertedFromId.value
+          : this.convertedFromId,
+      supplierInvoiceNumber: data.supplierInvoiceNumber.present
+          ? data.supplierInvoiceNumber.value
+          : this.supplierInvoiceNumber,
+      dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      godownId: data.godownId.present ? data.godownId.value : this.godownId,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PurchaseDocumentLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('documentType: $documentType, ')
+          ..write('status: $status, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('documentSeries: $documentSeries, ')
+          ..write('partyId: $partyId, ')
+          ..write('isGstFormal: $isGstFormal, ')
+          ..write('partyStateCode: $partyStateCode, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('discountTotal: $discountTotal, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('documentDate: $documentDate, ')
+          ..write('convertedFromId: $convertedFromId, ')
+          ..write('supplierInvoiceNumber: $supplierInvoiceNumber, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('notes: $notes, ')
+          ..write('godownId: $godownId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    documentType,
+    status,
+    documentNumber,
+    documentSeries,
+    partyId,
+    isGstFormal,
+    partyStateCode,
+    subtotal,
+    discountTotal,
+    taxAmount,
+    totalAmount,
+    documentDate,
+    convertedFromId,
+    supplierInvoiceNumber,
+    dueDate,
+    notes,
+    godownId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PurchaseDocumentLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.documentType == this.documentType &&
+          other.status == this.status &&
+          other.documentNumber == this.documentNumber &&
+          other.documentSeries == this.documentSeries &&
+          other.partyId == this.partyId &&
+          other.isGstFormal == this.isGstFormal &&
+          other.partyStateCode == this.partyStateCode &&
+          other.subtotal == this.subtotal &&
+          other.discountTotal == this.discountTotal &&
+          other.taxAmount == this.taxAmount &&
+          other.totalAmount == this.totalAmount &&
+          other.documentDate == this.documentDate &&
+          other.convertedFromId == this.convertedFromId &&
+          other.supplierInvoiceNumber == this.supplierInvoiceNumber &&
+          other.dueDate == this.dueDate &&
+          other.notes == this.notes &&
+          other.godownId == this.godownId &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class PurchaseDocumentsLocalCompanion
+    extends UpdateCompanion<PurchaseDocumentLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> documentType;
+  final Value<String> status;
+  final Value<String?> documentNumber;
+  final Value<String> documentSeries;
+  final Value<String> partyId;
+  final Value<bool> isGstFormal;
+  final Value<String?> partyStateCode;
+  final Value<String> subtotal;
+  final Value<String> discountTotal;
+  final Value<String> taxAmount;
+  final Value<String> totalAmount;
+  final Value<String> documentDate;
+  final Value<String?> convertedFromId;
+  final Value<String?> supplierInvoiceNumber;
+  final Value<String?> dueDate;
+  final Value<String?> notes;
+  final Value<String?> godownId;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const PurchaseDocumentsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.documentType = const Value.absent(),
+    this.status = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    this.documentSeries = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.isGstFormal = const Value.absent(),
+    this.partyStateCode = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.discountTotal = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    this.documentDate = const Value.absent(),
+    this.convertedFromId = const Value.absent(),
+    this.supplierInvoiceNumber = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.godownId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PurchaseDocumentsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String documentType,
+    this.status = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    required String documentSeries,
+    required String partyId,
+    this.isGstFormal = const Value.absent(),
+    this.partyStateCode = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.discountTotal = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    required String documentDate,
+    this.convertedFromId = const Value.absent(),
+    this.supplierInvoiceNumber = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.godownId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       documentType = Value(documentType),
+       documentSeries = Value(documentSeries),
+       partyId = Value(partyId),
+       documentDate = Value(documentDate),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PurchaseDocumentLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? documentType,
+    Expression<String>? status,
+    Expression<String>? documentNumber,
+    Expression<String>? documentSeries,
+    Expression<String>? partyId,
+    Expression<bool>? isGstFormal,
+    Expression<String>? partyStateCode,
+    Expression<String>? subtotal,
+    Expression<String>? discountTotal,
+    Expression<String>? taxAmount,
+    Expression<String>? totalAmount,
+    Expression<String>? documentDate,
+    Expression<String>? convertedFromId,
+    Expression<String>? supplierInvoiceNumber,
+    Expression<String>? dueDate,
+    Expression<String>? notes,
+    Expression<String>? godownId,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (documentType != null) 'document_type': documentType,
+      if (status != null) 'status': status,
+      if (documentNumber != null) 'document_number': documentNumber,
+      if (documentSeries != null) 'document_series': documentSeries,
+      if (partyId != null) 'party_id': partyId,
+      if (isGstFormal != null) 'is_gst_formal': isGstFormal,
+      if (partyStateCode != null) 'party_state_code': partyStateCode,
+      if (subtotal != null) 'subtotal': subtotal,
+      if (discountTotal != null) 'discount_total': discountTotal,
+      if (taxAmount != null) 'tax_amount': taxAmount,
+      if (totalAmount != null) 'total_amount': totalAmount,
+      if (documentDate != null) 'document_date': documentDate,
+      if (convertedFromId != null) 'converted_from_id': convertedFromId,
+      if (supplierInvoiceNumber != null)
+        'supplier_invoice_number': supplierInvoiceNumber,
+      if (dueDate != null) 'due_date': dueDate,
+      if (notes != null) 'notes': notes,
+      if (godownId != null) 'godown_id': godownId,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PurchaseDocumentsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? documentType,
+    Value<String>? status,
+    Value<String?>? documentNumber,
+    Value<String>? documentSeries,
+    Value<String>? partyId,
+    Value<bool>? isGstFormal,
+    Value<String?>? partyStateCode,
+    Value<String>? subtotal,
+    Value<String>? discountTotal,
+    Value<String>? taxAmount,
+    Value<String>? totalAmount,
+    Value<String>? documentDate,
+    Value<String?>? convertedFromId,
+    Value<String?>? supplierInvoiceNumber,
+    Value<String?>? dueDate,
+    Value<String?>? notes,
+    Value<String?>? godownId,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return PurchaseDocumentsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      documentType: documentType ?? this.documentType,
+      status: status ?? this.status,
+      documentNumber: documentNumber ?? this.documentNumber,
+      documentSeries: documentSeries ?? this.documentSeries,
+      partyId: partyId ?? this.partyId,
+      isGstFormal: isGstFormal ?? this.isGstFormal,
+      partyStateCode: partyStateCode ?? this.partyStateCode,
+      subtotal: subtotal ?? this.subtotal,
+      discountTotal: discountTotal ?? this.discountTotal,
+      taxAmount: taxAmount ?? this.taxAmount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      documentDate: documentDate ?? this.documentDate,
+      convertedFromId: convertedFromId ?? this.convertedFromId,
+      supplierInvoiceNumber:
+          supplierInvoiceNumber ?? this.supplierInvoiceNumber,
+      dueDate: dueDate ?? this.dueDate,
+      notes: notes ?? this.notes,
+      godownId: godownId ?? this.godownId,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (documentType.present) {
+      map['document_type'] = Variable<String>(documentType.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (documentNumber.present) {
+      map['document_number'] = Variable<String>(documentNumber.value);
+    }
+    if (documentSeries.present) {
+      map['document_series'] = Variable<String>(documentSeries.value);
+    }
+    if (partyId.present) {
+      map['party_id'] = Variable<String>(partyId.value);
+    }
+    if (isGstFormal.present) {
+      map['is_gst_formal'] = Variable<bool>(isGstFormal.value);
+    }
+    if (partyStateCode.present) {
+      map['party_state_code'] = Variable<String>(partyStateCode.value);
+    }
+    if (subtotal.present) {
+      map['subtotal'] = Variable<String>(subtotal.value);
+    }
+    if (discountTotal.present) {
+      map['discount_total'] = Variable<String>(discountTotal.value);
+    }
+    if (taxAmount.present) {
+      map['tax_amount'] = Variable<String>(taxAmount.value);
+    }
+    if (totalAmount.present) {
+      map['total_amount'] = Variable<String>(totalAmount.value);
+    }
+    if (documentDate.present) {
+      map['document_date'] = Variable<String>(documentDate.value);
+    }
+    if (convertedFromId.present) {
+      map['converted_from_id'] = Variable<String>(convertedFromId.value);
+    }
+    if (supplierInvoiceNumber.present) {
+      map['supplier_invoice_number'] = Variable<String>(
+        supplierInvoiceNumber.value,
+      );
+    }
+    if (dueDate.present) {
+      map['due_date'] = Variable<String>(dueDate.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (godownId.present) {
+      map['godown_id'] = Variable<String>(godownId.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PurchaseDocumentsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('documentType: $documentType, ')
+          ..write('status: $status, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('documentSeries: $documentSeries, ')
+          ..write('partyId: $partyId, ')
+          ..write('isGstFormal: $isGstFormal, ')
+          ..write('partyStateCode: $partyStateCode, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('discountTotal: $discountTotal, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('documentDate: $documentDate, ')
+          ..write('convertedFromId: $convertedFromId, ')
+          ..write('supplierInvoiceNumber: $supplierInvoiceNumber, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('notes: $notes, ')
+          ..write('godownId: $godownId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PurchaseDocumentLinesLocalTable extends PurchaseDocumentLinesLocal
+    with
+        TableInfo<
+          $PurchaseDocumentLinesLocalTable,
+          PurchaseDocumentLineLocalData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PurchaseDocumentLinesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _purchaseDocumentIdMeta =
+      const VerificationMeta('purchaseDocumentId');
+  @override
+  late final GeneratedColumn<String> purchaseDocumentId =
+      GeneratedColumn<String>(
+        'purchase_document_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<String> quantity = GeneratedColumn<String>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitPriceMeta = const VerificationMeta(
+    'unitPrice',
+  );
+  @override
+  late final GeneratedColumn<String> unitPrice = GeneratedColumn<String>(
+    'unit_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _discountAmountMeta = const VerificationMeta(
+    'discountAmount',
+  );
+  @override
+  late final GeneratedColumn<String> discountAmount = GeneratedColumn<String>(
+    'discount_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _taxTypeMeta = const VerificationMeta(
+    'taxType',
+  );
+  @override
+  late final GeneratedColumn<String> taxType = GeneratedColumn<String>(
+    'tax_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _taxRateMeta = const VerificationMeta(
+    'taxRate',
+  );
+  @override
+  late final GeneratedColumn<String> taxRate = GeneratedColumn<String>(
+    'tax_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _cgstAmountMeta = const VerificationMeta(
+    'cgstAmount',
+  );
+  @override
+  late final GeneratedColumn<String> cgstAmount = GeneratedColumn<String>(
+    'cgst_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _sgstAmountMeta = const VerificationMeta(
+    'sgstAmount',
+  );
+  @override
+  late final GeneratedColumn<String> sgstAmount = GeneratedColumn<String>(
+    'sgst_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _igstAmountMeta = const VerificationMeta(
+    'igstAmount',
+  );
+  @override
+  late final GeneratedColumn<String> igstAmount = GeneratedColumn<String>(
+    'igst_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _lineTotalMeta = const VerificationMeta(
+    'lineTotal',
+  );
+  @override
+  late final GeneratedColumn<String> lineTotal = GeneratedColumn<String>(
+    'line_total',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    purchaseDocumentId,
+    itemId,
+    quantity,
+    unit,
+    unitPrice,
+    discountAmount,
+    taxType,
+    taxRate,
+    cgstAmount,
+    sgstAmount,
+    igstAmount,
+    lineTotal,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'purchase_document_lines_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PurchaseDocumentLineLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('purchase_document_id')) {
+      context.handle(
+        _purchaseDocumentIdMeta,
+        purchaseDocumentId.isAcceptableOrUnknown(
+          data['purchase_document_id']!,
+          _purchaseDocumentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_purchaseDocumentIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    if (data.containsKey('unit_price')) {
+      context.handle(
+        _unitPriceMeta,
+        unitPrice.isAcceptableOrUnknown(data['unit_price']!, _unitPriceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitPriceMeta);
+    }
+    if (data.containsKey('discount_amount')) {
+      context.handle(
+        _discountAmountMeta,
+        discountAmount.isAcceptableOrUnknown(
+          data['discount_amount']!,
+          _discountAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_type')) {
+      context.handle(
+        _taxTypeMeta,
+        taxType.isAcceptableOrUnknown(data['tax_type']!, _taxTypeMeta),
+      );
+    }
+    if (data.containsKey('tax_rate')) {
+      context.handle(
+        _taxRateMeta,
+        taxRate.isAcceptableOrUnknown(data['tax_rate']!, _taxRateMeta),
+      );
+    }
+    if (data.containsKey('cgst_amount')) {
+      context.handle(
+        _cgstAmountMeta,
+        cgstAmount.isAcceptableOrUnknown(data['cgst_amount']!, _cgstAmountMeta),
+      );
+    }
+    if (data.containsKey('sgst_amount')) {
+      context.handle(
+        _sgstAmountMeta,
+        sgstAmount.isAcceptableOrUnknown(data['sgst_amount']!, _sgstAmountMeta),
+      );
+    }
+    if (data.containsKey('igst_amount')) {
+      context.handle(
+        _igstAmountMeta,
+        igstAmount.isAcceptableOrUnknown(data['igst_amount']!, _igstAmountMeta),
+      );
+    }
+    if (data.containsKey('line_total')) {
+      context.handle(
+        _lineTotalMeta,
+        lineTotal.isAcceptableOrUnknown(data['line_total']!, _lineTotalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lineTotalMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PurchaseDocumentLineLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PurchaseDocumentLineLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      purchaseDocumentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purchase_document_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quantity'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      unitPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit_price'],
+      )!,
+      discountAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_amount'],
+      )!,
+      taxType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_type'],
+      )!,
+      taxRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_rate'],
+      )!,
+      cgstAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cgst_amount'],
+      )!,
+      sgstAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sgst_amount'],
+      )!,
+      igstAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}igst_amount'],
+      )!,
+      lineTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}line_total'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $PurchaseDocumentLinesLocalTable createAlias(String alias) {
+    return $PurchaseDocumentLinesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class PurchaseDocumentLineLocalData extends DataClass
+    implements Insertable<PurchaseDocumentLineLocalData> {
+  final String id;
+  final String businessId;
+  final String purchaseDocumentId;
+  final String itemId;
+  final String quantity;
+  final String unit;
+  final String unitPrice;
+  final String discountAmount;
+  final String taxType;
+  final String taxRate;
+  final String cgstAmount;
+  final String sgstAmount;
+  final String igstAmount;
+  final String lineTotal;
+  final int sortOrder;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const PurchaseDocumentLineLocalData({
+    required this.id,
+    required this.businessId,
+    required this.purchaseDocumentId,
+    required this.itemId,
+    required this.quantity,
+    required this.unit,
+    required this.unitPrice,
+    required this.discountAmount,
+    required this.taxType,
+    required this.taxRate,
+    required this.cgstAmount,
+    required this.sgstAmount,
+    required this.igstAmount,
+    required this.lineTotal,
+    required this.sortOrder,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['purchase_document_id'] = Variable<String>(purchaseDocumentId);
+    map['item_id'] = Variable<String>(itemId);
+    map['quantity'] = Variable<String>(quantity);
+    map['unit'] = Variable<String>(unit);
+    map['unit_price'] = Variable<String>(unitPrice);
+    map['discount_amount'] = Variable<String>(discountAmount);
+    map['tax_type'] = Variable<String>(taxType);
+    map['tax_rate'] = Variable<String>(taxRate);
+    map['cgst_amount'] = Variable<String>(cgstAmount);
+    map['sgst_amount'] = Variable<String>(sgstAmount);
+    map['igst_amount'] = Variable<String>(igstAmount);
+    map['line_total'] = Variable<String>(lineTotal);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  PurchaseDocumentLinesLocalCompanion toCompanion(bool nullToAbsent) {
+    return PurchaseDocumentLinesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      purchaseDocumentId: Value(purchaseDocumentId),
+      itemId: Value(itemId),
+      quantity: Value(quantity),
+      unit: Value(unit),
+      unitPrice: Value(unitPrice),
+      discountAmount: Value(discountAmount),
+      taxType: Value(taxType),
+      taxRate: Value(taxRate),
+      cgstAmount: Value(cgstAmount),
+      sgstAmount: Value(sgstAmount),
+      igstAmount: Value(igstAmount),
+      lineTotal: Value(lineTotal),
+      sortOrder: Value(sortOrder),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory PurchaseDocumentLineLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PurchaseDocumentLineLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      purchaseDocumentId: serializer.fromJson<String>(
+        json['purchaseDocumentId'],
+      ),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      quantity: serializer.fromJson<String>(json['quantity']),
+      unit: serializer.fromJson<String>(json['unit']),
+      unitPrice: serializer.fromJson<String>(json['unitPrice']),
+      discountAmount: serializer.fromJson<String>(json['discountAmount']),
+      taxType: serializer.fromJson<String>(json['taxType']),
+      taxRate: serializer.fromJson<String>(json['taxRate']),
+      cgstAmount: serializer.fromJson<String>(json['cgstAmount']),
+      sgstAmount: serializer.fromJson<String>(json['sgstAmount']),
+      igstAmount: serializer.fromJson<String>(json['igstAmount']),
+      lineTotal: serializer.fromJson<String>(json['lineTotal']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'purchaseDocumentId': serializer.toJson<String>(purchaseDocumentId),
+      'itemId': serializer.toJson<String>(itemId),
+      'quantity': serializer.toJson<String>(quantity),
+      'unit': serializer.toJson<String>(unit),
+      'unitPrice': serializer.toJson<String>(unitPrice),
+      'discountAmount': serializer.toJson<String>(discountAmount),
+      'taxType': serializer.toJson<String>(taxType),
+      'taxRate': serializer.toJson<String>(taxRate),
+      'cgstAmount': serializer.toJson<String>(cgstAmount),
+      'sgstAmount': serializer.toJson<String>(sgstAmount),
+      'igstAmount': serializer.toJson<String>(igstAmount),
+      'lineTotal': serializer.toJson<String>(lineTotal),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  PurchaseDocumentLineLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? purchaseDocumentId,
+    String? itemId,
+    String? quantity,
+    String? unit,
+    String? unitPrice,
+    String? discountAmount,
+    String? taxType,
+    String? taxRate,
+    String? cgstAmount,
+    String? sgstAmount,
+    String? igstAmount,
+    String? lineTotal,
+    int? sortOrder,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => PurchaseDocumentLineLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    purchaseDocumentId: purchaseDocumentId ?? this.purchaseDocumentId,
+    itemId: itemId ?? this.itemId,
+    quantity: quantity ?? this.quantity,
+    unit: unit ?? this.unit,
+    unitPrice: unitPrice ?? this.unitPrice,
+    discountAmount: discountAmount ?? this.discountAmount,
+    taxType: taxType ?? this.taxType,
+    taxRate: taxRate ?? this.taxRate,
+    cgstAmount: cgstAmount ?? this.cgstAmount,
+    sgstAmount: sgstAmount ?? this.sgstAmount,
+    igstAmount: igstAmount ?? this.igstAmount,
+    lineTotal: lineTotal ?? this.lineTotal,
+    sortOrder: sortOrder ?? this.sortOrder,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  PurchaseDocumentLineLocalData copyWithCompanion(
+    PurchaseDocumentLinesLocalCompanion data,
+  ) {
+    return PurchaseDocumentLineLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      purchaseDocumentId: data.purchaseDocumentId.present
+          ? data.purchaseDocumentId.value
+          : this.purchaseDocumentId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      discountAmount: data.discountAmount.present
+          ? data.discountAmount.value
+          : this.discountAmount,
+      taxType: data.taxType.present ? data.taxType.value : this.taxType,
+      taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
+      cgstAmount: data.cgstAmount.present
+          ? data.cgstAmount.value
+          : this.cgstAmount,
+      sgstAmount: data.sgstAmount.present
+          ? data.sgstAmount.value
+          : this.sgstAmount,
+      igstAmount: data.igstAmount.present
+          ? data.igstAmount.value
+          : this.igstAmount,
+      lineTotal: data.lineTotal.present ? data.lineTotal.value : this.lineTotal,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PurchaseDocumentLineLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('purchaseDocumentId: $purchaseDocumentId, ')
+          ..write('itemId: $itemId, ')
+          ..write('quantity: $quantity, ')
+          ..write('unit: $unit, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('taxType: $taxType, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('cgstAmount: $cgstAmount, ')
+          ..write('sgstAmount: $sgstAmount, ')
+          ..write('igstAmount: $igstAmount, ')
+          ..write('lineTotal: $lineTotal, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    purchaseDocumentId,
+    itemId,
+    quantity,
+    unit,
+    unitPrice,
+    discountAmount,
+    taxType,
+    taxRate,
+    cgstAmount,
+    sgstAmount,
+    igstAmount,
+    lineTotal,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PurchaseDocumentLineLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.purchaseDocumentId == this.purchaseDocumentId &&
+          other.itemId == this.itemId &&
+          other.quantity == this.quantity &&
+          other.unit == this.unit &&
+          other.unitPrice == this.unitPrice &&
+          other.discountAmount == this.discountAmount &&
+          other.taxType == this.taxType &&
+          other.taxRate == this.taxRate &&
+          other.cgstAmount == this.cgstAmount &&
+          other.sgstAmount == this.sgstAmount &&
+          other.igstAmount == this.igstAmount &&
+          other.lineTotal == this.lineTotal &&
+          other.sortOrder == this.sortOrder &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class PurchaseDocumentLinesLocalCompanion
+    extends UpdateCompanion<PurchaseDocumentLineLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> purchaseDocumentId;
+  final Value<String> itemId;
+  final Value<String> quantity;
+  final Value<String> unit;
+  final Value<String> unitPrice;
+  final Value<String> discountAmount;
+  final Value<String> taxType;
+  final Value<String> taxRate;
+  final Value<String> cgstAmount;
+  final Value<String> sgstAmount;
+  final Value<String> igstAmount;
+  final Value<String> lineTotal;
+  final Value<int> sortOrder;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const PurchaseDocumentLinesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.purchaseDocumentId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.unitPrice = const Value.absent(),
+    this.discountAmount = const Value.absent(),
+    this.taxType = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.cgstAmount = const Value.absent(),
+    this.sgstAmount = const Value.absent(),
+    this.igstAmount = const Value.absent(),
+    this.lineTotal = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PurchaseDocumentLinesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String purchaseDocumentId,
+    required String itemId,
+    required String quantity,
+    required String unit,
+    required String unitPrice,
+    this.discountAmount = const Value.absent(),
+    this.taxType = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.cgstAmount = const Value.absent(),
+    this.sgstAmount = const Value.absent(),
+    this.igstAmount = const Value.absent(),
+    required String lineTotal,
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       purchaseDocumentId = Value(purchaseDocumentId),
+       itemId = Value(itemId),
+       quantity = Value(quantity),
+       unit = Value(unit),
+       unitPrice = Value(unitPrice),
+       lineTotal = Value(lineTotal),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PurchaseDocumentLineLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? purchaseDocumentId,
+    Expression<String>? itemId,
+    Expression<String>? quantity,
+    Expression<String>? unit,
+    Expression<String>? unitPrice,
+    Expression<String>? discountAmount,
+    Expression<String>? taxType,
+    Expression<String>? taxRate,
+    Expression<String>? cgstAmount,
+    Expression<String>? sgstAmount,
+    Expression<String>? igstAmount,
+    Expression<String>? lineTotal,
+    Expression<int>? sortOrder,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (purchaseDocumentId != null)
+        'purchase_document_id': purchaseDocumentId,
+      if (itemId != null) 'item_id': itemId,
+      if (quantity != null) 'quantity': quantity,
+      if (unit != null) 'unit': unit,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (discountAmount != null) 'discount_amount': discountAmount,
+      if (taxType != null) 'tax_type': taxType,
+      if (taxRate != null) 'tax_rate': taxRate,
+      if (cgstAmount != null) 'cgst_amount': cgstAmount,
+      if (sgstAmount != null) 'sgst_amount': sgstAmount,
+      if (igstAmount != null) 'igst_amount': igstAmount,
+      if (lineTotal != null) 'line_total': lineTotal,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PurchaseDocumentLinesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? purchaseDocumentId,
+    Value<String>? itemId,
+    Value<String>? quantity,
+    Value<String>? unit,
+    Value<String>? unitPrice,
+    Value<String>? discountAmount,
+    Value<String>? taxType,
+    Value<String>? taxRate,
+    Value<String>? cgstAmount,
+    Value<String>? sgstAmount,
+    Value<String>? igstAmount,
+    Value<String>? lineTotal,
+    Value<int>? sortOrder,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return PurchaseDocumentLinesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      purchaseDocumentId: purchaseDocumentId ?? this.purchaseDocumentId,
+      itemId: itemId ?? this.itemId,
+      quantity: quantity ?? this.quantity,
+      unit: unit ?? this.unit,
+      unitPrice: unitPrice ?? this.unitPrice,
+      discountAmount: discountAmount ?? this.discountAmount,
+      taxType: taxType ?? this.taxType,
+      taxRate: taxRate ?? this.taxRate,
+      cgstAmount: cgstAmount ?? this.cgstAmount,
+      sgstAmount: sgstAmount ?? this.sgstAmount,
+      igstAmount: igstAmount ?? this.igstAmount,
+      lineTotal: lineTotal ?? this.lineTotal,
+      sortOrder: sortOrder ?? this.sortOrder,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (purchaseDocumentId.present) {
+      map['purchase_document_id'] = Variable<String>(purchaseDocumentId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<String>(quantity.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (unitPrice.present) {
+      map['unit_price'] = Variable<String>(unitPrice.value);
+    }
+    if (discountAmount.present) {
+      map['discount_amount'] = Variable<String>(discountAmount.value);
+    }
+    if (taxType.present) {
+      map['tax_type'] = Variable<String>(taxType.value);
+    }
+    if (taxRate.present) {
+      map['tax_rate'] = Variable<String>(taxRate.value);
+    }
+    if (cgstAmount.present) {
+      map['cgst_amount'] = Variable<String>(cgstAmount.value);
+    }
+    if (sgstAmount.present) {
+      map['sgst_amount'] = Variable<String>(sgstAmount.value);
+    }
+    if (igstAmount.present) {
+      map['igst_amount'] = Variable<String>(igstAmount.value);
+    }
+    if (lineTotal.present) {
+      map['line_total'] = Variable<String>(lineTotal.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PurchaseDocumentLinesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('purchaseDocumentId: $purchaseDocumentId, ')
+          ..write('itemId: $itemId, ')
+          ..write('quantity: $quantity, ')
+          ..write('unit: $unit, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('taxType: $taxType, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('cgstAmount: $cgstAmount, ')
+          ..write('sgstAmount: $sgstAmount, ')
+          ..write('igstAmount: $igstAmount, ')
+          ..write('lineTotal: $lineTotal, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LocalDocumentCountersTable extends LocalDocumentCounters
+    with TableInfo<$LocalDocumentCountersTable, LocalDocumentCounterData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalDocumentCountersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentSeriesMeta = const VerificationMeta(
+    'documentSeries',
+  );
+  @override
+  late final GeneratedColumn<String> documentSeries = GeneratedColumn<String>(
+    'document_series',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nextNumberMeta = const VerificationMeta(
+    'nextNumber',
+  );
+  @override
+  late final GeneratedColumn<int> nextNumber = GeneratedColumn<int>(
+    'next_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    businessId,
+    documentSeries,
+    nextNumber,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_document_counters';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocalDocumentCounterData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('document_series')) {
+      context.handle(
+        _documentSeriesMeta,
+        documentSeries.isAcceptableOrUnknown(
+          data['document_series']!,
+          _documentSeriesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentSeriesMeta);
+    }
+    if (data.containsKey('next_number')) {
+      context.handle(
+        _nextNumberMeta,
+        nextNumber.isAcceptableOrUnknown(data['next_number']!, _nextNumberMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {businessId, documentSeries};
+  @override
+  LocalDocumentCounterData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalDocumentCounterData(
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      documentSeries: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_series'],
+      )!,
+      nextNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_number'],
+      )!,
+    );
+  }
+
+  @override
+  $LocalDocumentCountersTable createAlias(String alias) {
+    return $LocalDocumentCountersTable(attachedDatabase, alias);
+  }
+}
+
+class LocalDocumentCounterData extends DataClass
+    implements Insertable<LocalDocumentCounterData> {
+  final String businessId;
+  final String documentSeries;
+  final int nextNumber;
+  const LocalDocumentCounterData({
+    required this.businessId,
+    required this.documentSeries,
+    required this.nextNumber,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['business_id'] = Variable<String>(businessId);
+    map['document_series'] = Variable<String>(documentSeries);
+    map['next_number'] = Variable<int>(nextNumber);
+    return map;
+  }
+
+  LocalDocumentCountersCompanion toCompanion(bool nullToAbsent) {
+    return LocalDocumentCountersCompanion(
+      businessId: Value(businessId),
+      documentSeries: Value(documentSeries),
+      nextNumber: Value(nextNumber),
+    );
+  }
+
+  factory LocalDocumentCounterData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalDocumentCounterData(
+      businessId: serializer.fromJson<String>(json['businessId']),
+      documentSeries: serializer.fromJson<String>(json['documentSeries']),
+      nextNumber: serializer.fromJson<int>(json['nextNumber']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'businessId': serializer.toJson<String>(businessId),
+      'documentSeries': serializer.toJson<String>(documentSeries),
+      'nextNumber': serializer.toJson<int>(nextNumber),
+    };
+  }
+
+  LocalDocumentCounterData copyWith({
+    String? businessId,
+    String? documentSeries,
+    int? nextNumber,
+  }) => LocalDocumentCounterData(
+    businessId: businessId ?? this.businessId,
+    documentSeries: documentSeries ?? this.documentSeries,
+    nextNumber: nextNumber ?? this.nextNumber,
+  );
+  LocalDocumentCounterData copyWithCompanion(
+    LocalDocumentCountersCompanion data,
+  ) {
+    return LocalDocumentCounterData(
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      documentSeries: data.documentSeries.present
+          ? data.documentSeries.value
+          : this.documentSeries,
+      nextNumber: data.nextNumber.present
+          ? data.nextNumber.value
+          : this.nextNumber,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalDocumentCounterData(')
+          ..write('businessId: $businessId, ')
+          ..write('documentSeries: $documentSeries, ')
+          ..write('nextNumber: $nextNumber')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(businessId, documentSeries, nextNumber);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalDocumentCounterData &&
+          other.businessId == this.businessId &&
+          other.documentSeries == this.documentSeries &&
+          other.nextNumber == this.nextNumber);
+}
+
+class LocalDocumentCountersCompanion
+    extends UpdateCompanion<LocalDocumentCounterData> {
+  final Value<String> businessId;
+  final Value<String> documentSeries;
+  final Value<int> nextNumber;
+  final Value<int> rowid;
+  const LocalDocumentCountersCompanion({
+    this.businessId = const Value.absent(),
+    this.documentSeries = const Value.absent(),
+    this.nextNumber = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalDocumentCountersCompanion.insert({
+    required String businessId,
+    required String documentSeries,
+    this.nextNumber = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : businessId = Value(businessId),
+       documentSeries = Value(documentSeries);
+  static Insertable<LocalDocumentCounterData> custom({
+    Expression<String>? businessId,
+    Expression<String>? documentSeries,
+    Expression<int>? nextNumber,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (businessId != null) 'business_id': businessId,
+      if (documentSeries != null) 'document_series': documentSeries,
+      if (nextNumber != null) 'next_number': nextNumber,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalDocumentCountersCompanion copyWith({
+    Value<String>? businessId,
+    Value<String>? documentSeries,
+    Value<int>? nextNumber,
+    Value<int>? rowid,
+  }) {
+    return LocalDocumentCountersCompanion(
+      businessId: businessId ?? this.businessId,
+      documentSeries: documentSeries ?? this.documentSeries,
+      nextNumber: nextNumber ?? this.nextNumber,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (documentSeries.present) {
+      map['document_series'] = Variable<String>(documentSeries.value);
+    }
+    if (nextNumber.present) {
+      map['next_number'] = Variable<int>(nextNumber.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalDocumentCountersCompanion(')
+          ..write('businessId: $businessId, ')
+          ..write('documentSeries: $documentSeries, ')
+          ..write('nextNumber: $nextNumber, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -14090,6 +19425,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GodownsLocalTable godownsLocal = $GodownsLocalTable(this);
   late final $BusinessSettingsLocalTable businessSettingsLocal =
       $BusinessSettingsLocalTable(this);
+  late final $SalesDocumentsLocalTable salesDocumentsLocal =
+      $SalesDocumentsLocalTable(this);
+  late final $SalesDocumentLinesLocalTable salesDocumentLinesLocal =
+      $SalesDocumentLinesLocalTable(this);
+  late final $PurchaseDocumentsLocalTable purchaseDocumentsLocal =
+      $PurchaseDocumentsLocalTable(this);
+  late final $PurchaseDocumentLinesLocalTable purchaseDocumentLinesLocal =
+      $PurchaseDocumentLinesLocalTable(this);
+  late final $LocalDocumentCountersTable localDocumentCounters =
+      $LocalDocumentCountersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -14111,6 +19456,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     taxRatesLocal,
     godownsLocal,
     businessSettingsLocal,
+    salesDocumentsLocal,
+    salesDocumentLinesLocal,
+    purchaseDocumentsLocal,
+    purchaseDocumentLinesLocal,
+    localDocumentCounters,
   ];
 }
 
@@ -20878,6 +26228,2491 @@ typedef $$BusinessSettingsLocalTableProcessedTableManager =
       BusinessSettingsTableData,
       PrefetchHooks Function()
     >;
+typedef $$SalesDocumentsLocalTableCreateCompanionBuilder =
+    SalesDocumentsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String documentType,
+      Value<String> status,
+      Value<String?> documentNumber,
+      required String documentSeries,
+      Value<String?> partyId,
+      Value<bool> isGstFormal,
+      Value<String?> partyStateCode,
+      Value<String> subtotal,
+      Value<String> discountTotal,
+      Value<String> taxAmount,
+      Value<String> totalAmount,
+      required String documentDate,
+      Value<String?> convertedFromId,
+      Value<String?> notes,
+      Value<String?> godownId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$SalesDocumentsLocalTableUpdateCompanionBuilder =
+    SalesDocumentsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> documentType,
+      Value<String> status,
+      Value<String?> documentNumber,
+      Value<String> documentSeries,
+      Value<String?> partyId,
+      Value<bool> isGstFormal,
+      Value<String?> partyStateCode,
+      Value<String> subtotal,
+      Value<String> discountTotal,
+      Value<String> taxAmount,
+      Value<String> totalAmount,
+      Value<String> documentDate,
+      Value<String?> convertedFromId,
+      Value<String?> notes,
+      Value<String?> godownId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$SalesDocumentsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $SalesDocumentsLocalTable> {
+  $$SalesDocumentsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isGstFormal => $composableBuilder(
+    column: $table.isGstFormal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyStateCode => $composableBuilder(
+    column: $table.partyStateCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountTotal => $composableBuilder(
+    column: $table.discountTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentDate => $composableBuilder(
+    column: $table.documentDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get convertedFromId => $composableBuilder(
+    column: $table.convertedFromId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SalesDocumentsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $SalesDocumentsLocalTable> {
+  $$SalesDocumentsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isGstFormal => $composableBuilder(
+    column: $table.isGstFormal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyStateCode => $composableBuilder(
+    column: $table.partyStateCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountTotal => $composableBuilder(
+    column: $table.discountTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentDate => $composableBuilder(
+    column: $table.documentDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get convertedFromId => $composableBuilder(
+    column: $table.convertedFromId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SalesDocumentsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SalesDocumentsLocalTable> {
+  $$SalesDocumentsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get partyId =>
+      $composableBuilder(column: $table.partyId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isGstFormal => $composableBuilder(
+    column: $table.isGstFormal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get partyStateCode => $composableBuilder(
+    column: $table.partyStateCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subtotal =>
+      $composableBuilder(column: $table.subtotal, builder: (column) => column);
+
+  GeneratedColumn<String> get discountTotal => $composableBuilder(
+    column: $table.discountTotal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxAmount =>
+      $composableBuilder(column: $table.taxAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentDate => $composableBuilder(
+    column: $table.documentDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get convertedFromId => $composableBuilder(
+    column: $table.convertedFromId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get godownId =>
+      $composableBuilder(column: $table.godownId, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$SalesDocumentsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SalesDocumentsLocalTable,
+          SalesDocumentLocalData,
+          $$SalesDocumentsLocalTableFilterComposer,
+          $$SalesDocumentsLocalTableOrderingComposer,
+          $$SalesDocumentsLocalTableAnnotationComposer,
+          $$SalesDocumentsLocalTableCreateCompanionBuilder,
+          $$SalesDocumentsLocalTableUpdateCompanionBuilder,
+          (
+            SalesDocumentLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $SalesDocumentsLocalTable,
+              SalesDocumentLocalData
+            >,
+          ),
+          SalesDocumentLocalData,
+          PrefetchHooks Function()
+        > {
+  $$SalesDocumentsLocalTableTableManager(
+    _$AppDatabase db,
+    $SalesDocumentsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SalesDocumentsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SalesDocumentsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SalesDocumentsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> documentType = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> documentNumber = const Value.absent(),
+                Value<String> documentSeries = const Value.absent(),
+                Value<String?> partyId = const Value.absent(),
+                Value<bool> isGstFormal = const Value.absent(),
+                Value<String?> partyStateCode = const Value.absent(),
+                Value<String> subtotal = const Value.absent(),
+                Value<String> discountTotal = const Value.absent(),
+                Value<String> taxAmount = const Value.absent(),
+                Value<String> totalAmount = const Value.absent(),
+                Value<String> documentDate = const Value.absent(),
+                Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> godownId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesDocumentsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                documentType: documentType,
+                status: status,
+                documentNumber: documentNumber,
+                documentSeries: documentSeries,
+                partyId: partyId,
+                isGstFormal: isGstFormal,
+                partyStateCode: partyStateCode,
+                subtotal: subtotal,
+                discountTotal: discountTotal,
+                taxAmount: taxAmount,
+                totalAmount: totalAmount,
+                documentDate: documentDate,
+                convertedFromId: convertedFromId,
+                notes: notes,
+                godownId: godownId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String documentType,
+                Value<String> status = const Value.absent(),
+                Value<String?> documentNumber = const Value.absent(),
+                required String documentSeries,
+                Value<String?> partyId = const Value.absent(),
+                Value<bool> isGstFormal = const Value.absent(),
+                Value<String?> partyStateCode = const Value.absent(),
+                Value<String> subtotal = const Value.absent(),
+                Value<String> discountTotal = const Value.absent(),
+                Value<String> taxAmount = const Value.absent(),
+                Value<String> totalAmount = const Value.absent(),
+                required String documentDate,
+                Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> godownId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesDocumentsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                documentType: documentType,
+                status: status,
+                documentNumber: documentNumber,
+                documentSeries: documentSeries,
+                partyId: partyId,
+                isGstFormal: isGstFormal,
+                partyStateCode: partyStateCode,
+                subtotal: subtotal,
+                discountTotal: discountTotal,
+                taxAmount: taxAmount,
+                totalAmount: totalAmount,
+                documentDate: documentDate,
+                convertedFromId: convertedFromId,
+                notes: notes,
+                godownId: godownId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SalesDocumentsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SalesDocumentsLocalTable,
+      SalesDocumentLocalData,
+      $$SalesDocumentsLocalTableFilterComposer,
+      $$SalesDocumentsLocalTableOrderingComposer,
+      $$SalesDocumentsLocalTableAnnotationComposer,
+      $$SalesDocumentsLocalTableCreateCompanionBuilder,
+      $$SalesDocumentsLocalTableUpdateCompanionBuilder,
+      (
+        SalesDocumentLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $SalesDocumentsLocalTable,
+          SalesDocumentLocalData
+        >,
+      ),
+      SalesDocumentLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$SalesDocumentLinesLocalTableCreateCompanionBuilder =
+    SalesDocumentLinesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String salesDocumentId,
+      required String itemId,
+      required String quantity,
+      required String unit,
+      required String unitPrice,
+      Value<String?> marketPrice,
+      Value<String> discountAmount,
+      Value<String> taxType,
+      Value<String> taxRate,
+      Value<String> cgstAmount,
+      Value<String> sgstAmount,
+      Value<String> igstAmount,
+      required String lineTotal,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$SalesDocumentLinesLocalTableUpdateCompanionBuilder =
+    SalesDocumentLinesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> salesDocumentId,
+      Value<String> itemId,
+      Value<String> quantity,
+      Value<String> unit,
+      Value<String> unitPrice,
+      Value<String?> marketPrice,
+      Value<String> discountAmount,
+      Value<String> taxType,
+      Value<String> taxRate,
+      Value<String> cgstAmount,
+      Value<String> sgstAmount,
+      Value<String> igstAmount,
+      Value<String> lineTotal,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$SalesDocumentLinesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $SalesDocumentLinesLocalTable> {
+  $$SalesDocumentLinesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salesDocumentId => $composableBuilder(
+    column: $table.salesDocumentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get marketPrice => $composableBuilder(
+    column: $table.marketPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountAmount => $composableBuilder(
+    column: $table.discountAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxType => $composableBuilder(
+    column: $table.taxType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cgstAmount => $composableBuilder(
+    column: $table.cgstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sgstAmount => $composableBuilder(
+    column: $table.sgstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get igstAmount => $composableBuilder(
+    column: $table.igstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lineTotal => $composableBuilder(
+    column: $table.lineTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SalesDocumentLinesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $SalesDocumentLinesLocalTable> {
+  $$SalesDocumentLinesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salesDocumentId => $composableBuilder(
+    column: $table.salesDocumentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get marketPrice => $composableBuilder(
+    column: $table.marketPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountAmount => $composableBuilder(
+    column: $table.discountAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxType => $composableBuilder(
+    column: $table.taxType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cgstAmount => $composableBuilder(
+    column: $table.cgstAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sgstAmount => $composableBuilder(
+    column: $table.sgstAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get igstAmount => $composableBuilder(
+    column: $table.igstAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lineTotal => $composableBuilder(
+    column: $table.lineTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SalesDocumentLinesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SalesDocumentLinesLocalTable> {
+  $$SalesDocumentLinesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get salesDocumentId => $composableBuilder(
+    column: $table.salesDocumentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get unitPrice =>
+      $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<String> get marketPrice => $composableBuilder(
+    column: $table.marketPrice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discountAmount => $composableBuilder(
+    column: $table.discountAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxType =>
+      $composableBuilder(column: $table.taxType, builder: (column) => column);
+
+  GeneratedColumn<String> get taxRate =>
+      $composableBuilder(column: $table.taxRate, builder: (column) => column);
+
+  GeneratedColumn<String> get cgstAmount => $composableBuilder(
+    column: $table.cgstAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sgstAmount => $composableBuilder(
+    column: $table.sgstAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get igstAmount => $composableBuilder(
+    column: $table.igstAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lineTotal =>
+      $composableBuilder(column: $table.lineTotal, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$SalesDocumentLinesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SalesDocumentLinesLocalTable,
+          SalesDocumentLineLocalData,
+          $$SalesDocumentLinesLocalTableFilterComposer,
+          $$SalesDocumentLinesLocalTableOrderingComposer,
+          $$SalesDocumentLinesLocalTableAnnotationComposer,
+          $$SalesDocumentLinesLocalTableCreateCompanionBuilder,
+          $$SalesDocumentLinesLocalTableUpdateCompanionBuilder,
+          (
+            SalesDocumentLineLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $SalesDocumentLinesLocalTable,
+              SalesDocumentLineLocalData
+            >,
+          ),
+          SalesDocumentLineLocalData,
+          PrefetchHooks Function()
+        > {
+  $$SalesDocumentLinesLocalTableTableManager(
+    _$AppDatabase db,
+    $SalesDocumentLinesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SalesDocumentLinesLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SalesDocumentLinesLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SalesDocumentLinesLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> salesDocumentId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> quantity = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<String> unitPrice = const Value.absent(),
+                Value<String?> marketPrice = const Value.absent(),
+                Value<String> discountAmount = const Value.absent(),
+                Value<String> taxType = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<String> cgstAmount = const Value.absent(),
+                Value<String> sgstAmount = const Value.absent(),
+                Value<String> igstAmount = const Value.absent(),
+                Value<String> lineTotal = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesDocumentLinesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                salesDocumentId: salesDocumentId,
+                itemId: itemId,
+                quantity: quantity,
+                unit: unit,
+                unitPrice: unitPrice,
+                marketPrice: marketPrice,
+                discountAmount: discountAmount,
+                taxType: taxType,
+                taxRate: taxRate,
+                cgstAmount: cgstAmount,
+                sgstAmount: sgstAmount,
+                igstAmount: igstAmount,
+                lineTotal: lineTotal,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String salesDocumentId,
+                required String itemId,
+                required String quantity,
+                required String unit,
+                required String unitPrice,
+                Value<String?> marketPrice = const Value.absent(),
+                Value<String> discountAmount = const Value.absent(),
+                Value<String> taxType = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<String> cgstAmount = const Value.absent(),
+                Value<String> sgstAmount = const Value.absent(),
+                Value<String> igstAmount = const Value.absent(),
+                required String lineTotal,
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesDocumentLinesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                salesDocumentId: salesDocumentId,
+                itemId: itemId,
+                quantity: quantity,
+                unit: unit,
+                unitPrice: unitPrice,
+                marketPrice: marketPrice,
+                discountAmount: discountAmount,
+                taxType: taxType,
+                taxRate: taxRate,
+                cgstAmount: cgstAmount,
+                sgstAmount: sgstAmount,
+                igstAmount: igstAmount,
+                lineTotal: lineTotal,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SalesDocumentLinesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SalesDocumentLinesLocalTable,
+      SalesDocumentLineLocalData,
+      $$SalesDocumentLinesLocalTableFilterComposer,
+      $$SalesDocumentLinesLocalTableOrderingComposer,
+      $$SalesDocumentLinesLocalTableAnnotationComposer,
+      $$SalesDocumentLinesLocalTableCreateCompanionBuilder,
+      $$SalesDocumentLinesLocalTableUpdateCompanionBuilder,
+      (
+        SalesDocumentLineLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $SalesDocumentLinesLocalTable,
+          SalesDocumentLineLocalData
+        >,
+      ),
+      SalesDocumentLineLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$PurchaseDocumentsLocalTableCreateCompanionBuilder =
+    PurchaseDocumentsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String documentType,
+      Value<String> status,
+      Value<String?> documentNumber,
+      required String documentSeries,
+      required String partyId,
+      Value<bool> isGstFormal,
+      Value<String?> partyStateCode,
+      Value<String> subtotal,
+      Value<String> discountTotal,
+      Value<String> taxAmount,
+      Value<String> totalAmount,
+      required String documentDate,
+      Value<String?> convertedFromId,
+      Value<String?> supplierInvoiceNumber,
+      Value<String?> dueDate,
+      Value<String?> notes,
+      Value<String?> godownId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$PurchaseDocumentsLocalTableUpdateCompanionBuilder =
+    PurchaseDocumentsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> documentType,
+      Value<String> status,
+      Value<String?> documentNumber,
+      Value<String> documentSeries,
+      Value<String> partyId,
+      Value<bool> isGstFormal,
+      Value<String?> partyStateCode,
+      Value<String> subtotal,
+      Value<String> discountTotal,
+      Value<String> taxAmount,
+      Value<String> totalAmount,
+      Value<String> documentDate,
+      Value<String?> convertedFromId,
+      Value<String?> supplierInvoiceNumber,
+      Value<String?> dueDate,
+      Value<String?> notes,
+      Value<String?> godownId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$PurchaseDocumentsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $PurchaseDocumentsLocalTable> {
+  $$PurchaseDocumentsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isGstFormal => $composableBuilder(
+    column: $table.isGstFormal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyStateCode => $composableBuilder(
+    column: $table.partyStateCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountTotal => $composableBuilder(
+    column: $table.discountTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentDate => $composableBuilder(
+    column: $table.documentDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get convertedFromId => $composableBuilder(
+    column: $table.convertedFromId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplierInvoiceNumber => $composableBuilder(
+    column: $table.supplierInvoiceNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PurchaseDocumentsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $PurchaseDocumentsLocalTable> {
+  $$PurchaseDocumentsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isGstFormal => $composableBuilder(
+    column: $table.isGstFormal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyStateCode => $composableBuilder(
+    column: $table.partyStateCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subtotal => $composableBuilder(
+    column: $table.subtotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountTotal => $composableBuilder(
+    column: $table.discountTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentDate => $composableBuilder(
+    column: $table.documentDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get convertedFromId => $composableBuilder(
+    column: $table.convertedFromId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get supplierInvoiceNumber => $composableBuilder(
+    column: $table.supplierInvoiceNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PurchaseDocumentsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PurchaseDocumentsLocalTable> {
+  $$PurchaseDocumentsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get partyId =>
+      $composableBuilder(column: $table.partyId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isGstFormal => $composableBuilder(
+    column: $table.isGstFormal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get partyStateCode => $composableBuilder(
+    column: $table.partyStateCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subtotal =>
+      $composableBuilder(column: $table.subtotal, builder: (column) => column);
+
+  GeneratedColumn<String> get discountTotal => $composableBuilder(
+    column: $table.discountTotal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxAmount =>
+      $composableBuilder(column: $table.taxAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentDate => $composableBuilder(
+    column: $table.documentDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get convertedFromId => $composableBuilder(
+    column: $table.convertedFromId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get supplierInvoiceNumber => $composableBuilder(
+    column: $table.supplierInvoiceNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dueDate =>
+      $composableBuilder(column: $table.dueDate, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get godownId =>
+      $composableBuilder(column: $table.godownId, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$PurchaseDocumentsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PurchaseDocumentsLocalTable,
+          PurchaseDocumentLocalData,
+          $$PurchaseDocumentsLocalTableFilterComposer,
+          $$PurchaseDocumentsLocalTableOrderingComposer,
+          $$PurchaseDocumentsLocalTableAnnotationComposer,
+          $$PurchaseDocumentsLocalTableCreateCompanionBuilder,
+          $$PurchaseDocumentsLocalTableUpdateCompanionBuilder,
+          (
+            PurchaseDocumentLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $PurchaseDocumentsLocalTable,
+              PurchaseDocumentLocalData
+            >,
+          ),
+          PurchaseDocumentLocalData,
+          PrefetchHooks Function()
+        > {
+  $$PurchaseDocumentsLocalTableTableManager(
+    _$AppDatabase db,
+    $PurchaseDocumentsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PurchaseDocumentsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PurchaseDocumentsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PurchaseDocumentsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> documentType = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> documentNumber = const Value.absent(),
+                Value<String> documentSeries = const Value.absent(),
+                Value<String> partyId = const Value.absent(),
+                Value<bool> isGstFormal = const Value.absent(),
+                Value<String?> partyStateCode = const Value.absent(),
+                Value<String> subtotal = const Value.absent(),
+                Value<String> discountTotal = const Value.absent(),
+                Value<String> taxAmount = const Value.absent(),
+                Value<String> totalAmount = const Value.absent(),
+                Value<String> documentDate = const Value.absent(),
+                Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> supplierInvoiceNumber = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> godownId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PurchaseDocumentsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                documentType: documentType,
+                status: status,
+                documentNumber: documentNumber,
+                documentSeries: documentSeries,
+                partyId: partyId,
+                isGstFormal: isGstFormal,
+                partyStateCode: partyStateCode,
+                subtotal: subtotal,
+                discountTotal: discountTotal,
+                taxAmount: taxAmount,
+                totalAmount: totalAmount,
+                documentDate: documentDate,
+                convertedFromId: convertedFromId,
+                supplierInvoiceNumber: supplierInvoiceNumber,
+                dueDate: dueDate,
+                notes: notes,
+                godownId: godownId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String documentType,
+                Value<String> status = const Value.absent(),
+                Value<String?> documentNumber = const Value.absent(),
+                required String documentSeries,
+                required String partyId,
+                Value<bool> isGstFormal = const Value.absent(),
+                Value<String?> partyStateCode = const Value.absent(),
+                Value<String> subtotal = const Value.absent(),
+                Value<String> discountTotal = const Value.absent(),
+                Value<String> taxAmount = const Value.absent(),
+                Value<String> totalAmount = const Value.absent(),
+                required String documentDate,
+                Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> supplierInvoiceNumber = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> godownId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PurchaseDocumentsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                documentType: documentType,
+                status: status,
+                documentNumber: documentNumber,
+                documentSeries: documentSeries,
+                partyId: partyId,
+                isGstFormal: isGstFormal,
+                partyStateCode: partyStateCode,
+                subtotal: subtotal,
+                discountTotal: discountTotal,
+                taxAmount: taxAmount,
+                totalAmount: totalAmount,
+                documentDate: documentDate,
+                convertedFromId: convertedFromId,
+                supplierInvoiceNumber: supplierInvoiceNumber,
+                dueDate: dueDate,
+                notes: notes,
+                godownId: godownId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PurchaseDocumentsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PurchaseDocumentsLocalTable,
+      PurchaseDocumentLocalData,
+      $$PurchaseDocumentsLocalTableFilterComposer,
+      $$PurchaseDocumentsLocalTableOrderingComposer,
+      $$PurchaseDocumentsLocalTableAnnotationComposer,
+      $$PurchaseDocumentsLocalTableCreateCompanionBuilder,
+      $$PurchaseDocumentsLocalTableUpdateCompanionBuilder,
+      (
+        PurchaseDocumentLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $PurchaseDocumentsLocalTable,
+          PurchaseDocumentLocalData
+        >,
+      ),
+      PurchaseDocumentLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$PurchaseDocumentLinesLocalTableCreateCompanionBuilder =
+    PurchaseDocumentLinesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String purchaseDocumentId,
+      required String itemId,
+      required String quantity,
+      required String unit,
+      required String unitPrice,
+      Value<String> discountAmount,
+      Value<String> taxType,
+      Value<String> taxRate,
+      Value<String> cgstAmount,
+      Value<String> sgstAmount,
+      Value<String> igstAmount,
+      required String lineTotal,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$PurchaseDocumentLinesLocalTableUpdateCompanionBuilder =
+    PurchaseDocumentLinesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> purchaseDocumentId,
+      Value<String> itemId,
+      Value<String> quantity,
+      Value<String> unit,
+      Value<String> unitPrice,
+      Value<String> discountAmount,
+      Value<String> taxType,
+      Value<String> taxRate,
+      Value<String> cgstAmount,
+      Value<String> sgstAmount,
+      Value<String> igstAmount,
+      Value<String> lineTotal,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$PurchaseDocumentLinesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $PurchaseDocumentLinesLocalTable> {
+  $$PurchaseDocumentLinesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purchaseDocumentId => $composableBuilder(
+    column: $table.purchaseDocumentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountAmount => $composableBuilder(
+    column: $table.discountAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxType => $composableBuilder(
+    column: $table.taxType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cgstAmount => $composableBuilder(
+    column: $table.cgstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sgstAmount => $composableBuilder(
+    column: $table.sgstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get igstAmount => $composableBuilder(
+    column: $table.igstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lineTotal => $composableBuilder(
+    column: $table.lineTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PurchaseDocumentLinesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $PurchaseDocumentLinesLocalTable> {
+  $$PurchaseDocumentLinesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purchaseDocumentId => $composableBuilder(
+    column: $table.purchaseDocumentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unitPrice => $composableBuilder(
+    column: $table.unitPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountAmount => $composableBuilder(
+    column: $table.discountAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxType => $composableBuilder(
+    column: $table.taxType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cgstAmount => $composableBuilder(
+    column: $table.cgstAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sgstAmount => $composableBuilder(
+    column: $table.sgstAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get igstAmount => $composableBuilder(
+    column: $table.igstAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lineTotal => $composableBuilder(
+    column: $table.lineTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PurchaseDocumentLinesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PurchaseDocumentLinesLocalTable> {
+  $$PurchaseDocumentLinesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get purchaseDocumentId => $composableBuilder(
+    column: $table.purchaseDocumentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get unitPrice =>
+      $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<String> get discountAmount => $composableBuilder(
+    column: $table.discountAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxType =>
+      $composableBuilder(column: $table.taxType, builder: (column) => column);
+
+  GeneratedColumn<String> get taxRate =>
+      $composableBuilder(column: $table.taxRate, builder: (column) => column);
+
+  GeneratedColumn<String> get cgstAmount => $composableBuilder(
+    column: $table.cgstAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sgstAmount => $composableBuilder(
+    column: $table.sgstAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get igstAmount => $composableBuilder(
+    column: $table.igstAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lineTotal =>
+      $composableBuilder(column: $table.lineTotal, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$PurchaseDocumentLinesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PurchaseDocumentLinesLocalTable,
+          PurchaseDocumentLineLocalData,
+          $$PurchaseDocumentLinesLocalTableFilterComposer,
+          $$PurchaseDocumentLinesLocalTableOrderingComposer,
+          $$PurchaseDocumentLinesLocalTableAnnotationComposer,
+          $$PurchaseDocumentLinesLocalTableCreateCompanionBuilder,
+          $$PurchaseDocumentLinesLocalTableUpdateCompanionBuilder,
+          (
+            PurchaseDocumentLineLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $PurchaseDocumentLinesLocalTable,
+              PurchaseDocumentLineLocalData
+            >,
+          ),
+          PurchaseDocumentLineLocalData,
+          PrefetchHooks Function()
+        > {
+  $$PurchaseDocumentLinesLocalTableTableManager(
+    _$AppDatabase db,
+    $PurchaseDocumentLinesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PurchaseDocumentLinesLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PurchaseDocumentLinesLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PurchaseDocumentLinesLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> purchaseDocumentId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> quantity = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<String> unitPrice = const Value.absent(),
+                Value<String> discountAmount = const Value.absent(),
+                Value<String> taxType = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<String> cgstAmount = const Value.absent(),
+                Value<String> sgstAmount = const Value.absent(),
+                Value<String> igstAmount = const Value.absent(),
+                Value<String> lineTotal = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PurchaseDocumentLinesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                purchaseDocumentId: purchaseDocumentId,
+                itemId: itemId,
+                quantity: quantity,
+                unit: unit,
+                unitPrice: unitPrice,
+                discountAmount: discountAmount,
+                taxType: taxType,
+                taxRate: taxRate,
+                cgstAmount: cgstAmount,
+                sgstAmount: sgstAmount,
+                igstAmount: igstAmount,
+                lineTotal: lineTotal,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String purchaseDocumentId,
+                required String itemId,
+                required String quantity,
+                required String unit,
+                required String unitPrice,
+                Value<String> discountAmount = const Value.absent(),
+                Value<String> taxType = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<String> cgstAmount = const Value.absent(),
+                Value<String> sgstAmount = const Value.absent(),
+                Value<String> igstAmount = const Value.absent(),
+                required String lineTotal,
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PurchaseDocumentLinesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                purchaseDocumentId: purchaseDocumentId,
+                itemId: itemId,
+                quantity: quantity,
+                unit: unit,
+                unitPrice: unitPrice,
+                discountAmount: discountAmount,
+                taxType: taxType,
+                taxRate: taxRate,
+                cgstAmount: cgstAmount,
+                sgstAmount: sgstAmount,
+                igstAmount: igstAmount,
+                lineTotal: lineTotal,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PurchaseDocumentLinesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PurchaseDocumentLinesLocalTable,
+      PurchaseDocumentLineLocalData,
+      $$PurchaseDocumentLinesLocalTableFilterComposer,
+      $$PurchaseDocumentLinesLocalTableOrderingComposer,
+      $$PurchaseDocumentLinesLocalTableAnnotationComposer,
+      $$PurchaseDocumentLinesLocalTableCreateCompanionBuilder,
+      $$PurchaseDocumentLinesLocalTableUpdateCompanionBuilder,
+      (
+        PurchaseDocumentLineLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $PurchaseDocumentLinesLocalTable,
+          PurchaseDocumentLineLocalData
+        >,
+      ),
+      PurchaseDocumentLineLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$LocalDocumentCountersTableCreateCompanionBuilder =
+    LocalDocumentCountersCompanion Function({
+      required String businessId,
+      required String documentSeries,
+      Value<int> nextNumber,
+      Value<int> rowid,
+    });
+typedef $$LocalDocumentCountersTableUpdateCompanionBuilder =
+    LocalDocumentCountersCompanion Function({
+      Value<String> businessId,
+      Value<String> documentSeries,
+      Value<int> nextNumber,
+      Value<int> rowid,
+    });
+
+class $$LocalDocumentCountersTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalDocumentCountersTable> {
+  $$LocalDocumentCountersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextNumber => $composableBuilder(
+    column: $table.nextNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocalDocumentCountersTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalDocumentCountersTable> {
+  $$LocalDocumentCountersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextNumber => $composableBuilder(
+    column: $table.nextNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocalDocumentCountersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalDocumentCountersTable> {
+  $$LocalDocumentCountersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentSeries => $composableBuilder(
+    column: $table.documentSeries,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get nextNumber => $composableBuilder(
+    column: $table.nextNumber,
+    builder: (column) => column,
+  );
+}
+
+class $$LocalDocumentCountersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocalDocumentCountersTable,
+          LocalDocumentCounterData,
+          $$LocalDocumentCountersTableFilterComposer,
+          $$LocalDocumentCountersTableOrderingComposer,
+          $$LocalDocumentCountersTableAnnotationComposer,
+          $$LocalDocumentCountersTableCreateCompanionBuilder,
+          $$LocalDocumentCountersTableUpdateCompanionBuilder,
+          (
+            LocalDocumentCounterData,
+            BaseReferences<
+              _$AppDatabase,
+              $LocalDocumentCountersTable,
+              LocalDocumentCounterData
+            >,
+          ),
+          LocalDocumentCounterData,
+          PrefetchHooks Function()
+        > {
+  $$LocalDocumentCountersTableTableManager(
+    _$AppDatabase db,
+    $LocalDocumentCountersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalDocumentCountersTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$LocalDocumentCountersTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$LocalDocumentCountersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> businessId = const Value.absent(),
+                Value<String> documentSeries = const Value.absent(),
+                Value<int> nextNumber = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalDocumentCountersCompanion(
+                businessId: businessId,
+                documentSeries: documentSeries,
+                nextNumber: nextNumber,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String businessId,
+                required String documentSeries,
+                Value<int> nextNumber = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalDocumentCountersCompanion.insert(
+                businessId: businessId,
+                documentSeries: documentSeries,
+                nextNumber: nextNumber,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocalDocumentCountersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocalDocumentCountersTable,
+      LocalDocumentCounterData,
+      $$LocalDocumentCountersTableFilterComposer,
+      $$LocalDocumentCountersTableOrderingComposer,
+      $$LocalDocumentCountersTableAnnotationComposer,
+      $$LocalDocumentCountersTableCreateCompanionBuilder,
+      $$LocalDocumentCountersTableUpdateCompanionBuilder,
+      (
+        LocalDocumentCounterData,
+        BaseReferences<
+          _$AppDatabase,
+          $LocalDocumentCountersTable,
+          LocalDocumentCounterData
+        >,
+      ),
+      LocalDocumentCounterData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -20914,4 +28749,24 @@ class $AppDatabaseManager {
       $$GodownsLocalTableTableManager(_db, _db.godownsLocal);
   $$BusinessSettingsLocalTableTableManager get businessSettingsLocal =>
       $$BusinessSettingsLocalTableTableManager(_db, _db.businessSettingsLocal);
+  $$SalesDocumentsLocalTableTableManager get salesDocumentsLocal =>
+      $$SalesDocumentsLocalTableTableManager(_db, _db.salesDocumentsLocal);
+  $$SalesDocumentLinesLocalTableTableManager get salesDocumentLinesLocal =>
+      $$SalesDocumentLinesLocalTableTableManager(
+        _db,
+        _db.salesDocumentLinesLocal,
+      );
+  $$PurchaseDocumentsLocalTableTableManager get purchaseDocumentsLocal =>
+      $$PurchaseDocumentsLocalTableTableManager(
+        _db,
+        _db.purchaseDocumentsLocal,
+      );
+  $$PurchaseDocumentLinesLocalTableTableManager
+  get purchaseDocumentLinesLocal =>
+      $$PurchaseDocumentLinesLocalTableTableManager(
+        _db,
+        _db.purchaseDocumentLinesLocal,
+      );
+  $$LocalDocumentCountersTableTableManager get localDocumentCounters =>
+      $$LocalDocumentCountersTableTableManager(_db, _db.localDocumentCounters);
 }

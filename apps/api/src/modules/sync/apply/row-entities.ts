@@ -4,11 +4,21 @@ import {
   unitDefinitions,
 } from '../../../db/schema/inventory/tables';
 import {
+  purchaseDocumentLines,
+  purchaseDocuments,
+} from '../../../db/schema/purchases/tables';
+import {
+  salesDocumentLines,
+  salesDocuments,
+} from '../../../db/schema/sales/tables';
+import {
   businessSettings,
   taxRates,
 } from '../../../db/schema/settings/tables';
+import { guardDraftDocumentRow } from './document-row-guards';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
 
 export type SyncedRowBase = {
   id: string;
@@ -19,6 +29,8 @@ export type SyncedRowBase = {
   isDeleted: boolean;
   deviceId: string | null;
   createdAt: Date;
+  status?: string;
+  documentType?: string;
 };
 
 export type RowEntityDef = {
@@ -35,6 +47,10 @@ export type RowEntityDef = {
   allowedColumns: readonly string[];
   toPayload: (row: Record<string, unknown>) => Record<string, unknown>;
   fromPayload: (payload: Record<string, unknown>) => Record<string, unknown>;
+  beforeApply?: (
+    input: RowMutationInput,
+    existing: SyncedRowBase | null,
+  ) => ApplyOutcome | null;
 };
 
 function defineEntity(input: {
@@ -163,6 +179,93 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'creditLimitAction',
       'pricingTierLabels',
       'defaultInvoiceTaxRate',
+    ],
+  }),
+  sales_documents: {
+    ...defineEntity({
+      entityType: 'sales_documents',
+      table: salesDocuments,
+      allowedColumns: [
+        'documentType',
+        'status',
+        'documentNumber',
+        'documentSeries',
+        'partyId',
+        'isGstFormal',
+        'partyStateCode',
+        'subtotal',
+        'discountTotal',
+        'taxAmount',
+        'totalAmount',
+        'documentDate',
+        'convertedFromId',
+        'notes',
+      ],
+    }),
+    beforeApply: guardDraftDocumentRow('tax_invoice'),
+  },
+  sales_document_lines: defineEntity({
+    entityType: 'sales_document_lines',
+    table: salesDocumentLines,
+    allowedColumns: [
+      'salesDocumentId',
+      'itemId',
+      'quantity',
+      'unit',
+      'unitPrice',
+      'marketPrice',
+      'discountAmount',
+      'taxType',
+      'taxRate',
+      'cgstAmount',
+      'sgstAmount',
+      'igstAmount',
+      'lineTotal',
+      'sortOrder',
+    ],
+  }),
+  purchase_documents: {
+    ...defineEntity({
+      entityType: 'purchase_documents',
+      table: purchaseDocuments,
+      allowedColumns: [
+        'documentType',
+        'status',
+        'documentNumber',
+        'documentSeries',
+        'partyId',
+        'isGstFormal',
+        'partyStateCode',
+        'subtotal',
+        'discountTotal',
+        'taxAmount',
+        'totalAmount',
+        'documentDate',
+        'convertedFromId',
+        'supplierInvoiceNumber',
+        'dueDate',
+        'notes',
+      ],
+    }),
+    beforeApply: guardDraftDocumentRow('purchase_bill'),
+  },
+  purchase_document_lines: defineEntity({
+    entityType: 'purchase_document_lines',
+    table: purchaseDocumentLines,
+    allowedColumns: [
+      'purchaseDocumentId',
+      'itemId',
+      'quantity',
+      'unit',
+      'unitPrice',
+      'discountAmount',
+      'taxType',
+      'taxRate',
+      'cgstAmount',
+      'sgstAmount',
+      'igstAmount',
+      'lineTotal',
+      'sortOrder',
     ],
   }),
 };

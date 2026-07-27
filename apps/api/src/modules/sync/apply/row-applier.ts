@@ -2,54 +2,22 @@ import { and, asc, eq, gt, or } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../db/client';
 import type {
+  ApplyOutcome,
+  RowMutationInput,
+} from './sync-apply.types';
+import type {
   RowEntityDef,
   SyncedRowBase,
 } from './row-entities';
 import { getRowEntity, listRowEntities } from './row-entities';
 
-export type RowMutationInput = {
-  mutationId: string;
-  entityType: string;
-  entityId: string;
-  operation: 'create' | 'update' | 'delete';
-  baseSyncVersion: number;
-  payload: Record<string, unknown>;
-  deviceId: string;
-  businessId: string;
-};
-
-export type AcceptedRowResult = {
-  mutation_id: string;
-  kind: 'row';
-  entity_type: string;
-  entity_id: string;
-  sync_version: number;
-  server_updated_at: string;
-};
-
-export type ConflictRowResult = {
-  mutation_id: string;
-  code: 'CONFLICT';
-  entity_type: string;
-  entity_id: string;
-  incoming_sync_version: number;
-  server_sync_version: number;
-  server_payload: Record<string, unknown> | null;
-  server_updated_at: string;
-  suggested_resolution: 'retry_with_server_version';
-  conflict_id: string;
-};
-
-export type FailedRowResult = {
-  mutation_id: string;
-  code: string;
-  message: string;
-};
-
-export type ApplyOutcome =
-  | { status: 'accepted'; result: AcceptedRowResult }
-  | { status: 'conflict'; result: ConflictRowResult }
-  | { status: 'error'; result: FailedRowResult };
+export type {
+  AcceptedRowResult,
+  ApplyOutcome,
+  ConflictRowResult,
+  FailedRowResult,
+  RowMutationInput,
+} from './sync-apply.types';
 
 export type PullChange = {
   entity_type: string;
@@ -83,6 +51,10 @@ export class RowApplier {
     }
 
     const existing = await this.findRow(definition, input.businessId, input.entityId);
+    if (definition.beforeApply) {
+      const guardOutcome = definition.beforeApply(input, existing);
+      if (guardOutcome) return guardOutcome;
+    }
 
     switch (input.operation) {
       case 'create':

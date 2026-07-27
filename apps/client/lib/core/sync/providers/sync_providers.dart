@@ -16,6 +16,8 @@ import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart';
+import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
 import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,6 +82,8 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     taxRateSync: TaxRateSync(db),
     godownSync: GodownSync(db),
     businessSettingsSync: BusinessSettingsSync(db),
+    salesDocumentSync: SalesDocumentSync(db),
+    purchaseDocumentSync: PurchaseDocumentSync(db),
   );
 });
 

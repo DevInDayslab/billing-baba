@@ -15,6 +15,8 @@ import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart';
+import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
 import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
 import 'package:dio/dio.dart';
@@ -39,6 +41,8 @@ class SyncCoordinator {
     this._taxRateSync,
     this._godownSync,
     this._businessSettingsSync,
+    this._salesDocumentSync,
+    this._purchaseDocumentSync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
     this.partyEntityType = 'parties',
@@ -47,6 +51,10 @@ class SyncCoordinator {
     this.taxRateEntityType = 'tax_rates',
     this.godownEntityType = 'godowns',
     this.businessSettingsEntityType = 'business_settings',
+    this.salesDocumentsEntityType = 'sales_documents',
+    this.salesDocumentLinesEntityType = 'sales_document_lines',
+    this.purchaseDocumentsEntityType = 'purchase_documents',
+    this.purchaseDocumentLinesEntityType = 'purchase_document_lines',
   })  : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
@@ -61,6 +69,8 @@ class SyncCoordinator {
   final TaxRateSync? _taxRateSync;
   final GodownSync? _godownSync;
   final BusinessSettingsSync? _businessSettingsSync;
+  final SalesDocumentSync? _salesDocumentSync;
+  final PurchaseDocumentSync? _purchaseDocumentSync;
   final Uuid _uuid;
   final String categoryEntityType;
   final String partyEntityType;
@@ -69,11 +79,17 @@ class SyncCoordinator {
   final String taxRateEntityType;
   final String godownEntityType;
   final String businessSettingsEntityType;
+  final String salesDocumentsEntityType;
+  final String salesDocumentLinesEntityType;
+  final String purchaseDocumentsEntityType;
+  final String purchaseDocumentLinesEntityType;
 
   String get _pullEntityTypes =>
       '$categoryEntityType,$partyEntityType,$itemEntityType,'
       '$unitEntityType,$taxRateEntityType,$godownEntityType,'
-      '$businessSettingsEntityType';
+      '$businessSettingsEntityType,$salesDocumentsEntityType,'
+      '$salesDocumentLinesEntityType,$purchaseDocumentsEntityType,'
+      '$purchaseDocumentLinesEntityType';
 
   bool _isRowEntity(String? type) =>
       type == categoryEntityType ||
@@ -82,7 +98,11 @@ class SyncCoordinator {
       type == unitEntityType ||
       type == taxRateEntityType ||
       type == godownEntityType ||
-      type == businessSettingsEntityType;
+      type == businessSettingsEntityType ||
+      type == salesDocumentsEntityType ||
+      type == salesDocumentLinesEntityType ||
+      type == purchaseDocumentsEntityType ||
+      type == purchaseDocumentLinesEntityType;
 
   bool _busy = false;
 
@@ -569,6 +589,32 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'sales_documents':
+      case 'sales_document_lines':
+        await _salesDocumentSync?.applyChange(
+          businessId: businessId,
+          entityType: entityType,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'purchase_documents':
+      case 'purchase_document_lines':
+        await _purchaseDocumentSync?.applyChange(
+          businessId: businessId,
+          entityType: entityType,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       default:
         // Unknown entity — ignore until that entity ships.
         break;
@@ -627,6 +673,24 @@ class SyncCoordinator {
         );
       case 'business_settings':
         await _businessSettingsSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'sales_documents':
+      case 'sales_document_lines':
+        await _salesDocumentSync?.updateAckMeta(
+          entityType: entityType,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'purchase_documents':
+      case 'purchase_document_lines':
+        await _purchaseDocumentSync?.updateAckMeta(
+          entityType: entityType,
           entityId: entityId,
           syncVersion: syncVersion,
           updatedAt: updatedAt,
