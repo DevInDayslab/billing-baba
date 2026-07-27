@@ -21,6 +21,26 @@ class BackupDatabasePaths {
 }
 
 class BillingBabaBackupManifest {
+
+  factory BillingBabaBackupManifest.fromJson(Map<String, dynamic> json) {
+    final checksumsRaw = json['checksums'];
+    return BillingBabaBackupManifest(
+      version: json['version'] as int? ?? 0,
+      createdAt: json['created_at'] as String? ?? '',
+      schemaVersion: json['schema_version'] as int? ?? 0,
+      businessId: json['business_id'] as String? ?? '',
+      appVersion: json['app_version'] as String? ?? '',
+      checksums: checksumsRaw is Map
+          ? checksumsRaw.map(
+              (key, value) => MapEntry('$key', '$value'),
+            )
+          : const {},
+      tablesIncluded: (json['tables_included'] as List<dynamic>?)
+              ?.map((e) => '$e')
+              .toList() ??
+          kBibaTablesIncluded,
+    );
+  }
   const BillingBabaBackupManifest({
     required this.version,
     required this.createdAt,
@@ -50,26 +70,6 @@ class BillingBabaBackupManifest {
         'tables_included': tablesIncluded,
       };
 
-  factory BillingBabaBackupManifest.fromJson(Map<String, dynamic> json) {
-    final checksumsRaw = json['checksums'];
-    return BillingBabaBackupManifest(
-      version: json['version'] as int? ?? 0,
-      createdAt: json['created_at'] as String? ?? '',
-      schemaVersion: json['schema_version'] as int? ?? 0,
-      businessId: json['business_id'] as String? ?? '',
-      appVersion: json['app_version'] as String? ?? '',
-      checksums: checksumsRaw is Map
-          ? checksumsRaw.map(
-              (key, value) => MapEntry('$key', '$value'),
-            )
-          : const {},
-      tablesIncluded: (json['tables_included'] as List<dynamic>?)
-              ?.map((e) => '$e')
-              .toList() ??
-          kBibaTablesIncluded,
-    );
-  }
-
   static BillingBabaBackupManifest parse(String source) {
     final decoded = jsonDecode(source);
     if (decoded is! Map<String, dynamic>) {
@@ -80,6 +80,15 @@ class BillingBabaBackupManifest {
 }
 
 class BackupSyncMetadata {
+
+  factory BackupSyncMetadata.fromJson(Map<String, dynamic> json) {
+    return BackupSyncMetadata(
+      pullCursor: json['pull_cursor'] as String?,
+      bootstrappedAt: json['bootstrapped_at'] as String?,
+      localSchemaVersion: json['local_schema_version'] as int?,
+      lastServerSchemaVersion: json['last_server_schema_version'] as int?,
+    );
+  }
   const BackupSyncMetadata({
     this.pullCursor,
     this.bootstrappedAt,
@@ -100,13 +109,4 @@ class BackupSyncMetadata {
         if (lastServerSchemaVersion != null)
           'last_server_schema_version': lastServerSchemaVersion,
       };
-
-  factory BackupSyncMetadata.fromJson(Map<String, dynamic> json) {
-    return BackupSyncMetadata(
-      pullCursor: json['pull_cursor'] as String?,
-      bootstrappedAt: json['bootstrapped_at'] as String?,
-      localSchemaVersion: json['local_schema_version'] as int?,
-      lastServerSchemaVersion: json['last_server_schema_version'] as int?,
-    );
-  }
 }

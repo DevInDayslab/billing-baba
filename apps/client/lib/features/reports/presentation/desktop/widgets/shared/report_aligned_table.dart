@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_table_widgets.dart'
     show ReportTableHeaderRow;
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 
 /// Fixed or flexible column used to keep headers and data rows aligned.

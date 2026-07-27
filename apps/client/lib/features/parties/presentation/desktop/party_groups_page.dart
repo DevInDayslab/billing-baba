@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
@@ -12,6 +11,7 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/party
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_group_list_panel.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,7 +1,3 @@
-import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
-import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -15,6 +11,10 @@ import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

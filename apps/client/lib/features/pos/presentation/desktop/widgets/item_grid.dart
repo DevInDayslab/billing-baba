@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
@@ -7,6 +6,7 @@ import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/item_card.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
 import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

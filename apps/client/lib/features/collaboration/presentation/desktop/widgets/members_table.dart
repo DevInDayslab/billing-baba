@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_error_mapper.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
@@ -13,6 +12,7 @@ import 'package:billing_baba/features/collaboration/presentation/desktop/widgets
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/role_badge.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/role_select_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

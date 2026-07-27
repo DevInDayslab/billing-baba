@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/shared/media/image_display_context.dart';
-import 'package:billing_baba/shared/media/pick_media_image.dart';
-import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
@@ -13,6 +10,9 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/ite
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/pending_item_image.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/pick_media_image.dart';
+import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

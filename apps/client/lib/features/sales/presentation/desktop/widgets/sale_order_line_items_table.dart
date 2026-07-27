@@ -1,4 +1,3 @@
-import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/sales/application/sale_order_form_provider.dart';
@@ -10,6 +9,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fi
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_item_serial_no_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_items_table_layout.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

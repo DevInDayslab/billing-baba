@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_error_mapper.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
@@ -11,6 +10,7 @@ import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/permission_matrix_table.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/role_select_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

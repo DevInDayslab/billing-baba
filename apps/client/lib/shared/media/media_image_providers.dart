@@ -1,6 +1,6 @@
-import 'package:billing_baba/shared/media/image_variant.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/shared/media/image_variant.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/src/providers/future_provider.dart';
 

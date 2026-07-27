@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
@@ -8,6 +7,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/item_image_gallery_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';

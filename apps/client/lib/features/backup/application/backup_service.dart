@@ -30,13 +30,12 @@ Future<BackupService> backupService(Ref ref) async {
 
 class BackupService {
   BackupService({
-    required Ref ref,
+    required this._ref,
     required this.database,
     required this.storage,
     required this.metadata,
     BackupDatabasePaths? paths,
-  })  : _ref = ref,
-        _paths = paths ?? BackupDatabasePaths();
+  })  : _paths = paths ?? BackupDatabasePaths();
 
   final Ref _ref;
   final AppDatabase database;

@@ -1,8 +1,5 @@
-import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/share_menu_button.dart';
-import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/sales/application/add_sale_fa_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_tabs_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/add_sale_fa_footer.dart';
@@ -15,6 +12,9 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_ge
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_page_title_bar.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
+import 'package:billing_baba/shared/widgets/share_menu_button.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _cardBorder = Color(0xFFE0E0E0);

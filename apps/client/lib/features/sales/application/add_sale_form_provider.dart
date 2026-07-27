@@ -1,12 +1,6 @@
 import 'dart:async';
 
-import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/shared/documents/document_line_sync.dart';
-import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
-import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
-import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/hidden_ledger/application/hidden_ledger_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
@@ -29,6 +23,12 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_sync.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

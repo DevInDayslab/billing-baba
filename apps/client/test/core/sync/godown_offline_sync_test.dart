@@ -4,7 +4,6 @@ import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/core/sync/engine/sync_coordinator.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
-import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';

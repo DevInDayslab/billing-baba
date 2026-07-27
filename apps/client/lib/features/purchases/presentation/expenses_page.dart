@@ -1,6 +1,6 @@
-import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/expenses_page.dart';
 import 'package:billing_baba/features/purchases/presentation/mobile/expenses_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class ExpensesPage extends StatelessWidget {

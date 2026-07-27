@@ -1,6 +1,6 @@
-import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/mobile/deals_screen.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class DealsScreen extends StatelessWidget {

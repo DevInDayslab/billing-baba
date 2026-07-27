@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_settings_list_tile.dart';
 import 'package:billing_baba/features/settings/application/settings_nav_catalog.dart';
 import 'package:billing_baba/features/settings/models/settings_nav_item.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

@@ -1,13 +1,13 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/utils/date_time_utils.dart';
-import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
-import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
-import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_movement_indicator.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/utils/date_time_utils.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

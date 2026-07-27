@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/database/database.dart' show AppDatabase;
+
 /// Billing Baba `.biba` backup format version.
 const kBibaFormatVersion = 1;
 

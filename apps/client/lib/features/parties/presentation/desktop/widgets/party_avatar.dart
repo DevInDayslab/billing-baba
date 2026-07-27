@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/features/business/utils/business_avatar_color.dart';
 import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

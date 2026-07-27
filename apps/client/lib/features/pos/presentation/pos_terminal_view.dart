@@ -1,6 +1,6 @@
-import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/pos_terminal_view.dart';
 import 'package:billing_baba/features/pos/presentation/mobile/pos_terminal_view.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class PosTerminalView extends StatelessWidget {

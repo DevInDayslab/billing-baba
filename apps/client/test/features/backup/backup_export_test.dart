@@ -37,7 +37,7 @@ void main() {
     db = AppDatabase(NativeDatabase(dbFile));
 
     await db.customStatement(
-      "INSERT INTO parties_local (id, business_id, name, party_type, created_at, updated_at, sync_version, is_deleted) "
+      'INSERT INTO parties_local (id, business_id, name, party_type, created_at, updated_at, sync_version, is_deleted) '
       "VALUES ('party-1', 'biz-backup-1', 'Test Party', 'customer', '2026-07-27T00:00:00.000Z', '2026-07-27T00:00:00.000Z', 0, 0)",
     );
   });

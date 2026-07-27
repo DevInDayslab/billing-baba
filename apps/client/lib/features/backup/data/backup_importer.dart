@@ -35,16 +35,13 @@ class BackupRestoreResult {
 /// Validates and restores a `.biba` archive into the local Drift database.
 class BackupImporter {
   BackupImporter({
-    required StorageService storage,
+    required this._storage,
     required SyncMetadataStore metadata,
     BackupDatabasePaths? paths,
-    Future<void> Function()? onBeforeDatabaseReplace,
-    Future<void> Function(AppDatabase database)? onDatabaseReopened,
-  })  : _storage = storage,
-        _metadata = metadata,
-        _paths = paths ?? BackupDatabasePaths(),
-        _onBeforeDatabaseReplace = onBeforeDatabaseReplace,
-        _onDatabaseReopened = onDatabaseReopened;
+    this._onBeforeDatabaseReplace,
+    this._onDatabaseReopened,
+  })  : _metadata = metadata,
+        _paths = paths ?? BackupDatabasePaths();
 
   final StorageService _storage;
   final SyncMetadataStore _metadata;

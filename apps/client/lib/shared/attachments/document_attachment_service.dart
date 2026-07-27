@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:billing_baba/shared/attachments/document_attachment_repository.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class DocumentAttachmentService {

@@ -114,7 +114,7 @@ void main() {
         tamperedArchive.addFile(file);
       }
     }
-    final tampered = Uint8List.fromList(ZipEncoder().encode(tamperedArchive)!);
+    final tampered = Uint8List.fromList(ZipEncoder().encode(tamperedArchive));
 
     final importer = BackupImporter(
       storage: storage,

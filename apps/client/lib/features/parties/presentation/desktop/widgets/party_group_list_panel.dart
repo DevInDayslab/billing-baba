@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_table_row.dart';
@@ -9,6 +8,7 @@ import 'package:billing_baba/features/parties/application/parties_selection_prov
 import 'package:billing_baba/features/parties/application/party_group_providers.dart';
 import 'package:billing_baba/features/parties/models/party_group_summary.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';

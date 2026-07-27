@@ -28,13 +28,11 @@ class BackupExportResult {
 /// Builds a `.biba` ZIP archive from the local Drift database and sync metadata.
 class BackupExporter {
   BackupExporter({
-    required AppDatabase database,
+    required this._database,
     required StorageService storage,
-    required SyncMetadataStore metadata,
+    required this._metadata,
     BackupDatabasePaths? paths,
-  })  : _database = database,
-        _storage = storage,
-        _metadata = metadata,
+  })  : _storage = storage,
         _paths = paths ?? BackupDatabasePaths();
 
   final AppDatabase _database;
@@ -140,8 +138,8 @@ class BackupExporter {
         ),
       );
 
-    final zipBytes = Uint8List.fromList(ZipEncoder().encode(archive)!);
-    final safeBusiness = businessId.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '');
+    final zipBytes = Uint8List.fromList(ZipEncoder().encode(archive));
+    final safeBusiness = businessId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '');
     final date = createdAt.split('T').first;
     return BackupExportResult(
       bytes: zipBytes,

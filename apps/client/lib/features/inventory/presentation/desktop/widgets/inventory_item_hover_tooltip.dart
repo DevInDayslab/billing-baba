@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/application/item_images_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';

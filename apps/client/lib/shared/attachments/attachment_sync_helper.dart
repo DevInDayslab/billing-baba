@@ -1,5 +1,5 @@
-import 'package:billing_baba/shared/attachments/document_attachment_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_service.dart';
 import 'package:flutter/foundation.dart';
 
 /// Uploads local-only attachments after a transaction receives an ID.

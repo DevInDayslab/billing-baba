@@ -1,4 +1,3 @@
-import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_simulator.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
@@ -10,6 +9,7 @@ import 'package:billing_baba/features/collaboration/domain/models/member_status.
 import 'package:billing_baba/features/collaboration/domain/models/permission_preset.dart';
 import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:billing_baba/features/collaboration/domain/models/sync_status.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 
 class CollaborationService {
   CollaborationService(this._repository);

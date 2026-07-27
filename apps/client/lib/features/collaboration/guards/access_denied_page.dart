@@ -1,6 +1,6 @@
-import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/access_denied_page.dart';
 import 'package:billing_baba/features/collaboration/presentation/mobile/access_denied_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class AccessDeniedPage extends StatelessWidget {

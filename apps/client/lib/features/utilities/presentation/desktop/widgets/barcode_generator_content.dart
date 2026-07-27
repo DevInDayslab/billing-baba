@@ -1,7 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/utils/output_error_mapper.dart';
-import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';
@@ -14,6 +12,8 @@ import 'package:billing_baba/features/utilities/application/barcode_label_pdf_bu
 import 'package:billing_baba/features/utilities/models/barcode_label_entry.dart';
 import 'package:billing_baba/features/utilities/presentation/desktop/widgets/barcode_label_preview.dart';
 import 'package:billing_baba/features/utilities/presentation/desktop/widgets/utilities_page_title_bar.dart';
+import 'package:billing_baba/shared/utils/output_error_mapper.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

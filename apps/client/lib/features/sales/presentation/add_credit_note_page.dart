@@ -1,6 +1,6 @@
-import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/add_credit_note_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class AddCreditNotePage extends StatelessWidget {
