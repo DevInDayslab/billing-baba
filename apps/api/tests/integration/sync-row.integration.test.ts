@@ -314,4 +314,153 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
     },
     INTEGRATION_TIMEOUT_MS,
   );
+
+  test(
+    'parties create → pull → conflict → duplicate replay',
+    async () => {
+      const partyId = randomUUID();
+      const mutationCreate = randomUUID();
+      const batch1 = randomUUID();
+
+      const createPush = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: batch1,
+          mutations: [
+            {
+              mutation_id: mutationCreate,
+              kind: 'row',
+              entity_type: 'parties',
+              entity_id: partyId,
+              operation: 'create',
+              base_sync_version: 0,
+              payload: {
+                name: `Sync Party ${suffix}`,
+                mobile: `9${suffix.slice(0, 9).padEnd(9, '0')}`,
+                party_type: 'customer',
+                pricing_tier: 'tier_1',
+                credit_limit: '0',
+                opening_balance: '0',
+                is_active: true,
+              },
+              client_updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      expect(createPush.statusCode).toBe(200);
+      const createBody = createPush.json() as {
+        data: {
+          accepted: Array<{ sync_version: number; entity_id: string }>;
+          conflicts: unknown[];
+          errors: unknown[];
+        };
+      };
+      expect(createBody.data.errors).toEqual([]);
+      expect(createBody.data.conflicts).toEqual([]);
+      expect(createBody.data.accepted).toHaveLength(1);
+      expect(createBody.data.accepted[0]?.sync_version).toBe(1);
+      expect(createBody.data.accepted[0]?.entity_id).toBe(partyId);
+
+      const pullCursor = encodeCursor({
+        t: new Date(Date.now() - 60_000).toISOString(),
+        i: ZERO_UUID,
+      });
+      const pull1 = await app.inject({
+        method: 'GET',
+        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(pullCursor)}&entity_types=parties&limit=200`,
+        headers: syncHeaders(token, deviceId),
+      });
+      expect(pull1.statusCode).toBe(200);
+      const pull1Body = pull1.json() as {
+        data: {
+          changes: Array<{
+            entity_id: string;
+            sync_version: number;
+            is_deleted: boolean;
+            payload: Record<string, unknown> | null;
+          }>;
+        };
+      };
+      const found = pull1Body.data.changes.find((c) => c.entity_id === partyId);
+      expect(found).toBeTruthy();
+      expect(found?.sync_version).toBe(1);
+      expect(found?.is_deleted).toBe(false);
+      expect(found?.payload?.name).toBe(`Sync Party ${suffix}`);
+
+      const mutationUpdate = randomUUID();
+      const conflictPush = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: randomUUID(),
+          mutations: [
+            {
+              mutation_id: mutationUpdate,
+              kind: 'row',
+              entity_type: 'parties',
+              entity_id: partyId,
+              operation: 'update',
+              base_sync_version: 0,
+              payload: {
+                name: 'Should Conflict',
+                party_type: 'customer',
+                pricing_tier: 'tier_1',
+                credit_limit: '0',
+                opening_balance: '0',
+                is_active: true,
+              },
+              client_updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      expect(conflictPush.statusCode).toBe(200);
+      const conflictBody = conflictPush.json() as {
+        data: { conflicts: Array<{ mutation_id: string }>; accepted: unknown[] };
+      };
+      expect(conflictBody.data.accepted).toEqual([]);
+      expect(conflictBody.data.conflicts).toHaveLength(1);
+      expect(conflictBody.data.conflicts[0]?.mutation_id).toBe(mutationUpdate);
+
+      const replay = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: randomUUID(),
+          mutations: [
+            {
+              mutation_id: mutationCreate,
+              kind: 'row',
+              entity_type: 'parties',
+              entity_id: partyId,
+              operation: 'create',
+              base_sync_version: 0,
+              payload: { name: 'should not re-apply', party_type: 'customer' },
+              client_updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      expect(replay.statusCode).toBe(200);
+      const replayBody = replay.json() as {
+        data: {
+          replayed: Array<{ mutation_id: string; idempotent_replay: boolean }>;
+          accepted: unknown[];
+        };
+      };
+      expect(replayBody.data.accepted).toEqual([]);
+      expect(replayBody.data.replayed).toHaveLength(1);
+      expect(replayBody.data.replayed[0]?.mutation_id).toBe(mutationCreate);
+      expect(replayBody.data.replayed[0]?.idempotent_replay).toBe(true);
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
 });

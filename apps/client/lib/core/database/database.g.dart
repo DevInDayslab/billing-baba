@@ -7892,6 +7892,1585 @@ class CategoriesLocalCompanion extends UpdateCompanion<CategoryTableData> {
   }
 }
 
+class $PartiesLocalTable extends PartiesLocal
+    with TableInfo<$PartiesLocalTable, PartyTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PartiesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _legalNameMeta = const VerificationMeta(
+    'legalName',
+  );
+  @override
+  late final GeneratedColumn<String> legalName = GeneratedColumn<String>(
+    'legal_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _aliasMeta = const VerificationMeta('alias');
+  @override
+  late final GeneratedColumn<String> alias = GeneratedColumn<String>(
+    'alias',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _mobileMeta = const VerificationMeta('mobile');
+  @override
+  late final GeneratedColumn<String> mobile = GeneratedColumn<String>(
+    'mobile',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partyGroupMeta = const VerificationMeta(
+    'partyGroup',
+  );
+  @override
+  late final GeneratedColumn<String> partyGroup = GeneratedColumn<String>(
+    'party_group',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _areaCodeMeta = const VerificationMeta(
+    'areaCode',
+  );
+  @override
+  late final GeneratedColumn<String> areaCode = GeneratedColumn<String>(
+    'area_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partyTypeMeta = const VerificationMeta(
+    'partyType',
+  );
+  @override
+  late final GeneratedColumn<String> partyType = GeneratedColumn<String>(
+    'party_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('customer'),
+  );
+  static const VerificationMeta _partyCategoryMeta = const VerificationMeta(
+    'partyCategory',
+  );
+  @override
+  late final GeneratedColumn<String> partyCategory = GeneratedColumn<String>(
+    'party_category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pricingTierMeta = const VerificationMeta(
+    'pricingTier',
+  );
+  @override
+  late final GeneratedColumn<String> pricingTier = GeneratedColumn<String>(
+    'pricing_tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('tier_1'),
+  );
+  static const VerificationMeta _gstinMeta = const VerificationMeta('gstin');
+  @override
+  late final GeneratedColumn<String> gstin = GeneratedColumn<String>(
+    'gstin',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stateCodeMeta = const VerificationMeta(
+    'stateCode',
+  );
+  @override
+  late final GeneratedColumn<String> stateCode = GeneratedColumn<String>(
+    'state_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _areaIdMeta = const VerificationMeta('areaId');
+  @override
+  late final GeneratedColumn<String> areaId = GeneratedColumn<String>(
+    'area_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _creditLimitMeta = const VerificationMeta(
+    'creditLimit',
+  );
+  @override
+  late final GeneratedColumn<String> creditLimit = GeneratedColumn<String>(
+    'credit_limit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _openingBalanceMeta = const VerificationMeta(
+    'openingBalance',
+  );
+  @override
+  late final GeneratedColumn<String> openingBalance = GeneratedColumn<String>(
+    'opening_balance',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _hiddenLedgerBalanceMeta =
+      const VerificationMeta('hiddenLedgerBalance');
+  @override
+  late final GeneratedColumn<String> hiddenLedgerBalance =
+      GeneratedColumn<String>(
+        'hidden_ledger_balance',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('0'),
+      );
+  static const VerificationMeta _profileImageUrlMeta = const VerificationMeta(
+    'profileImageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> profileImageUrl = GeneratedColumn<String>(
+    'profile_image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _profileMediaAssetIdMeta =
+      const VerificationMeta('profileMediaAssetId');
+  @override
+  late final GeneratedColumn<String> profileMediaAssetId =
+      GeneratedColumn<String>(
+        'profile_media_asset_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _connectedSinceMeta = const VerificationMeta(
+    'connectedSince',
+  );
+  @override
+  late final GeneratedColumn<String> connectedSince = GeneratedColumn<String>(
+    'connected_since',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    legalName,
+    alias,
+    mobile,
+    email,
+    partyGroup,
+    areaCode,
+    partyType,
+    partyCategory,
+    pricingTier,
+    gstin,
+    stateCode,
+    areaId,
+    creditLimit,
+    openingBalance,
+    hiddenLedgerBalance,
+    profileImageUrl,
+    profileMediaAssetId,
+    connectedSince,
+    notes,
+    isActive,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'parties_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PartyTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('legal_name')) {
+      context.handle(
+        _legalNameMeta,
+        legalName.isAcceptableOrUnknown(data['legal_name']!, _legalNameMeta),
+      );
+    }
+    if (data.containsKey('alias')) {
+      context.handle(
+        _aliasMeta,
+        alias.isAcceptableOrUnknown(data['alias']!, _aliasMeta),
+      );
+    }
+    if (data.containsKey('mobile')) {
+      context.handle(
+        _mobileMeta,
+        mobile.isAcceptableOrUnknown(data['mobile']!, _mobileMeta),
+      );
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    }
+    if (data.containsKey('party_group')) {
+      context.handle(
+        _partyGroupMeta,
+        partyGroup.isAcceptableOrUnknown(data['party_group']!, _partyGroupMeta),
+      );
+    }
+    if (data.containsKey('area_code')) {
+      context.handle(
+        _areaCodeMeta,
+        areaCode.isAcceptableOrUnknown(data['area_code']!, _areaCodeMeta),
+      );
+    }
+    if (data.containsKey('party_type')) {
+      context.handle(
+        _partyTypeMeta,
+        partyType.isAcceptableOrUnknown(data['party_type']!, _partyTypeMeta),
+      );
+    }
+    if (data.containsKey('party_category')) {
+      context.handle(
+        _partyCategoryMeta,
+        partyCategory.isAcceptableOrUnknown(
+          data['party_category']!,
+          _partyCategoryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pricing_tier')) {
+      context.handle(
+        _pricingTierMeta,
+        pricingTier.isAcceptableOrUnknown(
+          data['pricing_tier']!,
+          _pricingTierMeta,
+        ),
+      );
+    }
+    if (data.containsKey('gstin')) {
+      context.handle(
+        _gstinMeta,
+        gstin.isAcceptableOrUnknown(data['gstin']!, _gstinMeta),
+      );
+    }
+    if (data.containsKey('state_code')) {
+      context.handle(
+        _stateCodeMeta,
+        stateCode.isAcceptableOrUnknown(data['state_code']!, _stateCodeMeta),
+      );
+    }
+    if (data.containsKey('area_id')) {
+      context.handle(
+        _areaIdMeta,
+        areaId.isAcceptableOrUnknown(data['area_id']!, _areaIdMeta),
+      );
+    }
+    if (data.containsKey('credit_limit')) {
+      context.handle(
+        _creditLimitMeta,
+        creditLimit.isAcceptableOrUnknown(
+          data['credit_limit']!,
+          _creditLimitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('opening_balance')) {
+      context.handle(
+        _openingBalanceMeta,
+        openingBalance.isAcceptableOrUnknown(
+          data['opening_balance']!,
+          _openingBalanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('hidden_ledger_balance')) {
+      context.handle(
+        _hiddenLedgerBalanceMeta,
+        hiddenLedgerBalance.isAcceptableOrUnknown(
+          data['hidden_ledger_balance']!,
+          _hiddenLedgerBalanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('profile_image_url')) {
+      context.handle(
+        _profileImageUrlMeta,
+        profileImageUrl.isAcceptableOrUnknown(
+          data['profile_image_url']!,
+          _profileImageUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('profile_media_asset_id')) {
+      context.handle(
+        _profileMediaAssetIdMeta,
+        profileMediaAssetId.isAcceptableOrUnknown(
+          data['profile_media_asset_id']!,
+          _profileMediaAssetIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('connected_since')) {
+      context.handle(
+        _connectedSinceMeta,
+        connectedSince.isAcceptableOrUnknown(
+          data['connected_since']!,
+          _connectedSinceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PartyTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PartyTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      legalName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}legal_name'],
+      ),
+      alias: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}alias'],
+      ),
+      mobile: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mobile'],
+      ),
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      ),
+      partyGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_group'],
+      ),
+      areaCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}area_code'],
+      ),
+      partyType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_type'],
+      )!,
+      partyCategory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_category'],
+      ),
+      pricingTier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pricing_tier'],
+      )!,
+      gstin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gstin'],
+      ),
+      stateCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state_code'],
+      ),
+      areaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}area_id'],
+      ),
+      creditLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}credit_limit'],
+      )!,
+      openingBalance: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opening_balance'],
+      )!,
+      hiddenLedgerBalance: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hidden_ledger_balance'],
+      )!,
+      profileImageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}profile_image_url'],
+      ),
+      profileMediaAssetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}profile_media_asset_id'],
+      ),
+      connectedSince: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}connected_since'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $PartiesLocalTable createAlias(String alias) {
+    return $PartiesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class PartyTableData extends DataClass implements Insertable<PartyTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String? legalName;
+  final String? alias;
+  final String? mobile;
+  final String? email;
+  final String? partyGroup;
+  final String? areaCode;
+  final String partyType;
+  final String? partyCategory;
+  final String pricingTier;
+  final String? gstin;
+  final String? stateCode;
+  final String? areaId;
+  final String creditLimit;
+  final String openingBalance;
+  final String hiddenLedgerBalance;
+  final String? profileImageUrl;
+  final String? profileMediaAssetId;
+  final String? connectedSince;
+  final String? notes;
+  final bool isActive;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const PartyTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    this.legalName,
+    this.alias,
+    this.mobile,
+    this.email,
+    this.partyGroup,
+    this.areaCode,
+    required this.partyType,
+    this.partyCategory,
+    required this.pricingTier,
+    this.gstin,
+    this.stateCode,
+    this.areaId,
+    required this.creditLimit,
+    required this.openingBalance,
+    required this.hiddenLedgerBalance,
+    this.profileImageUrl,
+    this.profileMediaAssetId,
+    this.connectedSince,
+    this.notes,
+    required this.isActive,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || legalName != null) {
+      map['legal_name'] = Variable<String>(legalName);
+    }
+    if (!nullToAbsent || alias != null) {
+      map['alias'] = Variable<String>(alias);
+    }
+    if (!nullToAbsent || mobile != null) {
+      map['mobile'] = Variable<String>(mobile);
+    }
+    if (!nullToAbsent || email != null) {
+      map['email'] = Variable<String>(email);
+    }
+    if (!nullToAbsent || partyGroup != null) {
+      map['party_group'] = Variable<String>(partyGroup);
+    }
+    if (!nullToAbsent || areaCode != null) {
+      map['area_code'] = Variable<String>(areaCode);
+    }
+    map['party_type'] = Variable<String>(partyType);
+    if (!nullToAbsent || partyCategory != null) {
+      map['party_category'] = Variable<String>(partyCategory);
+    }
+    map['pricing_tier'] = Variable<String>(pricingTier);
+    if (!nullToAbsent || gstin != null) {
+      map['gstin'] = Variable<String>(gstin);
+    }
+    if (!nullToAbsent || stateCode != null) {
+      map['state_code'] = Variable<String>(stateCode);
+    }
+    if (!nullToAbsent || areaId != null) {
+      map['area_id'] = Variable<String>(areaId);
+    }
+    map['credit_limit'] = Variable<String>(creditLimit);
+    map['opening_balance'] = Variable<String>(openingBalance);
+    map['hidden_ledger_balance'] = Variable<String>(hiddenLedgerBalance);
+    if (!nullToAbsent || profileImageUrl != null) {
+      map['profile_image_url'] = Variable<String>(profileImageUrl);
+    }
+    if (!nullToAbsent || profileMediaAssetId != null) {
+      map['profile_media_asset_id'] = Variable<String>(profileMediaAssetId);
+    }
+    if (!nullToAbsent || connectedSince != null) {
+      map['connected_since'] = Variable<String>(connectedSince);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  PartiesLocalCompanion toCompanion(bool nullToAbsent) {
+    return PartiesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      legalName: legalName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(legalName),
+      alias: alias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(alias),
+      mobile: mobile == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mobile),
+      email: email == null && nullToAbsent
+          ? const Value.absent()
+          : Value(email),
+      partyGroup: partyGroup == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyGroup),
+      areaCode: areaCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(areaCode),
+      partyType: Value(partyType),
+      partyCategory: partyCategory == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyCategory),
+      pricingTier: Value(pricingTier),
+      gstin: gstin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gstin),
+      stateCode: stateCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stateCode),
+      areaId: areaId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(areaId),
+      creditLimit: Value(creditLimit),
+      openingBalance: Value(openingBalance),
+      hiddenLedgerBalance: Value(hiddenLedgerBalance),
+      profileImageUrl: profileImageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileImageUrl),
+      profileMediaAssetId: profileMediaAssetId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileMediaAssetId),
+      connectedSince: connectedSince == null && nullToAbsent
+          ? const Value.absent()
+          : Value(connectedSince),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      isActive: Value(isActive),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory PartyTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PartyTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      legalName: serializer.fromJson<String?>(json['legalName']),
+      alias: serializer.fromJson<String?>(json['alias']),
+      mobile: serializer.fromJson<String?>(json['mobile']),
+      email: serializer.fromJson<String?>(json['email']),
+      partyGroup: serializer.fromJson<String?>(json['partyGroup']),
+      areaCode: serializer.fromJson<String?>(json['areaCode']),
+      partyType: serializer.fromJson<String>(json['partyType']),
+      partyCategory: serializer.fromJson<String?>(json['partyCategory']),
+      pricingTier: serializer.fromJson<String>(json['pricingTier']),
+      gstin: serializer.fromJson<String?>(json['gstin']),
+      stateCode: serializer.fromJson<String?>(json['stateCode']),
+      areaId: serializer.fromJson<String?>(json['areaId']),
+      creditLimit: serializer.fromJson<String>(json['creditLimit']),
+      openingBalance: serializer.fromJson<String>(json['openingBalance']),
+      hiddenLedgerBalance: serializer.fromJson<String>(
+        json['hiddenLedgerBalance'],
+      ),
+      profileImageUrl: serializer.fromJson<String?>(json['profileImageUrl']),
+      profileMediaAssetId: serializer.fromJson<String?>(
+        json['profileMediaAssetId'],
+      ),
+      connectedSince: serializer.fromJson<String?>(json['connectedSince']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'legalName': serializer.toJson<String?>(legalName),
+      'alias': serializer.toJson<String?>(alias),
+      'mobile': serializer.toJson<String?>(mobile),
+      'email': serializer.toJson<String?>(email),
+      'partyGroup': serializer.toJson<String?>(partyGroup),
+      'areaCode': serializer.toJson<String?>(areaCode),
+      'partyType': serializer.toJson<String>(partyType),
+      'partyCategory': serializer.toJson<String?>(partyCategory),
+      'pricingTier': serializer.toJson<String>(pricingTier),
+      'gstin': serializer.toJson<String?>(gstin),
+      'stateCode': serializer.toJson<String?>(stateCode),
+      'areaId': serializer.toJson<String?>(areaId),
+      'creditLimit': serializer.toJson<String>(creditLimit),
+      'openingBalance': serializer.toJson<String>(openingBalance),
+      'hiddenLedgerBalance': serializer.toJson<String>(hiddenLedgerBalance),
+      'profileImageUrl': serializer.toJson<String?>(profileImageUrl),
+      'profileMediaAssetId': serializer.toJson<String?>(profileMediaAssetId),
+      'connectedSince': serializer.toJson<String?>(connectedSince),
+      'notes': serializer.toJson<String?>(notes),
+      'isActive': serializer.toJson<bool>(isActive),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  PartyTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    Value<String?> legalName = const Value.absent(),
+    Value<String?> alias = const Value.absent(),
+    Value<String?> mobile = const Value.absent(),
+    Value<String?> email = const Value.absent(),
+    Value<String?> partyGroup = const Value.absent(),
+    Value<String?> areaCode = const Value.absent(),
+    String? partyType,
+    Value<String?> partyCategory = const Value.absent(),
+    String? pricingTier,
+    Value<String?> gstin = const Value.absent(),
+    Value<String?> stateCode = const Value.absent(),
+    Value<String?> areaId = const Value.absent(),
+    String? creditLimit,
+    String? openingBalance,
+    String? hiddenLedgerBalance,
+    Value<String?> profileImageUrl = const Value.absent(),
+    Value<String?> profileMediaAssetId = const Value.absent(),
+    Value<String?> connectedSince = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    bool? isActive,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => PartyTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    legalName: legalName.present ? legalName.value : this.legalName,
+    alias: alias.present ? alias.value : this.alias,
+    mobile: mobile.present ? mobile.value : this.mobile,
+    email: email.present ? email.value : this.email,
+    partyGroup: partyGroup.present ? partyGroup.value : this.partyGroup,
+    areaCode: areaCode.present ? areaCode.value : this.areaCode,
+    partyType: partyType ?? this.partyType,
+    partyCategory: partyCategory.present
+        ? partyCategory.value
+        : this.partyCategory,
+    pricingTier: pricingTier ?? this.pricingTier,
+    gstin: gstin.present ? gstin.value : this.gstin,
+    stateCode: stateCode.present ? stateCode.value : this.stateCode,
+    areaId: areaId.present ? areaId.value : this.areaId,
+    creditLimit: creditLimit ?? this.creditLimit,
+    openingBalance: openingBalance ?? this.openingBalance,
+    hiddenLedgerBalance: hiddenLedgerBalance ?? this.hiddenLedgerBalance,
+    profileImageUrl: profileImageUrl.present
+        ? profileImageUrl.value
+        : this.profileImageUrl,
+    profileMediaAssetId: profileMediaAssetId.present
+        ? profileMediaAssetId.value
+        : this.profileMediaAssetId,
+    connectedSince: connectedSince.present
+        ? connectedSince.value
+        : this.connectedSince,
+    notes: notes.present ? notes.value : this.notes,
+    isActive: isActive ?? this.isActive,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  PartyTableData copyWithCompanion(PartiesLocalCompanion data) {
+    return PartyTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      legalName: data.legalName.present ? data.legalName.value : this.legalName,
+      alias: data.alias.present ? data.alias.value : this.alias,
+      mobile: data.mobile.present ? data.mobile.value : this.mobile,
+      email: data.email.present ? data.email.value : this.email,
+      partyGroup: data.partyGroup.present
+          ? data.partyGroup.value
+          : this.partyGroup,
+      areaCode: data.areaCode.present ? data.areaCode.value : this.areaCode,
+      partyType: data.partyType.present ? data.partyType.value : this.partyType,
+      partyCategory: data.partyCategory.present
+          ? data.partyCategory.value
+          : this.partyCategory,
+      pricingTier: data.pricingTier.present
+          ? data.pricingTier.value
+          : this.pricingTier,
+      gstin: data.gstin.present ? data.gstin.value : this.gstin,
+      stateCode: data.stateCode.present ? data.stateCode.value : this.stateCode,
+      areaId: data.areaId.present ? data.areaId.value : this.areaId,
+      creditLimit: data.creditLimit.present
+          ? data.creditLimit.value
+          : this.creditLimit,
+      openingBalance: data.openingBalance.present
+          ? data.openingBalance.value
+          : this.openingBalance,
+      hiddenLedgerBalance: data.hiddenLedgerBalance.present
+          ? data.hiddenLedgerBalance.value
+          : this.hiddenLedgerBalance,
+      profileImageUrl: data.profileImageUrl.present
+          ? data.profileImageUrl.value
+          : this.profileImageUrl,
+      profileMediaAssetId: data.profileMediaAssetId.present
+          ? data.profileMediaAssetId.value
+          : this.profileMediaAssetId,
+      connectedSince: data.connectedSince.present
+          ? data.connectedSince.value
+          : this.connectedSince,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PartyTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('legalName: $legalName, ')
+          ..write('alias: $alias, ')
+          ..write('mobile: $mobile, ')
+          ..write('email: $email, ')
+          ..write('partyGroup: $partyGroup, ')
+          ..write('areaCode: $areaCode, ')
+          ..write('partyType: $partyType, ')
+          ..write('partyCategory: $partyCategory, ')
+          ..write('pricingTier: $pricingTier, ')
+          ..write('gstin: $gstin, ')
+          ..write('stateCode: $stateCode, ')
+          ..write('areaId: $areaId, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('hiddenLedgerBalance: $hiddenLedgerBalance, ')
+          ..write('profileImageUrl: $profileImageUrl, ')
+          ..write('profileMediaAssetId: $profileMediaAssetId, ')
+          ..write('connectedSince: $connectedSince, ')
+          ..write('notes: $notes, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    name,
+    legalName,
+    alias,
+    mobile,
+    email,
+    partyGroup,
+    areaCode,
+    partyType,
+    partyCategory,
+    pricingTier,
+    gstin,
+    stateCode,
+    areaId,
+    creditLimit,
+    openingBalance,
+    hiddenLedgerBalance,
+    profileImageUrl,
+    profileMediaAssetId,
+    connectedSince,
+    notes,
+    isActive,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PartyTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.legalName == this.legalName &&
+          other.alias == this.alias &&
+          other.mobile == this.mobile &&
+          other.email == this.email &&
+          other.partyGroup == this.partyGroup &&
+          other.areaCode == this.areaCode &&
+          other.partyType == this.partyType &&
+          other.partyCategory == this.partyCategory &&
+          other.pricingTier == this.pricingTier &&
+          other.gstin == this.gstin &&
+          other.stateCode == this.stateCode &&
+          other.areaId == this.areaId &&
+          other.creditLimit == this.creditLimit &&
+          other.openingBalance == this.openingBalance &&
+          other.hiddenLedgerBalance == this.hiddenLedgerBalance &&
+          other.profileImageUrl == this.profileImageUrl &&
+          other.profileMediaAssetId == this.profileMediaAssetId &&
+          other.connectedSince == this.connectedSince &&
+          other.notes == this.notes &&
+          other.isActive == this.isActive &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String?> legalName;
+  final Value<String?> alias;
+  final Value<String?> mobile;
+  final Value<String?> email;
+  final Value<String?> partyGroup;
+  final Value<String?> areaCode;
+  final Value<String> partyType;
+  final Value<String?> partyCategory;
+  final Value<String> pricingTier;
+  final Value<String?> gstin;
+  final Value<String?> stateCode;
+  final Value<String?> areaId;
+  final Value<String> creditLimit;
+  final Value<String> openingBalance;
+  final Value<String> hiddenLedgerBalance;
+  final Value<String?> profileImageUrl;
+  final Value<String?> profileMediaAssetId;
+  final Value<String?> connectedSince;
+  final Value<String?> notes;
+  final Value<bool> isActive;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const PartiesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.legalName = const Value.absent(),
+    this.alias = const Value.absent(),
+    this.mobile = const Value.absent(),
+    this.email = const Value.absent(),
+    this.partyGroup = const Value.absent(),
+    this.areaCode = const Value.absent(),
+    this.partyType = const Value.absent(),
+    this.partyCategory = const Value.absent(),
+    this.pricingTier = const Value.absent(),
+    this.gstin = const Value.absent(),
+    this.stateCode = const Value.absent(),
+    this.areaId = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.openingBalance = const Value.absent(),
+    this.hiddenLedgerBalance = const Value.absent(),
+    this.profileImageUrl = const Value.absent(),
+    this.profileMediaAssetId = const Value.absent(),
+    this.connectedSince = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PartiesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.legalName = const Value.absent(),
+    this.alias = const Value.absent(),
+    this.mobile = const Value.absent(),
+    this.email = const Value.absent(),
+    this.partyGroup = const Value.absent(),
+    this.areaCode = const Value.absent(),
+    this.partyType = const Value.absent(),
+    this.partyCategory = const Value.absent(),
+    this.pricingTier = const Value.absent(),
+    this.gstin = const Value.absent(),
+    this.stateCode = const Value.absent(),
+    this.areaId = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.openingBalance = const Value.absent(),
+    this.hiddenLedgerBalance = const Value.absent(),
+    this.profileImageUrl = const Value.absent(),
+    this.profileMediaAssetId = const Value.absent(),
+    this.connectedSince = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PartyTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? legalName,
+    Expression<String>? alias,
+    Expression<String>? mobile,
+    Expression<String>? email,
+    Expression<String>? partyGroup,
+    Expression<String>? areaCode,
+    Expression<String>? partyType,
+    Expression<String>? partyCategory,
+    Expression<String>? pricingTier,
+    Expression<String>? gstin,
+    Expression<String>? stateCode,
+    Expression<String>? areaId,
+    Expression<String>? creditLimit,
+    Expression<String>? openingBalance,
+    Expression<String>? hiddenLedgerBalance,
+    Expression<String>? profileImageUrl,
+    Expression<String>? profileMediaAssetId,
+    Expression<String>? connectedSince,
+    Expression<String>? notes,
+    Expression<bool>? isActive,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (legalName != null) 'legal_name': legalName,
+      if (alias != null) 'alias': alias,
+      if (mobile != null) 'mobile': mobile,
+      if (email != null) 'email': email,
+      if (partyGroup != null) 'party_group': partyGroup,
+      if (areaCode != null) 'area_code': areaCode,
+      if (partyType != null) 'party_type': partyType,
+      if (partyCategory != null) 'party_category': partyCategory,
+      if (pricingTier != null) 'pricing_tier': pricingTier,
+      if (gstin != null) 'gstin': gstin,
+      if (stateCode != null) 'state_code': stateCode,
+      if (areaId != null) 'area_id': areaId,
+      if (creditLimit != null) 'credit_limit': creditLimit,
+      if (openingBalance != null) 'opening_balance': openingBalance,
+      if (hiddenLedgerBalance != null)
+        'hidden_ledger_balance': hiddenLedgerBalance,
+      if (profileImageUrl != null) 'profile_image_url': profileImageUrl,
+      if (profileMediaAssetId != null)
+        'profile_media_asset_id': profileMediaAssetId,
+      if (connectedSince != null) 'connected_since': connectedSince,
+      if (notes != null) 'notes': notes,
+      if (isActive != null) 'is_active': isActive,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PartiesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String?>? legalName,
+    Value<String?>? alias,
+    Value<String?>? mobile,
+    Value<String?>? email,
+    Value<String?>? partyGroup,
+    Value<String?>? areaCode,
+    Value<String>? partyType,
+    Value<String?>? partyCategory,
+    Value<String>? pricingTier,
+    Value<String?>? gstin,
+    Value<String?>? stateCode,
+    Value<String?>? areaId,
+    Value<String>? creditLimit,
+    Value<String>? openingBalance,
+    Value<String>? hiddenLedgerBalance,
+    Value<String?>? profileImageUrl,
+    Value<String?>? profileMediaAssetId,
+    Value<String?>? connectedSince,
+    Value<String?>? notes,
+    Value<bool>? isActive,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return PartiesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      legalName: legalName ?? this.legalName,
+      alias: alias ?? this.alias,
+      mobile: mobile ?? this.mobile,
+      email: email ?? this.email,
+      partyGroup: partyGroup ?? this.partyGroup,
+      areaCode: areaCode ?? this.areaCode,
+      partyType: partyType ?? this.partyType,
+      partyCategory: partyCategory ?? this.partyCategory,
+      pricingTier: pricingTier ?? this.pricingTier,
+      gstin: gstin ?? this.gstin,
+      stateCode: stateCode ?? this.stateCode,
+      areaId: areaId ?? this.areaId,
+      creditLimit: creditLimit ?? this.creditLimit,
+      openingBalance: openingBalance ?? this.openingBalance,
+      hiddenLedgerBalance: hiddenLedgerBalance ?? this.hiddenLedgerBalance,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      profileMediaAssetId: profileMediaAssetId ?? this.profileMediaAssetId,
+      connectedSince: connectedSince ?? this.connectedSince,
+      notes: notes ?? this.notes,
+      isActive: isActive ?? this.isActive,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (legalName.present) {
+      map['legal_name'] = Variable<String>(legalName.value);
+    }
+    if (alias.present) {
+      map['alias'] = Variable<String>(alias.value);
+    }
+    if (mobile.present) {
+      map['mobile'] = Variable<String>(mobile.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (partyGroup.present) {
+      map['party_group'] = Variable<String>(partyGroup.value);
+    }
+    if (areaCode.present) {
+      map['area_code'] = Variable<String>(areaCode.value);
+    }
+    if (partyType.present) {
+      map['party_type'] = Variable<String>(partyType.value);
+    }
+    if (partyCategory.present) {
+      map['party_category'] = Variable<String>(partyCategory.value);
+    }
+    if (pricingTier.present) {
+      map['pricing_tier'] = Variable<String>(pricingTier.value);
+    }
+    if (gstin.present) {
+      map['gstin'] = Variable<String>(gstin.value);
+    }
+    if (stateCode.present) {
+      map['state_code'] = Variable<String>(stateCode.value);
+    }
+    if (areaId.present) {
+      map['area_id'] = Variable<String>(areaId.value);
+    }
+    if (creditLimit.present) {
+      map['credit_limit'] = Variable<String>(creditLimit.value);
+    }
+    if (openingBalance.present) {
+      map['opening_balance'] = Variable<String>(openingBalance.value);
+    }
+    if (hiddenLedgerBalance.present) {
+      map['hidden_ledger_balance'] = Variable<String>(
+        hiddenLedgerBalance.value,
+      );
+    }
+    if (profileImageUrl.present) {
+      map['profile_image_url'] = Variable<String>(profileImageUrl.value);
+    }
+    if (profileMediaAssetId.present) {
+      map['profile_media_asset_id'] = Variable<String>(
+        profileMediaAssetId.value,
+      );
+    }
+    if (connectedSince.present) {
+      map['connected_since'] = Variable<String>(connectedSince.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PartiesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('legalName: $legalName, ')
+          ..write('alias: $alias, ')
+          ..write('mobile: $mobile, ')
+          ..write('email: $email, ')
+          ..write('partyGroup: $partyGroup, ')
+          ..write('areaCode: $areaCode, ')
+          ..write('partyType: $partyType, ')
+          ..write('partyCategory: $partyCategory, ')
+          ..write('pricingTier: $pricingTier, ')
+          ..write('gstin: $gstin, ')
+          ..write('stateCode: $stateCode, ')
+          ..write('areaId: $areaId, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('hiddenLedgerBalance: $hiddenLedgerBalance, ')
+          ..write('profileImageUrl: $profileImageUrl, ')
+          ..write('profileMediaAssetId: $profileMediaAssetId, ')
+          ..write('connectedSince: $connectedSince, ')
+          ..write('notes: $notes, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7908,6 +9487,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CategoriesLocalTable categoriesLocal = $CategoriesLocalTable(
     this,
   );
+  late final $PartiesLocalTable partiesLocal = $PartiesLocalTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7923,6 +9503,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     deals,
     syncQueue,
     categoriesLocal,
+    partiesLocal,
   ];
 }
 
@@ -11893,6 +13474,684 @@ typedef $$CategoriesLocalTableProcessedTableManager =
       CategoryTableData,
       PrefetchHooks Function()
     >;
+typedef $$PartiesLocalTableCreateCompanionBuilder =
+    PartiesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<String?> legalName,
+      Value<String?> alias,
+      Value<String?> mobile,
+      Value<String?> email,
+      Value<String?> partyGroup,
+      Value<String?> areaCode,
+      Value<String> partyType,
+      Value<String?> partyCategory,
+      Value<String> pricingTier,
+      Value<String?> gstin,
+      Value<String?> stateCode,
+      Value<String?> areaId,
+      Value<String> creditLimit,
+      Value<String> openingBalance,
+      Value<String> hiddenLedgerBalance,
+      Value<String?> profileImageUrl,
+      Value<String?> profileMediaAssetId,
+      Value<String?> connectedSince,
+      Value<String?> notes,
+      Value<bool> isActive,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$PartiesLocalTableUpdateCompanionBuilder =
+    PartiesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String?> legalName,
+      Value<String?> alias,
+      Value<String?> mobile,
+      Value<String?> email,
+      Value<String?> partyGroup,
+      Value<String?> areaCode,
+      Value<String> partyType,
+      Value<String?> partyCategory,
+      Value<String> pricingTier,
+      Value<String?> gstin,
+      Value<String?> stateCode,
+      Value<String?> areaId,
+      Value<String> creditLimit,
+      Value<String> openingBalance,
+      Value<String> hiddenLedgerBalance,
+      Value<String?> profileImageUrl,
+      Value<String?> profileMediaAssetId,
+      Value<String?> connectedSince,
+      Value<String?> notes,
+      Value<bool> isActive,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$PartiesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $PartiesLocalTable> {
+  $$PartiesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get legalName => $composableBuilder(
+    column: $table.legalName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get alias => $composableBuilder(
+    column: $table.alias,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mobile => $composableBuilder(
+    column: $table.mobile,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyGroup => $composableBuilder(
+    column: $table.partyGroup,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get areaCode => $composableBuilder(
+    column: $table.areaCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyType => $composableBuilder(
+    column: $table.partyType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyCategory => $composableBuilder(
+    column: $table.partyCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pricingTier => $composableBuilder(
+    column: $table.pricingTier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gstin => $composableBuilder(
+    column: $table.gstin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stateCode => $composableBuilder(
+    column: $table.stateCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get areaId => $composableBuilder(
+    column: $table.areaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openingBalance => $composableBuilder(
+    column: $table.openingBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hiddenLedgerBalance => $composableBuilder(
+    column: $table.hiddenLedgerBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get profileImageUrl => $composableBuilder(
+    column: $table.profileImageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get profileMediaAssetId => $composableBuilder(
+    column: $table.profileMediaAssetId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get connectedSince => $composableBuilder(
+    column: $table.connectedSince,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PartiesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $PartiesLocalTable> {
+  $$PartiesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get legalName => $composableBuilder(
+    column: $table.legalName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get alias => $composableBuilder(
+    column: $table.alias,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mobile => $composableBuilder(
+    column: $table.mobile,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyGroup => $composableBuilder(
+    column: $table.partyGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get areaCode => $composableBuilder(
+    column: $table.areaCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyType => $composableBuilder(
+    column: $table.partyType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyCategory => $composableBuilder(
+    column: $table.partyCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pricingTier => $composableBuilder(
+    column: $table.pricingTier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get gstin => $composableBuilder(
+    column: $table.gstin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stateCode => $composableBuilder(
+    column: $table.stateCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get areaId => $composableBuilder(
+    column: $table.areaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openingBalance => $composableBuilder(
+    column: $table.openingBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hiddenLedgerBalance => $composableBuilder(
+    column: $table.hiddenLedgerBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get profileImageUrl => $composableBuilder(
+    column: $table.profileImageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get profileMediaAssetId => $composableBuilder(
+    column: $table.profileMediaAssetId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get connectedSince => $composableBuilder(
+    column: $table.connectedSince,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PartiesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PartiesLocalTable> {
+  $$PartiesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get legalName =>
+      $composableBuilder(column: $table.legalName, builder: (column) => column);
+
+  GeneratedColumn<String> get alias =>
+      $composableBuilder(column: $table.alias, builder: (column) => column);
+
+  GeneratedColumn<String> get mobile =>
+      $composableBuilder(column: $table.mobile, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get partyGroup => $composableBuilder(
+    column: $table.partyGroup,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get areaCode =>
+      $composableBuilder(column: $table.areaCode, builder: (column) => column);
+
+  GeneratedColumn<String> get partyType =>
+      $composableBuilder(column: $table.partyType, builder: (column) => column);
+
+  GeneratedColumn<String> get partyCategory => $composableBuilder(
+    column: $table.partyCategory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pricingTier => $composableBuilder(
+    column: $table.pricingTier,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get gstin =>
+      $composableBuilder(column: $table.gstin, builder: (column) => column);
+
+  GeneratedColumn<String> get stateCode =>
+      $composableBuilder(column: $table.stateCode, builder: (column) => column);
+
+  GeneratedColumn<String> get areaId =>
+      $composableBuilder(column: $table.areaId, builder: (column) => column);
+
+  GeneratedColumn<String> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get openingBalance => $composableBuilder(
+    column: $table.openingBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get hiddenLedgerBalance => $composableBuilder(
+    column: $table.hiddenLedgerBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get profileImageUrl => $composableBuilder(
+    column: $table.profileImageUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get profileMediaAssetId => $composableBuilder(
+    column: $table.profileMediaAssetId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get connectedSince => $composableBuilder(
+    column: $table.connectedSince,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$PartiesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PartiesLocalTable,
+          PartyTableData,
+          $$PartiesLocalTableFilterComposer,
+          $$PartiesLocalTableOrderingComposer,
+          $$PartiesLocalTableAnnotationComposer,
+          $$PartiesLocalTableCreateCompanionBuilder,
+          $$PartiesLocalTableUpdateCompanionBuilder,
+          (
+            PartyTableData,
+            BaseReferences<_$AppDatabase, $PartiesLocalTable, PartyTableData>,
+          ),
+          PartyTableData,
+          PrefetchHooks Function()
+        > {
+  $$PartiesLocalTableTableManager(_$AppDatabase db, $PartiesLocalTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PartiesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PartiesLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PartiesLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> legalName = const Value.absent(),
+                Value<String?> alias = const Value.absent(),
+                Value<String?> mobile = const Value.absent(),
+                Value<String?> email = const Value.absent(),
+                Value<String?> partyGroup = const Value.absent(),
+                Value<String?> areaCode = const Value.absent(),
+                Value<String> partyType = const Value.absent(),
+                Value<String?> partyCategory = const Value.absent(),
+                Value<String> pricingTier = const Value.absent(),
+                Value<String?> gstin = const Value.absent(),
+                Value<String?> stateCode = const Value.absent(),
+                Value<String?> areaId = const Value.absent(),
+                Value<String> creditLimit = const Value.absent(),
+                Value<String> openingBalance = const Value.absent(),
+                Value<String> hiddenLedgerBalance = const Value.absent(),
+                Value<String?> profileImageUrl = const Value.absent(),
+                Value<String?> profileMediaAssetId = const Value.absent(),
+                Value<String?> connectedSince = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PartiesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                legalName: legalName,
+                alias: alias,
+                mobile: mobile,
+                email: email,
+                partyGroup: partyGroup,
+                areaCode: areaCode,
+                partyType: partyType,
+                partyCategory: partyCategory,
+                pricingTier: pricingTier,
+                gstin: gstin,
+                stateCode: stateCode,
+                areaId: areaId,
+                creditLimit: creditLimit,
+                openingBalance: openingBalance,
+                hiddenLedgerBalance: hiddenLedgerBalance,
+                profileImageUrl: profileImageUrl,
+                profileMediaAssetId: profileMediaAssetId,
+                connectedSince: connectedSince,
+                notes: notes,
+                isActive: isActive,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<String?> legalName = const Value.absent(),
+                Value<String?> alias = const Value.absent(),
+                Value<String?> mobile = const Value.absent(),
+                Value<String?> email = const Value.absent(),
+                Value<String?> partyGroup = const Value.absent(),
+                Value<String?> areaCode = const Value.absent(),
+                Value<String> partyType = const Value.absent(),
+                Value<String?> partyCategory = const Value.absent(),
+                Value<String> pricingTier = const Value.absent(),
+                Value<String?> gstin = const Value.absent(),
+                Value<String?> stateCode = const Value.absent(),
+                Value<String?> areaId = const Value.absent(),
+                Value<String> creditLimit = const Value.absent(),
+                Value<String> openingBalance = const Value.absent(),
+                Value<String> hiddenLedgerBalance = const Value.absent(),
+                Value<String?> profileImageUrl = const Value.absent(),
+                Value<String?> profileMediaAssetId = const Value.absent(),
+                Value<String?> connectedSince = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PartiesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                legalName: legalName,
+                alias: alias,
+                mobile: mobile,
+                email: email,
+                partyGroup: partyGroup,
+                areaCode: areaCode,
+                partyType: partyType,
+                partyCategory: partyCategory,
+                pricingTier: pricingTier,
+                gstin: gstin,
+                stateCode: stateCode,
+                areaId: areaId,
+                creditLimit: creditLimit,
+                openingBalance: openingBalance,
+                hiddenLedgerBalance: hiddenLedgerBalance,
+                profileImageUrl: profileImageUrl,
+                profileMediaAssetId: profileMediaAssetId,
+                connectedSince: connectedSince,
+                notes: notes,
+                isActive: isActive,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PartiesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PartiesLocalTable,
+      PartyTableData,
+      $$PartiesLocalTableFilterComposer,
+      $$PartiesLocalTableOrderingComposer,
+      $$PartiesLocalTableAnnotationComposer,
+      $$PartiesLocalTableCreateCompanionBuilder,
+      $$PartiesLocalTableUpdateCompanionBuilder,
+      (
+        PartyTableData,
+        BaseReferences<_$AppDatabase, $PartiesLocalTable, PartyTableData>,
+      ),
+      PartyTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -11917,4 +14176,6 @@ class $AppDatabaseManager {
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
   $$CategoriesLocalTableTableManager get categoriesLocal =>
       $$CategoriesLocalTableTableManager(_db, _db.categoriesLocal);
+  $$PartiesLocalTableTableManager get partiesLocal =>
+      $$PartiesLocalTableTableManager(_db, _db.partiesLocal);
 }

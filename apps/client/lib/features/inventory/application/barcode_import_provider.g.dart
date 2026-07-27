@@ -49,7 +49,7 @@ final class InventoryRepositoryProvider
 }
 
 String _$inventoryRepositoryHash() =>
-    r'27bd44ca8d4bd9c2072f3216fd7e69b67bab56a7';
+    r'2c31265edb66a9b0a1ce44370c4b7ddc251e9e6d';
 
 @ProviderFor(barcodeLookupService)
 final barcodeLookupServiceProvider = BarcodeLookupServiceProvider._();

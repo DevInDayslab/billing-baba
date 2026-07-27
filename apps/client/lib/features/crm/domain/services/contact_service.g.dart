@@ -46,4 +46,4 @@ final class ContactServiceProvider
   }
 }
 
-String _$contactServiceHash() => r'e6e2a7ec72e1d64bd9bf1c0cb13abcfb5906b86f';
+String _$contactServiceHash() => r'78848ae4713770f642bf601b3d32704f7b75b240';

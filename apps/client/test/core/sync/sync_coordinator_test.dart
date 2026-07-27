@@ -9,7 +9,9 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:dio/dio.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -145,6 +147,7 @@ void main() {
       metadata: metadata,
       storage: storage,
       categorySync: CategorySync(db),
+      partySync: PartySync(db),
     );
 
     lifecycles = <SyncLifecycleState>[];
@@ -188,14 +191,14 @@ void main() {
     expect(api.pushCalls, 0);
     // bootstrap pull + steady-state pull
     expect(api.pullCalls, 2);
-    expect(api.lastPullEntityTypes, 'categories');
+    expect(api.lastPullEntityTypes, 'categories,parties');
     expect(metadata.pullCursor, isNotNull);
     expect(metadata.bootstrappedAt, isNotNull);
     expect(state.lifecycle, SyncLifecycleState.idle);
     expect(state.lastResultMessage, contains('Sync complete'));
   });
 
-  test('ready state pushes category jobs and skips non-category rows', () async {
+  test('ready state pushes category and party row jobs', () async {
     await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
     await storage.write(StorageKeys.syncPullCursor, 'cursor-abc');
     await storage.write(
@@ -204,12 +207,12 @@ void main() {
     );
     await storage.write(StorageKeys.syncLastServerSchemaVersion, '1');
 
-    await queue.enqueueRowMutation(
+    final partyJob = await queue.enqueueRowMutation(
       businessId: 'biz-1',
       entityType: 'parties',
       entityId: '00000000-0000-0000-0000-0000000000p1',
       operation: SyncQueueOperation.create,
-      payload: {'name': 'A'},
+      payload: {'name': 'A', 'mobile': '9000000000', 'party_type': 'customer'},
     );
 
     final catJob = await queue.enqueueRowMutation(
@@ -230,28 +233,45 @@ void main() {
           ),
         );
 
+    await db.into(db.partiesLocal).insert(
+          PartiesLocalCompanion.insert(
+            id: '00000000-0000-0000-0000-0000000000p1',
+            businessId: 'biz-1',
+            name: 'A',
+            mobile: const Value('9000000000'),
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        );
+
     final state = await runOrchestrate();
 
     expect(api.pushCalls, 1);
     expect(api.pullCalls, 1);
+    expect(api.lastPullEntityTypes, 'categories,parties');
     final mutations = api.lastPushBody!['mutations'] as List;
-    expect(mutations, hasLength(1));
-    expect(mutations.first['entity_type'], 'categories');
-    expect(mutations.first['mutation_id'], catJob.mutationId);
-    expect(mutations.first['payload'], {'name': 'Retail'});
+    expect(mutations, hasLength(2));
+    final types = mutations.map((m) => m['entity_type']).toSet();
+    expect(types, {'categories', 'parties'});
     expect(
-      mutations.first.containsKey(SyncJob.baseSyncVersionKey),
-      isFalse,
+      mutations.map((m) => m['mutation_id']),
+      containsAll([catJob.mutationId, partyJob.mutationId]),
     );
 
-    expect(await queue.pendingCount(), 1); // parties still pending
-    final row = await (db.select(db.categoriesLocal)
+    expect(await queue.pendingCount(), 0);
+    final catRow = await (db.select(db.categoriesLocal)
           ..where(
             (t) => t.id.equals('11111111-1111-1111-1111-111111111111'),
           ))
         .getSingle();
-    expect(row.syncVersion, 1);
-    expect(state.lastResultMessage, contains('push=1'));
+    expect(catRow.syncVersion, 1);
+    final partyRow = await (db.select(db.partiesLocal)
+          ..where(
+            (t) => t.id.equals('00000000-0000-0000-0000-0000000000p1'),
+          ))
+        .getSingle();
+    expect(partyRow.syncVersion, 1);
+    expect(state.lastResultMessage, contains('push=2'));
   });
 
   test('401 on register → needsAuthentication', () async {

@@ -16,6 +16,7 @@ import 'package:billing_baba/features/inventory/data/inventory_local_data_source
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
+import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
@@ -134,6 +135,7 @@ void main() {
       metadata: metadata,
       storage: storage,
       categorySync: CategorySync(db),
+      partySync: PartySync(db),
     );
     lastState = const SyncState(connectivity: SyncConnectivityStatus.online);
   });

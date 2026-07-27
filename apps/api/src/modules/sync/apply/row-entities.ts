@@ -1,4 +1,4 @@
-import { categories } from '../../../db/schema';
+import { categories, parties } from '../../../db/schema';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 
@@ -62,12 +62,39 @@ function defineEntity(input: {
   };
 }
 
-/** MVP: categories only. Add masters here as client cutovers land. */
+/** MVP registered masters. Add entries as client cutovers land. */
 export const ROW_ENTITIES: Record<string, RowEntityDef> = {
   categories: defineEntity({
     entityType: 'categories',
     table: categories,
     allowedColumns: ['name'],
+  }),
+  parties: defineEntity({
+    entityType: 'parties',
+    table: parties,
+    allowedColumns: [
+      'name',
+      'legalName',
+      'alias',
+      'mobile',
+      'email',
+      'partyGroup',
+      'areaCode',
+      'partyType',
+      'partyCategory',
+      'pricingTier',
+      'gstin',
+      'stateCode',
+      'areaId',
+      'creditLimit',
+      'openingBalance',
+      'hiddenLedgerBalance',
+      'profileImageUrl',
+      'profileMediaAssetId',
+      'connectedSince',
+      'notes',
+      'isActive',
+    ],
   }),
 };
 

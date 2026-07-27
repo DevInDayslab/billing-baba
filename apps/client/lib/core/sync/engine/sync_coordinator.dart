@@ -11,6 +11,7 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
@@ -27,8 +28,10 @@ class SyncCoordinator {
     required this._metadata,
     required this._storage,
     this._categorySync,
+    this._partySync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
+    this.partyEntityType = 'parties',
   })  : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
@@ -37,8 +40,10 @@ class SyncCoordinator {
   final SyncMetadataStore _metadata;
   final StorageService _storage;
   final CategorySync? _categorySync;
+  final PartySync? _partySync;
   final Uuid _uuid;
   final String categoryEntityType;
+  final String partyEntityType;
 
   bool _busy = false;
 
@@ -159,27 +164,28 @@ class SyncCoordinator {
       }
 
       final pending = await _safePendingJobs();
-      final categoryJobs = pending
+      final rowJobs = pending
           .where(
             (j) =>
                 j.kind == SyncQueueKind.row &&
-                j.entityType == categoryEntityType &&
+                (j.entityType == categoryEntityType ||
+                    j.entityType == partyEntityType) &&
                 j.status == SyncQueueStatus.pending,
           )
           .toList();
 
-      if (categoryJobs.isNotEmpty) {
+      if (rowJobs.isNotEmpty) {
         try {
-          final pushStats = await _pushCategoryJobs(
+          final pushStats = await _pushRowJobs(
             deviceId: deviceId,
             appVersion: appVersion,
-            jobs: categoryJobs,
+            jobs: rowJobs,
           );
           rowsUploaded += pushStats.uploaded;
           conflicts += pushStats.conflicts;
           failures += pushStats.failures;
         } on Object catch (error) {
-          for (final job in categoryJobs) {
+          for (final job in rowJobs) {
             await _queue.markFailed(job.id, reason: 'push failed: $error');
           }
           return _finishFailure(
@@ -268,7 +274,7 @@ class SyncCoordinator {
     return false;
   }
 
-  Future<({int uploaded, int conflicts, int failures})> _pushCategoryJobs({
+  Future<({int uploaded, int conflicts, int failures})> _pushRowJobs({
     required String deviceId,
     required String appVersion,
     required List<SyncJob> jobs,
@@ -386,7 +392,7 @@ class SyncCoordinator {
         appVersion: appVersion,
         cursor: cursor,
         limit: 200,
-        entityTypes: categoryEntityType,
+        entityTypes: '$categoryEntityType,$partyEntityType',
       );
 
       final changes = _asList(response['changes']);
@@ -459,6 +465,17 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'parties':
+        await _partySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       default:
         // Unknown entity — ignore until that entity ships.
         break;
@@ -475,6 +492,13 @@ class SyncCoordinator {
     switch (entityType) {
       case 'categories':
         await _categorySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'parties':
+        await _partySync?.updateAckMeta(
           entityId: entityId,
           syncVersion: syncVersion,
           updatedAt: updatedAt,

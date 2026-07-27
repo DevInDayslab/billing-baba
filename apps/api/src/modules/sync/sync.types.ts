@@ -4,7 +4,7 @@ export const SUPPORTED_SYNC_COMMANDS = [] as const;
 export type SupportedSyncCommand = string;
 
 /** MVP registered row entities — keep in sync with apply/row-entities.ts */
-export const SUPPORTED_ROW_ENTITY_TYPES = ['categories'] as const;
+export const SUPPORTED_ROW_ENTITY_TYPES = ['categories', 'parties'] as const;
 
 export type SupportedRowEntityType =
   (typeof SUPPORTED_ROW_ENTITY_TYPES)[number];
