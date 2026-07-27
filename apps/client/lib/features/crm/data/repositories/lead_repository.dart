@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
+import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/crm/data/sources/lead_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/lead_remote_source.dart';
@@ -7,12 +7,10 @@ import 'package:billing_baba/features/crm/domain/models/lead_activity.dart';
 
 class LeadRepository {
   LeadRepository({
-    required LeadLocalSource local,
-    required LeadRemoteSource remote,
-    required SyncQueue syncQueue,
-  })  : _local = local,
-        _remote = remote,
-        _syncQueue = syncQueue;
+    required this._local,
+    required this._remote,
+    required this._syncQueue,
+  });
 
   final LeadLocalSource _local;
   final LeadRemoteSource _remote;

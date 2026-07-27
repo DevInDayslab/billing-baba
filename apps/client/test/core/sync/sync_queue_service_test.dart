@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/database/database.dart';
-import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
+import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';

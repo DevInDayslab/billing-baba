@@ -24,9 +24,6 @@ final syncQueueProvider = Provider<SyncQueue>((ref) {
   return SyncQueue(ref.watch(appDatabaseProvider));
 });
 
-/// Alias kept for inventory call sites during cutover.
-final syncQueueServiceProvider = syncQueueProvider;
-
 final syncPendingCountProvider = StreamProvider<int>((ref) {
   return ref.watch(syncQueueProvider).streamPendingCount();
 });
@@ -82,10 +79,7 @@ final syncEngineProvider = FutureProvider<SyncEngine>((ref) async {
     coordinator: coordinator,
   );
 
-  ref.onDispose(() {
-    // ignore: discarded_futures
-    engine.dispose();
-  });
+  ref.onDispose(engine.dispose);
 
   return engine;
 });

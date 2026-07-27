@@ -1,8 +1,21 @@
+import 'dart:convert';
+
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 
 /// Client sync protocol schema generation (Drift ↔ PG logical gen).
 const kSyncLocalSchemaVersion = 1;
+
+const _kSyncZeroUuid = '00000000-0000-0000-0000-000000000000';
+
+/// Opaque pull cursor for “beginning of time” (matches API `cursor.ts`).
+String epochSyncCursor() {
+  final payload = jsonEncode({
+    't': DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toIso8601String(),
+    'i': _kSyncZeroUuid,
+  });
+  return base64Url.encode(utf8.encode(payload)).replaceAll('=', '');
+}
 
 /// Preference-backed sync metadata (cursor / bootstrap) — no Drift table.
 class SyncMetadataStore {

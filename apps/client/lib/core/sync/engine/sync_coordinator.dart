@@ -4,11 +4,8 @@ import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/engine/device_identity.dart';
-import 'package:billing_baba/core/sync/engine/sync_cursor.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
-import 'package:billing_baba/core/sync/models/sync_direction.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
-import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
 import 'package:billing_baba/core/sync/models/sync_result.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
@@ -24,21 +21,15 @@ typedef SyncStateEmitter = void Function(
 /// Owns the synchronization workflow: register → status → bootstrap → push → pull.
 class SyncCoordinator {
   SyncCoordinator({
-    required SyncApi api,
-    required SyncQueue queue,
-    required SyncDeviceIdentity identity,
-    required SyncMetadataStore metadata,
-    required StorageService storage,
-    CategorySync? categorySync,
+    required this._api,
+    required this._queue,
+    required this._identity,
+    required this._metadata,
+    required this._storage,
+    this._categorySync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
-  })  : _api = api,
-        _queue = queue,
-        _identity = identity,
-        _metadata = metadata,
-        _storage = storage,
-        _categorySync = categorySync,
-        _uuid = uuid ?? const Uuid();
+  })  : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
   final SyncQueue _queue;
@@ -128,7 +119,6 @@ class SyncCoordinator {
         );
         return SyncResult(
           success: false,
-          direction: SyncDirection.full,
           completedAt: DateTime.now().toUtc(),
           message: 'No business selected',
           errorCount: 1,
@@ -228,7 +218,6 @@ class SyncCoordinator {
 
       final result = SyncResult(
         success: failures == 0,
-        direction: SyncDirection.full,
         completedAt: DateTime.now().toUtc(),
         message: message,
         acceptedCount: rowsUploaded,
@@ -517,7 +506,6 @@ class SyncCoordinator {
     return Future.value(
       SyncResult(
         success: false,
-        direction: SyncDirection.full,
         completedAt: DateTime.now().toUtc(),
         message: message,
         errorCount: 1,

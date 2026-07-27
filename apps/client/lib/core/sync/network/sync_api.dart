@@ -40,24 +40,6 @@ class SyncApi {
     );
   }
 
-  /// MVP bootstrap: returns `{ initial_cursor, schema_version, ... }`.
-  Future<Map<String, dynamic>> bootstrap({
-    required String deviceId,
-    required String appVersion,
-    required int schemaVersion,
-  }) {
-    return _post(
-      ApiEndpoints.syncBootstrap,
-      deviceId: deviceId,
-      appVersion: appVersion,
-      body: {
-        'device_id': deviceId,
-        'schema_version': schemaVersion,
-        'include_media_metadata': false,
-      },
-    );
-  }
-
   Future<Map<String, dynamic>> push({
     required String deviceId,
     required String appVersion,

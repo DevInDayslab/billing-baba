@@ -6,7 +6,6 @@ import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
-import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/inventory/application/barcode_lookup_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
@@ -31,7 +30,7 @@ Future<InventoryRepository> inventoryRepository(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final storage = await ref.watch(storageServiceProvider.future);
   final db = ref.watch(appDatabaseProvider);
-  final queue = ref.watch(syncQueueServiceProvider);
+  final queue = ref.watch(syncQueueProvider);
   String? deviceId;
   try {
     final identity = await ref.watch(syncDeviceIdentityProvider.future);

@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
+import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/crm/data/sources/contact_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/contact_remote_source.dart';
@@ -7,12 +7,10 @@ import 'package:billing_baba/features/crm/domain/models/contact_activity.dart';
 
 class ContactRepository {
   ContactRepository({
-    required ContactLocalSource local,
-    required ContactRemoteSource remote,
-    required SyncQueue syncQueue,
-  })  : _local = local,
-        _remote = remote,
-        _syncQueue = syncQueue;
+    required this._local,
+    required this._remote,
+    required this._syncQueue,
+  });
 
   final ContactLocalSource _local;
   final ContactRemoteSource _remote;
