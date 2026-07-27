@@ -11,6 +11,8 @@ import 'package:billing_baba/features/inventory/data/category_local_source.dart'
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
@@ -73,6 +75,14 @@ Future<InventoryService> inventoryService(Ref ref) async {
     businessIdReader: () =>
         storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
     deviceIdReader: () => deviceId,
+    items: ItemMasterRepository(
+      local: ItemLocalSource(db),
+      syncQueue: queue,
+      remote: InventoryRemoteDataSource(api.dio),
+      businessIdReader: () =>
+          storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+      deviceIdReader: () => deviceId,
+    ),
   );
   return InventoryService(
     repository: repository,
@@ -815,6 +825,8 @@ class InventoryService {
       final validation = ApiErrorParser.parseValidation(error);
       if (validation != null) throw validation;
       InventoryErrorMapper.mapAndThrow(error);
+    } on Object {
+      rethrow;
     }
   }
 

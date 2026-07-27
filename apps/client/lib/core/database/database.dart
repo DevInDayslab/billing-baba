@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
+import 'package:billing_baba/core/database/tables/items_table.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
 import 'package:billing_baba/core/database/tables/parties_table.dart';
 import 'package:billing_baba/core/database/tables/pos_sales_tables.dart';
@@ -24,13 +25,14 @@ part 'database.g.dart';
     SyncQueue,
     CategoriesLocal,
     PartiesLocal,
+    ItemsLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -94,6 +96,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 11) {
         await m.createTable(partiesLocal);
+      }
+      if (from < 12) {
+        await m.createTable(itemsLocal);
       }
     },
   );

@@ -11,6 +11,7 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
@@ -29,9 +30,11 @@ class SyncCoordinator {
     required this._storage,
     this._categorySync,
     this._partySync,
+    this._itemSync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
     this.partyEntityType = 'parties',
+    this.itemEntityType = 'items',
   })  : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
@@ -41,9 +44,11 @@ class SyncCoordinator {
   final StorageService _storage;
   final CategorySync? _categorySync;
   final PartySync? _partySync;
+  final ItemSync? _itemSync;
   final Uuid _uuid;
   final String categoryEntityType;
   final String partyEntityType;
+  final String itemEntityType;
 
   bool _busy = false;
 
@@ -169,7 +174,8 @@ class SyncCoordinator {
             (j) =>
                 j.kind == SyncQueueKind.row &&
                 (j.entityType == categoryEntityType ||
-                    j.entityType == partyEntityType) &&
+                    j.entityType == partyEntityType ||
+                    j.entityType == itemEntityType) &&
                 j.status == SyncQueueStatus.pending,
           )
           .toList();
@@ -392,7 +398,7 @@ class SyncCoordinator {
         appVersion: appVersion,
         cursor: cursor,
         limit: 200,
-        entityTypes: '$categoryEntityType,$partyEntityType',
+        entityTypes: '$categoryEntityType,$partyEntityType,$itemEntityType',
       );
 
       final changes = _asList(response['changes']);
@@ -476,6 +482,17 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'items':
+        await _itemSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       default:
         // Unknown entity — ignore until that entity ships.
         break;
@@ -499,6 +516,13 @@ class SyncCoordinator {
         );
       case 'parties':
         await _partySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'items':
+        await _itemSync?.updateAckMeta(
           entityId: entityId,
           syncVersion: syncVersion,
           updatedAt: updatedAt,

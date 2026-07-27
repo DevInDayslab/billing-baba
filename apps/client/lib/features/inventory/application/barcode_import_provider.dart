@@ -14,6 +14,8 @@ import 'package:billing_baba/features/inventory/data/category_local_source.dart'
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
@@ -45,6 +47,14 @@ Future<InventoryRepository> inventoryRepository(Ref ref) async {
     businessIdReader: () =>
         storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
     deviceIdReader: () => deviceId,
+    items: ItemMasterRepository(
+      local: ItemLocalSource(db),
+      syncQueue: queue,
+      remote: InventoryRemoteDataSource(api.dio),
+      businessIdReader: () =>
+          storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+      deviceIdReader: () => deviceId,
+    ),
   );
 }
 

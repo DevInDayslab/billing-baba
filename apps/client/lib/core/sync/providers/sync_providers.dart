@@ -12,6 +12,7 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -70,6 +71,7 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     storage: storage,
     categorySync: CategorySync(db),
     partySync: PartySync(db),
+    itemSync: ItemSync(db),
   );
 });
 

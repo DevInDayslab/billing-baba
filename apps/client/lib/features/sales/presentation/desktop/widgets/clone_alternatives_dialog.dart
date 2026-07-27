@@ -2,7 +2,6 @@ import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
-import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:flutter/material.dart';
@@ -44,14 +43,12 @@ class _CloneAlternativesDialogState
   Future<void> _loadItemNames() async {
     try {
       final apiClient = await ref.read(apiClientProvider.future);
-      final inventoryRepo = InventoryRepository(
-        remote: InventoryRemoteDataSource(apiClient.dio),
-      );
+      final remote = InventoryRemoteDataSource(apiClient.dio);
 
       for (final outOfStockItem in widget.outOfStockItems) {
         if (outOfStockItem.itemName.isEmpty) {
           try {
-            final item = await inventoryRepo.getItem(outOfStockItem.itemId);
+            final item = await remote.getItem(outOfStockItem.itemId);
             if (mounted) {
               setState(() {
                 _itemNames[outOfStockItem.itemId] = item.name;

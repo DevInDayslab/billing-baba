@@ -1,8 +1,16 @@
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/generated_documents/application/generated_document_providers.dart';
+import 'package:billing_baba/features/inventory/data/category_local_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
 import 'package:billing_baba/features/print/application/print_data_service.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
@@ -46,6 +54,19 @@ Future<PrintDataService> printDataService(Ref ref) async {
   final businessService = await ref.watch(businessServiceProvider.future);
   final printRepository = await ref.watch(printRepositoryProvider.future);
   final imageService = ref.watch(imageServiceProvider);
+  final storage = await ref.watch(storageServiceProvider.future);
+  final db = ref.watch(appDatabaseProvider);
+  final queue = ref.watch(syncQueueProvider);
+  String? deviceId;
+  try {
+    final identity = await ref.watch(syncDeviceIdentityProvider.future);
+    deviceId = await identity.deviceId();
+  } on Object {
+    deviceId = null;
+  }
+  final remote = InventoryRemoteDataSource(api.dio);
+  String businessIdReader() =>
+      storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
 
   return PrintDataService(
     salesRepository: SalesRepository(
@@ -57,7 +78,18 @@ Future<PrintDataService> printDataService(Ref ref) async {
       local: const PurchaseLocalDataSource(),
     ),
     inventoryRepository: InventoryRepository(
-      remote: InventoryRemoteDataSource(api.dio),
+      remote: remote,
+      local: DriftInventoryLocalDataSource(CategoryLocalSource(db)),
+      syncQueue: queue,
+      businessIdReader: businessIdReader,
+      deviceIdReader: () => deviceId,
+      items: ItemMasterRepository(
+        local: ItemLocalSource(db),
+        syncQueue: queue,
+        remote: remote,
+        businessIdReader: businessIdReader,
+        deviceIdReader: () => deviceId,
+      ),
     ),
     printRepository: printRepository,
     businessService: businessService,

@@ -15,6 +15,9 @@ import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:dio/dio.dart';
@@ -115,6 +118,14 @@ void main() {
       businessIdReader: () =>
           storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
       deviceIdReader: () => '22222222-2222-2222-2222-222222222222',
+      items: ItemMasterRepository(
+        local: ItemLocalSource(db),
+        syncQueue: queue,
+        remote: InventoryRemoteDataSource(Dio()),
+        businessIdReader: () =>
+            storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+        deviceIdReader: () => '22222222-2222-2222-2222-222222222222',
+      ),
     );
 
     final identity = SyncDeviceIdentity(
@@ -136,6 +147,7 @@ void main() {
       storage: storage,
       categorySync: CategorySync(db),
       partySync: PartySync(db),
+      itemSync: ItemSync(db),
     );
     lastState = const SyncState(connectivity: SyncConnectivityStatus.online);
   });
@@ -349,6 +361,12 @@ void main() {
       local: DriftInventoryLocalDataSource(cats1),
       syncQueue: queue1,
       businessIdReader: () => 'biz-1',
+      items: ItemMasterRepository(
+        local: ItemLocalSource(db1),
+        syncQueue: queue1,
+        remote: InventoryRemoteDataSource(Dio()),
+        businessIdReader: () => 'biz-1',
+      ),
     );
 
     final created = await repo1.createCategory(

@@ -11,6 +11,7 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/parties/data/party_local_source.dart';
 import 'package:billing_baba/features/parties/data/party_master_repository.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
@@ -135,6 +136,7 @@ void main() {
       storage: storage,
       categorySync: CategorySync(db),
       partySync: PartySync(db),
+      itemSync: ItemSync(db),
     );
     lastState = const SyncState(connectivity: SyncConnectivityStatus.online);
   });

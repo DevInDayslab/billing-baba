@@ -9471,6 +9471,1533 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
   }
 }
 
+class $ItemsLocalTable extends ItemsLocal
+    with TableInfo<$ItemsLocalTable, ItemTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shortNameMeta = const VerificationMeta(
+    'shortName',
+  );
+  @override
+  late final GeneratedColumn<String> shortName = GeneratedColumn<String>(
+    'short_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _aliasMeta = const VerificationMeta('alias');
+  @override
+  late final GeneratedColumn<String> alias = GeneratedColumn<String>(
+    'alias',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _searchKeywordsMeta = const VerificationMeta(
+    'searchKeywords',
+  );
+  @override
+  late final GeneratedColumn<String> searchKeywords = GeneratedColumn<String>(
+    'search_keywords',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _itemTypeMeta = const VerificationMeta(
+    'itemType',
+  );
+  @override
+  late final GeneratedColumn<String> itemType = GeneratedColumn<String>(
+    'item_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('product'),
+  );
+  static const VerificationMeta _hasStockTrackingMeta = const VerificationMeta(
+    'hasStockTracking',
+  );
+  @override
+  late final GeneratedColumn<bool> hasStockTracking = GeneratedColumn<bool>(
+    'has_stock_tracking',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_stock_tracking" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _brandIdMeta = const VerificationMeta(
+    'brandId',
+  );
+  @override
+  late final GeneratedColumn<String> brandId = GeneratedColumn<String>(
+    'brand_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _hsnCodeMeta = const VerificationMeta(
+    'hsnCode',
+  );
+  @override
+  late final GeneratedColumn<String> hsnCode = GeneratedColumn<String>(
+    'hsn_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _barcodeMeta = const VerificationMeta(
+    'barcode',
+  );
+  @override
+  late final GeneratedColumn<String> barcode = GeneratedColumn<String>(
+    'barcode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _baseUnitMeta = const VerificationMeta(
+    'baseUnit',
+  );
+  @override
+  late final GeneratedColumn<String> baseUnit = GeneratedColumn<String>(
+    'base_unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('piece'),
+  );
+  static const VerificationMeta _mrpMeta = const VerificationMeta('mrp');
+  @override
+  late final GeneratedColumn<String> mrp = GeneratedColumn<String>(
+    'mrp',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isMrpOnlyMeta = const VerificationMeta(
+    'isMrpOnly',
+  );
+  @override
+  late final GeneratedColumn<bool> isMrpOnly = GeneratedColumn<bool>(
+    'is_mrp_only',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_mrp_only" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _marketPriceMeta = const VerificationMeta(
+    'marketPrice',
+  );
+  @override
+  late final GeneratedColumn<String> marketPrice = GeneratedColumn<String>(
+    'market_price',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _salePriceMeta = const VerificationMeta(
+    'salePrice',
+  );
+  @override
+  late final GeneratedColumn<String> salePrice = GeneratedColumn<String>(
+    'sale_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _purchasePriceMeta = const VerificationMeta(
+    'purchasePrice',
+  );
+  @override
+  late final GeneratedColumn<String> purchasePrice = GeneratedColumn<String>(
+    'purchase_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _reorderLevelMeta = const VerificationMeta(
+    'reorderLevel',
+  );
+  @override
+  late final GeneratedColumn<String> reorderLevel = GeneratedColumn<String>(
+    'reorder_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _defaultTaxRateMeta = const VerificationMeta(
+    'defaultTaxRate',
+  );
+  @override
+  late final GeneratedColumn<String> defaultTaxRate = GeneratedColumn<String>(
+    'default_tax_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _primaryImageUrlMeta = const VerificationMeta(
+    'primaryImageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> primaryImageUrl = GeneratedColumn<String>(
+    'primary_image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    shortName,
+    alias,
+    searchKeywords,
+    description,
+    itemType,
+    hasStockTracking,
+    categoryId,
+    brandId,
+    hsnCode,
+    barcode,
+    baseUnit,
+    mrp,
+    isMrpOnly,
+    marketPrice,
+    salePrice,
+    purchasePrice,
+    reorderLevel,
+    defaultTaxRate,
+    primaryImageUrl,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'items_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('short_name')) {
+      context.handle(
+        _shortNameMeta,
+        shortName.isAcceptableOrUnknown(data['short_name']!, _shortNameMeta),
+      );
+    }
+    if (data.containsKey('alias')) {
+      context.handle(
+        _aliasMeta,
+        alias.isAcceptableOrUnknown(data['alias']!, _aliasMeta),
+      );
+    }
+    if (data.containsKey('search_keywords')) {
+      context.handle(
+        _searchKeywordsMeta,
+        searchKeywords.isAcceptableOrUnknown(
+          data['search_keywords']!,
+          _searchKeywordsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('item_type')) {
+      context.handle(
+        _itemTypeMeta,
+        itemType.isAcceptableOrUnknown(data['item_type']!, _itemTypeMeta),
+      );
+    }
+    if (data.containsKey('has_stock_tracking')) {
+      context.handle(
+        _hasStockTrackingMeta,
+        hasStockTracking.isAcceptableOrUnknown(
+          data['has_stock_tracking']!,
+          _hasStockTrackingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('brand_id')) {
+      context.handle(
+        _brandIdMeta,
+        brandId.isAcceptableOrUnknown(data['brand_id']!, _brandIdMeta),
+      );
+    }
+    if (data.containsKey('hsn_code')) {
+      context.handle(
+        _hsnCodeMeta,
+        hsnCode.isAcceptableOrUnknown(data['hsn_code']!, _hsnCodeMeta),
+      );
+    }
+    if (data.containsKey('barcode')) {
+      context.handle(
+        _barcodeMeta,
+        barcode.isAcceptableOrUnknown(data['barcode']!, _barcodeMeta),
+      );
+    }
+    if (data.containsKey('base_unit')) {
+      context.handle(
+        _baseUnitMeta,
+        baseUnit.isAcceptableOrUnknown(data['base_unit']!, _baseUnitMeta),
+      );
+    }
+    if (data.containsKey('mrp')) {
+      context.handle(
+        _mrpMeta,
+        mrp.isAcceptableOrUnknown(data['mrp']!, _mrpMeta),
+      );
+    }
+    if (data.containsKey('is_mrp_only')) {
+      context.handle(
+        _isMrpOnlyMeta,
+        isMrpOnly.isAcceptableOrUnknown(data['is_mrp_only']!, _isMrpOnlyMeta),
+      );
+    }
+    if (data.containsKey('market_price')) {
+      context.handle(
+        _marketPriceMeta,
+        marketPrice.isAcceptableOrUnknown(
+          data['market_price']!,
+          _marketPriceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sale_price')) {
+      context.handle(
+        _salePriceMeta,
+        salePrice.isAcceptableOrUnknown(data['sale_price']!, _salePriceMeta),
+      );
+    }
+    if (data.containsKey('purchase_price')) {
+      context.handle(
+        _purchasePriceMeta,
+        purchasePrice.isAcceptableOrUnknown(
+          data['purchase_price']!,
+          _purchasePriceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reorder_level')) {
+      context.handle(
+        _reorderLevelMeta,
+        reorderLevel.isAcceptableOrUnknown(
+          data['reorder_level']!,
+          _reorderLevelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('default_tax_rate')) {
+      context.handle(
+        _defaultTaxRateMeta,
+        defaultTaxRate.isAcceptableOrUnknown(
+          data['default_tax_rate']!,
+          _defaultTaxRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('primary_image_url')) {
+      context.handle(
+        _primaryImageUrlMeta,
+        primaryImageUrl.isAcceptableOrUnknown(
+          data['primary_image_url']!,
+          _primaryImageUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      shortName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}short_name'],
+      ),
+      alias: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}alias'],
+      ),
+      searchKeywords: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}search_keywords'],
+      ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      itemType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_type'],
+      )!,
+      hasStockTracking: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_stock_tracking'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      brandId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}brand_id'],
+      ),
+      hsnCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hsn_code'],
+      ),
+      barcode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}barcode'],
+      ),
+      baseUnit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_unit'],
+      )!,
+      mrp: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mrp'],
+      ),
+      isMrpOnly: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_mrp_only'],
+      )!,
+      marketPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}market_price'],
+      ),
+      salePrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sale_price'],
+      )!,
+      purchasePrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purchase_price'],
+      )!,
+      reorderLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reorder_level'],
+      ),
+      defaultTaxRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}default_tax_rate'],
+      ),
+      primaryImageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}primary_image_url'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $ItemsLocalTable createAlias(String alias) {
+    return $ItemsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class ItemTableData extends DataClass implements Insertable<ItemTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String? shortName;
+  final String? alias;
+  final String? searchKeywords;
+  final String? description;
+  final String itemType;
+  final bool hasStockTracking;
+  final String? categoryId;
+  final String? brandId;
+  final String? hsnCode;
+  final String? barcode;
+  final String baseUnit;
+  final String? mrp;
+  final bool isMrpOnly;
+  final String? marketPrice;
+  final String salePrice;
+  final String purchasePrice;
+  final String? reorderLevel;
+  final String? defaultTaxRate;
+  final String? primaryImageUrl;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const ItemTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    this.shortName,
+    this.alias,
+    this.searchKeywords,
+    this.description,
+    required this.itemType,
+    required this.hasStockTracking,
+    this.categoryId,
+    this.brandId,
+    this.hsnCode,
+    this.barcode,
+    required this.baseUnit,
+    this.mrp,
+    required this.isMrpOnly,
+    this.marketPrice,
+    required this.salePrice,
+    required this.purchasePrice,
+    this.reorderLevel,
+    this.defaultTaxRate,
+    this.primaryImageUrl,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || shortName != null) {
+      map['short_name'] = Variable<String>(shortName);
+    }
+    if (!nullToAbsent || alias != null) {
+      map['alias'] = Variable<String>(alias);
+    }
+    if (!nullToAbsent || searchKeywords != null) {
+      map['search_keywords'] = Variable<String>(searchKeywords);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['item_type'] = Variable<String>(itemType);
+    map['has_stock_tracking'] = Variable<bool>(hasStockTracking);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || brandId != null) {
+      map['brand_id'] = Variable<String>(brandId);
+    }
+    if (!nullToAbsent || hsnCode != null) {
+      map['hsn_code'] = Variable<String>(hsnCode);
+    }
+    if (!nullToAbsent || barcode != null) {
+      map['barcode'] = Variable<String>(barcode);
+    }
+    map['base_unit'] = Variable<String>(baseUnit);
+    if (!nullToAbsent || mrp != null) {
+      map['mrp'] = Variable<String>(mrp);
+    }
+    map['is_mrp_only'] = Variable<bool>(isMrpOnly);
+    if (!nullToAbsent || marketPrice != null) {
+      map['market_price'] = Variable<String>(marketPrice);
+    }
+    map['sale_price'] = Variable<String>(salePrice);
+    map['purchase_price'] = Variable<String>(purchasePrice);
+    if (!nullToAbsent || reorderLevel != null) {
+      map['reorder_level'] = Variable<String>(reorderLevel);
+    }
+    if (!nullToAbsent || defaultTaxRate != null) {
+      map['default_tax_rate'] = Variable<String>(defaultTaxRate);
+    }
+    if (!nullToAbsent || primaryImageUrl != null) {
+      map['primary_image_url'] = Variable<String>(primaryImageUrl);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  ItemsLocalCompanion toCompanion(bool nullToAbsent) {
+    return ItemsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      shortName: shortName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shortName),
+      alias: alias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(alias),
+      searchKeywords: searchKeywords == null && nullToAbsent
+          ? const Value.absent()
+          : Value(searchKeywords),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      itemType: Value(itemType),
+      hasStockTracking: Value(hasStockTracking),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      brandId: brandId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(brandId),
+      hsnCode: hsnCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(hsnCode),
+      barcode: barcode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(barcode),
+      baseUnit: Value(baseUnit),
+      mrp: mrp == null && nullToAbsent ? const Value.absent() : Value(mrp),
+      isMrpOnly: Value(isMrpOnly),
+      marketPrice: marketPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(marketPrice),
+      salePrice: Value(salePrice),
+      purchasePrice: Value(purchasePrice),
+      reorderLevel: reorderLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reorderLevel),
+      defaultTaxRate: defaultTaxRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultTaxRate),
+      primaryImageUrl: primaryImageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(primaryImageUrl),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory ItemTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      shortName: serializer.fromJson<String?>(json['shortName']),
+      alias: serializer.fromJson<String?>(json['alias']),
+      searchKeywords: serializer.fromJson<String?>(json['searchKeywords']),
+      description: serializer.fromJson<String?>(json['description']),
+      itemType: serializer.fromJson<String>(json['itemType']),
+      hasStockTracking: serializer.fromJson<bool>(json['hasStockTracking']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      brandId: serializer.fromJson<String?>(json['brandId']),
+      hsnCode: serializer.fromJson<String?>(json['hsnCode']),
+      barcode: serializer.fromJson<String?>(json['barcode']),
+      baseUnit: serializer.fromJson<String>(json['baseUnit']),
+      mrp: serializer.fromJson<String?>(json['mrp']),
+      isMrpOnly: serializer.fromJson<bool>(json['isMrpOnly']),
+      marketPrice: serializer.fromJson<String?>(json['marketPrice']),
+      salePrice: serializer.fromJson<String>(json['salePrice']),
+      purchasePrice: serializer.fromJson<String>(json['purchasePrice']),
+      reorderLevel: serializer.fromJson<String?>(json['reorderLevel']),
+      defaultTaxRate: serializer.fromJson<String?>(json['defaultTaxRate']),
+      primaryImageUrl: serializer.fromJson<String?>(json['primaryImageUrl']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'shortName': serializer.toJson<String?>(shortName),
+      'alias': serializer.toJson<String?>(alias),
+      'searchKeywords': serializer.toJson<String?>(searchKeywords),
+      'description': serializer.toJson<String?>(description),
+      'itemType': serializer.toJson<String>(itemType),
+      'hasStockTracking': serializer.toJson<bool>(hasStockTracking),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'brandId': serializer.toJson<String?>(brandId),
+      'hsnCode': serializer.toJson<String?>(hsnCode),
+      'barcode': serializer.toJson<String?>(barcode),
+      'baseUnit': serializer.toJson<String>(baseUnit),
+      'mrp': serializer.toJson<String?>(mrp),
+      'isMrpOnly': serializer.toJson<bool>(isMrpOnly),
+      'marketPrice': serializer.toJson<String?>(marketPrice),
+      'salePrice': serializer.toJson<String>(salePrice),
+      'purchasePrice': serializer.toJson<String>(purchasePrice),
+      'reorderLevel': serializer.toJson<String?>(reorderLevel),
+      'defaultTaxRate': serializer.toJson<String?>(defaultTaxRate),
+      'primaryImageUrl': serializer.toJson<String?>(primaryImageUrl),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  ItemTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    Value<String?> shortName = const Value.absent(),
+    Value<String?> alias = const Value.absent(),
+    Value<String?> searchKeywords = const Value.absent(),
+    Value<String?> description = const Value.absent(),
+    String? itemType,
+    bool? hasStockTracking,
+    Value<String?> categoryId = const Value.absent(),
+    Value<String?> brandId = const Value.absent(),
+    Value<String?> hsnCode = const Value.absent(),
+    Value<String?> barcode = const Value.absent(),
+    String? baseUnit,
+    Value<String?> mrp = const Value.absent(),
+    bool? isMrpOnly,
+    Value<String?> marketPrice = const Value.absent(),
+    String? salePrice,
+    String? purchasePrice,
+    Value<String?> reorderLevel = const Value.absent(),
+    Value<String?> defaultTaxRate = const Value.absent(),
+    Value<String?> primaryImageUrl = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => ItemTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    shortName: shortName.present ? shortName.value : this.shortName,
+    alias: alias.present ? alias.value : this.alias,
+    searchKeywords: searchKeywords.present
+        ? searchKeywords.value
+        : this.searchKeywords,
+    description: description.present ? description.value : this.description,
+    itemType: itemType ?? this.itemType,
+    hasStockTracking: hasStockTracking ?? this.hasStockTracking,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    brandId: brandId.present ? brandId.value : this.brandId,
+    hsnCode: hsnCode.present ? hsnCode.value : this.hsnCode,
+    barcode: barcode.present ? barcode.value : this.barcode,
+    baseUnit: baseUnit ?? this.baseUnit,
+    mrp: mrp.present ? mrp.value : this.mrp,
+    isMrpOnly: isMrpOnly ?? this.isMrpOnly,
+    marketPrice: marketPrice.present ? marketPrice.value : this.marketPrice,
+    salePrice: salePrice ?? this.salePrice,
+    purchasePrice: purchasePrice ?? this.purchasePrice,
+    reorderLevel: reorderLevel.present ? reorderLevel.value : this.reorderLevel,
+    defaultTaxRate: defaultTaxRate.present
+        ? defaultTaxRate.value
+        : this.defaultTaxRate,
+    primaryImageUrl: primaryImageUrl.present
+        ? primaryImageUrl.value
+        : this.primaryImageUrl,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  ItemTableData copyWithCompanion(ItemsLocalCompanion data) {
+    return ItemTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      shortName: data.shortName.present ? data.shortName.value : this.shortName,
+      alias: data.alias.present ? data.alias.value : this.alias,
+      searchKeywords: data.searchKeywords.present
+          ? data.searchKeywords.value
+          : this.searchKeywords,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      itemType: data.itemType.present ? data.itemType.value : this.itemType,
+      hasStockTracking: data.hasStockTracking.present
+          ? data.hasStockTracking.value
+          : this.hasStockTracking,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      brandId: data.brandId.present ? data.brandId.value : this.brandId,
+      hsnCode: data.hsnCode.present ? data.hsnCode.value : this.hsnCode,
+      barcode: data.barcode.present ? data.barcode.value : this.barcode,
+      baseUnit: data.baseUnit.present ? data.baseUnit.value : this.baseUnit,
+      mrp: data.mrp.present ? data.mrp.value : this.mrp,
+      isMrpOnly: data.isMrpOnly.present ? data.isMrpOnly.value : this.isMrpOnly,
+      marketPrice: data.marketPrice.present
+          ? data.marketPrice.value
+          : this.marketPrice,
+      salePrice: data.salePrice.present ? data.salePrice.value : this.salePrice,
+      purchasePrice: data.purchasePrice.present
+          ? data.purchasePrice.value
+          : this.purchasePrice,
+      reorderLevel: data.reorderLevel.present
+          ? data.reorderLevel.value
+          : this.reorderLevel,
+      defaultTaxRate: data.defaultTaxRate.present
+          ? data.defaultTaxRate.value
+          : this.defaultTaxRate,
+      primaryImageUrl: data.primaryImageUrl.present
+          ? data.primaryImageUrl.value
+          : this.primaryImageUrl,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('shortName: $shortName, ')
+          ..write('alias: $alias, ')
+          ..write('searchKeywords: $searchKeywords, ')
+          ..write('description: $description, ')
+          ..write('itemType: $itemType, ')
+          ..write('hasStockTracking: $hasStockTracking, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('brandId: $brandId, ')
+          ..write('hsnCode: $hsnCode, ')
+          ..write('barcode: $barcode, ')
+          ..write('baseUnit: $baseUnit, ')
+          ..write('mrp: $mrp, ')
+          ..write('isMrpOnly: $isMrpOnly, ')
+          ..write('marketPrice: $marketPrice, ')
+          ..write('salePrice: $salePrice, ')
+          ..write('purchasePrice: $purchasePrice, ')
+          ..write('reorderLevel: $reorderLevel, ')
+          ..write('defaultTaxRate: $defaultTaxRate, ')
+          ..write('primaryImageUrl: $primaryImageUrl, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    name,
+    shortName,
+    alias,
+    searchKeywords,
+    description,
+    itemType,
+    hasStockTracking,
+    categoryId,
+    brandId,
+    hsnCode,
+    barcode,
+    baseUnit,
+    mrp,
+    isMrpOnly,
+    marketPrice,
+    salePrice,
+    purchasePrice,
+    reorderLevel,
+    defaultTaxRate,
+    primaryImageUrl,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.shortName == this.shortName &&
+          other.alias == this.alias &&
+          other.searchKeywords == this.searchKeywords &&
+          other.description == this.description &&
+          other.itemType == this.itemType &&
+          other.hasStockTracking == this.hasStockTracking &&
+          other.categoryId == this.categoryId &&
+          other.brandId == this.brandId &&
+          other.hsnCode == this.hsnCode &&
+          other.barcode == this.barcode &&
+          other.baseUnit == this.baseUnit &&
+          other.mrp == this.mrp &&
+          other.isMrpOnly == this.isMrpOnly &&
+          other.marketPrice == this.marketPrice &&
+          other.salePrice == this.salePrice &&
+          other.purchasePrice == this.purchasePrice &&
+          other.reorderLevel == this.reorderLevel &&
+          other.defaultTaxRate == this.defaultTaxRate &&
+          other.primaryImageUrl == this.primaryImageUrl &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class ItemsLocalCompanion extends UpdateCompanion<ItemTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String?> shortName;
+  final Value<String?> alias;
+  final Value<String?> searchKeywords;
+  final Value<String?> description;
+  final Value<String> itemType;
+  final Value<bool> hasStockTracking;
+  final Value<String?> categoryId;
+  final Value<String?> brandId;
+  final Value<String?> hsnCode;
+  final Value<String?> barcode;
+  final Value<String> baseUnit;
+  final Value<String?> mrp;
+  final Value<bool> isMrpOnly;
+  final Value<String?> marketPrice;
+  final Value<String> salePrice;
+  final Value<String> purchasePrice;
+  final Value<String?> reorderLevel;
+  final Value<String?> defaultTaxRate;
+  final Value<String?> primaryImageUrl;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const ItemsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.shortName = const Value.absent(),
+    this.alias = const Value.absent(),
+    this.searchKeywords = const Value.absent(),
+    this.description = const Value.absent(),
+    this.itemType = const Value.absent(),
+    this.hasStockTracking = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.brandId = const Value.absent(),
+    this.hsnCode = const Value.absent(),
+    this.barcode = const Value.absent(),
+    this.baseUnit = const Value.absent(),
+    this.mrp = const Value.absent(),
+    this.isMrpOnly = const Value.absent(),
+    this.marketPrice = const Value.absent(),
+    this.salePrice = const Value.absent(),
+    this.purchasePrice = const Value.absent(),
+    this.reorderLevel = const Value.absent(),
+    this.defaultTaxRate = const Value.absent(),
+    this.primaryImageUrl = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.shortName = const Value.absent(),
+    this.alias = const Value.absent(),
+    this.searchKeywords = const Value.absent(),
+    this.description = const Value.absent(),
+    this.itemType = const Value.absent(),
+    this.hasStockTracking = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.brandId = const Value.absent(),
+    this.hsnCode = const Value.absent(),
+    this.barcode = const Value.absent(),
+    this.baseUnit = const Value.absent(),
+    this.mrp = const Value.absent(),
+    this.isMrpOnly = const Value.absent(),
+    this.marketPrice = const Value.absent(),
+    this.salePrice = const Value.absent(),
+    this.purchasePrice = const Value.absent(),
+    this.reorderLevel = const Value.absent(),
+    this.defaultTaxRate = const Value.absent(),
+    this.primaryImageUrl = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ItemTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? shortName,
+    Expression<String>? alias,
+    Expression<String>? searchKeywords,
+    Expression<String>? description,
+    Expression<String>? itemType,
+    Expression<bool>? hasStockTracking,
+    Expression<String>? categoryId,
+    Expression<String>? brandId,
+    Expression<String>? hsnCode,
+    Expression<String>? barcode,
+    Expression<String>? baseUnit,
+    Expression<String>? mrp,
+    Expression<bool>? isMrpOnly,
+    Expression<String>? marketPrice,
+    Expression<String>? salePrice,
+    Expression<String>? purchasePrice,
+    Expression<String>? reorderLevel,
+    Expression<String>? defaultTaxRate,
+    Expression<String>? primaryImageUrl,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (shortName != null) 'short_name': shortName,
+      if (alias != null) 'alias': alias,
+      if (searchKeywords != null) 'search_keywords': searchKeywords,
+      if (description != null) 'description': description,
+      if (itemType != null) 'item_type': itemType,
+      if (hasStockTracking != null) 'has_stock_tracking': hasStockTracking,
+      if (categoryId != null) 'category_id': categoryId,
+      if (brandId != null) 'brand_id': brandId,
+      if (hsnCode != null) 'hsn_code': hsnCode,
+      if (barcode != null) 'barcode': barcode,
+      if (baseUnit != null) 'base_unit': baseUnit,
+      if (mrp != null) 'mrp': mrp,
+      if (isMrpOnly != null) 'is_mrp_only': isMrpOnly,
+      if (marketPrice != null) 'market_price': marketPrice,
+      if (salePrice != null) 'sale_price': salePrice,
+      if (purchasePrice != null) 'purchase_price': purchasePrice,
+      if (reorderLevel != null) 'reorder_level': reorderLevel,
+      if (defaultTaxRate != null) 'default_tax_rate': defaultTaxRate,
+      if (primaryImageUrl != null) 'primary_image_url': primaryImageUrl,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String?>? shortName,
+    Value<String?>? alias,
+    Value<String?>? searchKeywords,
+    Value<String?>? description,
+    Value<String>? itemType,
+    Value<bool>? hasStockTracking,
+    Value<String?>? categoryId,
+    Value<String?>? brandId,
+    Value<String?>? hsnCode,
+    Value<String?>? barcode,
+    Value<String>? baseUnit,
+    Value<String?>? mrp,
+    Value<bool>? isMrpOnly,
+    Value<String?>? marketPrice,
+    Value<String>? salePrice,
+    Value<String>? purchasePrice,
+    Value<String?>? reorderLevel,
+    Value<String?>? defaultTaxRate,
+    Value<String?>? primaryImageUrl,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return ItemsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      shortName: shortName ?? this.shortName,
+      alias: alias ?? this.alias,
+      searchKeywords: searchKeywords ?? this.searchKeywords,
+      description: description ?? this.description,
+      itemType: itemType ?? this.itemType,
+      hasStockTracking: hasStockTracking ?? this.hasStockTracking,
+      categoryId: categoryId ?? this.categoryId,
+      brandId: brandId ?? this.brandId,
+      hsnCode: hsnCode ?? this.hsnCode,
+      barcode: barcode ?? this.barcode,
+      baseUnit: baseUnit ?? this.baseUnit,
+      mrp: mrp ?? this.mrp,
+      isMrpOnly: isMrpOnly ?? this.isMrpOnly,
+      marketPrice: marketPrice ?? this.marketPrice,
+      salePrice: salePrice ?? this.salePrice,
+      purchasePrice: purchasePrice ?? this.purchasePrice,
+      reorderLevel: reorderLevel ?? this.reorderLevel,
+      defaultTaxRate: defaultTaxRate ?? this.defaultTaxRate,
+      primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (shortName.present) {
+      map['short_name'] = Variable<String>(shortName.value);
+    }
+    if (alias.present) {
+      map['alias'] = Variable<String>(alias.value);
+    }
+    if (searchKeywords.present) {
+      map['search_keywords'] = Variable<String>(searchKeywords.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (itemType.present) {
+      map['item_type'] = Variable<String>(itemType.value);
+    }
+    if (hasStockTracking.present) {
+      map['has_stock_tracking'] = Variable<bool>(hasStockTracking.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (brandId.present) {
+      map['brand_id'] = Variable<String>(brandId.value);
+    }
+    if (hsnCode.present) {
+      map['hsn_code'] = Variable<String>(hsnCode.value);
+    }
+    if (barcode.present) {
+      map['barcode'] = Variable<String>(barcode.value);
+    }
+    if (baseUnit.present) {
+      map['base_unit'] = Variable<String>(baseUnit.value);
+    }
+    if (mrp.present) {
+      map['mrp'] = Variable<String>(mrp.value);
+    }
+    if (isMrpOnly.present) {
+      map['is_mrp_only'] = Variable<bool>(isMrpOnly.value);
+    }
+    if (marketPrice.present) {
+      map['market_price'] = Variable<String>(marketPrice.value);
+    }
+    if (salePrice.present) {
+      map['sale_price'] = Variable<String>(salePrice.value);
+    }
+    if (purchasePrice.present) {
+      map['purchase_price'] = Variable<String>(purchasePrice.value);
+    }
+    if (reorderLevel.present) {
+      map['reorder_level'] = Variable<String>(reorderLevel.value);
+    }
+    if (defaultTaxRate.present) {
+      map['default_tax_rate'] = Variable<String>(defaultTaxRate.value);
+    }
+    if (primaryImageUrl.present) {
+      map['primary_image_url'] = Variable<String>(primaryImageUrl.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('shortName: $shortName, ')
+          ..write('alias: $alias, ')
+          ..write('searchKeywords: $searchKeywords, ')
+          ..write('description: $description, ')
+          ..write('itemType: $itemType, ')
+          ..write('hasStockTracking: $hasStockTracking, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('brandId: $brandId, ')
+          ..write('hsnCode: $hsnCode, ')
+          ..write('barcode: $barcode, ')
+          ..write('baseUnit: $baseUnit, ')
+          ..write('mrp: $mrp, ')
+          ..write('isMrpOnly: $isMrpOnly, ')
+          ..write('marketPrice: $marketPrice, ')
+          ..write('salePrice: $salePrice, ')
+          ..write('purchasePrice: $purchasePrice, ')
+          ..write('reorderLevel: $reorderLevel, ')
+          ..write('defaultTaxRate: $defaultTaxRate, ')
+          ..write('primaryImageUrl: $primaryImageUrl, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9488,6 +11015,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $PartiesLocalTable partiesLocal = $PartiesLocalTable(this);
+  late final $ItemsLocalTable itemsLocal = $ItemsLocalTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9504,6 +11032,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncQueue,
     categoriesLocal,
     partiesLocal,
+    itemsLocal,
   ];
 }
 
@@ -14152,6 +15681,665 @@ typedef $$PartiesLocalTableProcessedTableManager =
       PartyTableData,
       PrefetchHooks Function()
     >;
+typedef $$ItemsLocalTableCreateCompanionBuilder =
+    ItemsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<String?> shortName,
+      Value<String?> alias,
+      Value<String?> searchKeywords,
+      Value<String?> description,
+      Value<String> itemType,
+      Value<bool> hasStockTracking,
+      Value<String?> categoryId,
+      Value<String?> brandId,
+      Value<String?> hsnCode,
+      Value<String?> barcode,
+      Value<String> baseUnit,
+      Value<String?> mrp,
+      Value<bool> isMrpOnly,
+      Value<String?> marketPrice,
+      Value<String> salePrice,
+      Value<String> purchasePrice,
+      Value<String?> reorderLevel,
+      Value<String?> defaultTaxRate,
+      Value<String?> primaryImageUrl,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$ItemsLocalTableUpdateCompanionBuilder =
+    ItemsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String?> shortName,
+      Value<String?> alias,
+      Value<String?> searchKeywords,
+      Value<String?> description,
+      Value<String> itemType,
+      Value<bool> hasStockTracking,
+      Value<String?> categoryId,
+      Value<String?> brandId,
+      Value<String?> hsnCode,
+      Value<String?> barcode,
+      Value<String> baseUnit,
+      Value<String?> mrp,
+      Value<bool> isMrpOnly,
+      Value<String?> marketPrice,
+      Value<String> salePrice,
+      Value<String> purchasePrice,
+      Value<String?> reorderLevel,
+      Value<String?> defaultTaxRate,
+      Value<String?> primaryImageUrl,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$ItemsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemsLocalTable> {
+  $$ItemsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shortName => $composableBuilder(
+    column: $table.shortName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get alias => $composableBuilder(
+    column: $table.alias,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get searchKeywords => $composableBuilder(
+    column: $table.searchKeywords,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemType => $composableBuilder(
+    column: $table.itemType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasStockTracking => $composableBuilder(
+    column: $table.hasStockTracking,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get brandId => $composableBuilder(
+    column: $table.brandId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hsnCode => $composableBuilder(
+    column: $table.hsnCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get barcode => $composableBuilder(
+    column: $table.barcode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseUnit => $composableBuilder(
+    column: $table.baseUnit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mrp => $composableBuilder(
+    column: $table.mrp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isMrpOnly => $composableBuilder(
+    column: $table.isMrpOnly,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get marketPrice => $composableBuilder(
+    column: $table.marketPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salePrice => $composableBuilder(
+    column: $table.salePrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reorderLevel => $composableBuilder(
+    column: $table.reorderLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get defaultTaxRate => $composableBuilder(
+    column: $table.defaultTaxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get primaryImageUrl => $composableBuilder(
+    column: $table.primaryImageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ItemsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemsLocalTable> {
+  $$ItemsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shortName => $composableBuilder(
+    column: $table.shortName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get alias => $composableBuilder(
+    column: $table.alias,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get searchKeywords => $composableBuilder(
+    column: $table.searchKeywords,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemType => $composableBuilder(
+    column: $table.itemType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hasStockTracking => $composableBuilder(
+    column: $table.hasStockTracking,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get brandId => $composableBuilder(
+    column: $table.brandId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hsnCode => $composableBuilder(
+    column: $table.hsnCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get barcode => $composableBuilder(
+    column: $table.barcode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseUnit => $composableBuilder(
+    column: $table.baseUnit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mrp => $composableBuilder(
+    column: $table.mrp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isMrpOnly => $composableBuilder(
+    column: $table.isMrpOnly,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get marketPrice => $composableBuilder(
+    column: $table.marketPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salePrice => $composableBuilder(
+    column: $table.salePrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reorderLevel => $composableBuilder(
+    column: $table.reorderLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get defaultTaxRate => $composableBuilder(
+    column: $table.defaultTaxRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get primaryImageUrl => $composableBuilder(
+    column: $table.primaryImageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ItemsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemsLocalTable> {
+  $$ItemsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get shortName =>
+      $composableBuilder(column: $table.shortName, builder: (column) => column);
+
+  GeneratedColumn<String> get alias =>
+      $composableBuilder(column: $table.alias, builder: (column) => column);
+
+  GeneratedColumn<String> get searchKeywords => $composableBuilder(
+    column: $table.searchKeywords,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemType =>
+      $composableBuilder(column: $table.itemType, builder: (column) => column);
+
+  GeneratedColumn<bool> get hasStockTracking => $composableBuilder(
+    column: $table.hasStockTracking,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get brandId =>
+      $composableBuilder(column: $table.brandId, builder: (column) => column);
+
+  GeneratedColumn<String> get hsnCode =>
+      $composableBuilder(column: $table.hsnCode, builder: (column) => column);
+
+  GeneratedColumn<String> get barcode =>
+      $composableBuilder(column: $table.barcode, builder: (column) => column);
+
+  GeneratedColumn<String> get baseUnit =>
+      $composableBuilder(column: $table.baseUnit, builder: (column) => column);
+
+  GeneratedColumn<String> get mrp =>
+      $composableBuilder(column: $table.mrp, builder: (column) => column);
+
+  GeneratedColumn<bool> get isMrpOnly =>
+      $composableBuilder(column: $table.isMrpOnly, builder: (column) => column);
+
+  GeneratedColumn<String> get marketPrice => $composableBuilder(
+    column: $table.marketPrice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get salePrice =>
+      $composableBuilder(column: $table.salePrice, builder: (column) => column);
+
+  GeneratedColumn<String> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reorderLevel => $composableBuilder(
+    column: $table.reorderLevel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get defaultTaxRate => $composableBuilder(
+    column: $table.defaultTaxRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get primaryImageUrl => $composableBuilder(
+    column: $table.primaryImageUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$ItemsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemsLocalTable,
+          ItemTableData,
+          $$ItemsLocalTableFilterComposer,
+          $$ItemsLocalTableOrderingComposer,
+          $$ItemsLocalTableAnnotationComposer,
+          $$ItemsLocalTableCreateCompanionBuilder,
+          $$ItemsLocalTableUpdateCompanionBuilder,
+          (
+            ItemTableData,
+            BaseReferences<_$AppDatabase, $ItemsLocalTable, ItemTableData>,
+          ),
+          ItemTableData,
+          PrefetchHooks Function()
+        > {
+  $$ItemsLocalTableTableManager(_$AppDatabase db, $ItemsLocalTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemsLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> shortName = const Value.absent(),
+                Value<String?> alias = const Value.absent(),
+                Value<String?> searchKeywords = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> itemType = const Value.absent(),
+                Value<bool> hasStockTracking = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> brandId = const Value.absent(),
+                Value<String?> hsnCode = const Value.absent(),
+                Value<String?> barcode = const Value.absent(),
+                Value<String> baseUnit = const Value.absent(),
+                Value<String?> mrp = const Value.absent(),
+                Value<bool> isMrpOnly = const Value.absent(),
+                Value<String?> marketPrice = const Value.absent(),
+                Value<String> salePrice = const Value.absent(),
+                Value<String> purchasePrice = const Value.absent(),
+                Value<String?> reorderLevel = const Value.absent(),
+                Value<String?> defaultTaxRate = const Value.absent(),
+                Value<String?> primaryImageUrl = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                shortName: shortName,
+                alias: alias,
+                searchKeywords: searchKeywords,
+                description: description,
+                itemType: itemType,
+                hasStockTracking: hasStockTracking,
+                categoryId: categoryId,
+                brandId: brandId,
+                hsnCode: hsnCode,
+                barcode: barcode,
+                baseUnit: baseUnit,
+                mrp: mrp,
+                isMrpOnly: isMrpOnly,
+                marketPrice: marketPrice,
+                salePrice: salePrice,
+                purchasePrice: purchasePrice,
+                reorderLevel: reorderLevel,
+                defaultTaxRate: defaultTaxRate,
+                primaryImageUrl: primaryImageUrl,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<String?> shortName = const Value.absent(),
+                Value<String?> alias = const Value.absent(),
+                Value<String?> searchKeywords = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> itemType = const Value.absent(),
+                Value<bool> hasStockTracking = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> brandId = const Value.absent(),
+                Value<String?> hsnCode = const Value.absent(),
+                Value<String?> barcode = const Value.absent(),
+                Value<String> baseUnit = const Value.absent(),
+                Value<String?> mrp = const Value.absent(),
+                Value<bool> isMrpOnly = const Value.absent(),
+                Value<String?> marketPrice = const Value.absent(),
+                Value<String> salePrice = const Value.absent(),
+                Value<String> purchasePrice = const Value.absent(),
+                Value<String?> reorderLevel = const Value.absent(),
+                Value<String?> defaultTaxRate = const Value.absent(),
+                Value<String?> primaryImageUrl = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                shortName: shortName,
+                alias: alias,
+                searchKeywords: searchKeywords,
+                description: description,
+                itemType: itemType,
+                hasStockTracking: hasStockTracking,
+                categoryId: categoryId,
+                brandId: brandId,
+                hsnCode: hsnCode,
+                barcode: barcode,
+                baseUnit: baseUnit,
+                mrp: mrp,
+                isMrpOnly: isMrpOnly,
+                marketPrice: marketPrice,
+                salePrice: salePrice,
+                purchasePrice: purchasePrice,
+                reorderLevel: reorderLevel,
+                defaultTaxRate: defaultTaxRate,
+                primaryImageUrl: primaryImageUrl,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ItemsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemsLocalTable,
+      ItemTableData,
+      $$ItemsLocalTableFilterComposer,
+      $$ItemsLocalTableOrderingComposer,
+      $$ItemsLocalTableAnnotationComposer,
+      $$ItemsLocalTableCreateCompanionBuilder,
+      $$ItemsLocalTableUpdateCompanionBuilder,
+      (
+        ItemTableData,
+        BaseReferences<_$AppDatabase, $ItemsLocalTable, ItemTableData>,
+      ),
+      ItemTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14178,4 +16366,6 @@ class $AppDatabaseManager {
       $$CategoriesLocalTableTableManager(_db, _db.categoriesLocal);
   $$PartiesLocalTableTableManager get partiesLocal =>
       $$PartiesLocalTableTableManager(_db, _db.partiesLocal);
+  $$ItemsLocalTableTableManager get itemsLocal =>
+      $$ItemsLocalTableTableManager(_db, _db.itemsLocal);
 }

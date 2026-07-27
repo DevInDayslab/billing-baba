@@ -87,7 +87,7 @@ describe('sync pushBodySchema', () => {
         {
           mutation_id: 'a1111111-1111-4111-8111-111111111111',
           kind: 'row',
-          entity_type: 'items',
+          entity_type: 'brands',
           entity_id: 'b2222222-2222-4222-8222-222222222222',
           operation: 'create',
           base_sync_version: 0,

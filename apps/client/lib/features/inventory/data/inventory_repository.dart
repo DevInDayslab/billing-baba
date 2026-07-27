@@ -2,6 +2,7 @@ import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/models/dto/brand_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/godown_dto.dart';
@@ -31,6 +32,7 @@ class InventoryRepository {
     required this._local,
     required this._syncQueue,
     required this._businessIdReader,
+    required this._items,
     this._deviceIdReader,
   });
 
@@ -38,6 +40,7 @@ class InventoryRepository {
   final InventoryLocalDataSource _local;
   final SyncQueue _syncQueue;
   final String Function() _businessIdReader;
+  final ItemMasterRepository _items;
   final String? Function()? _deviceIdReader;
 
   InventoryRemoteDataSource get remoteDataSource => _remote;
@@ -250,20 +253,24 @@ class InventoryRepository {
   Future<void> deleteGodown(String id) => _remote.deleteGodown(id);
 
   Future<PaginatedItemsDto> listItems(ItemListQuery query) =>
-      _remote.listItems(query);
+      _items.list(query);
 
-  Future<ItemDetailDto> getItem(String id) => _remote.getItem(id);
+  Future<ItemDetailDto> getItem(String id) async {
+    final local = await _items.getActive(id);
+    if (local != null) return local;
+    return _remote.getItem(id);
+  }
 
   Future<Map<String, List<String>>> getAlternativesIndex() =>
       _remote.getAlternativesIndex();
 
   Future<ItemDetailDto> createItem(CreateItemRequest request) =>
-      _remote.createItem(request);
+      _items.create(request);
 
   Future<ItemDetailDto> updateItem(String id, UpdateItemRequest request) =>
-      _remote.updateItem(id, request);
+      _items.update(id, request);
 
-  Future<void> deleteItem(String id) => _remote.deleteItem(id);
+  Future<void> deleteItem(String id) => _items.softDelete(id);
 
   Future<List<ItemImageDto>> getItemImages(String itemId) =>
       _remote.listItemImages(itemId);

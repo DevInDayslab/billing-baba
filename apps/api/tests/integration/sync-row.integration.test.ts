@@ -463,4 +463,154 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
     },
     INTEGRATION_TIMEOUT_MS,
   );
+
+  test(
+    'items create → pull → conflict → duplicate replay',
+    async () => {
+      const itemId = randomUUID();
+      const mutationCreate = randomUUID();
+      const batch1 = randomUUID();
+
+      const createPush = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: batch1,
+          mutations: [
+            {
+              mutation_id: mutationCreate,
+              kind: 'row',
+              entity_type: 'items',
+              entity_id: itemId,
+              operation: 'create',
+              base_sync_version: 0,
+              payload: {
+                name: `Sync Item ${suffix}`,
+                base_unit: 'piece',
+                item_type: 'product',
+                has_stock_tracking: true,
+                sale_price: '100',
+                purchase_price: '80',
+                is_mrp_only: false,
+              },
+              client_updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      expect(createPush.statusCode).toBe(200);
+      const createBody = createPush.json() as {
+        data: {
+          accepted: Array<{ sync_version: number; entity_id: string }>;
+          conflicts: unknown[];
+          errors: unknown[];
+        };
+      };
+      expect(createBody.data.errors).toEqual([]);
+      expect(createBody.data.conflicts).toEqual([]);
+      expect(createBody.data.accepted).toHaveLength(1);
+      expect(createBody.data.accepted[0]?.sync_version).toBe(1);
+      expect(createBody.data.accepted[0]?.entity_id).toBe(itemId);
+
+      const pullCursor = encodeCursor({
+        t: new Date(Date.now() - 60_000).toISOString(),
+        i: ZERO_UUID,
+      });
+      const pull1 = await app.inject({
+        method: 'GET',
+        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(pullCursor)}&entity_types=items&limit=200`,
+        headers: syncHeaders(token, deviceId),
+      });
+      expect(pull1.statusCode).toBe(200);
+      const pull1Body = pull1.json() as {
+        data: {
+          changes: Array<{
+            entity_id: string;
+            sync_version: number;
+            is_deleted: boolean;
+            payload: Record<string, unknown> | null;
+          }>;
+        };
+      };
+      const found = pull1Body.data.changes.find((c) => c.entity_id === itemId);
+      expect(found).toBeTruthy();
+      expect(found?.sync_version).toBe(1);
+      expect(found?.is_deleted).toBe(false);
+      expect(found?.payload?.name).toBe(`Sync Item ${suffix}`);
+
+      const mutationUpdate = randomUUID();
+      const conflictPush = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: randomUUID(),
+          mutations: [
+            {
+              mutation_id: mutationUpdate,
+              kind: 'row',
+              entity_type: 'items',
+              entity_id: itemId,
+              operation: 'update',
+              base_sync_version: 0,
+              payload: {
+                name: 'Should Conflict',
+                base_unit: 'piece',
+                item_type: 'product',
+                has_stock_tracking: true,
+                sale_price: '100',
+                purchase_price: '80',
+                is_mrp_only: false,
+              },
+              client_updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      expect(conflictPush.statusCode).toBe(200);
+      const conflictBody = conflictPush.json() as {
+        data: { conflicts: Array<{ mutation_id: string }>; accepted: unknown[] };
+      };
+      expect(conflictBody.data.accepted).toEqual([]);
+      expect(conflictBody.data.conflicts).toHaveLength(1);
+      expect(conflictBody.data.conflicts[0]?.mutation_id).toBe(mutationUpdate);
+
+      const replay = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: randomUUID(),
+          mutations: [
+            {
+              mutation_id: mutationCreate,
+              kind: 'row',
+              entity_type: 'items',
+              entity_id: itemId,
+              operation: 'create',
+              base_sync_version: 0,
+              payload: { name: 'should not re-apply', base_unit: 'piece' },
+              client_updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      expect(replay.statusCode).toBe(200);
+      const replayBody = replay.json() as {
+        data: {
+          replayed: Array<{ mutation_id: string; idempotent_replay: boolean }>;
+          accepted: unknown[];
+        };
+      };
+      expect(replayBody.data.accepted).toEqual([]);
+      expect(replayBody.data.replayed).toHaveLength(1);
+      expect(replayBody.data.replayed[0]?.mutation_id).toBe(mutationCreate);
+      expect(replayBody.data.replayed[0]?.idempotent_replay).toBe(true);
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
 });

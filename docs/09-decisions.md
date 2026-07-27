@@ -1526,12 +1526,12 @@ Early sync scaffolding added plan/session/runner/worker layers, a 4-deep queue s
 For Billing Baba MVP:
 
 1. **Keep only:** SyncEngine, SyncCoordinator, SyncQueue, SyncApi, SyncState, SyncJob, Device Identity, Sync Metadata.
-2. **Client entity apply:** `switch (entityType)` — start with `categories`; copy the pattern for parties/items later. No client registry/adapter/mapper framework.
+2. **Client entity apply:** `switch (entityType)` — copy the pattern for each master (`categories`, `parties`, `items`, …). No client registry/adapter/mapper framework.
 3. **Two sync modes only:** row (masters) and command (financial/inventory ops). Media deferred.
 4. **Bootstrap:** if local DB has no cursor → pull from epoch until `has_more=false` → store cursor. No chunk planner / bootstrap session state machine. `POST /bootstrap` may return `initial_cursor` only.
 5. **Conflicts:** optimistic `base_sync_version` gate; on conflict mark queue job, keep local row, show later. No merge framework.
 6. **Triggers:** app startup, connectivity restored, manual refresh, periodic while app open. No OS background workers.
-7. **Server:** register only entities the client syncs (MVP: `categories`). Status/Zod advertise registered types only.
+7. **Server:** register only entities the client syncs (currently `categories`, `parties`, `items`). Status/Zod advertise registered types only.
 
 ### Consequences
 

@@ -1,4 +1,4 @@
-import { categories, parties } from '../../../db/schema';
+import { categories, items, parties } from '../../../db/schema';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 
@@ -94,6 +94,32 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'connectedSince',
       'notes',
       'isActive',
+    ],
+  }),
+  items: defineEntity({
+    entityType: 'items',
+    table: items,
+    allowedColumns: [
+      'name',
+      'shortName',
+      'alias',
+      'searchKeywords',
+      'description',
+      'itemType',
+      'hasStockTracking',
+      'categoryId',
+      'brandId',
+      'hsnCode',
+      'barcode',
+      'baseUnit',
+      'mrp',
+      'isMrpOnly',
+      'marketPrice',
+      'salePrice',
+      'purchasePrice',
+      'reorderLevel',
+      'defaultTaxRate',
+      'primaryImageUrl',
     ],
   }),
 };

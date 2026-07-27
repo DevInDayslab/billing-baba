@@ -9,6 +9,7 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
@@ -148,6 +149,7 @@ void main() {
       storage: storage,
       categorySync: CategorySync(db),
       partySync: PartySync(db),
+      itemSync: ItemSync(db),
     );
 
     lifecycles = <SyncLifecycleState>[];
@@ -191,14 +193,14 @@ void main() {
     expect(api.pushCalls, 0);
     // bootstrap pull + steady-state pull
     expect(api.pullCalls, 2);
-    expect(api.lastPullEntityTypes, 'categories,parties');
+    expect(api.lastPullEntityTypes, 'categories,parties,items');
     expect(metadata.pullCursor, isNotNull);
     expect(metadata.bootstrappedAt, isNotNull);
     expect(state.lifecycle, SyncLifecycleState.idle);
     expect(state.lastResultMessage, contains('Sync complete'));
   });
 
-  test('ready state pushes category and party row jobs', () async {
+  test('ready state pushes category, party, and item row jobs', () async {
     await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
     await storage.write(StorageKeys.syncPullCursor, 'cursor-abc');
     await storage.write(
@@ -223,6 +225,14 @@ void main() {
       payload: {'name': 'Retail'},
     );
 
+    final itemJob = await queue.enqueueRowMutation(
+      businessId: 'biz-1',
+      entityType: 'items',
+      entityId: '22222222-2222-2222-2222-222222222222',
+      operation: SyncQueueOperation.create,
+      payload: {'name': 'Widget', 'base_unit': 'piece'},
+    );
+
     await db.into(db.categoriesLocal).insert(
           CategoriesLocalCompanion.insert(
             id: '11111111-1111-1111-1111-111111111111',
@@ -244,18 +254,28 @@ void main() {
           ),
         );
 
+    await db.into(db.itemsLocal).insert(
+          ItemsLocalCompanion.insert(
+            id: '22222222-2222-2222-2222-222222222222',
+            businessId: 'biz-1',
+            name: 'Widget',
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        );
+
     final state = await runOrchestrate();
 
     expect(api.pushCalls, 1);
     expect(api.pullCalls, 1);
-    expect(api.lastPullEntityTypes, 'categories,parties');
+    expect(api.lastPullEntityTypes, 'categories,parties,items');
     final mutations = api.lastPushBody!['mutations'] as List;
-    expect(mutations, hasLength(2));
+    expect(mutations, hasLength(3));
     final types = mutations.map((m) => m['entity_type']).toSet();
-    expect(types, {'categories', 'parties'});
+    expect(types, {'categories', 'parties', 'items'});
     expect(
       mutations.map((m) => m['mutation_id']),
-      containsAll([catJob.mutationId, partyJob.mutationId]),
+      containsAll([catJob.mutationId, partyJob.mutationId, itemJob.mutationId]),
     );
 
     expect(await queue.pendingCount(), 0);
@@ -271,7 +291,13 @@ void main() {
           ))
         .getSingle();
     expect(partyRow.syncVersion, 1);
-    expect(state.lastResultMessage, contains('push=2'));
+    final itemRow = await (db.select(db.itemsLocal)
+          ..where(
+            (t) => t.id.equals('22222222-2222-2222-2222-222222222222'),
+          ))
+        .getSingle();
+    expect(itemRow.syncVersion, 1);
+    expect(state.lastResultMessage, contains('push=3'));
   });
 
   test('401 on register → needsAuthentication', () async {
