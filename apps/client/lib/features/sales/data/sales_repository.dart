@@ -3,6 +3,7 @@ import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
+import 'package:dio/dio.dart';
 
 class SalesRepository {
   SalesRepository({
@@ -11,14 +12,31 @@ class SalesRepository {
   });
 
   final SalesRemoteDataSource _remote;
-  // ignore: unused_field
   final SalesLocalDataSource? _local;
 
   Future<PaginatedSalesDocumentsDto> listDocuments(
     SalesDocumentListQuery query,
-  ) => _remote.listDocuments(query);
+  ) =>
+      _remote.listDocuments(query);
 
-  Future<SalesDocumentDto> getDocument(String id) => _remote.getDocument(id);
+  /// Local Drift first, then API. Printing and detail views must not block on network.
+  Future<SalesDocumentDto> getDocument(String id) async {
+    final local = _local;
+    if (local != null) {
+      final cached = await local.getDocument(id);
+      if (cached != null) return cached;
+    }
+
+    try {
+      return await _remote.getDocument(id);
+    } on DioException {
+      if (local != null) {
+        final cached = await local.getDocument(id);
+        if (cached != null) return cached;
+      }
+      rethrow;
+    }
+  }
 
   Future<SalesDocumentDto> createDocument(CreateSalesDocumentRequest request) =>
       _remote.createDocument(request);

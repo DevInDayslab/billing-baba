@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
@@ -13,6 +14,7 @@ import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
+import 'package:billing_baba/shared/utils/output_error_mapper.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
@@ -368,7 +370,7 @@ class _PartyLedgerTransactionsSectionState
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not print party ledger: $error'),
+          content: Text(OutputErrorMapper.printMessage(error)),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -669,7 +671,7 @@ class _PartyLedgerTransactionsSectionState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Could not load transactions: $error',
+                    PartyErrorMapper.messageFor(error),
                     style: const TextStyle(color: AppColors.error),
                     textAlign: TextAlign.center,
                   ),

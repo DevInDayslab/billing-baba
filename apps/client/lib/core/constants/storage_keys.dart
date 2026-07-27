@@ -23,6 +23,7 @@ abstract final class StorageKeys {
       'sale_line_item_column_visibility';
   static const dashboardTasks = 'dashboard_tasks';
   static const dashboardSideWidgets = 'dashboard_side_widgets';
+  static const dashboardSnapshots = 'dashboard_snapshots';
   static const barcodeImportDraft = 'barcode_import_draft';
   static const printSettings = 'print_settings';
   static const whatsappSettings = 'whatsapp_settings';
@@ -38,4 +39,8 @@ abstract final class StorageKeys {
   static const syncBootstrappedAt = 'sync_bootstrapped_at';
   static const syncLocalSchemaVersion = 'sync_local_schema_version';
   static const syncLastServerSchemaVersion = 'sync_last_server_schema_version';
+
+  /// Per-business local POS session id used while offline.
+  static String localPosSessionId(String businessId) =>
+      'local_pos_session_$businessId';
 }

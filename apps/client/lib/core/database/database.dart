@@ -4,6 +4,7 @@ import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
 import 'package:billing_baba/core/database/tables/godowns_table.dart';
+import 'package:billing_baba/core/database/tables/inventory_stock_tables.dart';
 import 'package:billing_baba/core/database/tables/items_table.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
 import 'package:billing_baba/core/database/tables/parties_table.dart';
@@ -42,13 +43,15 @@ part 'database.g.dart';
     PurchaseDocumentsLocal,
     PurchaseDocumentLinesLocal,
     LocalDocumentCounters,
+    InventoryMovementsLocal,
+    StockLevelsLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -144,6 +147,10 @@ class AppDatabase extends _$AppDatabase {
           purchaseDocumentsLocal,
           purchaseDocumentsLocal.paymentMode,
         );
+      }
+      if (from < 17) {
+        await m.createTable(inventoryMovementsLocal);
+        await m.createTable(stockLevelsLocal);
       }
     },
   );

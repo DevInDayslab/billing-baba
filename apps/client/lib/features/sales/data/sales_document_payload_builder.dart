@@ -15,6 +15,7 @@ Map<String, dynamic> buildSalesDocumentRowPayload({
   String? documentNumber,
   String? convertedFromId,
   String? notes,
+  String? posSessionId,
 }) {
   return {
     'document_type': documentType,
@@ -26,6 +27,7 @@ Map<String, dynamic> buildSalesDocumentRowPayload({
     'document_date': documentDate,
     'converted_from_id': ?convertedFromId,
     'notes': ?notes,
+    'pos_session_id': ?posSessionId,
     'subtotal': subtotal,
     'discount_total': discountTotal,
     'tax_amount': taxAmount,

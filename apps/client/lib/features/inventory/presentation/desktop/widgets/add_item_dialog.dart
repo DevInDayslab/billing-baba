@@ -14,6 +14,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternatives_section.dart';
@@ -202,7 +203,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final detailDto = await service.fetchItemDetailDto(item.id);
-      final tiers = await service.fetchItemTierPrices(item.id);
+      var tiers = const <TierPriceModel>[];
+      try {
+        tiers = await service.fetchItemTierPrices(item.id);
+      } on Object {
+        // Tier prices may be unavailable offline; form still opens from local item.
+      }
 
       await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
 

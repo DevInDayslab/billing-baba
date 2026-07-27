@@ -4,6 +4,7 @@ import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_chart_todo_row.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_offline_banner.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_overview_section.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_reports_row.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_side_widget_column.dart';
@@ -23,20 +24,40 @@ class DashboardTabContent extends ConsumerWidget {
 
     return dashboardAsync.when(
       loading: () => const _DashboardGridShell(child: DashboardSkeleton()),
-      error: (error, _) => AppError(
-        message: DashboardErrorMapper.messageFor(error),
-        onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
-      ),
-      data: (dashboard) => _DashboardGridShell(
-        child: _DashboardGrid(
-          dashboard: dashboard,
-          period: period,
-          onPeriodChanged: (value) =>
-              ref.read(dashboardProvider.notifier).setPeriod(value),
-          onReceivableTap: () =>
-              DashboardNavigation.openReceivables(context, ref),
-          onPayableTap: () => DashboardNavigation.openPayables(context, ref),
-          onSaleTap: () => DashboardNavigation.openTotalSale(context, ref),
+      error: (error, _) {
+        final message = DashboardErrorMapper.messageFor(error);
+        final isOfflineNoCache =
+            error is DashboardException && error.code == 'OFFLINE';
+        return AppError(
+          message: message,
+          onRetry:
+              isOfflineNoCache ? null : () => ref.read(dashboardProvider.notifier).refresh(),
+        );
+      },
+      data: (viewState) => _DashboardGridShell(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (viewState.isCachedSnapshot)
+              DashboardOfflineBanner(
+                snapshotSavedAt: viewState.snapshotSavedAt,
+                isRefreshing: viewState.isRefreshing,
+              ),
+            Expanded(
+              child: _DashboardGrid(
+                dashboard: viewState.dashboard,
+                period: period,
+                onPeriodChanged: (value) =>
+                    ref.read(dashboardProvider.notifier).setPeriod(value),
+                onReceivableTap: () =>
+                    DashboardNavigation.openReceivables(context, ref),
+                onPayableTap: () =>
+                    DashboardNavigation.openPayables(context, ref),
+                onSaleTap: () =>
+                    DashboardNavigation.openTotalSale(context, ref),
+              ),
+            ),
+          ],
         ),
       ),
     );

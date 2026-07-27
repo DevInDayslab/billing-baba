@@ -2,8 +2,11 @@ import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/stock_adjustment_command_repository.dart';
 import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
 import 'package:billing_baba/features/inventory/models/dto/brand_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
@@ -35,6 +38,8 @@ class InventoryRepository {
     required this._syncQueue,
     required this._businessIdReader,
     required this._items,
+    required this._stockLocal,
+    required this._movementProjector,
     this._units,
     this._godowns,
     this._deviceIdReader,
@@ -45,6 +50,8 @@ class InventoryRepository {
   final SyncQueue _syncQueue;
   final String Function() _businessIdReader;
   final ItemMasterRepository _items;
+  final InventoryStockLocalDataSource _stockLocal;
+  final InventoryMovementProjector _movementProjector;
   final UnitMasterRepository? _units;
   final GodownMasterRepository? _godowns;
   final String? Function()? _deviceIdReader;
@@ -349,7 +356,55 @@ class InventoryRepository {
 
   Future<MovementDto> getMovement(String id) => _remote.getMovement(id);
 
-  Future<MovementDto> createMovement(CreateMovementRequest request) =>
+  Future<void> createMovement(CreateMovementRequest request) {
+    return StockAdjustmentCommandRepository(
+      syncQueue: _syncQueue,
+      local: _stockLocal,
+      businessIdReader: _businessIdReader,
+      deviceIdReader: _deviceIdReader,
+    ).applyAdjustment(request);
+  }
+
+  Future<List<MovementDto>> listLocalMovementsForItem(String itemId) async {
+    final businessId = _requireBusinessId();
+    final stored = await _stockLocal.listMovementsForItem(
+      businessId: businessId,
+      itemId: itemId,
+    );
+    final projected = await _movementProjector.projectForItem(
+      businessId: businessId,
+      itemId: itemId,
+    );
+
+    final byId = <String, MovementDto>{};
+    for (final movement in [...stored, ...projected]) {
+      byId[movement.id] = movement;
+    }
+
+    final merged = byId.values.toList()
+      ..sort(
+        (a, b) => DateTime.parse(b.createdAt).compareTo(
+          DateTime.parse(a.createdAt),
+        ),
+      );
+    return merged;
+  }
+
+  Future<double> localStockQuantityForItem(String itemId) {
+    return _stockLocal.totalQuantityForItem(
+      businessId: _requireBusinessId(),
+      itemId: itemId,
+    );
+  }
+
+  Future<void> reconcileLocalItemStock(String itemId) {
+    return _stockLocal.reconcileItemStock(
+      businessId: _requireBusinessId(),
+      itemId: itemId,
+    );
+  }
+
+  Future<MovementDto> createMovementRemote(CreateMovementRequest request) =>
       _remote.createMovement(request);
 
   Future<PaginatedPriceHistoryDto> getItemPriceHistory(

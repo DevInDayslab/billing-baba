@@ -4,6 +4,7 @@ import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sale_document_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
@@ -266,7 +267,7 @@ class _EmptyState extends ConsumerWidget {
                 child: Column(
                   children: [
                     Text(
-                      documentsAsync.error.toString(),
+                      SalesErrorMapper.messageFor(documentsAsync.error!),
                       style: const TextStyle(color: AppColors.error),
                     ),
                     const SizedBox(height: AppSpacing.sm),

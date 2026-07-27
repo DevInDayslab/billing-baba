@@ -15,7 +15,9 @@ import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
@@ -122,6 +124,8 @@ void main() {
       businessIdReader: () =>
           storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
       deviceIdReader: () => '22222222-2222-2222-2222-222222222222',
+      stockLocal: InventoryStockLocalDataSource(db),
+      movementProjector: InventoryMovementProjector(db),
       items: ItemMasterRepository(
         local: ItemLocalSource(db),
         syncQueue: queue,
@@ -369,6 +373,8 @@ void main() {
       local: DriftInventoryLocalDataSource(cats1),
       syncQueue: queue1,
       businessIdReader: () => 'biz-1',
+      stockLocal: InventoryStockLocalDataSource(db1),
+      movementProjector: InventoryMovementProjector(db1),
       items: ItemMasterRepository(
         local: ItemLocalSource(db1),
         syncQueue: queue1,

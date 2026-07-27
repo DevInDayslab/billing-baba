@@ -81,10 +81,13 @@ class SalesInvoiceCommandRepository {
       documentTime: input.documentTime,
     );
 
+    final documentType = input.documentType.apiValue;
+    final syncPosSessionId = _syncPosSessionId(input.posSessionId);
+
     await _local.upsertDocument(
       id: documentId,
       businessId: businessId,
-      documentType: SalesDocumentType.taxInvoice.apiValue,
+      documentType: documentType,
       status: 'draft',
       documentNumber: documentNumber,
       documentSeries: input.documentSeries,
@@ -166,7 +169,7 @@ class SalesInvoiceCommandRepository {
     );
 
     final headerPayload = buildSalesDocumentRowPayload(
-      documentType: SalesDocumentType.taxInvoice.apiValue,
+      documentType: documentType,
       documentSeries: input.documentSeries,
       partyId: input.partyId,
       isGstFormal: input.isGstFormal,
@@ -174,6 +177,7 @@ class SalesInvoiceCommandRepository {
       documentDate: documentDate,
       convertedFromId: input.convertedFromId,
       notes: input.notes,
+      posSessionId: syncPosSessionId,
       subtotal: totals.subtotal,
       discountTotal: totals.discountTotal,
       taxAmount: totals.taxAmount,
@@ -341,4 +345,11 @@ class SalesInvoiceCommandRepository {
   }
 
   Future<SalesDocumentDto?> getDocument(String id) => _local.getDocument(id);
+
+  /// Local-only POS sessions are not pushed to the server.
+  static String? _syncPosSessionId(String? sessionId) {
+    if (sessionId == null || sessionId.isEmpty) return null;
+    if (sessionId.startsWith('local-pos-')) return null;
+    return sessionId;
+  }
 }

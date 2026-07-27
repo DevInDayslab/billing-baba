@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:dio/dio.dart';
 
 abstract final class ApiErrorParser {
@@ -52,6 +53,10 @@ abstract final class ApiErrorParser {
 
   /// Maps API/business errors to user-facing copy.
   static String userFacingMessage(DioException error) {
+    if (isOffline(error)) {
+      return OfflineUiMessages.workingOffline;
+    }
+
     final code = errorCode(error);
     final message = errorMessage(error);
 
@@ -72,11 +77,22 @@ abstract final class ApiErrorParser {
     if (message != null && message.isNotEmpty) return message;
 
     if (error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout) {
-      return 'Unable to connect to Billing Baba server.';
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout) {
+      return OfflineUiMessages.workingOffline;
     }
 
     return 'Unable to save business profile. Please try again.';
+  }
+
+  static bool isOffline(DioException error) {
+    if (error.response != null) return false;
+    return error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.unknown;
   }
 
   /// First validation detail message when present.

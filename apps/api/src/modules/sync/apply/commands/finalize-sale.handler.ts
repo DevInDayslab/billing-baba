@@ -79,10 +79,10 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
     return notFoundError(input, 'Sales document not found');
   }
 
-  if (document.documentType !== 'tax_invoice') {
+  if (document.documentType !== 'tax_invoice' && document.documentType !== 'pos') {
     return validationError(
       input,
-      'finalize_sale only supports tax_invoice documents in Phase 2',
+      'finalize_sale only supports tax_invoice and pos documents',
     );
   }
 

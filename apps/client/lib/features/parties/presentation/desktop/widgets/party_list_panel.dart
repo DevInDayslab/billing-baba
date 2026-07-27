@@ -412,7 +412,7 @@ class _OfflineBanner extends StatelessWidget {
         border: Border.all(color: Colors.orange.shade200),
       ),
       child: Text(
-        'Offline — showing cached parties',
+        'Working offline · Showing locally synchronized data.',
         style: TextStyle(color: Colors.orange.shade900, fontSize: 12),
       ),
     );

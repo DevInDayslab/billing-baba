@@ -3,6 +3,7 @@ import 'package:billing_baba/features/purchases/data/purchase_remote_data_source
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
+import 'package:dio/dio.dart';
 
 class PurchaseRepository {
   PurchaseRepository({
@@ -11,14 +12,31 @@ class PurchaseRepository {
   });
 
   final PurchaseRemoteDataSource _remote;
-  // ignore: unused_field
   final PurchaseLocalDataSource? _local;
 
   Future<PaginatedPurchaseDocumentsDto> listDocuments(
     PurchaseDocumentListQuery query,
-  ) => _remote.listDocuments(query);
+  ) =>
+      _remote.listDocuments(query);
 
-  Future<PurchaseDocumentDto> getDocument(String id) => _remote.getDocument(id);
+  /// Local Drift first, then API. Printing must work offline for synced documents.
+  Future<PurchaseDocumentDto> getDocument(String id) async {
+    final local = _local;
+    if (local != null) {
+      final cached = await local.getDocument(id);
+      if (cached != null) return cached;
+    }
+
+    try {
+      return await _remote.getDocument(id);
+    } on DioException {
+      if (local != null) {
+        final cached = await local.getDocument(id);
+        if (cached != null) return cached;
+      }
+      rethrow;
+    }
+  }
 
   Future<PurchaseDocumentDto> createDocument(
     CreatePurchaseDocumentRequest request,

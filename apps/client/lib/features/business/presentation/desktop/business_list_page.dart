@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -237,7 +238,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
       );
     }
   }
@@ -257,7 +258,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
       );
     }
   }

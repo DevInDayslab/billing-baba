@@ -11,8 +11,10 @@ import 'package:billing_baba/features/inventory/data/category_local_source.dart'
 import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
 import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
@@ -83,6 +85,8 @@ Future<InventoryService> inventoryService(Ref ref) async {
     syncQueue: queue,
     businessIdReader: businessIdReader,
     deviceIdReader: deviceIdReader,
+    stockLocal: InventoryStockLocalDataSource(db),
+    movementProjector: InventoryMovementProjector(db),
     items: ItemMasterRepository(
       local: ItemLocalSource(db),
       syncQueue: queue,
@@ -721,13 +725,7 @@ class InventoryService {
   }
 
   Future<void> createMovement(CreateMovementRequest request) async {
-    try {
-      await _repository.createMovement(request);
-    } on DioException catch (error) {
-      final validation = ApiErrorParser.parseValidation(error);
-      if (validation != null) rethrow;
-      InventoryErrorMapper.mapAndThrow(error);
-    }
+    await _repository.createMovement(request);
   }
 
   Future<List<InventoryItem>> fetchItems({
@@ -751,15 +749,20 @@ class InventoryService {
         },
       );
 
-      final stockLevels = await _fetchAllPages<StockLevelDto>(
-        fetchPage: (page) async {
-          final response = await _repository.getStockLevels(
-            StockLevelListQuery(page: page),
-          );
-          return (response.stockLevels, response.meta.total);
-        },
-      );
-      final stockByItem = StockLevelMapper.aggregateByItem(stockLevels);
+      var stockByItem = <String, ({double quantity, double stockValue})>{};
+      try {
+        final stockLevels = await _fetchAllPages<StockLevelDto>(
+          fetchPage: (page) async {
+            final response = await _repository.getStockLevels(
+              StockLevelListQuery(page: page),
+            );
+            return (response.stockLevels, response.meta.total);
+          },
+        );
+        stockByItem = StockLevelMapper.aggregateByItem(stockLevels);
+      } on DioException {
+        // Stock levels are remote-only; keep local item rows with DTO quantities.
+      }
 
       return itemDtos.map((dto) {
         final stock = stockByItem[dto.id];
@@ -779,22 +782,31 @@ class InventoryService {
   Future<InventoryItem> getItem(String id) async {
     try {
       final dto = await fetchItemDetailDto(id);
-      final stockLevels = await _fetchAllPages<StockLevelDto>(
-        fetchPage: (page) async {
-          final response = await _repository.getStockLevels(
-            StockLevelListQuery(page: page, itemId: id),
-          );
-          return (response.stockLevels, response.meta.total);
-        },
-      );
-      final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
-      return ItemMapper.fromDetailDto(
-        dto,
-        quantity: stock?.quantity ?? _parseDecimal(dto.quantity),
-        stockValue: stock?.stockValue,
-        reservedQuantity: _parseDecimal(dto.reservedQuantity),
-        availableForSale: _parseDecimal(dto.availableForSale),
-      );
+      try {
+        final stockLevels = await _fetchAllPages<StockLevelDto>(
+          fetchPage: (page) async {
+            final response = await _repository.getStockLevels(
+              StockLevelListQuery(page: page, itemId: id),
+            );
+            return (response.stockLevels, response.meta.total);
+          },
+        );
+        final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
+        return ItemMapper.fromDetailDto(
+          dto,
+          quantity: stock?.quantity ?? _parseDecimal(dto.quantity),
+          stockValue: stock?.stockValue,
+          reservedQuantity: _parseDecimal(dto.reservedQuantity),
+          availableForSale: _parseDecimal(dto.availableForSale),
+        );
+      } on DioException {
+        return ItemMapper.fromDetailDto(
+          dto,
+          quantity: _parseDecimal(dto.quantity),
+          reservedQuantity: _parseDecimal(dto.reservedQuantity),
+          availableForSale: _parseDecimal(dto.availableForSale),
+        );
+      }
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -876,15 +888,13 @@ class InventoryService {
     );
 
     try {
-      await _repository.updateItem(itemId, request);
-      final tierPrices = AddItemFormMapper.tierPricesForUpsert(form);
-      if (tierPrices.isNotEmpty) {
-        await _repository.upsertItemTierPrices(
-          itemId,
-          UpsertTierPricesRequest(tierPrices: tierPrices),
-        );
-      }
-      return getItem(itemId);
+      final dto = await _repository.updateItem(itemId, request);
+      return ItemMapper.fromDetailDto(
+        dto,
+        quantity: _parseDecimal(dto.quantity),
+        reservedQuantity: _parseDecimal(dto.reservedQuantity),
+        availableForSale: _parseDecimal(dto.availableForSale),
+      );
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
       if (validation != null) throw validation;
@@ -932,20 +942,8 @@ class InventoryService {
   Future<List<ProductTransaction>> fetchProductTransactions(
     String itemId,
   ) async {
-    try {
-      final movements = await _fetchAllPages(
-        fetchPage: (page) async {
-          final response = await _repository.getMovements(
-            MovementListQuery(page: page, itemId: itemId),
-          );
-          return (response.movements, response.meta.total);
-        },
-      );
-      return movements.map(MovementMapper.toProductTransaction).toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
-    } on DioException catch (error) {
-      InventoryErrorMapper.mapAndThrow(error);
-    }
+    final movements = await _repository.listLocalMovementsForItem(itemId);
+    return movements.map(MovementMapper.toProductTransaction).toList();
   }
 
   List<InventoryCategory> withUncategorizedCategory({

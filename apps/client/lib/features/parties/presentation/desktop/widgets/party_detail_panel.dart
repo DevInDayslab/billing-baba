@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
@@ -141,7 +142,9 @@ class _PartyDetailContent extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => _PartyDetailError(
               message: PartyErrorMapper.messageFor(error),
-              onRetry: () => ref.invalidate(partyTimelineProvider(party.id)),
+              onRetry: OfflineUiMessages.isOfflineError(error)
+                  ? null
+                  : () => ref.invalidate(partyTimelineProvider(party.id)),
             ),
             data: (_) => PartyLedgerTransactionsSection(
               transactionsAsync: transactionsAsync,
@@ -720,11 +723,11 @@ class _PartyDetailLoading extends StatelessWidget {
 class _PartyDetailError extends StatelessWidget {
   const _PartyDetailError({
     required this.message,
-    required this.onRetry,
+    this.onRetry,
   });
 
   final String message;
-  final VoidCallback onRetry;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -737,8 +740,10 @@ class _PartyDetailError extends StatelessWidget {
             const Icon(Icons.error_outline, color: AppColors.error, size: 32),
             const SizedBox(height: AppSpacing.sm),
             Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            if (onRetry != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            ],
           ],
         ),
       ),
@@ -771,7 +776,7 @@ class _OfflineBanner extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              'Network unavailable. Showing cached data.',
+              'Working offline · Showing locally synchronized data.',
               style: TextStyle(
                 color: Colors.orange.shade900,
                 fontSize: 13,

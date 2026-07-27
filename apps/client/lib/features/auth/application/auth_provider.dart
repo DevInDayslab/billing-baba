@@ -22,6 +22,11 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
+import 'package:billing_baba/features/business/models/business_model.dart'
+    as business;
 import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -466,6 +471,9 @@ class Auth extends _$Auth {
         otpPhase: OtpPhase.idle,
         backendLoginCompleted: true,
       );
+      if (AuthService.isOfflineDevSession(session)) {
+        await _bootstrapOfflineDevSession(session);
+      }
     } on TimeoutException {
       await splashWait;
       _setAuthStatus(AuthStatus.unauthenticated);
@@ -721,6 +729,7 @@ class Auth extends _$Auth {
       final session = await service.devLogin();
       AuthDebugLogger.log('devLogin: login successful');
       _completeOtpLogin(session);
+      await _bootstrapOfflineDevSession(session);
     } on Object catch (e, st) {
       AuthDebugLogger.log('devLogin failed: $e');
       if (AppConfig.authDebugLogging) {
@@ -800,6 +809,38 @@ class Auth extends _$Auth {
     state = state.copyWith(phone: '');
   }
 
+  Future<void> _bootstrapOfflineDevSession(AuthSession session) async {
+    if (!AuthService.isOfflineDevSession(session) || session.businesses.isEmpty) {
+      return;
+    }
+
+    final businessSummary = session.businesses.first;
+    final user = session.user;
+
+    final businessService = await ref.read(businessServiceProvider.future);
+    await businessService.seedOfflineDevSession(session);
+
+    final profile = AuthService.offlineDevBusinessProfile(session);
+    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+
+    ref.read(companySessionProvider.notifier).setSession(
+      CompanySession.owner(
+        entry: CompanyListEntry(
+          id: businessSummary.id,
+          name: businessSummary.name,
+          relationship: CompanyRelationship.owner,
+          syncStatus: business.SyncStatus.on,
+          source: CompanyListSource.apiOwned,
+          ownerName: user.name,
+          phone: user.phone,
+        ),
+        userId: user.id,
+        userName: user.name ?? 'Developer',
+        userPhone: user.phone,
+      ),
+    );
+  }
+
   Future<void> selectBusiness(String businessId) {
     final operation = _businessSelectionChain
         .catchError((_) {})
@@ -813,6 +854,16 @@ class Auth extends _$Auth {
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) {
       throw const BusinessSelectionFailed('Session expired. Please sign in again.');
+    }
+
+    final storage = await ref.read(storageServiceProvider.future);
+    final accessToken = await storage.readSecure(StorageKeys.accessToken);
+    if (accessToken != null && AuthService.isOfflineDevToken(accessToken)) {
+      BusinessOpenDebugLog.step('selectBusiness', 'offline dev — local scope only');
+      final service = await _service();
+      await service.persistSession(state.session!, businessId: businessId);
+      _setAuthStatus(AuthStatus.authenticated);
+      return;
     }
 
     if (await _isJwtScopedToBusiness(businessId)) {
@@ -851,6 +902,11 @@ class Auth extends _$Auth {
   Future<bool> _isJwtScopedToBusiness(String businessId) async {
     final storage = await ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
+    if (token != null && AuthService.isOfflineDevToken(token)) {
+      final selected = await storage.readSecure(StorageKeys.selectedBusinessId);
+      return selected == businessId;
+    }
+
     final jwtBusinessId = JwtUtils.businessId(token);
     final role = JwtUtils.role(token);
     return jwtBusinessId == businessId && role != null && role.isNotEmpty;

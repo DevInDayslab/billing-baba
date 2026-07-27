@@ -46,4 +46,4 @@ final class PosSaleServiceProvider
   }
 }
 
-String _$posSaleServiceHash() => r'1293691de21c70224c3b150087afbc50d6710887';
+String _$posSaleServiceHash() => r'84a21841549c5b1463ae2d6fe9c8ba36ab705bdd';

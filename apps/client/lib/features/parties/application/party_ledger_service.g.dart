@@ -49,7 +49,133 @@ final class PartyLedgerServiceProvider
 }
 
 String _$partyLedgerServiceHash() =>
-    r'477a72680bab55138162a27daa6660461d01c462';
+    r'1c208454b13adab61770d54cbd2cc55920ee917d';
+
+@ProviderFor(partyLedgerBusinessId)
+final partyLedgerBusinessIdProvider = PartyLedgerBusinessIdProvider._();
+
+final class PartyLedgerBusinessIdProvider
+    extends $FunctionalProvider<AsyncValue<String>, String, FutureOr<String>>
+    with $FutureModifier<String>, $FutureProvider<String> {
+  PartyLedgerBusinessIdProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'partyLedgerBusinessIdProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$partyLedgerBusinessIdHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<String> create(Ref ref) {
+    return partyLedgerBusinessId(ref);
+  }
+}
+
+String _$partyLedgerBusinessIdHash() =>
+    r'31e40d7aefbe46449dc1bedfbfe42ab0d1b0097a';
+
+@ProviderFor(PartyProfileProjection)
+final partyProfileProjectionProvider = PartyProfileProjectionFamily._();
+
+final class PartyProfileProjectionProvider
+    extends $AsyncNotifierProvider<PartyProfileProjection, PartyProjection> {
+  PartyProfileProjectionProvider._({
+    required PartyProfileProjectionFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'partyProfileProjectionProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$partyProfileProjectionHash();
+
+  @override
+  String toString() {
+    return r'partyProfileProjectionProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  PartyProfileProjection create() => PartyProfileProjection();
+
+  @override
+  bool operator ==(Object other) {
+    return other is PartyProfileProjectionProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$partyProfileProjectionHash() =>
+    r'5bc4d396dd1ab48ebd32ef9b88c48d51af0cfe3c';
+
+final class PartyProfileProjectionFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          PartyProfileProjection,
+          AsyncValue<PartyProjection>,
+          PartyProjection,
+          FutureOr<PartyProjection>,
+          String
+        > {
+  PartyProfileProjectionFamily._()
+    : super(
+        retry: null,
+        name: r'partyProfileProjectionProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  PartyProfileProjectionProvider call(String partyId) =>
+      PartyProfileProjectionProvider._(argument: partyId, from: this);
+
+  @override
+  String toString() => r'partyProfileProjectionProvider';
+}
+
+abstract class _$PartyProfileProjection
+    extends $AsyncNotifier<PartyProjection> {
+  late final _$args = ref.$arg as String;
+  String get partyId => _$args;
+
+  FutureOr<PartyProjection> build(String partyId);
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<PartyProjection>, PartyProjection>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<PartyProjection>, PartyProjection>,
+              AsyncValue<PartyProjection>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, () => build(_$args));
+  }
+}
 
 @ProviderFor(PartyTimeline)
 final partyTimelineProvider = PartyTimelineFamily._();
@@ -92,7 +218,7 @@ final class PartyTimelineProvider
   }
 }
 
-String _$partyTimelineHash() => r'fd53c57f1a3205e309c20968fe884d234901348e';
+String _$partyTimelineHash() => r'74074ed01aac7fc06228491562d956711bf49035';
 
 final class PartyTimelineFamily extends $Family
     with
@@ -182,7 +308,7 @@ final class PartyLedgerProvider
   }
 }
 
-String _$partyLedgerHash() => r'0a9fd32d17befc9939ccac5080107dd11869a4e9';
+String _$partyLedgerHash() => r'59e1a18e5993edaa37c7361b7a370a9985b99755';
 
 final class PartyLedgerFamily extends $Family
     with

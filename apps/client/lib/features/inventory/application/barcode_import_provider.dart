@@ -13,7 +13,9 @@ import 'package:billing_baba/features/inventory/application/inventory_units_prov
 import 'package:billing_baba/features/inventory/data/category_local_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
@@ -47,6 +49,8 @@ Future<InventoryRepository> inventoryRepository(Ref ref) async {
     businessIdReader: () =>
         storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
     deviceIdReader: () => deviceId,
+    stockLocal: InventoryStockLocalDataSource(db),
+    movementProjector: InventoryMovementProjector(db),
     items: ItemMasterRepository(
       local: ItemLocalSource(db),
       syncQueue: queue,

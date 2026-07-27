@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
@@ -17,6 +18,7 @@ import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/receipt_view_widget.dart';
 import 'package:billing_baba/shared/utils/debouncer.dart';
+import 'package:billing_baba/shared/utils/output_error_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,7 +100,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $error')),
+        SnackBar(content: Text(OutputErrorMapper.printMessage(error))),
       );
     }
   }
@@ -113,7 +115,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
 
   Future<void> _completeSale() async {
     final session = ref.read(posSessionProvider);
-    if (!session.hasActiveBackendSession) {
+    if (!session.hasActiveSession) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('POS session not open. Please retry.')),
       );
@@ -178,7 +180,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to complete sale: $error')),
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
       );
     }
   }

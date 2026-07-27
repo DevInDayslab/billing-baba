@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/desktop/widgets/export_actions.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
@@ -586,7 +587,7 @@ class _ReportPdfPreviewPane extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '$error',
+                OfflineUiMessages.messageFor(error),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 12,

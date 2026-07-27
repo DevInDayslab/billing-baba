@@ -12,7 +12,9 @@ import 'package:billing_baba/features/inventory/data/category_local_source.dart'
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
@@ -312,6 +314,8 @@ Future<_DeviceHarness> _openDevice({
     syncQueue: queue,
     businessIdReader: () => 'biz-1',
     deviceIdReader: () => deviceId,
+    stockLocal: InventoryStockLocalDataSource(db),
+    movementProjector: InventoryMovementProjector(db),
     items: ItemMasterRepository(
       local: items,
       syncQueue: queue,

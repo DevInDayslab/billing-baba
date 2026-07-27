@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
@@ -184,7 +185,7 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(
               child: Text(
-                'Failed to load items: $error',
+                InventoryErrorMapper.messageFor(error),
                 style: PosStyles.emptyStateStyle,
                 textAlign: TextAlign.center,
               ),

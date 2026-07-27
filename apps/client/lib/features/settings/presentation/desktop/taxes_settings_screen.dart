@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/business/models/commerce_settings_model.dart';
@@ -104,7 +105,9 @@ class _TaxesSettingsScreenState
       ),
       body: settingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Failed to load: $error')),
+        error: (error, _) => Center(
+          child: Text(OfflineUiMessages.messageFor(error)),
+        ),
         data: (settings) {
           _syncDraft(settings);
           return ListView(

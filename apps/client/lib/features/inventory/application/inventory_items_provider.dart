@@ -72,23 +72,13 @@ List<InventoryItem> _catalogItems({
   return items;
 }
 
-Future<List<InventoryItem>> _fetchItemsWithCatalogFallback(
+Future<List<InventoryItem>> _fetchItemsFromLocal(
   InventoryService service, {
   String? searchQuery,
   ItemType? type,
   String? categoryId,
-}) async {
-  try {
-    final items = await service.fetchItems(
-      searchQuery: searchQuery,
-      type: type,
-      categoryId: categoryId,
-    );
-    if (items.isNotEmpty) return items;
-  } catch (_) {
-    // Fall through to local catalog when API is empty or unavailable.
-  }
-  return _catalogItems(
+}) {
+  return service.fetchItems(
     searchQuery: searchQuery,
     type: type,
     categoryId: categoryId,
@@ -144,12 +134,8 @@ class InventoryItems extends _$InventoryItems {
 
   @override
   Future<List<InventoryItem>> build() async {
-    try {
-      final service = await ref.watch(inventoryServiceProvider.future);
-      return _fetchItemsWithCatalogFallback(service);
-    } catch (_) {
-      return _catalogItems();
-    }
+    final service = await ref.watch(inventoryServiceProvider.future);
+    return _fetchItemsFromLocal(service);
   }
 
   Future<void> refresh({
@@ -159,25 +145,14 @@ class InventoryItems extends _$InventoryItems {
   }) async {
     final previous = state.value ?? const <InventoryItem>[];
     state = await AsyncValue.guard(() async {
-      try {
-        final service = await ref.read(inventoryServiceProvider.future);
-        final fetched = await _fetchItemsWithCatalogFallback(
-          service,
-          searchQuery: searchQuery,
-          type: type,
-          categoryId: categoryId,
-        );
-        return mergeFetchedWithPendingLocalInventoryItems(fetched, previous);
-      } catch (_) {
-        return mergeFetchedWithPendingLocalInventoryItems(
-          _catalogItems(
-            searchQuery: searchQuery,
-            type: type,
-            categoryId: categoryId,
-          ),
-          previous,
-        );
-      }
+      final service = await ref.read(inventoryServiceProvider.future);
+      final fetched = await _fetchItemsFromLocal(
+        service,
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+      );
+      return mergeFetchedWithPendingLocalInventoryItems(fetched, previous);
     });
   }
 
@@ -287,9 +262,27 @@ class InventoryItems extends _$InventoryItems {
       rethrow;
     } on InventoryException {
       rethrow;
+    } on InventoryOfflineException {
+      rethrow;
     } catch (error) {
       throw InventoryException(InventoryErrorMapper.messageFor(error));
     }
+  }
+
+  /// Optimistic stock quantity patch (e.g. offline adjustment until sync).
+  void patchItemQuantity(String itemId, double newQuantity) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData([
+      for (final item in current)
+        if (item.id == itemId)
+          item.copyWith(
+            quantity: newQuantity,
+            stockValue: newQuantity * (item.purchasePrice ?? 0),
+          )
+        else
+          item,
+    ]);
   }
 
   Future<String?> deleteItem(String id) async {

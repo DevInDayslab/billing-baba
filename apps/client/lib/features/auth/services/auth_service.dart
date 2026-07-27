@@ -7,6 +7,7 @@ import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
+import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:dio/dio.dart';
 
 class AuthService {
@@ -21,6 +22,19 @@ class AuthService {
 
   final AuthRepository _repository;
   final StorageService _storage;
+
+  static bool isOfflineDevSession(AuthSession session) =>
+      isOfflineDevToken(session.accessToken);
+
+  static BusinessProfileModel offlineDevBusinessProfile(AuthSession session) {
+    final business = session.businesses.first;
+    return BusinessProfileModel(
+      id: business.id,
+      name: business.name,
+      ownerName: session.user.name,
+      phone: session.user.phone,
+    );
+  }
 
   static bool isOfflineDevToken(String accessToken) =>
       accessToken == devAccessToken ||
@@ -112,6 +126,15 @@ class AuthService {
         refreshToken ?? await _storage.readSecure(StorageKeys.refreshToken);
     if (token == null) {
       return null;
+    }
+
+    final accessToken = await _storage.readSecure(StorageKeys.accessToken);
+    if (isOfflineDevToken(accessToken ?? '')) {
+      final phone = _storage.read(StorageKeys.accountPhone) ?? '919999999999';
+      return offlineDevSession(phone: phone).copyWith(
+        accessToken: accessToken!,
+        refreshToken: token,
+      );
     }
 
     final storedBusinessId = preserveBusinessScope

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_init_provider.dart';
@@ -100,7 +101,7 @@ class _SyncSharePageState extends ConsumerState<DesktopSyncSharePage>
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: CollaborationSectionEmptyState(
           title: 'Could not load collaboration',
-          message: error.toString(),
+          message: OfflineUiMessages.messageFor(error),
           actionLabel: 'Retry',
           onAction: () => ref.invalidate(collaborationInitProvider),
           showIllustration: false,

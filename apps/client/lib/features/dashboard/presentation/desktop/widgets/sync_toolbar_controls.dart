@@ -161,19 +161,25 @@ class _CloudSyncToolbarButtonState extends ConsumerState<CloudSyncToolbarButton>
   }
 
   String _productionTooltip(SyncUiSnapshot snapshot) {
-    final status = switch (snapshot.cloudState) {
-      SyncCloudVisualState.synced => 'Synced',
-      SyncCloudVisualState.syncing => 'Syncing',
-      SyncCloudVisualState.offline => 'Offline',
-      SyncCloudVisualState.pending => 'Pending changes',
-      SyncCloudVisualState.error => 'Sync failed',
+    return switch (snapshot.cloudState) {
+      SyncCloudVisualState.synced => _syncedProductionTooltip(snapshot),
+      SyncCloudVisualState.syncing =>
+        'Synchronizing\nUploading your latest changes...',
+      SyncCloudVisualState.offline =>
+        'Offline\nWorking locally\nChanges will sync later',
+      SyncCloudVisualState.pending =>
+        'Pending changes\nWorking locally\nChanges will sync later',
+      SyncCloudVisualState.error =>
+        'Sync failed\nWorking locally\nTap to retry',
     };
-    final last = _formatLastSync(snapshot.lastSyncTime);
-    final pending = snapshot.queueSize;
-    return 'Status: $status\n'
-        'Last sync: $last\n'
-        'Pending changes: $pending\n'
-        'Click to sync now';
+  }
+
+  String _syncedProductionTooltip(SyncUiSnapshot snapshot) {
+    final last = snapshot.lastSyncTime;
+    if (last == null) return 'Synced';
+    final diff = DateTime.now().difference(last);
+    if (diff.inMinutes < 1) return 'Synced\nLast synced just now';
+    return 'Synced\nLast synced ${_formatLastSync(last)}';
   }
 
   String _syncedTooltip(SyncUiSnapshot snapshot) {

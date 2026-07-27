@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/settings/application/print_settings_provider.dart';
@@ -109,7 +110,7 @@ class _PrintSettingsScreenState
       body: settingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
-          message: error.toString(),
+          message: OfflineUiMessages.messageFor(error),
           onRetry: () => ref.invalidate(printSettingsProvider),
         ),
         data: (savedSettings) {

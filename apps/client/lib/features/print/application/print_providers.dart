@@ -7,10 +7,14 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/generated_documents/application/generated_document_providers.dart';
 import 'package:billing_baba/features/inventory/data/category_local_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/parties/data/party_local_source.dart';
+import 'package:billing_baba/features/parties/data/party_master_repository.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
 import 'package:billing_baba/features/print/application/print_data_service.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
@@ -83,6 +87,8 @@ Future<PrintDataService> printDataService(Ref ref) async {
       syncQueue: queue,
       businessIdReader: businessIdReader,
       deviceIdReader: () => deviceId,
+      stockLocal: InventoryStockLocalDataSource(db),
+      movementProjector: InventoryMovementProjector(db),
       items: ItemMasterRepository(
         local: ItemLocalSource(db),
         syncQueue: queue,
@@ -93,7 +99,13 @@ Future<PrintDataService> printDataService(Ref ref) async {
     ),
     printRepository: printRepository,
     businessService: businessService,
-    partyRepository: PartyRepository(api.dio),
+    partyMasterRepository: PartyMasterRepository(
+      local: PartyLocalSource(db),
+      syncQueue: queue,
+      remote: PartyRepository(api.dio),
+      businessIdReader: businessIdReader,
+      deviceIdReader: () => deviceId,
+    ),
     expenseRepository: ExpenseRepository(
       remote: ExpenseRemoteDataSource(api.dio),
     ),

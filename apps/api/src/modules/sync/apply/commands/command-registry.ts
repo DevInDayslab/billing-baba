@@ -2,6 +2,7 @@ import { finalizeCreditNoteHandler } from './finalize-credit-note.handler';
 import { finalizeDebitNoteHandler } from './finalize-debit-note.handler';
 import { finalizePurchaseHandler } from './finalize-purchase.handler';
 import { finalizeSaleHandler } from './finalize-sale.handler';
+import { stockAdjustmentHandler } from './stock-adjustment.handler';
 import type { CommandHandler } from './command.types';
 
 export const SUPPORTED_SYNC_COMMAND_NAMES = [
@@ -9,6 +10,7 @@ export const SUPPORTED_SYNC_COMMAND_NAMES = [
   'finalize_purchase',
   'finalize_credit_note',
   'finalize_debit_note',
+  'stock_adjustment',
 ] as const;
 
 export type SupportedSyncCommandName =
@@ -19,6 +21,7 @@ const COMMAND_HANDLERS: Record<SupportedSyncCommandName, CommandHandler> = {
   finalize_purchase: finalizePurchaseHandler,
   finalize_credit_note: finalizeCreditNoteHandler,
   finalize_debit_note: finalizeDebitNoteHandler,
+  stock_adjustment: stockAdjustmentHandler,
 };
 
 export function isSupportedSyncCommand(

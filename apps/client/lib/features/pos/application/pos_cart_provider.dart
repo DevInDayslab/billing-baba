@@ -14,6 +14,7 @@ import 'package:billing_baba/features/pos/models/held_bill.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -289,7 +290,7 @@ class PosCart extends _$PosCart {
     } on PosRepositoryException {
       rethrow;
     } catch (error) {
-      throw PosRepositoryException(message: error.toString());
+      throw PosRepositoryException(message: OfflineUiMessages.messageFor(error));
     }
   }
 

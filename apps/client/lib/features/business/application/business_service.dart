@@ -10,6 +10,8 @@ import 'package:billing_baba/core/services/business_local_data_cleanup.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
+import 'package:billing_baba/features/auth/models/auth_session.dart';
+import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/business/data/business_cache.dart';
 import 'package:billing_baba/features/business/data/business_repository.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
@@ -179,11 +181,49 @@ class BusinessService {
     return null;
   }
 
+  Future<void> seedOfflineDevSession(AuthSession session) async {
+    if (!AuthService.isOfflineDevSession(session)) return;
+    if (session.businesses.isEmpty) return;
+
+    final businessSummary = session.businesses.first;
+    final profile = AuthService.offlineDevBusinessProfile(session);
+
+    await _cache.saveBusinessProfile(profile);
+    await rememberLastOpened(businessSummary.id);
+    await _cache.saveBusinesses(
+      [
+        {
+          'id': businessSummary.id,
+          'name': businessSummary.name,
+          'role': businessSummary.role,
+          'owner_name': session.user.name,
+          'phone': session.user.phone,
+        },
+      ],
+      accountId: session.user.id,
+    );
+  }
+
+  Future<bool> _isOfflineDevSession() async {
+    final storage = await _ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    return AuthService.isOfflineDevToken(token ?? '');
+  }
+
   Future<void> ensureProfileApiBusinessScope({
     bool forceReselect = false,
   }) async {
     final storage = await _ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
+
+    if (token != null && AuthService.isOfflineDevToken(token)) {
+      final businessId = await _resolveBusinessIdForScope();
+      if (businessId != null && businessId.isNotEmpty) {
+        await rememberLastOpened(businessId);
+      }
+      return;
+    }
+
     final jwtBusinessId = JwtUtils.businessId(token);
     final jwtRole = JwtUtils.role(token);
 
@@ -234,6 +274,21 @@ class BusinessService {
     final auth = _ref.read(authProvider);
     if (!authHasBusinessScope(auth)) {
       throw const BusinessProfileScopeRequired();
+    }
+
+    final session = auth.session;
+    if (session != null && AuthService.isOfflineDevSession(session)) {
+      final selectedBusinessId = _cache.readLastOpenedBusinessId();
+      if (!forceRefresh) {
+        final cached = await _cache.readBusinessProfile();
+        if (cached != null &&
+            (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+          return cached;
+        }
+      }
+      final profile = AuthService.offlineDevBusinessProfile(session);
+      await _cache.saveBusinessProfile(profile);
+      return profile;
     }
 
     await ensureProfileApiBusinessScope();
@@ -314,6 +369,11 @@ class BusinessService {
   Future<void> clearCachedBusinessProfile() => _cache.clearBusinessProfile();
 
   Future<bool> isJwtScopedToBusiness(String businessId) async {
+    if (await _isOfflineDevSession()) {
+      final selected = _cache.readLastOpenedBusinessId();
+      return selected == businessId;
+    }
+
     final storage = await _ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
     final jwtBusinessId = JwtUtils.businessId(token);

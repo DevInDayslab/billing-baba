@@ -29,8 +29,13 @@ void invalidatePartyBalances(Ref ref) {
 }
 
 void invalidatePartyTimeline(Ref ref, String partyId) {
-  ref..invalidate(partyTimelineProvider(partyId))
-  ..invalidate(partyLedgerProvider(partyId));
+  final service = ref.read(partyLedgerServiceProvider).asData?.value;
+  service?.invalidateCache(partyId: partyId);
+
+  ref
+    ..invalidate(partyTimelineProvider(partyId))
+    ..invalidate(partyLedgerProvider(partyId))
+    ..invalidate(partyProfileProjectionProvider(partyId));
 }
 
 void invalidatePartyLedger(Ref ref, String partyId) {
@@ -44,6 +49,7 @@ void _schedulePartyLedgerRefresh(
 ) {
   final timeline = partyTimelineProvider(partyId);
   final ledger = partyLedgerProvider(partyId);
+  final projection = partyProfileProjectionProvider(partyId);
 
   // Auto-dispose providers must not be invalidated then refreshed, and must
   // only be refreshed while a listener still holds them alive.
@@ -57,6 +63,12 @@ void _schedulePartyLedgerRefresh(
     refreshTasks.add(ref.read(ledger.notifier).refresh());
   } else {
     ref.invalidate(ledger);
+  }
+
+  if (ref.exists(projection)) {
+    refreshTasks.add(ref.read(projection.notifier).refresh());
+  } else {
+    ref.invalidate(projection);
   }
 }
 

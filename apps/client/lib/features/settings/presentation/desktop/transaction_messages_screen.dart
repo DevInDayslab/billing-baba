@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/settings/application/transaction_message_settings_provider.dart';
 import 'package:billing_baba/features/settings/models/transaction_message_settings.dart';
@@ -62,7 +63,7 @@ class _TransactionMessagesScreenState
       ),
       body: settingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Failed to load: $e')),
+        error: (e, _) => Center(child: Text(OfflineUiMessages.messageFor(e))),
         data: (settings) {
           _draft ??= settings;
           final draft = _draft!;

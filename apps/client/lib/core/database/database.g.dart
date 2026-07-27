@@ -19605,6 +19605,2132 @@ class LocalDocumentCountersCompanion
   }
 }
 
+class $InventoryMovementsLocalTable extends InventoryMovementsLocal
+    with TableInfo<$InventoryMovementsLocalTable, InventoryMovementLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InventoryMovementsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _godownIdMeta = const VerificationMeta(
+    'godownId',
+  );
+  @override
+  late final GeneratedColumn<String> godownId = GeneratedColumn<String>(
+    'godown_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentIdMeta = const VerificationMeta(
+    'documentId',
+  );
+  @override
+  late final GeneratedColumn<String> documentId = GeneratedColumn<String>(
+    'document_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentTypeMeta = const VerificationMeta(
+    'documentType',
+  );
+  @override
+  late final GeneratedColumn<String> documentType = GeneratedColumn<String>(
+    'document_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _movementTypeMeta = const VerificationMeta(
+    'movementType',
+  );
+  @override
+  late final GeneratedColumn<String> movementType = GeneratedColumn<String>(
+    'movement_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<String> quantity = GeneratedColumn<String>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _beforeQuantityMeta = const VerificationMeta(
+    'beforeQuantity',
+  );
+  @override
+  late final GeneratedColumn<String> beforeQuantity = GeneratedColumn<String>(
+    'before_quantity',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _afterQuantityMeta = const VerificationMeta(
+    'afterQuantity',
+  );
+  @override
+  late final GeneratedColumn<String> afterQuantity = GeneratedColumn<String>(
+    'after_quantity',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceIdMeta = const VerificationMeta(
+    'referenceId',
+  );
+  @override
+  late final GeneratedColumn<String> referenceId = GeneratedColumn<String>(
+    'reference_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceTypeMeta = const VerificationMeta(
+    'referenceType',
+  );
+  @override
+  late final GeneratedColumn<String> referenceType = GeneratedColumn<String>(
+    'reference_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceNumberMeta = const VerificationMeta(
+    'referenceNumber',
+  );
+  @override
+  late final GeneratedColumn<String> referenceNumber = GeneratedColumn<String>(
+    'reference_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partyNameMeta = const VerificationMeta(
+    'partyName',
+  );
+  @override
+  late final GeneratedColumn<String> partyName = GeneratedColumn<String>(
+    'party_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _costPerUnitMeta = const VerificationMeta(
+    'costPerUnit',
+  );
+  @override
+  late final GeneratedColumn<String> costPerUnit = GeneratedColumn<String>(
+    'cost_per_unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByNameMeta = const VerificationMeta(
+    'createdByName',
+  );
+  @override
+  late final GeneratedColumn<String> createdByName = GeneratedColumn<String>(
+    'created_by_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    itemId,
+    godownId,
+    documentId,
+    documentType,
+    movementType,
+    quantity,
+    beforeQuantity,
+    afterQuantity,
+    unit,
+    reason,
+    referenceId,
+    referenceType,
+    referenceNumber,
+    partyName,
+    costPerUnit,
+    notes,
+    createdBy,
+    createdByName,
+    createdAt,
+    updatedAt,
+    syncVersion,
+    isDeleted,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inventory_movements_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InventoryMovementLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('godown_id')) {
+      context.handle(
+        _godownIdMeta,
+        godownId.isAcceptableOrUnknown(data['godown_id']!, _godownIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_godownIdMeta);
+    }
+    if (data.containsKey('document_id')) {
+      context.handle(
+        _documentIdMeta,
+        documentId.isAcceptableOrUnknown(data['document_id']!, _documentIdMeta),
+      );
+    }
+    if (data.containsKey('document_type')) {
+      context.handle(
+        _documentTypeMeta,
+        documentType.isAcceptableOrUnknown(
+          data['document_type']!,
+          _documentTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('movement_type')) {
+      context.handle(
+        _movementTypeMeta,
+        movementType.isAcceptableOrUnknown(
+          data['movement_type']!,
+          _movementTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_movementTypeMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('before_quantity')) {
+      context.handle(
+        _beforeQuantityMeta,
+        beforeQuantity.isAcceptableOrUnknown(
+          data['before_quantity']!,
+          _beforeQuantityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('after_quantity')) {
+      context.handle(
+        _afterQuantityMeta,
+        afterQuantity.isAcceptableOrUnknown(
+          data['after_quantity']!,
+          _afterQuantityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    if (data.containsKey('reference_id')) {
+      context.handle(
+        _referenceIdMeta,
+        referenceId.isAcceptableOrUnknown(
+          data['reference_id']!,
+          _referenceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_type')) {
+      context.handle(
+        _referenceTypeMeta,
+        referenceType.isAcceptableOrUnknown(
+          data['reference_type']!,
+          _referenceTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_number')) {
+      context.handle(
+        _referenceNumberMeta,
+        referenceNumber.isAcceptableOrUnknown(
+          data['reference_number']!,
+          _referenceNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('party_name')) {
+      context.handle(
+        _partyNameMeta,
+        partyName.isAcceptableOrUnknown(data['party_name']!, _partyNameMeta),
+      );
+    }
+    if (data.containsKey('cost_per_unit')) {
+      context.handle(
+        _costPerUnitMeta,
+        costPerUnit.isAcceptableOrUnknown(
+          data['cost_per_unit']!,
+          _costPerUnitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_by_name')) {
+      context.handle(
+        _createdByNameMeta,
+        createdByName.isAcceptableOrUnknown(
+          data['created_by_name']!,
+          _createdByNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InventoryMovementLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InventoryMovementLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      godownId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}godown_id'],
+      )!,
+      documentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_id'],
+      ),
+      documentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_type'],
+      ),
+      movementType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}movement_type'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quantity'],
+      )!,
+      beforeQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}before_quantity'],
+      ),
+      afterQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}after_quantity'],
+      ),
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      ),
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      ),
+      referenceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_id'],
+      ),
+      referenceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_type'],
+      ),
+      referenceNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_number'],
+      ),
+      partyName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_name'],
+      ),
+      costPerUnit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cost_per_unit'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      createdByName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by_name'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $InventoryMovementsLocalTable createAlias(String alias) {
+    return $InventoryMovementsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class InventoryMovementLocalData extends DataClass
+    implements Insertable<InventoryMovementLocalData> {
+  final String id;
+  final String businessId;
+  final String itemId;
+  final String godownId;
+  final String? documentId;
+  final String? documentType;
+  final String movementType;
+  final String quantity;
+  final String? beforeQuantity;
+  final String? afterQuantity;
+  final String? unit;
+  final String? reason;
+  final String? referenceId;
+  final String? referenceType;
+  final String? referenceNumber;
+  final String? partyName;
+  final String? costPerUnit;
+  final String? notes;
+  final String? createdBy;
+  final String? createdByName;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int syncVersion;
+  final bool isDeleted;
+  final String? deviceId;
+  const InventoryMovementLocalData({
+    required this.id,
+    required this.businessId,
+    required this.itemId,
+    required this.godownId,
+    this.documentId,
+    this.documentType,
+    required this.movementType,
+    required this.quantity,
+    this.beforeQuantity,
+    this.afterQuantity,
+    this.unit,
+    this.reason,
+    this.referenceId,
+    this.referenceType,
+    this.referenceNumber,
+    this.partyName,
+    this.costPerUnit,
+    this.notes,
+    this.createdBy,
+    this.createdByName,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.syncVersion,
+    required this.isDeleted,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['item_id'] = Variable<String>(itemId);
+    map['godown_id'] = Variable<String>(godownId);
+    if (!nullToAbsent || documentId != null) {
+      map['document_id'] = Variable<String>(documentId);
+    }
+    if (!nullToAbsent || documentType != null) {
+      map['document_type'] = Variable<String>(documentType);
+    }
+    map['movement_type'] = Variable<String>(movementType);
+    map['quantity'] = Variable<String>(quantity);
+    if (!nullToAbsent || beforeQuantity != null) {
+      map['before_quantity'] = Variable<String>(beforeQuantity);
+    }
+    if (!nullToAbsent || afterQuantity != null) {
+      map['after_quantity'] = Variable<String>(afterQuantity);
+    }
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
+    if (!nullToAbsent || referenceId != null) {
+      map['reference_id'] = Variable<String>(referenceId);
+    }
+    if (!nullToAbsent || referenceType != null) {
+      map['reference_type'] = Variable<String>(referenceType);
+    }
+    if (!nullToAbsent || referenceNumber != null) {
+      map['reference_number'] = Variable<String>(referenceNumber);
+    }
+    if (!nullToAbsent || partyName != null) {
+      map['party_name'] = Variable<String>(partyName);
+    }
+    if (!nullToAbsent || costPerUnit != null) {
+      map['cost_per_unit'] = Variable<String>(costPerUnit);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || createdByName != null) {
+      map['created_by_name'] = Variable<String>(createdByName);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  InventoryMovementsLocalCompanion toCompanion(bool nullToAbsent) {
+    return InventoryMovementsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      itemId: Value(itemId),
+      godownId: Value(godownId),
+      documentId: documentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(documentId),
+      documentType: documentType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(documentType),
+      movementType: Value(movementType),
+      quantity: Value(quantity),
+      beforeQuantity: beforeQuantity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(beforeQuantity),
+      afterQuantity: afterQuantity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(afterQuantity),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      reason: reason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reason),
+      referenceId: referenceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceId),
+      referenceType: referenceType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceType),
+      referenceNumber: referenceNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceNumber),
+      partyName: partyName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyName),
+      costPerUnit: costPerUnit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(costPerUnit),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      createdByName: createdByName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdByName),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory InventoryMovementLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InventoryMovementLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      godownId: serializer.fromJson<String>(json['godownId']),
+      documentId: serializer.fromJson<String?>(json['documentId']),
+      documentType: serializer.fromJson<String?>(json['documentType']),
+      movementType: serializer.fromJson<String>(json['movementType']),
+      quantity: serializer.fromJson<String>(json['quantity']),
+      beforeQuantity: serializer.fromJson<String?>(json['beforeQuantity']),
+      afterQuantity: serializer.fromJson<String?>(json['afterQuantity']),
+      unit: serializer.fromJson<String?>(json['unit']),
+      reason: serializer.fromJson<String?>(json['reason']),
+      referenceId: serializer.fromJson<String?>(json['referenceId']),
+      referenceType: serializer.fromJson<String?>(json['referenceType']),
+      referenceNumber: serializer.fromJson<String?>(json['referenceNumber']),
+      partyName: serializer.fromJson<String?>(json['partyName']),
+      costPerUnit: serializer.fromJson<String?>(json['costPerUnit']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      createdByName: serializer.fromJson<String?>(json['createdByName']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'itemId': serializer.toJson<String>(itemId),
+      'godownId': serializer.toJson<String>(godownId),
+      'documentId': serializer.toJson<String?>(documentId),
+      'documentType': serializer.toJson<String?>(documentType),
+      'movementType': serializer.toJson<String>(movementType),
+      'quantity': serializer.toJson<String>(quantity),
+      'beforeQuantity': serializer.toJson<String?>(beforeQuantity),
+      'afterQuantity': serializer.toJson<String?>(afterQuantity),
+      'unit': serializer.toJson<String?>(unit),
+      'reason': serializer.toJson<String?>(reason),
+      'referenceId': serializer.toJson<String?>(referenceId),
+      'referenceType': serializer.toJson<String?>(referenceType),
+      'referenceNumber': serializer.toJson<String?>(referenceNumber),
+      'partyName': serializer.toJson<String?>(partyName),
+      'costPerUnit': serializer.toJson<String?>(costPerUnit),
+      'notes': serializer.toJson<String?>(notes),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'createdByName': serializer.toJson<String?>(createdByName),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  InventoryMovementLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? itemId,
+    String? godownId,
+    Value<String?> documentId = const Value.absent(),
+    Value<String?> documentType = const Value.absent(),
+    String? movementType,
+    String? quantity,
+    Value<String?> beforeQuantity = const Value.absent(),
+    Value<String?> afterQuantity = const Value.absent(),
+    Value<String?> unit = const Value.absent(),
+    Value<String?> reason = const Value.absent(),
+    Value<String?> referenceId = const Value.absent(),
+    Value<String?> referenceType = const Value.absent(),
+    Value<String?> referenceNumber = const Value.absent(),
+    Value<String?> partyName = const Value.absent(),
+    Value<String?> costPerUnit = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    Value<String?> createdByName = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? syncVersion,
+    bool? isDeleted,
+    Value<String?> deviceId = const Value.absent(),
+  }) => InventoryMovementLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    itemId: itemId ?? this.itemId,
+    godownId: godownId ?? this.godownId,
+    documentId: documentId.present ? documentId.value : this.documentId,
+    documentType: documentType.present ? documentType.value : this.documentType,
+    movementType: movementType ?? this.movementType,
+    quantity: quantity ?? this.quantity,
+    beforeQuantity: beforeQuantity.present
+        ? beforeQuantity.value
+        : this.beforeQuantity,
+    afterQuantity: afterQuantity.present
+        ? afterQuantity.value
+        : this.afterQuantity,
+    unit: unit.present ? unit.value : this.unit,
+    reason: reason.present ? reason.value : this.reason,
+    referenceId: referenceId.present ? referenceId.value : this.referenceId,
+    referenceType: referenceType.present
+        ? referenceType.value
+        : this.referenceType,
+    referenceNumber: referenceNumber.present
+        ? referenceNumber.value
+        : this.referenceNumber,
+    partyName: partyName.present ? partyName.value : this.partyName,
+    costPerUnit: costPerUnit.present ? costPerUnit.value : this.costPerUnit,
+    notes: notes.present ? notes.value : this.notes,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    createdByName: createdByName.present
+        ? createdByName.value
+        : this.createdByName,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  InventoryMovementLocalData copyWithCompanion(
+    InventoryMovementsLocalCompanion data,
+  ) {
+    return InventoryMovementLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      godownId: data.godownId.present ? data.godownId.value : this.godownId,
+      documentId: data.documentId.present
+          ? data.documentId.value
+          : this.documentId,
+      documentType: data.documentType.present
+          ? data.documentType.value
+          : this.documentType,
+      movementType: data.movementType.present
+          ? data.movementType.value
+          : this.movementType,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      beforeQuantity: data.beforeQuantity.present
+          ? data.beforeQuantity.value
+          : this.beforeQuantity,
+      afterQuantity: data.afterQuantity.present
+          ? data.afterQuantity.value
+          : this.afterQuantity,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      referenceId: data.referenceId.present
+          ? data.referenceId.value
+          : this.referenceId,
+      referenceType: data.referenceType.present
+          ? data.referenceType.value
+          : this.referenceType,
+      referenceNumber: data.referenceNumber.present
+          ? data.referenceNumber.value
+          : this.referenceNumber,
+      partyName: data.partyName.present ? data.partyName.value : this.partyName,
+      costPerUnit: data.costPerUnit.present
+          ? data.costPerUnit.value
+          : this.costPerUnit,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdByName: data.createdByName.present
+          ? data.createdByName.value
+          : this.createdByName,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryMovementLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('godownId: $godownId, ')
+          ..write('documentId: $documentId, ')
+          ..write('documentType: $documentType, ')
+          ..write('movementType: $movementType, ')
+          ..write('quantity: $quantity, ')
+          ..write('beforeQuantity: $beforeQuantity, ')
+          ..write('afterQuantity: $afterQuantity, ')
+          ..write('unit: $unit, ')
+          ..write('reason: $reason, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('referenceType: $referenceType, ')
+          ..write('referenceNumber: $referenceNumber, ')
+          ..write('partyName: $partyName, ')
+          ..write('costPerUnit: $costPerUnit, ')
+          ..write('notes: $notes, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdByName: $createdByName, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    itemId,
+    godownId,
+    documentId,
+    documentType,
+    movementType,
+    quantity,
+    beforeQuantity,
+    afterQuantity,
+    unit,
+    reason,
+    referenceId,
+    referenceType,
+    referenceNumber,
+    partyName,
+    costPerUnit,
+    notes,
+    createdBy,
+    createdByName,
+    createdAt,
+    updatedAt,
+    syncVersion,
+    isDeleted,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InventoryMovementLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.itemId == this.itemId &&
+          other.godownId == this.godownId &&
+          other.documentId == this.documentId &&
+          other.documentType == this.documentType &&
+          other.movementType == this.movementType &&
+          other.quantity == this.quantity &&
+          other.beforeQuantity == this.beforeQuantity &&
+          other.afterQuantity == this.afterQuantity &&
+          other.unit == this.unit &&
+          other.reason == this.reason &&
+          other.referenceId == this.referenceId &&
+          other.referenceType == this.referenceType &&
+          other.referenceNumber == this.referenceNumber &&
+          other.partyName == this.partyName &&
+          other.costPerUnit == this.costPerUnit &&
+          other.notes == this.notes &&
+          other.createdBy == this.createdBy &&
+          other.createdByName == this.createdByName &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.deviceId == this.deviceId);
+}
+
+class InventoryMovementsLocalCompanion
+    extends UpdateCompanion<InventoryMovementLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> itemId;
+  final Value<String> godownId;
+  final Value<String?> documentId;
+  final Value<String?> documentType;
+  final Value<String> movementType;
+  final Value<String> quantity;
+  final Value<String?> beforeQuantity;
+  final Value<String?> afterQuantity;
+  final Value<String?> unit;
+  final Value<String?> reason;
+  final Value<String?> referenceId;
+  final Value<String?> referenceType;
+  final Value<String?> referenceNumber;
+  final Value<String?> partyName;
+  final Value<String?> costPerUnit;
+  final Value<String?> notes;
+  final Value<String?> createdBy;
+  final Value<String?> createdByName;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const InventoryMovementsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.godownId = const Value.absent(),
+    this.documentId = const Value.absent(),
+    this.documentType = const Value.absent(),
+    this.movementType = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.beforeQuantity = const Value.absent(),
+    this.afterQuantity = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.referenceType = const Value.absent(),
+    this.referenceNumber = const Value.absent(),
+    this.partyName = const Value.absent(),
+    this.costPerUnit = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdByName = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  InventoryMovementsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String itemId,
+    required String godownId,
+    this.documentId = const Value.absent(),
+    this.documentType = const Value.absent(),
+    required String movementType,
+    required String quantity,
+    this.beforeQuantity = const Value.absent(),
+    this.afterQuantity = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.referenceType = const Value.absent(),
+    this.referenceNumber = const Value.absent(),
+    this.partyName = const Value.absent(),
+    this.costPerUnit = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdByName = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       itemId = Value(itemId),
+       godownId = Value(godownId),
+       movementType = Value(movementType),
+       quantity = Value(quantity),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<InventoryMovementLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? itemId,
+    Expression<String>? godownId,
+    Expression<String>? documentId,
+    Expression<String>? documentType,
+    Expression<String>? movementType,
+    Expression<String>? quantity,
+    Expression<String>? beforeQuantity,
+    Expression<String>? afterQuantity,
+    Expression<String>? unit,
+    Expression<String>? reason,
+    Expression<String>? referenceId,
+    Expression<String>? referenceType,
+    Expression<String>? referenceNumber,
+    Expression<String>? partyName,
+    Expression<String>? costPerUnit,
+    Expression<String>? notes,
+    Expression<String>? createdBy,
+    Expression<String>? createdByName,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (itemId != null) 'item_id': itemId,
+      if (godownId != null) 'godown_id': godownId,
+      if (documentId != null) 'document_id': documentId,
+      if (documentType != null) 'document_type': documentType,
+      if (movementType != null) 'movement_type': movementType,
+      if (quantity != null) 'quantity': quantity,
+      if (beforeQuantity != null) 'before_quantity': beforeQuantity,
+      if (afterQuantity != null) 'after_quantity': afterQuantity,
+      if (unit != null) 'unit': unit,
+      if (reason != null) 'reason': reason,
+      if (referenceId != null) 'reference_id': referenceId,
+      if (referenceType != null) 'reference_type': referenceType,
+      if (referenceNumber != null) 'reference_number': referenceNumber,
+      if (partyName != null) 'party_name': partyName,
+      if (costPerUnit != null) 'cost_per_unit': costPerUnit,
+      if (notes != null) 'notes': notes,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdByName != null) 'created_by_name': createdByName,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  InventoryMovementsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? itemId,
+    Value<String>? godownId,
+    Value<String?>? documentId,
+    Value<String?>? documentType,
+    Value<String>? movementType,
+    Value<String>? quantity,
+    Value<String?>? beforeQuantity,
+    Value<String?>? afterQuantity,
+    Value<String?>? unit,
+    Value<String?>? reason,
+    Value<String?>? referenceId,
+    Value<String?>? referenceType,
+    Value<String?>? referenceNumber,
+    Value<String?>? partyName,
+    Value<String?>? costPerUnit,
+    Value<String?>? notes,
+    Value<String?>? createdBy,
+    Value<String?>? createdByName,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return InventoryMovementsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      itemId: itemId ?? this.itemId,
+      godownId: godownId ?? this.godownId,
+      documentId: documentId ?? this.documentId,
+      documentType: documentType ?? this.documentType,
+      movementType: movementType ?? this.movementType,
+      quantity: quantity ?? this.quantity,
+      beforeQuantity: beforeQuantity ?? this.beforeQuantity,
+      afterQuantity: afterQuantity ?? this.afterQuantity,
+      unit: unit ?? this.unit,
+      reason: reason ?? this.reason,
+      referenceId: referenceId ?? this.referenceId,
+      referenceType: referenceType ?? this.referenceType,
+      referenceNumber: referenceNumber ?? this.referenceNumber,
+      partyName: partyName ?? this.partyName,
+      costPerUnit: costPerUnit ?? this.costPerUnit,
+      notes: notes ?? this.notes,
+      createdBy: createdBy ?? this.createdBy,
+      createdByName: createdByName ?? this.createdByName,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (godownId.present) {
+      map['godown_id'] = Variable<String>(godownId.value);
+    }
+    if (documentId.present) {
+      map['document_id'] = Variable<String>(documentId.value);
+    }
+    if (documentType.present) {
+      map['document_type'] = Variable<String>(documentType.value);
+    }
+    if (movementType.present) {
+      map['movement_type'] = Variable<String>(movementType.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<String>(quantity.value);
+    }
+    if (beforeQuantity.present) {
+      map['before_quantity'] = Variable<String>(beforeQuantity.value);
+    }
+    if (afterQuantity.present) {
+      map['after_quantity'] = Variable<String>(afterQuantity.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (referenceId.present) {
+      map['reference_id'] = Variable<String>(referenceId.value);
+    }
+    if (referenceType.present) {
+      map['reference_type'] = Variable<String>(referenceType.value);
+    }
+    if (referenceNumber.present) {
+      map['reference_number'] = Variable<String>(referenceNumber.value);
+    }
+    if (partyName.present) {
+      map['party_name'] = Variable<String>(partyName.value);
+    }
+    if (costPerUnit.present) {
+      map['cost_per_unit'] = Variable<String>(costPerUnit.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdByName.present) {
+      map['created_by_name'] = Variable<String>(createdByName.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryMovementsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('godownId: $godownId, ')
+          ..write('documentId: $documentId, ')
+          ..write('documentType: $documentType, ')
+          ..write('movementType: $movementType, ')
+          ..write('quantity: $quantity, ')
+          ..write('beforeQuantity: $beforeQuantity, ')
+          ..write('afterQuantity: $afterQuantity, ')
+          ..write('unit: $unit, ')
+          ..write('reason: $reason, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('referenceType: $referenceType, ')
+          ..write('referenceNumber: $referenceNumber, ')
+          ..write('partyName: $partyName, ')
+          ..write('costPerUnit: $costPerUnit, ')
+          ..write('notes: $notes, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdByName: $createdByName, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StockLevelsLocalTable extends StockLevelsLocal
+    with TableInfo<$StockLevelsLocalTable, StockLevelLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StockLevelsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _godownIdMeta = const VerificationMeta(
+    'godownId',
+  );
+  @override
+  late final GeneratedColumn<String> godownId = GeneratedColumn<String>(
+    'godown_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currentQuantityMeta = const VerificationMeta(
+    'currentQuantity',
+  );
+  @override
+  late final GeneratedColumn<String> currentQuantity = GeneratedColumn<String>(
+    'current_quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _reservedQuantityMeta = const VerificationMeta(
+    'reservedQuantity',
+  );
+  @override
+  late final GeneratedColumn<String> reservedQuantity = GeneratedColumn<String>(
+    'reserved_quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _availableQuantityMeta = const VerificationMeta(
+    'availableQuantity',
+  );
+  @override
+  late final GeneratedColumn<String> availableQuantity =
+      GeneratedColumn<String>(
+        'available_quantity',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('0'),
+      );
+  static const VerificationMeta _averageCostMeta = const VerificationMeta(
+    'averageCost',
+  );
+  @override
+  late final GeneratedColumn<String> averageCost = GeneratedColumn<String>(
+    'average_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    itemId,
+    godownId,
+    currentQuantity,
+    reservedQuantity,
+    availableQuantity,
+    averageCost,
+    updatedAt,
+    syncVersion,
+    isDeleted,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stock_levels_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StockLevelLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('godown_id')) {
+      context.handle(
+        _godownIdMeta,
+        godownId.isAcceptableOrUnknown(data['godown_id']!, _godownIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_godownIdMeta);
+    }
+    if (data.containsKey('current_quantity')) {
+      context.handle(
+        _currentQuantityMeta,
+        currentQuantity.isAcceptableOrUnknown(
+          data['current_quantity']!,
+          _currentQuantityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reserved_quantity')) {
+      context.handle(
+        _reservedQuantityMeta,
+        reservedQuantity.isAcceptableOrUnknown(
+          data['reserved_quantity']!,
+          _reservedQuantityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('available_quantity')) {
+      context.handle(
+        _availableQuantityMeta,
+        availableQuantity.isAcceptableOrUnknown(
+          data['available_quantity']!,
+          _availableQuantityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('average_cost')) {
+      context.handle(
+        _averageCostMeta,
+        averageCost.isAcceptableOrUnknown(
+          data['average_cost']!,
+          _averageCostMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StockLevelLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StockLevelLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      godownId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}godown_id'],
+      )!,
+      currentQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_quantity'],
+      )!,
+      reservedQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reserved_quantity'],
+      )!,
+      availableQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}available_quantity'],
+      )!,
+      averageCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}average_cost'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $StockLevelsLocalTable createAlias(String alias) {
+    return $StockLevelsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class StockLevelLocalData extends DataClass
+    implements Insertable<StockLevelLocalData> {
+  final String id;
+  final String businessId;
+  final String itemId;
+  final String godownId;
+  final String currentQuantity;
+  final String reservedQuantity;
+  final String availableQuantity;
+  final String averageCost;
+  final DateTime updatedAt;
+  final int syncVersion;
+  final bool isDeleted;
+  final String? deviceId;
+  const StockLevelLocalData({
+    required this.id,
+    required this.businessId,
+    required this.itemId,
+    required this.godownId,
+    required this.currentQuantity,
+    required this.reservedQuantity,
+    required this.availableQuantity,
+    required this.averageCost,
+    required this.updatedAt,
+    required this.syncVersion,
+    required this.isDeleted,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['item_id'] = Variable<String>(itemId);
+    map['godown_id'] = Variable<String>(godownId);
+    map['current_quantity'] = Variable<String>(currentQuantity);
+    map['reserved_quantity'] = Variable<String>(reservedQuantity);
+    map['available_quantity'] = Variable<String>(availableQuantity);
+    map['average_cost'] = Variable<String>(averageCost);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  StockLevelsLocalCompanion toCompanion(bool nullToAbsent) {
+    return StockLevelsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      itemId: Value(itemId),
+      godownId: Value(godownId),
+      currentQuantity: Value(currentQuantity),
+      reservedQuantity: Value(reservedQuantity),
+      availableQuantity: Value(availableQuantity),
+      averageCost: Value(averageCost),
+      updatedAt: Value(updatedAt),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory StockLevelLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StockLevelLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      godownId: serializer.fromJson<String>(json['godownId']),
+      currentQuantity: serializer.fromJson<String>(json['currentQuantity']),
+      reservedQuantity: serializer.fromJson<String>(json['reservedQuantity']),
+      availableQuantity: serializer.fromJson<String>(json['availableQuantity']),
+      averageCost: serializer.fromJson<String>(json['averageCost']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'itemId': serializer.toJson<String>(itemId),
+      'godownId': serializer.toJson<String>(godownId),
+      'currentQuantity': serializer.toJson<String>(currentQuantity),
+      'reservedQuantity': serializer.toJson<String>(reservedQuantity),
+      'availableQuantity': serializer.toJson<String>(availableQuantity),
+      'averageCost': serializer.toJson<String>(averageCost),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  StockLevelLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? itemId,
+    String? godownId,
+    String? currentQuantity,
+    String? reservedQuantity,
+    String? availableQuantity,
+    String? averageCost,
+    DateTime? updatedAt,
+    int? syncVersion,
+    bool? isDeleted,
+    Value<String?> deviceId = const Value.absent(),
+  }) => StockLevelLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    itemId: itemId ?? this.itemId,
+    godownId: godownId ?? this.godownId,
+    currentQuantity: currentQuantity ?? this.currentQuantity,
+    reservedQuantity: reservedQuantity ?? this.reservedQuantity,
+    availableQuantity: availableQuantity ?? this.availableQuantity,
+    averageCost: averageCost ?? this.averageCost,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  StockLevelLocalData copyWithCompanion(StockLevelsLocalCompanion data) {
+    return StockLevelLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      godownId: data.godownId.present ? data.godownId.value : this.godownId,
+      currentQuantity: data.currentQuantity.present
+          ? data.currentQuantity.value
+          : this.currentQuantity,
+      reservedQuantity: data.reservedQuantity.present
+          ? data.reservedQuantity.value
+          : this.reservedQuantity,
+      availableQuantity: data.availableQuantity.present
+          ? data.availableQuantity.value
+          : this.availableQuantity,
+      averageCost: data.averageCost.present
+          ? data.averageCost.value
+          : this.averageCost,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockLevelLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('godownId: $godownId, ')
+          ..write('currentQuantity: $currentQuantity, ')
+          ..write('reservedQuantity: $reservedQuantity, ')
+          ..write('availableQuantity: $availableQuantity, ')
+          ..write('averageCost: $averageCost, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    itemId,
+    godownId,
+    currentQuantity,
+    reservedQuantity,
+    availableQuantity,
+    averageCost,
+    updatedAt,
+    syncVersion,
+    isDeleted,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StockLevelLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.itemId == this.itemId &&
+          other.godownId == this.godownId &&
+          other.currentQuantity == this.currentQuantity &&
+          other.reservedQuantity == this.reservedQuantity &&
+          other.availableQuantity == this.availableQuantity &&
+          other.averageCost == this.averageCost &&
+          other.updatedAt == this.updatedAt &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.deviceId == this.deviceId);
+}
+
+class StockLevelsLocalCompanion extends UpdateCompanion<StockLevelLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> itemId;
+  final Value<String> godownId;
+  final Value<String> currentQuantity;
+  final Value<String> reservedQuantity;
+  final Value<String> availableQuantity;
+  final Value<String> averageCost;
+  final Value<DateTime> updatedAt;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const StockLevelsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.godownId = const Value.absent(),
+    this.currentQuantity = const Value.absent(),
+    this.reservedQuantity = const Value.absent(),
+    this.availableQuantity = const Value.absent(),
+    this.averageCost = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StockLevelsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String itemId,
+    required String godownId,
+    this.currentQuantity = const Value.absent(),
+    this.reservedQuantity = const Value.absent(),
+    this.availableQuantity = const Value.absent(),
+    this.averageCost = const Value.absent(),
+    required DateTime updatedAt,
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       itemId = Value(itemId),
+       godownId = Value(godownId),
+       updatedAt = Value(updatedAt);
+  static Insertable<StockLevelLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? itemId,
+    Expression<String>? godownId,
+    Expression<String>? currentQuantity,
+    Expression<String>? reservedQuantity,
+    Expression<String>? availableQuantity,
+    Expression<String>? averageCost,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (itemId != null) 'item_id': itemId,
+      if (godownId != null) 'godown_id': godownId,
+      if (currentQuantity != null) 'current_quantity': currentQuantity,
+      if (reservedQuantity != null) 'reserved_quantity': reservedQuantity,
+      if (availableQuantity != null) 'available_quantity': availableQuantity,
+      if (averageCost != null) 'average_cost': averageCost,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StockLevelsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? itemId,
+    Value<String>? godownId,
+    Value<String>? currentQuantity,
+    Value<String>? reservedQuantity,
+    Value<String>? availableQuantity,
+    Value<String>? averageCost,
+    Value<DateTime>? updatedAt,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return StockLevelsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      itemId: itemId ?? this.itemId,
+      godownId: godownId ?? this.godownId,
+      currentQuantity: currentQuantity ?? this.currentQuantity,
+      reservedQuantity: reservedQuantity ?? this.reservedQuantity,
+      availableQuantity: availableQuantity ?? this.availableQuantity,
+      averageCost: averageCost ?? this.averageCost,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (godownId.present) {
+      map['godown_id'] = Variable<String>(godownId.value);
+    }
+    if (currentQuantity.present) {
+      map['current_quantity'] = Variable<String>(currentQuantity.value);
+    }
+    if (reservedQuantity.present) {
+      map['reserved_quantity'] = Variable<String>(reservedQuantity.value);
+    }
+    if (availableQuantity.present) {
+      map['available_quantity'] = Variable<String>(availableQuantity.value);
+    }
+    if (averageCost.present) {
+      map['average_cost'] = Variable<String>(averageCost.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockLevelsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('godownId: $godownId, ')
+          ..write('currentQuantity: $currentQuantity, ')
+          ..write('reservedQuantity: $reservedQuantity, ')
+          ..write('availableQuantity: $availableQuantity, ')
+          ..write('averageCost: $averageCost, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -19639,6 +21765,35 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PurchaseDocumentLinesLocalTable(this);
   late final $LocalDocumentCountersTable localDocumentCounters =
       $LocalDocumentCountersTable(this);
+  late final $InventoryMovementsLocalTable inventoryMovementsLocal =
+      $InventoryMovementsLocalTable(this);
+  late final $StockLevelsLocalTable stockLevelsLocal = $StockLevelsLocalTable(
+    this,
+  );
+  late final Index idxMovementsLocalBusiness = Index(
+    'idx_movements_local_business',
+    'CREATE INDEX idx_movements_local_business ON inventory_movements_local (business_id)',
+  );
+  late final Index idxMovementsLocalItem = Index(
+    'idx_movements_local_item',
+    'CREATE INDEX idx_movements_local_item ON inventory_movements_local (item_id)',
+  );
+  late final Index idxMovementsLocalCreatedAt = Index(
+    'idx_movements_local_created_at',
+    'CREATE INDEX idx_movements_local_created_at ON inventory_movements_local (created_at)',
+  );
+  late final Index idxMovementsLocalType = Index(
+    'idx_movements_local_type',
+    'CREATE INDEX idx_movements_local_type ON inventory_movements_local (movement_type)',
+  );
+  late final Index idxStockLevelsLocalBusiness = Index(
+    'idx_stock_levels_local_business',
+    'CREATE INDEX idx_stock_levels_local_business ON stock_levels_local (business_id)',
+  );
+  late final Index idxStockLevelsLocalItem = Index(
+    'idx_stock_levels_local_item',
+    'CREATE INDEX idx_stock_levels_local_item ON stock_levels_local (item_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -19665,6 +21820,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     purchaseDocumentsLocal,
     purchaseDocumentLinesLocal,
     localDocumentCounters,
+    inventoryMovementsLocal,
+    stockLevelsLocal,
+    idxMovementsLocalBusiness,
+    idxMovementsLocalItem,
+    idxMovementsLocalCreatedAt,
+    idxMovementsLocalType,
+    idxStockLevelsLocalBusiness,
+    idxStockLevelsLocalItem,
   ];
 }
 
@@ -29001,6 +31164,984 @@ typedef $$LocalDocumentCountersTableProcessedTableManager =
       LocalDocumentCounterData,
       PrefetchHooks Function()
     >;
+typedef $$InventoryMovementsLocalTableCreateCompanionBuilder =
+    InventoryMovementsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String itemId,
+      required String godownId,
+      Value<String?> documentId,
+      Value<String?> documentType,
+      required String movementType,
+      required String quantity,
+      Value<String?> beforeQuantity,
+      Value<String?> afterQuantity,
+      Value<String?> unit,
+      Value<String?> reason,
+      Value<String?> referenceId,
+      Value<String?> referenceType,
+      Value<String?> referenceNumber,
+      Value<String?> partyName,
+      Value<String?> costPerUnit,
+      Value<String?> notes,
+      Value<String?> createdBy,
+      Value<String?> createdByName,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$InventoryMovementsLocalTableUpdateCompanionBuilder =
+    InventoryMovementsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> itemId,
+      Value<String> godownId,
+      Value<String?> documentId,
+      Value<String?> documentType,
+      Value<String> movementType,
+      Value<String> quantity,
+      Value<String?> beforeQuantity,
+      Value<String?> afterQuantity,
+      Value<String?> unit,
+      Value<String?> reason,
+      Value<String?> referenceId,
+      Value<String?> referenceType,
+      Value<String?> referenceNumber,
+      Value<String?> partyName,
+      Value<String?> costPerUnit,
+      Value<String?> notes,
+      Value<String?> createdBy,
+      Value<String?> createdByName,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$InventoryMovementsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $InventoryMovementsLocalTable> {
+  $$InventoryMovementsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get beforeQuantity => $composableBuilder(
+    column: $table.beforeQuantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get afterQuantity => $composableBuilder(
+    column: $table.afterQuantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyName => $composableBuilder(
+    column: $table.partyName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get costPerUnit => $composableBuilder(
+    column: $table.costPerUnit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdByName => $composableBuilder(
+    column: $table.createdByName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$InventoryMovementsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $InventoryMovementsLocalTable> {
+  $$InventoryMovementsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get beforeQuantity => $composableBuilder(
+    column: $table.beforeQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get afterQuantity => $composableBuilder(
+    column: $table.afterQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyName => $composableBuilder(
+    column: $table.partyName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get costPerUnit => $composableBuilder(
+    column: $table.costPerUnit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdByName => $composableBuilder(
+    column: $table.createdByName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$InventoryMovementsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InventoryMovementsLocalTable> {
+  $$InventoryMovementsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get godownId =>
+      $composableBuilder(column: $table.godownId, builder: (column) => column);
+
+  GeneratedColumn<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get beforeQuantity => $composableBuilder(
+    column: $table.beforeQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get afterQuantity => $composableBuilder(
+    column: $table.afterQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get partyName =>
+      $composableBuilder(column: $table.partyName, builder: (column) => column);
+
+  GeneratedColumn<String> get costPerUnit => $composableBuilder(
+    column: $table.costPerUnit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get createdByName => $composableBuilder(
+    column: $table.createdByName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$InventoryMovementsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $InventoryMovementsLocalTable,
+          InventoryMovementLocalData,
+          $$InventoryMovementsLocalTableFilterComposer,
+          $$InventoryMovementsLocalTableOrderingComposer,
+          $$InventoryMovementsLocalTableAnnotationComposer,
+          $$InventoryMovementsLocalTableCreateCompanionBuilder,
+          $$InventoryMovementsLocalTableUpdateCompanionBuilder,
+          (
+            InventoryMovementLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $InventoryMovementsLocalTable,
+              InventoryMovementLocalData
+            >,
+          ),
+          InventoryMovementLocalData,
+          PrefetchHooks Function()
+        > {
+  $$InventoryMovementsLocalTableTableManager(
+    _$AppDatabase db,
+    $InventoryMovementsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InventoryMovementsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$InventoryMovementsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$InventoryMovementsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> godownId = const Value.absent(),
+                Value<String?> documentId = const Value.absent(),
+                Value<String?> documentType = const Value.absent(),
+                Value<String> movementType = const Value.absent(),
+                Value<String> quantity = const Value.absent(),
+                Value<String?> beforeQuantity = const Value.absent(),
+                Value<String?> afterQuantity = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<String?> referenceId = const Value.absent(),
+                Value<String?> referenceType = const Value.absent(),
+                Value<String?> referenceNumber = const Value.absent(),
+                Value<String?> partyName = const Value.absent(),
+                Value<String?> costPerUnit = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> createdByName = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => InventoryMovementsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                godownId: godownId,
+                documentId: documentId,
+                documentType: documentType,
+                movementType: movementType,
+                quantity: quantity,
+                beforeQuantity: beforeQuantity,
+                afterQuantity: afterQuantity,
+                unit: unit,
+                reason: reason,
+                referenceId: referenceId,
+                referenceType: referenceType,
+                referenceNumber: referenceNumber,
+                partyName: partyName,
+                costPerUnit: costPerUnit,
+                notes: notes,
+                createdBy: createdBy,
+                createdByName: createdByName,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String itemId,
+                required String godownId,
+                Value<String?> documentId = const Value.absent(),
+                Value<String?> documentType = const Value.absent(),
+                required String movementType,
+                required String quantity,
+                Value<String?> beforeQuantity = const Value.absent(),
+                Value<String?> afterQuantity = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<String?> referenceId = const Value.absent(),
+                Value<String?> referenceType = const Value.absent(),
+                Value<String?> referenceNumber = const Value.absent(),
+                Value<String?> partyName = const Value.absent(),
+                Value<String?> costPerUnit = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> createdByName = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => InventoryMovementsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                godownId: godownId,
+                documentId: documentId,
+                documentType: documentType,
+                movementType: movementType,
+                quantity: quantity,
+                beforeQuantity: beforeQuantity,
+                afterQuantity: afterQuantity,
+                unit: unit,
+                reason: reason,
+                referenceId: referenceId,
+                referenceType: referenceType,
+                referenceNumber: referenceNumber,
+                partyName: partyName,
+                costPerUnit: costPerUnit,
+                notes: notes,
+                createdBy: createdBy,
+                createdByName: createdByName,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$InventoryMovementsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $InventoryMovementsLocalTable,
+      InventoryMovementLocalData,
+      $$InventoryMovementsLocalTableFilterComposer,
+      $$InventoryMovementsLocalTableOrderingComposer,
+      $$InventoryMovementsLocalTableAnnotationComposer,
+      $$InventoryMovementsLocalTableCreateCompanionBuilder,
+      $$InventoryMovementsLocalTableUpdateCompanionBuilder,
+      (
+        InventoryMovementLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $InventoryMovementsLocalTable,
+          InventoryMovementLocalData
+        >,
+      ),
+      InventoryMovementLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$StockLevelsLocalTableCreateCompanionBuilder =
+    StockLevelsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String itemId,
+      required String godownId,
+      Value<String> currentQuantity,
+      Value<String> reservedQuantity,
+      Value<String> availableQuantity,
+      Value<String> averageCost,
+      required DateTime updatedAt,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$StockLevelsLocalTableUpdateCompanionBuilder =
+    StockLevelsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> itemId,
+      Value<String> godownId,
+      Value<String> currentQuantity,
+      Value<String> reservedQuantity,
+      Value<String> availableQuantity,
+      Value<String> averageCost,
+      Value<DateTime> updatedAt,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$StockLevelsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $StockLevelsLocalTable> {
+  $$StockLevelsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currentQuantity => $composableBuilder(
+    column: $table.currentQuantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reservedQuantity => $composableBuilder(
+    column: $table.reservedQuantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get availableQuantity => $composableBuilder(
+    column: $table.availableQuantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get averageCost => $composableBuilder(
+    column: $table.averageCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StockLevelsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $StockLevelsLocalTable> {
+  $$StockLevelsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get godownId => $composableBuilder(
+    column: $table.godownId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currentQuantity => $composableBuilder(
+    column: $table.currentQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reservedQuantity => $composableBuilder(
+    column: $table.reservedQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get availableQuantity => $composableBuilder(
+    column: $table.availableQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get averageCost => $composableBuilder(
+    column: $table.averageCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StockLevelsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StockLevelsLocalTable> {
+  $$StockLevelsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get godownId =>
+      $composableBuilder(column: $table.godownId, builder: (column) => column);
+
+  GeneratedColumn<String> get currentQuantity => $composableBuilder(
+    column: $table.currentQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reservedQuantity => $composableBuilder(
+    column: $table.reservedQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get availableQuantity => $composableBuilder(
+    column: $table.availableQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get averageCost => $composableBuilder(
+    column: $table.averageCost,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$StockLevelsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StockLevelsLocalTable,
+          StockLevelLocalData,
+          $$StockLevelsLocalTableFilterComposer,
+          $$StockLevelsLocalTableOrderingComposer,
+          $$StockLevelsLocalTableAnnotationComposer,
+          $$StockLevelsLocalTableCreateCompanionBuilder,
+          $$StockLevelsLocalTableUpdateCompanionBuilder,
+          (
+            StockLevelLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $StockLevelsLocalTable,
+              StockLevelLocalData
+            >,
+          ),
+          StockLevelLocalData,
+          PrefetchHooks Function()
+        > {
+  $$StockLevelsLocalTableTableManager(
+    _$AppDatabase db,
+    $StockLevelsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StockLevelsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StockLevelsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StockLevelsLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> godownId = const Value.absent(),
+                Value<String> currentQuantity = const Value.absent(),
+                Value<String> reservedQuantity = const Value.absent(),
+                Value<String> availableQuantity = const Value.absent(),
+                Value<String> averageCost = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StockLevelsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                godownId: godownId,
+                currentQuantity: currentQuantity,
+                reservedQuantity: reservedQuantity,
+                availableQuantity: availableQuantity,
+                averageCost: averageCost,
+                updatedAt: updatedAt,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String itemId,
+                required String godownId,
+                Value<String> currentQuantity = const Value.absent(),
+                Value<String> reservedQuantity = const Value.absent(),
+                Value<String> availableQuantity = const Value.absent(),
+                Value<String> averageCost = const Value.absent(),
+                required DateTime updatedAt,
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StockLevelsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                godownId: godownId,
+                currentQuantity: currentQuantity,
+                reservedQuantity: reservedQuantity,
+                availableQuantity: availableQuantity,
+                averageCost: averageCost,
+                updatedAt: updatedAt,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StockLevelsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StockLevelsLocalTable,
+      StockLevelLocalData,
+      $$StockLevelsLocalTableFilterComposer,
+      $$StockLevelsLocalTableOrderingComposer,
+      $$StockLevelsLocalTableAnnotationComposer,
+      $$StockLevelsLocalTableCreateCompanionBuilder,
+      $$StockLevelsLocalTableUpdateCompanionBuilder,
+      (
+        StockLevelLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $StockLevelsLocalTable,
+          StockLevelLocalData
+        >,
+      ),
+      StockLevelLocalData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -29057,4 +32198,11 @@ class $AppDatabaseManager {
       );
   $$LocalDocumentCountersTableTableManager get localDocumentCounters =>
       $$LocalDocumentCountersTableTableManager(_db, _db.localDocumentCounters);
+  $$InventoryMovementsLocalTableTableManager get inventoryMovementsLocal =>
+      $$InventoryMovementsLocalTableTableManager(
+        _db,
+        _db.inventoryMovementsLocal,
+      );
+  $$StockLevelsLocalTableTableManager get stockLevelsLocal =>
+      $$StockLevelsLocalTableTableManager(_db, _db.stockLevelsLocal);
 }

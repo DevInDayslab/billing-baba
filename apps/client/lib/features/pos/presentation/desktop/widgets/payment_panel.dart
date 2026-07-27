@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
@@ -264,7 +265,7 @@ class _CustomerSearchResults extends StatelessWidget {
       error: (error, _) => Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Text(
-          'Search failed: $error',
+          OfflineUiMessages.messageFor(error),
           style: PosStyles.metadataStyle.copyWith(color: AppColors.error),
         ),
       ),
