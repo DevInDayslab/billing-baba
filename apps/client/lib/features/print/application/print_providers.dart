@@ -71,11 +71,11 @@ Future<PrintDataService> printDataService(Ref ref) async {
   return PrintDataService(
     salesRepository: SalesRepository(
       remote: SalesRemoteDataSource(api.dio),
-      local: const SalesLocalDataSource(),
+      local: SalesLocalDataSource(db),
     ),
     purchaseRepository: PurchaseRepository(
       remote: PurchaseRemoteDataSource(api.dio),
-      local: const PurchaseLocalDataSource(),
+      local: PurchaseLocalDataSource(db),
     ),
     inventoryRepository: InventoryRepository(
       remote: remote,

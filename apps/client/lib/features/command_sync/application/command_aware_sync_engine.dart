@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/sync/engine/sync_engine.dart';
+import 'package:billing_baba/core/sync/engine/sync_scheduler.dart';
 import 'package:billing_baba/core/sync/models/sync_result.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_runner.dart';
@@ -23,7 +24,10 @@ class CommandAwareSyncEngine {
   Future<void> start({bool enableAutoSync = true}) =>
       _engine.start(enableAutoSync: enableAutoSync);
   Future<void> stop() => _engine.stop();
-  void schedule([dynamic trigger]) => _engine.schedule(trigger);
+  void schedule([
+    SyncScheduleTrigger trigger = SyncScheduleTrigger.manualRefresh,
+  ]) =>
+      _engine.schedule(trigger);
   Future<void> dispose() => _engine.dispose();
 
   Future<SyncResult> syncNow() async {
