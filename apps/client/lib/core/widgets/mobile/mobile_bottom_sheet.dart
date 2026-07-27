@@ -14,6 +14,8 @@ Future<T?> showMobileBottomSheet<T>({
   bool enableDrag = true,
   bool useRootNavigator = true,
   double maxHeightFraction = 0.92,
+  double? heightFraction,
+  bool scrollBody = true,
 }) {
   return showModalBottomSheet<T>(
     context: context,
@@ -28,6 +30,8 @@ Future<T?> showMobileBottomSheet<T>({
         titleWidget: titleWidget,
         footer: footer,
         maxHeightFraction: maxHeightFraction,
+        heightFraction: heightFraction,
+        scrollBody: scrollBody,
         child: builder(sheetContext),
       );
     },
@@ -43,6 +47,8 @@ class MobileBottomSheet extends StatelessWidget {
     this.titleWidget,
     this.footer,
     this.maxHeightFraction = 0.92,
+    this.heightFraction,
+    this.scrollBody = true,
   });
 
   final Widget child;
@@ -51,10 +57,20 @@ class MobileBottomSheet extends StatelessWidget {
   final Widget? footer;
   final double maxHeightFraction;
 
+  /// When set, locks sheet height so content scrolls inside instead of growing.
+  final double? heightFraction;
+
+  /// When false, [child] is placed directly in the body (for internal scroll layouts).
+  final bool scrollBody;
+
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    final maxHeight = MediaQuery.sizeOf(context).height * maxHeightFraction;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final fixedHeight = heightFraction == null
+        ? null
+        : screenHeight * heightFraction!;
+    final maxHeight = screenHeight * maxHeightFraction;
     final resolvedTitle =
         titleWidget ??
         (title == null
@@ -81,52 +97,101 @@ class MobileBottomSheet extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: SafeArea(
             top: false,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxHeight),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const _DragHandle(),
-                  if (resolvedTitle != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        0,
-                        AppSpacing.lg,
-                        AppSpacing.sm,
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: resolvedTitle,
-                      ),
-                    ),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.sm,
-                        AppSpacing.lg,
-                        AppSpacing.lg,
-                      ),
+            child: fixedHeight == null
+                ? ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxHeight),
+                    child: _SheetBody(
+                      title: resolvedTitle,
+                      footer: footer,
                       child: child,
+                      expand: false,
+                      scrollBody: scrollBody,
+                    ),
+                  )
+                : SizedBox(
+                    height: fixedHeight,
+                    child: _SheetBody(
+                      title: resolvedTitle,
+                      footer: footer,
+                      child: child,
+                      expand: true,
+                      scrollBody: scrollBody,
                     ),
                   ),
-                  if (footer != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        0,
-                        AppSpacing.lg,
-                        AppSpacing.md,
-                      ),
-                      child: footer,
-                    ),
-                ],
-              ),
-            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SheetBody extends StatelessWidget {
+  const _SheetBody({
+    required this.child,
+    required this.expand,
+    this.title,
+    this.footer,
+    this.scrollBody = true,
+  });
+
+  final Widget child;
+  final Widget? title;
+  final Widget? footer;
+  final bool expand;
+  final bool scrollBody;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        const _DragHandle(),
+        if (title != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: title,
+            ),
+          ),
+        Flexible(
+          fit: expand ? FlexFit.tight : FlexFit.loose,
+          child: scrollBody
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: child,
+                )
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: child,
+                ),
+        ),
+        if (footer != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.md,
+            ),
+            child: footer,
+          ),
+      ],
     );
   }
 }

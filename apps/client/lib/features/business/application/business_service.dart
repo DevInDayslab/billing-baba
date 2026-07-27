@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
@@ -20,6 +22,7 @@ import 'package:billing_baba/features/business/utils/business_open_debug_log.dar
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'business_service.g.dart';
@@ -163,6 +166,17 @@ class BusinessService {
 
   Future<AccountProfile?> readCachedProfile() => _cache.readProfile();
 
+  Future<BusinessProfileModel?> readCachedBusinessProfile() =>
+      _cache.readBusinessProfile();
+
+  /// Business list from local storage only — no network calls.
+  Future<List<BusinessModel>> readCachedBusinesses() async {
+    final selectedId = _cache.readLastOpenedBusinessId();
+    return _loadFromCache(selectedId);
+  }
+
+  Future<String?> resolveActiveBusinessId() => _resolveBusinessIdForScope();
+
   Future<String?> _resolveBusinessIdForScope() async {
     final fromCache = _cache.readLastOpenedBusinessId();
     if (fromCache != null && fromCache.isNotEmpty) return fromCache;
@@ -182,6 +196,17 @@ class BusinessService {
   Future<void> ensureProfileApiBusinessScope({
     bool forceReselect = false,
   }) async {
+    final businessId = await _resolveBusinessIdForScope();
+    if (businessId != null &&
+        businessId.isNotEmpty &&
+        BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      BusinessSelectionRetryGuard.logBlockedOnce(
+        'ensureProfileApiBusinessScope',
+        businessId,
+      );
+      return;
+    }
+
     final storage = await _ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
     final jwtBusinessId = JwtUtils.businessId(token);
@@ -207,7 +232,6 @@ class BusinessService {
       );
     }
 
-    final businessId = await _resolveBusinessIdForScope();
     BusinessProfileDebugLog.log(
       'resolved business_id=${businessId ?? '(none)'} forceReselect=$forceReselect',
     );
@@ -224,6 +248,9 @@ class BusinessService {
 
   /// Re-scopes the JWT to [businessId] without touching business list/profile providers.
   Future<void> scopeJwtToBusiness(String businessId) async {
+    if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      return;
+    }
     await rememberLastOpened(businessId);
     await _ref.read(authProvider.notifier).selectBusiness(businessId);
   }
@@ -236,9 +263,22 @@ class BusinessService {
       throw const BusinessProfileScopeRequired();
     }
 
-    await ensureProfileApiBusinessScope();
-
     final selectedBusinessId = _cache.readLastOpenedBusinessId();
+    final scopeId = await _resolveBusinessIdForScope();
+
+    if (scopeId != null &&
+        scopeId.isNotEmpty &&
+        BusinessSelectionRetryGuard.isBlocked(scopeId)) {
+      final cached = await _cache.readBusinessProfile();
+      if (cached != null &&
+          (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+        BusinessProfileDebugLog.log(
+          'Returning cached business profile (backend unreachable)',
+        );
+        return cached;
+      }
+      throw const BusinessServerUnavailable();
+    }
 
     if (!forceRefresh) {
       final cached = await _cache.readBusinessProfile();
@@ -249,12 +289,28 @@ class BusinessService {
       }
     }
 
+    await ensureProfileApiBusinessScope();
+
     try {
       final remote = await _repository.getBusinessProfile();
       await _cache.saveBusinessProfile(remote);
       return remote;
     } on DioException catch (e) {
-      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED') {
+      if (NetworkExceptionClassifier.isConnectivityError(e)) {
+        final cached = await _cache.readBusinessProfile();
+        if (cached != null &&
+            (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+          BusinessProfileDebugLog.log(
+            'Returning cached business profile (connectivity error)',
+          );
+          return cached;
+        }
+        throw const BusinessServerUnavailable();
+      }
+
+      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED' &&
+          e.response != null &&
+          !BusinessSelectionRetryGuard.isBlocked(scopeId)) {
         await ensureProfileApiBusinessScope(forceReselect: true);
         final remote = await _repository.getBusinessProfile();
         await _cache.saveBusinessProfile(remote);
@@ -282,7 +338,15 @@ class BusinessService {
     try {
       return await _repository.updateBusinessProfile(request);
     } on DioException catch (e) {
-      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED') {
+      if (NetworkExceptionClassifier.isConnectivityError(e)) {
+        throw const BusinessServerUnavailable();
+      }
+      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED' &&
+          e.response != null) {
+        final scopeId = await _resolveBusinessIdForScope();
+        if (BusinessSelectionRetryGuard.isBlocked(scopeId)) {
+          throw const BusinessServerUnavailable();
+        }
         BusinessProfileDebugLog.log(
           'BUSINESS_NOT_SELECTED — retrying after re-scope',
         );
@@ -421,6 +485,15 @@ class BusinessOfflineException implements Exception {
   const BusinessOfflineException();
 }
 
+/// Backend is unreachable (connection refused, timeout, etc.).
+class BusinessServerUnavailable implements Exception {
+  const BusinessServerUnavailable();
+
+  @override
+  String toString() =>
+      'Server is unavailable. Check your connection and try again.';
+}
+
 @Riverpod(keepAlive: true)
 class BusinessList extends _$BusinessList {
   @override
@@ -438,8 +511,14 @@ class BusinessList extends _$BusinessList {
   }
 
   Future<void> _activateBusiness(String id) async {
-    BusinessOpenDebugLog.step('activate', 'rememberLastOpened $id');
     final service = await ref.read(businessServiceProvider.future);
+    if (BusinessSelectionRetryGuard.isBlocked(id)) {
+      BusinessSelectionRetryGuard.logBlockedOnce('activateBusiness', id);
+      await service.rememberLastOpened(id);
+      return;
+    }
+
+    BusinessOpenDebugLog.step('activate', 'rememberLastOpened $id');
     await service.rememberLastOpened(id);
     BusinessOpenDebugLog.step('activate', 'selectBusiness (JWT refresh)');
     await ref.read(authProvider.notifier).selectBusiness(id);
@@ -603,12 +682,55 @@ String loggedInPhone(Ref ref) {
 class BusinessProfile extends _$BusinessProfile {
   @override
   Future<BusinessProfileModel> build() async {
-    final auth = ref.watch(authProvider);
-    if (!authHasBusinessScope(auth)) {
+    final authScope = ref.watch(
+      authProvider.select(businessProfileAuthScope),
+    );
+    if (!businessProfileHasScope(authScope)) {
       throw const BusinessProfileScopeRequired();
     }
 
     final service = await ref.watch(businessServiceProvider.future);
+    final businessId = await service.resolveActiveBusinessId();
+    if (businessId != null &&
+        businessId.isNotEmpty &&
+        BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      final cached = await service.readCachedBusinessProfile();
+      if (cached != null) {
+        return cached;
+      }
+
+      final cachedBusinesses = await service.readCachedBusinesses();
+      for (final business in cachedBusinesses) {
+        if (business.id == businessId) {
+          return BusinessProfileModel(
+            id: business.id,
+            name: business.name,
+            ownerName: business.ownerName,
+            phone: business.phone,
+            email: business.email,
+            gstin: business.gstin,
+            address: business.address,
+            logoUrl: business.logoUrl,
+          );
+        }
+      }
+
+      final authBusinesses = ref.read(authProvider).session?.businesses;
+      if (authBusinesses != null) {
+        for (final business in authBusinesses) {
+          if (business.id == businessId) {
+            return BusinessProfileModel(
+              id: business.id,
+              name: business.name,
+              gstin: business.gstin,
+            );
+          }
+        }
+      }
+
+      throw const BusinessServerUnavailable();
+    }
+
     return service.fetchBusinessProfile();
   }
 

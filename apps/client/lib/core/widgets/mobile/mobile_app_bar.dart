@@ -4,6 +4,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Shared mobile app bar with business identity, notifications, and settings.
 ///
@@ -66,7 +67,7 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
       return IconButton(
         tooltip: 'Back',
         icon: const Icon(Icons.arrow_back_rounded),
-        onPressed: onBack ?? () => Navigator.maybeOf(context)?.maybePop(),
+        onPressed: onBack ?? () => context.pop(),
       );
     }
 

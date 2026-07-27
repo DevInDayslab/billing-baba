@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/config/api_base_url_resolver.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -10,14 +12,28 @@ abstract final class AppConfig {
 
   static const _defaultWebsiteUrl = 'https://billingbaba.com';
 
-  /// Resolved at runtime: `--dart-define=API_BASE_URL` overrides `.env`.
-  static String get apiBaseUrl {
+  static String? _resolvedApiBaseUrl;
+  static bool _initialized = false;
+
+  /// Call once after [dotenv.load] to resolve platform-aware API URL.
+  static Future<void> initialize() async {
+    if (_initialized) return;
+    final raw = _readRawApiBaseUrl();
+    _resolvedApiBaseUrl = await ApiBaseUrlResolver.resolve(raw);
+    _initialized = true;
+    _logApiBaseUrl();
+  }
+
+  static String _readRawApiBaseUrl() {
     const fromDefine = String.fromEnvironment('API_BASE_URL');
     if (fromDefine.isNotEmpty) return fromDefine;
     final fromEnv = dotenv.env['API_BASE_URL']?.trim();
     if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
     return _defaultApiBaseUrl;
   }
+
+  /// Resolved at runtime: `--dart-define=API_BASE_URL` overrides `.env`.
+  static String get apiBaseUrl => _resolvedApiBaseUrl ?? _readRawApiBaseUrl();
 
   /// Where [apiBaseUrl] was resolved from (for startup diagnostics).
   static String get apiBaseUrlSource {
@@ -83,18 +99,32 @@ abstract final class AppConfig {
   /// Default OTP for local development when MSG91 is not configured.
   static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
 
-  /// Prints resolved config once at startup when verbose logging is enabled.
+  /// Prints resolved config once at startup.
   static void logStartupConfig() {
+    if (!_initialized) {
+      debugPrint(
+        '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource, '
+        'platform-aware resolve pending)',
+      );
+    }
     if (!consoleVerbose) return;
-    debugPrint(
-      '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource)',
-    );
     debugPrint('[CONFIG] WEBSITE_URL=$websiteUrl');
     debugPrint('[CONFIG] ENABLE_DEV_LOGIN=$enableDevLogin');
     debugPrint('[CONFIG] APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}');
     debugPrint('[CONFIG] DEBUG=${dotenv.env['DEBUG'] ?? '(unset)'}');
     debugPrint('[CONFIG] DEV_OTP=${'*' * devOtp.length}');
     debugPrint('[CONFIG] GIT_COMMIT=$gitCommit');
+  }
+
+  static void _logApiBaseUrl() {
+    final platform = AppPlatform.current;
+    final deviceKind = ApiBaseUrlResolver.deviceKind ?? 'unknown';
+    final rewrite = ApiBaseUrlResolver.rewriteNote;
+    debugPrint(
+      '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource, '
+      'platform=${platform.os.name}, device=$deviceKind'
+      '${rewrite != null ? ', rewrite: $rewrite' : ''})',
+    );
   }
 
   static List<String> startupConfigLines() {

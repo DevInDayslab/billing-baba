@@ -2,6 +2,23 @@ import 'package:flutter/material.dart';
 
 enum MobileHomeView { transactionDetails, partyDetails }
 
+/// Transaction document types for the mobile home filter sheet.
+enum MobileHomeTransactionFilterType {
+  sale('Sale'),
+  saleOrder('Sale Order'),
+  creditNote('Credit Note'),
+  purchase('Purchase'),
+  purchaseOrder('Purchase Order'),
+  debitNote('Debit Note'),
+  paymentIn('Payment-In'),
+  paymentOut('Payment-Out'),
+  estimate('Estimate');
+
+  const MobileHomeTransactionFilterType(this.label);
+
+  final String label;
+}
+
 /// A transaction row shown on the mobile home screen.
 class MobileHomeTransactionItem {
   const MobileHomeTransactionItem({
@@ -10,6 +27,7 @@ class MobileHomeTransactionItem {
     required this.documentNumber,
     required this.statusLabel,
     required this.statusType,
+    required this.filterType,
     required this.dateLabel,
     required this.totalLabel,
     required this.balanceLabel,
@@ -22,6 +40,7 @@ class MobileHomeTransactionItem {
   final String documentNumber;
   final String statusLabel;
   final MobileHomeTransactionStatusType statusType;
+  final MobileHomeTransactionFilterType filterType;
   final String dateLabel;
   final String totalLabel;
   final String balanceLabel;
