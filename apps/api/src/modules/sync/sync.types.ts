@@ -1,56 +1,10 @@
-export const SUPPORTED_SYNC_COMMANDS = [
-  'finalize_sale',
-  'finalize_purchase',
-  'finalize_credit_note',
-  'finalize_debit_note',
-  'record_payment',
-  'record_receipt',
-  'stock_adjustment',
-  'stock_transfer',
-  'post_journal_entry',
-] as const;
+/** MVP: no sync commands implemented yet. */
+export const SUPPORTED_SYNC_COMMANDS = [] as const;
 
-export type SupportedSyncCommand = (typeof SUPPORTED_SYNC_COMMANDS)[number];
+export type SupportedSyncCommand = string;
 
-export const SUPPORTED_ROW_ENTITY_TYPES = [
-  'areas',
-  'business_settings',
-  'tax_rates',
-  'loyalty_rules',
-  'document_number_sequences',
-  'parties',
-  'party_phones',
-  'party_links',
-  'party_tags',
-  'party_tag_assignments',
-  'party_visits',
-  'categories',
-  'brands',
-  'unit_definitions',
-  'unit_conversions',
-  'items',
-  'item_units',
-  'item_tier_prices',
-  'item_alternatives',
-  'godowns',
-  'item_locations',
-  'users',
-  'branches',
-  'leads',
-  'lead_activities',
-  'contacts',
-  'contact_activities',
-  'deals',
-  'sales_documents',
-  'sales_document_lines',
-  'purchase_documents',
-  'purchase_document_lines',
-  'expense_categories',
-  'expenses',
-  'pos_sessions',
-  'job_work_orders',
-  'document_attachments',
-] as const;
+/** MVP registered row entities — keep in sync with apply/row-entities.ts */
+export const SUPPORTED_ROW_ENTITY_TYPES = ['categories'] as const;
 
 export type SupportedRowEntityType =
   (typeof SUPPORTED_ROW_ENTITY_TYPES)[number];

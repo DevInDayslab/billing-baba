@@ -1,220 +1,103 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
-import 'package:billing_baba/core/sync/engine/bootstrap_decision.dart';
 import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/core/sync/engine/sync_cursor.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
-import 'package:billing_baba/core/sync/engine/sync_orchestration_phase.dart';
-import 'package:billing_baba/core/sync/engine/sync_plan.dart';
-import 'package:billing_baba/core/sync/engine/sync_session.dart';
 import 'package:billing_baba/core/sync/models/sync_direction.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
-import 'package:billing_baba/core/sync/models/sync_job_payload_meta.dart';
 import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
 import 'package:billing_baba/core/sync/models/sync_result.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
-import 'package:billing_baba/core/sync/network/sync_client.dart';
-import 'package:billing_baba/core/sync/offline/category_sync_applier.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_service.dart';
+import 'package:billing_baba/core/sync/network/sync_api.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
-
-/// Transport used by the coordinator (register/status/push/pull).
-abstract class SyncCoordinatorTransport {
-  Future<Map<String, dynamic>> registerDevice({
-    required String deviceId,
-    required String platform,
-    required String appVersion,
-    required String deviceName,
-  });
-
-  Future<Map<String, dynamic>> status({
-    required String deviceId,
-    required String appVersion,
-  });
-
-  Future<Map<String, dynamic>> push({
-    required String deviceId,
-    required String appVersion,
-    required Map<String, dynamic> body,
-  });
-
-  Future<Map<String, dynamic>> pull({
-    required String deviceId,
-    required String appVersion,
-    required String cursor,
-    int? limit,
-    String? entityTypes,
-  });
-}
-
-/// Adapts [SyncClient] to [SyncCoordinatorTransport].
-class SyncClientCoordinatorTransport implements SyncCoordinatorTransport {
-  SyncClientCoordinatorTransport(this._client);
-
-  final SyncClient _client;
-
-  @override
-  Future<Map<String, dynamic>> registerDevice({
-    required String deviceId,
-    required String platform,
-    required String appVersion,
-    required String deviceName,
-  }) {
-    return _client.registerDevice(
-      deviceId: deviceId,
-      platform: platform,
-      appVersion: appVersion,
-      deviceName: deviceName,
-    );
-  }
-
-  @override
-  Future<Map<String, dynamic>> status({
-    required String deviceId,
-    required String appVersion,
-  }) {
-    return _client.status(deviceId: deviceId, appVersion: appVersion);
-  }
-
-  @override
-  Future<Map<String, dynamic>> push({
-    required String deviceId,
-    required String appVersion,
-    required Map<String, dynamic> body,
-  }) {
-    return _client.push(
-      deviceId: deviceId,
-      appVersion: appVersion,
-      body: body,
-    );
-  }
-
-  @override
-  Future<Map<String, dynamic>> pull({
-    required String deviceId,
-    required String appVersion,
-    required String cursor,
-    int? limit,
-    String? entityTypes,
-  }) {
-    return _client.pull(
-      deviceId: deviceId,
-      appVersion: appVersion,
-      cursor: cursor,
-      limit: limit,
-      entityTypes: entityTypes,
-    );
-  }
-}
 
 typedef SyncStateEmitter = void Function(
   SyncState Function(SyncState current) update,
 );
 
-/// Owns the synchronization workflow order.
-///
-/// First real entity path: push/pull `categories` only.
+/// Owns the synchronization workflow: register → status → bootstrap → push → pull.
 class SyncCoordinator {
   SyncCoordinator({
-    required this._transport,
-    required SyncQueueService queueService,
-    required this._identity,
-    required this._metadata,
-    required this._storage,
-    this._categoryApplier,
+    required SyncApi api,
+    required SyncQueue queue,
+    required SyncDeviceIdentity identity,
+    required SyncMetadataStore metadata,
+    required StorageService storage,
+    CategorySync? categorySync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
-  })  : _queue = queueService,
+  })  : _api = api,
+        _queue = queue,
+        _identity = identity,
+        _metadata = metadata,
+        _storage = storage,
+        _categorySync = categorySync,
         _uuid = uuid ?? const Uuid();
 
-  final SyncCoordinatorTransport _transport;
-  final SyncQueueService _queue;
+  final SyncApi _api;
+  final SyncQueue _queue;
   final SyncDeviceIdentity _identity;
   final SyncMetadataStore _metadata;
   final StorageService _storage;
-  final CategorySyncApplier? _categoryApplier;
+  final CategorySync? _categorySync;
   final Uuid _uuid;
   final String categoryEntityType;
 
-  final _sessionController = StreamController<SyncSession?>.broadcast();
-  final _planController = StreamController<SyncPlan?>.broadcast();
-
-  SyncSession? _currentSession;
-  SyncPlan? _currentPlan;
   bool _busy = false;
 
-  SyncSession? get currentSession => _currentSession;
-  SyncPlan? get currentPlan => _currentPlan;
-
-  Stream<SyncSession?> get sessionChanges => _sessionController.stream;
-  Stream<SyncPlan?> get planChanges => _planController.stream;
-
-  /// Runs register → status → minimal bootstrap → push categories → pull.
-  Future<SyncSession> orchestrate({
+  /// Runs one full sync pass. Returns a [SyncResult].
+  Future<SyncResult> orchestrate({
     required SyncState currentState,
     required SyncStateEmitter emit,
   }) async {
     if (_busy) {
-      final existing = _currentSession;
-      if (existing != null && !existing.isFinished) return existing;
+      return SyncResult.noop(message: 'Sync already in progress');
     }
     _busy = true;
 
-    final session = SyncSession(
-      sessionId: _uuid.v4(),
-      startedAt: DateTime.now().toUtc(),
-    );
-    _setSession(session);
+    var rowsUploaded = 0;
+    var rowsDownloaded = 0;
+    var conflicts = 0;
+    var failures = 0;
 
     try {
       if (currentState.connectivity == SyncConnectivityStatus.offline) {
-        return _finish(
-          session: session,
-          phase: SyncOrchestrationPhase.offline,
-          emit: emit,
-          currentState: currentState,
-          result: SyncResult.noop(message: 'Offline — sync skipped'),
-          errorMessage: 'Device is offline',
+        emit(
+          (s) => s.copyWith(
+            lifecycle: SyncLifecycleState.offline,
+            lastResultMessage: 'Offline — sync skipped',
+            errorMessage: 'Device is offline',
+          ),
         );
+        return SyncResult.noop(message: 'Offline — sync skipped');
       }
 
-      _emitPhase(
-        emit,
-        currentState,
-        SyncOrchestrationPhase.checkingServer,
-        lifecycle: SyncLifecycleState.syncing,
-        runningJobId: session.sessionId,
-        clearError: true,
-      );
-
-      _emitPhase(
-        emit,
-        currentState,
-        SyncOrchestrationPhase.registeringDevice,
-        lifecycle: SyncLifecycleState.syncing,
-        runningJobId: session.sessionId,
+      emit(
+        (s) => s.copyWith(
+          lifecycle: SyncLifecycleState.syncing,
+          clearError: true,
+        ),
       );
 
       final deviceId = await _identity.deviceId();
       final appVersion = await _identity.appVersion();
 
       try {
-        await _transport.registerDevice(
+        await _api.registerDevice(
           deviceId: deviceId,
           platform: _identity.platform(),
           appVersion: appVersion,
           deviceName: _identity.deviceName(),
         );
       } on Object catch (error) {
-        return _finishTransportFailure(
-          session: session,
+        return _finishFailure(
           emit: emit,
-          currentState: currentState,
           error: error,
           context: 'registerDevice',
         );
@@ -222,32 +105,38 @@ class SyncCoordinator {
 
       late final Map<String, dynamic> statusPayload;
       try {
-        statusPayload = await _transport.status(
+        statusPayload = await _api.status(
           deviceId: deviceId,
           appVersion: appVersion,
         );
       } on Object catch (error) {
-        return _finishTransportFailure(
-          session: session,
+        return _finishFailure(
           emit: emit,
-          currentState: currentState,
           error: error,
           context: 'status',
         );
       }
 
-      _emitPhase(
-        emit,
-        currentState,
-        SyncOrchestrationPhase.planning,
-        lifecycle: SyncLifecycleState.syncing,
-        runningJobId: session.sessionId,
-      );
-
       final businessId = _storage.read(StorageKeys.lastOpenedBusinessId);
-      final serverSchema = _readInt(statusPayload['schema_version']);
+      if (businessId == null || businessId.isEmpty) {
+        emit(
+          (s) => s.copyWith(
+            lifecycle: SyncLifecycleState.idle,
+            lastResultMessage: 'No business selected',
+            errorMessage: 'No business selected',
+          ),
+        );
+        return SyncResult(
+          success: false,
+          direction: SyncDirection.full,
+          completedAt: DateTime.now().toUtc(),
+          message: 'No business selected',
+          errorCount: 1,
+        );
+      }
 
-      var decision = BootstrapDecision.evaluate(
+      final serverSchema = _readInt(statusPayload['schema_version']);
+      final needsBootstrap = _needsBootstrap(
         businessId: businessId,
         pullCursor: _metadata.pullCursor,
         bootstrappedAt: _metadata.bootstrappedAt,
@@ -256,20 +145,30 @@ class SyncCoordinator {
         serverSchemaVersion: serverSchema,
       );
 
-      // Minimal bootstrap: seed cursor so categories push/pull can run.
-      if (decision.needsBootstrap &&
-          businessId != null &&
-          businessId.isNotEmpty) {
-        await _metadata.setBootstrappedAt(DateTime.now().toUtc());
-        await _metadata.setPullCursor(epochSyncCursor());
-        if (serverSchema != null) {
-          await _metadata.setLastServerSchemaVersion(serverSchema);
+      // Empty DB / no cursor → pull from epoch until done.
+      if (needsBootstrap) {
+        try {
+          await _metadata.setPullCursor(epochSyncCursor());
+          final downloaded = await _pullAll(
+            businessId: businessId,
+            deviceId: deviceId,
+            appVersion: appVersion,
+          );
+          rowsDownloaded += downloaded;
+          await _metadata.setBootstrappedAt(DateTime.now().toUtc());
+          if (serverSchema != null) {
+            await _metadata.setLastServerSchemaVersion(serverSchema);
+          }
+        } on Object catch (error) {
+          return _finishFailure(
+            emit: emit,
+            error: error,
+            context: 'bootstrap',
+          );
         }
-        decision = BootstrapDecision.ready;
       }
 
       final pending = await _safePendingJobs();
-      final counts = _countByKind(pending);
       final categoryJobs = pending
           .where(
             (j) =>
@@ -279,74 +178,38 @@ class SyncCoordinator {
           )
           .toList();
 
-      final plan = _buildPlan(
-        decision: decision,
-        pendingRowCount: counts.rows,
-        pendingCommandCount: counts.commands,
-        pendingMediaCount: counts.media,
-        forceSteady: true,
-      );
-      _setPlan(plan);
-      session.plan = plan;
-
-      if (businessId == null || businessId.isEmpty) {
-        return _finish(
-          session: session,
-          phase: SyncOrchestrationPhase.needsBootstrap,
-          emit: emit,
-          currentState: currentState,
-          plan: plan,
-          result: SyncResult(
-            success: false,
-            direction: SyncDirection.full,
-            completedAt: DateTime.now().toUtc(),
-            message: 'No business selected',
-            errorCount: 1,
-          ),
-          errorMessage: 'No business selected',
-        );
-      }
-
-      // Push categories queue jobs.
       if (categoryJobs.isNotEmpty) {
         try {
-          await _pushCategoryJobs(
-            session: session,
+          final pushStats = await _pushCategoryJobs(
             deviceId: deviceId,
             appVersion: appVersion,
             jobs: categoryJobs,
           );
+          rowsUploaded += pushStats.uploaded;
+          conflicts += pushStats.conflicts;
+          failures += pushStats.failures;
         } on Object catch (error) {
           for (final job in categoryJobs) {
-            await _queue.markFailed(
-              job.id,
-              reason: 'push failed: $error',
-            );
+            await _queue.markFailed(job.id, reason: 'push failed: $error');
           }
-          session.failures += categoryJobs.length;
-          return _finishTransportFailure(
-            session: session,
+          return _finishFailure(
             emit: emit,
-            currentState: currentState,
             error: error,
             context: 'push',
           );
         }
       }
 
-      // Pull categories only.
       try {
-        await _pullCategories(
-          session: session,
+        final downloaded = await _pullAll(
           businessId: businessId,
           deviceId: deviceId,
           appVersion: appVersion,
         );
+        rowsDownloaded += downloaded;
       } on Object catch (error) {
-        return _finishTransportFailure(
-          session: session,
+        return _finishFailure(
           emit: emit,
-          currentState: currentState,
           error: error,
           context: 'pull',
         );
@@ -354,45 +217,77 @@ class SyncCoordinator {
 
       final remaining = await _safePendingJobs();
       final message =
-          'Sync complete (categories push=${categoryJobs.length}, '
-          'conflicts=${session.conflicts}, failures=${session.failures})';
+          'Sync complete (push=$rowsUploaded, pull=$rowsDownloaded, '
+          'conflicts=$conflicts, failures=$failures)';
 
       try {
-        LoggingService.instance.info(
-          'SyncCoordinator: session=${session.sessionId} $message',
-        );
+        LoggingService.instance.info('SyncCoordinator: $message');
       } on Object {
         // Logging may be unavailable in unit tests without dotenv.
       }
 
-      return _finish(
-        session: session,
-        phase: SyncOrchestrationPhase.ready,
-        emit: emit,
-        currentState: currentState,
-        plan: plan,
-        result: SyncResult(
-          success: session.failures == 0,
-          direction: SyncDirection.full,
-          completedAt: DateTime.now().toUtc(),
-          message: message,
-          acceptedCount: session.rowsUploaded,
-          conflictCount: session.conflicts,
-          errorCount: session.failures,
-        ),
-        pendingJobs: remaining.length,
+      final result = SyncResult(
+        success: failures == 0,
+        direction: SyncDirection.full,
+        completedAt: DateTime.now().toUtc(),
+        message: message,
+        acceptedCount: rowsUploaded,
+        conflictCount: conflicts,
+        errorCount: failures,
       );
+
+      emit(
+        (s) => s.copyWith(
+          lifecycle: SyncLifecycleState.idle,
+          lastSyncTime: result.completedAt,
+          pendingJobs: remaining.length,
+          lastResultMessage: message,
+          clearError: true,
+          clearRunningJob: true,
+        ),
+      );
+      return result;
     } finally {
       _busy = false;
     }
   }
 
-  Future<void> _pushCategoryJobs({
-    required SyncSession session,
+  void dispose() {}
+
+  bool _needsBootstrap({
+    required String? businessId,
+    required String? pullCursor,
+    required DateTime? bootstrappedAt,
+    required int localSchemaVersion,
+    required int? lastServerSchemaVersion,
+    required int? serverSchemaVersion,
+  }) {
+    if (businessId == null || businessId.isEmpty) return true;
+    if (bootstrappedAt == null || pullCursor == null || pullCursor.isEmpty) {
+      return true;
+    }
+    if (serverSchemaVersion != null &&
+        lastServerSchemaVersion != null &&
+        serverSchemaVersion > lastServerSchemaVersion) {
+      return true;
+    }
+    if (serverSchemaVersion != null &&
+        serverSchemaVersion > localSchemaVersion &&
+        lastServerSchemaVersion == null) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<({int uploaded, int conflicts, int failures})> _pushCategoryJobs({
     required String deviceId,
     required String appVersion,
     required List<SyncJob> jobs,
   }) async {
+    var uploaded = 0;
+    var conflicts = 0;
+    var failures = 0;
+
     final mutations = <Map<String, dynamic>>[];
     for (final job in jobs) {
       await _queue.markRunning(job.id);
@@ -402,24 +297,20 @@ class SyncCoordinator {
         'entity_type': job.entityType,
         'entity_id': job.entityId,
         'operation': job.operation.wire,
-        'base_sync_version':
-            SyncJobPayloadMeta.readBaseSyncVersion(job.payload),
-        'payload': SyncJobPayloadMeta.domainOnly(job.payload),
-        'client_updated_at':
-            SyncJobPayloadMeta.readClientUpdatedAt(job.payload),
+        'base_sync_version': SyncJob.readBaseSyncVersion(job.payload),
+        'payload': SyncJob.domainOnly(job.payload),
+        'client_updated_at': SyncJob.readClientUpdatedAt(job.payload),
       });
     }
 
-    final body = {
-      'device_id': deviceId,
-      'client_batch_id': _uuid.v4(),
-      'mutations': mutations,
-    };
-
-    final response = await _transport.push(
+    final response = await _api.push(
       deviceId: deviceId,
       appVersion: appVersion,
-      body: body,
+      body: {
+        'device_id': deviceId,
+        'client_batch_id': _uuid.v4(),
+        'mutations': mutations,
+      },
     );
 
     final byMutation = {for (final job in jobs) job.mutationId: job};
@@ -433,14 +324,15 @@ class SyncCoordinator {
             item['server_updated_at']?.toString() ?? '',
           )?.toUtc() ??
           DateTime.now().toUtc();
-      await _categoryApplier?.updateAckMeta(
+      await _applyAck(
+        entityType: job.entityType,
         entityId: job.entityId ?? '',
         syncVersion: syncVersion,
         updatedAt: updatedAt,
         deviceId: deviceId,
       );
       await _queue.markCompleted(job.id);
-      session.rowsUploaded += 1;
+      uploaded += 1;
     }
 
     for (final item in _asList(response['replayed'])) {
@@ -453,7 +345,8 @@ class SyncCoordinator {
               item['server_updated_at']?.toString() ?? '',
             )?.toUtc() ??
             DateTime.now().toUtc();
-        await _categoryApplier?.updateAckMeta(
+        await _applyAck(
+          entityType: job.entityType,
           entityId: job.entityId!,
           syncVersion: syncVersion,
           updatedAt: updatedAt,
@@ -461,19 +354,16 @@ class SyncCoordinator {
         );
       }
       await _queue.markCompleted(job.id);
-      session.rowsUploaded += 1;
+      uploaded += 1;
     }
 
     for (final item in _asList(response['conflicts'])) {
       final mutationId = item['mutation_id']?.toString();
       final job = mutationId == null ? null : byMutation[mutationId];
       if (job == null) continue;
-      // Do not overwrite Drift with server_payload.
-      await _queue.markConflict(
-        job.id,
-        reason: jsonEncode(item),
-      );
-      session.conflicts += 1;
+      // Keep local row; do not overwrite with server_payload.
+      await _queue.markConflict(job.id, reason: jsonEncode(item));
+      conflicts += 1;
     }
 
     for (final item in _asList(response['errors'])) {
@@ -484,26 +374,25 @@ class SyncCoordinator {
         job.id,
         reason: item['message']?.toString() ?? jsonEncode(item),
       );
-      session.failures += 1;
+      failures += 1;
     }
+
+    return (uploaded: uploaded, conflicts: conflicts, failures: failures);
   }
 
-  Future<void> _pullCategories({
-    required SyncSession session,
+  Future<int> _pullAll({
     required String businessId,
     required String deviceId,
     required String appVersion,
   }) async {
-    final applier = _categoryApplier;
-    if (applier == null) return;
-
+    var downloaded = 0;
     var cursor = _metadata.pullCursor ?? epochSyncCursor();
     var pages = 0;
-    const maxPages = 20;
+    const maxPages = 50;
 
     while (pages < maxPages) {
       pages += 1;
-      final response = await _transport.pull(
+      final response = await _api.pull(
         deviceId: deviceId,
         appVersion: appVersion,
         cursor: cursor,
@@ -514,9 +403,9 @@ class SyncCoordinator {
       final changes = _asList(response['changes']);
       for (final change in changes) {
         final entityType = change['entity_type']?.toString();
-        if (entityType != categoryEntityType) continue;
         final entityId = change['entity_id']?.toString();
-        if (entityId == null) continue;
+        if (entityType == null || entityId == null) continue;
+
         final syncVersion = _readInt(change['sync_version']) ?? 1;
         final updatedAt = DateTime.tryParse(
               change['updated_at']?.toString() ?? '',
@@ -527,7 +416,12 @@ class SyncCoordinator {
           change['deleted_at']?.toString() ?? '',
         )?.toUtc();
         final payload = change['payload'];
-        await applier.applyChange(
+        final payloadMap = payload is Map<String, dynamic>
+            ? payload
+            : (payload is Map ? Map<String, dynamic>.from(payload) : null);
+
+        await _applyChange(
+          entityType: entityType,
           businessId: businessId,
           entityId: entityId,
           syncVersion: syncVersion,
@@ -535,15 +429,9 @@ class SyncCoordinator {
           isDeleted: isDeleted,
           deletedAt: deletedAt,
           deviceId: change['device_id']?.toString(),
-          payload: payload is Map<String, dynamic>
-              ? payload
-              : (payload is Map
-                  ? Map<String, dynamic>.from(payload)
-                  : null),
+          payload: payloadMap,
         );
-        if (!isDeleted) {
-          session.rowsDownloaded += 1;
-        }
+        if (!isDeleted) downloaded += 1;
       }
 
       final next = response['next_cursor']?.toString();
@@ -555,157 +443,86 @@ class SyncCoordinator {
       final hasMore = response['has_more'] == true;
       if (!hasMore || changes.isEmpty) break;
     }
+
+    return downloaded;
   }
 
-  void dispose() {
-    unawaited(_sessionController.close());
-    unawaited(_planController.close());
-  }
-
-  SyncPlan _buildPlan({
-    required BootstrapDecision decision,
-    required int pendingRowCount,
-    required int pendingCommandCount,
-    required int pendingMediaCount,
-    bool forceSteady = false,
-  }) {
-    final needsBootstrap = !forceSteady && decision.needsBootstrap;
-    final steps = <SyncPlanStep>[
-      SyncPlanStep.registerDevice,
-      SyncPlanStep.fetchStatus,
-    ];
-
-    if (needsBootstrap) {
-      steps.add(SyncPlanStep.bootstrap);
-    } else {
-      steps.addAll([
-        SyncPlanStep.pushQueue,
-        SyncPlanStep.pullChanges,
-      ]);
+  Future<void> _applyChange({
+    required String entityType,
+    required String businessId,
+    required String entityId,
+    required int syncVersion,
+    required DateTime updatedAt,
+    required bool isDeleted,
+    DateTime? deletedAt,
+    String? deviceId,
+    Map<String, dynamic>? payload,
+  }) async {
+    switch (entityType) {
+      case 'categories':
+        await _categorySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      default:
+        // Unknown entity — ignore until that entity ships.
+        break;
     }
-    steps.add(SyncPlanStep.complete);
-
-    final willPush = !needsBootstrap && pendingRowCount > 0;
-    final willPull = !needsBootstrap;
-
-    return SyncPlan(
-      planId: _uuid.v4(),
-      createdAt: DateTime.now().toUtc(),
-      steps: steps,
-      needsBootstrap: needsBootstrap,
-      willPush: willPush,
-      willPull: willPull,
-      willUploadMedia: false,
-      pendingRowCount: pendingRowCount,
-      pendingCommandCount: pendingCommandCount,
-      pendingMediaCount: pendingMediaCount,
-      reason: decision.reason,
-    );
   }
 
-  Future<SyncSession> _finishTransportFailure({
-    required SyncSession session,
+  Future<void> _applyAck({
+    required String entityType,
+    required String entityId,
+    required int syncVersion,
+    required DateTime updatedAt,
+    String? deviceId,
+  }) async {
+    switch (entityType) {
+      case 'categories':
+        await _categorySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      default:
+        break;
+    }
+  }
+
+  Future<SyncResult> _finishFailure({
     required SyncStateEmitter emit,
-    required SyncState currentState,
     required Object error,
     required String context,
   }) {
     final auth = _isAuthFailure(error);
-    final phase = auth
-        ? SyncOrchestrationPhase.authenticationFailed
-        : SyncOrchestrationPhase.serverUnavailable;
+    final lifecycle = auth
+        ? SyncLifecycleState.needsAuthentication
+        : SyncLifecycleState.failed;
     final message = '$context failed: $error';
-    session.failures += 1;
-    return Future.value(
-      _finish(
-        session: session,
-        phase: phase,
-        emit: emit,
-        currentState: currentState,
-        result: SyncResult(
-          success: false,
-          direction: SyncDirection.full,
-          completedAt: DateTime.now().toUtc(),
-          message: message,
-          errorCount: 1,
-        ),
+    emit(
+      (s) => s.copyWith(
+        lifecycle: lifecycle,
+        lastResultMessage: message,
         errorMessage: message,
-      ),
-    );
-  }
-
-  SyncSession _finish({
-    required SyncSession session,
-    required SyncOrchestrationPhase phase,
-    required SyncStateEmitter emit,
-    required SyncState currentState,
-    required SyncResult result,
-    SyncPlan? plan,
-    String? errorMessage,
-    int? pendingJobs,
-  }) {
-    session.finish(phase: phase, result: result, plan: plan);
-    _setSession(session);
-
-    final lifecycle = switch (phase) {
-      SyncOrchestrationPhase.offline => SyncLifecycleState.offline,
-      SyncOrchestrationPhase.authenticationFailed =>
-        SyncLifecycleState.needsAuthentication,
-      SyncOrchestrationPhase.serverUnavailable => SyncLifecycleState.failed,
-      SyncOrchestrationPhase.ready ||
-      SyncOrchestrationPhase.needsBootstrap ||
-      SyncOrchestrationPhase.idle =>
-        SyncLifecycleState.idle,
-      _ => SyncLifecycleState.idle,
-    };
-
-    emit(
-      (s) => s.copyWith(
-        lifecycle: lifecycle,
-        orchestrationPhase: phase,
-        lastSyncTime: result.completedAt,
-        pendingJobs: pendingJobs ?? s.pendingJobs,
-        lastResultMessage: result.message,
-        errorMessage: errorMessage,
-        clearError: errorMessage == null,
         clearRunningJob: true,
-        connectivity: currentState.connectivity,
       ),
     );
-    return session;
-  }
-
-  void _emitPhase(
-    SyncStateEmitter emit,
-    SyncState currentState,
-    SyncOrchestrationPhase phase, {
-    required SyncLifecycleState lifecycle,
-    String? runningJobId,
-    bool clearError = false,
-  }) {
-    emit(
-      (s) => s.copyWith(
-        lifecycle: lifecycle,
-        orchestrationPhase: phase,
-        runningJobId: runningJobId,
-        clearError: clearError,
-        connectivity: currentState.connectivity,
+    return Future.value(
+      SyncResult(
+        success: false,
+        direction: SyncDirection.full,
+        completedAt: DateTime.now().toUtc(),
+        message: message,
+        errorCount: 1,
       ),
     );
-  }
-
-  void _setSession(SyncSession? session) {
-    _currentSession = session;
-    if (!_sessionController.isClosed) {
-      _sessionController.add(session);
-    }
-  }
-
-  void _setPlan(SyncPlan? plan) {
-    _currentPlan = plan;
-    if (!_planController.isClosed) {
-      _planController.add(plan);
-    }
   }
 
   Future<List<SyncJob>> _safePendingJobs() async {
@@ -714,25 +531,6 @@ class SyncCoordinator {
     } on Object {
       return const [];
     }
-  }
-
-  static ({int rows, int commands, int media}) _countByKind(
-    List<SyncJob> jobs,
-  ) {
-    var rows = 0;
-    var commands = 0;
-    var media = 0;
-    for (final job in jobs) {
-      switch (job.kind) {
-        case SyncQueueKind.row:
-          rows++;
-        case SyncQueueKind.command:
-          commands++;
-        case SyncQueueKind.media:
-          media++;
-      }
-    }
-    return (rows: rows, commands: commands, media: media);
   }
 
   static List<Map<String, dynamic>> _asList(Object? value) {
@@ -754,13 +552,6 @@ class SyncCoordinator {
     if (error is DioException) {
       final code = error.response?.statusCode;
       if (code == 401 || code == 403) return true;
-      final type = error.type;
-      if (type == DioExceptionType.connectionTimeout ||
-          type == DioExceptionType.sendTimeout ||
-          type == DioExceptionType.receiveTimeout ||
-          type == DioExceptionType.connectionError) {
-        return false;
-      }
     }
     final text = error.toString().toLowerCase();
     return text.contains('401') ||

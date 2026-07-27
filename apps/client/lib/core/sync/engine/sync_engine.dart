@@ -3,17 +3,14 @@ import 'dart:async';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/sync/engine/connectivity_monitor.dart';
 import 'package:billing_baba/core/sync/engine/sync_coordinator.dart';
-import 'package:billing_baba/core/sync/engine/sync_orchestration_phase.dart';
-import 'package:billing_baba/core/sync/engine/sync_plan.dart';
 import 'package:billing_baba/core/sync/engine/sync_scheduler.dart';
-import 'package:billing_baba/core/sync/engine/sync_session.dart';
 import 'package:billing_baba/core/sync/models/sync_result.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
 
-/// Owns the offline sync runtime lifecycle.
+/// Owns the offline sync runtime lifecycle and triggers.
 ///
-/// Orchestration order lives in [SyncCoordinator] — this class does not know
-/// endpoint sequencing. Does **not** contain feature business logic.
+/// Orchestration lives in [SyncCoordinator]. Triggers:
+/// app startup, connectivity restored, manual refresh, periodic timer.
 class SyncEngine {
   SyncEngine({
     required ConnectivityMonitor connectivityMonitor,
@@ -36,10 +33,7 @@ class SyncEngine {
   Stream<SyncState> get stateChanges => _stateController.stream;
   bool get isRunning => _running;
   bool get isInitialized => _initialized;
-
   SyncCoordinator get coordinator => _coordinator;
-  SyncSession? get currentSession => _coordinator.currentSession;
-  SyncPlan? get currentPlan => _coordinator.currentPlan;
 
   /// Initializes monitors/scheduler. Does **not** run sync.
   Future<void> initialize() async {
@@ -59,9 +53,6 @@ class SyncEngine {
         lifecycle: status == SyncConnectivityStatus.offline
             ? SyncLifecycleState.offline
             : SyncLifecycleState.idle,
-        orchestrationPhase: status == SyncConnectivityStatus.offline
-            ? SyncOrchestrationPhase.offline
-            : SyncOrchestrationPhase.idle,
         clearError: true,
       ),
     );
@@ -71,8 +62,8 @@ class SyncEngine {
     );
   }
 
-  /// Starts scheduler + connectivity handling. Still does not sync by default.
-  Future<void> start({bool enableAutoSync = false}) async {
+  /// Starts scheduler + connectivity handling.
+  Future<void> start({bool enableAutoSync = true}) async {
     await initialize();
     if (_running) return;
     _running = true;
@@ -97,33 +88,25 @@ class SyncEngine {
     LoggingService.instance.info('SyncEngine stopped');
   }
 
-  /// Records a schedule intent. Does not execute network sync.
-  /// Auto-sync remains disabled until a later milestone enables it.
+  /// Manual sync request.
   void schedule([
     SyncScheduleTrigger trigger = SyncScheduleTrigger.manualRefresh,
   ]) {
     _emit(
-      _state.copyWith(
-        nextScheduledSync: _scheduler.nextScheduledSync,
-        lastResultMessage: 'Scheduled: $trigger (sync deferred)',
-      ),
+      _state.copyWith(nextScheduledSync: _scheduler.nextScheduledSync),
     );
-    LoggingService.instance.info(
-      'SyncEngine.schedule($trigger) — sync execution deferred',
-    );
+    if (_autoSyncEnabled || trigger == SyncScheduleTrigger.manualRefresh) {
+      unawaited(syncNow());
+    }
   }
 
-  /// Manual sync: delegates workflow to [SyncCoordinator] (no push/pull yet).
   Future<SyncResult> syncNow() async {
     await initialize();
 
-    final session = await _coordinator.orchestrate(
+    return _coordinator.orchestrate(
       currentState: _state,
       emit: (update) => _emit(update(_state)),
     );
-
-    return session.result ??
-        SyncResult.noop(message: 'Orchestration finished without result');
   }
 
   Future<void> dispose() async {
@@ -139,8 +122,9 @@ class SyncEngine {
     _emit(
       _state.copyWith(nextScheduledSync: _scheduler.nextScheduledSync),
     );
-    // Intentionally do not call syncNow — auto-sync remains deferred.
-    schedule(trigger);
+    if (!_autoSyncEnabled) return;
+    if (_state.connectivity == SyncConnectivityStatus.offline) return;
+    unawaited(syncNow());
   }
 
   void _onConnectivity(SyncConnectivityStatus status) {
@@ -157,17 +141,10 @@ class SyncEngine {
             ? SyncLifecycleState.idle
             : _state.lifecycle);
 
-    final phase = status == SyncConnectivityStatus.offline
-        ? SyncOrchestrationPhase.offline
-        : (_state.orchestrationPhase == SyncOrchestrationPhase.offline
-            ? SyncOrchestrationPhase.idle
-            : _state.orchestrationPhase);
-
     _emit(
       _state.copyWith(
         connectivity: status,
         lifecycle: lifecycle,
-        orchestrationPhase: phase,
       ),
     );
     if (emitSchedule) {

@@ -1,8 +1,8 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { MutationAckRepository } from './apply/mutation-ack.repository';
+import { isRegisteredRowEntity } from './apply/row-entities';
 import { RowApplier } from './apply/row-applier';
-import { syncEntityRegistry } from './apply/entity-registry.register';
 import { SYNC_MAX_PUSH_MUTATIONS } from './sync.constants';
 import { syncBatchTooLarge } from './sync.errors';
 import type { PushBody } from './sync.schema';
@@ -17,8 +17,7 @@ export type PushProcessResult = {
 };
 
 /**
- * Applies registered row mutations. Commands and unregistered entities
- * return NOT_IMPLEMENTED in errors[] — no command execution.
+ * Applies registered row mutations. Commands return NOT_IMPLEMENTED.
  */
 export class PushService {
   constructor(
@@ -38,7 +37,7 @@ export class PushService {
       throw new AppError('SERVER_BUSY', 'Database is not configured', 429);
     }
     return {
-      applier: this.applier ?? new RowApplier(db, syncEntityRegistry),
+      applier: this.applier ?? new RowApplier(db),
       acks: this.acks ?? new MutationAckRepository(db),
     };
   }
@@ -78,7 +77,7 @@ export class PushService {
         continue;
       }
 
-      if (!syncEntityRegistry.isRegistered(mutation.entity_type)) {
+      if (!isRegisteredRowEntity(mutation.entity_type)) {
         errors.push({
           mutation_id: mutation.mutation_id,
           code: 'NOT_IMPLEMENTED',

@@ -37,11 +37,11 @@ describe('sync pushBodySchema', () => {
       {
         mutation_id: 'a1111111-1111-4111-8111-111111111111',
         kind: 'row' as const,
-        entity_type: 'parties' as const,
+        entity_type: 'categories' as const,
         entity_id: 'b2222222-2222-4222-8222-222222222222',
         operation: 'create' as const,
         base_sync_version: 0,
-        payload: { name: 'New Party' },
+        payload: { name: 'New Category' },
         client_updated_at: '2026-07-26T05:01:00.000Z',
       },
       {
@@ -63,17 +63,36 @@ describe('sync pushBodySchema', () => {
     expect(result.success).toBe(true);
   });
 
-  test('rejects unknown command', () => {
+  test('rejects empty command name', () => {
     const result = pushBodySchema.safeParse({
       ...validBatch,
       mutations: [
         {
           mutation_id: 'c3333333-3333-4333-8333-333333333333',
           kind: 'command',
-          command: 'not_a_real_command',
+          command: '',
           command_id: '9c6d8d2d-3c62-4b3c-a1cb-7a8d7d8c4d1f',
           payload: {},
           client_updated_at: '2026-07-26T05:02:00.000Z',
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test('rejects unknown row entity_type', () => {
+    const result = pushBodySchema.safeParse({
+      ...validBatch,
+      mutations: [
+        {
+          mutation_id: 'a1111111-1111-4111-8111-111111111111',
+          kind: 'row',
+          entity_type: 'parties',
+          entity_id: 'b2222222-2222-4222-8222-222222222222',
+          operation: 'create',
+          base_sync_version: 0,
+          payload: { name: 'Nope' },
+          client_updated_at: '2026-07-26T05:01:00.000Z',
         },
       ],
     });

@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_service.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/models/dto/brand_dto.dart';
@@ -36,7 +36,7 @@ class InventoryRepository {
 
   final InventoryRemoteDataSource _remote;
   final InventoryLocalDataSource _local;
-  final SyncQueueService _syncQueue;
+  final SyncQueue _syncQueue;
   final String Function() _businessIdReader;
   final String? Function()? _deviceIdReader;
 

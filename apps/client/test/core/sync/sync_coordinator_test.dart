@@ -1,25 +1,24 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
-import 'package:billing_baba/core/sync/engine/bootstrap_decision.dart';
 import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/core/sync/engine/sync_coordinator.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
-import 'package:billing_baba/core/sync/engine/sync_orchestration_phase.dart';
-import 'package:billing_baba/core/sync/engine/sync_plan.dart';
-import 'package:billing_baba/core/sync/models/sync_job_payload_meta.dart';
+import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
-import 'package:billing_baba/core/sync/offline/category_sync_applier.dart';
-import 'package:billing_baba/core/sync/queue/drift_sync_queue_repository.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_service.dart';
+import 'package:billing_baba/core/sync/network/sync_api.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FakeTransport implements SyncCoordinatorTransport {
+class _FakeSyncApi extends SyncApi {
+  _FakeSyncApi() : super(Dio());
+
   int registerCalls = 0;
   int statusCalls = 0;
   int pushCalls = 0;
@@ -114,20 +113,20 @@ class _FakeTransport implements SyncCoordinatorTransport {
 void main() {
   late StorageService storage;
   late AppDatabase db;
-  late SyncQueueService queue;
+  late SyncQueue queue;
   late SyncMetadataStore metadata;
-  late _FakeTransport transport;
+  late _FakeSyncApi api;
   late SyncCoordinator coordinator;
-  late List<SyncOrchestrationPhase> phases;
+  late List<SyncLifecycleState> lifecycles;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     storage = StorageService(preferences: prefs);
     db = AppDatabase(NativeDatabase.memory());
-    queue = SyncQueueService(DriftSyncQueueRepository(db));
+    queue = SyncQueue(db);
     metadata = SyncMetadataStore(storage);
-    transport = _FakeTransport();
+    api = _FakeSyncApi();
 
     final identity = SyncDeviceIdentity(
       storage,
@@ -141,15 +140,15 @@ void main() {
     );
 
     coordinator = SyncCoordinator(
-      transport: transport,
-      queueService: queue,
+      api: api,
+      queue: queue,
       identity: identity,
       metadata: metadata,
       storage: storage,
-      categoryApplier: CategorySyncApplier(db),
+      categorySync: CategorySync(db),
     );
 
-    phases = <SyncOrchestrationPhase>[];
+    lifecycles = <SyncLifecycleState>[];
   });
 
   tearDown(() async {
@@ -157,7 +156,7 @@ void main() {
     await db.close();
   });
 
-  Future<void> runOrchestrate({
+  Future<SyncState> runOrchestrate({
     SyncConnectivityStatus connectivity = SyncConnectivityStatus.online,
   }) async {
     var state = SyncState(connectivity: connectivity);
@@ -165,72 +164,39 @@ void main() {
       currentState: state,
       emit: (update) {
         state = update(state);
-        phases.add(state.orchestrationPhase);
+        lifecycles.add(state.lifecycle);
       },
     );
+    return state;
   }
 
-  test('BootstrapDecision needs bootstrap without cursor', () {
-    final decision = BootstrapDecision.evaluate(
-      businessId: 'biz-1',
-      pullCursor: null,
-      bootstrappedAt: null,
-      localSchemaVersion: 1,
-      lastServerSchemaVersion: null,
-      serverSchemaVersion: 1,
+  test('orchestrate offline short-circuits without network', () async {
+    final state = await runOrchestrate(
+      connectivity: SyncConnectivityStatus.offline,
     );
-    expect(decision.needsBootstrap, isTrue);
-    expect(decision.reason, 'no_local_cursor');
+    expect(api.registerCalls, 0);
+    expect(api.statusCalls, 0);
+    expect(state.lifecycle, SyncLifecycleState.offline);
   });
 
-  test('BootstrapDecision ready when cursor present', () {
-    final decision = BootstrapDecision.evaluate(
-      businessId: 'biz-1',
-      pullCursor: 'cursor-1',
-      bootstrappedAt: DateTime.utc(2026),
-      localSchemaVersion: 1,
-      lastServerSchemaVersion: 1,
-      serverSchemaVersion: 1,
-    );
-    expect(decision.needsBootstrap, isFalse);
-  });
-
-  test('orchestrate offline short-circuits without transport', () async {
-    await runOrchestrate(connectivity: SyncConnectivityStatus.offline);
-    expect(transport.registerCalls, 0);
-    expect(transport.statusCalls, 0);
-    expect(
-      coordinator.currentSession?.terminalPhase,
-      SyncOrchestrationPhase.offline,
-    );
-    expect(coordinator.currentSession?.rowsUploaded, 0);
-  });
-
-  test('minimal bootstrap seeds cursor then push/pull categories', () async {
+  test('bootstrap pulls from epoch then marks bootstrapped', () async {
     await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
 
-    await runOrchestrate();
+    final state = await runOrchestrate();
 
-    expect(transport.registerCalls, 1);
-    expect(transport.statusCalls, 1);
-    expect(transport.pushCalls, 0);
-    expect(transport.pullCalls, 1);
-    expect(transport.lastPullEntityTypes, 'categories');
+    expect(api.registerCalls, 1);
+    expect(api.statusCalls, 1);
+    expect(api.pushCalls, 0);
+    // bootstrap pull + steady-state pull
+    expect(api.pullCalls, 2);
+    expect(api.lastPullEntityTypes, 'categories');
     expect(metadata.pullCursor, isNotNull);
     expect(metadata.bootstrappedAt, isNotNull);
-
-    final plan = coordinator.currentPlan!;
-    expect(plan.needsBootstrap, isFalse);
-    expect(plan.steps, contains(SyncPlanStep.pushQueue));
-    expect(plan.steps, contains(SyncPlanStep.pullChanges));
-    expect(plan.steps, isNot(contains(SyncPlanStep.bootstrap)));
-    expect(
-      coordinator.currentSession?.terminalPhase,
-      SyncOrchestrationPhase.ready,
-    );
+    expect(state.lifecycle, SyncLifecycleState.idle);
+    expect(state.lastResultMessage, contains('Sync complete'));
   });
 
-  test('ready plan pushes category jobs and skips non-category rows', () async {
+  test('ready state pushes category jobs and skips non-category rows', () async {
     await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
     await storage.write(StorageKeys.syncPullCursor, 'cursor-abc');
     await storage.write(
@@ -265,17 +231,17 @@ void main() {
           ),
         );
 
-    await runOrchestrate();
+    final state = await runOrchestrate();
 
-    expect(transport.pushCalls, 1);
-    expect(transport.pullCalls, 1);
-    final mutations = transport.lastPushBody!['mutations'] as List;
+    expect(api.pushCalls, 1);
+    expect(api.pullCalls, 1);
+    final mutations = api.lastPushBody!['mutations'] as List;
     expect(mutations, hasLength(1));
     expect(mutations.first['entity_type'], 'categories');
     expect(mutations.first['mutation_id'], catJob.mutationId);
     expect(mutations.first['payload'], {'name': 'Retail'});
     expect(
-      mutations.first.containsKey(SyncJobPayloadMeta.baseSyncVersionKey),
+      mutations.first.containsKey(SyncJob.baseSyncVersionKey),
       isFalse,
     );
 
@@ -286,11 +252,11 @@ void main() {
           ))
         .getSingle();
     expect(row.syncVersion, 1);
-    expect(coordinator.currentSession?.rowsUploaded, 1);
+    expect(state.lastResultMessage, contains('push=1'));
   });
 
-  test('401 on register → authenticationFailed', () async {
-    transport.registerError = DioException(
+  test('401 on register → needsAuthentication', () async {
+    api.registerError = DioException(
       requestOptions: RequestOptions(path: '/sync/devices'),
       response: Response(
         requestOptions: RequestOptions(path: '/sync/devices'),
@@ -299,27 +265,20 @@ void main() {
       type: DioExceptionType.badResponse,
     );
 
-    await runOrchestrate();
+    final state = await runOrchestrate();
 
-    expect(
-      coordinator.currentSession?.terminalPhase,
-      SyncOrchestrationPhase.authenticationFailed,
-    );
-    expect(coordinator.currentSession?.failures, 1);
+    expect(state.lifecycle, SyncLifecycleState.needsAuthentication);
   });
 
-  test('network error on status → serverUnavailable', () async {
-    transport.statusError = DioException(
+  test('network error on status → failed', () async {
+    api.statusError = DioException(
       requestOptions: RequestOptions(path: '/sync/status'),
       type: DioExceptionType.connectionError,
     );
 
     await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
-    await runOrchestrate();
+    final state = await runOrchestrate();
 
-    expect(
-      coordinator.currentSession?.terminalPhase,
-      SyncOrchestrationPhase.serverUnavailable,
-    );
+    expect(state.lifecycle, SyncLifecycleState.failed);
   });
 }

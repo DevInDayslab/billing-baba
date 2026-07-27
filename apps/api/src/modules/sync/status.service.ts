@@ -3,6 +3,9 @@ import { getDb } from '../../db/client';
 import { schemaVersion } from '../../db/schema/meta/tables';
 import type { DeviceService } from './device.service';
 import {
+  REGISTERED_ROW_ENTITY_TYPES,
+} from './apply/row-entities';
+import {
   SYNC_BOOTSTRAP_CHUNK_MAX_BYTES,
   SYNC_MAX_PUSH_BYTES,
   SYNC_MAX_PUSH_MUTATIONS,
@@ -13,10 +16,6 @@ import {
   SYNC_PULL_LIMIT_MAX,
   SYNC_SCHEMA_VERSION_FALLBACK,
 } from './sync.constants';
-import {
-  SUPPORTED_ROW_ENTITY_TYPES,
-  SUPPORTED_SYNC_COMMANDS,
-} from './sync.types';
 
 export class StatusService {
   constructor(private readonly deviceService: DeviceService) {}
@@ -39,8 +38,8 @@ export class StatusService {
       pull_limit_default: SYNC_PULL_LIMIT_DEFAULT,
       pull_limit_max: SYNC_PULL_LIMIT_MAX,
       bootstrap_chunk_max_bytes: SYNC_BOOTSTRAP_CHUNK_MAX_BYTES,
-      supported_commands: [...SUPPORTED_SYNC_COMMANDS],
-      supported_entities: [...SUPPORTED_ROW_ENTITY_TYPES],
+      supported_commands: [] as string[],
+      supported_entities: [...REGISTERED_ROW_ENTITY_TYPES],
       capabilities: {
         channels: ['http'],
         selective_sync: true,

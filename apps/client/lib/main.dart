@@ -6,7 +6,7 @@ import 'package:billing_baba/core/logging/device_info_collector.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
-import 'package:billing_baba/core/sync/engine/sync_bootstrap.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +59,8 @@ Future<void> main() async {
 
       final container = ProviderContainer();
       await container.read(storageServiceProvider.future);
-      await initializeSyncRuntime(container);
+      final engine = await container.read(syncEngineProvider.future);
+      await engine.start();
 
       runApp(
         UncontrolledProviderScope(

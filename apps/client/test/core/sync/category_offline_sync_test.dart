@@ -6,14 +6,13 @@ import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/core/sync/engine/sync_coordinator.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
-import 'package:billing_baba/core/sync/engine/sync_orchestration_phase.dart';
-import 'package:billing_baba/core/sync/models/sync_job_payload_meta.dart';
+import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
-import 'package:billing_baba/core/sync/offline/category_sync_applier.dart';
-import 'package:billing_baba/core/sync/queue/drift_sync_queue_repository.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_service.dart';
+import 'package:billing_baba/core/sync/network/sync_api.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_local_source.dart';
+import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
@@ -25,7 +24,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FakeTransport implements SyncCoordinatorTransport {
+class _FakeSyncApi extends SyncApi {
+  _FakeSyncApi() : super(Dio());
+
   Map<String, dynamic> Function(Map<String, dynamic> body)? pushHandler;
   Map<String, dynamic> pullPayload = const {
     'changes': <Map<String, dynamic>>[],
@@ -87,12 +88,13 @@ class _FakeTransport implements SyncCoordinatorTransport {
 void main() {
   late StorageService storage;
   late AppDatabase db;
-  late SyncQueueService queue;
+  late SyncQueue queue;
   late CategoryLocalSource categories;
   late InventoryRepository repo;
   late SyncMetadataStore metadata;
-  late _FakeTransport transport;
+  late _FakeSyncApi api;
   late SyncCoordinator coordinator;
+  late SyncState lastState;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({
@@ -101,12 +103,11 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     storage = StorageService(preferences: prefs);
     db = AppDatabase(NativeDatabase.memory());
-    queue = SyncQueueService(DriftSyncQueueRepository(db));
+    queue = SyncQueue(db);
     categories = CategoryLocalSource(db);
     metadata = SyncMetadataStore(storage);
-    transport = _FakeTransport();
+    api = _FakeSyncApi();
 
-    // Writes must not hit Dio; unused remote is only for hydrate fallbacks.
     repo = InventoryRepository(
       remote: InventoryRemoteDataSource(Dio()),
       local: DriftInventoryLocalDataSource(categories),
@@ -128,13 +129,14 @@ void main() {
     );
 
     coordinator = SyncCoordinator(
-      transport: transport,
-      queueService: queue,
+      api: api,
+      queue: queue,
       identity: identity,
       metadata: metadata,
       storage: storage,
-      categoryApplier: CategorySyncApplier(db),
+      categorySync: CategorySync(db),
     );
+    lastState = const SyncState(connectivity: SyncConnectivityStatus.online);
   });
 
   tearDown(() async {
@@ -144,10 +146,12 @@ void main() {
 
   Future<void> syncNow() async {
     var state = const SyncState(connectivity: SyncConnectivityStatus.online);
-    await coordinator.orchestrate(
+    final result = await coordinator.orchestrate(
       currentState: state,
       emit: (update) => state = update(state),
     );
+    lastState = state;
+    expect(result, isNotNull);
   }
 
   test('offline create/update/delete writes Drift + pending queue jobs',
@@ -164,10 +168,10 @@ void main() {
     expect(pending, hasLength(1));
     expect(pending.first.entityType, 'categories');
     expect(pending.first.operation, SyncQueueOperation.create);
-    expect(SyncJobPayloadMeta.domainOnly(pending.first.payload), {
+    expect(SyncJob.domainOnly(pending.first.payload), {
       'name': 'Electronics',
     });
-    expect(SyncJobPayloadMeta.readBaseSyncVersion(pending.first.payload), 0);
+    expect(SyncJob.readBaseSyncVersion(pending.first.payload), 0);
 
     await repo.updateCategory(
       created.id,
@@ -176,7 +180,7 @@ void main() {
     pending = await queue.listPending();
     expect(pending, hasLength(2));
     expect(pending.last.operation, SyncQueueOperation.update);
-    expect(SyncJobPayloadMeta.readBaseSyncVersion(pending.last.payload), 0);
+    expect(SyncJob.readBaseSyncVersion(pending.last.payload), 0);
 
     await repo.deleteCategory(created.id);
     pending = await queue.listPending();
@@ -199,11 +203,8 @@ void main() {
     expect(await queue.pendingCount(), 0);
     final row = await categories.getById(created.id);
     expect(row!.syncVersion, 3);
-    expect(coordinator.currentSession?.rowsUploaded, 1);
-    expect(
-      coordinator.currentSession?.terminalPhase,
-      SyncOrchestrationPhase.ready,
-    );
+    expect(lastState.lastResultMessage, contains('push=1'));
+    expect(lastState.lifecycle, SyncLifecycleState.idle);
   });
 
   test('push replayed completes job and applies ack meta', () async {
@@ -212,7 +213,7 @@ void main() {
     );
     final job = (await queue.listPending()).single;
 
-    transport.pushHandler = (body) {
+    api.pushHandler = (body) {
       final mutationId = (body['mutations'] as List).first['mutation_id'];
       return {
         'accepted': <Map<String, dynamic>>[],
@@ -242,7 +243,7 @@ void main() {
       const CreateCategoryRequest(name: 'LocalWins'),
     );
 
-    transport.pushHandler = (body) {
+    api.pushHandler = (body) {
       final mutationId = (body['mutations'] as List).first['mutation_id'];
       return {
         'accepted': <Map<String, dynamic>>[],
@@ -270,7 +271,7 @@ void main() {
         .get();
     expect(jobs, hasLength(1));
     expect(jobs.first.status, SyncQueueStatus.conflict.wire);
-    expect(coordinator.currentSession?.conflicts, 1);
+    expect(lastState.lastResultMessage, contains('conflicts=1'));
   });
 
   test('pull upserts, soft-deletes, and advances cursor', () async {
@@ -290,7 +291,7 @@ void main() {
       updatedAt: DateTime.utc(2026),
     );
 
-    transport.pullPayload = {
+    api.pullPayload = {
       'changes': [
         {
           'entity_type': 'categories',
@@ -327,7 +328,7 @@ void main() {
     expect(deleted.syncVersion, 4);
 
     expect(metadata.pullCursor, 'cursor-after-pull');
-    expect(coordinator.currentSession?.rowsDownloaded, 1);
+    expect(lastState.lastResultMessage, contains('pull=1'));
   });
 
   test('categories and pending jobs persist across DB reopen', () async {
@@ -340,7 +341,7 @@ void main() {
     }
 
     final db1 = await openDb();
-    final queue1 = SyncQueueService(DriftSyncQueueRepository(db1));
+    final queue1 = SyncQueue(db1);
     final cats1 = CategoryLocalSource(db1);
     final repo1 = InventoryRepository(
       remote: InventoryRemoteDataSource(Dio()),
@@ -355,7 +356,7 @@ void main() {
     await db1.close();
 
     final db2 = await openDb();
-    final queue2 = SyncQueueService(DriftSyncQueueRepository(db2));
+    final queue2 = SyncQueue(db2);
     final cats2 = CategoryLocalSource(db2);
 
     final listed = await cats2.listActive('biz-1');

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
@@ -8,20 +6,12 @@ import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/core/sync/engine/sync_coordinator.dart';
 import 'package:billing_baba/core/sync/engine/sync_engine.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
-import 'package:billing_baba/core/sync/engine/sync_plan.dart';
 import 'package:billing_baba/core/sync/engine/sync_scheduler.dart';
-import 'package:billing_baba/core/sync/engine/sync_session.dart';
-import 'package:billing_baba/core/sync/engine/sync_status_controller.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
-import 'package:billing_baba/core/sync/network/sync_client.dart';
-import 'package:billing_baba/core/sync/network/sync_headers.dart';
-import 'package:billing_baba/core/sync/offline/category_sync_applier.dart';
-import 'package:billing_baba/core/sync/queue/drift_sync_queue_repository.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_processor.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_repository.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_service.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final connectivityMonitorProvider = Provider<ConnectivityMonitor>((ref) {
@@ -30,38 +20,19 @@ final connectivityMonitorProvider = Provider<ConnectivityMonitor>((ref) {
   return monitor;
 });
 
-final syncQueueRepositoryProvider = Provider<SyncQueueRepository>((ref) {
-  return DriftSyncQueueRepository(ref.watch(appDatabaseProvider));
+final syncQueueProvider = Provider<SyncQueue>((ref) {
+  return SyncQueue(ref.watch(appDatabaseProvider));
 });
 
-/// Alias for [syncQueueRepositoryProvider].
-final Provider<SyncQueueRepository> queueRepositoryProvider =
-    syncQueueRepositoryProvider;
-
-final syncQueueServiceProvider = Provider<SyncQueueService>((ref) {
-  return SyncQueueService(ref.watch(syncQueueRepositoryProvider));
-});
-
-/// Alias for [syncQueueServiceProvider].
-final Provider<SyncQueueService> queueServiceProvider = syncQueueServiceProvider;
+/// Alias kept for inventory call sites during cutover.
+final syncQueueServiceProvider = syncQueueProvider;
 
 final syncPendingCountProvider = StreamProvider<int>((ref) {
-  return ref.watch(syncQueueRepositoryProvider).streamPendingCount();
+  return ref.watch(syncQueueProvider).streamPendingCount();
 });
-
-/// Alias for [syncPendingCountProvider].
-final StreamProvider<int> pendingCountProvider = syncPendingCountProvider;
 
 final syncPendingJobsProvider = StreamProvider<List<SyncJob>>((ref) {
-  return ref.watch(syncQueueRepositoryProvider).watchPending();
-});
-
-/// Alias for [syncPendingJobsProvider].
-final StreamProvider<List<SyncJob>> pendingJobsProvider =
-    syncPendingJobsProvider;
-
-final syncQueueProcessorProvider = Provider<SyncQueueProcessor>((ref) {
-  return SyncQueueProcessor(ref.watch(syncQueueServiceProvider));
+  return ref.watch(syncQueueProvider).watchPending();
 });
 
 final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
@@ -70,14 +41,9 @@ final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
   return scheduler;
 });
 
-/// Async because [apiClientProvider] is a FutureProvider.
-final syncClientProvider = FutureProvider<SyncClient>((ref) async {
+final syncApiProvider = FutureProvider<SyncApi>((ref) async {
   final apiClient = await ref.watch(apiClientProvider.future);
-  final api = SyncApi(apiClient.dio);
-  return SyncClient(
-    api: api,
-    headerProvider: const DefaultSyncHeaderProvider(),
-  );
+  return SyncApi(apiClient.dio);
 });
 
 final syncDeviceIdentityProvider =
@@ -93,27 +59,23 @@ final syncMetadataStoreProvider =
 });
 
 final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
-  final client = await ref.watch(syncClientProvider.future);
+  final api = await ref.watch(syncApiProvider.future);
   final storage = await ref.watch(storageServiceProvider.future);
   final identity = await ref.watch(syncDeviceIdentityProvider.future);
   final metadata = await ref.watch(syncMetadataStoreProvider.future);
   final db = ref.watch(appDatabaseProvider);
-  final coordinator = SyncCoordinator(
-    transport: SyncClientCoordinatorTransport(client),
-    queueService: ref.watch(syncQueueServiceProvider),
+  return SyncCoordinator(
+    api: api,
+    queue: ref.watch(syncQueueProvider),
     identity: identity,
     metadata: metadata,
     storage: storage,
-    categoryApplier: CategorySyncApplier(db),
+    categorySync: CategorySync(db),
   );
-  // Disposed by SyncEngine when the engine provider tears down.
-  return coordinator;
 });
 
 final syncEngineProvider = FutureProvider<SyncEngine>((ref) async {
   final coordinator = await ref.watch(syncCoordinatorProvider.future);
-  // SyncWorker / SyncRunner remain available via their providers for a later
-  // milestone that drains the queue and executes push/pull.
   final engine = SyncEngine(
     connectivityMonitor: ref.watch(connectivityMonitorProvider),
     scheduler: ref.watch(syncSchedulerProvider),
@@ -121,39 +83,17 @@ final syncEngineProvider = FutureProvider<SyncEngine>((ref) async {
   );
 
   ref.onDispose(() {
-    unawaited(engine.dispose());
+    // ignore: discarded_futures
+    engine.dispose();
   });
 
   return engine;
 });
 
-final currentSyncSessionProvider = StreamProvider<SyncSession?>((ref) async* {
-  final coordinator = await ref.watch(syncCoordinatorProvider.future);
-  yield coordinator.currentSession;
-  yield* coordinator.sessionChanges;
-});
-
-final currentSyncPlanProvider = StreamProvider<SyncPlan?>((ref) async* {
-  final coordinator = await ref.watch(syncCoordinatorProvider.future);
-  yield coordinator.currentPlan;
-  yield* coordinator.planChanges;
-});
-
-/// Streams [SyncState] after the engine has been initialized at startup.
 final syncStateProvider = StreamProvider<SyncState>((ref) async* {
   final engine = await ref.watch(syncEngineProvider.future);
   yield engine.state;
   yield* engine.stateChanges;
-});
-
-final syncStatusControllerProvider =
-    FutureProvider<SyncStatusController>((ref) async {
-  final engine = await ref.watch(syncEngineProvider.future);
-  return SyncStatusController(
-    engine: engine,
-    queueService: ref.watch(syncQueueServiceProvider),
-    scheduler: ref.watch(syncSchedulerProvider),
-  );
 });
 
 final connectivityStatusProvider =

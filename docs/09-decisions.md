@@ -38,6 +38,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-023: Provider-Agnostic Object Storage](#adr-023-provider-agnostic-object-storage)
 - [ADR-024: Invoice Artifact System](#adr-024-invoice-artifact-system)
 - [ADR-025: Sync Contract (Hybrid + LOCAL Remap + Command Idempotency)](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
+- [ADR-026: MVP Sync Simplicity (No Client Registry)](#adr-026-mvp-sync-simplicity-no-client-registry)
 
 ---
 
@@ -1505,6 +1506,48 @@ Normative protocol: [11-sync-api-contract.md](11-sync-api-contract.md). Summary 
 | Online-only finalize | Blocks offline POS goal |
 
 **References:** [11-sync-api-contract.md](11-sync-api-contract.md), [10-offline-first-architecture-audit.md](10-offline-first-architecture-audit.md), [ADR-007](#adr-007-offline-first)
+
+---
+
+## ADR-026: MVP Sync Simplicity (No Client Registry)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-27 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+### Context
+
+Early sync scaffolding added plan/session/runner/worker layers, a 4-deep queue stack, and a multi-entity server registry before the client had proven offline for more than categories. That slowed shipping and onboarding.
+
+### Decision
+
+For Billing Baba MVP:
+
+1. **Keep only:** SyncEngine, SyncCoordinator, SyncQueue, SyncApi, SyncState, SyncJob, Device Identity, Sync Metadata.
+2. **Client entity apply:** `switch (entityType)` — start with `categories`; copy the pattern for parties/items later. No client registry/adapter/mapper framework.
+3. **Two sync modes only:** row (masters) and command (financial/inventory ops). Media deferred.
+4. **Bootstrap:** if local DB has no cursor → pull from epoch until `has_more=false` → store cursor. No chunk planner / bootstrap session state machine. `POST /bootstrap` may return `initial_cursor` only.
+5. **Conflicts:** optimistic `base_sync_version` gate; on conflict mark queue job, keep local row, show later. No merge framework.
+6. **Triggers:** app startup, connectivity restored, manual refresh, periodic while app open. No OS background workers.
+7. **Server:** register only entities the client syncs (MVP: `categories`). Status/Zod advertise registered types only.
+
+### Consequences
+
+**Positive:** smaller codebase, easier debugging, faster entity cutovers via duplication.
+
+**Negative:** adding the Nth entity means a bit of copy-paste until a later refactor is justified.
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Client SyncEntityRegistry / adapters | Premature for <10 entities |
+| Chunked bootstrap jobs | Speculative; pull-from-epoch is enough |
+| Silent LWW without version check | Unsafe for multi-device edits |
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md), [ADR-025](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
 
 ---
 

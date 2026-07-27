@@ -1,140 +1,130 @@
-import 'dart:typed_data';
-
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:dio/dio.dart';
 
-/// Low-level HTTP client for `/api/v1/sync/*` (contract v1).
+/// HTTP client for `/api/v1/sync/*` with protocol headers attached.
 ///
-/// Features must not call this directly — only the SyncEngine / transport layer.
+/// Features must not call this directly — only SyncEngine / SyncCoordinator.
 class SyncApi {
-  SyncApi(this._dio);
+  SyncApi(this._dio, {this.protocolVersion = '1'});
 
   final Dio _dio;
+  final String protocolVersion;
 
   Future<Map<String, dynamic>> registerDevice({
-    required Map<String, dynamic> body,
-    required Map<String, String> headers,
-  }) =>
-      _post(ApiEndpoints.syncDevices, body: body, headers: headers);
-
-  Future<Map<String, dynamic>> listDevices({
-    required Map<String, String> headers,
-  }) =>
-      _get(ApiEndpoints.syncDevices, headers: headers);
+    required String deviceId,
+    required String platform,
+    required String appVersion,
+    required String deviceName,
+  }) {
+    return _post(
+      ApiEndpoints.syncDevices,
+      deviceId: deviceId,
+      appVersion: appVersion,
+      body: {
+        'device_id': deviceId,
+        'platform': platform,
+        'app_version': appVersion,
+        'device_name': deviceName,
+      },
+    );
+  }
 
   Future<Map<String, dynamic>> status({
-    required Map<String, String> headers,
-  }) =>
-      _get(ApiEndpoints.syncStatus, headers: headers);
+    required String deviceId,
+    required String appVersion,
+  }) {
+    return _get(
+      ApiEndpoints.syncStatus,
+      deviceId: deviceId,
+      appVersion: appVersion,
+    );
+  }
 
+  /// MVP bootstrap: returns `{ initial_cursor, schema_version, ... }`.
   Future<Map<String, dynamic>> bootstrap({
-    required Map<String, dynamic> body,
-    required Map<String, String> headers,
-  }) =>
-      _post(ApiEndpoints.syncBootstrap, body: body, headers: headers);
-
-  Future<Map<String, dynamic>> bootstrapChunk({
-    required String bootstrapId,
-    required int chunkIndex,
-    required Map<String, String> headers,
-    int page = 1,
-  }) =>
-      _get(
-        ApiEndpoints.syncBootstrapChunk(bootstrapId, chunkIndex),
-        headers: headers,
-        queryParameters: {'page': page},
-      );
+    required String deviceId,
+    required String appVersion,
+    required int schemaVersion,
+  }) {
+    return _post(
+      ApiEndpoints.syncBootstrap,
+      deviceId: deviceId,
+      appVersion: appVersion,
+      body: {
+        'device_id': deviceId,
+        'schema_version': schemaVersion,
+        'include_media_metadata': false,
+      },
+    );
+  }
 
   Future<Map<String, dynamic>> push({
+    required String deviceId,
+    required String appVersion,
     required Map<String, dynamic> body,
-    required Map<String, String> headers,
-  }) =>
-      _post(ApiEndpoints.syncPush, body: body, headers: headers);
+  }) {
+    return _post(
+      ApiEndpoints.syncPush,
+      deviceId: deviceId,
+      appVersion: appVersion,
+      body: body,
+    );
+  }
 
   Future<Map<String, dynamic>> pull({
+    required String deviceId,
+    required String appVersion,
     required String cursor,
-    required Map<String, String> headers,
     int? limit,
     String? entityTypes,
-  }) =>
-      _get(
-        ApiEndpoints.syncPull,
-        headers: headers,
-        queryParameters: {
-          'cursor': cursor,
-          'limit': ?limit,
-          'entity_types': ?entityTypes,
-        },
-      );
-
-  Future<Map<String, dynamic>> uploadMedia({
-    required Map<String, dynamic> body,
-    required Map<String, String> headers,
-  }) =>
-      _post(ApiEndpoints.syncMediaUploads, body: body, headers: headers);
-
-  Future<Map<String, dynamic>> completeMedia({
-    required Map<String, dynamic> body,
-    required Map<String, String> headers,
-  }) =>
-      _post(ApiEndpoints.syncMediaUploadsComplete, body: body, headers: headers);
-
-  Future<Map<String, dynamic>> getMediaUrl({
-    required String assetId,
-    required Map<String, String> headers,
-    String variant = 'original',
-  }) =>
-      _get(
-        ApiEndpoints.syncMediaUrl(assetId),
-        headers: headers,
-        queryParameters: {'variant': variant},
-      );
-
-  /// Raw PUT to a presigned URL (no API auth headers).
-  Future<void> putBytes({
-    required String uploadUrl,
-    required Uint8List bytes,
-    required Map<String, String> headers,
-    required String contentType,
-  }) async {
-    final raw = Dio(
-      BaseOptions(
-        connectTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 60),
-      ),
+  }) {
+    return _get(
+      ApiEndpoints.syncPull,
+      deviceId: deviceId,
+      appVersion: appVersion,
+      queryParameters: {
+        'cursor': cursor,
+        'limit': ?limit,
+        'entity_types': ?entityTypes,
+      },
     );
-    await raw.put<void>(
-      uploadUrl,
-      data: bytes,
-      options: Options(
-        headers: headers,
-        contentType: contentType,
-      ),
-    );
+  }
+
+  Map<String, String> _headers({
+    required String deviceId,
+    required String appVersion,
+  }) {
+    return {
+      'X-Device-Id': deviceId,
+      'X-App-Version': appVersion,
+      'X-Sync-Protocol-Version': protocolVersion,
+    };
   }
 
   Future<Map<String, dynamic>> _get(
     String path, {
-    required Map<String, String> headers,
+    required String deviceId,
+    required String appVersion,
     Map<String, dynamic>? queryParameters,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
       path,
       queryParameters: queryParameters,
-      options: Options(headers: headers),
+      options: Options(headers: _headers(deviceId: deviceId, appVersion: appVersion)),
     );
     return _unwrap(response);
   }
 
   Future<Map<String, dynamic>> _post(
     String path, {
+    required String deviceId,
+    required String appVersion,
     required Map<String, dynamic> body,
-    required Map<String, String> headers,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       path,
       data: body,
-      options: Options(headers: headers),
+      options: Options(headers: _headers(deviceId: deviceId, appVersion: appVersion)),
     );
     return _unwrap(response);
   }

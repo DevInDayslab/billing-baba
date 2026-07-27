@@ -10,7 +10,6 @@ import {
 } from './sync.constants';
 import {
   SUPPORTED_ROW_ENTITY_TYPES,
-  SUPPORTED_SYNC_COMMANDS,
   SYNC_PLATFORMS,
 } from './sync.types';
 
@@ -72,7 +71,8 @@ const rowMutationSchema = z.object({
 const commandMutationSchema = z.object({
   mutation_id: uuidSchema,
   kind: z.literal('command'),
-  command: z.enum(SUPPORTED_SYNC_COMMANDS),
+  // Commands not implemented in MVP — accepted by schema, rejected in PushService.
+  command: z.string().min(1).max(64),
   command_id: uuidSchema,
   payload: z.record(z.string(), z.unknown()),
   client_updated_at: isoDateTimeSchema,

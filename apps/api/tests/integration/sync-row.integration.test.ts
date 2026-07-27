@@ -57,7 +57,7 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
   test(
     'create → pull → update → conflict → delete → duplicate replay → command NOT_IMPLEMENTED',
     async () => {
-      const partyId = randomUUID();
+      const categoryId = randomUUID();
       const mutationCreate = randomUUID();
       const batch1 = randomUUID();
 
@@ -72,15 +72,12 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
             {
               mutation_id: mutationCreate,
               kind: 'row',
-              entity_type: 'parties',
-              entity_id: partyId,
+              entity_type: 'categories',
+              entity_id: categoryId,
               operation: 'create',
               base_sync_version: 0,
               payload: {
-                name: `Sync Party ${suffix}`,
-                party_type: 'customer',
-                state_code: '27',
-                mobile: `9${String(Date.now()).slice(-9)}`,
+                name: `Sync Category ${suffix}`,
               },
               client_updated_at: new Date().toISOString(),
             },
@@ -99,7 +96,7 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       expect(createBody.data.conflicts).toEqual([]);
       expect(createBody.data.accepted).toHaveLength(1);
       expect(createBody.data.accepted[0]?.sync_version).toBe(1);
-      expect(createBody.data.accepted[0]?.entity_id).toBe(partyId);
+      expect(createBody.data.accepted[0]?.entity_id).toBe(categoryId);
 
       const pullCursor = encodeCursor({
         t: new Date(Date.now() - 60_000).toISOString(),
@@ -107,7 +104,7 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       });
       const pull1 = await app.inject({
         method: 'GET',
-        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(pullCursor)}&entity_types=parties&limit=200`,
+        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(pullCursor)}&entity_types=categories&limit=200`,
         headers: syncHeaders(token, deviceId),
       });
       expect(pull1.statusCode).toBe(200);
@@ -123,12 +120,12 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
         };
       };
       const createdChange = pull1Body.data.changes.find(
-        (c) => c.entity_id === partyId,
+        (c) => c.entity_id === categoryId,
       );
       expect(createdChange).toBeTruthy();
       expect(createdChange?.sync_version).toBe(1);
       expect(createdChange?.is_deleted).toBe(false);
-      expect(createdChange?.payload?.name).toBe(`Sync Party ${suffix}`);
+      expect(createdChange?.payload?.name).toBe(`Sync Category ${suffix}`);
 
       const mutationUpdate = randomUUID();
       const updateOk = await app.inject({
@@ -142,11 +139,11 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
             {
               mutation_id: mutationUpdate,
               kind: 'row',
-              entity_type: 'parties',
-              entity_id: partyId,
+              entity_type: 'categories',
+              entity_id: categoryId,
               operation: 'update',
               base_sync_version: 1,
-              payload: { notes: 'updated via sync' },
+              payload: { name: `Sync Category ${suffix} Updated` },
               client_updated_at: new Date().toISOString(),
             },
           ],
@@ -169,11 +166,11 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
             {
               mutation_id: randomUUID(),
               kind: 'row',
-              entity_type: 'parties',
-              entity_id: partyId,
+              entity_type: 'categories',
+              entity_id: categoryId,
               operation: 'update',
               base_sync_version: 1,
-              payload: { notes: 'stale' },
+              payload: { name: 'stale' },
               client_updated_at: new Date().toISOString(),
             },
           ],
@@ -204,8 +201,8 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
             {
               mutation_id: mutationDelete,
               kind: 'row',
-              entity_type: 'parties',
-              entity_id: partyId,
+              entity_type: 'categories',
+              entity_id: categoryId,
               operation: 'delete',
               base_sync_version: 2,
               payload: {},
@@ -222,7 +219,7 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
 
       const pullAfterDelete = await app.inject({
         method: 'GET',
-        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(pullCursor)}&entity_types=parties&limit=100`,
+        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(pullCursor)}&entity_types=categories&limit=100`,
         headers: syncHeaders(token, deviceId),
       });
       const pullDeleteBody = pullAfterDelete.json() as {
@@ -236,7 +233,7 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
         };
       };
       const tombstone = pullDeleteBody.data.changes.find(
-        (c) => c.entity_id === partyId && c.is_deleted,
+        (c) => c.entity_id === categoryId && c.is_deleted,
       );
       expect(tombstone).toBeTruthy();
       expect(tombstone?.payload).toBeNull();
@@ -253,8 +250,8 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
             {
               mutation_id: mutationCreate,
               kind: 'row',
-              entity_type: 'parties',
-              entity_id: partyId,
+              entity_type: 'categories',
+              entity_id: categoryId,
               operation: 'create',
               base_sync_version: 0,
               payload: { name: 'should not re-apply' },
@@ -291,16 +288,6 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
               payload: {},
               client_updated_at: new Date().toISOString(),
             },
-            {
-              mutation_id: randomUUID(),
-              kind: 'row',
-              entity_type: 'sales_documents',
-              entity_id: randomUUID(),
-              operation: 'create',
-              base_sync_version: 0,
-              payload: {},
-              client_updated_at: new Date().toISOString(),
-            },
           ],
         },
       });
@@ -308,14 +295,14 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       const cmdBody = commandPush.json() as {
         data: { errors: Array<{ code: string }> };
       };
-      expect(cmdBody.data.errors).toHaveLength(2);
+      expect(cmdBody.data.errors).toHaveLength(1);
       expect(cmdBody.data.errors.every((e) => e.code === 'NOT_IMPLEMENTED')).toBe(
         true,
       );
 
       const emptyPull = await app.inject({
         method: 'GET',
-        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(watermarkCursor())}&entity_types=parties&limit=10`,
+        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(watermarkCursor())}&entity_types=categories&limit=10`,
         headers: syncHeaders(token, deviceId),
       });
       expect(emptyPull.statusCode).toBe(200);

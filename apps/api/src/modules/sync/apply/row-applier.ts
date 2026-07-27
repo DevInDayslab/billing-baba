@@ -2,10 +2,10 @@ import { and, asc, eq, gt, or } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../db/client';
 import type {
-  EntityDefinition,
-  EntityRegistry,
+  RowEntityDef,
   SyncedRowBase,
-} from './entity-registry';
+} from './row-entities';
+import { getRowEntity, listRowEntities } from './row-entities';
 
 export type RowMutationInput = {
   mutationId: string;
@@ -67,13 +67,10 @@ export type PullChange = {
  * Soft-deletes only — never hard-deletes.
  */
 export class RowApplier {
-  constructor(
-    private readonly db: Database,
-    private readonly registry: EntityRegistry,
-  ) {}
+  constructor(private readonly db: Database) {}
 
   async apply(input: RowMutationInput): Promise<ApplyOutcome> {
-    const definition = this.registry.get(input.entityType);
+    const definition = getRowEntity(input.entityType);
     if (!definition) {
       return {
         status: 'error',
@@ -104,7 +101,7 @@ export class RowApplier {
     cursorId: string;
     limit: number;
   }): Promise<{ changes: PullChange[]; hasMore: boolean }> {
-    const definitions = this.registry.list().filter((def) => {
+    const definitions = listRowEntities().filter((def) => {
       if (!input.entityTypes || input.entityTypes.length === 0) return true;
       return input.entityTypes.includes(def.entityType);
     });
@@ -139,7 +136,7 @@ export class RowApplier {
   }
 
   private async applyCreate(
-    definition: EntityDefinition,
+    definition: RowEntityDef,
     input: RowMutationInput,
     existing: SyncedRowBase | null,
   ): Promise<ApplyOutcome> {
@@ -208,7 +205,7 @@ export class RowApplier {
   }
 
   private async applyUpdate(
-    definition: EntityDefinition,
+    definition: RowEntityDef,
     input: RowMutationInput,
     existing: SyncedRowBase | null,
   ): Promise<ApplyOutcome> {
@@ -229,7 +226,7 @@ export class RowApplier {
   }
 
   private async applyDelete(
-    definition: EntityDefinition,
+    definition: RowEntityDef,
     input: RowMutationInput,
     existing: SyncedRowBase | null,
   ): Promise<ApplyOutcome> {
@@ -267,7 +264,7 @@ export class RowApplier {
   }
 
   private async writeUpdate(
-    definition: EntityDefinition,
+    definition: RowEntityDef,
     input: RowMutationInput,
     existing: SyncedRowBase,
     options: { softDelete: boolean },
@@ -314,7 +311,7 @@ export class RowApplier {
   private conflict(
     input: RowMutationInput,
     existing: SyncedRowBase,
-    definition: EntityDefinition,
+    definition: RowEntityDef,
   ): ApplyOutcome {
     const row = existing as unknown as Record<string, unknown>;
     return {
@@ -337,7 +334,7 @@ export class RowApplier {
   }
 
   private async findRow(
-    definition: EntityDefinition,
+    definition: RowEntityDef,
     businessId: string,
     entityId: string,
   ): Promise<SyncedRowBase | null> {
@@ -357,7 +354,7 @@ export class RowApplier {
   }
 
   private async listSince(
-    definition: EntityDefinition,
+    definition: RowEntityDef,
     businessId: string,
     cursorUpdatedAt: Date,
     cursorId: string,
@@ -385,7 +382,7 @@ export class RowApplier {
   }
 
   private toPullChange(
-    definition: EntityDefinition,
+    definition: RowEntityDef,
     row: SyncedRowBase & Record<string, unknown>,
   ): PullChange {
     return {

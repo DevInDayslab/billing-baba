@@ -1,7 +1,7 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { isRegisteredRowEntity } from './apply/row-entities';
 import { RowApplier } from './apply/row-applier';
-import { syncEntityRegistry } from './apply/entity-registry.register';
 import { decodeCursor, encodeCursor, watermarkCursor } from './cursor';
 import type { PullQuery } from './sync.schema';
 
@@ -12,9 +12,7 @@ export type PullProcessResult = {
   server_time: string;
 };
 
-/**
- * Incremental pull for registered master-data row entities.
- */
+/** Incremental pull for registered master-data row entities. */
 export class PullService {
   constructor(private readonly applier?: RowApplier) {}
 
@@ -24,7 +22,7 @@ export class PullService {
     if (!db) {
       throw new AppError('SERVER_BUSY', 'Database is not configured', 429);
     }
-    return new RowApplier(db, syncEntityRegistry);
+    return new RowApplier(db);
   }
 
   async pull(
@@ -39,7 +37,7 @@ export class PullService {
       .filter(Boolean);
 
     const registeredFilter = entityTypes?.filter((type) =>
-      syncEntityRegistry.isRegistered(type),
+      isRegisteredRowEntity(type),
     );
 
     const { changes, hasMore } = await this.getApplier().pullChanges({

@@ -14,11 +14,6 @@ export const createSyncRoutes = (): FastifyPluginAsync => {
     app.get('/status', { preHandler }, controller.getStatus);
 
     app.post('/bootstrap', { preHandler }, controller.startBootstrap);
-    app.get(
-      '/bootstrap/:bootstrap_id/chunks/:chunk_index',
-      { preHandler },
-      controller.getBootstrapChunk,
-    );
 
     app.post('/push', { preHandler }, controller.push);
     app.get('/pull', { preHandler }, controller.pull);

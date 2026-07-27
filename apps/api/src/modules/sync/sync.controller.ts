@@ -18,8 +18,6 @@ import { SYNC_HEADER_DEVICE_ID } from './sync.constants';
 import { syncValidationFailed } from './sync.errors';
 import {
   bootstrapBodySchema,
-  bootstrapChunkParamsSchema,
-  bootstrapChunkQuerySchema,
   mediaAssetParamsSchema,
   mediaUploadCompleteBodySchema,
   mediaUploadIntentBodySchema,
@@ -88,29 +86,6 @@ export function createSyncController() {
         );
         const data = bootstrapService.start(businessId, body);
         return sendData(reply, data, 202);
-      } catch (error) {
-        throw mapZod(error);
-      }
-    },
-
-    getBootstrapChunk: async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const { businessId } = requireSyncAuthContext(request);
-        const headers = parseSyncHeaders(request);
-        await requireRegisteredDevice(
-          deviceService,
-          businessId,
-          headers[SYNC_HEADER_DEVICE_ID],
-        );
-        const params = bootstrapChunkParamsSchema.parse(request.params);
-        const query = bootstrapChunkQuerySchema.parse(request.query);
-        const data = bootstrapService.getChunk(
-          businessId,
-          params.bootstrap_id,
-          params.chunk_index,
-          query.page,
-        );
-        return sendData(reply, data);
       } catch (error) {
         throw mapZod(error);
       }

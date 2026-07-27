@@ -1,5 +1,3 @@
-import 'package:billing_baba/core/sync/engine/sync_orchestration_phase.dart';
-
 /// Coarse connectivity for the sync runtime.
 enum SyncConnectivityStatus {
   online,
@@ -23,7 +21,6 @@ class SyncState {
   const SyncState({
     this.lifecycle = SyncLifecycleState.idle,
     this.connectivity = SyncConnectivityStatus.unknown,
-    this.orchestrationPhase = SyncOrchestrationPhase.idle,
     this.isEngineRunning = false,
     this.lastSyncTime,
     this.nextScheduledSync,
@@ -35,7 +32,6 @@ class SyncState {
 
   final SyncLifecycleState lifecycle;
   final SyncConnectivityStatus connectivity;
-  final SyncOrchestrationPhase orchestrationPhase;
   final bool isEngineRunning;
   final DateTime? lastSyncTime;
   final DateTime? nextScheduledSync;
@@ -51,7 +47,6 @@ class SyncState {
   SyncState copyWith({
     SyncLifecycleState? lifecycle,
     SyncConnectivityStatus? connectivity,
-    SyncOrchestrationPhase? orchestrationPhase,
     bool? isEngineRunning,
     DateTime? lastSyncTime,
     DateTime? nextScheduledSync,
@@ -66,7 +61,6 @@ class SyncState {
     return SyncState(
       lifecycle: lifecycle ?? this.lifecycle,
       connectivity: connectivity ?? this.connectivity,
-      orchestrationPhase: orchestrationPhase ?? this.orchestrationPhase,
       isEngineRunning: isEngineRunning ?? this.isEngineRunning,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       nextScheduledSync: clearNextScheduled

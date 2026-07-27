@@ -1,8 +1,6 @@
-import type { SQL } from 'drizzle-orm';
-import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
-import type { Database } from '../../../db/client';
-import type { SupportedRowEntityType } from '../sync.types';
+import { categories } from '../../../db/schema';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
+import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 
 export type SyncedRowBase = {
   id: string;
@@ -15,8 +13,8 @@ export type SyncedRowBase = {
   createdAt: Date;
 };
 
-export type EntityDefinition = {
-  entityType: SupportedRowEntityType;
+export type RowEntityDef = {
+  entityType: string;
   table: PgTable;
   id: PgColumn;
   businessId: PgColumn;
@@ -26,38 +24,13 @@ export type EntityDefinition = {
   isDeleted: PgColumn;
   deviceId: PgColumn;
   createdAt: PgColumn;
-  /** Domain columns (camelCase) accepted from client payload. */
   allowedColumns: readonly string[];
   toPayload: (row: Record<string, unknown>) => Record<string, unknown>;
   fromPayload: (payload: Record<string, unknown>) => Record<string, unknown>;
 };
 
-export class EntityRegistry {
-  private readonly byType = new Map<string, EntityDefinition>();
-
-  register(definition: EntityDefinition): void {
-    this.byType.set(definition.entityType, definition);
-  }
-
-  get(entityType: string): EntityDefinition | undefined {
-    return this.byType.get(entityType);
-  }
-
-  isRegistered(entityType: string): boolean {
-    return this.byType.has(entityType);
-  }
-
-  list(): EntityDefinition[] {
-    return [...this.byType.values()];
-  }
-
-  listTypes(): string[] {
-    return [...this.byType.keys()];
-  }
-}
-
-export function defineSyncedEntity(input: {
-  entityType: SupportedRowEntityType;
+function defineEntity(input: {
+  entityType: string;
   table: PgTable & {
     id: PgColumn;
     businessId: PgColumn;
@@ -69,7 +42,7 @@ export function defineSyncedEntity(input: {
     createdAt: PgColumn;
   };
   allowedColumns: readonly string[];
-}): EntityDefinition {
+}): RowEntityDef {
   const { table, allowedColumns, entityType } = input;
   return {
     entityType,
@@ -89,12 +62,27 @@ export function defineSyncedEntity(input: {
   };
 }
 
-/** Helper type for drizzle where builders that need SQL fragments. */
-export type WhereBuilder = (args: {
-  businessId: string;
-  entityId?: string;
-  cursorUpdatedAt?: Date;
-  cursorId?: string;
-}) => SQL | undefined;
+/** MVP: categories only. Add masters here as client cutovers land. */
+export const ROW_ENTITIES: Record<string, RowEntityDef> = {
+  categories: defineEntity({
+    entityType: 'categories',
+    table: categories,
+    allowedColumns: ['name'],
+  }),
+};
 
-export type Db = Database;
+export const REGISTERED_ROW_ENTITY_TYPES = Object.keys(
+  ROW_ENTITIES,
+) as [string, ...string[]];
+
+export function getRowEntity(entityType: string): RowEntityDef | undefined {
+  return ROW_ENTITIES[entityType];
+}
+
+export function isRegisteredRowEntity(entityType: string): boolean {
+  return entityType in ROW_ENTITIES;
+}
+
+export function listRowEntities(): RowEntityDef[] {
+  return Object.values(ROW_ENTITIES);
+}

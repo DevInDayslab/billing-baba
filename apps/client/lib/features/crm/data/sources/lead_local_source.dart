@@ -1,13 +1,9 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
-import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
 import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/domain/models/lead_activity.dart';
 import 'package:drift/drift.dart';
-import 'package:uuid/uuid.dart';
-
-const _uuid = Uuid();
 
 class LeadLocalSource {
   LeadLocalSource(this._db, this._storage);
@@ -74,33 +70,6 @@ class LeadLocalSource {
     await _db
         .into(_db.leadActivities)
         .insertOnConflictUpdate(_activityToCompanion(activity));
-  }
-
-  Future<void> enqueueSyncOperation({
-    required String businessId,
-    required String entityType,
-    required String entityId,
-    required String operation,
-    required String payload,
-    required String createdAt,
-  }) async {
-    final id = _uuid.v4();
-    await _db.into(_db.syncQueue).insert(
-          SyncQueueCompanion.insert(
-            id: id,
-            mutationId: _uuid.v4(),
-            kind: SyncQueueKind.row.wire,
-            entityType: entityType,
-            entityId: Value(entityId),
-            operation: operation,
-            payload: payload,
-            businessId: businessId,
-            status: SyncQueueStatus.pending.wire,
-            priority: Value(SyncQueuePriority.normal.value),
-            createdAt: DateTime.tryParse(createdAt)?.toUtc() ??
-                DateTime.now().toUtc(),
-          ),
-        );
   }
 
   Lead _leadFromRow(LeadTableData row) {

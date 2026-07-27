@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/crm/data/repositories/contact_repository.dart';
 import 'package:billing_baba/features/crm/data/sources/contact_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/contact_remote_source.dart';
@@ -23,6 +24,7 @@ Future<ContactService> contactService(Ref ref) async {
   final repository = ContactRepository(
     local: ContactLocalSource(db, storage),
     remote: ContactRemoteSource(api.dio),
+    syncQueue: ref.watch(syncQueueProvider),
   );
   return ContactService(repository);
 }

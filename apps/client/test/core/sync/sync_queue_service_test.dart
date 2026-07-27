@@ -1,17 +1,16 @@
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
-import 'package:billing_baba/core/sync/queue/drift_sync_queue_repository.dart';
-import 'package:billing_baba/core/sync/queue/sync_queue_service.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late AppDatabase db;
-  late SyncQueueService queue;
+  late SyncQueue queue;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
-    queue = SyncQueueService(DriftSyncQueueRepository(db));
+    queue = SyncQueue(db);
   });
 
   tearDown(() async {
@@ -98,7 +97,7 @@ void main() {
     await sub.cancel();
   });
 
-  test('enqueueCommand and enqueueMedia set kind/operation', () async {
+  test('enqueueCommand sets kind/operation', () async {
     final cmd = await queue.enqueueCommand(
       businessId: 'biz-1',
       command: 'remap_document_number',
@@ -108,14 +107,5 @@ void main() {
     expect(cmd.kind, SyncQueueKind.command);
     expect(cmd.operation, SyncQueueOperation.command);
     expect(cmd.commandId, 'cmd-1');
-
-    final media = await queue.enqueueMedia(
-      businessId: 'biz-1',
-      entityType: 'attachments',
-      entityId: 'att-1',
-      payload: {'path': '/tmp/a.jpg'},
-    );
-    expect(media.kind, SyncQueueKind.media);
-    expect(media.operation, SyncQueueOperation.uploadMedia);
   });
 }

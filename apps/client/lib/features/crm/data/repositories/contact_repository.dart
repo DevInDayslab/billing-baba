@@ -1,5 +1,5 @@
-import 'dart:convert';
-
+import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/crm/data/sources/contact_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/contact_remote_source.dart';
 import 'package:billing_baba/features/crm/domain/models/contact.dart';
@@ -7,12 +7,16 @@ import 'package:billing_baba/features/crm/domain/models/contact_activity.dart';
 
 class ContactRepository {
   ContactRepository({
-    required this._local,
-    required this._remote,
-  });
+    required ContactLocalSource local,
+    required ContactRemoteSource remote,
+    required SyncQueue syncQueue,
+  })  : _local = local,
+        _remote = remote,
+        _syncQueue = syncQueue;
 
   final ContactLocalSource _local;
   final ContactRemoteSource _remote;
+  final SyncQueue _syncQueue;
 
   ContactRemoteSource get remote => _remote;
 
@@ -32,7 +36,8 @@ class ContactRepository {
   Stream<List<ContactActivity>> watchActivities(
     String businessId,
     String contactId,
-  ) => _local.watchActivities(businessId, contactId);
+  ) =>
+      _local.watchActivities(businessId, contactId);
 
   Future<Contact> saveContact(
     Contact contact, {
@@ -45,7 +50,6 @@ class ContactRepository {
       entityId: contact.id,
       operation: operation,
       payload: contact.toJson(),
-      createdAt: contact.updatedAt.toUtc().toIso8601String(),
     );
     return contact;
   }
@@ -61,7 +65,6 @@ class ContactRepository {
       entityId: activity.id,
       operation: operation,
       payload: activity.toJson(),
-      createdAt: activity.updatedAt.toUtc().toIso8601String(),
     );
     return activity;
   }
@@ -72,15 +75,13 @@ class ContactRepository {
     required String entityId,
     required String operation,
     required Map<String, dynamic> payload,
-    required String createdAt,
-  }) async {
-    await _local.enqueueSyncOperation(
+  }) {
+    return _syncQueue.enqueueRowMutation(
       businessId: businessId,
       entityType: entityType,
       entityId: entityId,
-      operation: operation,
-      payload: jsonEncode(payload),
-      createdAt: createdAt,
+      operation: SyncQueueOperation.fromWire(operation),
+      payload: payload,
     );
   }
 }

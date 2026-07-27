@@ -2,10 +2,8 @@ import 'package:billing_baba/core/database/database.dart';
 import 'package:drift/drift.dart';
 
 /// Applies pull/ack updates for `entity_type: categories` into Drift.
-///
-/// Lives in core/sync so the coordinator never imports feature modules.
-class CategorySyncApplier {
-  CategorySyncApplier(this._db);
+class CategorySync {
+  CategorySync(this._db);
 
   final AppDatabase _db;
 

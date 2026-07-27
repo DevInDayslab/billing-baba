@@ -75,13 +75,8 @@ sequenceDiagram
 
   Client->>SyncAPI: POST /sync/devices
   Client->>SyncAPI: GET /sync/status
-  Client->>SyncAPI: POST /sync/bootstrap
-  SyncAPI-->>Client: bootstrap_id plus chunk_count
-  loop chunks
-    Client->>SyncAPI: GET bootstrap chunk
-    SyncAPI-->>Client: entity rows
-  end
-  SyncAPI-->>Client: initial pull cursor
+  Client->>SyncAPI: GET /sync/pull (epoch cursor)
+  SyncAPI-->>Client: rows plus next_cursor
   Client->>SyncAPI: POST /sync/push
   SyncAPI->>DomainServices: apply row or run command
   DomainServices->>PG: transactional apply
@@ -465,22 +460,24 @@ Client MUST refuse to push if `schema_version` or `min_client_version` is unsupp
 
 Initial full dataset download after first login (or reinstall) for the JWT business.
 
-### Strategy
+### Strategy (MVP)
 
-1. `POST /bootstrap` creates a short-lived snapshot job.
-2. Client downloads chunks in order (`0 .. chunk_count-1`).
-3. Final chunk metadata (or bootstrap complete field) yields the **initial pull cursor**.
-4. Client then uses pull for incremental changes.
+**Preferred client path:** if local Drift has no pull cursor / is empty:
 
-Chunks are **entity-ordered**: settings → masters → drafts → projections (stock/ledger snapshots as of bootstrap time).
+1. Register device + fetch `/sync/status`.
+2. `GET /sync/pull?cursor=<epoch>` paginating until `has_more=false`.
+3. Apply rows into Drift via `switch(entityType)`.
+4. Persist `next_cursor` and mark bootstrapped.
 
-Compression: `Content-Encoding: gzip` when requested.
+No chunk planner. No multi-chunk bootstrap session on the client.
 
-### 7.1 Start bootstrap
+### 7.1 Optional bootstrap handshake
 
 #### HTTP
 
 `POST /api/v1/sync/bootstrap`
+
+Returns an `initial_cursor` (and schema/protocol metadata). Does **not** require downloading chunked snapshot jobs in MVP.
 
 #### Request JSON
 
@@ -488,7 +485,7 @@ Compression: `Content-Encoding: gzip` when requested.
 {
   "device_id": "7f1a2b3c-4d5e-6f70-8192-a3b4c5d6e7f8",
   "schema_version": 38,
-  "include_media_metadata": true
+  "include_media_metadata": false
 }
 ```
 
@@ -497,22 +494,22 @@ Compression: `Content-Encoding: gzip` when requested.
 ```json
 {
   "data": {
-    "bootstrap_id": "b0b0b0b0-1111-2222-3333-444444444444",
-    "business_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "initial_cursor": "<opaque>",
     "schema_version": 38,
-    "chunk_count": 12,
-    "compression": ["gzip"],
-    "expires_at": "2026-07-26T06:10:00.000Z",
-    "estimated_rows": 15420
+    "protocol_version": 1,
+    "server_time": "2026-07-26T06:00:00.000Z",
+    "estimated_rows": 0
   }
 }
 ```
+
+Chunked `GET /bootstrap/{id}/chunks/{index}` is **deferred** (not part of MVP). Clients must not depend on it.
 
 #### Status codes
 
 | Code | When |
 |------|------|
-| `200` / `202` | Snapshot ready / accepted |
+| `200` / `202` | Cursor ready |
 | `400` | Validation |
 | `401` / `403` | Auth / business |
 | `404` | Device not registered |
@@ -525,94 +522,11 @@ Compression: `Content-Encoding: gzip` when requested.
 
 #### Idempotency
 
-New `bootstrap_id` per successful start. Client should not start overlapping bootstraps for the same device without abandoning the previous id.
+Safe to call again; client may ignore the body and still pull from epoch.
 
 #### Retry
 
-Safe to start again if expired (`BOOTSTRAP_EXPIRED` on chunk fetch).
-
-### 7.2 Fetch chunk
-
-#### HTTP
-
-`GET /api/v1/sync/bootstrap/{bootstrap_id}/chunks/{chunk_index}`
-
-#### Query
-
-| Param | Description |
-|-------|-------------|
-| `page` | Optional page within a large single-entity chunk (default `1`) |
-
-#### Response JSON (`200`)
-
-```json
-{
-  "data": {
-    "bootstrap_id": "b0b0b0b0-1111-2222-3333-444444444444",
-    "chunk_index": 3,
-    "chunk_count": 12,
-    "entity_type": "parties",
-    "page": 1,
-    "has_more_pages": false,
-    "rows": [
-      {
-        "id": "p1111111-1111-1111-1111-111111111111",
-        "business_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-        "sync_version": 4,
-        "updated_at": "2026-07-20T12:00:00.000Z",
-        "is_deleted": false,
-        "deleted_at": null,
-        "payload": { "name": "Asha Traders", "party_type": "customer" }
-      }
-    ],
-    "tombstones": [],
-    "initial_cursor": null
-  }
-}
-```
-
-On the **last** chunk (`chunk_index == chunk_count - 1` and no more pages):
-
-```json
-{
-  "data": {
-    "bootstrap_id": "b0b0b0b0-1111-2222-3333-444444444444",
-    "chunk_index": 11,
-    "chunk_count": 12,
-    "entity_type": "_bootstrap_complete",
-    "page": 1,
-    "has_more_pages": false,
-    "rows": [],
-    "tombstones": [],
-    "initial_cursor": "eyJ0IjoiMjAyNi0wNy0yNlQwNToxMDowMC4wMDBaIiwiaSI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9",
-    "server_time": "2026-07-26T05:10:00.000Z"
-  }
-}
-```
-
-`initial_cursor` is opaque; client stores it as the pull cursor.
-
-#### Status codes
-
-`200`, `401`, `403`, `404` (unknown bootstrap), `410` (`BOOTSTRAP_EXPIRED`), `409` schema/protocol
-
-#### Error codes
-
-`BOOTSTRAP_EXPIRED`, `VALIDATION_FAILED`, `DEVICE_NOT_REGISTERED`, …
-
-#### Idempotency
-
-GETs are idempotent until expiry.
-
-#### Retry
-
-Retry same chunk index on network failure. Do not skip chunks.
-
-#### Notes
-
-Guideline: ≤ ~2 MiB uncompressed per chunk response. Large entity types split via `page`.
-
----
+Safe to retry.
 
 ## 8. Push sync
 
