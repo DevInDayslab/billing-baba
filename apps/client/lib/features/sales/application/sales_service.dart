@@ -8,6 +8,7 @@ import 'package:billing_baba/features/sales/application/sales_error_mapper.dart'
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/sales/data/sales_sync_status.dart';
 import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
+import 'package:billing_baba/features/sales/data/sales_return_command_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
@@ -48,6 +49,8 @@ Future<SalesService> salesService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
   final commandRepo = await ref.watch(salesInvoiceCommandRepositoryProvider.future);
+  final returnCommandRepo =
+      await ref.watch(salesReturnCommandRepositoryProvider.future);
   return SalesService(
     repository: SalesRepository(
       remote: SalesRemoteDataSource(api.dio),
@@ -55,6 +58,7 @@ Future<SalesService> salesService(Ref ref) async {
     ),
     partyService: partyService,
     commandRepository: commandRepo,
+    returnCommandRepository: returnCommandRepo,
     syncQueue: ref.watch(syncQueueProvider),
   );
 }
@@ -64,12 +68,14 @@ class SalesService {
     required this._repository,
     required this._partyService,
     this._commandRepository,
+    this._returnCommandRepository,
     this._syncQueue,
   });
 
   final SalesRepository _repository;
   final PartyService _partyService;
   final SalesInvoiceCommandRepository? _commandRepository;
+  final SalesReturnCommandRepository? _returnCommandRepository;
   final SyncQueue? _syncQueue;
 
   SalesRepository get repository => _repository;
@@ -88,11 +94,19 @@ class SalesService {
   }) async {
     final isTaxInvoiceQuery =
         query.documentType == SalesDocumentType.taxInvoice.apiValue;
+    final isSalesReturnQuery =
+        query.documentType == SalesDocumentType.salesReturn.apiValue;
 
     var localDocs = const <SalesDocumentDto>[];
     if (isTaxInvoiceQuery && _commandRepository != null) {
       try {
         localDocs = await _commandRepository.listTaxInvoices();
+      } on Object {
+        localDocs = const [];
+      }
+    } else if (isSalesReturnQuery && _returnCommandRepository != null) {
+      try {
+        localDocs = await _returnCommandRepository.listSalesReturns();
       } on Object {
         localDocs = const [];
       }
@@ -103,8 +117,9 @@ class SalesService {
       final response = await _repository.listDocuments(query);
       final remoteDocs = response.documents;
 
-      final mergedDocs = isTaxInvoiceQuery && localDocs.isNotEmpty
-          ? _mergeTaxInvoiceDocuments(remoteDocs, localDocs)
+      final mergedDocs =
+          (isTaxInvoiceQuery || isSalesReturnQuery) && localDocs.isNotEmpty
+          ? _mergeLocalSalesDocuments(remoteDocs, localDocs)
           : remoteDocs;
 
       final items = mergedDocs
@@ -119,7 +134,8 @@ class SalesService {
           .toList()
         ..sort((a, b) => b.date.compareTo(a.date));
 
-      final total = isTaxInvoiceQuery && localDocs.isNotEmpty
+      final total =
+          (isTaxInvoiceQuery || isSalesReturnQuery) && localDocs.isNotEmpty
           ? items.length
           : response.meta.total;
       final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
@@ -145,7 +161,7 @@ class SalesService {
         summary: summary,
       );
     } on DioException catch (error) {
-      if (isTaxInvoiceQuery && localDocs.isNotEmpty) {
+      if ((isTaxInvoiceQuery || isSalesReturnQuery) && localDocs.isNotEmpty) {
         final resolvedPartyNames = partyNames ?? await _partyNameMap();
         final sortedDocs = [...localDocs]
           ..sort((a, b) {
@@ -182,7 +198,7 @@ class SalesService {
     }
   }
 
-  List<SalesDocumentDto> _mergeTaxInvoiceDocuments(
+  List<SalesDocumentDto> _mergeLocalSalesDocuments(
     List<SalesDocumentDto> remote,
     List<SalesDocumentDto> local,
   ) {
@@ -195,7 +211,7 @@ class SalesService {
       if (remoteDoc == null ||
           localDoc.status == 'draft' ||
           (localDoc.documentNumber?.startsWith('LOCAL-') ?? false) ||
-          _shouldPreferLocalTaxInvoice(localDoc, remoteDoc)) {
+          _shouldPreferLocalDocument(localDoc, remoteDoc)) {
         merged[localDoc.id] = localDoc;
       }
     }
@@ -203,7 +219,7 @@ class SalesService {
     return merged.values.toList();
   }
 
-  bool _shouldPreferLocalTaxInvoice(
+  bool _shouldPreferLocalDocument(
     SalesDocumentDto local,
     SalesDocumentDto remote,
   ) {
@@ -350,6 +366,14 @@ class SalesService {
       return _commandRepository.saveDraft(input, itemNameToId: itemNameToId);
     }
 
+    if (input.documentType == SalesDocumentType.salesReturn &&
+        _returnCommandRepository != null) {
+      return _returnCommandRepository.saveDraft(
+        input,
+        itemNameToId: itemNameToId,
+      );
+    }
+
     try {
       final document = input.documentId == null
           ? await _repository.createDocument(
@@ -408,6 +432,7 @@ class SalesService {
     SalesDocumentDraftInput input, {
     required Map<String, String> itemNameToId,
     String? godownId,
+    FinalizeSalePaymentCommand? payment,
   }) async {
     if (input.partyId == null || input.partyId!.isEmpty) {
       throw const SalesException('Party is required');
@@ -423,8 +448,24 @@ class SalesService {
         documentId: draft.id,
         localDocumentNumber: draft.documentNumber,
         godownId: godownId ?? input.godownId,
+        payment: payment,
       );
       return draft;
+    }
+
+    if (input.documentType == SalesDocumentType.salesReturn &&
+        _returnCommandRepository != null) {
+      final draft = await _returnCommandRepository.saveDraft(
+        input,
+        itemNameToId: itemNameToId,
+      );
+      await _returnCommandRepository.finalize(
+        documentId: draft.id,
+        localDocumentNumber: draft.documentNumber,
+        godownId: godownId ?? input.godownId,
+        payment: payment,
+      );
+      return (await _returnCommandRepository.getDocument(draft.id)) ?? draft;
     }
 
     final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);
@@ -436,30 +477,41 @@ class SalesService {
   }
 
   Future<SaleDocumentFormState> loadSaleDocumentForm(String documentId) async {
-    try {
-      final document = await _repository.getDocument(documentId);
-      final partyNames = await _partyNameMap();
-      final partyName = document.partyId != null
-          ? (partyNames[document.partyId] ?? '')
-          : '';
-
-      final date = DateTimeUtils.parseApiDateTime(document.documentDate);
-      final items = _linesToSaleLineItems(document.lines);
-
-      return SaleDocumentFormState(
-        isFormOpen: true,
-        documentId: document.id,
-        partyId: document.partyId,
-        party: partyName,
-        refNo: document.documentNumber ?? '',
-        invoiceDate: DateTime(date.year, date.month, date.day),
-        invoiceTime: TimeOfDay.fromDateTime(date),
-        description: document.notes ?? '',
-        items: items,
-      );
-    } on DioException catch (error) {
-      throw mapSalesError(error);
+    SalesDocumentDto? document;
+    if (_returnCommandRepository != null) {
+      document = await _returnCommandRepository.getDocument(documentId);
     }
+    if (document == null && _commandRepository != null) {
+      document = await _commandRepository.getDocument(documentId);
+    }
+
+    if (document == null) {
+      try {
+        document = await _repository.getDocument(documentId);
+      } on DioException catch (error) {
+        throw mapSalesError(error);
+      }
+    }
+
+    final partyNames = await _partyNameMap();
+    final partyName = document.partyId != null
+        ? (partyNames[document.partyId] ?? '')
+        : '';
+
+    final date = DateTimeUtils.parseApiDateTime(document.documentDate);
+    final items = _linesToSaleLineItems(document.lines);
+
+    return SaleDocumentFormState(
+      isFormOpen: true,
+      documentId: document.id,
+      partyId: document.partyId,
+      party: partyName,
+      refNo: document.documentNumber ?? '',
+      invoiceDate: DateTime(date.year, date.month, date.day),
+      invoiceTime: TimeOfDay.fromDateTime(date),
+      description: document.notes ?? '',
+      items: items,
+    );
   }
 
   List<SaleLineItem> _linesToSaleLineItems(List<SalesDocumentLineDto> lines) {

@@ -42,7 +42,7 @@ export function wirePayloadToDomainValues(
     const camel = snakeToCamel(key);
     if (SYNC_META_CAMEL.has(camel)) continue;
     if (!allowed.has(camel)) continue;
-    out[camel] = deserializeValue(value);
+    out[camel] = deserializeValue(value, camel);
   }
   return out;
 }
@@ -54,6 +54,24 @@ function serializeValue(value: unknown): unknown {
   return value;
 }
 
-function deserializeValue(value: unknown): unknown {
+function deserializeValue(value: unknown, camelKey: string): unknown {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  if (camelKey === 'documentDate' || camelKey.endsWith('At')) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  if (camelKey === 'dueDate' || camelKey === 'connectedSince') {
+    const dateOnly = value.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (dateOnly) {
+      return dateOnly[1];
+    }
+  }
+
   return value;
 }

@@ -414,13 +414,16 @@ export class RowApplier {
       };
     }
 
-    if (parent.documentType !== 'tax_invoice') {
+    if (
+      parent.documentType !== 'tax_invoice' &&
+      parent.documentType !== 'sales_return'
+    ) {
       return {
         status: 'error',
         result: {
           mutation_id: input.mutationId,
           code: 'VALIDATION_FAILED',
-          message: 'Only tax_invoice line sync is supported in Phase 2',
+          message: 'Only tax_invoice and sales_return line sync is supported',
         },
       };
     }
@@ -497,13 +500,17 @@ export class RowApplier {
       };
     }
 
-    if (parent.documentType !== 'purchase_bill') {
+    if (
+      parent.documentType !== 'purchase_bill' &&
+      parent.documentType !== 'purchase_return'
+    ) {
       return {
         status: 'error',
         result: {
           mutation_id: input.mutationId,
           code: 'VALIDATION_FAILED',
-          message: 'Only purchase_bill line sync is supported in Phase 2',
+          message:
+            'Only purchase_bill and purchase_return line sync is supported',
         },
       };
     }

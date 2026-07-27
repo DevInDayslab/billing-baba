@@ -33,9 +33,17 @@ function documentAlreadyFinalizedConflict(
   };
 }
 
+function normalizeAllowedDocumentTypes(
+  allowed: string | readonly string[],
+): Set<string> {
+  return new Set(Array.isArray(allowed) ? allowed : [allowed]);
+}
+
 export function guardDraftDocumentRow(
-  allowedDocumentType: string,
+  allowedDocumentType: string | readonly string[],
 ): NonNullable<RowEntityDef['beforeApply']> {
+  const allowedTypes = normalizeAllowedDocumentTypes(allowedDocumentType);
+
   return (input, existing) => {
     const existingRow = existing as Record<string, unknown> | null;
     const existingStatus =
@@ -50,13 +58,14 @@ export function guardDraftDocumentRow(
     }
 
     const documentType = readPayloadString(input.payload, 'document_type');
-    if (documentType && documentType !== allowedDocumentType) {
+    if (documentType && !allowedTypes.has(documentType)) {
+      const allowedLabel = [...allowedTypes].join(', ');
       return {
         status: 'error',
         result: {
           mutation_id: input.mutationId,
           code: 'VALIDATION_FAILED',
-          message: `Only ${allowedDocumentType} documents are supported for sync in Phase 2`,
+          message: `Only ${allowedLabel} documents are supported for sync`,
         },
       };
     }

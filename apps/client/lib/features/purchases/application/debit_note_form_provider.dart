@@ -7,6 +7,7 @@ import 'package:billing_baba/features/inventory/application/inventory_items_prov
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/models/debit_note_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
@@ -346,11 +347,20 @@ class DebitNoteForm extends _$DebitNoteForm {
       );
 
       late final String savedDocumentId;
+      FinalizePurchasePaymentCommand? payment;
+      if (state.paymentAmount > 0) {
+        payment = FinalizePurchasePaymentCommand(
+          amount: state.paymentAmount.toStringAsFixed(4),
+          paymentMode: PurchasePaymentModes.toApi(state.paymentType),
+        );
+      }
+
       if (finalize) {
         final document = await service.finalizeDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
+          payment: payment,
         );
         savedDocumentId = document.id;
       } else {

@@ -158,9 +158,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
         context.go(AppRoutes.collaborationSyncShare);
       case CompanyCardMenuAction.backup:
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup is not available yet.')),
-        );
+        context.go(AppRoutes.settingsBackup);
       case CompanyCardMenuAction.leave:
         final sessionService = await ref.read(
           companySessionServiceProvider.future,

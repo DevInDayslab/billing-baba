@@ -202,7 +202,7 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
         'notes',
       ],
     }),
-    beforeApply: guardDraftDocumentRow('tax_invoice'),
+    beforeApply: guardDraftDocumentRow(['tax_invoice', 'sales_return']),
   },
   sales_document_lines: defineEntity({
     entityType: 'sales_document_lines',
@@ -247,7 +247,7 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
         'notes',
       ],
     }),
-    beforeApply: guardDraftDocumentRow('purchase_bill'),
+    beforeApply: guardDraftDocumentRow(['purchase_bill', 'purchase_return']),
   },
   purchase_document_lines: defineEntity({
     entityType: 'purchase_document_lines',

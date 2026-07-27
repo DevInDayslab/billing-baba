@@ -20,6 +20,7 @@ class PurchaseReturnModel {
     this.user = 'Admin',
     this.firm = 'All Firms',
     this.godown = 'Main Godown',
+    this.syncState = PurchaseBillSyncState.none,
   });
 
   final String id;
@@ -39,6 +40,49 @@ class PurchaseReturnModel {
   final String user;
   final String firm;
   final String godown;
+  final PurchaseBillSyncState syncState;
 
   bool get isDraft => documentStatus == PurchaseDocumentStatus.draft;
+
+  PurchaseReturnModel copyWith({
+    String? id,
+    String? debitNoteNo,
+    DateTime? date,
+    String? partyName,
+    String? partyId,
+    String? categoryName,
+    String? type,
+    PurchaseBillStatus? status,
+    PurchaseDocumentStatus? documentStatus,
+    double? total,
+    double? receivedPaid,
+    double? balance,
+    DateTime? dueDate,
+    String? paymentType,
+    String? user,
+    String? firm,
+    String? godown,
+    PurchaseBillSyncState? syncState,
+  }) {
+    return PurchaseReturnModel(
+      id: id ?? this.id,
+      debitNoteNo: debitNoteNo ?? this.debitNoteNo,
+      date: date ?? this.date,
+      partyName: partyName ?? this.partyName,
+      partyId: partyId ?? this.partyId,
+      categoryName: categoryName ?? this.categoryName,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      documentStatus: documentStatus ?? this.documentStatus,
+      total: total ?? this.total,
+      receivedPaid: receivedPaid ?? this.receivedPaid,
+      balance: balance ?? this.balance,
+      dueDate: dueDate ?? this.dueDate,
+      paymentType: paymentType ?? this.paymentType,
+      user: user ?? this.user,
+      firm: firm ?? this.firm,
+      godown: godown ?? this.godown,
+      syncState: syncState ?? this.syncState,
+    );
+  }
 }

@@ -46,4 +46,4 @@ final class SalesServiceProvider
   }
 }
 
-String _$salesServiceHash() => r'b43bbbc8abb78da2c1f6335fc9971a7c44e5e459';
+String _$salesServiceHash() => r'3e1fddb0962aad9a7e2e9359c8634c71426b88c6';

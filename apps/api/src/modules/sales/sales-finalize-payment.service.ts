@@ -3,6 +3,7 @@ import { AppError } from '../../shared/errors/app-error';
 import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import { PaymentRepository } from '../accounting/payment.repository';
 import { HiddenLedgerService } from '../hidden-ledger/hidden-ledger.service';
+import type { SalesDocumentType } from './sales-document.types';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -31,6 +32,7 @@ export async function recordSaleFinalizePayment(
     partyId: string;
     documentTotal: string;
     documentDate: Date;
+    documentType?: SalesDocumentType;
     userId?: string;
     payment: FinalizeSalePaymentInput;
   },
@@ -57,7 +59,9 @@ export async function recordSaleFinalizePayment(
     );
   }
 
-  const isHiddenLedgerRoute = params.payment.shortPaymentHandling === 'unrecovered';
+  const isReturn = params.documentType === 'sales_return';
+  const isHiddenLedgerRoute =
+    !isReturn && params.payment.shortPaymentHandling === 'unrecovered';
   const shortfallAmount = isHiddenLedgerRoute
     ? parseMoney(params.payment.shortfallAmount ?? '0')
     : 0;
@@ -66,6 +70,14 @@ export async function recordSaleFinalizePayment(
     throw new AppError(
       'VALIDATION_ERROR',
       'shortfall_amount is required when short_payment_handling is unrecovered',
+      422,
+    );
+  }
+
+  if (isReturn && params.payment.shortPaymentHandling === 'unrecovered') {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'unrecovered short payments are not supported for sales return finalize',
       422,
     );
   }
@@ -83,7 +95,7 @@ export async function recordSaleFinalizePayment(
   const payment = await repo.create({
     businessId: params.businessId,
     partyId: params.partyId,
-    direction: 'received',
+    direction: isReturn ? 'paid' : 'received',
     amount: params.payment.amount,
     discountAmount: '0',
     paymentMode: params.payment.paymentMode as
@@ -116,13 +128,13 @@ export async function recordSaleFinalizePayment(
     businessId: params.businessId,
     partyId: params.partyId,
     entryType: 'payment',
-    debit: '0',
-    credit: params.payment.amount,
+    debit: isReturn ? params.payment.amount : '0',
+    credit: isReturn ? '0' : params.payment.amount,
     balanceAfter: params.payment.amount,
     referenceId: payment.id,
     referenceType: 'payments',
     entryDate: paymentDate.toISOString().slice(0, 10),
-    description: 'Payment received',
+    description: isReturn ? 'Refund paid' : 'Payment received',
   });
 
   if (isHiddenLedgerRoute && shortfallAmount > 0) {

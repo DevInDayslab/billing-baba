@@ -2,6 +2,7 @@ import type { Database } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import { PaymentRepository } from '../accounting/payment.repository';
+import type { PurchaseDocumentType } from './purchase-document.types';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -30,6 +31,7 @@ export async function recordPurchaseFinalizePayment(
     partyId: string;
     documentTotal: string;
     documentDate: Date;
+    documentType?: PurchaseDocumentType;
     userId?: string;
     payment: FinalizePurchasePaymentInput;
   },
@@ -64,6 +66,8 @@ export async function recordPurchaseFinalizePayment(
     );
   }
 
+  const isReturn = params.documentType === 'purchase_return';
+
   const paymentDate = params.payment.paymentDate
     ? new Date(params.payment.paymentDate)
     : params.documentDate;
@@ -73,7 +77,7 @@ export async function recordPurchaseFinalizePayment(
   const payment = await repo.create({
     businessId: params.businessId,
     partyId: params.partyId,
-    direction: 'paid',
+    direction: isReturn ? 'received' : 'paid',
     amount: params.payment.amount,
     discountAmount: '0',
     paymentMode: params.payment.paymentMode as
@@ -106,13 +110,13 @@ export async function recordPurchaseFinalizePayment(
     businessId: params.businessId,
     partyId: params.partyId,
     entryType: 'payment',
-    debit: params.payment.amount,
-    credit: '0',
+    debit: isReturn ? '0' : params.payment.amount,
+    credit: isReturn ? params.payment.amount : '0',
     balanceAfter: params.payment.amount,
     referenceId: payment.id,
     referenceType: 'payments',
     entryDate: paymentDate.toISOString().slice(0, 10),
-    description: 'Payment paid',
+    description: isReturn ? 'Refund received' : 'Payment paid',
   });
 
   return {

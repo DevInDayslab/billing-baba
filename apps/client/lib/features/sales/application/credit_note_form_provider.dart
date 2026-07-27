@@ -5,6 +5,7 @@ import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
+import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -364,6 +365,39 @@ class CreditNoteForm extends _$CreditNoteForm {
     taxOption: state.taxOption,
   );
 
+  Future<String?> saveDraft() async {
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
+
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final document = await service.saveDocumentDraft(
+        _draftInput(),
+        itemNameToId: _itemNameToId(),
+      );
+      ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
+      state = state.copyWith(
+        documentId: document.id,
+        isSaving: false,
+        isDirty: false,
+      );
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
+  }
+
+  FinalizeSalePaymentCommand? _finalizePayment() {
+    if (state.paymentAmount <= 0) return null;
+    return FinalizeSalePaymentCommand(
+      amount: state.paymentAmount.toStringAsFixed(4),
+      paymentMode: SalesPaymentModes.toApi(state.paymentType),
+    );
+  }
+
   Future<String?> save() async {
     if (state.isSaving) return null;
     if (!validate()) return _validationError();
@@ -375,6 +409,7 @@ class CreditNoteForm extends _$CreditNoteForm {
         _draftInput(),
         itemNameToId: _itemNameToId(),
         godownId: state.godownId,
+        payment: _finalizePayment(),
       );
       final synced = await syncTransactionAttachments(
         ref,

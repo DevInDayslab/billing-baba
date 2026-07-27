@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/backup/presentation/desktop/backup_restore_page.dart';
 import 'package:billing_baba/features/auth/presentation/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/splash_page.dart';
 import 'package:billing_baba/features/auth/presentation/user_profile_page.dart';
@@ -579,8 +580,7 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.settingsBackup,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Backup & Restore'),
+            builder: (context, state) => const BackupRestorePage(),
           ),
           GoRoute(
             path: AppRoutes.plansPricing,

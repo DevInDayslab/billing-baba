@@ -1584,6 +1584,36 @@ Phase 2 requires offline-capable sales and purchase invoices without redesigning
 
 ---
 
+## ADR-028: Client `.biba` Backup Format v1
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-27 |
+| **Status** | Accepted |
+| **Author** | Billing Baba team |
+
+### Context
+
+Offline-first clients need out-of-band full-device backup and restore (per [10-offline-first-architecture-audit.md](10-offline-first-architecture-audit.md)) without redesigning sync v1. Restore must preserve `sync_device_id`, pull cursor, and the full `sync_queue` (including completed jobs) so server idempotency replays already-applied `command_id`s.
+
+### Decision
+
+1. **`.biba` is a ZIP archive** with extension `.biba`, format version `1`, tied to Drift schema version `16`.
+2. **Contents:** `manifest.json` (checksums + metadata), `database.sqlite` (full Drift DB after `PRAGMA wal_checkpoint(FULL)`), and `meta/*.json` for sync cursor, device id, business prefs, document counters, and queue snapshot.
+3. **Client-only** — export/restore runs in Flutter; no cloud upload in v1.
+4. **Restore replaces the SQLite file**, reapplies sync metadata and device identity, then triggers `CommandAwareSyncEngine.syncNow()` without clearing bootstrap state unless schema is incompatible.
+5. **Excludes** auth tokens and other businesses' data.
+
+### Consequences
+
+- Users can migrate devices or recover from data loss without duplicate finalized documents when cursor and command ids are preserved.
+- Format version and schema version gates allow safe rejection of incompatible backups.
+- Backup module lives under `features/backup/` with exporter/importer services and a settings UI at `/settings/backup`.
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md) (out-of-band backup scope)
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

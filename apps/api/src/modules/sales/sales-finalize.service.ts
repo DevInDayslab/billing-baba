@@ -324,6 +324,7 @@ export async function finalizeSalesDocument(
         partyId: document.partyId,
         documentTotal: document.totalAmount,
         documentDate: document.documentDate,
+        documentType: document.documentType as SalesDocumentType,
         userId: params.userId,
         payment: params.payment,
       });

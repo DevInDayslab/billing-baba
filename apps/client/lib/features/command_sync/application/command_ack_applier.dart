@@ -43,7 +43,27 @@ class CommandAckApplier {
           paidAmount: result['paid_amount']?.toString(),
           paymentMode: result['payment_mode']?.toString(),
         );
+      case 'finalize_credit_note':
+        await _salesLocal.applyFinalizeAck(
+          documentId: documentId,
+          status: status,
+          documentNumber: documentNumber,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          paidAmount: result['paid_amount']?.toString(),
+          paymentMode: result['payment_mode']?.toString(),
+        );
       case 'finalize_purchase':
+        await _purchaseLocal.applyFinalizeAck(
+          documentId: documentId,
+          status: status,
+          documentNumber: documentNumber,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          paidAmount: result['paid_amount']?.toString(),
+          paymentMode: result['payment_mode']?.toString(),
+        );
+      case 'finalize_debit_note':
         await _purchaseLocal.applyFinalizeAck(
           documentId: documentId,
           status: status,

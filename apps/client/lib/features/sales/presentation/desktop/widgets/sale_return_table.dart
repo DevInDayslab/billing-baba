@@ -224,7 +224,23 @@ class SaleReturnTableRows {
       cells: [
         _DataCell(child: Text('$rowNumber')),
         _DataCell(child: Text(_dateFormat.format(item.date))),
-        _DataCell(child: Text(item.invoiceNo)),
+        _DataCell(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  item.invoiceNo,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (item.syncState != SaleInvoiceSyncState.none)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: _SyncStateBadge(state: item.syncState),
+                ),
+            ],
+          ),
+        ),
         _DataCell(
           child: Text(
             item.partyName,
@@ -979,6 +995,43 @@ class _EmptyTransactionsState extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SyncStateBadge extends StatelessWidget {
+  const _SyncStateBadge({required this.state});
+
+  final SaleInvoiceSyncState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (state) {
+      SaleInvoiceSyncState.savedLocally => ('Local', const Color(0xFF1565C0)),
+      SaleInvoiceSyncState.syncing => ('Syncing', const Color(0xFFF57C00)),
+      SaleInvoiceSyncState.synced => ('Synced', const Color(0xFF2E7D32)),
+      SaleInvoiceSyncState.conflict => ('Conflict', const Color(0xFFC62828)),
+      SaleInvoiceSyncState.none => ('', Colors.transparent),
+    };
+
+    if (label.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
