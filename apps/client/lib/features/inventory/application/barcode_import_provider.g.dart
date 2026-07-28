@@ -178,7 +178,7 @@ final class BarcodeImportProvider
   }
 }
 
-String _$barcodeImportHash() => r'd729b4fdafacd5d7eaea4f15443fb80e7b914104';
+String _$barcodeImportHash() => r'ae163843fb51ecbe86848af8893d574ffa9345e0';
 
 abstract class _$BarcodeImport extends $Notifier<List<BarcodeImportRow>> {
   List<BarcodeImportRow> build();

@@ -40,6 +40,7 @@ abstract final class AppRoutes {
   static const editCreditNote = '/sale/edit-credit-note';
   static const duplicateSale = '/sale/add/duplicate';
   static const addSale = '/sale/add';
+  static const saleInvoiceMoreSettings = '/sale/more-settings';
   static const editSale = '/sale/edit';
   static const viewSale = '/sale/view';
   static const addEstimate = '/sale/add-estimate';

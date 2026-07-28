@@ -13,10 +13,10 @@ _BusinessMember _$BusinessMemberFromJson(Map<String, dynamic> json) =>
       phoneOrEmail: json['phone_or_email'] as String,
       status: $enumDecode(_$MemberStatusEnumMap, json['status']),
       role: $enumDecode(_$RoleEnumMap, json['role']),
+      invitedAt: DateTime.parse(json['invited_at'] as String),
       isOwner: json['is_owner'] as bool? ?? false,
       isCurrentUser: json['is_current_user'] as bool? ?? false,
       invitationId: json['invitation_id'] as String?,
-      invitedAt: DateTime.parse(json['invited_at'] as String),
       joinedAt: json['joined_at'] == null
           ? null
           : DateTime.parse(json['joined_at'] as String),
@@ -29,10 +29,10 @@ Map<String, dynamic> _$BusinessMemberToJson(_BusinessMember instance) =>
       'phone_or_email': instance.phoneOrEmail,
       'status': _$MemberStatusEnumMap[instance.status]!,
       'role': _$RoleEnumMap[instance.role]!,
+      'invited_at': instance.invitedAt.toIso8601String(),
       'is_owner': instance.isOwner,
       'is_current_user': instance.isCurrentUser,
       'invitation_id': instance.invitationId,
-      'invited_at': instance.invitedAt.toIso8601String(),
       'joined_at': instance.joinedAt?.toIso8601String(),
     };
 

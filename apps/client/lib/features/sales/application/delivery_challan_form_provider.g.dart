@@ -46,7 +46,7 @@ final class DeliveryChallanFormNotifierProvider
 }
 
 String _$deliveryChallanFormNotifierHash() =>
-    r'e13b2f9a2a1115df496828d513d26d5880a14eaa';
+    r'98b936190e455a1338dc364af29e3658e357ed02';
 
 abstract class _$DeliveryChallanFormNotifier
     extends $Notifier<DeliveryChallanFormState> {

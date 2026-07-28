@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/dashboard/presentation/mobile/dashboard_page.dart';
 import 'package:flutter/material.dart';
 
 class MobileReportsPage extends StatelessWidget {
@@ -7,10 +8,6 @@ class MobileReportsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Reports — Mobile UI coming soon'),
-      ),
-    );
+    return const MobileDashboardPage();
   }
 }

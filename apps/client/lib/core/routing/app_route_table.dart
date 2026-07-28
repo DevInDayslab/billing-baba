@@ -25,11 +25,8 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
-<<<<<<< Updated upstream
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
-=======
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
->>>>>>> Stashed changes
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
@@ -53,6 +50,7 @@ import 'package:billing_baba/features/sales/presentation/add_sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_page.dart';
 import 'package:billing_baba/features/sales/presentation/delivery_challan_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/sale_invoice_more_settings_page.dart';
 import 'package:billing_baba/features/sales/presentation/estimate_quotation_page.dart';
 import 'package:billing_baba/features/sales/presentation/job_work_out_page.dart';
 import 'package:billing_baba/features/sales/presentation/payment_in_page.dart';
@@ -260,6 +258,11 @@ GoRouter createAppRouter({
                   ? state.extra! as List<String>
                   : null,
             ),
+          ),
+          GoRoute(
+            path: AppRoutes.saleInvoiceMoreSettings,
+            builder: (context, state) =>
+                const MobileSaleInvoiceMoreSettingsPage(),
           ),
           GoRoute(
             path: '${AppRoutes.editSale}/:invoiceId',
