@@ -60,6 +60,116 @@ class InventoryStockLocalDataSource {
     );
   }
 
+  /// Bulk item quantities for list views (sums all godowns per item).
+  Future<Map<String, double>> quantitiesByItem({
+    required String businessId,
+  }) async {
+    final rows = await (_db.select(_db.stockLevelsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) & t.isDeleted.equals(false),
+          ))
+        .get();
+
+    final totals = <String, double>{};
+    for (final row in rows) {
+      totals[row.itemId] =
+          (totals[row.itemId] ?? 0) + _parseQty(row.currentQuantity);
+    }
+    return totals;
+  }
+
+  Future<List<StockLevelLocalData>> listStockLevelRowsForItem({
+    required String businessId,
+    required String itemId,
+  }) {
+    return (_db.select(_db.stockLevelsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.itemId.equals(itemId) &
+                t.isDeleted.equals(false),
+          ))
+        .get();
+  }
+
+  /// Idempotent movement write for finalized sales/purchase documents.
+  Future<void> recordDocumentMovement({
+    required String movementId,
+    required String businessId,
+    required String itemId,
+    required String godownId,
+    required String movementType,
+    required double quantityDelta,
+    required String documentId,
+    required String documentType,
+    required String referenceType,
+    required DateTime createdAt, String? referenceNumber,
+    String? costPerUnit,
+    String? unit,
+    String? notes,
+    String? deviceId,
+  }) async {
+    final existing = await (_db.select(_db.inventoryMovementsLocal)
+          ..where((t) => t.id.equals(movementId)))
+        .getSingleOrNull();
+    if (existing != null) return;
+
+    final beforeQty = await currentQuantity(
+      businessId: businessId,
+      itemId: itemId,
+      godownId: godownId,
+    );
+    final afterQty = beforeQty + quantityDelta;
+
+    await _db.into(_db.inventoryMovementsLocal).insert(
+          InventoryMovementsLocalCompanion.insert(
+            id: movementId,
+            businessId: businessId,
+            itemId: itemId,
+            godownId: godownId,
+            documentId: Value(documentId),
+            documentType: Value(documentType),
+            movementType: movementType,
+            quantity: _formatQty(quantityDelta),
+            beforeQuantity: Value(_formatQty(beforeQty)),
+            afterQuantity: Value(_formatQty(afterQty)),
+            unit: Value(unit),
+            reason: Value(notes),
+            referenceId: Value(documentId),
+            referenceType: Value(referenceType),
+            referenceNumber: Value(referenceNumber),
+            costPerUnit: Value(costPerUnit),
+            notes: Value(notes),
+            createdAt: createdAt,
+            updatedAt: createdAt,
+            syncVersion: const Value(0),
+            deviceId: Value(deviceId),
+          ),
+        );
+
+    await _upsertStockLevel(
+      businessId: businessId,
+      itemId: itemId,
+      godownId: godownId,
+      quantity: afterQty,
+      averageCost: _parseQty(costPerUnit),
+      updatedAt: createdAt,
+      deviceId: deviceId,
+    );
+  }
+
+  Future<bool> hasAnyMovements({required String businessId}) async {
+    final row = await (_db.select(_db.inventoryMovementsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) & t.isDeleted.equals(false),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    return row != null;
+  }
+
   Future<InventoryMovementLocalData> recordAdjustment({
     required String movementId,
     required String businessId,

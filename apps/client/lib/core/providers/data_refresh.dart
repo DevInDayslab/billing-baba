@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
@@ -25,7 +26,9 @@ void invalidateDashboard(Ref ref) {
 }
 
 void invalidatePartyBalances(Ref ref) {
-  ref.invalidate(partyListProvider);
+  ref
+    ..invalidate(partyListProvider)
+    ..invalidate(partyOutstandingIndexProvider);
 }
 
 void invalidatePartyTimeline(Ref ref, String partyId) {

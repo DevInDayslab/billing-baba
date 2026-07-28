@@ -2,6 +2,7 @@ import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/documents/data/local_document_number_service.dart';
+import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
 import 'package:billing_baba/features/sales/data/sales_document_payload_builder.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
@@ -36,6 +37,7 @@ class SalesInvoiceCommandRepository {
     required this._numbering,
     required this._businessIdReader,
     this._deviceIdReader,
+    this._stockApplier,
   });
 
   final SalesLocalDataSource _local;
@@ -43,6 +45,7 @@ class SalesInvoiceCommandRepository {
   final LocalDocumentNumberService _numbering;
   final String Function() _businessIdReader;
   final String? Function()? _deviceIdReader;
+  final InventoryDocumentStockApplier? _stockApplier;
 
   String _requireBusinessId() {
     final id = _businessIdReader().trim();
@@ -297,6 +300,13 @@ class SalesInvoiceCommandRepository {
       entityType: _salesDocumentsEntity,
       entityId: documentId,
       priority: SyncQueuePriority.high,
+    );
+
+    await _stockApplier?.applySalesDocument(
+      businessId: businessId,
+      documentId: documentId,
+      godownId: godownId,
+      deviceId: _deviceIdReader?.call(),
     );
   }
 

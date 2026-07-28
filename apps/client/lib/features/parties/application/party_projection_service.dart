@@ -37,10 +37,61 @@ class PartyProjectionService {
   void invalidateCache({String? partyId}) {
     if (partyId == null) {
       _cache.clear();
+      _outstandingIndexCache.clear();
       return;
     }
     _cache.removeWhere((key, _) => key.endsWith(':$partyId'));
+    _outstandingIndexCache.clear();
   }
+
+  final Map<String, Map<String, double>> _outstandingIndexCache = {};
+
+  /// Computes projected outstanding balances for all parties in one pass.
+  Future<Map<String, double>> buildOutstandingIndex({
+    required String businessId,
+  }) async {
+    final cacheKey = businessId;
+    final cached = _outstandingIndexCache[cacheKey];
+    if (cached != null) return cached;
+
+    final salesDocs = await _local.listAllSalesDocuments(businessId);
+    final purchaseDocs = await _local.listAllPurchaseDocuments(businessId);
+
+    final salesByParty = <String, List<PartyDocumentSnapshot>>{};
+    for (final doc in salesDocs) {
+      final partyId = _partyIdFromSalesDoc(doc);
+      if (partyId == null) continue;
+      salesByParty.putIfAbsent(partyId, () => []).add(doc);
+    }
+
+    final purchaseByParty = <String, List<PartyDocumentSnapshot>>{};
+    for (final doc in purchaseDocs) {
+      final partyId = _partyIdFromPurchaseDoc(doc);
+      if (partyId == null) continue;
+      purchaseByParty.putIfAbsent(partyId, () => []).add(doc);
+    }
+
+    final partyIds = {...salesByParty.keys, ...purchaseByParty.keys};
+    final index = <String, double>{};
+
+    for (final partyId in partyIds) {
+      final party = await _local.getParty(partyId);
+      if (party == null) continue;
+      final openingBalance = parseTimelineMoney(party.openingBalance);
+      final entries = _buildLedgerEntries(
+        salesByParty[partyId] ?? const [],
+        purchaseByParty[partyId] ?? const [],
+      );
+      index[partyId] = _computeOutstanding(openingBalance, entries);
+    }
+
+    _outstandingIndexCache[cacheKey] = index;
+    return index;
+  }
+
+  String? _partyIdFromSalesDoc(PartyDocumentSnapshot doc) => doc.partyId;
+
+  String? _partyIdFromPurchaseDoc(PartyDocumentSnapshot doc) => doc.partyId;
 
   Future<PartyProjection> buildProjection({
     required String businessId,

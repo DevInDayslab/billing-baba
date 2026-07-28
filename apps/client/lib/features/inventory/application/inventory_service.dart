@@ -10,6 +10,7 @@ import 'package:billing_baba/features/inventory/application/inventory_error_mapp
 import 'package:billing_baba/features/inventory/data/category_local_source.dart';
 import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
 import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
@@ -17,6 +18,8 @@ import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
+import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
 import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
@@ -87,6 +90,11 @@ Future<InventoryService> inventoryService(Ref ref) async {
     deviceIdReader: deviceIdReader,
     stockLocal: InventoryStockLocalDataSource(db),
     movementProjector: InventoryMovementProjector(db),
+    stockApplier: InventoryDocumentStockApplier(
+      stockLocal: InventoryStockLocalDataSource(db),
+      salesLocal: SalesLocalDataSource(db),
+      purchaseLocal: PurchaseLocalDataSource(db),
+    ),
     items: ItemMasterRepository(
       local: ItemLocalSource(db),
       syncQueue: queue,
@@ -710,6 +718,9 @@ class InventoryService {
   }
 
   Future<List<StockLevelDto>> fetchItemStockLevels(String itemId) async {
+    final local = await _repository.listLocalStockLevelsForItem(itemId);
+    if (local.isNotEmpty) return local;
+
     try {
       return _fetchAllPages<StockLevelDto>(
         fetchPage: (page) async {
@@ -749,7 +760,13 @@ class InventoryService {
         },
       );
 
-      var stockByItem = <String, ({double quantity, double stockValue})>{};
+      final localStock = await _repository.localStockQuantitiesByItem();
+
+      final stockByItem = <String, ({double quantity, double stockValue})>{};
+      for (final entry in localStock.entries) {
+        stockByItem[entry.key] = (quantity: entry.value, stockValue: 0);
+      }
+
       try {
         final stockLevels = await _fetchAllPages<StockLevelDto>(
           fetchPage: (page) async {
@@ -759,9 +776,12 @@ class InventoryService {
             return (response.stockLevels, response.meta.total);
           },
         );
-        stockByItem = StockLevelMapper.aggregateByItem(stockLevels);
+        final remoteStock = StockLevelMapper.aggregateByItem(stockLevels);
+        for (final entry in remoteStock.entries) {
+          stockByItem.putIfAbsent(entry.key, () => entry.value);
+        }
       } on DioException {
-        // Stock levels are remote-only; keep local item rows with DTO quantities.
+        // Local stock levels are authoritative while offline.
       }
 
       return itemDtos.map((dto) {
@@ -782,6 +802,8 @@ class InventoryService {
   Future<InventoryItem> getItem(String id) async {
     try {
       final dto = await fetchItemDetailDto(id);
+      final localQty = await _repository.localStockQuantityForItem(id);
+
       try {
         final stockLevels = await _fetchAllPages<StockLevelDto>(
           fetchPage: (page) async {
@@ -792,9 +814,10 @@ class InventoryService {
           },
         );
         final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
+        final quantity = localQty != 0 ? localQty : (stock?.quantity ?? localQty);
         return ItemMapper.fromDetailDto(
           dto,
-          quantity: stock?.quantity ?? _parseDecimal(dto.quantity),
+          quantity: quantity,
           stockValue: stock?.stockValue,
           reservedQuantity: _parseDecimal(dto.reservedQuantity),
           availableForSale: _parseDecimal(dto.availableForSale),
@@ -802,7 +825,7 @@ class InventoryService {
       } on DioException {
         return ItemMapper.fromDetailDto(
           dto,
-          quantity: _parseDecimal(dto.quantity),
+          quantity: localQty,
           reservedQuantity: _parseDecimal(dto.reservedQuantity),
           availableForSale: _parseDecimal(dto.availableForSale),
         );

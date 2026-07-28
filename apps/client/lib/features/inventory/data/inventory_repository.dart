@@ -1,6 +1,8 @@
+import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
@@ -43,6 +45,7 @@ class InventoryRepository {
     this._units,
     this._godowns,
     this._deviceIdReader,
+    this._stockApplier,
   });
 
   final InventoryRemoteDataSource _remote;
@@ -55,6 +58,7 @@ class InventoryRepository {
   final UnitMasterRepository? _units;
   final GodownMasterRepository? _godowns;
   final String? Function()? _deviceIdReader;
+  final InventoryDocumentStockApplier? _stockApplier;
 
   InventoryRemoteDataSource get remoteDataSource => _remote;
 
@@ -346,10 +350,68 @@ class InventoryRepository {
 
   Future<void> deleteItemLocation(String id) => _remote.deleteItemLocation(id);
 
-  Future<PaginatedStockLevelsDto> getStockLevels(StockLevelListQuery query) =>
-      _remote.listStockLevels(query);
+  Future<PaginatedStockLevelsDto> getStockLevels(StockLevelListQuery query) async {
+    final businessId = _requireBusinessId();
+    if (query.itemId != null && query.itemId!.isNotEmpty) {
+      final rows = await _stockLocal.listStockLevelRowsForItem(
+        businessId: businessId,
+        itemId: query.itemId!,
+      );
+      final levels = await _mapLocalStockRows(businessId, rows);
+      return PaginatedStockLevelsDto(
+        stockLevels: levels,
+        meta: PaginationMetaDto(
+          page: query.page,
+          limit: query.limit,
+          total: levels.length,
+        ),
+      );
+    }
+    try {
+      return await _remote.listStockLevels(query);
+    } on Object {
+      return PaginatedStockLevelsDto(
+        stockLevels: const [],
+        meta: PaginationMetaDto(
+          page: query.page,
+          limit: query.limit,
+          total: 0,
+        ),
+      );
+    }
+  }
 
   Future<StockLevelDto> getStockLevel(String id) => _remote.getStockLevel(id);
+
+  Future<List<StockLevelDto>> listLocalStockLevelsForItem(String itemId) async {
+    final businessId = _requireBusinessId();
+    final rows = await _stockLocal.listStockLevelRowsForItem(
+      businessId: businessId,
+      itemId: itemId,
+    );
+    return _mapLocalStockRows(businessId, rows);
+  }
+
+  Future<Map<String, double>> localStockQuantitiesByItem() async {
+    final businessId = _requireBusinessId();
+    var quantities = await _stockLocal.quantitiesByItem(businessId: businessId);
+    if (quantities.isEmpty) {
+      await _maybeBackfillBusinessStock(businessId);
+      quantities = await _stockLocal.quantitiesByItem(businessId: businessId);
+    }
+    return quantities;
+  }
+
+  Future<void> _maybeBackfillBusinessStock(String businessId) async {
+    final applier = _stockApplier;
+    if (applier == null) return;
+    final hasMovements = await _stockLocal.hasAnyMovements(businessId: businessId);
+    if (hasMovements) return;
+    await applier.backfillBusinessStock(
+      businessId: businessId,
+      deviceId: _deviceIdReader?.call(),
+    );
+  }
 
   Future<PaginatedMovementsDto> getMovements(MovementListQuery query) =>
       _remote.listMovements(query);
@@ -390,11 +452,20 @@ class InventoryRepository {
     return merged;
   }
 
-  Future<double> localStockQuantityForItem(String itemId) {
-    return _stockLocal.totalQuantityForItem(
-      businessId: _requireBusinessId(),
+  Future<double> localStockQuantityForItem(String itemId) async {
+    final businessId = _requireBusinessId();
+    var qty = await _stockLocal.totalQuantityForItem(
+      businessId: businessId,
       itemId: itemId,
     );
+    if (qty == 0) {
+      await _maybeBackfillBusinessStock(businessId);
+      qty = await _stockLocal.totalQuantityForItem(
+        businessId: businessId,
+        itemId: itemId,
+      );
+    }
+    return qty;
   }
 
   Future<void> reconcileLocalItemStock(String itemId) {
@@ -406,6 +477,51 @@ class InventoryRepository {
 
   Future<MovementDto> createMovementRemote(CreateMovementRequest request) =>
       _remote.createMovement(request);
+
+  Future<List<StockLevelDto>> _mapLocalStockRows(
+    String businessId,
+    List<StockLevelLocalData> rows,
+  ) async {
+    if (rows.isEmpty) return const [];
+
+    final itemIds = rows.map((row) => row.itemId).toSet();
+    final godownIds = rows.map((row) => row.godownId).toSet();
+
+    final itemNames = <String, String>{};
+    for (final itemId in itemIds) {
+      final item = await _items.getActive(itemId);
+      if (item != null) {
+        itemNames[itemId] = item.name;
+      }
+    }
+
+    final godownNames = <String, String>{};
+    if (_godowns != null) {
+      for (final godownId in godownIds) {
+        final godown = await _godowns.getActive(godownId);
+        if (godown != null) {
+          godownNames[godownId] = godown.name;
+        }
+      }
+    }
+
+    final now = DateTime.now().toUtc().toIso8601String();
+    return [
+      for (final row in rows)
+        StockLevelDto(
+          id: row.id,
+          itemId: row.itemId,
+          itemName: itemNames[row.itemId] ?? row.itemId,
+          godownId: row.godownId,
+          godownName: godownNames[row.godownId] ?? row.godownId,
+          quantity: row.currentQuantity,
+          averageCost: row.averageCost,
+          isLowStock: false,
+          createdAt: now,
+          updatedAt: row.updatedAt.toUtc().toIso8601String(),
+        ),
+    ];
+  }
 
   Future<PaginatedPriceHistoryDto> getItemPriceHistory(
     String itemId, {

@@ -6,6 +6,8 @@ import 'package:billing_baba/features/command_sync/application/command_ack_appli
 import 'package:billing_baba/features/command_sync/application/command_aware_sync_engine.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_runner.dart';
 import 'package:billing_baba/features/documents/data/local_document_number_service.dart';
+import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_return_command_repository.dart';
@@ -21,6 +23,15 @@ final localDocumentNumberServiceProvider =
   return LocalDocumentNumberService(ref.watch(appDatabaseProvider));
 });
 
+InventoryDocumentStockApplier _stockApplier(Ref ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return InventoryDocumentStockApplier(
+    stockLocal: InventoryStockLocalDataSource(db),
+    salesLocal: SalesLocalDataSource(db),
+    purchaseLocal: PurchaseLocalDataSource(db),
+  );
+}
+
 final salesInvoiceCommandRepositoryProvider =
     FutureProvider<SalesInvoiceCommandRepository>((ref) async {
   final storage = await ref.watch(storageServiceProvider.future);
@@ -31,6 +42,7 @@ final salesInvoiceCommandRepositoryProvider =
     numbering: ref.watch(localDocumentNumberServiceProvider),
     businessIdReader: () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
     deviceIdReader: () => storage.read(StorageKeys.syncDeviceId),
+    stockApplier: _stockApplier(ref),
   );
 });
 
@@ -44,6 +56,7 @@ final purchaseBillCommandRepositoryProvider =
     numbering: ref.watch(localDocumentNumberServiceProvider),
     businessIdReader: () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
     deviceIdReader: () => storage.read(StorageKeys.syncDeviceId),
+    stockApplier: _stockApplier(ref),
   );
 });
 
@@ -57,6 +70,7 @@ final salesReturnCommandRepositoryProvider =
     numbering: ref.watch(localDocumentNumberServiceProvider),
     businessIdReader: () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
     deviceIdReader: () => storage.read(StorageKeys.syncDeviceId),
+    stockApplier: _stockApplier(ref),
   );
 });
 
@@ -70,6 +84,7 @@ final purchaseReturnCommandRepositoryProvider =
     numbering: ref.watch(localDocumentNumberServiceProvider),
     businessIdReader: () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
     deviceIdReader: () => storage.read(StorageKeys.syncDeviceId),
+    stockApplier: _stockApplier(ref),
   );
 });
 

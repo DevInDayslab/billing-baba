@@ -15,6 +15,7 @@ class PartyDocumentSnapshot {
     required this.paidAmount,
     required this.createdAt,
     required this.updatedAt,
+    this.partyId,
     this.dueDate,
     this.paymentMode,
   });
@@ -30,6 +31,7 @@ class PartyDocumentSnapshot {
   final String totalAmount;
   final String paidAmount;
   final String? paymentMode;
+  final String? partyId;
   final DateTime createdAt;
   final DateTime updatedAt;
 }
@@ -61,24 +63,22 @@ class PartyLedgerLocalDataSource {
               ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
             .get();
 
-    return rows
-        .map(
-          (row) => PartyDocumentSnapshot(
-            id: row.id,
-            source: 'sales_documents',
-            documentType: row.documentType,
-            status: row.status,
-            documentSeries: row.documentSeries,
-            documentNumber: row.documentNumber,
-            documentDate: row.documentDate,
-            totalAmount: row.totalAmount,
-            paidAmount: row.paidAmount,
-            paymentMode: row.paymentMode,
-            createdAt: row.createdAt,
-            updatedAt: row.updatedAt,
-          ),
-        )
-        .toList();
+    return rows.map(_salesRowToSnapshot).toList();
+  }
+
+  Future<List<PartyDocumentSnapshot>> listAllSalesDocuments(
+    String businessId,
+  ) async {
+    final rows = await (_db.select(_db.salesDocumentsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.isDeleted.equals(false) &
+                t.status.isIn(['finalized', 'converted']) &
+                t.partyId.isNotNull(),
+          ))
+        .get();
+    return rows.map(_salesRowToSnapshot).toList();
   }
 
   Future<List<PartyDocumentSnapshot>> listPurchaseDocumentsForParty({
@@ -97,24 +97,58 @@ class PartyLedgerLocalDataSource {
               ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
             .get();
 
-    return rows
-        .map(
-          (row) => PartyDocumentSnapshot(
-            id: row.id,
-            source: 'purchase_documents',
-            documentType: row.documentType,
-            status: row.status,
-            documentSeries: row.documentSeries,
-            documentNumber: row.documentNumber,
-            documentDate: row.documentDate,
-            dueDate: row.dueDate,
-            totalAmount: row.totalAmount,
-            paidAmount: row.paidAmount,
-            paymentMode: row.paymentMode,
-            createdAt: row.createdAt,
-            updatedAt: row.updatedAt,
-          ),
-        )
-        .toList();
+    return rows.map(_purchaseRowToSnapshot).toList();
+  }
+
+  Future<List<PartyDocumentSnapshot>> listAllPurchaseDocuments(
+    String businessId,
+  ) async {
+    final rows = await (_db.select(_db.purchaseDocumentsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.isDeleted.equals(false) &
+                t.status.isIn(['finalized', 'converted']) &
+                t.partyId.isNotNull(),
+          ))
+        .get();
+    return rows.map(_purchaseRowToSnapshot).toList();
+  }
+
+  PartyDocumentSnapshot _salesRowToSnapshot(SalesDocumentLocalData row) {
+    return PartyDocumentSnapshot(
+      id: row.id,
+      source: 'sales_documents',
+      documentType: row.documentType,
+      status: row.status,
+      documentSeries: row.documentSeries,
+      documentNumber: row.documentNumber,
+      documentDate: row.documentDate,
+      totalAmount: row.totalAmount,
+      paidAmount: row.paidAmount,
+      paymentMode: row.paymentMode,
+      partyId: row.partyId,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    );
+  }
+
+  PartyDocumentSnapshot _purchaseRowToSnapshot(PurchaseDocumentLocalData row) {
+    return PartyDocumentSnapshot(
+      id: row.id,
+      source: 'purchase_documents',
+      documentType: row.documentType,
+      status: row.status,
+      documentSeries: row.documentSeries,
+      documentNumber: row.documentNumber,
+      documentDate: row.documentDate,
+      dueDate: row.dueDate,
+      totalAmount: row.totalAmount,
+      paidAmount: row.paidAmount,
+      paymentMode: row.paymentMode,
+      partyId: row.partyId,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    );
   }
 }

@@ -41,6 +41,12 @@ class PartyLedgerService {
   void invalidateCache({String? partyId}) {
     _projection.invalidateCache(partyId: partyId);
   }
+
+  Future<Map<String, double>> fetchOutstandingIndex({
+    required String businessId,
+  }) {
+    return _projection.buildOutstandingIndex(businessId: businessId);
+  }
 }
 
 @Riverpod(keepAlive: true)

@@ -54,6 +54,25 @@ class SalesLocalDataSource {
     return results;
   }
 
+  Future<List<String>> listFinalizedDocumentIds(String businessId) async {
+    final headers = await (_db.select(_db.salesDocumentsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.status.equals('finalized') &
+                t.isDeleted.equals(false),
+          ))
+        .get();
+    return headers.map((header) => header.id).toList();
+  }
+
+  Future<String?> getDocumentGodownId(String documentId) async {
+    final header = await (_db.select(_db.salesDocumentsLocal)
+          ..where((t) => t.id.equals(documentId)))
+        .getSingleOrNull();
+    return header?.godownId;
+  }
+
   Future<void> upsertDocument({
     required String id,
     required String businessId,
