@@ -346,4 +346,31 @@ abstract final class NetworkExceptionClassifier {
   static String hostFromApiUrl() {
     return Uri.parse(AppConfig.apiBaseUrl).host;
   }
+
+  /// True when the error indicates the server is unreachable (offline / refused).
+  static bool isConnectivityError(Object error) {
+    if (error is DioException) {
+      if (error.response != null) return false;
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return true;
+      }
+      final inner = error.error;
+      if (inner != null) return isConnectivityError(inner);
+      return false;
+    }
+
+    if (error is SocketException) return true;
+    if (error is TimeoutException) return true;
+
+    final lower = error.toString().toLowerCase();
+    return lower.contains('connection refused') ||
+        lower.contains('connection reset') ||
+        lower.contains('network is unreachable') ||
+        lower.contains('failed host lookup') ||
+        lower.contains('no address associated with hostname') ||
+        lower.contains('socketexception');
+  }
 }

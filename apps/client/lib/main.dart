@@ -21,6 +21,7 @@ Future<void> main() async {
       GoogleFonts.config.allowRuntimeFetching = false;
 
       await dotenv.load();
+      await AppConfig.initialize();
       await LoggingService.instance.initialize();
 
       AppConfig.logStartupConfig();

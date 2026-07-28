@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
@@ -204,6 +205,17 @@ Future<void> _warmBusinessProfile(
   BusinessService service,
   String businessId,
 ) async {
+  if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+    final cached = await service.readCachedBusinessProfile();
+    if (cached != null && ref.mounted) {
+      ref.read(businessProfileProvider.notifier).replaceWith(cached);
+      BusinessOpenDebugLog.step('warm', 'profile ok from cache (${cached.name})');
+    } else {
+      BusinessOpenDebugLog.step('warm', 'profile skipped — backend unreachable');
+    }
+    return;
+  }
+
   BusinessOpenDebugLog.step('warm', 'profile fetch');
   final profile = await service.fetchBusinessProfile(forceRefresh: true);
   _ensureRefMounted(ref, 'warm after profile fetch');

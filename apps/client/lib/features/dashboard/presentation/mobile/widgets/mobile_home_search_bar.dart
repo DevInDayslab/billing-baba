@@ -9,12 +9,14 @@ class MobileHomeSearchBar extends StatelessWidget {
     required this.onFilterTap,
     super.key,
     this.hint = 'Search for a transaction...',
+    this.showFilter = true,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onFilterTap;
   final String hint;
+  final bool showFilter;
 
   static const borderColor = Color(0xFFE3E8EF);
   static const filterBlue = Color(0xFF42A5F5);
@@ -61,26 +63,29 @@ class MobileHomeSearchBar extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Material(
-                color: filterBlue,
-                borderRadius: BorderRadius.circular(10),
-                child: InkWell(
-                  onTap: onFilterTap,
+            if (showFilter)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Material(
+                  color: filterBlue,
                   borderRadius: BorderRadius.circular(10),
-                  child: const SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: Icon(
-                      Icons.filter_alt_rounded,
-                      color: Colors.white,
-                      size: 18,
+                  child: InkWell(
+                    onTap: onFilterTap,
+                    borderRadius: BorderRadius.circular(10),
+                    child: const SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Icon(
+                        Icons.filter_alt_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+              )
+            else
+              const SizedBox(width: AppSpacing.md),
           ],
         ),
       ),

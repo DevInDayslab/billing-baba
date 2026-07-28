@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/api_base_url_resolver.dart';
 import 'package:billing_baba/core/logging/log_level.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
@@ -16,14 +17,28 @@ abstract final class AppConfig {
 
   static const _defaultWebsiteUrl = 'https://billingbaba.com';
 
-  /// Resolved at runtime: `--dart-define=API_BASE_URL` overrides `.env`.
-  static String get apiBaseUrl {
+  static String? _resolvedApiBaseUrl;
+  static bool _initialized = false;
+
+  /// Call once after [dotenv.load] to resolve platform-aware API URL.
+  static Future<void> initialize() async {
+    if (_initialized) return;
+    final raw = _readRawApiBaseUrl();
+    _resolvedApiBaseUrl = await ApiBaseUrlResolver.resolve(raw);
+    _initialized = true;
+    _logApiBaseUrl();
+  }
+
+  static String _readRawApiBaseUrl() {
     const fromDefine = String.fromEnvironment('API_BASE_URL');
     if (fromDefine.isNotEmpty) return fromDefine;
     final fromEnv = dotenv.env['API_BASE_URL']?.trim();
     if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
     return _defaultApiBaseUrl;
   }
+
+  /// Resolved at runtime: `--dart-define=API_BASE_URL` overrides `.env`.
+  static String get apiBaseUrl => _resolvedApiBaseUrl ?? _readRawApiBaseUrl();
 
   /// Where [apiBaseUrl] was resolved from (for startup diagnostics).
   static String get apiBaseUrlSource {
@@ -130,6 +145,18 @@ abstract final class AppConfig {
     LoggingService.instance.info('[CONFIG] GIT_COMMIT=$gitCommit');
     LoggingService.instance.info(
       '[CONFIG] FILE_LOGGING=$fileLoggingEnabled LOG_LEVEL=${minLogLevel.name}',
+    );
+  
+  }
+
+  static void _logApiBaseUrl() {
+    final platform = AppPlatform.current;
+    final deviceKind = ApiBaseUrlResolver.deviceKind ?? 'unknown';
+    final rewrite = ApiBaseUrlResolver.rewriteNote;
+    debugPrint(
+      '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource, '
+      'platform=${platform.os.name}, device=$deviceKind'
+      '${rewrite != null ? ', rewrite: $rewrite' : ''})',
     );
   }
 

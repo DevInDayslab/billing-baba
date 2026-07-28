@@ -25,7 +25,11 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
+<<<<<<< Updated upstream
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
+=======
+import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
+>>>>>>> Stashed changes
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
@@ -177,6 +181,10 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.home,
             builder: (context, state) => const HomePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.notifications,
+            builder: (context, state) => const NotificationsPage(),
           ),
           GoRoute(
             path: AppRoutes.parties,

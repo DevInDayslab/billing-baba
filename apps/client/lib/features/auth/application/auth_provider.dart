@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/network/network_diagnostics_service.dart';
 import 'package:billing_baba/core/network/network_error_details.dart';
 import 'package:billing_baba/core/network/network_exception_classifier.dart';
@@ -41,6 +42,26 @@ enum AuthStatus {
   needsBusinessCreation,
 }
 
+/// Auth inputs that should restart [businessProfileProvider].
+typedef BusinessProfileAuthScope = (
+  AuthStatus status,
+  String? userId,
+  String? userRole,
+);
+
+BusinessProfileAuthScope businessProfileAuthScope(AuthState auth) {
+  final session = auth.session;
+  return (auth.status, session?.user.id, session?.user.role);
+}
+
+bool businessProfileHasScope(BusinessProfileAuthScope scope) {
+  final (status, _, userRole) = scope;
+  return status == AuthStatus.authenticated &&
+      userRole != null &&
+      userRole.isNotEmpty;
+}
+
+@immutable
 class AuthState {
   const AuthState({
     this.status = AuthStatus.initializing,
@@ -151,6 +172,55 @@ class AuthState {
           backendLoginCompleted ?? this.backendLoginCompleted,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AuthState &&
+        other.status == status &&
+        other.otpPhase == otpPhase &&
+        other.phone == phone &&
+        other.reqId == reqId &&
+        other.msg91AccessToken == msg91AccessToken &&
+        other.error == error &&
+        _networkErrorEquals(other.networkError, networkError) &&
+        other.session == session &&
+        other.resendAvailableAt == resendAvailableAt &&
+        other.otpSessionVersion == otpSessionVersion &&
+        other.backendLoginCompleted == backendLoginCompleted;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    status,
+    otpPhase,
+    phone,
+    reqId,
+    msg91AccessToken,
+    error,
+    networkError?.title,
+    networkError?.reason,
+    networkError?.details,
+    networkError?.host,
+    networkError?.httpStatus,
+    session,
+    resendAvailableAt,
+    otpSessionVersion,
+    backendLoginCompleted,
+  );
+}
+
+bool _networkErrorEquals(
+  NetworkErrorDetails? a,
+  NetworkErrorDetails? b,
+) {
+  if (identical(a, b)) return true;
+  if (a == null || b == null) return false;
+  return a.title == b.title &&
+      a.reason == b.reason &&
+      a.details == b.details &&
+      a.host == b.host &&
+      a.httpStatus == b.httpStatus;
 }
 
 @Riverpod(keepAlive: true)
@@ -191,14 +261,19 @@ class Auth extends _$Auth {
   Future<AuthService> _service() => ref.read(authServiceProvider.future);
   OtpService get _otp => ref.read(otpServiceProvider);
 
+  void _commitState(AuthState next) {
+    if (next == state) return;
+    state = next;
+  }
+
   void _setOtpPhase(OtpPhase phase) {
     AuthFlowLogger.otpTransition(phase);
-    state = state.copyWith(otpPhase: phase);
+    _commitState(state.copyWith(otpPhase: phase));
   }
 
   void _setAuthStatus(AuthStatus status) {
     AuthFlowLogger.authStatus(status.name);
-    state = state.copyWith(status: status);
+    _commitState(state.copyWith(status: status));
   }
 
   AuthStatus _statusForSession(AuthSession session) {
@@ -805,6 +880,11 @@ class Auth extends _$Auth {
   }
 
   Future<void> selectBusiness(String businessId) {
+    if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      BusinessSelectionRetryGuard.logBlockedOnce('selectBusiness', businessId);
+      return Future<void>.value();
+    }
+
     final operation = _businessSelectionChain
         .catchError((_) {})
         .then((_) => _selectBusinessInternal(businessId));
@@ -813,6 +893,10 @@ class Auth extends _$Auth {
   }
 
   Future<void> _selectBusinessInternal(String businessId) async {
+    if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      return;
+    }
+
     BusinessOpenDebugLog.step('selectBusiness', 'begin id=$businessId');
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) {
@@ -821,14 +905,18 @@ class Auth extends _$Auth {
 
     if (await _isJwtScopedToBusiness(businessId)) {
       BusinessOpenDebugLog.step('selectBusiness', 'JWT already scoped — skip refresh');
+      await _syncSessionRoleFromJwt();
+      BusinessSelectionRetryGuard.recordSuccess(businessId);
       if (state.status != AuthStatus.authenticated) {
         _setAuthStatus(AuthStatus.authenticated);
       }
       return;
     }
 
-    BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh API');
-    state = state.copyWith(clearError: true);
+    BusinessOpenDebugLog.step(
+      'selectBusiness',
+      'JWT refresh API (retryCount=${BusinessSelectionRetryGuard.retryCount})',
+    );
     try {
       final service = await _service();
       final session = await service.selectBusiness(
@@ -840,13 +928,23 @@ class Auth extends _$Auth {
           'Could not select business. Please try again.',
         );
       }
-      _setAuthStatus(AuthStatus.authenticated);
-      state = state.copyWith(session: session);
+      AuthFlowLogger.authStatus(AuthStatus.authenticated.name);
+      _commitState(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          session: session,
+          clearError: true,
+        ),
+      );
+      BusinessSelectionRetryGuard.recordSuccess(businessId);
       BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh done');
     } on BusinessSelectionFailed {
       BusinessOpenDebugLog.step('selectBusiness', 'failed (BusinessSelectionFailed)');
       rethrow;
     } on Object catch (e) {
+      if (NetworkExceptionClassifier.isConnectivityError(e)) {
+        BusinessSelectionRetryGuard.recordConnectivityFailure(businessId, e);
+      }
       BusinessOpenDebugLog.step('selectBusiness', 'failed ($e)');
       throw BusinessSelectionFailed(_messageFromError(e));
     }
@@ -858,6 +956,25 @@ class Auth extends _$Auth {
     final jwtBusinessId = JwtUtils.businessId(token);
     final role = JwtUtils.role(token);
     return jwtBusinessId == businessId && role != null && role.isNotEmpty;
+  }
+
+  /// Keeps session user role aligned with the scoped JWT when refresh is skipped.
+  Future<void> _syncSessionRoleFromJwt() async {
+    final session = state.session;
+    if (session == null || session.user.role != null) return;
+
+    final storage = await ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    final role = JwtUtils.role(token);
+    if (role == null || role.isEmpty) return;
+
+    _commitState(
+      state.copyWith(
+        session: session.copyWith(
+          user: session.user.copyWith(role: role),
+        ),
+      ),
+    );
   }
 
   /// Scopes JWT to [businessId] for edit-from-list without invalidating providers.
