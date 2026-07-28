@@ -133,14 +133,11 @@ GoRouter createAppRouter({
         case AuthStatus.needsBusinessCreation:
         case AuthStatus.needsBusinessSelection:
           if (!onBusinessList) {
-            final hasActiveCompany = ref.read(companySessionProvider) != null;
-            if (!hasActiveCompany) {
-              SwitchCompanyDebugLog.nav(
-                'GoRouter redirect $location → ${AppRoutes.businessList} '
-                '(${auth.status.name})',
-              );
-              return AppRoutes.businessList;
-            }
+            SwitchCompanyDebugLog.nav(
+              'GoRouter redirect $location → ${AppRoutes.businessList} '
+              '(${auth.status.name})',
+            );
+            return AppRoutes.businessList;
           }
         case AuthStatus.authenticated:
           if (onLogin || onOtp) return AppRoutes.home;

@@ -75,16 +75,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
   final _shellShortcutFocusNode = FocusNode(debugLabel: 'shellShortcuts');
+  SearchDialogNotifier? _searchDialogNotifier;
 
   @override
   void initState() {
     super.initState();
+    _searchDialogNotifier = ref.read(searchDialogProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _registerSearchDialog();
       _ensureShellShortcutFocus();
       final businessId = ref.read(sidebarBusinessProvider).id;
-      if (businessId!.isNotEmpty) {
+      if (businessId != null && businessId.isNotEmpty) {
         unawaited(
           ref.read(imageStartupWarmupProvider).run(businessId: businessId),
         );
@@ -94,7 +96,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
   @override
   void dispose() {
-    ref.read(searchDialogProvider.notifier).unregister();
+    _searchDialogNotifier?.unregister();
     _shellShortcutFocusNode.dispose();
     super.dispose();
   }

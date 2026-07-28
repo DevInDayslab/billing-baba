@@ -93,6 +93,18 @@ class _DiagnosticsPageState extends State<DesktopDiagnosticsPage> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           _Section(
+            title: 'Logging',
+            children: [
+              _InfoRow('FILE_LOGGING', '${AppConfig.fileLoggingEnabled}'),
+              _InfoRow('LOG_LEVEL', AppConfig.minLogLevel.name),
+              _InfoRow('VERBOSE_LOGGING', '${AppConfig.consoleVerbose}'),
+              _InfoRow(
+                'Log File',
+                LoggingService.instance.logFilePath ?? '(not initialized)',
+              ),
+            ],
+          ),
+          _Section(
             title: 'Environment',
             children: [
               _InfoRow('API URL', AppConfig.apiBaseUrl),

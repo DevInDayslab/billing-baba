@@ -223,6 +223,33 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
   );
 
   test(
+    'company directory: list shared companies and pending invitations',
+    async () => {
+      const config = loadAppConfig();
+      const prefix = `${config.apiPrefix}/collaboration`;
+
+      const shared = await app.inject({
+        method: 'GET',
+        url: `${prefix}/companies/shared`,
+        headers: jsonAuthHeaders(ownerToken),
+      });
+      expect(shared.statusCode).toBe(200);
+      const sharedBody = shared.json() as { data: unknown[] };
+      expect(Array.isArray(sharedBody.data)).toBe(true);
+
+      const pending = await app.inject({
+        method: 'GET',
+        url: `${prefix}/companies/invitations`,
+        headers: jsonAuthHeaders(ownerToken),
+      });
+      expect(pending.statusCode).toBe(200);
+      const pendingBody = pending.json() as { data: unknown[] };
+      expect(Array.isArray(pendingBody.data)).toBe(true);
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
+
+  test(
     'member management: list, update role, remove joined member',
     async () => {
       const config = loadAppConfig();

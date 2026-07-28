@@ -27,35 +27,21 @@ Future<void> showReviewOrderSummaryDialog(
         input: input,
         onBack: onBack ?? () => Navigator.of(dialogContext).pop(),
         onCompletePurchase: () async {
-          final navigator = Navigator.of(dialogContext);
           final rootNavigator = Navigator.of(dialogContext, rootNavigator: true);
 
-          final order = await ref
+          // Kick off order creation but open checkout immediately so Razorpay
+          // runs inside a dialog that is already on screen after the user tap.
+          final orderFuture = ref
               .read(createOrderControllerProvider.notifier)
               .createOrder(input.planType);
-          if (!dialogContext.mounted) return;
 
-          final error =
-              ref.read(createOrderControllerProvider.notifier).errorMessage();
-          if (error != null) {
-            ScaffoldMessenger.of(dialogContext).showSnackBar(
-              SnackBar(
-                content: Text(error),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            return;
-          }
-
-          if (order == null) return;
-
-          navigator.pop();
+          Navigator.of(dialogContext).pop();
           if (!rootNavigator.mounted) return;
 
-          await SubscriptionCheckoutFlow.startFromOrder(
+          await SubscriptionCheckoutFlow.start(
             rootNavigator.context,
             ref,
-            order: order,
+            orderFuture: orderFuture,
             planType: input.planType,
           );
         },

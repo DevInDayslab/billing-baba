@@ -247,6 +247,10 @@ class Auth extends _$Auth {
     _resendInFlight = false;
     AuthFlowLogger.reset();
     final nextStatus = _statusForSession(session);
+    if (nextStatus == AuthStatus.needsBusinessSelection ||
+        nextStatus == AuthStatus.needsBusinessCreation) {
+      ref.read(companySessionProvider.notifier).clear();
+    }
     _setAuthStatus(nextStatus);
     state = state.copyWith(
       otpPhase: OtpPhase.idle,
@@ -974,7 +978,17 @@ class Auth extends _$Auth {
     try {
       final service = await _service();
       await service.logout();
-      await _invalidateBusinessProviders(includeList: true);
+      ref.read(companySessionProvider.notifier).clear();
+      // Defer so invalidation does not run while authProvider is still updating
+      // (businessProfileProvider watches authProvider → circular dependency).
+      Future.microtask(() {
+        if (ref.mounted) {
+          invalidateAllBusinessScopedProviders(
+            ref,
+            includeBusinessList: true,
+          );
+        }
+      });
     } finally {
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);

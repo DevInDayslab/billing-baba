@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/features/auth/models/otp_phase.dart';
-import 'package:flutter/foundation.dart';
 
 /// Logs OTP/auth phase transitions only (no duplicate SDK dumps).
 abstract final class AuthFlowLogger {
@@ -12,16 +12,18 @@ abstract final class AuthFlowLogger {
     if (!enabled) return;
     if (_lastOtpPhase == phase) return;
     if (_lastOtpPhase != null) {
-      debugPrint('[AUTH_FLOW] ${_lastOtpPhase!.name} → ${phase.name}');
+      LoggingService.instance.debug(
+        '[AUTH_FLOW] ${_lastOtpPhase!.name} → ${phase.name}',
+      );
     } else {
-      debugPrint('[AUTH_FLOW] → ${phase.name}');
+      LoggingService.instance.debug('[AUTH_FLOW] → ${phase.name}');
     }
     _lastOtpPhase = phase;
   }
 
   static void authStatus(String status) {
     if (!enabled) return;
-    debugPrint('[AUTH_FLOW] AuthStatus → $status');
+    LoggingService.instance.debug('[AUTH_FLOW] AuthStatus → $status');
   }
 
   static void reset() {
