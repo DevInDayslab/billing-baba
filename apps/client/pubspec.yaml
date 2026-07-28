@@ -19,7 +19,6 @@ dependencies:
 
   # Networking
   dio: ^5.9.2
-  pretty_dio_logger: ^1.4.0
 
   # Database
   drift: ^2.34.0
@@ -73,7 +72,7 @@ dependencies:
   open_filex: ^4.7.0
 
   # Desktop Razorpay checkout (InAppWebView host + netbanking popups).
-  flutter_inappwebview: 6.2.0-beta.3
+  flutter_inappwebview: ^6.1.5
 
 dev_dependencies:
   flutter_test:

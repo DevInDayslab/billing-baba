@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/config/app_config.dart';
-import 'package:flutter/foundation.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
 
 /// Temporary diagnostics for business profile update flow.
 abstract final class BusinessProfileDebugLog {
@@ -7,7 +7,7 @@ abstract final class BusinessProfileDebugLog {
 
   static void log(String message) {
     if (!enabled) return;
-    debugPrint('[BUSINESS_PROFILE] $message');
+    LoggingService.instance.debug('[BUSINESS_PROFILE] $message');
   }
 
   static void section(String title) {

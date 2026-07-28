@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/config/api_base_url_resolver.dart';
+import 'package:billing_baba/core/logging/log_level.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -6,6 +8,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Environment-specific application configuration.
 abstract final class AppConfig {
   static const appName = 'Billing Baba';
+
+  /// Filesystem folder for local logs and app data (no spaces).
+  static const dataDirectoryName = 'BillingBaba';
 
   static const _defaultApiBaseUrl =
       'https://billing-baba-production-6b5e.up.railway.app';
@@ -63,6 +68,29 @@ abstract final class AppConfig {
       dotenv.env['APP_ENV']?.toLowerCase() == 'development' ||
       _isDiagnosticsAppEnv;
 
+  /// When true, logs are written to a local rotating file on disk.
+  ///
+  /// Defaults to `true` on desktop; set `FILE_LOGGING=false` to disable.
+  static bool get fileLoggingEnabled {
+    final fromEnv = dotenv.env['FILE_LOGGING']?.toLowerCase().trim();
+    if (fromEnv == 'false' || fromEnv == '0') return false;
+    if (fromEnv == 'true' || fromEnv == '1') return true;
+    return !kIsWeb && AppPlatform.current.isDesktop;
+  }
+
+  /// Minimum severity written to the log file.
+  ///
+  /// Set via `LOG_LEVEL` (`debug`, `info`, `warn`, `error`). Defaults to
+  /// `debug` when [consoleVerbose], otherwise `info`.
+  static LogLevel get minLogLevel {
+    final parsed = LogLevel.tryParse(dotenv.env['LOG_LEVEL']);
+    if (parsed != null) return parsed;
+    return consoleVerbose ? LogLevel.debug : LogLevel.info;
+  }
+
+  /// Whether [level] meets the configured [minLogLevel] threshold.
+  static bool shouldLog(LogLevel level) => level.index >= minLogLevel.index;
+
   /// Production-grade diagnostics for alpha, demo, and internal builds.
   static bool get diagnosticsEnabled => consoleVerbose || _isDiagnosticsAppEnv;
 
@@ -99,21 +127,26 @@ abstract final class AppConfig {
   /// Default OTP for local development when MSG91 is not configured.
   static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
 
-  /// Prints resolved config once at startup.
+  /// Logs resolved config once at startup (console when verbose, file per [minLogLevel]).
   static void logStartupConfig() {
-    if (!_initialized) {
-      debugPrint(
-        '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource, '
-        'platform-aware resolve pending)',
-      );
-    }
-    if (!consoleVerbose) return;
-    debugPrint('[CONFIG] WEBSITE_URL=$websiteUrl');
-    debugPrint('[CONFIG] ENABLE_DEV_LOGIN=$enableDevLogin');
-    debugPrint('[CONFIG] APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}');
-    debugPrint('[CONFIG] DEBUG=${dotenv.env['DEBUG'] ?? '(unset)'}');
-    debugPrint('[CONFIG] DEV_OTP=${'*' * devOtp.length}');
-    debugPrint('[CONFIG] GIT_COMMIT=$gitCommit');
+    if (!consoleVerbose && !shouldLog(LogLevel.info)) return;
+    LoggingService.instance.info(
+      '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource)',
+    );
+    LoggingService.instance.info('[CONFIG] WEBSITE_URL=$websiteUrl');
+    LoggingService.instance.info('[CONFIG] ENABLE_DEV_LOGIN=$enableDevLogin');
+    LoggingService.instance.info(
+      '[CONFIG] APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}',
+    );
+    LoggingService.instance.info(
+      '[CONFIG] DEBUG=${dotenv.env['DEBUG'] ?? '(unset)'}',
+    );
+    LoggingService.instance.info('[CONFIG] DEV_OTP=${'*' * devOtp.length}');
+    LoggingService.instance.info('[CONFIG] GIT_COMMIT=$gitCommit');
+    LoggingService.instance.info(
+      '[CONFIG] FILE_LOGGING=$fileLoggingEnabled LOG_LEVEL=${minLogLevel.name}',
+    );
+  
   }
 
   static void _logApiBaseUrl() {

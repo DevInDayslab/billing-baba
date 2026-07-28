@@ -14,7 +14,9 @@ Never throwSubscriptionApiError(DioException error) {
     throw error;
   }
 
-  if (statusCode == 503 || code == 'DATABASE_NOT_CONFIGURED') {
+  if (statusCode == 503 ||
+      code == 'DATABASE_NOT_CONFIGURED' ||
+      code == 'RAZORPAY_NOT_CONFIGURED') {
     throw SubscriptionUnavailableException(
       message.isNotEmpty
           ? message

@@ -2,28 +2,50 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:billing_baba/core/platform/app_platform.dart';
+import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/subscription/domain/models/create_order_result.dart';
+import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/payment_bridge_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
+/// Result from the desktop Razorpay host, including the server order when known.
+class SubscriptionPaymentHostResult {
+  const SubscriptionPaymentHostResult({
+    required this.payment,
+    this.order,
+    this.orderErrorMessage,
+  });
+
+  final CreateOrderResult? order;
+  final PaymentBridgeResult payment;
+  final String? orderErrorMessage;
+}
+
 /// Desktop Razorpay checkout hosted in [InAppWebView].
 ///
-/// Mirrors `razorpay_web`'s desktop path (HTML checkout + netbanking popups)
-/// but sizes the host ourselves. Upstream `razorpay_web` hardcodes 480px and
-/// always shows Razorpay's mobile layout.
-Future<PaymentBridgeResult> showRazorpayDesktopCheckout(
+/// The dialog is shown immediately on user tap. [orderFuture] resolves while a
+/// loading state is visible so Razorpay opens in an already-present host
+/// (Razorpay requires checkout to open right after the user gesture).
+Future<SubscriptionPaymentHostResult?> showRazorpayDesktopCheckout(
   BuildContext context, {
-  required Map<String, dynamic> options,
+  required Future<CreateOrderResult?> orderFuture,
+  required SubscriptionPlanType planType,
+  required String? Function() orderErrorMessage,
 }) async {
-  final completer = Completer<PaymentBridgeResult>();
+  final completer = Completer<SubscriptionPaymentHostResult?>();
 
   await showGeneralDialog<void>(
     context: context,
+    useRootNavigator: true,
+    barrierDismissible: false,
     barrierLabel: 'Razorpay Checkout',
     barrierColor: Colors.black54,
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
       return _RazorpayDesktopCheckoutDialog(
-        options: options,
+        orderFuture: orderFuture,
+        planType: planType,
+        orderErrorMessage: orderErrorMessage,
         onResult: (result) {
           if (Navigator.of(dialogContext).canPop()) {
             Navigator.of(dialogContext).pop();
@@ -37,9 +59,29 @@ Future<PaymentBridgeResult> showRazorpayDesktopCheckout(
   );
 
   if (!completer.isCompleted) {
-    completer.complete(const PaymentBridgeCancelled());
+    completer.complete(null);
   }
   return completer.future;
+}
+
+Map<String, dynamic> razorpayCheckoutOptions({
+  required CreateOrderResult order,
+  required SubscriptionPlanType planType,
+}) {
+  return {
+    'key': order.razorpayKey,
+    'amount': order.amount,
+    'currency': order.currency,
+    'order_id': order.razorpayOrderId,
+    'name': order.businessName,
+    'description': 'Vyapar ${planType.displayName}',
+    'prefill': {
+      'name': order.ownerName,
+      'email': order.businessEmail,
+      'contact': order.businessPhone,
+    },
+    'theme': {'color': '#1565C0'},
+  };
 }
 
 String _checkoutHtml(Map<String, dynamic> options) {
@@ -154,14 +196,67 @@ String _checkoutHtml(Map<String, dynamic> options) {
 ''';
 }
 
-class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
+class _RazorpayDesktopCheckoutDialog extends StatefulWidget {
   const _RazorpayDesktopCheckoutDialog({
-    required this.options,
+    required this.orderFuture,
+    required this.planType,
+    required this.orderErrorMessage,
     required this.onResult,
   });
 
-  final Map<String, dynamic> options;
-  final ValueChanged<PaymentBridgeResult> onResult;
+  final Future<CreateOrderResult?> orderFuture;
+  final SubscriptionPlanType planType;
+  final String? Function() orderErrorMessage;
+  final ValueChanged<SubscriptionPaymentHostResult?> onResult;
+
+  @override
+  State<_RazorpayDesktopCheckoutDialog> createState() =>
+      _RazorpayDesktopCheckoutDialogState();
+}
+
+class _RazorpayDesktopCheckoutDialogState
+    extends State<_RazorpayDesktopCheckoutDialog> {
+  CreateOrderResult? _order;
+  var _isResolvingOrder = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_resolveOrder());
+  }
+
+  Future<void> _resolveOrder() async {
+    try {
+      final order = await widget.orderFuture;
+      if (!mounted) return;
+
+      if (order == null) {
+        final message = widget.orderErrorMessage() ??
+            'Unable to create payment order. Please try again.';
+        widget.onResult(
+          SubscriptionPaymentHostResult(
+            payment: PaymentBridgeFailed(message),
+            orderErrorMessage: message,
+          ),
+        );
+        return;
+      }
+
+      setState(() {
+        _order = order;
+        _isResolvingOrder = false;
+      });
+    } on Object catch (error) {
+      if (!mounted) return;
+      final message = error.toString();
+      widget.onResult(
+        SubscriptionPaymentHostResult(
+          payment: PaymentBridgeFailed(message),
+          orderErrorMessage: message,
+        ),
+      );
+    }
+  }
 
   String _desktopUserAgent() {
     if (AppPlatform.current.isMacOS) {
@@ -175,44 +270,60 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
   }
 
   void _handleCustomSchemeUrl(String url) {
+    final order = _order;
+    if (order == null) return;
+
     final uri = Uri.parse(url);
+    late final PaymentBridgeResult payment;
     switch (uri.host) {
       case 'success':
         final paymentId = uri.queryParameters['razorpay_payment_id'] ?? '';
         final orderId = uri.queryParameters['razorpay_order_id'] ?? '';
         final signature = uri.queryParameters['razorpay_signature'] ?? '';
         if (paymentId.isEmpty || orderId.isEmpty || signature.isEmpty) {
-          onResult(
-            const PaymentBridgeFailed(
-              'Incomplete payment response from Razorpay.',
-            ),
+          payment = const PaymentBridgeFailed(
+            'Incomplete payment response from Razorpay.',
           );
-          return;
-        }
-        onResult(
-          PaymentBridgeSuccess(
+        } else {
+          payment = PaymentBridgeSuccess(
             razorpayPaymentId: paymentId,
             razorpayOrderId: orderId,
             razorpaySignature: signature,
-          ),
-        );
+          );
+        }
       case 'error':
-        onResult(
-          PaymentBridgeFailed(
-            uri.queryParameters['description'] ?? 'Payment failed.',
-          ),
+        payment = PaymentBridgeFailed(
+          uri.queryParameters['description'] ?? 'Payment failed.',
         );
       case 'dismiss':
-        onResult(const PaymentBridgeCancelled());
+        payment = const PaymentBridgeCancelled();
       default:
-        break;
+        return;
     }
+
+    widget.onResult(
+      SubscriptionPaymentHostResult(order: order, payment: payment),
+    );
+  }
+
+  InAppWebViewSettings _webViewSettings() {
+    return InAppWebViewSettings(
+      javaScriptEnabled: true,
+      domStorageEnabled: true,
+      javaScriptCanOpenWindowsAutomatically: true,
+      supportMultipleWindows: true,
+      useShouldOverrideUrlLoading: true,
+      mediaPlaybackRequiresUserGesture: false,
+      allowsInlineMediaPlayback: true,
+      mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+      transparentBackground: true,
+      userAgent: _desktopUserAgent(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
-    // width ≤ 800 → compact; width > 800 → desktop
     final double dialogWidth;
     final double dialogHeight;
     if (screenSize.width > 800) {
@@ -223,12 +334,6 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
       dialogHeight = 680;
     }
 
-    debugPrint(
-      '[checkout] host ${dialogWidth.toInt()}x${dialogHeight.toInt()} '
-      '(window=${screenSize.width.toStringAsFixed(0)}x'
-      '${screenSize.height.toStringAsFixed(0)})',
-    );
-
     return Center(
       child: Material(
         color: Colors.transparent,
@@ -237,84 +342,102 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
           height: dialogHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: InAppWebView(
-              initialData: InAppWebViewInitialData(
-                data: _checkoutHtml(options),
-                encoding: 'utf-8',
-                baseUrl: WebUri('https://checkout.razorpay.com'),
-              ),
-              initialSettings: InAppWebViewSettings(
-                javaScriptCanOpenWindowsAutomatically: true,
-                supportMultipleWindows: true,
-                mediaPlaybackRequiresUserGesture: false,
-                allowsInlineMediaPlayback: true,
-                mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-                transparentBackground: true,
-                userAgent: _desktopUserAgent(),
-              ),
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                final url = navigationAction.request.url.toString();
-                if (url.startsWith('razorpay://')) {
-                  _handleCustomSchemeUrl(url);
-                  return NavigationActionPolicy.CANCEL;
-                }
-                return NavigationActionPolicy.ALLOW;
-              },
-              onConsoleMessage: (controller, message) {
-                debugPrint('[checkout] console: ${message.message}');
-              },
-              onCreateWindow: (controller, createWindowAction) async {
-                // Netbanking / bank redirects open in a popup WebView.
-                if (!context.mounted) return true;
-                final popupWidth =
-                    screenSize.width > 900 ? 900.0 : screenSize.width - 32;
-                final popupHeight =
-                    screenSize.height > 750 ? 700.0 : screenSize.height - 80;
-
-                unawaited(
-                  showDialog<void>(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (popupContext) {
-                      return Dialog(
-                        backgroundColor: Colors.transparent,
-                        insetPadding: const EdgeInsets.all(16),
-                        constraints: BoxConstraints(
-                          maxWidth: popupWidth,
-                          maxHeight: popupHeight,
-                        ),
-                        child: SizedBox(
-                          width: popupWidth,
-                          height: popupHeight,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: InAppWebView(
-                                windowId: createWindowAction.windowId,
-                                initialSettings: InAppWebViewSettings(
-                                  transparentBackground: true,
-                                ),
-                                onCloseWindow: (_) {
-                                  Navigator.of(popupContext).pop();
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-                return true;
-              },
+            child: ColoredBox(
+              color: AppColors.surface,
+              child: _isResolvingOrder
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildCheckoutWebView(screenSize),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCheckoutWebView(Size screenSize) {
+    final order = _order;
+    if (order == null) {
+      return const SizedBox.shrink();
+    }
+
+    final options = razorpayCheckoutOptions(order: order, planType: widget.planType);
+
+    debugPrint(
+      '[checkout] host ${screenSize.width > 800 ? 1000 : 440}x'
+      '${screenSize.width > 800 ? 580 : 680} '
+      '(window=${screenSize.width.toStringAsFixed(0)}x'
+      '${screenSize.height.toStringAsFixed(0)})',
+    );
+
+    return InAppWebView(
+      key: ValueKey(order.paymentUuid),
+      initialData: InAppWebViewInitialData(
+        data: _checkoutHtml(options),
+        encoding: 'utf-8',
+        baseUrl: WebUri('https://checkout.razorpay.com'),
+      ),
+      initialSettings: _webViewSettings(),
+      shouldOverrideUrlLoading: (controller, navigationAction) async {
+        final url = navigationAction.request.url.toString();
+        if (url.startsWith('razorpay://')) {
+          _handleCustomSchemeUrl(url);
+          return NavigationActionPolicy.CANCEL;
+        }
+        return NavigationActionPolicy.ALLOW;
+      },
+      onConsoleMessage: (controller, message) {
+        debugPrint('[checkout] console: ${message.message}');
+      },
+      onCreateWindow: (controller, createWindowAction) async {
+        if (!context.mounted) return true;
+        final popupWidth = screenSize.width > 900 ? 900.0 : screenSize.width - 32;
+        final popupHeight =
+            screenSize.height > 750 ? 700.0 : screenSize.height - 80;
+
+        unawaited(
+          showDialog<void>(
+            context: context,
+            useRootNavigator: true,
+            barrierDismissible: false,
+            builder: (popupContext) {
+              return Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.all(16),
+                constraints: BoxConstraints(
+                  maxWidth: popupWidth,
+                  maxHeight: popupHeight,
+                ),
+                child: SizedBox(
+                  width: popupWidth,
+                  height: popupHeight,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: InAppWebView(
+                        windowId: createWindowAction.windowId,
+                        initialSettings: InAppWebViewSettings(
+                          javaScriptEnabled: true,
+                          domStorageEnabled: true,
+                          useShouldOverrideUrlLoading: true,
+                          transparentBackground: true,
+                        ),
+                        onCloseWindow: (_) {
+                          Navigator.of(popupContext).pop();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+        return true;
+      },
     );
   }
 }
