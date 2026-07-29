@@ -118,7 +118,6 @@ class _AddSaleFaPageState extends ConsumerState<DesktopAddSaleFaPage> {
             ),
             child: SalePageTitleBar(
               currentRoute: AppRoutes.saleFa,
-              onSettingsTap: () {},
               onBack: _handleBack,
             ),
           ),

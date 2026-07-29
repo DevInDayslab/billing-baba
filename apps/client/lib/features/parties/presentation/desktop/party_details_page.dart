@@ -75,7 +75,6 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => _openAddPartyDialog(context, ref),
-                onSettingsTap: () {},
               ),
               const SizedBox(height: AppSpacing.md),
               Expanded(

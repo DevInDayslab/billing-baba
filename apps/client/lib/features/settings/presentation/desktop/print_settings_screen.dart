@@ -12,7 +12,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class DesktopPrintSettingsScreen extends ConsumerStatefulWidget {
-  const DesktopPrintSettingsScreen({super.key});
+  const DesktopPrintSettingsScreen({this.embedded = false, super.key});
+
+  /// When true, omit the standalone AppBar (used inside Settings tabs).
+  final bool embedded;
 
   static const _narrowBreakpoint = 600.0;
 
@@ -77,36 +80,39 @@ class _PrintSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(printSettingsProvider);
+    final embedded = widget.embedded;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.textPrimary,
-          onPressed: () => context.pop(),
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: Text(
-          'Print Settings',
-          style: AppTypography.inter(
-            fontSize: AppTypography.titleMediumSize,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: listPanelCardBorder,
-          ),
-        ),
-      ),
+      appBar: embedded
+          ? null
+          : AppBar(
+              backgroundColor: AppColors.surface,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                color: AppColors.textPrimary,
+                onPressed: () => context.pop(),
+              ),
+              iconTheme: const IconThemeData(color: AppColors.textPrimary),
+              title: Text(
+                'Print Settings',
+                style: AppTypography.inter(
+                  fontSize: AppTypography.titleMediumSize,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(1),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: listPanelCardBorder,
+                ),
+              ),
+            ),
       body: settingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
@@ -142,34 +148,43 @@ class _PrintSettingsScreenState
               top: BorderSide(color: listPanelCardBorder),
             ),
           ),
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
           child: SafeArea(
-            child: FilledButton(
-              onPressed: _isApplying || _draft == null ? null : _handleApply,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                minimumSize: const Size(double.infinity, 0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                onPressed: _isApplying || _draft == null ? null : _handleApply,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: const Size(96, 40),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  textStyle: AppTypography.inter(
+                    fontSize: AppTypography.bodyMediumSize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                textStyle: AppTypography.inter(
-                  fontSize: AppTypography.bodyMediumSize,
-                  fontWeight: FontWeight.w600,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: _isApplying
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Apply'),
               ),
-              child: _isApplying
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Apply'),
             ),
           ),
         ),

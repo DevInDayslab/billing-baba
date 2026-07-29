@@ -18,7 +18,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class DesktopEditProfilePage extends ConsumerStatefulWidget {
-  const DesktopEditProfilePage({super.key});
+  const DesktopEditProfilePage({this.embedded = false, super.key});
+
+  /// When true, omit page chrome meant for the standalone `/edit-profile` route
+  /// (used inside the Settings Business Profile tab).
+  final bool embedded;
 
   @override
   ConsumerState<DesktopEditProfilePage> createState() => _EditProfilePageState();
@@ -596,15 +600,17 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Edit Profile',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                if (!widget.embedded) ...[
+                  const Text(
+                    'Edit Profile',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
                 if (formState.generalError != null) ...[
                   Container(
                     width: double.infinity,
@@ -720,19 +726,50 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          OutlinedButton(
-                            onPressed: formState.isSubmitting
-                                ? null
-                                : () => context.pop(),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg,
-                                vertical: AppSpacing.sm + 4,
+                          if (!widget.embedded) ...[
+                            OutlinedButton(
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : () => context.pop(),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.lg,
+                                  vertical: AppSpacing.sm + 4,
+                                ),
                               ),
+                              child: const Text('Cancel'),
                             ),
-                            child: const Text('Cancel'),
-                          ),
-                          const SizedBox(width: AppSpacing.sm + 4),
+                            const SizedBox(width: AppSpacing.sm + 4),
+                          ] else ...[
+                            OutlinedButton(
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : () {
+                                      final current = ref
+                                          .read(businessProfileProvider)
+                                          .asData
+                                          ?.value;
+                                      if (current == null) return;
+                                      setState(
+                                        () => _hydrateFromProfile(current),
+                                      );
+                                      ref
+                                          .read(
+                                            editBusinessProfileFormProvider
+                                                .notifier,
+                                          )
+                                          .clearErrors();
+                                    },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.lg,
+                                  vertical: AppSpacing.sm + 4,
+                                ),
+                              ),
+                              child: const Text('Reset'),
+                            ),
+                            const SizedBox(width: AppSpacing.sm + 4),
+                          ],
                           FilledButton(
                             onPressed: formState.isSubmitting ? null : _save,
                             style: FilledButton.styleFrom(

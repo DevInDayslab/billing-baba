@@ -31,7 +31,6 @@ class DesktopSaleReturnPage extends ConsumerWidget {
               children: [
                 SalePageTitleBar(
                   currentRoute: AppRoutes.saleReturnCreditNote,
-                  onSettingsTap: () {},
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const SaleReturnFilterBar(),

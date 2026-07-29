@@ -15,6 +15,7 @@ import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
 import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
@@ -158,6 +159,7 @@ void invalidateAllBusinessScopedProviders(
     ..invalidate(dashboardWidgetPreferencesProvider)
     ..invalidate(saleLineItemColumnVisibilityStateProvider)
     ..invalidate(localItemTierPricesProvider)
+    ..invalidate(localItemSuppliersProvider)
     ..invalidate(posCartProvider)
     ..invalidate(posSalesListProvider)
     ..invalidate(dashboardProvider)

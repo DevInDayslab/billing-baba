@@ -675,18 +675,6 @@ class _DialogHeader extends StatelessWidget {
           ),
           const Spacer(),
           IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.calculate_outlined, size: 20),
-            color: AppColors.textSecondary,
-            tooltip: 'Calculator',
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.settings_outlined, size: 20),
-            color: AppColors.textSecondary,
-            tooltip: 'Settings',
-          ),
-          IconButton(
             onPressed: onClose,
             icon: const Icon(Icons.close, size: 20),
             color: AppColors.textSecondary,

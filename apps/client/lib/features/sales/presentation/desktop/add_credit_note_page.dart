@@ -143,7 +143,6 @@ class _AddCreditNotePageState extends ConsumerState<DesktopAddCreditNotePage> {
             ),
             child: SalePageTitleBar(
               currentRoute: AppRoutes.saleReturnCreditNote,
-              onSettingsTap: () {},
               onBack: _handleBack,
             ),
           ),

@@ -6,6 +6,7 @@ import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/data/brand_local_source.dart';
 import 'package:billing_baba/features/inventory/data/brand_master_repository.dart';
@@ -20,8 +21,6 @@ import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
-import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
-import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
 import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
@@ -37,7 +36,6 @@ import 'package:billing_baba/features/inventory/models/godown_model.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/brand_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
@@ -48,6 +46,7 @@ import 'package:billing_baba/features/inventory/models/mappers/item_mapper.dart'
 import 'package:billing_baba/features/inventory/models/mappers/movement_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/price_history_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/unit_mapper.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/price_history_model.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/models/requests/brand_requests.dart';
@@ -58,6 +57,8 @@ import 'package:billing_baba/features/inventory/models/requests/movement_request
 import 'package:billing_baba/features/inventory/models/requests/unit_requests.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
+import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -80,9 +81,17 @@ Future<InventoryService> inventoryService(Ref ref) async {
     deviceId = null;
   }
 
+  // Rebuild when the active business changes so item ops get a fresh business id.
+  final currentBusiness = ref.watch(currentBusinessProvider);
+
   final remote = InventoryRemoteDataSource(api.dio);
-  String businessIdReader() =>
-      storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
+  String businessIdReader() {
+    final fromProfile = currentBusiness?.id.trim() ??
+        ref.read(currentBusinessProvider)?.id.trim() ??
+        '';
+    if (fromProfile.isNotEmpty) return fromProfile;
+    return storage.read(StorageKeys.lastOpenedBusinessId)?.trim() ?? '';
+  }
   String? deviceIdReader() => deviceId;
 
   final repository = InventoryRepository(

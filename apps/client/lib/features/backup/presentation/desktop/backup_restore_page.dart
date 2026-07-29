@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 class BackupRestorePage extends ConsumerStatefulWidget {
-  const BackupRestorePage({super.key});
+  const BackupRestorePage({this.embedded = false, super.key});
+
+  final bool embedded;
 
   @override
   ConsumerState<BackupRestorePage> createState() => _BackupRestorePageState();
@@ -86,54 +88,62 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final body = Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Local backup (.biba)',
+            style: theme.textTheme.titleLarge,
+          ),
+          const Gap(8),
+          Text(
+            'Create a backup file on this computer, or restore from a '
+            '.biba file. Choose the save location when you create a backup.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const Gap(24),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              FilledButton.icon(
+                onPressed: _busy ? null : _exportBackup,
+                icon: const Icon(Icons.upload_file_outlined),
+                label: const Text('Create Backup'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _busy ? null : _restoreBackup,
+                icon: const Icon(Icons.download_outlined),
+                label: const Text('Restore Backup'),
+              ),
+            ],
+          ),
+          if (_busy) ...[
+            const Gap(24),
+            const LinearProgressIndicator(),
+          ],
+          if (_statusMessage != null) ...[
+            const Gap(16),
+            Text(_statusMessage!),
+          ],
+        ],
+      ),
+    );
+
+    if (widget.embedded) {
+      return ColoredBox(
+        color: AppColors.surface,
+        child: body,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Backup & Restore')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Local backup (.biba)',
-              style: theme.textTheme.titleLarge,
-            ),
-            const Gap(8),
-            Text(
-              'Export master data, documents, sync queue, cursor, and device '
-              'identity. Restore on a fresh install to continue syncing without '
-              'duplicate uploads.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const Gap(24),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                FilledButton.icon(
-                  onPressed: _busy ? null : _exportBackup,
-                  icon: const Icon(Icons.upload_file_outlined),
-                  label: const Text('Export backup'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _busy ? null : _restoreBackup,
-                  icon: const Icon(Icons.download_outlined),
-                  label: const Text('Restore backup'),
-                ),
-              ],
-            ),
-            if (_busy) ...[
-              const Gap(24),
-              const LinearProgressIndicator(),
-            ],
-            if (_statusMessage != null) ...[
-              const Gap(16),
-              Text(_statusMessage!),
-            ],
-          ],
-        ),
-      ),
+      body: body,
     );
   }
 }

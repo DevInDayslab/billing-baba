@@ -60,18 +60,8 @@ class AppTopBar extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
               ],
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minWidth: 320,
-                      maxWidth: 600,
-                    ),
-                    child: const GlobalSearchField(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
+              const Expanded(child: GlobalSearchField()),
+              const SizedBox(width: AppSpacing.md),
               _TopBarActions(showQuickButtons: !isCompact),
             ],
           );
@@ -160,17 +150,18 @@ class _QuickActionButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: backgroundColor,
         foregroundColor: Colors.white,
+        elevation: 0,
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm + 2,
         ),
-        minimumSize: const Size(0, 34),
+        minimumSize: const Size(0, 40),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
       ),
-      icon: Icon(icon, size: 15),
+      icon: Icon(icon, size: 18),
       label: Text(
         label,
         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),

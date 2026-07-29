@@ -77,12 +77,6 @@ abstract final class MobileTransactionCatalog {
     MobileFilterOption(key: 'open', label: 'Open'),
   ];
 
-  static const Set<String> _crmRoutes = {
-    AppRoutes.crmLeads,
-    AppRoutes.crmContacts,
-    AppRoutes.crmDeals,
-  };
-
   static final Map<String, MobileTransactionScopeDefinition> _byRoute = {
     for (final def in all) def.route: def,
   };
@@ -123,20 +117,19 @@ abstract final class MobileTransactionCatalog {
 
   static final List<MobileTransactionScopeDefinition> _salesDefinitions = [
     for (final sub in SaleSubRoutes.items)
-      if (!_crmRoutes.contains(sub.route))
-        MobileTransactionScopeDefinition(
-          scopeId: _scopeId(sub.route),
-          route: sub.route,
-          title: sub.pageTitle ?? sub.label,
-          category: MobileTransactionCategory.sales,
-          addRoute: _salesAddRoute(sub.route),
-          addFabLabel: _salesAddLabel(sub.route),
-          leadingIcon: _salesIcon(sub.route),
-          isP2P: sub.route == AppRoutes.salePaymentIn,
-          emptyMessage: sub.route == AppRoutes.salePaymentIn
-              ? 'Record a payment received from a party.'
-              : null,
-        ),
+      MobileTransactionScopeDefinition(
+        scopeId: _scopeId(sub.route),
+        route: sub.route,
+        title: sub.pageTitle ?? sub.label,
+        category: MobileTransactionCategory.sales,
+        addRoute: _salesAddRoute(sub.route),
+        addFabLabel: _salesAddLabel(sub.route),
+        leadingIcon: _salesIcon(sub.route),
+        isP2P: sub.route == AppRoutes.salePaymentIn,
+        emptyMessage: sub.route == AppRoutes.salePaymentIn
+            ? 'Record a payment received from a party.'
+            : null,
+      ),
   ];
 
   static final List<MobileTransactionScopeDefinition> _purchaseDefinitions = [

@@ -109,7 +109,6 @@ class _AddDeliveryChallanPageState
                   ),
                   child: SalePageTitleBar(
                     currentRoute: AppRoutes.saleDeliveryChallan,
-                    onSettingsTap: () {},
                     onBack: _handleClose,
                   ),
                 ),

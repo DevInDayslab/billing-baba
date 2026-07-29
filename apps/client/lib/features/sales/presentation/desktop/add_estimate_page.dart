@@ -106,7 +106,6 @@ class _AddEstimatePageState extends ConsumerState<DesktopAddEstimatePage> {
               ),
               child: SalePageTitleBar(
                 currentRoute: AppRoutes.saleEstimateQuotation,
-                onSettingsTap: () {},
                 onBack: _handleClose,
               ),
             ),

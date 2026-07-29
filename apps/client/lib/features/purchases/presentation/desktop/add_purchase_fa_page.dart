@@ -44,7 +44,6 @@ class DesktopAddPurchaseFaPage extends ConsumerWidget {
               children: [
                 PurchasePageTitleBar(
                   currentRoute: AppRoutes.purchaseFa,
-                  onSettingsTap: () {},
                   onBack: () => leaveTransactionFormPage(
                     context: context,
                     isDirty: form.isDirty,

@@ -25,18 +25,20 @@ class PosPageTitleBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        IconButton(
-          onPressed: onHistoryTap,
-          icon: const Icon(Icons.history),
-          color: AppColors.textSecondary,
-          tooltip: 'History',
-        ),
-        IconButton(
-          onPressed: onSettingsTap,
-          icon: const Icon(Icons.settings_outlined),
-          color: AppColors.textSecondary,
-          tooltip: 'Settings',
-        ),
+        if (onHistoryTap != null)
+          IconButton(
+            onPressed: onHistoryTap,
+            icon: const Icon(Icons.history),
+            color: AppColors.textSecondary,
+            tooltip: 'History',
+          ),
+        if (onSettingsTap != null)
+          IconButton(
+            onPressed: onSettingsTap,
+            icon: const Icon(Icons.settings_outlined),
+            color: AppColors.textSecondary,
+            tooltip: 'Settings',
+          ),
       ],
     );
   }

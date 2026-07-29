@@ -269,11 +269,6 @@ class _HeaderControls extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        IconButton(
-          tooltip: 'Settings',
-          onPressed: () {},
-          icon: Icon(Icons.settings_outlined, color: Colors.grey.shade600),
-        ),
       ],
     );
   }
