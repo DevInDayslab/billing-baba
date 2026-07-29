@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
-import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
@@ -57,16 +57,21 @@ class BusinessService {
     bool forceRefresh = false,
   }) async {
     final auth = _ref.read(authProvider);
-    final accountId = auth.session?.user.id;
+    final session = auth.session;
+    final accountId = _businessListCacheAccountId(session);
     final selectedId = authHasBusinessScope(auth)
         ? _cache.readLastOpenedBusinessId()
         : null;
 
-    if (accountId != null) {
+    if (accountId != null && session != null) {
       final cachedAccountId = _cache.readCachedBusinessesAccountId();
       if (cachedAccountId != null &&
           cachedAccountId.isNotEmpty &&
-          cachedAccountId != accountId) {
+          !JwtUtils.isSameAccountCacheKey(
+            cachedAccountId: cachedAccountId,
+            sessionUserId: session.user.id,
+            accessToken: session.accessToken,
+          )) {
         await _cache.clearAll();
       }
     }
@@ -93,6 +98,16 @@ class BusinessService {
       if (cached.isNotEmpty) return cached;
       rethrow;
     }
+  }
+
+  /// Stable SharedPreferences key: JWT `account_id` when present, else user.id.
+  String? _businessListCacheAccountId(AuthSession? session) {
+    if (session == null) return null;
+    final fromJwt = JwtUtils.accountId(session.accessToken);
+    if (fromJwt != null && fromJwt.isNotEmpty) return fromJwt;
+    final id = session.user.id;
+    if (id.isEmpty || id == 'offline') return null;
+    return id;
   }
 
   Future<void> _refreshInBackground(

@@ -10,6 +10,7 @@ import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
+import 'package:billing_baba/features/business/data/business_cache.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
@@ -119,13 +120,15 @@ class AuthService {
           businessId: selectedId,
         );
       }
-      return AuthSession(
+      final session = AuthSession(
         accessToken: accessToken,
         refreshToken: refreshToken,
         expiresIn: 0,
         user: me.user,
         businesses: me.businesses,
       );
+      await seedBusinessListCache(session);
+      return session;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         AuthDebugLogger.log(
@@ -137,9 +140,10 @@ class AuthService {
         );
       }
       if (NetworkExceptionClassifier.isConnectivityError(e)) {
-        final phone = _storage.read(StorageKeys.accountPhone) ?? '';
-        final payload = JwtUtils.decodePayload(accessToken);
-        final userId = payload?['sub']?.toString() ?? 'offline';
+        final storedPhone = _storage.read(StorageKeys.accountPhone) ?? '';
+        final phone = JwtUtils.phone(accessToken) ?? storedPhone;
+        // API JWTs use account_id / user_id — never `sub`.
+        final userId = JwtUtils.sessionUserId(accessToken) ?? 'offline';
         return AuthSession(
           accessToken: accessToken,
           refreshToken: refreshToken,
@@ -297,6 +301,47 @@ class AuthService {
     } else {
       await _storage.deleteSecure(StorageKeys.selectedBusinessId);
     }
+
+    await seedBusinessListCache(session);
+  }
+
+  /// Seeds SharedPreferences business-list cache from auth session summaries so
+  /// company selection works offline even if GET /businesses was never called.
+  Future<void> seedBusinessListCache(AuthSession session) async {
+    if (session.businesses.isEmpty) return;
+    if (isOfflineDevSession(session)) return;
+
+    final accountId =
+        JwtUtils.accountId(session.accessToken) ?? session.user.id;
+    if (accountId.isEmpty || accountId == 'offline') return;
+
+    final cache = BusinessCache(_storage);
+    final existing = await cache.readBusinesses();
+    final cachedAccountId = cache.readCachedBusinessesAccountId();
+    if (existing.isNotEmpty &&
+        cachedAccountId != null &&
+        JwtUtils.isSameAccountCacheKey(
+          cachedAccountId: cachedAccountId,
+          sessionUserId: session.user.id,
+          accessToken: session.accessToken,
+        )) {
+      // Keep a richer list from GET /businesses when already present.
+      return;
+    }
+
+    await cache.saveBusinesses(
+      session.businesses
+          .map(
+            (b) => <String, dynamic>{
+              'id': b.id,
+              'name': b.name,
+              'role': b.role,
+              'gstin': b.gstin,
+            },
+          )
+          .toList(),
+      accountId: accountId,
+    );
   }
 
   String? _businessIdForSession(

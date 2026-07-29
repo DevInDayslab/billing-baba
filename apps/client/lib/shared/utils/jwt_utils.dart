@@ -39,6 +39,63 @@ abstract final class JwtUtils {
     return value.toString();
   }
 
+  /// Account UUID from the API access token (`account_id` claim).
+  static String? accountId(String? token) {
+    if (token == null || token.isEmpty) return null;
+    final payload = decodePayload(token);
+    final id = payload?['account_id'];
+    if (id == null) return null;
+    final value = id.toString().trim();
+    return value.isEmpty ? null : value;
+  }
+
+  /// Membership user UUID when the token is business-scoped (`user_id` claim).
+  static String? membershipUserId(String? token) {
+    if (token == null || token.isEmpty) return null;
+    final payload = decodePayload(token);
+    final id = payload?['user_id'];
+    if (id == null) return null;
+    final value = id.toString().trim();
+    return value.isEmpty ? null : value;
+  }
+
+  /// Stable session user id matching API `buildUserResponse`:
+  /// membership `user_id` when present, otherwise `account_id`.
+  static String? sessionUserId(String? token) =>
+      membershipUserId(token) ?? accountId(token);
+
+  static String? phone(String? token) {
+    if (token == null || token.isEmpty) return null;
+    final payload = decodePayload(token);
+    final value = payload?['phone'];
+    if (value == null) return null;
+    final phone = value.toString().trim();
+    return phone.isEmpty ? null : phone;
+  }
+
+  /// Whether [cachedAccountId] belongs to the same account as the session.
+  ///
+  /// Cache keys historically used either `account_id` or membership/`user.id`;
+  /// treat all of those as the same account so offline restore never wipes the list.
+  static bool isSameAccountCacheKey({
+    required String cachedAccountId,
+    required String? sessionUserId,
+    String? accessToken,
+  }) {
+    if (cachedAccountId.isEmpty) return false;
+    if (sessionUserId == 'offline') return true;
+    if (sessionUserId != null &&
+        sessionUserId.isNotEmpty &&
+        cachedAccountId == sessionUserId) {
+      return true;
+    }
+    final account = accountId(accessToken);
+    if (account != null && cachedAccountId == account) return true;
+    final membership = membershipUserId(accessToken);
+    if (membership != null && cachedAccountId == membership) return true;
+    return false;
+  }
+
   /// Returns true when the JWT `exp` claim is in the past (with optional leeway).
   static bool isExpired(
     String? token, {
