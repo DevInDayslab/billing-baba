@@ -263,6 +263,15 @@ export class AuthService {
         phone: DEV_BUSINESS_PHONE,
       });
       memberships = [membership];
+    } else if (memberships.length > 1) {
+      // Dev accounts accumulate many test businesses; seeding all of them on
+      // every login is O(n) remote round-trips and blows past Bun's hook timeout.
+      const preferred = memberships.find(
+        (membership) => membership.businessName === DEV_BUSINESS_NAME,
+      );
+      if (preferred) {
+        memberships = [preferred];
+      }
     }
 
     for (const membership of memberships) {
