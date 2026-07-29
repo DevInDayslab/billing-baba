@@ -6,13 +6,17 @@ const _uuid = Uuid();
 /// A queued row in the barcode generator table.
 class BarcodeLabelEntry {
   BarcodeLabelEntry({
-    required this.itemName, required this.itemCode, required this.labelCount, String? id,
+    required this.itemName,
+    required this.itemCode,
+    required this.labelCount,
+    String? id,
     this.itemId,
     this.header = '',
     this.line1 = '',
     this.line2 = '',
     this.line3 = '',
     this.line4 = '',
+    this.noBarcode = false,
   }) : id = id ?? _uuid.v4();
 
   final String id;
@@ -25,6 +29,7 @@ class BarcodeLabelEntry {
   final String line2;
   final String line3;
   final String line4;
+  final bool noBarcode;
 
   BarcodeLabelEntry copyWith({
     String? itemName,
@@ -36,6 +41,7 @@ class BarcodeLabelEntry {
     String? line2,
     String? line3,
     String? line4,
+    bool? noBarcode,
   }) {
     return BarcodeLabelEntry(
       id: id,
@@ -48,6 +54,7 @@ class BarcodeLabelEntry {
       line2: line2 ?? this.line2,
       line3: line3 ?? this.line3,
       line4: line4 ?? this.line4,
+      noBarcode: noBarcode ?? this.noBarcode,
     );
   }
 }

@@ -20,4 +20,23 @@ void main() {
     expect(bytes, isNotEmpty);
     expect(String.fromCharCodes(bytes.take(4)), '%PDF');
   });
+
+  test('builds pdf without barcode graphic when noBarcode is set', () async {
+    final bytes = await BarcodeLabelPdfBuilder.build(
+      entries: [
+        BarcodeLabelEntry(
+          itemName: 'Widget',
+          itemCode: '8901234567890',
+          labelCount: 1,
+          header: 'Store',
+          line1: 'Price tag',
+          noBarcode: true,
+        ),
+      ],
+      layout: BarcodeLabelLayout.twoLabels50x25,
+    );
+
+    expect(bytes, isNotEmpty);
+    expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+  });
 }

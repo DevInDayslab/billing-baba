@@ -119,8 +119,8 @@ class _DashboardGrid extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                height: metrics.kpiRowHeight,
+              Expanded(
+                flex: metrics.kpiRowFlex,
                 child: DashboardOverviewSection(
                   overview: dashboard.overview,
                   onReceivableTap: onReceivableTap,
@@ -128,8 +128,8 @@ class _DashboardGrid extends StatelessWidget {
                 ),
               ),
               SizedBox(height: metrics.gap),
-              SizedBox(
-                height: metrics.chartRowHeight,
+              Expanded(
+                flex: metrics.chartRowFlex,
                 child: DashboardChartTodoRow(
                   dashboard: dashboard,
                   period: period,
@@ -138,8 +138,8 @@ class _DashboardGrid extends StatelessWidget {
                 ),
               ),
               SizedBox(height: metrics.gap),
-              SizedBox(
-                height: metrics.reportsRowHeight,
+              Expanded(
+                flex: metrics.reportsRowFlex,
                 child: DashboardReportsRow(
                   reports: dashboard.quickReports,
                 ),

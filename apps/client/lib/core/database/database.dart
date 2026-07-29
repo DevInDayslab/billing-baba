@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/database/database_corruption_exception.dart';
 import 'package:billing_baba/core/database/drift_database_paths.dart';
 import 'package:billing_baba/core/database/tables/brands_table.dart';
 import 'package:billing_baba/core/database/tables/business_settings_table.dart';
@@ -60,6 +61,16 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+      final integrityRows = await customSelect('PRAGMA integrity_check').get();
+      for (final row in integrityRows) {
+        final result = row.read<String>('integrity_check');
+        if (result != 'ok') {
+          throw DatabaseCorruptionException(result);
+        }
+      }
+    },
     onCreate: (m) async {
       await m.createAll();
     },

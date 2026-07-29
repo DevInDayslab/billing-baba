@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
@@ -16,6 +18,15 @@ class AuthService {
     required this._repository,
     required this._storage,
   });
+
+  /// Serializes every `/auth/refresh` call across Dio clients and business selection.
+  static Future<void> _refreshMutexChain = Future<void>.value();
+
+  static Future<T> _withRefreshLock<T>(Future<T> Function() action) {
+    final operation = _refreshMutexChain.then((_) => action());
+    _refreshMutexChain = operation.then((_) {}, onError: (_) {});
+    return operation;
+  }
 
   /// Local-only developer session — never sent to the API.
   static const devAccessToken = 'dev-offline-access-token';
@@ -158,21 +169,23 @@ class AuthService {
             ? storedBusinessId
             : null);
 
-    try {
-      final session = await _repository.refresh(
-        refreshToken: token,
-        businessId: effectiveBusinessId,
-      );
-      final persistBusinessId = _businessIdForSession(
-        session,
-        explicitBusinessId: businessId ?? effectiveBusinessId,
-      );
-      await persistSession(session, businessId: persistBusinessId);
-      return session;
-    } on DioException {
-      await clearSession();
-      return null;
-    }
+    return _withRefreshLock(() async {
+      try {
+        final session = await _repository.refresh(
+          refreshToken: token,
+          businessId: effectiveBusinessId,
+        );
+        final persistBusinessId = _businessIdForSession(
+          session,
+          explicitBusinessId: businessId ?? effectiveBusinessId,
+        );
+        await persistSession(session, businessId: persistBusinessId);
+        return session;
+      } on DioException {
+        await clearSession();
+        return null;
+      }
+    });
   }
 
   Future<AuthSession> loginWithMsg91Token({
@@ -208,12 +221,14 @@ class AuthService {
     required String businessId,
     required String refreshToken,
   }) async {
-    final session = await _repository.refresh(
-      refreshToken: refreshToken,
-      businessId: businessId,
-    );
-    await persistSession(session, businessId: businessId);
-    return session;
+    return _withRefreshLock(() async {
+      final session = await _repository.refresh(
+        refreshToken: refreshToken,
+        businessId: businessId,
+      );
+      await persistSession(session, businessId: businessId);
+      return session;
+    });
   }
 
   Future<void> logout() async {

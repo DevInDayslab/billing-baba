@@ -38,11 +38,16 @@ export function createSyncController() {
   return {
     registerDevice: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const { businessId, userId } = requireSyncAuthContext(request);
+        const { accountId, businessId, userId } = requireSyncAuthContext(request);
         const headers = parseSyncHeaders(request);
         const body = registerDeviceBodySchema.parse(request.body);
         assertDeviceIdMatch(headers[SYNC_HEADER_DEVICE_ID], body.device_id);
-        const data = await deviceService.register(businessId, userId, body);
+        const data = await deviceService.register(
+          accountId,
+          businessId,
+          userId,
+          body,
+        );
         return sendData(reply, data);
       } catch (error) {
         throw mapZod(error);

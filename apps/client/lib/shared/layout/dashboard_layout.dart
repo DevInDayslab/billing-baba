@@ -19,6 +19,11 @@ abstract final class DashboardLayout {
   static const chartHeightRatio = 0.64;
   static const reportsHeightRatio = 0.20;
 
+  // Flex weights for main-column rows (match height ratios × 100).
+  static const kpiRowFlex = 16;
+  static const chartRowFlex = 64;
+  static const reportsRowFlex = 20;
+
   // Chart row column split.
   static const chartRatio = 0.64;
   static const todoRatio = 0.36;
@@ -121,6 +126,9 @@ final class DashboardMetrics {
 
   int get chartColumnFlex => DashboardLayout.chartColumnFlex;
   int get todoColumnFlex => DashboardLayout.todoColumnFlex;
+  int get kpiRowFlex => DashboardLayout.kpiRowFlex;
+  int get chartRowFlex => DashboardLayout.chartRowFlex;
+  int get reportsRowFlex => DashboardLayout.reportsRowFlex;
 
   EdgeInsets get pagePadding =>
       const EdgeInsets.all(DashboardLayout.pagePadding);

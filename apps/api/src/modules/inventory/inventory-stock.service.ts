@@ -42,6 +42,12 @@ export type GodownRow = {
   isDefault: boolean;
 };
 
+type StockLevelRow = {
+  id: string;
+  quantity: string;
+  averageCost: string;
+};
+
 export async function getDefaultGodown(
   db: Database | DbTransaction,
   businessId: string,
@@ -73,6 +79,59 @@ export async function getDefaultGodown(
   return godown;
 }
 
+async function lockStockLevelRow(
+  tx: DbTransaction,
+  params: Pick<RecordMovementParams, 'businessId' | 'itemId' | 'godownId'>,
+): Promise<StockLevelRow> {
+  const predicate = and(
+    eq(stockLevels.businessId, params.businessId),
+    eq(stockLevels.itemId, params.itemId),
+    eq(stockLevels.godownId, params.godownId),
+    eq(stockLevels.isDeleted, false),
+  );
+
+  const selectLocked = () =>
+    tx
+      .select({
+        id: stockLevels.id,
+        quantity: stockLevels.quantity,
+        averageCost: stockLevels.averageCost,
+      })
+      .from(stockLevels)
+      .where(predicate)
+      .limit(1)
+      .for('update');
+
+  let [row] = await selectLocked();
+  if (row) {
+    return row;
+  }
+
+  await tx
+    .insert(stockLevels)
+    .values({
+      businessId: params.businessId,
+      itemId: params.itemId,
+      godownId: params.godownId,
+      quantity: '0',
+      averageCost: '0',
+    })
+    .onConflictDoNothing({
+      target: [
+        stockLevels.businessId,
+        stockLevels.itemId,
+        stockLevels.godownId,
+      ],
+    });
+
+  [row] = await selectLocked();
+  if (!row) {
+    throw new Error('Failed to lock stock level row');
+  }
+
+  return row;
+}
+
 export async function recordMovementAndUpdateStock(
   _db: Database,
   tx: DbTransaction,
@@ -90,25 +149,10 @@ export async function recordMovementAndUpdateStock(
     );
   }
 
-  const [existingStock] = await tx
-    .select({
-      id: stockLevels.id,
-      quantity: stockLevels.quantity,
-      averageCost: stockLevels.averageCost,
-    })
-    .from(stockLevels)
-    .where(
-      and(
-        eq(stockLevels.businessId, params.businessId),
-        eq(stockLevels.itemId, params.itemId),
-        eq(stockLevels.godownId, params.godownId),
-        eq(stockLevels.isDeleted, false),
-      ),
-    )
-    .limit(1);
+  const existingStock = await lockStockLevelRow(tx, params);
 
-  const currentQty = existingStock?.quantity ?? '0';
-  const currentAvg = existingStock?.averageCost ?? '0';
+  const currentQty = existingStock.quantity;
+  const currentAvg = existingStock.averageCost;
   const newQty = parseMoney(currentQty) + delta;
 
   if (newQty < 0) {
@@ -153,38 +197,19 @@ export async function recordMovementAndUpdateStock(
     costPerUnit,
   );
 
-  if (existingStock) {
-    const [updated] = await tx
-      .update(stockLevels)
-      .set({
-        quantity: normalizeMoney(newQty),
-        averageCost: newAverageCost,
-        updatedAt: new Date(),
-      })
-      .where(eq(stockLevels.id, existingStock.id))
-      .returning({ id: stockLevels.id });
-
-    if (!updated) {
-      throw new Error('Failed to update stock level');
-    }
-
-    return { movementId: movement.id, stockLevelId: updated.id };
-  }
-
-  const [created] = await tx
-    .insert(stockLevels)
-    .values({
-      businessId: params.businessId,
-      itemId: params.itemId,
-      godownId: params.godownId,
+  const [updated] = await tx
+    .update(stockLevels)
+    .set({
       quantity: normalizeMoney(newQty),
       averageCost: newAverageCost,
+      updatedAt: new Date(),
     })
+    .where(eq(stockLevels.id, existingStock.id))
     .returning({ id: stockLevels.id });
 
-  if (!created) {
-    throw new Error('Failed to create stock level');
+  if (!updated) {
+    throw new Error('Failed to update stock level');
   }
 
-  return { movementId: movement.id, stockLevelId: created.id };
+  return { movementId: movement.id, stockLevelId: updated.id };
 }

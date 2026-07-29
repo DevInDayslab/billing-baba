@@ -272,6 +272,7 @@ class SyncCoordinator {
             businessId: businessId,
             deviceId: deviceId,
             appVersion: appVersion,
+            syncGeneration: syncGeneration,
           );
           rowsDownloaded += downloaded;
           await _metadata.setBootstrappedAtFor(businessId, DateTime.now().toUtc());
@@ -341,6 +342,7 @@ class SyncCoordinator {
           businessId: businessId,
           deviceId: deviceId,
           appVersion: appVersion,
+          syncGeneration: syncGeneration,
         );
         rowsDownloaded += downloaded;
       } on Object catch (error) {
@@ -522,6 +524,7 @@ class SyncCoordinator {
     required String businessId,
     required String deviceId,
     required String appVersion,
+    required int syncGeneration,
   }) async {
     var downloaded = 0;
     var cursor = _metadata.pullCursorFor(businessId) ?? epochSyncCursor();
@@ -529,6 +532,10 @@ class SyncCoordinator {
     const maxPages = 50;
 
     while (pages < maxPages) {
+      if (SyncPauseGate.instance.isStale(syncGeneration)) {
+        return downloaded;
+      }
+
       pages += 1;
       final response = await _api.pull(
         deviceId: deviceId,
@@ -537,6 +544,10 @@ class SyncCoordinator {
         limit: 200,
         entityTypes: _pullEntityTypes,
       );
+
+      if (SyncPauseGate.instance.isStale(syncGeneration)) {
+        return downloaded;
+      }
 
       final changes = _asList(response['changes']);
       for (final change in changes) {

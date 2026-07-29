@@ -20,17 +20,18 @@ export class DeviceService {
   }
 
   async register(
+    accountId: string,
     businessId: string,
     userId: string | undefined,
     body: RegisterDeviceBody,
   ): Promise<SyncDeviceRecord> {
     const repo = this.getRepository();
-    const other = await repo.findByIdAnyBusiness(body.device_id);
-    if (other && other.businessId !== businessId) {
-      throw syncBusinessChanged(
-        'This device_id is already registered to another business',
-      );
-    }
+    await this.assertDeviceNotOwnedByOtherAccount(
+      repo,
+      accountId,
+      businessId,
+      body.device_id,
+    );
 
     return repo.upsert({
       deviceId: body.device_id,
@@ -60,5 +61,33 @@ export class DeviceService {
     deviceId: string,
   ): Promise<SyncDeviceRecord | null> {
     return this.getRepository().findByBusinessAndDeviceId(businessId, deviceId);
+  }
+
+  private async assertDeviceNotOwnedByOtherAccount(
+    repo: DeviceRepository,
+    accountId: string,
+    businessId: string,
+    deviceId: string,
+  ): Promise<void> {
+    const registrations = await repo.findAllByDeviceId(deviceId);
+    for (const registration of registrations) {
+      if (registration.businessId === businessId) {
+        continue;
+      }
+
+      const ownerAccountId = await repo.findAccountIdForBusiness(
+        registration.businessId,
+      );
+      if (ownerAccountId === null) {
+        throw syncBusinessChanged(
+          'This device_id is already registered to another business',
+        );
+      }
+      if (ownerAccountId !== accountId) {
+        throw syncBusinessChanged(
+          'This device_id is already registered to another account',
+        );
+      }
+    }
   }
 }

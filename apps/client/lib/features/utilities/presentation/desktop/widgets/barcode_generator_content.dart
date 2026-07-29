@@ -141,42 +141,40 @@ class _BarcodeGeneratorContentState
                           ),
                         ],
                       )
-                    : IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              flex: 7,
-                              child: _EntryFormCard(
-                                key: ValueKey(state.formSession),
-                                draft: draft,
-                                items: items,
-                                onDraftChanged: notifier.updateDraft,
-                                onItemSelected: notifier.selectInventoryItem,
-                                onItemNameChanged: (name, linkedItem) {
-                                  if (linkedItem != null &&
-                                      linkedItem.name.trim() != name.trim()) {
-                                    notifier.unlinkItemSelection(itemName: name);
-                                    return;
-                                  }
-                                  notifier.updateDraft(
-                                    draft.copyWith(itemName: name),
-                                  );
-                                },
-                                onAdd: notifier.addEntry,
-                              ),
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 7,
+                            child: _EntryFormCard(
+                              key: ValueKey(state.formSession),
+                              draft: draft,
+                              items: items,
+                              onDraftChanged: notifier.updateDraft,
+                              onItemSelected: notifier.selectInventoryItem,
+                              onItemNameChanged: (name, linkedItem) {
+                                if (linkedItem != null &&
+                                    linkedItem.name.trim() != name.trim()) {
+                                  notifier.unlinkItemSelection(itemName: name);
+                                  return;
+                                }
+                                notifier.updateDraft(
+                                  draft.copyWith(itemName: name),
+                                );
+                              },
+                              onAdd: notifier.addEntry,
                             ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              flex: 3,
-                              child: _PreviewCard(
-                                draft: draft,
-                                canAdd: draft.canAdd,
-                                onAdd: notifier.addEntry,
-                              ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            flex: 3,
+                            child: _PreviewCard(
+                              draft: draft,
+                              canAdd: draft.canAdd,
+                              onAdd: notifier.addEntry,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       );
 
                 return Column(
@@ -405,7 +403,7 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: _LabeledField(
-                    label: 'Item Code*',
+                    label: draft.noBarcode ? 'Item Code' : 'Item Code*',
                     error: draft.itemCodeError,
                     child: TextFormField(
                       controller: _itemCodeController,
@@ -513,6 +511,40 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.md),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: InkWell(
+                onTap: () => onDraftChanged(
+                  draft.copyWith(noBarcode: !draft.noBarcode),
+                ),
+                borderRadius: BorderRadius.circular(6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: draft.noBarcode,
+                        onChanged: (value) => onDraftChanged(
+                          draft.copyWith(noBarcode: value ?? false),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'No barcode',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -542,6 +574,7 @@ class _PreviewCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
@@ -559,16 +592,15 @@ class _PreviewCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            Expanded(
-              child: Center(
-                child: BarcodeLabelPreview(
-                  header: draft.header,
-                  itemCode: draft.itemCode,
-                  line1: draft.line1,
-                  line2: draft.line2,
-                  line3: draft.line3,
-                  line4: draft.line4,
-                ),
+            Center(
+              child: BarcodeLabelPreview(
+                header: draft.header,
+                itemCode: draft.itemCode,
+                line1: draft.line1,
+                line2: draft.line2,
+                line3: draft.line3,
+                line4: draft.line4,
+                showBarcode: !draft.noBarcode,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
