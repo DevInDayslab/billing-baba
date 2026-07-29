@@ -15,6 +15,8 @@ abstract final class AppRoutes {
   static const crmContacts = '/crm/contacts';
   static const crmDeals = '/crm/deals';
   static const items = '/items';
+  static const itemsStockSummary = '/items/stock-summary';
+  static const itemsSettings = '/items/settings';
   static const itemsCategories = '/items/categories';
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
@@ -106,6 +108,10 @@ abstract final class AppRoutes {
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
   static const plansPricing = '/plans-pricing';
+  static const subscriptionReview = '/plans-pricing/review';
+  static const subscriptionPaymentProcessing = '/plans-pricing/payment-processing';
+  static const subscriptionPaymentSuccess = '/plans-pricing/payment-success';
+  static const plansPricingLicenseInfo = '/plans-pricing/license-info';
   static const editProfile = '/edit-profile';
   static const userProfile = '/my-profile';
   static const accessDenied = '/access-denied';

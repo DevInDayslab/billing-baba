@@ -29,6 +29,14 @@ class PlansPricingView extends _$PlansPricingView {
     state = await AsyncValue.guard(_loadViewData);
   }
 
+  /// Frontend-only: refresh plans UI after a mock purchase.
+  void applyLocalPurchase(CurrentSubscription current) {
+    final plans = ref.read(subscriptionPlansProvider).value ??
+        SubscriptionLocalCatalog.plans();
+    _syncChildProviders(plans: plans, current: current);
+    state = AsyncData(PlansPricingMapper.build(plans: plans, current: current));
+  }
+
   Future<PlansPricingViewData> _loadViewData() async {
     final service = await ref.read(subscriptionServiceProvider.future);
 

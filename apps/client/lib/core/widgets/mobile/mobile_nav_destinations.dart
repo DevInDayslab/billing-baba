@@ -109,6 +109,13 @@ abstract final class MobileNavDestinations {
   static MobileNavTab tabForLocation(String location) {
     if (location.startsWith(AppRoutes.pos)) return MobileNavTab.pos;
     if (location.startsWith(AppRoutes.items)) return MobileNavTab.items;
+    if (location.startsWith(AppRoutes.plansPricingLicenseInfo) ||
+        location.startsWith(AppRoutes.subscriptionReview) ||
+        location.startsWith(AppRoutes.subscriptionPaymentProcessing) ||
+        location.startsWith(AppRoutes.subscriptionPaymentSuccess) ||
+        location.startsWith(AppRoutes.plansPricing)) {
+      return MobileNavTab.menu;
+    }
     if (location.startsWith(AppRoutes.settings)) return MobileNavTab.menu;
     if (location.startsWith(AppRoutes.reports)) return MobileNavTab.dashboard;
     if (location.startsWith(AppRoutes.home)) return MobileNavTab.home;

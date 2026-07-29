@@ -35,7 +35,7 @@ final class CurrentSubscriptionStateProvider
 }
 
 String _$currentSubscriptionStateHash() =>
-    r'd679f3eeb19f4da601febaeda69c459327881703';
+    r'bf54459e21f05d99a76c54e4884452ed41fecf51';
 
 abstract class _$CurrentSubscriptionState
     extends $AsyncNotifier<CurrentSubscription> {

@@ -26,10 +26,17 @@ import 'package:billing_baba/features/developer/presentation/table_filters_playg
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/mobile_item_settings_page.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/mobile_stock_summary_page.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/payment_processing_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/payment_success_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/review_order_summary_page.dart';
+import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_page.dart';
+import 'package:billing_baba/features/plans_pricing/application/plans_pricing_license_constants.dart';
 import 'package:billing_baba/features/pos/presentation/pos_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_expense_page.dart';
@@ -219,6 +226,14 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.items,
             builder: (context, state) => const ItemsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsStockSummary,
+            builder: (context, state) => const MobileStockSummaryPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsSettings,
+            builder: (context, state) => const MobileItemSettingsPage(),
           ),
           GoRoute(
             path: AppRoutes.itemsCategories,
@@ -593,6 +608,31 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.plansPricing,
             builder: (context, state) => const PlansPricingPage(),
+            routes: [
+              GoRoute(
+                path: 'review',
+                builder: (context, state) => const ReviewOrderSummaryPage(),
+              ),
+              GoRoute(
+                path: 'payment-processing',
+                builder: (context, state) => const PaymentProcessingPage(),
+              ),
+              GoRoute(
+                path: 'payment-success',
+                builder: (context, state) => const PaymentSuccessPage(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: AppRoutes.plansPricingLicenseInfo,
+            builder: (context, state) {
+              final sectionParam = state.uri.queryParameters['section'];
+              final section = MobileLicenseInfoSection.values.firstWhere(
+                (value) => value.name == sectionParam,
+                orElse: () => MobileLicenseInfoSection.none,
+              );
+              return MobileLicenseInfoPage(initialSection: section);
+            },
           ),
           GoRoute(
             path: AppRoutes.editProfile,

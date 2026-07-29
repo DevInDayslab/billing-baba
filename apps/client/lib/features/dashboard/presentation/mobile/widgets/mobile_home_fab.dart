@@ -7,10 +7,12 @@ class MobileHomeAddSaleFab extends StatelessWidget {
     required this.onPressed,
     super.key,
     this.label = 'Add New Sale',
+    this.icon = Icons.currency_rupee_rounded,
   });
 
   final VoidCallback onPressed;
   final String label;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -56,8 +58,8 @@ class MobileHomeAddSaleFab extends StatelessWidget {
                       width: 1.25,
                     ),
                   ),
-                  child: const Icon(
-                    Icons.currency_rupee_rounded,
+                  child: Icon(
+                    icon,
                     color: Colors.white,
                     size: 15,
                   ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
@@ -7,15 +8,18 @@ import 'package:billing_baba/features/plans_pricing/presentation/mobile/applicat
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/application/mobile_plans_selection_provider.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/widgets/mobile_feature_comparison_sheet.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/widgets/mobile_plan_card.dart';
+import 'package:billing_baba/features/plans_pricing/presentation/mobile/widgets/mobile_plans_pricing_more_options_sheet.dart';
 import 'package:billing_baba/features/subscription/application/plans_pricing_mapper.dart';
 import 'package:billing_baba/features/subscription/application/plans_pricing_view_provider.dart';
+import 'package:billing_baba/features/subscription/application/subscription_checkout_session.dart';
+import 'package:billing_baba/features/subscription/application/subscription_checkout_session_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
 import 'package:billing_baba/features/subscription/domain/subscription_plan_metadata.dart';
-import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_dialog.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 /// Vyapar-style mobile Plans & Pricing screen with accordion plan cards.
@@ -28,12 +32,20 @@ class MobilePlansPricingPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const MobileAppBar(
+      appBar: MobileAppBar(
         title: 'Plans & Pricing',
         showBackButton: true,
         showBusinessHeader: false,
         showNotification: false,
         showSettings: false,
+        actions: [
+          IconButton(
+            tooltip: 'More options',
+            icon: const Icon(Icons.more_vert_rounded),
+            onPressed: () =>
+                showMobilePlansPricingMoreOptionsSheet(context, ref),
+          ),
+        ],
       ),
       body: viewAsync.when(
         skipLoadingOnReload: true,
@@ -78,32 +90,34 @@ class _PlansPricingBody extends ConsumerWidget {
           ? SubscriptionPlanType.gold
           : SubscriptionPlanType.platinum;
 
-  Future<void> _openReviewOrder(
+  void _openReviewOrder(
     BuildContext context,
     WidgetRef ref,
     PricingPlan plan,
     PlanPlatform platform,
     PlanDuration duration,
-  ) async {
+  ) {
     final planType = _subscriptionTypeFor(_planTypeFor(plan));
     final pricing = plan.pricingFor(platform, duration);
     final metadata = metadataFor(planType);
 
-    await showReviewOrderSummaryDialog(
-      context,
-      ref,
-      input: ReviewOrderSummaryInput(
-        planType: planType,
-        planName: plan.mobileDisplayName,
-        platform: platform,
-        duration: duration,
-        discountedPrice: pricing.discountedPrice,
-        originalPrice: pricing.originalPrice,
-        licenseType: metadata.licenseType,
-        deviceLimit: metadata.deviceLimit,
-        durationLabel: duration.label,
-      ),
-    );
+    ref.read(subscriptionCheckoutSessionProvider.notifier).startSession(
+          SubscriptionCheckoutSession(
+            input: ReviewOrderSummaryInput(
+              planType: planType,
+              planName: plan.mobileDisplayName,
+              platform: platform,
+              duration: duration,
+              discountedPrice: pricing.discountedPrice,
+              originalPrice: pricing.originalPrice,
+              licenseType: metadata.licenseType,
+              deviceLimit: metadata.deviceLimit,
+              durationLabel: duration.label,
+            ),
+          ),
+        );
+
+    unawaited(context.push(AppRoutes.subscriptionReview));
   }
 
   void _showAllFeaturesSheet(BuildContext context, WidgetRef ref) {
@@ -112,13 +126,15 @@ class _PlansPricingBody extends ConsumerWidget {
         context: context,
         ref: ref,
         viewData: viewData,
-        onPurchase: (plan) => _openReviewOrder(
-          context,
-          ref,
-          plan,
-          ref.read(mobilePlansSelectionProvider).platform,
-          ref.read(mobilePlansSelectionProvider).duration,
-        ),
+        onPurchase: (plan) async {
+          _openReviewOrder(
+            context,
+            ref,
+            plan,
+            ref.read(mobilePlansSelectionProvider).platform,
+            ref.read(mobilePlansSelectionProvider).duration,
+          );
+        },
       ),
     );
   }

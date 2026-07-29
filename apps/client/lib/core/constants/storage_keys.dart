@@ -21,6 +21,7 @@ abstract final class StorageKeys {
   static const localItemTierPrices = 'local_item_tier_prices';
   static const saleLineItemColumnVisibility =
       'sale_line_item_column_visibility';
+  static const itemSettings = 'item_settings';
   static const saleInvoiceSettings = 'sale_invoice_settings';
   static const dashboardTasks = 'dashboard_tasks';
   static const dashboardSideWidgets = 'dashboard_side_widgets';
