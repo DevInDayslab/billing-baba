@@ -118,10 +118,24 @@ abstract final class AppConfig {
     return _defaultWebsiteUrl;
   }
 
+  static String get _websiteBase =>
+      websiteUrl.replaceAll(RegExp(r'/+$'), '');
+
+  /// Product documentation / features overview on the public site.
+  static String get documentationUrl => '$_websiteBase/features';
+
+  /// Contact / support page on the public site.
+  static String get contactSupportUrl => '$_websiteBase/contact';
+
+  /// Privacy policy page on the public site.
+  static String get privacyPolicyUrl => '$_websiteBase/privacy';
+
+  /// Support inbox for issue reports and mailto: actions.
+  static const supportEmail = 'support@billingbaba.com';
+
   /// Builds `https://example.com/invite/{code}` from [inviteCode].
   static String inviteLinkForCode(String inviteCode) {
-    final base = websiteUrl.replaceAll(RegExp(r'/+$'), '');
-    return '$base/invite/$inviteCode';
+    return '$_websiteBase/invite/$inviteCode';
   }
 
   /// Default OTP for local development when MSG91 is not configured.

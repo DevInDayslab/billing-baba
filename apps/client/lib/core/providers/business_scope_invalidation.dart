@@ -129,8 +129,19 @@ void invalidateAllBusinessScopedProviders(
   bool includeBusinessList = false,
   bool includeBusinessService = true,
 }) {
-  final container = ref.container;
+  invalidateAllBusinessScopedProvidersOn(
+    ref.container,
+    includeBusinessList: includeBusinessList,
+    includeBusinessService: includeBusinessService,
+  );
+}
 
+/// Same as [invalidateAllBusinessScopedProviders] for [WidgetRef]/menu callers.
+void invalidateAllBusinessScopedProvidersOn(
+  ProviderContainer container, {
+  bool includeBusinessList = false,
+  bool includeBusinessService = true,
+}) {
   if (includeBusinessList) {
     container.invalidate(businessListProvider);
   }

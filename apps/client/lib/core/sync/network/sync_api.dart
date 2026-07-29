@@ -5,7 +5,9 @@ import 'package:dio/dio.dart';
 ///
 /// Features must not call this directly — only SyncEngine / SyncCoordinator.
 class SyncApi {
-  SyncApi(this._dio, {this.protocolVersion = '1'});
+  SyncApi(this._dio, {this.protocolVersion = defaultProtocolVersion});
+
+  static const defaultProtocolVersion = '1';
 
   final Dio _dio;
   final String protocolVersion;
