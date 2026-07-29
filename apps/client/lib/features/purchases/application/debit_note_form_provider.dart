@@ -15,6 +15,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
@@ -22,12 +23,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'debit_note_form_provider.g.dart';
 
-int _debitNoteLineItemCounter = 0;
-
-String _nextDebitNoteLineItemId() {
-  _debitNoteLineItemCounter += 1;
-  return 'debit_note_line_$_debitNoteLineItemCounter';
-}
+String _nextDebitNoteLineItemId() => newDocumentLineId();
 
 DebitNoteFormState _initialDebitNoteFormState({String? documentId}) {
   final now = DateTime.now();
@@ -75,7 +71,7 @@ class DebitNoteForm extends _$DebitNoteForm {
     try {
       final service = await ref.read(purchaseServiceProvider.future);
       final loaded = await service.loadDebitNoteForm(documentId);
-      final inventory = ref.read(inventoryItemsProvider).value ?? [];
+      final inventory = ref.read(inventoryItemListProvider);
       final itemNames = {for (final item in inventory) item.id: item.name};
 
       final items = loaded.items.map((line) {
@@ -127,7 +123,7 @@ class DebitNoteForm extends _$DebitNoteForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 

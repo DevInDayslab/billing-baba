@@ -13,6 +13,7 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
@@ -20,12 +21,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'add_purchase_order_form_provider.g.dart';
 
-int _purchaseOrderLineItemCounter = 0;
-
-String _nextPurchaseOrderLineItemId() {
-  _purchaseOrderLineItemCounter += 1;
-  return 'po_line_$_purchaseOrderLineItemCounter';
-}
+String _nextPurchaseOrderLineItemId() => newDocumentLineId();
 
 @riverpod
 class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
@@ -99,7 +95,7 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
   Future<List<PurchaseLineItem>> _resolveItemNames(
     List<PurchaseLineItem> items,
   ) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
 
     return [
@@ -112,7 +108,7 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 

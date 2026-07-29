@@ -11,6 +11,7 @@ import 'package:billing_baba/features/inventory/application/inventory_service.da
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/pricing/application/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
@@ -20,6 +21,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'inventory_items_provider.g.dart';
+
+/// Flat list view of the paginated inventory catalog.
+final inventoryItemListProvider = Provider<List<InventoryItem>>((ref) {
+  return ref.watch(inventoryItemsProvider).value?.items ?? const [];
+});
 
 /// Clears cached detail/tier data for a single item after mutations.
 ///
@@ -72,37 +78,9 @@ List<InventoryItem> _catalogItems({
   return items;
 }
 
-Future<List<InventoryItem>> _fetchItemsFromLocal(
-  InventoryService service, {
-  String? searchQuery,
-  ItemType? type,
-  String? categoryId,
-}) {
-  return service.fetchItems(
-    searchQuery: searchQuery,
-    type: type,
-    categoryId: categoryId,
-  );
-}
-
-InventoryItem _itemFromForm(
-  AddItemFormState form,
-  List<InventoryUnit> units,
-) {
-  final unit = units.where((u) => u.id == form.baseUnitId).firstOrNull;
-  return InventoryItem(
-    id: 'item-local-${_uuid.v4()}',
-    name: form.itemName.trim(),
-    type: form.itemType,
-    salePrice: form.salePrice,
-    purchasePrice: form.atPrice,
-    quantity: form.openingQty,
-    stockValue: form.openingQty * form.atPrice,
-    categoryId: form.categoryId,
-    hsnCode: form.hsn.isEmpty ? null : form.hsn,
-    barcode: form.itemCode.isEmpty ? null : form.itemCode,
-    baseUnitShortName: unit?.shortName ?? 'Pcs',
-    description: form.description.isEmpty ? null : form.description,
+InventoryItemsQuery _currentQuery(Ref ref) {
+  return InventoryItemsQuery(
+    searchQuery: ref.watch(productBackendSearchProvider),
   );
 }
 
@@ -131,11 +109,102 @@ class ServiceBackendSearch extends Notifier<String> {
 @Riverpod(keepAlive: true)
 class InventoryItems extends _$InventoryItems {
   Future<void> _addItemTail = Future.value();
+  StreamSubscription<PaginatedInventoryItems>? _watchSub;
+  InventoryItemsQuery _query = const InventoryItemsQuery();
+  int _loadedCount = InventoryService.inventoryPageSize;
 
   @override
-  Future<List<InventoryItem>> build() async {
+  Future<PaginatedInventoryItems> build() async {
+    ref.onDispose(() => _watchSub?.cancel());
+    ref.listen(productBackendSearchProvider, (_, next) {
+      unawaited(refresh(searchQuery: next));
+    });
+
     final service = await ref.watch(inventoryServiceProvider.future);
-    return _fetchItemsFromLocal(service);
+    _query = _currentQuery(ref);
+    _loadedCount = InventoryService.inventoryPageSize;
+    return _startWatching(service);
+  }
+
+  Future<PaginatedInventoryItems> _startWatching(InventoryService service) async {
+    _watchSub?.cancel();
+    final initial = await service.fetchItemsPage(
+      limit: _loadedCount,
+      searchQuery: _query.searchQuery,
+      type: _query.type,
+      categoryId: _query.categoryId,
+    );
+
+    _watchSub = service
+        .watchItemsPage(
+          limit: _loadedCount,
+          searchQuery: _query.searchQuery,
+          type: _query.type,
+          categoryId: _query.categoryId,
+        )
+        .listen(
+      (page) {
+        if (!ref.mounted) return;
+        final previous = state.value;
+        state = AsyncData(
+          page.copyWith(
+            isLoadingMore: previous?.isLoadingMore ?? false,
+          ),
+        );
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!ref.mounted) return;
+        state = AsyncError(error, stackTrace);
+      },
+    );
+
+    return initial;
+  }
+
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null || current.isLoadingMore || !current.hasMore) return;
+
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final next = await service.fetchItemsPage(
+        offset: current.items.length,
+        searchQuery: _query.searchQuery,
+        type: _query.type,
+        categoryId: _query.categoryId,
+      );
+      final merged = PaginatedInventoryItems(
+        items: [
+          ...current.items,
+          ...next.items,
+        ],
+        totalCount: next.totalCount,
+        hasMore: current.items.length + next.items.length < next.totalCount,
+      );
+      _loadedCount = merged.items.length;
+      _watchSub?.cancel();
+      _watchSub = service
+          .watchItemsPage(
+            limit: _loadedCount,
+            searchQuery: _query.searchQuery,
+            type: _query.type,
+            categoryId: _query.categoryId,
+          )
+          .listen(
+        (page) {
+          if (!ref.mounted) return;
+          state = AsyncData(page.copyWith(isLoadingMore: false));
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (!ref.mounted) return;
+          state = AsyncError(error, stackTrace);
+        },
+      );
+      state = AsyncData(merged);
+    } on Object catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+    }
   }
 
   Future<void> refresh({
@@ -143,16 +212,57 @@ class InventoryItems extends _$InventoryItems {
     ItemType? type,
     String? categoryId,
   }) async {
-    final previous = state.value ?? const <InventoryItem>[];
+    final previous = state.value ?? const PaginatedInventoryItems(
+      items: [],
+      totalCount: 0,
+      hasMore: false,
+    );
+    _query = InventoryItemsQuery(
+      searchQuery: searchQuery ?? _query.searchQuery,
+      type: type ?? _query.type,
+      categoryId: categoryId ?? _query.categoryId,
+    );
+    _loadedCount = InventoryService.inventoryPageSize;
+
     state = await AsyncValue.guard(() async {
       final service = await ref.read(inventoryServiceProvider.future);
-      final fetched = await _fetchItemsFromLocal(
-        service,
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
+      final fetched = await service.fetchItemsPage(
+        limit: _loadedCount,
+        searchQuery: _query.searchQuery,
+        type: _query.type,
+        categoryId: _query.categoryId,
       );
-      return mergeFetchedWithPendingLocalInventoryItems(fetched, previous);
+      final mergedItems = mergeFetchedWithPendingLocalInventoryItems(
+        fetched.items,
+        previous.items,
+      );
+      final page = fetched.copyWith(items: mergedItems);
+      _watchSub?.cancel();
+      _watchSub = service
+          .watchItemsPage(
+            limit: _loadedCount,
+            searchQuery: _query.searchQuery,
+            type: _query.type,
+            categoryId: _query.categoryId,
+          )
+          .listen(
+        (streamPage) {
+          if (!ref.mounted) return;
+          state = AsyncData(
+            streamPage.copyWith(
+              items: mergeFetchedWithPendingLocalInventoryItems(
+                streamPage.items,
+                state.value?.items ?? const [],
+              ),
+            ),
+          );
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (!ref.mounted) return;
+          state = AsyncError(error, stackTrace);
+        },
+      );
+      return page;
     });
   }
 
@@ -182,6 +292,20 @@ class InventoryItems extends _$InventoryItems {
       ..removeItem(local.id);
   }
 
+  void _upsertItem(InventoryItem item) {
+    final current = state.value;
+    if (current == null) return;
+    final withoutReconciledLocals = removeReconciledLocalInventoryItems(
+      current.items,
+      item,
+    );
+    state = AsyncData(
+      current.copyWith(
+        items: upsertInventoryItemById(withoutReconciledLocals, item),
+      ),
+    );
+  }
+
   Future<InventoryItem?> addItemFromForm(AddItemFormState form) {
     return _withAddItemLock(() => _addItemFromFormImpl(form));
   }
@@ -202,19 +326,13 @@ class InventoryItems extends _$InventoryItems {
       throw InventoryException(InventoryErrorMapper.messageForSaveItem(error));
     }
 
-    final current = state.value ?? [];
+    final current = state.value?.items ?? [];
     for (final existing in current) {
       if (inventoryItemsReconcile(existing, item)) {
         _migrateReconciledLocalTierPrices(existing, item);
       }
     }
-    final withoutReconciledLocals = removeReconciledLocalInventoryItems(
-      current,
-      item,
-    );
-    state = AsyncData(
-      upsertInventoryItemById(withoutReconciledLocals, item),
-    );
+    _upsertItem(item);
 
     try {
       await refreshAfterItemMutation(ref);
@@ -222,8 +340,7 @@ class InventoryItems extends _$InventoryItems {
       // Item is already saved and upserted; refresh is best-effort.
     }
 
-    final refreshed = state.value ?? [];
-    state = AsyncData(upsertInventoryItemById(refreshed, item));
+    _upsertItem(item);
     return item;
   }
 
@@ -231,8 +348,7 @@ class InventoryItems extends _$InventoryItems {
     final units =
         ref.read(inventoryUnitsProvider).value ?? InventoryCatalog.units;
     final localItem = _itemFromForm(form, units);
-    final current = state.value ?? [];
-    state = AsyncData(upsertInventoryItemById(current, localItem));
+    _upsertItem(localItem);
     return localItem;
   }
 
@@ -250,11 +366,17 @@ class InventoryItems extends _$InventoryItems {
         units,
         initialOpeningQty: initialOpeningQty,
       );
-      final current = state.value ?? [];
-      state = AsyncData([
-        for (final existing in current)
-          if (existing.id == itemId) item else existing,
-      ]);
+      final current = state.value;
+      if (current != null) {
+        state = AsyncData(
+          current.copyWith(
+            items: [
+              for (final existing in current.items)
+                if (existing.id == itemId) item else existing,
+            ],
+          ),
+        );
+      }
       invalidateItemCaches(ref, itemId, refreshDashboard: true);
       await refresh();
       return item;
@@ -269,26 +391,34 @@ class InventoryItems extends _$InventoryItems {
     }
   }
 
-  /// Optimistic stock quantity patch (e.g. offline adjustment until sync).
   void patchItemQuantity(String itemId, double newQuantity) {
     final current = state.value;
     if (current == null) return;
-    state = AsyncData([
-      for (final item in current)
-        if (item.id == itemId)
-          item.copyWith(
-            quantity: newQuantity,
-            stockValue: newQuantity * (item.purchasePrice ?? 0),
-          )
-        else
-          item,
-    ]);
+    state = AsyncData(
+      current.copyWith(
+        items: [
+          for (final item in current.items)
+            if (item.id == itemId)
+              item.copyWith(
+                quantity: newQuantity,
+                stockValue: newQuantity * (item.purchasePrice ?? 0),
+              )
+            else
+              item,
+        ],
+      ),
+    );
   }
 
   Future<String?> deleteItem(String id) async {
     final previous = state;
-    final current = state.value ?? [];
-    state = AsyncData(current.where((item) => item.id != id).toList());
+    final current = state.value;
+    if (current == null) return null;
+    state = AsyncData(
+      current.copyWith(
+        items: current.items.where((item) => item.id != id).toList(),
+      ),
+    );
 
     try {
       final service = await ref.read(inventoryServiceProvider.future);
@@ -334,19 +464,43 @@ class InventoryItems extends _$InventoryItems {
     );
   }
 
-  /// Keeps list/POS catalog in sync after gallery uploads without a full refetch.
   void patchItemPrimaryImageUrl(String itemId, String? primaryImageUrl) {
     final current = state.value;
     if (current == null) return;
 
-    state = AsyncData([
-      for (final item in current)
-        if (item.id == itemId)
-          item.copyWith(
-            primaryImageUrl: primaryImageUrl ?? '',
-          )
-        else
-          item,
-    ]);
+    state = AsyncData(
+      current.copyWith(
+        items: [
+          for (final item in current.items)
+            if (item.id == itemId)
+              item.copyWith(
+                primaryImageUrl: primaryImageUrl ?? '',
+              )
+            else
+              item,
+        ],
+      ),
+    );
   }
+}
+
+InventoryItem _itemFromForm(
+  AddItemFormState form,
+  List<InventoryUnit> units,
+) {
+  final unit = units.where((u) => u.id == form.baseUnitId).firstOrNull;
+  return InventoryItem(
+    id: 'item-local-${_uuid.v4()}',
+    name: form.itemName.trim(),
+    type: form.itemType,
+    salePrice: form.salePrice,
+    purchasePrice: form.atPrice,
+    quantity: form.openingQty,
+    stockValue: form.openingQty * form.atPrice,
+    categoryId: form.categoryId,
+    hsnCode: form.hsn.isEmpty ? null : form.hsn,
+    barcode: form.itemCode.isEmpty ? null : form.itemCode,
+    baseUnitShortName: unit?.shortName ?? 'Pcs',
+    description: form.description.isEmpty ? null : form.description,
+  );
 }

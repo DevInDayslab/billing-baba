@@ -91,7 +91,7 @@ class _BarcodeGeneratorContentState
     final state = ref.watch(barcodeGeneratorProvider);
     final notifier = ref.read(barcodeGeneratorProvider.notifier);
     final draft = state.draft;
-    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    final items = ref.watch(inventoryItemListProvider);
 
     return ColoredBox(
       color: AppColors.background,

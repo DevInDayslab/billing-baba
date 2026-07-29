@@ -24081,6 +24081,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExpenseCategoriesLocalTable expenseCategoriesLocal =
       $ExpenseCategoriesLocalTable(this);
   late final $ExpensesLocalTable expensesLocal = $ExpensesLocalTable(this);
+  late final Index idxSyncQueueStatus = Index(
+    'idx_sync_queue_status',
+    'CREATE INDEX idx_sync_queue_status ON sync_queue (status)',
+  );
+  late final Index idxSyncQueueBusinessId = Index(
+    'idx_sync_queue_business_id',
+    'CREATE INDEX idx_sync_queue_business_id ON sync_queue (business_id)',
+  );
+  late final Index idxSyncQueueStatusBusinessId = Index(
+    'idx_sync_queue_status_business_id',
+    'CREATE INDEX idx_sync_queue_status_business_id ON sync_queue (status, business_id)',
+  );
   late final Index idxMovementsLocalBusiness = Index(
     'idx_movements_local_business',
     'CREATE INDEX idx_movements_local_business ON inventory_movements_local (business_id)',
@@ -24136,6 +24148,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stockLevelsLocal,
     expenseCategoriesLocal,
     expensesLocal,
+    idxSyncQueueStatus,
+    idxSyncQueueBusinessId,
+    idxSyncQueueStatusBusinessId,
     idxMovementsLocalBusiness,
     idxMovementsLocalItem,
     idxMovementsLocalCreatedAt,

@@ -43,8 +43,8 @@ class PosCart extends _$PosCart {
   String? get _businessId => ref.read(currentBusinessProvider)?.id;
 
   PosItem? _livePosItem(PosItem item) {
-    final inventoryItems = ref.read(inventoryItemsProvider).value;
-    if (inventoryItems == null) return item;
+    final inventoryItems = ref.read(inventoryItemListProvider);
+    if (inventoryItems.isEmpty) return item;
     final categories = ref.read(inventoryCategoriesProvider).value ?? const [];
     return findLivePosItem(
           itemId: item.id,

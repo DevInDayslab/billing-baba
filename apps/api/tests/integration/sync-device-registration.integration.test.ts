@@ -208,15 +208,15 @@ describe.skipIf(!canRunDbTests)('Sync device registration integration', () => {
   );
 
   test(
-    'rejects cross-account registration for an existing device_id',
+    'allows the same device_id for a different account business (JWT-scoped)',
     async () => {
-      const hijackedDeviceId = randomUUID();
+      const sharedDeviceId = randomUUID();
       const ownerSession = await devLogin(app);
       const ownerReg = await registerDevice(
         app,
         syncPrefix,
         ownerSession.access_token,
-        hijackedDeviceId,
+        sharedDeviceId,
       );
       expect(ownerReg.statusCode).toBe(200);
 
@@ -244,18 +244,18 @@ describe.skipIf(!canRunDbTests)('Sync device registration integration', () => {
         role: otherMembership.role,
       });
 
-      const blocked = await registerDevice(
+      const allowed = await registerDevice(
         app,
         syncPrefix,
         otherToken,
-        hijackedDeviceId,
+        sharedDeviceId,
       );
-      expect(blocked.statusCode).toBe(403);
-      const blockedBody = blocked.json() as {
-        error: { code: string; message: string };
+      expect(allowed.statusCode).toBe(200);
+      const body = allowed.json() as {
+        data: { device_id: string; business_id: string };
       };
-      expect(blockedBody.error.code).toBe('BUSINESS_CHANGED');
-      expect(blockedBody.error.message).toContain('another account');
+      expect(body.data.device_id).toBe(sharedDeviceId);
+      expect(body.data.business_id).toBe(otherMembership.businessId);
     },
     INTEGRATION_TIMEOUT_MS,
   );

@@ -85,6 +85,13 @@ Future<void> switchToBusinessSelection(
   container.read(businessSelectionTransitionProvider.notifier).start();
   try {
     await container.read(authProvider.notifier).enterBusinessSelection();
+    final auth = container.read(authProvider);
+    if (auth.status != AuthStatus.needsBusinessSelection) {
+      SwitchCompanyDebugLog.action(
+        'switch aborted — auth=${auth.status.name}',
+      );
+      return;
+    }
     SwitchCompanyDebugLog.nav('explicit navigateToBusinessList');
     await navigateToBusinessList();
     SwitchCompanyDebugLog.loading('await companyDirectoryProvider.future');

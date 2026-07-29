@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 
 const saleFieldBorderColor = Color(0xFFE0E0E0);
 const saleCompactFieldBorderColor = Color(0xFFBDBDBD);
+
+/// Compact table-cell / header control height (qty, price, invoice header).
 const saleCompactFieldHeight = 30.0;
+
+/// Standard form control height — TextField and select/dropdown triggers share
+/// this so sale/purchase invoice forms and party edit dialogs look consistent.
+const saleFieldHeight = 36.0;
+
 const _compactBorderRadius = 4.0;
 const saleFieldFocusColor = Color(0xFF42A5F5);
 const saleFieldErrorColor = Color(0xFFD32F2F);
@@ -27,6 +34,10 @@ InputDecoration buildSaleFieldDecoration({
   bool compact = false,
   bool borderless = false,
 }) {
+  final fieldHeight = compact ? saleCompactFieldHeight : saleFieldHeight;
+  // fontSize 14 ≈ 14px glyph; +2 border; remainder is vertical padding.
+  final verticalPadding = (fieldHeight - 14 - 2) / 2;
+
   if (borderless) {
     return InputDecoration(
       hintText: hint,
@@ -36,7 +47,7 @@ InputDecoration buildSaleFieldDecoration({
       ),
       contentPadding: EdgeInsets.symmetric(
         horizontal: compact ? 4 : 12,
-        vertical: compact ? 8 : 10,
+        vertical: compact ? 8 : verticalPadding,
       ),
       isDense: true,
       border: InputBorder.none,
@@ -56,8 +67,6 @@ InputDecoration buildSaleFieldDecoration({
       ? saleFieldErrorColor
       : saleFieldFocusColor;
   final borderRadius = compact ? _compactBorderRadius : 6.0;
-  const compactVerticalPadding =
-      (saleCompactFieldHeight - 12 - 2) / 2; // font + border
 
   return InputDecoration(
     hintText: hint,
@@ -67,12 +76,10 @@ InputDecoration buildSaleFieldDecoration({
     ),
     contentPadding: EdgeInsets.symmetric(
       horizontal: compact ? 6 : 12,
-      vertical: compact ? compactVerticalPadding : 10,
+      vertical: compact ? (saleCompactFieldHeight - 12 - 2) / 2 : verticalPadding,
     ),
     isDense: true,
-    constraints: compact
-        ? const BoxConstraints.tightFor(height: saleCompactFieldHeight)
-        : null,
+    constraints: BoxConstraints.tightFor(height: fieldHeight),
     filled: compact || filled,
     fillColor: compact
         ? Colors.white
@@ -146,66 +153,50 @@ class SaleFieldTrigger extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fieldHeight = compact ? saleCompactFieldHeight : saleFieldHeight;
+
     if (borderless) {
       return GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: compact
-              ? SizedBox(
-                  width: double.infinity,
-                  height: saleCompactFieldHeight,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: child,
-                  ),
-                )
-              : child,
+          child: SizedBox(
+            width: double.infinity,
+            height: fieldHeight,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: child,
+            ),
+          ),
         ),
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final fillHeight =
-            !compact &&
-            constraints.hasBoundedHeight &&
-            constraints.maxHeight.isFinite;
-
-        return GestureDetector(
-          onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: double.infinity,
-            height: compact
-                ? saleCompactFieldHeight
-                : (fillHeight ? constraints.maxHeight : null),
-            padding: compact
-                ? const EdgeInsets.symmetric(horizontal: 6)
-                : EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: fillHeight ? 0 : 10,
-                  ),
-            alignment: Alignment.centerLeft,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: compact ? Colors.white : null,
-              borderRadius: BorderRadius.circular(
-                compact ? _compactBorderRadius : 6,
-              ),
-              border: Border.all(
-                color: hasError
-                    ? saleFieldErrorColor
-                    : (compact
-                          ? saleCompactFieldBorderColor
-                          : saleFieldBorderColor),
-              ),
-            ),
-            child: Align(alignment: Alignment.centerLeft, child: child),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        height: fieldHeight,
+        padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 12),
+        alignment: Alignment.centerLeft,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: compact ? Colors.white : null,
+          borderRadius: BorderRadius.circular(
+            compact ? _compactBorderRadius : 6,
           ),
-        );
-      },
+          border: Border.all(
+            color: hasError
+                ? saleFieldErrorColor
+                : (compact
+                      ? saleCompactFieldBorderColor
+                      : saleFieldBorderColor),
+          ),
+        ),
+        child: Align(alignment: Alignment.centerLeft, child: child),
+      ),
     );
   }
 }

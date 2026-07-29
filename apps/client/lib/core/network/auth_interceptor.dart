@@ -4,22 +4,28 @@ import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 
 typedef TokenRefreshCallback = Future<String?> Function();
+typedef AccessTokenFallback = Future<String?> Function();
 
 class AuthInterceptor extends Interceptor {
   AuthInterceptor({
     required this._storage,
     this._onRefreshToken,
+    this._accessTokenFallback,
   });
 
   final StorageService _storage;
   final TokenRefreshCallback? _onRefreshToken;
+  final AccessTokenFallback? _accessTokenFallback;
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _storage.readSecure(StorageKeys.accessToken);
+    var token = await _storage.readSecure(StorageKeys.accessToken);
+    if ((token == null || token.isEmpty) && _accessTokenFallback != null) {
+      token = await _accessTokenFallback.call();
+    }
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }

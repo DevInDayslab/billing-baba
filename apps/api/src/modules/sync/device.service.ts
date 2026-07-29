@@ -1,7 +1,6 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { DeviceRepository } from './device.repository';
-import { syncBusinessChanged } from './sync.errors';
 import type { RegisterDeviceBody } from './sync.schema';
 import type { SyncDeviceRecord } from './sync.types';
 
@@ -19,21 +18,21 @@ export class DeviceService {
     return new DeviceRepository(db);
   }
 
+  /**
+   * Register (or heartbeat) a device for the JWT business.
+   *
+   * The same physical device_id may register for many businesses and accounts.
+   * Isolation is enforced by JWT membership + composite PK (business_id, id) —
+   * registration never grants access to another business's data.
+   */
   async register(
     accountId: string,
     businessId: string,
     userId: string | undefined,
     body: RegisterDeviceBody,
   ): Promise<SyncDeviceRecord> {
-    const repo = this.getRepository();
-    await this.assertDeviceNotOwnedByOtherAccount(
-      repo,
-      accountId,
-      businessId,
-      body.device_id,
-    );
-
-    return repo.upsert({
+    void accountId;
+    return this.getRepository().upsert({
       deviceId: body.device_id,
       businessId,
       userId,
@@ -61,33 +60,5 @@ export class DeviceService {
     deviceId: string,
   ): Promise<SyncDeviceRecord | null> {
     return this.getRepository().findByBusinessAndDeviceId(businessId, deviceId);
-  }
-
-  private async assertDeviceNotOwnedByOtherAccount(
-    repo: DeviceRepository,
-    accountId: string,
-    businessId: string,
-    deviceId: string,
-  ): Promise<void> {
-    const registrations = await repo.findAllByDeviceId(deviceId);
-    for (const registration of registrations) {
-      if (registration.businessId === businessId) {
-        continue;
-      }
-
-      const ownerAccountId = await repo.findAccountIdForBusiness(
-        registration.businessId,
-      );
-      if (ownerAccountId === null) {
-        throw syncBusinessChanged(
-          'This device_id is already registered to another business',
-        );
-      }
-      if (ownerAccountId !== accountId) {
-        throw syncBusinessChanged(
-          'This device_id is already registered to another account',
-        );
-      }
-    }
   }
 }

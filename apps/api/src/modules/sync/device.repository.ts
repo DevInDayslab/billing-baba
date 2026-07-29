@@ -1,6 +1,6 @@
 import { and, asc, eq } from 'drizzle-orm';
 import type { Database } from '../../db/client';
-import { devices, users } from '../../db/schema/identity/tables';
+import { devices } from '../../db/schema/identity/tables';
 import type { SyncDeviceRecord } from './sync.types';
 
 type DeviceRow = typeof devices.$inferSelect;
@@ -44,16 +44,6 @@ export class DeviceRepository {
       .select()
       .from(devices)
       .where(and(eq(devices.id, deviceId), eq(devices.isDeleted, false)));
-  }
-
-  async findAccountIdForBusiness(businessId: string): Promise<string | null> {
-    const [row] = await this.db
-      .select({ accountId: users.accountId })
-      .from(users)
-      .where(and(eq(users.businessId, businessId), eq(users.isDeleted, false)))
-      .limit(1);
-
-    return row?.accountId ?? null;
   }
 
   async upsert(input: {

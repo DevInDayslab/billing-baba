@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -155,13 +156,17 @@ class SyncQueue {
     );
   }
 
-  Future<void> clearCompleted() async {
+  Future<void> clearCompleted({String? businessId}) async {
     await (_db.delete(_db.syncQueue)
-          ..where(
-            (t) =>
+          ..where((t) {
+            final statusMatch =
                 t.status.equals(SyncQueueStatus.completed.wire) |
-                t.status.equals(SyncQueueStatus.cancelled.wire),
-          ))
+                t.status.equals(SyncQueueStatus.cancelled.wire);
+            if (businessId == null || businessId.isEmpty) {
+              return statusMatch;
+            }
+            return statusMatch & t.businessId.equals(businessId);
+          }))
         .go();
   }
 
@@ -243,6 +248,99 @@ class SyncQueue {
       count += 1;
     }
     return count;
+  }
+
+  /// Rewrites non-UUID line `entity_id`s so push passes API validation.
+  ///
+  /// Older clients used counters like `line_4` / `purchase_line_1` as line PKs.
+  Future<List<SyncJob>> remediateInvalidLineEntityIds(List<SyncJob> jobs) async {
+    final fixed = <SyncJob>[];
+    for (final job in jobs) {
+      final entityId = job.entityId?.trim();
+      final isLineEntity = job.entityType == 'sales_document_lines' ||
+          job.entityType == 'purchase_document_lines';
+      if (!isLineEntity ||
+          entityId == null ||
+          entityId.isEmpty ||
+          isDocumentUuid(entityId)) {
+        fixed.add(job);
+        continue;
+      }
+
+      final newId = newDocumentLineId();
+      final domain = SyncJob.domainOnly(job.payload);
+      await _remapLocalDocumentLineId(
+        entityType: job.entityType,
+        businessId: job.businessId,
+        oldId: entityId,
+        newId: newId,
+        payload: domain,
+      );
+      await _update(
+        job.id,
+        SyncQueueCompanion(entityId: Value(newId)),
+      );
+      fixed.add(job.copyWith(entityId: newId));
+    }
+    return fixed;
+  }
+
+  Future<void> _remapLocalDocumentLineId({
+    required String entityType,
+    required String businessId,
+    required String oldId,
+    required String newId,
+    required Map<String, dynamic> payload,
+  }) async {
+    if (entityType == 'sales_document_lines') {
+      final documentId = payload['sales_document_id']?.toString();
+      final sortOrder = _readInt(payload['sort_order']);
+      if (documentId != null && documentId.isNotEmpty && sortOrder != null) {
+        final updated = await (_db.update(_db.salesDocumentLinesLocal)
+              ..where(
+                (t) =>
+                    t.businessId.equals(businessId) &
+                    t.salesDocumentId.equals(documentId) &
+                    t.sortOrder.equals(sortOrder),
+              ))
+            .write(SalesDocumentLinesLocalCompanion(id: Value(newId)));
+        if (updated > 0) return;
+      }
+      await (_db.update(_db.salesDocumentLinesLocal)
+            ..where(
+              (t) => t.businessId.equals(businessId) & t.id.equals(oldId),
+            ))
+          .write(SalesDocumentLinesLocalCompanion(id: Value(newId)));
+      return;
+    }
+
+    if (entityType == 'purchase_document_lines') {
+      final documentId = payload['purchase_document_id']?.toString();
+      final sortOrder = _readInt(payload['sort_order']);
+      if (documentId != null && documentId.isNotEmpty && sortOrder != null) {
+        final updated = await (_db.update(_db.purchaseDocumentLinesLocal)
+              ..where(
+                (t) =>
+                    t.businessId.equals(businessId) &
+                    t.purchaseDocumentId.equals(documentId) &
+                    t.sortOrder.equals(sortOrder),
+              ))
+            .write(PurchaseDocumentLinesLocalCompanion(id: Value(newId)));
+        if (updated > 0) return;
+      }
+      await (_db.update(_db.purchaseDocumentLinesLocal)
+            ..where(
+              (t) => t.businessId.equals(businessId) & t.id.equals(oldId),
+            ))
+          .write(PurchaseDocumentLinesLocalCompanion(id: Value(newId)));
+    }
+  }
+
+  int? _readInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   Future<SyncJob> _enqueue({

@@ -23,6 +23,7 @@ import 'package:billing_baba/features/inventory/models/dto/price_history_dto.dar
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/unit_conversion_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/unit_dto.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/requests/brand_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/godown_requests.dart';
@@ -289,6 +290,55 @@ class InventoryRepository {
 
   Future<PaginatedItemsDto> listItems(ItemListQuery query) =>
       _items.list(query);
+
+  Future<int> countItemsPage({
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+  }) =>
+      _items.countActive(
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+      );
+
+  Future<List<ItemListDto>> listItemsPage({
+    required int limit,
+    required int offset,
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+  }) =>
+      _items.listPage(
+        limit: limit,
+        offset: offset,
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+      );
+
+  Stream<List<ItemListDto>> watchItemsPage({
+    required int limit,
+    required int offset,
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+  }) =>
+      _items.watchPage(
+        limit: limit,
+        offset: offset,
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+      );
+
+  Future<Map<String, double>> localStockQuantitiesForItems(
+    Iterable<String> itemIds,
+  ) async {
+    final all = await localStockQuantitiesByItem();
+    final ids = itemIds.toSet();
+    return Map.fromEntries(all.entries.where((entry) => ids.contains(entry.key)));
+  }
 
   Future<ItemDetailDto> getItem(String id) async {
     final local = await _items.getActive(id);

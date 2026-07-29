@@ -2,55 +2,113 @@ import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:drift/drift.dart';
 
+typedef ItemLocalFilter = ({
+  String? searchQuery,
+  String? categoryId,
+  String? brandId,
+  String? itemType,
+});
+
+const ItemLocalFilter emptyItemLocalFilter = (
+  searchQuery: null,
+  categoryId: null,
+  brandId: null,
+  itemType: null,
+);
+
 /// Drift-backed local store for item masters. Does not enqueue SyncJobs.
 class ItemLocalSource {
   ItemLocalSource(this._db);
 
   final AppDatabase _db;
 
-  Future<int> countActive(String businessId) async {
-    final rows = await (_db.select(_db.itemsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          ))
-        .get();
-    return rows.length;
+  Future<int> countActive(
+    String businessId, {
+    ItemLocalFilter filter = emptyItemLocalFilter,
+  }) {
+    return countActiveFiltered(businessId, filter: filter);
+  }
+
+  Future<int> countActiveFiltered(
+    String businessId, {
+    ItemLocalFilter filter = emptyItemLocalFilter,
+  }) {
+    final count = _db.itemsLocal.id.count();
+    final query = _db.selectOnly(_db.itemsLocal)..addColumns([count])
+    ..where(_buildPredicate(_db.itemsLocal, filter, businessId));
+    return query.map((row) => row.read(count) ?? 0).getSingle();
   }
 
   Future<List<ItemListDto>> listActive(
     String businessId, {
-    String? searchQuery,
-    String? categoryId,
-    String? brandId,
-    String? itemType,
+    ItemLocalFilter filter = emptyItemLocalFilter,
+    int? limit,
+    int offset = 0,
   }) async {
-    final query = _db.select(_db.itemsLocal)
-      ..where(
-        (t) => t.businessId.equals(businessId) & t.isDeleted.equals(false),
-      )
-      ..orderBy([(t) => OrderingTerm.asc(t.name)]);
+    var query = _filteredSelect(
+      businessId: businessId,
+      filter: filter,
+    )..orderBy([(t) => OrderingTerm.asc(t.name)]);
+
+    if (limit != null) {
+      query = query..limit(limit, offset: offset);
+    }
+
     final rows = await query.get();
-    final q = searchQuery?.trim().toLowerCase();
-    var filtered = rows;
+    return rows.map(_toListDto).toList();
+  }
+
+  Stream<List<ItemListDto>> watchActive(
+    String businessId, {
+    required ItemLocalFilter filter,
+    required int limit,
+    int offset = 0,
+  }) {
+    final query = _filteredSelect(
+      businessId: businessId,
+      filter: filter,
+    )
+      ..orderBy([(t) => OrderingTerm.asc(t.name)])
+      ..limit(limit, offset: offset);
+
+    return query.watch().map((rows) => rows.map(_toListDto).toList());
+  }
+
+  SimpleSelectStatement<$ItemsLocalTable, ItemTableData> _filteredSelect({
+    required String businessId,
+    required ItemLocalFilter filter,
+  }) {
+    return _db.select(_db.itemsLocal)
+      ..where((t) => _buildPredicate(t, filter, businessId));
+  }
+
+  Expression<bool> _buildPredicate(
+    $ItemsLocalTable t,
+    ItemLocalFilter filter,
+    String businessId,
+  ) {
+    var predicate =
+        t.businessId.equals(businessId) & t.isDeleted.equals(false);
+
+    if (filter.categoryId != null && filter.categoryId!.isNotEmpty) {
+      predicate = predicate & t.categoryId.equals(filter.categoryId!);
+    }
+    if (filter.brandId != null && filter.brandId!.isNotEmpty) {
+      predicate = predicate & t.brandId.equals(filter.brandId!);
+    }
+    if (filter.itemType != null && filter.itemType!.isNotEmpty) {
+      predicate = predicate & t.itemType.equals(filter.itemType!);
+    }
+    final q = filter.searchQuery?.trim().toLowerCase();
     if (q != null && q.isNotEmpty) {
-      filtered = filtered.where((r) {
-        final hay =
-            '${r.name} ${r.barcode ?? ''} ${r.hsnCode ?? ''} ${r.alias ?? ''}'
-                .toLowerCase();
-        return hay.contains(q);
-      }).toList();
+      final pattern = '%$q%';
+      predicate = predicate &
+          (t.name.lower().like(pattern) |
+              t.barcode.lower().like(pattern) |
+              t.hsnCode.lower().like(pattern) |
+              t.alias.lower().like(pattern));
     }
-    if (categoryId != null && categoryId.isNotEmpty) {
-      filtered = filtered.where((r) => r.categoryId == categoryId).toList();
-    }
-    if (brandId != null && brandId.isNotEmpty) {
-      filtered = filtered.where((r) => r.brandId == brandId).toList();
-    }
-    if (itemType != null && itemType.isNotEmpty) {
-      filtered = filtered.where((r) => r.itemType == itemType).toList();
-    }
-    return filtered.map(_toListDto).toList();
+    return predicate;
   }
 
   Future<ItemTableData?> getById(String id) {

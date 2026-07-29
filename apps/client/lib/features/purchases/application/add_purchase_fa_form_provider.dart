@@ -5,6 +5,7 @@ import 'package:billing_baba/features/purchases/application/purchase_fa_service.
 import 'package:billing_baba/features/purchases/models/purchase_fa_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
@@ -12,12 +13,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'add_purchase_fa_form_provider.g.dart';
 
-int _purchaseFaLineItemCounter = 0;
-
-String _nextPurchaseFaLineItemId() {
-  _purchaseFaLineItemCounter += 1;
-  return 'purchase_fa_line_$_purchaseFaLineItemCounter';
-}
+String _nextPurchaseFaLineItemId() => newDocumentLineId();
 
 AddPurchaseFaFormState _defaultFormState({String? batchId}) {
   final now = DateTime.now();

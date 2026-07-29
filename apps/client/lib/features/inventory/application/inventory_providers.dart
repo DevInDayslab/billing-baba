@@ -30,7 +30,8 @@ final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
   final engine = ref.watch(inventorySearchEngineProvider);
-  final products = (ref.watch(inventoryItemsProvider).value ?? [])
+  final products = ref
+      .watch(inventoryItemListProvider)
       .where((item) => item.type == ItemType.product);
 
   return searchInventoryItems(engine, products, query: query)
@@ -44,7 +45,8 @@ final servicesProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(serviceSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
   final engine = ref.watch(inventorySearchEngineProvider);
-  final services = (ref.watch(inventoryItemsProvider).value ?? [])
+  final services = ref
+      .watch(inventoryItemListProvider)
       .where((item) => item.type == ItemType.service);
 
   return searchInventoryItems(engine, services, query: query)
@@ -57,7 +59,7 @@ final servicesProvider = Provider<List<InventoryItem>>((ref) {
 final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
   final query = ref.watch(categorySearchQueryProvider).toLowerCase();
   final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
-  final items = ref.watch(inventoryItemsProvider).value ?? [];
+  final items = ref.watch(inventoryItemListProvider);
   final serviceAsync = ref.watch(inventoryServiceProvider);
 
   final withUncategorized = serviceAsync.maybeWhen(
@@ -85,7 +87,7 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
   final query = ref.watch(categoryItemSearchQueryProvider);
   final filters = ref.watch(categoryItemFiltersProvider);
   final sort = ref.watch(categoryItemSortProvider);
-  final items = ref.watch(inventoryItemsProvider).value ?? [];
+  final items = ref.watch(inventoryItemListProvider);
 
   final filteredItems = categoryId == uncategorizedCategoryId
       ? items.where(
@@ -327,7 +329,7 @@ class ProductStockSummary {
 // ignore: specify_nonobvious_property_types
 final itemStockMetricsProvider =
     Provider.family<ItemStockMetrics, String>((ref, itemId) {
-      final item = (ref.watch(inventoryItemsProvider).value ?? [])
+      final item = ref.watch(inventoryItemListProvider)
           .where((entry) => entry.id == itemId)
           .firstOrNull;
       return InventoryStockCalculator.metricsFromItem(item);
@@ -337,7 +339,7 @@ final itemStockMetricsProvider =
 // ignore: specify_nonobvious_property_types
 final productStockSummaryProvider =
     Provider.family<ProductStockSummary, String>((ref, itemId) {
-      final item = (ref.watch(inventoryItemsProvider).value ?? [])
+      final item = ref.watch(inventoryItemListProvider)
           .where((entry) => entry.id == itemId)
           .firstOrNull;
       final metrics = ref.watch(itemStockMetricsProvider(itemId));
@@ -455,7 +457,7 @@ final productDetailContextProvider =
       ref,
       itemId,
     ) {
-      final item = (ref.watch(inventoryItemsProvider).value ?? [])
+      final item = ref.watch(inventoryItemListProvider)
           .where((entry) => entry.id == itemId)
           .firstOrNull;
       final categories = ref.watch(categoriesProvider);

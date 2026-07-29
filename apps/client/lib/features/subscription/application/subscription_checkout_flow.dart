@@ -2,6 +2,7 @@ import 'package:billing_baba/features/plans_pricing/presentation/desktop/widgets
 import 'package:billing_baba/features/subscription/application/current_subscription_provider.dart';
 import 'package:billing_baba/features/subscription/application/plans_pricing_view_provider.dart';
 import 'package:billing_baba/features/subscription/application/purchase_history_provider.dart';
+import 'package:billing_baba/features/subscription/application/subscription_checkout_busy_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
 import 'package:billing_baba/features/subscription/application/subscription_plans_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_service_provider.dart';
@@ -22,61 +23,69 @@ class SubscriptionCheckoutFlow {
     required CreateOrderResult order,
     required SubscriptionPlanType planType,
   }) async {
-    final bridgeResult = await showSubscriptionPaymentHost(
-      context,
-      order: order,
-      planType: planType,
-    );
+    ref.read(subscriptionCheckoutBusyProvider.notifier).begin();
+    try {
+      final bridgeResult = await showSubscriptionPaymentHost(
+        context,
+        order: order,
+        planType: planType,
+      );
 
-    if (!context.mounted || bridgeResult == null) return;
+      if (!context.mounted || bridgeResult == null) return;
 
-    switch (bridgeResult) {
-      case PaymentBridgeCancelled():
-        return;
-      case PaymentBridgeFailed(:final message):
-        _showErrorSnackBar(context, message);
-        return;
-      case PaymentBridgeSuccess(
-        :final razorpayPaymentId,
-        :final razorpayOrderId,
-        :final razorpaySignature,
-      ):
-        if (razorpayPaymentId.isEmpty ||
-            razorpayOrderId.isEmpty ||
-            razorpaySignature.isEmpty) {
-          _showErrorSnackBar(
-            context,
-            'Incomplete payment response. Please try again.',
-          );
+      switch (bridgeResult) {
+        case PaymentBridgeCancelled():
           return;
-        }
+        case PaymentBridgeFailed(:final message):
+          _showErrorSnackBar(context, message);
+          return;
+        case PaymentBridgeSuccess(
+          :final razorpayPaymentId,
+          :final razorpayOrderId,
+          :final razorpaySignature,
+        ):
+          if (razorpayPaymentId.isEmpty ||
+              razorpayOrderId.isEmpty ||
+              razorpaySignature.isEmpty) {
+            _showErrorSnackBar(
+              context,
+              'Incomplete payment response. Please try again.',
+            );
+            return;
+          }
 
-        try {
-          final service = await ref.read(subscriptionServiceProvider.future);
-          final verifyResult = await service.verifyPayment(
-            paymentUuid: order.paymentUuid,
-            razorpayOrderId: razorpayOrderId,
-            razorpayPaymentId: razorpayPaymentId,
-            razorpaySignature: razorpaySignature,
-          );
+          try {
+            final service = await ref.read(subscriptionServiceProvider.future);
+            final verifyResult = await service.verifyPayment(
+              paymentUuid: order.paymentUuid,
+              razorpayOrderId: razorpayOrderId,
+              razorpayPaymentId: razorpayPaymentId,
+              razorpaySignature: razorpaySignature,
+            );
 
-          _refreshSubscriptionData(ref);
+            if (!context.mounted) return;
 
-          if (!context.mounted) return;
+            final formattedAmount =
+                '₹${NumberFormat('#,##0.##', 'en_IN').format(order.amount / 100)}';
 
-          final formattedAmount =
-              '₹${NumberFormat('#,##0.##', 'en_IN').format(order.amount / 100)}';
+            await showPaymentSuccessDialog(
+              context,
+              planName: verifyResult.plan.displayName,
+              expiresAt: verifyResult.expiresAt,
+              amount: formattedAmount,
+            );
 
-          await showPaymentSuccessDialog(
-            context,
-            planName: verifyResult.plan.displayName,
-            expiresAt: verifyResult.expiresAt,
-            amount: formattedAmount,
-          );
-        } on Object catch (error) {
-          if (!context.mounted) return;
-          _showErrorSnackBar(context, SubscriptionErrorMapper.messageFor(error));
-        }
+            _refreshSubscriptionData(ref);
+          } on Object catch (error) {
+            if (!context.mounted) return;
+            _showErrorSnackBar(
+              context,
+              SubscriptionErrorMapper.messageFor(error),
+            );
+          }
+      }
+    } finally {
+      ref.read(subscriptionCheckoutBusyProvider.notifier).end();
     }
   }
 

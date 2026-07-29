@@ -19,14 +19,14 @@ import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/models/business_model.dart'
+    as business;
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
-import 'package:billing_baba/features/business/models/business_model.dart'
-    as business;
 import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -932,26 +932,44 @@ class Auth extends _$Auth {
     SwitchCompanyDebugLog.action('companySession cleared');
     state = state.copyWith(clearError: true);
     try {
-      await _clearActiveBusinessSession();
-      SwitchCompanyDebugLog.invalidate(
-        'active business session + business-scoped providers',
-      );
       final service = await _service();
-      SwitchCompanyDebugLog.api('refreshStoredSession(preserveBusinessScope: false)');
+      // Refresh to an unscoped JWT BEFORE clearing selectedBusinessId /
+      // invalidating providers. Doing it the other way raced 401 retries that
+      // revoked the refresh token and wiped the session (empty Authorization).
+      SwitchCompanyDebugLog.api(
+        'refreshStoredSession(preserveBusinessScope: false)',
+      );
       final session = await service.refreshStoredSession(
         refreshToken: refreshToken,
         preserveBusinessScope: false,
       );
       if (session == null) {
-        AuthFlowLogger.authStatus(AuthStatus.unauthenticated.name);
-        // Single write so auth watchers only rebuild once.
-        state = state.copyWith(
-          status: AuthStatus.unauthenticated,
-          clearSession: true,
+        final stillHasToken = await service.getAccessToken();
+        if (stillHasToken == null || stillHasToken.isEmpty) {
+          AuthFlowLogger.authStatus(AuthStatus.unauthenticated.name);
+          state = state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearSession: true,
+          );
+          SwitchCompanyDebugLog.action(
+            'session null + no token → unauthenticated',
+          );
+          return;
+        }
+        SwitchCompanyDebugLog.action(
+          'refresh failed but tokens kept — abort switch',
         );
-        SwitchCompanyDebugLog.action('session null → unauthenticated (atomic)');
+        state = state.copyWith(
+          error: 'Could not switch company. Please try again.',
+        );
         return;
       }
+
+      await _clearActiveBusinessSession();
+      SwitchCompanyDebugLog.invalidate(
+        'active business session + business-scoped providers',
+      );
+
       // Single write for status + session. Splitting these caused
       // collaborationRepository / companyDirectory to rebuild twice and
       // produced a second loading indicator after Switch Company.

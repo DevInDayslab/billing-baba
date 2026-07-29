@@ -41,8 +41,7 @@ class ItemMasterRepository {
   Future<PaginatedItemsDto> list(ItemListQuery query) async {
     final businessId = _requireBusinessId();
     await _hydrateIfEmpty(businessId);
-    final all = await _local.listActive(
-      businessId,
+    final filter = (
       searchQuery: query.q,
       categoryId: query.categoryId,
       brandId: query.brandId,
@@ -50,17 +49,105 @@ class ItemMasterRepository {
           ? null
           : (query.type == ItemType.service ? 'service' : 'product'),
     );
+    final total = await _local.countActiveFiltered(
+      businessId,
+      filter: filter,
+    );
     final start = (query.page - 1) * query.limit;
-    final pageItems = start >= all.length
-        ? <ItemListDto>[]
-        : all.skip(start).take(query.limit).toList();
+    final pageItems = await _local.listActive(
+      businessId,
+      filter: filter,
+      limit: query.limit,
+      offset: start,
+    );
     return PaginatedItemsDto(
       items: pageItems,
       meta: PaginationMetaDto(
         page: query.page,
         limit: query.limit,
-        total: all.length,
+        total: total,
       ),
+    );
+  }
+
+  ItemLocalFilter _toLocalFilter({
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+    String? brandId,
+  }) {
+    return (
+      searchQuery: searchQuery,
+      categoryId: categoryId,
+      brandId: brandId,
+      itemType: type == null
+          ? null
+          : (type == ItemType.service ? 'service' : 'product'),
+    );
+  }
+
+  Future<int> countActive({
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+    String? brandId,
+  }) async {
+    final businessId = _requireBusinessId();
+    await _hydrateIfEmpty(businessId);
+    return _local.countActiveFiltered(
+      businessId,
+      filter: _toLocalFilter(
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+        brandId: brandId,
+      ),
+    );
+  }
+
+  Future<List<ItemListDto>> listPage({
+    required int limit,
+    required int offset,
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+    String? brandId,
+  }) async {
+    final businessId = _requireBusinessId();
+    await _hydrateIfEmpty(businessId);
+    return _local.listActive(
+      businessId,
+      filter: _toLocalFilter(
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+        brandId: brandId,
+      ),
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  Stream<List<ItemListDto>> watchPage({
+    required int limit,
+    required int offset,
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+    String? brandId,
+  }) async* {
+    final businessId = _requireBusinessId();
+    await _hydrateIfEmpty(businessId);
+    yield* _local.watchActive(
+      businessId,
+      filter: _toLocalFilter(
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+        brandId: brandId,
+      ),
+      limit: limit,
+      offset: offset,
     );
   }
 

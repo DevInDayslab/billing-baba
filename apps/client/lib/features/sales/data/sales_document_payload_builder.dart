@@ -1,10 +1,8 @@
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
-
-const _uuid = Uuid();
 
 String money(double value) => value.toStringAsFixed(2);
 
@@ -109,4 +107,4 @@ String apiDocumentDateFromInput({
   return DateTimeUtils.toApiIso(combined);
 }
 
-String newLineId() => _uuid.v4();
+String newLineId() => newDocumentLineId();

@@ -21,15 +21,17 @@ Future<PaymentBridgeResult> showRazorpayDesktopCheckout(
     context: context,
     barrierLabel: 'Razorpay Checkout',
     barrierColor: Colors.black54,
+    transitionDuration: Duration.zero,
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
       return _RazorpayDesktopCheckoutDialog(
         options: options,
         onResult: (result) {
-          if (Navigator.of(dialogContext).canPop()) {
-            Navigator.of(dialogContext).pop();
-          }
           if (!completer.isCompleted) {
             completer.complete(result);
+          }
+          if (dialogContext.mounted &&
+              Navigator.of(dialogContext, rootNavigator: true).canPop()) {
+            Navigator.of(dialogContext, rootNavigator: true).pop();
           }
         },
       );
@@ -54,7 +56,7 @@ String _checkoutHtml(Map<String, dynamic> options) {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100%; height: 100%; overflow: hidden; background: transparent;
+      width: 100%; height: 100%; overflow: hidden; background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     body { display: flex; align-items: center; justify-content: center; }
@@ -154,7 +156,14 @@ String _checkoutHtml(Map<String, dynamic> options) {
 ''';
 }
 
-class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
+/// Snap logical sizes to whole physical pixels to avoid macOS WKWebView frame
+/// drift (AppKit fights Flutter over fractional platform-view widths).
+double _snapToPhysical(double logical, double devicePixelRatio) {
+  if (devicePixelRatio <= 0) return logical.floorToDouble();
+  return (logical * devicePixelRatio).round() / devicePixelRatio;
+}
+
+class _RazorpayDesktopCheckoutDialog extends StatefulWidget {
   const _RazorpayDesktopCheckoutDialog({
     required this.options,
     required this.onResult,
@@ -163,7 +172,25 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
   final Map<String, dynamic> options;
   final ValueChanged<PaymentBridgeResult> onResult;
 
-  String _desktopUserAgent() {
+  @override
+  State<_RazorpayDesktopCheckoutDialog> createState() =>
+      _RazorpayDesktopCheckoutDialogState();
+}
+
+class _RazorpayDesktopCheckoutDialogState
+    extends State<_RazorpayDesktopCheckoutDialog> {
+  /// Captured once so MediaQuery / window resize rebuilds do not recreate
+  /// the WKWebView (which was thrashing memory and freezing checkout).
+  late final double _dialogWidth;
+  late final double _dialogHeight;
+  late final String _html;
+  late final String _userAgent;
+  late final Size _screenSizeAtOpen;
+
+  var _sizesReady = false;
+  var _resultSent = false;
+
+  static String _desktopUserAgent() {
     if (AppPlatform.current.isMacOS) {
       return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
           'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -174,6 +201,42 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
         'Chrome/120.0.0.0 Safari/537.36';
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_sizesReady) return;
+
+    final media = MediaQuery.of(context);
+    final screenSize = media.size;
+    final dpr = media.devicePixelRatio;
+    _screenSizeAtOpen = screenSize;
+
+    final rawWidth = screenSize.width > 800 ? 1000.0 : 440.0;
+    final rawHeight = screenSize.width > 800 ? 580.0 : 680.0;
+    _dialogWidth = _snapToPhysical(rawWidth, dpr);
+    _dialogHeight = _snapToPhysical(rawHeight, dpr);
+    _html = _checkoutHtml(widget.options);
+    _userAgent = _desktopUserAgent();
+    _sizesReady = true;
+
+    debugPrint(
+      '[checkout] host ${_dialogWidth}x$_dialogHeight '
+      '(window=${screenSize.width.toStringAsFixed(0)}x'
+      '${screenSize.height.toStringAsFixed(0)}, dpr=$dpr)',
+    );
+  }
+
+  void _emitResult(PaymentBridgeResult result) {
+    if (_resultSent) return;
+    _resultSent = true;
+    // Drop the WKWebView immediately so Razorpay's post-success blank page
+    // never shows as a white rectangle while we close the dialog.
+    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onResult(result);
+    });
+  }
+
   void _handleCustomSchemeUrl(String url) {
     final uri = Uri.parse(url);
     switch (uri.host) {
@@ -182,14 +245,14 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
         final orderId = uri.queryParameters['razorpay_order_id'] ?? '';
         final signature = uri.queryParameters['razorpay_signature'] ?? '';
         if (paymentId.isEmpty || orderId.isEmpty || signature.isEmpty) {
-          onResult(
+          _emitResult(
             const PaymentBridgeFailed(
               'Incomplete payment response from Razorpay.',
             ),
           );
           return;
         }
-        onResult(
+        _emitResult(
           PaymentBridgeSuccess(
             razorpayPaymentId: paymentId,
             razorpayOrderId: orderId,
@@ -197,123 +260,135 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
           ),
         );
       case 'error':
-        onResult(
+        _emitResult(
           PaymentBridgeFailed(
             uri.queryParameters['description'] ?? 'Payment failed.',
           ),
         );
       case 'dismiss':
-        onResult(const PaymentBridgeCancelled());
+        _emitResult(const PaymentBridgeCancelled());
       default:
         break;
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    // width ≤ 800 → compact; width > 800 → desktop
-    final double dialogWidth;
-    final double dialogHeight;
-    if (screenSize.width > 800) {
-      dialogWidth = 1000;
-      dialogHeight = 580;
-    } else {
-      dialogWidth = 440;
-      dialogHeight = 680;
-    }
-
-    debugPrint(
-      '[checkout] host ${dialogWidth.toInt()}x${dialogHeight.toInt()} '
-      '(window=${screenSize.width.toStringAsFixed(0)}x'
-      '${screenSize.height.toStringAsFixed(0)})',
-    );
-
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: SizedBox(
-          width: dialogWidth,
-          height: dialogHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: InAppWebView(
-              initialData: InAppWebViewInitialData(
-                data: _checkoutHtml(options),
-                encoding: 'utf-8',
-                baseUrl: WebUri('https://checkout.razorpay.com'),
-              ),
-              initialSettings: InAppWebViewSettings(
-                javaScriptCanOpenWindowsAutomatically: true,
-                supportMultipleWindows: true,
-                mediaPlaybackRequiresUserGesture: false,
-                allowsInlineMediaPlayback: true,
-                mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-                transparentBackground: true,
-                userAgent: _desktopUserAgent(),
-              ),
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                final url = navigationAction.request.url.toString();
-                if (url.startsWith('razorpay://')) {
-                  _handleCustomSchemeUrl(url);
-                  return NavigationActionPolicy.CANCEL;
-                }
-                return NavigationActionPolicy.ALLOW;
-              },
-              onConsoleMessage: (controller, message) {
-                debugPrint('[checkout] console: ${message.message}');
-              },
-              onCreateWindow: (controller, createWindowAction) async {
-                // Netbanking / bank redirects open in a popup WebView.
-                if (!context.mounted) return true;
-                final popupWidth =
-                    screenSize.width > 900 ? 900.0 : screenSize.width - 32;
-                final popupHeight =
-                    screenSize.height > 750 ? 700.0 : screenSize.height - 80;
-
-                unawaited(
-                  showDialog<void>(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (popupContext) {
-                      return Dialog(
-                        backgroundColor: Colors.transparent,
-                        insetPadding: const EdgeInsets.all(16),
-                        constraints: BoxConstraints(
-                          maxWidth: popupWidth,
-                          maxHeight: popupHeight,
-                        ),
-                        child: SizedBox(
-                          width: popupWidth,
-                          height: popupHeight,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: InAppWebView(
-                                windowId: createWindowAction.windowId,
-                                initialSettings: InAppWebViewSettings(
-                                  transparentBackground: true,
-                                ),
-                                onCloseWindow: (_) {
-                                  Navigator.of(popupContext).pop();
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-                return true;
-              },
-            ),
+  Widget _checkoutShell({required Widget child}) {
+    return Material(
+      color: Colors.black54,
+      child: Center(
+        child: Material(
+          color: Colors.white,
+          elevation: 8,
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: _dialogWidth,
+            height: _dialogHeight,
+            child: child,
           ),
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_sizesReady) {
+      return const SizedBox.shrink();
+    }
+
+    if (_resultSent) {
+      return _checkoutShell(
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Confirming payment…'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Opaque Material (not ClipRRect) — clipping platform views on macOS
+    // contributes to WKWebView frame drift / UI freezes.
+    return _checkoutShell(
+      child: InAppWebView(
+        key: const ValueKey('razorpay-desktop-checkout'),
+        initialData: InAppWebViewInitialData(
+          data: _html,
+          encoding: 'utf-8',
+          baseUrl: WebUri('https://checkout.razorpay.com'),
+        ),
+        initialSettings: InAppWebViewSettings(
+          javaScriptCanOpenWindowsAutomatically: true,
+          supportMultipleWindows: true,
+          mediaPlaybackRequiresUserGesture: false,
+          allowsInlineMediaPlayback: true,
+          mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+          userAgent: _userAgent,
+          cacheEnabled: false,
+          disableHorizontalScroll: true,
+          disableVerticalScroll: true,
+        ),
+        shouldOverrideUrlLoading: (controller, navigationAction) async {
+          final url = navigationAction.request.url.toString();
+          if (url.startsWith('razorpay://')) {
+            _handleCustomSchemeUrl(url);
+            return NavigationActionPolicy.CANCEL;
+          }
+          return NavigationActionPolicy.ALLOW;
+        },
+        onCreateWindow: (controller, createWindowAction) async {
+          if (!context.mounted) return true;
+          final dpr = MediaQuery.devicePixelRatioOf(context);
+          final popupWidth = _snapToPhysical(
+            _screenSizeAtOpen.width > 900
+                ? 900.0
+                : _screenSizeAtOpen.width - 32,
+            dpr,
+          );
+          final popupHeight = _snapToPhysical(
+            _screenSizeAtOpen.height > 750
+                ? 700.0
+                : _screenSizeAtOpen.height - 80,
+            dpr,
+          );
+
+          unawaited(
+            showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (popupContext) {
+                return Dialog(
+                  backgroundColor: Colors.white,
+                  insetPadding: const EdgeInsets.all(16),
+                  constraints: BoxConstraints(
+                    maxWidth: popupWidth,
+                    maxHeight: popupHeight,
+                  ),
+                  child: SizedBox(
+                    width: popupWidth,
+                    height: popupHeight,
+                    child: InAppWebView(
+                      windowId: createWindowAction.windowId,
+                      initialSettings: InAppWebViewSettings(
+                        cacheEnabled: false,
+                      ),
+                      onCloseWindow: (_) {
+                        if (Navigator.of(popupContext).canPop()) {
+                          Navigator.of(popupContext).pop();
+                        }
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+          return true;
+        },
       ),
     );
   }

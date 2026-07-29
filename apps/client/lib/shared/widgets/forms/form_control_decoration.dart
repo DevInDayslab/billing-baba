@@ -10,8 +10,8 @@ InputDecoration buildFormControlDecoration({
   bool hasError = false,
   bool filled = false,
 }) {
-  // font 14 + borders ≈ 22; remaining vertical pad fills 44px control height.
-  const verticalPad = (FormSpacing.inputHeight - 22) / 2;
+  // font 14 + borders ≈ 16; remaining vertical pad fills 44px control height.
+  const verticalPad = (FormSpacing.inputHeight - 14 - 2) / 2;
 
   return buildSaleFieldDecoration(
     hint: hint,
@@ -25,5 +25,6 @@ InputDecoration buildFormControlDecoration({
       horizontal: 12,
       vertical: verticalPad,
     ),
+    constraints: const BoxConstraints.tightFor(height: FormSpacing.inputHeight),
   );
 }

@@ -181,8 +181,14 @@ class AuthService {
         );
         await persistSession(session, businessId: persistBusinessId);
         return session;
-      } on DioException {
-        await clearSession();
+      } on DioException catch (e) {
+        // Only wipe local credentials on definitive auth failures. Clearing on
+        // every Dio error (timeouts, 5xx) left Switch Company with Headers:{}
+        // and endless "Could not load businesses" 401 loops.
+        final status = e.response?.statusCode;
+        if (status == 401 || status == 403) {
+          await clearSession();
+        }
         return null;
       }
     });

@@ -4,6 +4,7 @@ import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_fa_requests.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:flutter/material.dart';
 
 class PurchaseFaMapper {
@@ -45,7 +46,7 @@ class PurchaseFaMapper {
         .toDouble();
 
     final items = dto.assets.isEmpty
-        ? [FixedAssetLineItem.empty(id: 'line_1')]
+        ? [FixedAssetLineItem.empty(id: newDocumentLineId())]
         : dto.assets
               .map(
                 (asset) => FixedAssetLineItem(

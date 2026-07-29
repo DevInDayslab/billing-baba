@@ -6,6 +6,7 @@ import 'package:billing_baba/features/sales/models/sale_fa_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
@@ -13,12 +14,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'add_sale_fa_form_provider.g.dart';
 
-int _saleFaLineItemCounter = 0;
-
-String _nextSaleFaLineItemId() {
-  _saleFaLineItemCounter += 1;
-  return 'sale_fa_line_$_saleFaLineItemCounter';
-}
+String _nextSaleFaLineItemId() => newDocumentLineId();
 
 AddSaleFaFormState _defaultFormState() {
   final now = DateTime.now();

@@ -8,6 +8,7 @@ import 'package:billing_baba/features/purchases/data/purchase_local_data_source.
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -116,7 +117,7 @@ class PurchaseBillCommandRepository {
     for (final item in input.items) {
       final itemId = item.itemId ?? itemNameToId[item.itemName];
       if (itemId == null || itemId.isEmpty) continue;
-      final lineId = item.serverLineId ?? item.id;
+      final lineId = ensureDocumentLineId(item.serverLineId ?? item.id);
       lineRows.add(
         PurchaseDocumentLineLocalData(
           id: lineId,
@@ -197,7 +198,7 @@ class PurchaseBillCommandRepository {
     for (final item in input.items) {
       final itemId = item.itemId ?? itemNameToId[item.itemName];
       if (itemId == null || itemId.isEmpty) continue;
-      final lineId = item.serverLineId ?? item.id;
+      final lineId = ensureDocumentLineId(item.serverLineId ?? item.id);
       await _syncQueue.enqueueRowMutation(
         businessId: businessId,
         entityType: _purchaseDocumentLinesEntity,

@@ -6,6 +6,7 @@ import 'package:billing_baba/features/inventory/application/inventory_search_pro
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_index_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/pricing/application/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
@@ -120,7 +121,7 @@ class ItemNameAutocompleteFieldState
     if (!mounted) return;
 
     final resolved =
-        ref.read(inventoryItemsProvider).value?.firstWhereOrNull(
+        ref.read(inventoryItemListProvider).firstWhereOrNull(
           (item) => item.id == created.id,
         ) ??
         created;
@@ -139,7 +140,7 @@ class ItemNameAutocompleteFieldState
     if (_focusNode.hasFocus) {
       _showOverlay();
 
-      final itemsAsync = ref.read(inventoryItemsProvider);
+      final itemsAsync = ref.read(inventoryItemsProvider).itemsOnly;
       if (!itemsAsync.hasValue || (itemsAsync.value?.isEmpty ?? true)) {
         setState(() => _waitingForItems = true);
         unawaited(
@@ -257,7 +258,7 @@ class ItemNameAutocompleteFieldState
 
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) {
-        final itemsAsync = ref.watch(inventoryItemsProvider);
+        final itemsAsync = ref.watch(inventoryItemsProvider).itemsOnly;
         final panelWidth = triggerWidth < 420 ? 420.0 : triggerWidth;
 
         if (_shouldShowItemsLoading(itemsAsync)) {

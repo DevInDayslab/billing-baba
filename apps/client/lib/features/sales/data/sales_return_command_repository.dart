@@ -9,6 +9,7 @@ import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -104,7 +105,7 @@ class SalesReturnCommandRepository {
     for (final item in input.items) {
       final itemId = item.itemId ?? itemNameToId[item.itemName];
       if (itemId == null || itemId.isEmpty) continue;
-      final lineId = item.serverLineId ?? item.id;
+      final lineId = ensureDocumentLineId(item.serverLineId ?? item.id);
       lineRows.add(
         SalesDocumentLineLocalData(
           id: lineId,
@@ -188,7 +189,7 @@ class SalesReturnCommandRepository {
     for (final item in input.items) {
       final itemId = item.itemId ?? itemNameToId[item.itemName];
       if (itemId == null || itemId.isEmpty) continue;
-      final lineId = item.serverLineId ?? item.id;
+      final lineId = ensureDocumentLineId(item.serverLineId ?? item.id);
       await _syncQueue.enqueueRowMutation(
         businessId: businessId,
         entityType: _salesDocumentLinesEntity,

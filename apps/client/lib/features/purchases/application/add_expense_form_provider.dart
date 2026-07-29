@@ -16,6 +16,7 @@ import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
@@ -23,12 +24,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'add_expense_form_provider.g.dart';
 
-int _expenseLineItemCounter = 0;
-
-String _nextExpenseLineItemId() {
-  _expenseLineItemCounter += 1;
-  return 'expense_line_$_expenseLineItemCounter';
-}
+String _nextExpenseLineItemId() => newDocumentLineId();
 
 AddExpenseFormState _defaultFormState({String? expenseId}) {
   final now = DateTime.now();
@@ -344,7 +340,7 @@ class AddExpenseForm extends _$AddExpenseForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 

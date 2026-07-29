@@ -8,6 +8,6 @@ void main() {
   test('schema version includes business_id index migration', () {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, greaterThanOrEqualTo(19));
+    expect(db.schemaVersion, greaterThanOrEqualTo(20));
   });
 }

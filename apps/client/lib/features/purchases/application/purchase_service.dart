@@ -22,6 +22,7 @@ import 'package:billing_baba/features/purchases/models/purchase_order_model.dart
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/documents/document_line_sync.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:dio/dio.dart';
@@ -1246,7 +1247,7 @@ class PurchaseService {
     List<PurchaseDocumentLineDto> lines,
   ) {
     if (lines.isEmpty) {
-      return [PurchaseLineItem.empty(id: 'line_1')];
+      return [PurchaseLineItem.empty(id: newDocumentLineId())];
     }
 
     return lines.map((line) {

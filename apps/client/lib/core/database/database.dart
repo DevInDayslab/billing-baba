@@ -57,7 +57,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -176,8 +176,22 @@ class AppDatabase extends _$AppDatabase {
       if (from < 19) {
         await _createBusinessIdIndexes(m);
       }
+      if (from < 20) {
+        await _createSyncQueueIndexes(m);
+      }
     },
   );
+
+  static Future<void> _createSyncQueueIndexes(Migrator m) async {
+    const statements = [
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue (status)',
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_business_id ON sync_queue (business_id)',
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_status_business_id ON sync_queue (status, business_id)',
+    ];
+    for (final statement in statements) {
+      await m.database.customStatement(statement);
+    }
+  }
 
   static Future<void> _createBusinessIdIndexes(Migrator m) async {
     const tables = [

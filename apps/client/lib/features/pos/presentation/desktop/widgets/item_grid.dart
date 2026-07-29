@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/item_card.dart';
@@ -55,7 +56,7 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
 
   @override
   Widget build(BuildContext context) {
-    final inventoryAsync = ref.watch(inventoryItemsProvider);
+    final inventoryAsync = ref.watch(inventoryItemsProvider).itemsOnly;
     final categoriesAsync = ref.watch(inventoryCategoriesProvider);
     final categoryOptions = ref.watch(posCategoriesProvider);
 

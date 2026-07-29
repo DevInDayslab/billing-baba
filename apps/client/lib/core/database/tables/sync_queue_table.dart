@@ -1,6 +1,12 @@
 import 'package:drift/drift.dart';
 
 /// Local-only queue for offline mutations awaiting background sync.
+@TableIndex(name: 'idx_sync_queue_status', columns: {#status})
+@TableIndex(name: 'idx_sync_queue_business_id', columns: {#businessId})
+@TableIndex(
+  name: 'idx_sync_queue_status_business_id',
+  columns: {#status, #businessId},
+)
 class SyncQueue extends Table {
   TextColumn get id => text()();
   TextColumn get mutationId => text()();

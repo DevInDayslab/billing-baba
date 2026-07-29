@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
@@ -24,6 +26,7 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/documents/document_line_sync.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
@@ -32,12 +35,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'add_purchase_form_provider.g.dart';
 
-int _purchaseLineItemCounter = 0;
-
-String _nextPurchaseLineItemId() {
-  _purchaseLineItemCounter += 1;
-  return 'purchase_line_$_purchaseLineItemCounter';
-}
+String _nextPurchaseLineItemId() => newDocumentLineId();
 
 AddPurchaseFormState _defaultFormState({String? documentId}) {
   final now = DateTime.now();
@@ -207,7 +205,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
   Future<List<PurchaseLineItem>> _resolveItemNames(
     List<PurchaseLineItem> items,
   ) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
 
     return [
@@ -220,7 +218,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return PurchaseDocumentItemFactory.buildNameToIdMap(items);
   }
 
@@ -230,7 +228,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
   ) async {
     if (items.isEmpty) return items;
 
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final nameToId = PurchaseDocumentItemFactory.buildNameToIdMap(inventory);
     var lines = PurchaseDocumentItemFactory.assignItemIds(items, nameToId);
 
@@ -541,13 +539,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         input.copyWith(partyId: state.partyId),
         itemNameToId: _itemNameToId(),
       );
-      final synced = await syncTransactionAttachments(
-        ref,
-        entityType: DocumentAttachmentEntityType.purchase.apiValue,
-        entityId: document.id,
-        images: state.attachedImages,
-        documents: state.attachedDocuments,
-      );
+      final synced = await _syncAttachmentsBestEffort(document.id);
       state = state.copyWith(
         documentId: document.id,
         items: bindPurchaseServerLineIds(state.items, document.lines),
@@ -557,7 +549,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         isDirty: false,
       );
       ref.invalidate(purchaseBillsProvider);
-      await _refreshAfterPurchaseMutation();
+      unawaited(_refreshAfterPurchaseMutation());
       return null;
     } catch (error) {
       final message = PurchaseErrorMapper.messageFor(error);
@@ -608,13 +600,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         );
       }
 
-      final synced = await syncTransactionAttachments(
-        ref,
-        entityType: DocumentAttachmentEntityType.purchase.apiValue,
-        entityId: document.id,
-        images: state.attachedImages,
-        documents: state.attachedDocuments,
-      );
+      final synced = await _syncAttachmentsBestEffort(document.id);
       state = state.copyWith(
         documentId: document.id,
         items: bindPurchaseServerLineIds(state.items, document.lines),
@@ -625,7 +611,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       );
 
       ref.invalidate(purchaseBillsProvider);
-      await _refreshAfterPurchaseMutation();
+      unawaited(_refreshAfterPurchaseMutation());
       ref
           .read(purchaseBillSaveSuccessMessageProvider.notifier)
           .setMessage(
@@ -639,6 +625,34 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       final message = PurchaseErrorMapper.messageFor(error);
       state = state.copyWith(isSaving: false, saveError: message);
       return message;
+    }
+  }
+
+  /// Uploads attachments when online; when offline/failing, keeps local bytes
+  /// and metadata so the bill save still succeeds and navigates to the list.
+  Future<
+    ({
+      List<SaleFormAttachment> images,
+      List<SaleFormAttachment> documents,
+    })?
+  >
+  _syncAttachmentsBestEffort(String documentId) async {
+    try {
+      return await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: documentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+    } on Object {
+      await persistOfflineAttachmentMetadata(
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: documentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      return null;
     }
   }
 

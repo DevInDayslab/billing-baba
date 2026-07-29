@@ -15,6 +15,7 @@ import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
@@ -22,12 +23,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'credit_note_form_provider.g.dart';
 
-int _creditNoteLineItemCounter = 0;
-
-String _nextCreditNoteLineItemId() {
-  _creditNoteLineItemCounter += 1;
-  return 'credit_note_line_$_creditNoteLineItemCounter';
-}
+String _nextCreditNoteLineItemId() => newDocumentLineId();
 
 CreditNoteFormState _initialCreditNoteFormState() {
   final now = DateTime.now();
@@ -48,7 +44,7 @@ class CreditNoteForm extends _$CreditNoteForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -110,7 +106,7 @@ class CreditNoteForm extends _$CreditNoteForm {
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
     return [
       for (final line in items)

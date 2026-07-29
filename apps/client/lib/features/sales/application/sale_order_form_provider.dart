@@ -17,6 +17,7 @@ import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
@@ -26,12 +27,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_order_form_provider.g.dart';
 
-int _saleOrderLineItemCounter = 0;
-
-String _nextSaleOrderLineItemId() {
-  _saleOrderLineItemCounter += 1;
-  return 'order_line_$_saleOrderLineItemCounter';
-}
+String _nextSaleOrderLineItemId() => newDocumentLineId();
 
 SaleOrderFormState _initialSaleOrderFormState() {
   final now = DateTime.now();
@@ -53,7 +49,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -113,7 +109,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
     return [
       for (final line in items)

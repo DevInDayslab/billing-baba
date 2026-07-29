@@ -13,7 +13,7 @@ part of 'inventory_items_provider.dart';
 final inventoryItemsProvider = InventoryItemsProvider._();
 
 final class InventoryItemsProvider
-    extends $AsyncNotifierProvider<InventoryItems, List<InventoryItem>> {
+    extends $AsyncNotifierProvider<InventoryItems, PaginatedInventoryItems> {
   InventoryItemsProvider._()
     : super(
         from: null,
@@ -33,20 +33,28 @@ final class InventoryItemsProvider
   InventoryItems create() => InventoryItems();
 }
 
-String _$inventoryItemsHash() => r'8f3fb03b8549c7e521f49c6cd58f0de3426833e9';
+String _$inventoryItemsHash() => r'd5c6ab909d33df654dcb65a740c6059ce3b77560';
 
-abstract class _$InventoryItems extends $AsyncNotifier<List<InventoryItem>> {
-  FutureOr<List<InventoryItem>> build();
+abstract class _$InventoryItems
+    extends $AsyncNotifier<PaginatedInventoryItems> {
+  FutureOr<PaginatedInventoryItems> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref as $Ref<AsyncValue<List<InventoryItem>>, List<InventoryItem>>;
+        this.ref
+            as $Ref<
+              AsyncValue<PaginatedInventoryItems>,
+              PaginatedInventoryItems
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<InventoryItem>>, List<InventoryItem>>,
-              AsyncValue<List<InventoryItem>>,
+              AnyNotifier<
+                AsyncValue<PaginatedInventoryItems>,
+                PaginatedInventoryItems
+              >,
+              AsyncValue<PaginatedInventoryItems>,
               Object?,
               Object?
             >;

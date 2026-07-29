@@ -103,7 +103,7 @@ final class CollaborationRepositoryProvider
 }
 
 String _$collaborationRepositoryHash() =>
-    r'06321ef8fadedbb54f1291b9fd60d7f4e278cdb3';
+    r'8925de049aa3ad8ccf08d5442c66c3891b983eb0';
 
 @ProviderFor(collaborationService)
 final collaborationServiceProvider = CollaborationServiceProvider._();

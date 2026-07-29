@@ -22,6 +22,7 @@ import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:billing_baba/shared/documents/document_line_sync.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:dio/dio.dart';
@@ -516,7 +517,7 @@ class SalesService {
 
   List<SaleLineItem> _linesToSaleLineItems(List<SalesDocumentLineDto> lines) {
     if (lines.isEmpty) {
-      return [SaleLineItem.empty(id: 'line_1')];
+      return [SaleLineItem.empty(id: newDocumentLineId())];
     }
 
     return lines.map((line) {

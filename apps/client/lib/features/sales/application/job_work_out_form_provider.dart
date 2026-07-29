@@ -32,12 +32,12 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
   JobWorkOutFormState build() => _initialJobWorkOutFormState();
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
   Map<String, String> _itemIdToName() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.id: item.name};
   }
 

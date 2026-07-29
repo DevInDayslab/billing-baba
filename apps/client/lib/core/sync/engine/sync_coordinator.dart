@@ -319,6 +319,7 @@ class SyncCoordinator {
             conflicts += pushStats.conflicts;
             failures += pushStats.failures;
           }
+          await _queue.clearCompleted(businessId: businessId);
         } on Object catch (error) {
           for (final job in rowJobs) {
             if (job.status == SyncQueueStatus.running) {
@@ -425,8 +426,10 @@ class SyncCoordinator {
     var conflicts = 0;
     var failures = 0;
 
+    final pushJobs = await _queue.remediateInvalidLineEntityIds(jobs);
+
     final mutations = <Map<String, dynamic>>[];
-    for (final job in jobs) {
+    for (final job in pushJobs) {
       await _queue.markRunning(job.id);
       mutations.add({
         'mutation_id': job.mutationId,
@@ -450,7 +453,7 @@ class SyncCoordinator {
       },
     );
 
-    final byMutation = {for (final job in jobs) job.mutationId: job};
+    final byMutation = {for (final job in pushJobs) job.mutationId: job};
 
     for (final item in _asList(response['accepted'])) {
       final mutationId = item['mutation_id']?.toString();

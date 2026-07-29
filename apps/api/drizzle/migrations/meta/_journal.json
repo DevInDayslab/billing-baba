@@ -330,6 +330,20 @@
       "when": 1787200000000,
       "tag": "0046_devices_composite_pk",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1787300000000,
+      "tag": "0047_sync_pull_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1787400000000,
+      "tag": "0048_repair_crm_leads_contacts",
+      "breakpoints": true
     }
   ]
 }

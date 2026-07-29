@@ -19,7 +19,7 @@ class AlternativeItemsField extends ConsumerWidget {
   final ValueChanged<List<String>> onChanged;
 
   Future<void> _openPicker(BuildContext context, WidgetRef ref) async {
-    final items = ref.read(inventoryItemsProvider).value ?? const [];
+    final items = ref.read(inventoryItemListProvider);
     final picked = await showDialog<List<String>>(
       context: context,
       builder: (dialogContext) => _AlternativeItemsPickerDialog(
@@ -33,7 +33,7 @@ class AlternativeItemsField extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(inventoryItemsProvider).value ?? const [];
+    final items = ref.watch(inventoryItemListProvider);
     final itemsById = {for (final item in items) item.id: item};
     final selectedItems = selectedItemIds
         .map((id) => itemsById[id])
