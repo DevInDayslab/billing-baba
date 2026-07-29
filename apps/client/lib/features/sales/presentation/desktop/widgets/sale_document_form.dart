@@ -1037,10 +1037,9 @@ class _SaleTextFieldState extends State<_SaleTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return SaleTextField(
       controller: _controller,
-      style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(hint: widget.hintText),
+      hint: widget.hintText,
       onChanged: widget.onChanged,
     );
   }

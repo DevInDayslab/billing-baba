@@ -318,6 +318,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               style: saleFieldTextStyle,
                               decoration: buildSaleFieldDecoration(
                                 hint: 'Add description...',
+                                fixedHeight: false,
                               ),
                             ),
                           ],

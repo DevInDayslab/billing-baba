@@ -968,19 +968,13 @@ class _CompactTextFieldState extends State<_CompactTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return SaleCompactFieldBox(
-      child: TextField(
-        controller: _controller,
-        style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
-        textAlignVertical: TextAlignVertical.center,
-        decoration: buildSaleFieldDecoration(
-          hint: widget.hintText,
-          compact: true,
-          borderless: widget.borderless,
-          suffixIcon: widget.suffixIcon,
-        ),
-        onChanged: widget.onChanged,
-      ),
+    return SaleTextField(
+      controller: _controller,
+      hint: widget.hintText,
+      compact: true,
+      borderless: widget.borderless,
+      suffixIcon: widget.suffixIcon,
+      onChanged: widget.onChanged,
     );
   }
 }

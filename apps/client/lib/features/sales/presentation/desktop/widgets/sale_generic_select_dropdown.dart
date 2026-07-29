@@ -105,37 +105,43 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
           ),
           menuChildren: _buildMenuChildren(),
           builder: (context, controller, child) {
-            return SaleFieldTrigger(
-              onTap: () {
-                if (controller.isOpen) {
-                  controller.close();
-                } else {
-                  controller.open();
-                }
-              },
-              hasError: widget.hasError,
-              compact: widget.compact,
-              borderless: widget.borderless,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AppEllipsisText(
-                      displayText,
-                      style: TextStyle(
-                        fontSize: widget.compact ? 12 : 14,
-                        height: 1,
-                        color: isPlaceholder
-                            ? Colors.grey.shade400
-                            : AppColors.textPrimary,
+            return SizedBox(
+              height: widget.compact
+                  ? saleCompactFieldHeight
+                  : saleFieldHeight,
+              width: double.infinity,
+              child: SaleFieldTrigger(
+                onTap: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+                hasError: widget.hasError,
+                compact: widget.compact,
+                borderless: widget.borderless,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppEllipsisText(
+                        displayText,
+                        style: TextStyle(
+                          fontSize: widget.compact ? 12 : 14,
+                          height: 1,
+                          color: isPlaceholder
+                              ? Colors.grey.shade400
+                              : AppColors.textPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: widget.compact ? 16 : 18,
-                    color: AppColors.textSecondary,
-                  ),
-                ],
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      size: widget.compact ? 16 : 18,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
+                ),
               ),
             );
           },

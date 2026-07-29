@@ -1150,6 +1150,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         icon: const Icon(Icons.info_outline, size: 18),
         color: AppColors.textSecondary,
         tooltip: '15-character GST identification number',
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(
+          width: saleFieldHeight - 8,
+          height: saleFieldHeight - 2,
+        ),
+        visualDensity: VisualDensity.compact,
       ),
     );
 
@@ -1170,15 +1176,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     );
 
     final billingNameField = _isEditMode
-        ? InputDecorator(
-            decoration: buildSaleFieldDecoration(hint: 'Billing Name'),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                widget.partyToEdit!.name,
-                style: saleFieldTextStyle,
-                overflow: TextOverflow.ellipsis,
-              ),
+        ? SaleFieldChrome(
+            child: Text(
+              widget.partyToEdit!.name,
+              style: saleFieldTextStyle,
+              overflow: TextOverflow.ellipsis,
             ),
           )
         : null;
@@ -1382,26 +1384,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
+        SaleTextField(
           controller: controller,
+          hint: hint,
+          hasError: hasError,
           autofocus: autofocus,
-          style: saleFieldTextStyle,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           maxLength: maxLength,
-          buildCounter: maxLength == null
-              ? null
-              : (
-                  context, {
-                  required currentLength,
-                  required isFocused,
-                  maxLength,
-                }) => null,
-          decoration: buildSaleFieldDecoration(
-            hint: hint,
-            hasError: hasError,
-            suffixIcon: suffixIcon,
-          ),
+          suffixIcon: suffixIcon,
           onChanged: onChanged,
         ),
         if (hasError && errorText != null)
@@ -1518,12 +1509,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  SaleTextField(
                     controller: _emailController,
-                    style: saleFieldTextStyle,
-                    decoration: buildSaleFieldDecoration(
-                      hasError: _emailError != null,
-                    ),
+                    hasError: _emailError != null,
                     keyboardType: TextInputType.emailAddress,
                     onChanged: (_) {
                       if (_emailError != null) {
@@ -1698,7 +1686,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: TextField(
             controller: addressController,
             style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(),
+            decoration: buildSaleFieldDecoration(fixedHeight: false),
             minLines: 4,
             maxLines: 4,
           ),
@@ -1758,22 +1746,18 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
         final addressLineField = _LabeledField(
           label: 'Address',
-          child: TextField(
+          child: SaleTextField(
             controller: addressLineController,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(
-              hint: 'Street, building, area',
-            ),
+            hint: 'Street, building, area',
             textCapitalization: TextCapitalization.sentences,
           ),
         );
 
         final cityField = _LabeledField(
           label: 'City',
-          child: TextField(
+          child: SaleTextField(
             controller: cityController,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: 'City'),
+            hint: 'City',
             textCapitalization: TextCapitalization.words,
           ),
         );
@@ -1789,19 +1773,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
         final pincodeField = _LabeledField(
           label: 'Pincode',
-          child: TextField(
+          child: SaleTextField(
             controller: pincodeController,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: 'Pincode'),
+            hint: 'Pincode',
             keyboardType: TextInputType.number,
             maxLength: 6,
-            buildCounter:
-                (
-                  context, {
-                  required currentLength,
-                  required isFocused,
-                  maxLength,
-                }) => null,
           ),
         );
 
@@ -1926,13 +1902,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
+              SaleTextField(
                 controller: _loyaltyPointsOpeningBalanceController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(
-                  hint: _defaultDecimal,
-                  hasError: _loyaltyBalanceError != null,
-                ),
+                hint: _defaultDecimal,
+                hasError: _loyaltyBalanceError != null,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -2007,13 +1980,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
+              SaleTextField(
                 controller: amountController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(
-                  hint: _defaultDecimal,
-                  hasError: amountError != null,
-                ),
+                hint: _defaultDecimal,
+                hasError: amountError != null,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -2071,13 +2041,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
+                SaleTextField(
                   controller: _creditLimitController,
-                  style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
-                    hint: _defaultDecimal,
-                    hasError: _creditLimitError != null,
-                  ).copyWith(prefixText: '₹ '),
+                  hint: _defaultDecimal,
+                  hasError: _creditLimitError != null,
+                  prefix: const Text('₹ ', style: saleFieldTextStyle),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -2226,11 +2194,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         ),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
-          child: TextField(
+          child: SaleTextField(
             controller: controller,
             enabled: enabled,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: label),
+            hint: label,
           ),
         ),
       ],

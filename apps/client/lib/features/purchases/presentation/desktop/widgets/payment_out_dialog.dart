@@ -311,6 +311,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                   style: saleFieldTextStyle,
                                   decoration: buildSaleFieldDecoration(
                                     hint: 'Add description...',
+                                    fixedHeight: false,
                                   ),
                                 ),
                               ],

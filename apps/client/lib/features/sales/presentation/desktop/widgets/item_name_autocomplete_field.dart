@@ -565,15 +565,12 @@ class ItemNameAutocompleteFieldState
 
     return CompositedTransformTarget(
       link: _layerLink,
-      child: TextField(
+      child: SaleTextField(
         controller: _controller,
         focusNode: _focusNode,
-        style: saleFieldTextStyle.copyWith(fontSize: 13),
-        decoration: buildSaleFieldDecoration(
-          hint: 'Item Name',
-          compact: true,
-          borderless: widget.borderless,
-        ),
+        hint: 'Item Name',
+        compact: true,
+        borderless: widget.borderless,
         onChanged: (value) {
           widget.onChanged(value);
           _overlayEntry?.markNeedsBuild();

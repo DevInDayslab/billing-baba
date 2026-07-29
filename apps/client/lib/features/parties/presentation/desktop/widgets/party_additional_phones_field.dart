@@ -75,19 +75,16 @@ Widget buildAdditionalPhoneInput({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            SaleTextField(
               controller: controller,
+              hint: 'Additional Mobile',
+              hasError: errorText != null,
               keyboardType: TextInputType.number,
               maxLength: 10,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(
-                hint: 'Additional Mobile',
-                hasError: errorText != null,
-              ),
               onChanged: (_) => onChanged(),
             ),
             if (errorText != null)

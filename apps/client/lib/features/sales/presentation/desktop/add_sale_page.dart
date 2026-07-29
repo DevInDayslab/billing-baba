@@ -1304,6 +1304,21 @@ class _SaleTextFieldState extends State<_SaleTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final isSingleLine = widget.minLines <= 1 && widget.maxLines <= 1;
+    if (isSingleLine) {
+      return SaleTextField(
+        controller: _controller,
+        hint: widget.hintText,
+        hasError: widget.hasError,
+        compact: widget.compact,
+        filled: widget.filled,
+        readOnly: widget.readOnly,
+        keyboardType: widget.keyboardType,
+        inputFormatters: widget.inputFormatters,
+        onChanged: widget.onChanged,
+      );
+    }
+
     return TextField(
       controller: _controller,
       readOnly: widget.readOnly,
@@ -1315,6 +1330,7 @@ class _SaleTextFieldState extends State<_SaleTextField> {
         filled: widget.filled,
         compact: widget.compact,
         hasError: widget.hasError,
+        fixedHeight: false,
       ).copyWith(
         errorText: widget.hasError ? widget.errorText : null,
       ),

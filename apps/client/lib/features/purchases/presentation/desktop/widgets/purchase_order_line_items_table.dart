@@ -661,13 +661,10 @@ class _CompactTextFieldState extends State<_CompactTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return SaleTextField(
       controller: _controller,
-      style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        compact: true,
-      ),
+      hint: widget.hintText,
+      compact: true,
       onChanged: widget.onChanged,
     );
   }
