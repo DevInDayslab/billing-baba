@@ -33,7 +33,7 @@
 #define AppName "Billing Baba"
 #define AppPublisher "Billing Baba"
 #define AppExeName "billing_baba.exe"
-#define AppId "{{A3F8C2E1-9B4D-4F6A-8C1E-2D5E7F9A0B3C}"
+#define AppId "{A3F8C2E1-9B4D-4F6A-8C1E-2D5E7F9A0B3C}"
 
 [Setup]
 AppId={#AppId}
