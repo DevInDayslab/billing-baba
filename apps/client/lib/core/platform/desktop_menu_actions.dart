@@ -39,14 +39,17 @@ abstract final class DesktopMenuActions {
     String? subject,
     String? body,
   }) async {
-    final params = <String, String>{
-      if (subject != null && subject.isNotEmpty) 'subject': subject,
-      if (body != null && body.isNotEmpty) 'body': body,
-    };
-    final uri = Uri(
-      scheme: 'mailto',
-      path: email,
-      queryParameters: params.isEmpty ? null : params,
+    // Build query with %20 (not +) so mail clients don't show literal pluses.
+    final parts = <String>[
+      if (subject != null && subject.isNotEmpty)
+        'subject=${Uri.encodeComponent(subject)}',
+      if (body != null && body.isNotEmpty)
+        'body=${Uri.encodeComponent(body)}',
+    ];
+    final uri = Uri.parse(
+      parts.isEmpty
+          ? 'mailto:$email'
+          : 'mailto:$email?${parts.join('&')}',
     );
     final launched = await launchUrl(uri);
     if (!launched) {
