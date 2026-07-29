@@ -399,6 +399,9 @@ class BackendCollaborationRepository implements CollaborationRepository {
       ];
       _cache.directory.replaceCompanies(companies);
       return companies;
+    } on CollaborationNotFoundException {
+      // Collaboration routes are not deployed yet — owned companies still work.
+      return const [];
     } on DioException {
       return List<CompanyListEntry>.from(_cache.directory.companies);
     }

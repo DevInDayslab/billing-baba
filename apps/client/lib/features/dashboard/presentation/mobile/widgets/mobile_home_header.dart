@@ -12,6 +12,7 @@ class MobileHomeHeader extends ConsumerWidget {
     super.key,
     this.onNotificationTap,
     this.onSettingsTap,
+    this.onAvatarTap,
     this.onBusinessTap,
     this.onSyncTap,
     this.lastSyncLabel = 'Last sync 1 min ago',
@@ -19,6 +20,7 @@ class MobileHomeHeader extends ConsumerWidget {
 
   final VoidCallback? onNotificationTap;
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onAvatarTap;
   final VoidCallback? onBusinessTap;
   final VoidCallback? onSyncTap;
   final String lastSyncLabel;
@@ -45,11 +47,15 @@ class MobileHomeHeader extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BusinessAvatar(
-                name: userName,
-                seed: business.seed,
-                diameter: 44,
-                logoUrl: business.logoUrl,
+              InkWell(
+                onTap: onAvatarTap,
+                borderRadius: BorderRadius.circular(22),
+                child: BusinessAvatar(
+                  name: userName,
+                  seed: business.seed,
+                  diameter: 44,
+                  logoUrl: business.logoUrl,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(

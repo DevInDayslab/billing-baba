@@ -74,12 +74,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
-  ProviderContainer? _providerContainer;
   final _shellShortcutFocusNode = FocusNode(debugLabel: 'shellShortcuts');
+  SearchDialogNotifier? _searchDialogNotifier;
 
   @override
   void initState() {
     super.initState();
+    _searchDialogNotifier = ref.read(searchDialogProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _registerSearchDialog();
@@ -95,7 +96,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
   @override
   void dispose() {
-    _providerContainer?.read(searchDialogProvider.notifier).unregister();
+    _searchDialogNotifier?.unregister();
     _shellShortcutFocusNode.dispose();
     super.dispose();
   }
@@ -118,7 +119,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _providerContainer = ProviderScope.containerOf(context);
     if (!_expandInitialized) {
       _expandInitialized = true;
       final location = GoRouterState.of(context).uri.path;

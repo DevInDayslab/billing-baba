@@ -90,7 +90,9 @@ abstract final class RoutePermissionRegistry {
       return false;
     }
 
-    if (location == AppRoutes.home || location == AppRoutes.editProfile) {
+    if (location == AppRoutes.home ||
+        location == AppRoutes.editProfile ||
+        location == AppRoutes.notifications) {
       return true;
     }
 

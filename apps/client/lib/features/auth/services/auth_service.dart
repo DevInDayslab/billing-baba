@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
@@ -135,6 +136,22 @@ class AuthService {
           businessId: selectedId,
         );
       }
+      if (NetworkExceptionClassifier.isConnectivityError(e)) {
+        final phone = _storage.read(StorageKeys.accountPhone) ?? '';
+        final payload = JwtUtils.decodePayload(accessToken);
+        final userId = payload?['sub']?.toString() ?? 'offline';
+        return AuthSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          expiresIn: 0,
+          user: AuthUser(
+            id: userId,
+            phone: phone,
+            role: JwtUtils.role(accessToken),
+          ),
+          businesses: const [],
+        );
+      }
       await clearSession();
       return null;
     }
@@ -182,6 +199,10 @@ class AuthService {
         await persistSession(session, businessId: persistBusinessId);
         return session;
       } on DioException catch (e) {
+        if (NetworkExceptionClassifier.isConnectivityError(e)) {
+          // Keep stored tokens when the backend is unreachable.
+          return null;
+        }
         // Only wipe local credentials on definitive auth failures. Clearing on
         // every Dio error (timeouts, 5xx) left Switch Company with Headers:{}
         // and endless "Could not load businesses" 401 loops.

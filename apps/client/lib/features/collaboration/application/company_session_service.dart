@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
@@ -139,6 +140,20 @@ class CompanySessionService {
     }
 
     await _businessService.rememberLastOpened(businessId);
+
+    if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      BusinessSelectionRetryGuard.logBlockedOnce(
+        'scopeOwnedApiCompany',
+        businessId,
+      );
+      seedBusinessProfilePreview(_ref, entry: entry);
+      BusinessOpenDebugLog.step(
+        'scopeOwnedApiCompany',
+        'offline — seeded preview, skip JWT refresh',
+      );
+      return;
+    }
+
     await _ref.read(authProvider.notifier).selectBusiness(businessId);
 
     final auth = _ref.read(authProvider);

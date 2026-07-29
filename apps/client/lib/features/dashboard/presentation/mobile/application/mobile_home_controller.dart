@@ -5,18 +5,23 @@ class MobileHomeState {
   const MobileHomeState({
     this.activeView = MobileHomeView.transactionDetails,
     this.searchQuery = '',
+    this.transactionTypeFilters = const {},
   });
 
   final MobileHomeView activeView;
   final String searchQuery;
+  final Set<MobileHomeTransactionFilterType> transactionTypeFilters;
 
   MobileHomeState copyWith({
     MobileHomeView? activeView,
     String? searchQuery,
+    Set<MobileHomeTransactionFilterType>? transactionTypeFilters,
   }) {
     return MobileHomeState(
       activeView: activeView ?? this.activeView,
       searchQuery: searchQuery ?? this.searchQuery,
+      transactionTypeFilters:
+          transactionTypeFilters ?? this.transactionTypeFilters,
     );
   }
 }
@@ -37,16 +42,31 @@ class MobileHomeController extends Notifier<MobileHomeState> {
   void setSearch(String query) {
     state = state.copyWith(searchQuery: query);
   }
+
+  void setTransactionTypeFilters(
+    Set<MobileHomeTransactionFilterType> filters,
+  ) {
+    state = state.copyWith(transactionTypeFilters: filters);
+  }
 }
 
 List<MobileHomeTransactionItem> filterHomeTransactions(
   List<MobileHomeTransactionItem> items,
-  String query,
-) {
-  final normalized = query.trim().toLowerCase();
-  if (normalized.isEmpty) return items;
+  String query, {
+  Set<MobileHomeTransactionFilterType> typeFilters = const {},
+}) {
+  var result = items;
 
-  return items.where((item) {
+  if (typeFilters.isNotEmpty) {
+    result = result
+        .where((item) => typeFilters.contains(item.filterType))
+        .toList();
+  }
+
+  final normalized = query.trim().toLowerCase();
+  if (normalized.isEmpty) return result;
+
+  return result.where((item) {
     final haystack = [
       item.partyName,
       item.documentNumber,

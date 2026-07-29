@@ -27,6 +27,7 @@ import 'package:billing_baba/features/developer/presentation/table_filters_playg
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
+import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
@@ -142,14 +143,11 @@ GoRouter createAppRouter({
             return AppRoutes.businessList;
           }
           if (!onBusinessList) {
-            final hasActiveCompany = ref.read(companySessionProvider) != null;
-            if (!hasActiveCompany) {
-              SwitchCompanyDebugLog.nav(
-                'GoRouter redirect $location → ${AppRoutes.businessList} '
-                '(${auth.status.name})',
-              );
-              return AppRoutes.businessList;
-            }
+            SwitchCompanyDebugLog.nav(
+              'GoRouter redirect $location → ${AppRoutes.businessList} '
+              '(${auth.status.name})',
+            );
+            return AppRoutes.businessList;
           }
         case AuthStatus.authenticated:
           if (onLogin || onOtp) return AppRoutes.home;
@@ -189,6 +187,10 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.home,
             builder: (context, state) => const HomePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.notifications,
+            builder: (context, state) => const NotificationsPage(),
           ),
           GoRoute(
             path: AppRoutes.parties,

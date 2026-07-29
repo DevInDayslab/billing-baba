@@ -22,6 +22,7 @@ Future<void> main() async {
       GoogleFonts.config.allowRuntimeFetching = false;
 
       await dotenv.load();
+      await AppConfig.initialize();
       await LoggingService.instance.initialize();
 
       AppConfig.logStartupConfig();
@@ -76,7 +77,7 @@ Future<void> main() async {
 }
 
 Future<void> _logStartupDiagnostics() async {
-  if (!AppConfig.consoleVerbose) return;
+  if (!AppConfig.fileLoggingEnabled && !AppConfig.consoleVerbose) return;
 
   try {
     final deviceInfo = await DeviceInfoCollector.collect();

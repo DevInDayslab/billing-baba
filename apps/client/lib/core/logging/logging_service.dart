@@ -10,6 +10,7 @@ import 'package:billing_baba/core/network/network_error_details.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Centralized application logging with rotating file output.
 class LoggingService {
@@ -32,6 +33,8 @@ class LoggingService {
 
   Directory? get logDirectory => _logDirectory;
 
+  String? get logFilePath => _logFile?.path;
+
   Future<void> initialize() async {
     if (_initialized) return;
 
@@ -41,36 +44,33 @@ class LoggingService {
 
     _initialized = true;
     await _rotateIfNeeded();
+    await _flushPreInitBuffer();
+
+    if (AppConfig.fileLoggingEnabled && _logFile != null) {
+      await _writeLine(
+        '${_formatTimestamp(DateTime.now())} INFO Log file: ${_logFile!.path}',
+      );
+    }
   }
 
   Future<Directory> _resolveLogDirectory() async {
     if (!kIsWeb && AppPlatform.current.isWindows) {
       final localAppData = Platform.environment['LOCALAPPDATA'];
       if (localAppData != null && localAppData.isNotEmpty) {
-        return Directory('$localAppData\\${AppConfig.appName}\\logs');
+        return Directory('$localAppData\\${AppConfig.dataDirectoryName}\\logs');
       }
     }
 
-    final documents = await _documentsDirectory();
-    return Directory('${documents.path}/${AppConfig.appName}/logs');
+    final supportDir = await getApplicationSupportDirectory();
+    return Directory('${supportDir.path}/logs');
   }
 
-  Future<Directory> _documentsDirectory() async {
-    if (!kIsWeb && AppPlatform.current.isWindows) {
-      final userProfile = Platform.environment['USERPROFILE'];
-      if (userProfile != null && userProfile.isNotEmpty) {
-        return Directory('$userProfile\\Documents');
-      }
+  Future<void> _flushPreInitBuffer() async {
+    if (!AppConfig.fileLoggingEnabled || _buffer.isEmpty) return;
+    for (final line in _buffer) {
+      _writeQueue.add(_LogEntry(line));
     }
-    if (!kIsWeb && AppPlatform.current.isMacOS) {
-      return Directory('${Platform.environment['HOME'] ?? ''}/Documents');
-    }
-    if (!kIsWeb && AppPlatform.current.isLinux) {
-      return Directory('${Platform.environment['HOME'] ?? ''}/Documents');
-    }
-    // Fallback for mobile — use app documents via path_provider pattern.
-    final temp = Directory.systemTemp;
-    return temp;
+    await _flushQueue();
   }
 
   void debug(String message) => _log(LogLevel.debug, message);
@@ -118,8 +118,10 @@ class LoggingService {
 
     if (!_initialized) return;
 
-    _writeQueue.add(_LogEntry(line));
-    unawaited(_flushQueue());
+    if (AppConfig.fileLoggingEnabled && AppConfig.shouldLog(level)) {
+      _writeQueue.add(_LogEntry(line));
+      unawaited(_flushQueue());
+    }
   }
 
   Future<void> _flushQueue() async {
@@ -128,11 +130,7 @@ class LoggingService {
     try {
       while (_writeQueue.isNotEmpty) {
         final entry = _writeQueue.removeFirst();
-        await _logFile!.writeAsString(
-          '${entry.line}\n',
-          mode: FileMode.append,
-          flush: true,
-        );
+        await _writeLine(entry.line);
         await _rotateIfNeeded();
       }
     } on Object catch (e) {
@@ -143,6 +141,14 @@ class LoggingService {
         unawaited(_flushQueue());
       }
     }
+  }
+
+  Future<void> _writeLine(String line) async {
+    await _logFile!.writeAsString(
+      '$line\n',
+      mode: FileMode.append,
+      flush: true,
+    );
   }
 
   Future<void> _rotateIfNeeded() async {

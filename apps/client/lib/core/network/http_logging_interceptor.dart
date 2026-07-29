@@ -45,6 +45,11 @@ class HttpLoggingInterceptor extends Interceptor {
       LoggingService.instance.info('  Status $status');
       LoggingService.instance.info('  Duration ${duration.inMilliseconds}ms');
       LoggingService.instance.info('  Response: $body');
+    } else if (status != null && status >= 400) {
+      LoggingService.instance.warn(
+        '← ${response.requestOptions.method} ${response.requestOptions.uri} '
+        'Status $status Duration ${duration.inMilliseconds}ms',
+      );
     }
 
     DiagnosticsStore.instance.recordApiCall(
@@ -65,26 +70,21 @@ class HttpLoggingInterceptor extends Interceptor {
       LogSanitizer.sanitizeBody(err.response?.data),
     );
 
-    if (AppConfig.consoleVerbose) {
-      final isRecoverableAuth401 =
-          status == 401 &&
-          err.requestOptions.path.contains('/auth/me');
-      final message =
-          '✗ ${err.requestOptions.method} ${err.requestOptions.uri}\n'
-          '  Type: ${err.type}\n'
-          '  Status: $status\n'
-          '  Duration: ${duration.inMilliseconds}ms\n'
-          '  Message: ${err.message}\n'
-          '  Response: $body';
+    final isRecoverableAuth401 =
+        status == 401 && err.requestOptions.path.contains('/auth/me');
+    final message =
+        '✗ ${err.requestOptions.method} ${err.requestOptions.uri}\n'
+        '  Type: ${err.type}\n'
+        '  Status: $status\n'
+        '  Duration: ${duration.inMilliseconds}ms\n'
+        '  Message: ${err.message}\n'
+        '  Response: $body';
 
+    if (AppConfig.consoleVerbose || AppConfig.fileLoggingEnabled) {
       if (isRecoverableAuth401) {
         LoggingService.instance.info(message);
       } else {
-        LoggingService.instance.error(
-          message,
-          err,
-          err.stackTrace,
-        );
+        LoggingService.instance.error(message, err, err.stackTrace);
       }
     }
 
@@ -118,7 +118,7 @@ class HttpLoggingInterceptor extends Interceptor {
   static void logRetry(RequestOptions options, {required String reason}) {
     final count = (options.extra[_extraRetryCount] as int? ?? 0) + 1;
     options.extra[_extraRetryCount] = count;
-    if (AppConfig.consoleVerbose) {
+    if (AppConfig.consoleVerbose || AppConfig.fileLoggingEnabled) {
       LoggingService.instance.warn(
         '↻ Retry #$count ${options.method} ${options.uri} ($reason)',
       );

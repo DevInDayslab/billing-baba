@@ -1,12 +1,9 @@
-import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 
 /// Lightweight application logger — delegates to [LoggingService].
 abstract final class AppLogger {
   static void debug(String message) {
-    if (AppConfig.consoleVerbose) {
-      LoggingService.instance.debug(message);
-    }
+    LoggingService.instance.debug(message);
   }
 
   static void info(String message) {

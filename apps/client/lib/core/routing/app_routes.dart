@@ -4,6 +4,7 @@ abstract final class AppRoutes {
   static const login = '/login';
   static const verifyOtp = '/verify-otp';
   static const home = '/home';
+  static const notifications = '/notifications';
   static const businessList = '/business-list';
   static const parties = '/parties';
   static const partyDetails = '/parties/party-details';
