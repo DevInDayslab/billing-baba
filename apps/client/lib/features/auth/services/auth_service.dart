@@ -213,13 +213,11 @@ class AuthService {
   }
 
   Future<AuthSession> devLogin() async {
-    AuthDebugLogger.log(
-      'AuthService.devLogin: offline local session (no API)',
-    );
-    final session = AuthService.offlineDevSession();
-    await persistSession(session);
+    AuthDebugLogger.log('AuthService.devLogin: POST /auth/dev-login');
+    final session = await _repository.devLogin();
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
+    await persistSession(session);
     return session;
   }
 

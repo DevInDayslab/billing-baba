@@ -720,7 +720,7 @@ class Auth extends _$Auth {
     if (_devLoginInFlight || state.backendLoginCompleted) return;
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: offline local session (no API)');
+    AuthDebugLogger.log('devLogin: POST /auth/dev-login');
     state = state.copyWith(clearError: true);
     _setOtpPhase(OtpPhase.backendLogin);
 
@@ -729,7 +729,6 @@ class Auth extends _$Auth {
       final session = await service.devLogin();
       AuthDebugLogger.log('devLogin: login successful');
       _completeOtpLogin(session);
-      await _bootstrapOfflineDevSession(session);
     } on Object catch (e, st) {
       AuthDebugLogger.log('devLogin failed: $e');
       if (AppConfig.authDebugLogging) {
