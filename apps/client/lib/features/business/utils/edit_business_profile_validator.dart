@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 
 abstract final class EditBusinessProfileValidator {
   static Map<String, String> validate(UpdateBusinessProfileInput input) {

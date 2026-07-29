@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/add_item_form_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
@@ -15,6 +14,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternatives_section.dart';
@@ -31,6 +31,7 @@ import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,7 +203,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final detailDto = await service.fetchItemDetailDto(item.id);
-      final tiers = await service.fetchItemTierPrices(item.id);
+      var tiers = const <TierPriceModel>[];
+      try {
+        tiers = await service.fetchItemTierPrices(item.id);
+      } on Object {
+        // Tier prices may be unavailable offline; form still opens from local item.
+      }
 
       await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
 

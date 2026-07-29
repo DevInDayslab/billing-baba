@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_session_service.dart';
 import 'package:billing_baba/features/sales/models/dto/pos_session_dto.dart';
@@ -20,6 +21,8 @@ class PosSessionState {
 
   bool get hasActiveBackendSession =>
       backendSession != null && backendSession!.isOpen;
+
+  bool get hasActiveSession => hasActiveBackendSession;
 
   PosSessionState copyWith({
     bool? isTerminalOpen,
@@ -64,7 +67,7 @@ class PosSession extends _$PosSession {
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: error.toString(),
+        errorMessage: OfflineUiMessages.messageFor(error),
       );
     }
   }

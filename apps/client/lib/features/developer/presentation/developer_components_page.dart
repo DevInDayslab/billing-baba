@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/developer/presentation/desktop/developer_components_page.dart';
 import 'package:billing_baba/features/developer/presentation/mobile/developer_components_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 export 'package:billing_baba/features/developer/presentation/desktop/developer_components_page.dart'

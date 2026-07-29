@@ -38,7 +38,7 @@ class _PartyReportByItemContentState
   @override
   Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
-    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    final items = ref.watch(inventoryItemListProvider);
     final selectedItemId = filters.itemId;
     final selectedItemName = _selectedItemName(items, selectedItemId);
     final itemNames = items.map((item) => item.name).toList();

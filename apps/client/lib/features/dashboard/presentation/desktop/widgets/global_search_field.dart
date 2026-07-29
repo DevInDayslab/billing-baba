@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/dashboard/application/global_search_provider.dart';
 import 'package:billing_baba/features/dashboard/models/global_search_result.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

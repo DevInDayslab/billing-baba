@@ -14,12 +14,12 @@ _ConnectedDevice _$ConnectedDeviceFromJson(Map<String, dynamic> json) =>
       osName: json['os_name'] as String,
       appVersion: json['app_version'] as String,
       lastSeenAt: DateTime.parse(json['last_seen_at'] as String),
-      isCurrentDevice: json['is_current_device'] as bool? ?? false,
-      isOnline: json['is_online'] as bool? ?? true,
       deviceSyncStatus: $enumDecode(
         _$DeviceSyncStatusEnumMap,
         json['sync_status'],
       ),
+      isCurrentDevice: json['is_current_device'] as bool? ?? false,
+      isOnline: json['is_online'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$ConnectedDeviceToJson(_ConnectedDevice instance) =>
@@ -30,9 +30,9 @@ Map<String, dynamic> _$ConnectedDeviceToJson(_ConnectedDevice instance) =>
       'os_name': instance.osName,
       'app_version': instance.appVersion,
       'last_seen_at': instance.lastSeenAt.toIso8601String(),
+      'sync_status': _$DeviceSyncStatusEnumMap[instance.deviceSyncStatus]!,
       'is_current_device': instance.isCurrentDevice,
       'is_online': instance.isOnline,
-      'sync_status': _$DeviceSyncStatusEnumMap[instance.deviceSyncStatus]!,
     };
 
 const _$DevicePlatformEnumMap = {

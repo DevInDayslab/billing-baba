@@ -58,7 +58,7 @@ final class CreditNoteFormProvider
   }
 }
 
-String _$creditNoteFormHash() => r'2773ff1d9b90457dd0e95d5171e5325467936b41';
+String _$creditNoteFormHash() => r'160a912e778c6a4227b634e5b3deefa86f2c9201';
 
 final class CreditNoteFormFamily extends $Family
     with

@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
@@ -80,6 +82,7 @@ abstract final class PartyLedgerTransactionResolver {
     }
 
     final api = await ref.read(apiClientProvider.future);
+    final db = ref.read(appDatabaseProvider);
 
     final source = transaction.source.isNotEmpty
         ? transaction.source
@@ -89,18 +92,21 @@ abstract final class PartyLedgerTransactionResolver {
       case 'sales_documents':
         return _resolveSalesDocument(
           api.dio,
+          db,
           referenceId,
           transaction,
         );
       case 'purchase_documents':
         return _resolvePurchaseDocument(
           api.dio,
+          db,
           referenceId,
           transaction,
         );
       case 'payments':
         return _resolvePayment(
           api.dio,
+          db,
           referenceId,
           transaction,
         );
@@ -113,12 +119,13 @@ abstract final class PartyLedgerTransactionResolver {
 
   static Future<PartyLedgerActionTarget> _resolveSalesDocument(
     Dio dio,
+    AppDatabase db,
     String referenceId,
     PartyLedgerTransactionModel transaction,
   ) async {
     final repository = SalesRepository(
       remote: SalesRemoteDataSource(dio),
-      local: const SalesLocalDataSource(),
+      local: SalesLocalDataSource(db),
     );
     final dto = await repository.getDocument(referenceId);
     final invoice = SalesDocumentMapper.toInvoiceModel(
@@ -150,12 +157,13 @@ abstract final class PartyLedgerTransactionResolver {
 
   static Future<PartyLedgerActionTarget> _resolvePurchaseDocument(
     Dio dio,
+    AppDatabase db,
     String referenceId,
     PartyLedgerTransactionModel transaction,
   ) async {
     final repository = PurchaseRepository(
       remote: PurchaseRemoteDataSource(dio),
-      local: const PurchaseLocalDataSource(),
+      local: PurchaseLocalDataSource(db),
     );
     final dto = await repository.getDocument(referenceId);
     final documentType =
@@ -182,12 +190,13 @@ abstract final class PartyLedgerTransactionResolver {
 
   static Future<PartyLedgerActionTarget> _resolvePayment(
     Dio dio,
+    AppDatabase db,
     String referenceId,
     PartyLedgerTransactionModel transaction,
   ) async {
     final repository = SalesRepository(
       remote: SalesRemoteDataSource(dio),
-      local: const SalesLocalDataSource(),
+      local: SalesLocalDataSource(db),
     );
     final dto = await repository.getPayment(referenceId);
     final direction = transaction.direction ?? dto.direction;

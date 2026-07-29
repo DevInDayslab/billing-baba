@@ -1,5 +1,5 @@
-import 'dart:convert';
-
+import 'package:billing_baba/core/sync/models/sync_job.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/crm/data/sources/lead_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/lead_remote_source.dart';
 import 'package:billing_baba/features/crm/domain/models/lead.dart';
@@ -9,10 +9,12 @@ class LeadRepository {
   LeadRepository({
     required this._local,
     required this._remote,
+    required this._syncQueue,
   });
 
   final LeadLocalSource _local;
   final LeadRemoteSource _remote;
+  final SyncQueue _syncQueue;
 
   LeadRemoteSource get remote => _remote;
 
@@ -31,17 +33,17 @@ class LeadRepository {
   Stream<List<LeadActivity>> watchActivities(
     String businessId,
     String leadId,
-  ) => _local.watchActivities(businessId, leadId);
+  ) =>
+      _local.watchActivities(businessId, leadId);
 
   Future<Lead> saveLead(Lead lead, {required String operation}) async {
     await _local.upsertLead(lead);
     await _enqueue(
       businessId: lead.businessId,
-      entityType: 'lead',
+      entityType: 'leads',
       entityId: lead.id,
       operation: operation,
       payload: lead.toJson(),
-      createdAt: lead.updatedAt.toUtc().toIso8601String(),
     );
     return lead;
   }
@@ -53,11 +55,10 @@ class LeadRepository {
     await _local.upsertActivity(activity);
     await _enqueue(
       businessId: activity.businessId,
-      entityType: 'lead_activity',
+      entityType: 'lead_activities',
       entityId: activity.id,
       operation: operation,
       payload: activity.toJson(),
-      createdAt: activity.updatedAt.toUtc().toIso8601String(),
     );
     return activity;
   }
@@ -68,15 +69,13 @@ class LeadRepository {
     required String entityId,
     required String operation,
     required Map<String, dynamic> payload,
-    required String createdAt,
-  }) async {
-    await _local.enqueueSyncOperation(
+  }) {
+    return _syncQueue.enqueueRowMutation(
       businessId: businessId,
       entityType: entityType,
       entityId: entityId,
-      operation: operation,
-      payload: jsonEncode(payload),
-      createdAt: createdAt,
+      operation: SyncQueueOperation.fromWire(operation),
+      payload: payload,
     );
   }
 }

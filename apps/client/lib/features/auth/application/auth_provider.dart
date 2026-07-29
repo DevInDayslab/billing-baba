@@ -10,7 +10,6 @@ import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
-import 'package:billing_baba/core/utils/jwt_utils.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
@@ -21,9 +20,15 @@ import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/models/business_model.dart'
+    as business;
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
+import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -321,6 +326,9 @@ class Auth extends _$Auth {
     _backendLoginInFlight = false;
     _resendInFlight = false;
     AuthFlowLogger.reset();
+    // Drop any leftover company session from a prior login so GoRouter can
+    // navigate off /login when status is needsBusinessSelection.
+    ref.read(companySessionProvider.notifier).clear();
     final nextStatus = _statusForSession(session);
     if (nextStatus == AuthStatus.needsBusinessSelection ||
         nextStatus == AuthStatus.needsBusinessCreation) {
@@ -545,6 +553,9 @@ class Auth extends _$Auth {
         otpPhase: OtpPhase.idle,
         backendLoginCompleted: true,
       );
+      if (AuthService.isOfflineDevSession(session)) {
+        await _bootstrapOfflineDevSession(session);
+      }
     } on TimeoutException {
       await splashWait;
       _setAuthStatus(AuthStatus.unauthenticated);
@@ -791,7 +802,7 @@ class Auth extends _$Auth {
     if (_devLoginInFlight || state.backendLoginCompleted) return;
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: offline local session (no API)');
+    AuthDebugLogger.log('devLogin: POST /auth/dev-login');
     state = state.copyWith(clearError: true);
     _setOtpPhase(OtpPhase.backendLogin);
 
@@ -879,6 +890,38 @@ class Auth extends _$Auth {
     state = state.copyWith(phone: '');
   }
 
+  Future<void> _bootstrapOfflineDevSession(AuthSession session) async {
+    if (!AuthService.isOfflineDevSession(session) || session.businesses.isEmpty) {
+      return;
+    }
+
+    final businessSummary = session.businesses.first;
+    final user = session.user;
+
+    final businessService = await ref.read(businessServiceProvider.future);
+    await businessService.seedOfflineDevSession(session);
+
+    final profile = AuthService.offlineDevBusinessProfile(session);
+    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+
+    ref.read(companySessionProvider.notifier).setSession(
+      CompanySession.owner(
+        entry: CompanyListEntry(
+          id: businessSummary.id,
+          name: businessSummary.name,
+          relationship: CompanyRelationship.owner,
+          syncStatus: business.SyncStatus.on,
+          source: CompanyListSource.apiOwned,
+          ownerName: user.name,
+          phone: user.phone,
+        ),
+        userId: user.id,
+        userName: user.name ?? 'Developer',
+        userPhone: user.phone,
+      ),
+    );
+  }
+
   Future<void> selectBusiness(String businessId) {
     if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
       BusinessSelectionRetryGuard.logBlockedOnce('selectBusiness', businessId);
@@ -901,6 +944,16 @@ class Auth extends _$Auth {
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) {
       throw const BusinessSelectionFailed('Session expired. Please sign in again.');
+    }
+
+    final storage = await ref.read(storageServiceProvider.future);
+    final accessToken = await storage.readSecure(StorageKeys.accessToken);
+    if (accessToken != null && AuthService.isOfflineDevToken(accessToken)) {
+      BusinessOpenDebugLog.step('selectBusiness', 'offline dev — local scope only');
+      final service = await _service();
+      await service.persistSession(state.session!, businessId: businessId);
+      _setAuthStatus(AuthStatus.authenticated);
+      return;
     }
 
     if (await _isJwtScopedToBusiness(businessId)) {
@@ -953,6 +1006,11 @@ class Auth extends _$Auth {
   Future<bool> _isJwtScopedToBusiness(String businessId) async {
     final storage = await ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
+    if (token != null && AuthService.isOfflineDevToken(token)) {
+      final selected = await storage.readSecure(StorageKeys.selectedBusinessId);
+      return selected == businessId;
+    }
+
     final jwtBusinessId = JwtUtils.businessId(token);
     final role = JwtUtils.role(token);
     return jwtBusinessId == businessId && role != null && role.isNotEmpty;
@@ -997,26 +1055,44 @@ class Auth extends _$Auth {
     SwitchCompanyDebugLog.action('companySession cleared');
     state = state.copyWith(clearError: true);
     try {
-      await _clearActiveBusinessSession();
-      SwitchCompanyDebugLog.invalidate(
-        'active business session + business-scoped providers',
-      );
       final service = await _service();
-      SwitchCompanyDebugLog.api('refreshStoredSession(preserveBusinessScope: false)');
+      // Refresh to an unscoped JWT BEFORE clearing selectedBusinessId /
+      // invalidating providers. Doing it the other way raced 401 retries that
+      // revoked the refresh token and wiped the session (empty Authorization).
+      SwitchCompanyDebugLog.api(
+        'refreshStoredSession(preserveBusinessScope: false)',
+      );
       final session = await service.refreshStoredSession(
         refreshToken: refreshToken,
         preserveBusinessScope: false,
       );
       if (session == null) {
-        AuthFlowLogger.authStatus(AuthStatus.unauthenticated.name);
-        // Single write so auth watchers only rebuild once.
-        state = state.copyWith(
-          status: AuthStatus.unauthenticated,
-          clearSession: true,
+        final stillHasToken = await service.getAccessToken();
+        if (stillHasToken == null || stillHasToken.isEmpty) {
+          AuthFlowLogger.authStatus(AuthStatus.unauthenticated.name);
+          state = state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearSession: true,
+          );
+          SwitchCompanyDebugLog.action(
+            'session null + no token → unauthenticated',
+          );
+          return;
+        }
+        SwitchCompanyDebugLog.action(
+          'refresh failed but tokens kept — abort switch',
         );
-        SwitchCompanyDebugLog.action('session null → unauthenticated (atomic)');
+        state = state.copyWith(
+          error: 'Could not switch company. Please try again.',
+        );
         return;
       }
+
+      await _clearActiveBusinessSession();
+      SwitchCompanyDebugLog.invalidate(
+        'active business session + business-scoped providers',
+      );
+
       // Single write for status + session. Splitting these caused
       // collaborationRepository / companyDirectory to rebuild twice and
       // produced a second loading indicator after Switch Company.
@@ -1107,6 +1183,7 @@ class Auth extends _$Auth {
         }
       });
     } finally {
+      ref.read(companySessionProvider.notifier).clear();
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }

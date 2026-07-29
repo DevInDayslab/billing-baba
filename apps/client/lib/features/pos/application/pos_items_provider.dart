@@ -20,7 +20,7 @@ class PosItemSearchQuery extends _$PosItemSearchQuery {
 /// POS catalog derived from the shared inventory cache (single source of truth).
 @riverpod
 List<PosItem> posCatalog(Ref ref) {
-  final inventoryItems = ref.watch(inventoryItemsProvider).value ?? const [];
+  final inventoryItems = ref.watch(inventoryItemListProvider);
   final categories = ref.watch(inventoryCategoriesProvider).value ?? const [];
   return mapInventoryItemsToPosItems(
     inventoryItems,
@@ -48,7 +48,7 @@ List<PosItem> posFilteredCatalog(
   ref.watch(inventoryCategoriesProvider);
 
   final catalog = ref.watch(posCatalogProvider);
-  final inventoryItems = ref.watch(inventoryItemsProvider).value ?? const [];
+  final inventoryItems = ref.watch(inventoryItemListProvider);
   final searchEngine = ref.watch(inventorySearchEngineProvider);
 
   return filterPosCatalog(

@@ -1,12 +1,9 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/models/debit_note_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
@@ -16,17 +13,17 @@ import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'debit_note_form_provider.g.dart';
 
-int _debitNoteLineItemCounter = 0;
-
-String _nextDebitNoteLineItemId() {
-  _debitNoteLineItemCounter += 1;
-  return 'debit_note_line_$_debitNoteLineItemCounter';
-}
+String _nextDebitNoteLineItemId() => newDocumentLineId();
 
 DebitNoteFormState _initialDebitNoteFormState({String? documentId}) {
   final now = DateTime.now();
@@ -74,7 +71,7 @@ class DebitNoteForm extends _$DebitNoteForm {
     try {
       final service = await ref.read(purchaseServiceProvider.future);
       final loaded = await service.loadDebitNoteForm(documentId);
-      final inventory = ref.read(inventoryItemsProvider).value ?? [];
+      final inventory = ref.read(inventoryItemListProvider);
       final itemNames = {for (final item in inventory) item.id: item.name};
 
       final items = loaded.items.map((line) {
@@ -126,7 +123,7 @@ class DebitNoteForm extends _$DebitNoteForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -346,11 +343,20 @@ class DebitNoteForm extends _$DebitNoteForm {
       );
 
       late final String savedDocumentId;
+      FinalizePurchasePaymentCommand? payment;
+      if (state.paymentAmount > 0) {
+        payment = FinalizePurchasePaymentCommand(
+          amount: state.paymentAmount.toStringAsFixed(4),
+          paymentMode: PurchasePaymentModes.toApi(state.paymentType),
+        );
+      }
+
       if (finalize) {
         final document = await service.finalizeDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
+          payment: payment,
         );
         savedDocumentId = document.id;
       } else {

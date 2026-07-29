@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,6 +40,24 @@ final partiesListProvider = Provider<List<PartyModel>>((ref) {
       );
 });
 
+/// Projected outstanding balances keyed by party id (local Drift ledger).
+final partyOutstandingIndexProvider =
+    FutureProvider<Map<String, double>>((ref) async {
+  ref.watch(partyListProvider);
+  final service = await ref.watch(partyLedgerServiceProvider.future);
+  final businessId = await ref.watch(partyLedgerBusinessIdProvider.future);
+  return service.fetchOutstandingIndex(businessId: businessId);
+});
+
+double projectedPartyBalance(
+  PartyModel party,
+  Map<String, double>? outstandingIndex,
+) {
+  final projected = outstandingIndex?[party.id];
+  if (projected != null) return projected;
+  return party.openingBalance;
+}
+
 /// Unfiltered parties for group membership and group-name discovery.
 /// Rebuilds when [partyListProvider] changes so CRUD stays in sync.
 final allPartiesListProvider = FutureProvider<List<PartyModel>>((ref) async {
@@ -69,6 +88,7 @@ final partyBalanceSummaryProvider = Provider<PartyBalanceSummary>((ref) {
         data: (items) => items,
         orElse: () => const <PartyModel>[],
       );
+  final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
 
   var totalReceivable = 0.0;
   var receivablePartyCount = 0;
@@ -76,11 +96,13 @@ final partyBalanceSummaryProvider = Provider<PartyBalanceSummary>((ref) {
   var payablePartyCount = 0;
 
   for (final party in parties) {
-    if (party.hasReceivable) {
-      totalReceivable += party.balance;
+    final balance = projectedPartyBalance(party, outstandingIndex);
+    final projected = party.copyWith(balance: balance);
+    if (projected.hasReceivable) {
+      totalReceivable += balance;
       receivablePartyCount++;
-    } else if (party.hasPayable) {
-      totalPayable += party.balance.abs();
+    } else if (projected.hasPayable) {
+      totalPayable += balance.abs();
       payablePartyCount++;
     }
   }

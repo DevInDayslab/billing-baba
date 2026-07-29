@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/crm/data/repositories/deal_repository.dart';
 import 'package:billing_baba/features/crm/data/sources/deal_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/deal_remote_source.dart';
@@ -23,6 +24,7 @@ Future<DealService> dealService(Ref ref) async {
   final repository = DealRepository(
     local: DealLocalSource(db, storage),
     remote: DealRemoteSource(api.dio),
+    syncQueue: ref.watch(syncQueueProvider),
   );
   return DealService(repository);
 }

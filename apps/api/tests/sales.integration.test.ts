@@ -111,11 +111,11 @@ describe.skipIf(!canRun)('Sales API integration', () => {
     app = await buildApp(config);
     await app.ready();
     token = await login(app);
-  });
+  }, testTimeout);
 
   afterAll(async () => {
     await app.close();
-  });
+  }, testTimeout);
 
   test(
     'estimate draft CRUD',

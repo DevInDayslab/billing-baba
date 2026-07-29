@@ -1,7 +1,3 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
@@ -14,6 +10,10 @@ import 'package:billing_baba/features/purchases/presentation/desktop/widgets/sha
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

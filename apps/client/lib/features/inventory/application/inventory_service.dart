@@ -1,11 +1,30 @@
 import 'dart:typed_data';
 
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/data/brand_local_source.dart';
+import 'package:billing_baba/features/inventory/data/brand_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/category_local_source.dart';
+import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
+import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
+import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
+import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
+import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
+import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
@@ -18,6 +37,7 @@ import 'package:billing_baba/features/inventory/models/godown_model.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/brand_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
@@ -49,10 +69,66 @@ part 'inventory_service.g.dart';
 @Riverpod(keepAlive: true)
 Future<InventoryService> inventoryService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
-  return InventoryService(
-    repository: InventoryRepository(
-      remote: InventoryRemoteDataSource(api.dio),
+  final storage = await ref.watch(storageServiceProvider.future);
+  final db = ref.watch(appDatabaseProvider);
+  final queue = ref.watch(syncQueueProvider);
+  String? deviceId;
+  try {
+    final identity = await ref.watch(syncDeviceIdentityProvider.future);
+    deviceId = await identity.deviceId();
+  } on Object {
+    deviceId = null;
+  }
+
+  final remote = InventoryRemoteDataSource(api.dio);
+  String businessIdReader() =>
+      storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
+  String? deviceIdReader() => deviceId;
+
+  final repository = InventoryRepository(
+    remote: remote,
+    local: DriftInventoryLocalDataSource(CategoryLocalSource(db)),
+    syncQueue: queue,
+    businessIdReader: businessIdReader,
+    deviceIdReader: deviceIdReader,
+    stockLocal: InventoryStockLocalDataSource(db),
+    movementProjector: InventoryMovementProjector(db),
+    stockApplier: InventoryDocumentStockApplier(
+      stockLocal: InventoryStockLocalDataSource(db),
+      salesLocal: SalesLocalDataSource(db),
+      purchaseLocal: PurchaseLocalDataSource(db),
     ),
+    items: ItemMasterRepository(
+      local: ItemLocalSource(db),
+      syncQueue: queue,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
+    ),
+    units: UnitMasterRepository(
+      local: UnitLocalSource(db),
+      syncQueue: queue,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
+    ),
+    godowns: GodownMasterRepository(
+      local: GodownLocalSource(db),
+      syncQueue: queue,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
+    ),
+    brands: BrandMasterRepository(
+      local: BrandLocalSource(db),
+      syncQueue: queue,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
+    ),
+  );
+  return InventoryService(
+    repository: repository,
     mediaRepository: ItemMediaRepository(api.dio),
   );
 }
@@ -62,6 +138,8 @@ class InventoryService {
     required this._repository,
     ItemMediaRepository? mediaRepository,
   })  : _media = mediaRepository;
+
+  static const inventoryPageSize = 80;
 
   final InventoryRepository _repository;
   final ItemMediaRepository? _media;
@@ -652,6 +730,9 @@ class InventoryService {
   }
 
   Future<List<StockLevelDto>> fetchItemStockLevels(String itemId) async {
+    final local = await _repository.listLocalStockLevelsForItem(itemId);
+    if (local.isNotEmpty) return local;
+
     try {
       return _fetchAllPages<StockLevelDto>(
         fetchPage: (page) async {
@@ -667,13 +748,7 @@ class InventoryService {
   }
 
   Future<void> createMovement(CreateMovementRequest request) async {
-    try {
-      await _repository.createMovement(request);
-    } on DioException catch (error) {
-      final validation = ApiErrorParser.parseValidation(error);
-      if (validation != null) rethrow;
-      InventoryErrorMapper.mapAndThrow(error);
-    }
+    await _repository.createMovement(request);
   }
 
   Future<List<InventoryItem>> fetchItems({
@@ -682,65 +757,150 @@ class InventoryService {
     String? categoryId,
   }) async {
     try {
-      final itemDtos = await _fetchAllPages<ItemListDto>(
-        fetchPage: (page) async {
-          final response = await _repository.listItems(
-            ItemListQuery(
-              page: page,
-              limit: 100,
-              q: searchQuery,
-              type: type,
-              categoryId: CategoryMapper.toApiCategoryId(categoryId),
-            ),
-          );
-          return (response.items, response.meta.total);
-        },
+      final page = await fetchItemsPage(
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
       );
+      if (!page.hasMore) {
+        return page.items;
+      }
 
-      final stockLevels = await _fetchAllPages<StockLevelDto>(
-        fetchPage: (page) async {
-          final response = await _repository.getStockLevels(
-            StockLevelListQuery(page: page),
-          );
-          return (response.stockLevels, response.meta.total);
-        },
-      );
-      final stockByItem = StockLevelMapper.aggregateByItem(stockLevels);
-
-      return itemDtos.map((dto) {
-        final stock = stockByItem[dto.id];
-        return ItemMapper.fromListDto(
-          dto,
-          quantity: stock?.quantity ?? _parseDecimal(dto.quantity),
-          stockValue: stock?.stockValue,
-          reservedQuantity: _parseDecimal(dto.reservedQuantity),
-          availableForSale: _parseDecimal(dto.availableForSale),
+      final all = List<InventoryItem>.from(page.items);
+      var offset = all.length;
+      while (offset < page.totalCount) {
+        final next = await fetchItemsPage(
+          offset: offset,
+          searchQuery: searchQuery,
+          type: type,
+          categoryId: categoryId,
         );
-      }).toList();
+        all.addAll(next.items);
+        offset = all.length;
+        if (!next.hasMore) break;
+      }
+      return all;
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
   }
 
-  Future<InventoryItem> getItem(String id) async {
+  Future<PaginatedInventoryItems> fetchItemsPage({
+    int limit = inventoryPageSize,
+    int offset = 0,
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+  }) async {
     try {
-      final dto = await fetchItemDetailDto(id);
-      final stockLevels = await _fetchAllPages<StockLevelDto>(
-        fetchPage: (page) async {
-          final response = await _repository.getStockLevels(
-            StockLevelListQuery(page: page, itemId: id),
-          );
-          return (response.stockLevels, response.meta.total);
-        },
+      final total = await _repository.countItemsPage(
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: CategoryMapper.toApiCategoryId(categoryId),
       );
-      final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
-      return ItemMapper.fromDetailDto(
+      final itemDtos = await _repository.listItemsPage(
+        limit: limit,
+        offset: offset,
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: CategoryMapper.toApiCategoryId(categoryId),
+      );
+      final items = await _mapItemDtosToInventoryItems(itemDtos);
+      return PaginatedInventoryItems(
+        items: items,
+        totalCount: total,
+        hasMore: offset + items.length < total,
+      );
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Stream<PaginatedInventoryItems> watchItemsPage({
+    int limit = inventoryPageSize,
+    int offset = 0,
+    String? searchQuery,
+    ItemType? type,
+    String? categoryId,
+  }) async* {
+    final apiCategoryId = CategoryMapper.toApiCategoryId(categoryId);
+    await for (final itemDtos in _repository.watchItemsPage(
+      limit: limit,
+      offset: offset,
+      searchQuery: searchQuery,
+      type: type,
+      categoryId: apiCategoryId,
+    )) {
+      try {
+        final total = await _repository.countItemsPage(
+          searchQuery: searchQuery,
+          type: type,
+          categoryId: apiCategoryId,
+        );
+        final items = await _mapItemDtosToInventoryItems(itemDtos);
+        yield PaginatedInventoryItems(
+          items: items,
+          totalCount: total,
+          hasMore: offset + items.length < total,
+        );
+      } on DioException catch (error) {
+        InventoryErrorMapper.mapAndThrow(error);
+      }
+    }
+  }
+
+  Future<List<InventoryItem>> _mapItemDtosToInventoryItems(
+    List<ItemListDto> itemDtos,
+  ) async {
+    if (itemDtos.isEmpty) return const [];
+
+    final stockByItem = await _repository.localStockQuantitiesForItems(
+      itemDtos.map((dto) => dto.id),
+    );
+
+    return itemDtos.map((dto) {
+      final stockQty = stockByItem[dto.id];
+      return ItemMapper.fromListDto(
         dto,
-        quantity: stock?.quantity ?? _parseDecimal(dto.quantity),
-        stockValue: stock?.stockValue,
+        quantity: stockQty ?? _parseDecimal(dto.quantity),
+        stockValue: stockQty == null ? null : 0,
         reservedQuantity: _parseDecimal(dto.reservedQuantity),
         availableForSale: _parseDecimal(dto.availableForSale),
       );
+    }).toList();
+  }
+
+  Future<InventoryItem> getItem(String id) async {
+    try {
+      final dto = await fetchItemDetailDto(id);
+      final localQty = await _repository.localStockQuantityForItem(id);
+
+      try {
+        final stockLevels = await _fetchAllPages<StockLevelDto>(
+          fetchPage: (page) async {
+            final response = await _repository.getStockLevels(
+              StockLevelListQuery(page: page, itemId: id),
+            );
+            return (response.stockLevels, response.meta.total);
+          },
+        );
+        final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
+        final quantity = localQty != 0 ? localQty : (stock?.quantity ?? localQty);
+        return ItemMapper.fromDetailDto(
+          dto,
+          quantity: quantity,
+          stockValue: stock?.stockValue,
+          reservedQuantity: _parseDecimal(dto.reservedQuantity),
+          availableForSale: _parseDecimal(dto.availableForSale),
+        );
+      } on DioException {
+        return ItemMapper.fromDetailDto(
+          dto,
+          quantity: localQty,
+          reservedQuantity: _parseDecimal(dto.reservedQuantity),
+          availableForSale: _parseDecimal(dto.availableForSale),
+        );
+      }
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -792,6 +952,8 @@ class InventoryService {
       final validation = ApiErrorParser.parseValidation(error);
       if (validation != null) throw validation;
       InventoryErrorMapper.mapAndThrow(error);
+    } on Object {
+      rethrow;
     }
   }
 
@@ -820,15 +982,13 @@ class InventoryService {
     );
 
     try {
-      await _repository.updateItem(itemId, request);
-      final tierPrices = AddItemFormMapper.tierPricesForUpsert(form);
-      if (tierPrices.isNotEmpty) {
-        await _repository.upsertItemTierPrices(
-          itemId,
-          UpsertTierPricesRequest(tierPrices: tierPrices),
-        );
-      }
-      return getItem(itemId);
+      final dto = await _repository.updateItem(itemId, request);
+      return ItemMapper.fromDetailDto(
+        dto,
+        quantity: _parseDecimal(dto.quantity),
+        reservedQuantity: _parseDecimal(dto.reservedQuantity),
+        availableForSale: _parseDecimal(dto.availableForSale),
+      );
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
       if (validation != null) throw validation;
@@ -876,20 +1036,8 @@ class InventoryService {
   Future<List<ProductTransaction>> fetchProductTransactions(
     String itemId,
   ) async {
-    try {
-      final movements = await _fetchAllPages(
-        fetchPage: (page) async {
-          final response = await _repository.getMovements(
-            MovementListQuery(page: page, itemId: itemId),
-          );
-          return (response.movements, response.meta.total);
-        },
-      );
-      return movements.map(MovementMapper.toProductTransaction).toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
-    } on DioException catch (error) {
-      InventoryErrorMapper.mapAndThrow(error);
-    }
+    final movements = await _repository.listLocalMovementsForItem(itemId);
+    return movements.map(MovementMapper.toProductTransaction).toList();
   }
 
   List<InventoryCategory> withUncategorizedCategory({

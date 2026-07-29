@@ -1,52 +1,35 @@
-import 'package:billing_baba/core/providers/api_client_provider.dart';
-import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/models/pos_sale_line_item.dart';
 import 'package:billing_baba/features/pos/models/return_item.dart';
 import 'package:billing_baba/features/pos/pos_constants.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
-import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
-import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
-import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
-import 'package:dio/dio.dart';
+import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
+import 'package:billing_baba/features/sales/data/sales_return_command_repository.dart';
+import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 part 'pos_return_service.g.dart';
 
+const _uuid = Uuid();
+const _posReturnTaxOption = '18%';
+
 @Riverpod(keepAlive: true)
 Future<PosReturnService> posReturnService(Ref ref) async {
-  final api = await ref.watch(apiClientProvider.future);
-  return PosReturnService(remote: SalesRemoteDataSource(api.dio));
-}
-
-@riverpod
-Future<PosSale> processPosReturn(
-  Ref ref, {
-  required PosSale originalSale,
-  required List<ReturnItem> returnItems,
-  required PaymentMode refundMode,
-}) async {
-  final service = await ref.read(posReturnServiceProvider.future);
-  final returnSale = await service.processReturn(
-    originalSale: originalSale,
-    returnItems: returnItems,
-    refundMode: refundMode,
-  );
-  await refreshAfterSaleReturn(
-    ref,
-    context: (
-      partyId: originalSale.partyId,
-      itemIds: returnItems.map((item) => item.itemId),
-    ),
-  );
-  return returnSale;
+  final commandRepository =
+      await ref.watch(salesReturnCommandRepositoryProvider.future);
+  return PosReturnService(commandRepository: commandRepository);
 }
 
 class PosReturnService {
-  PosReturnService({required this._remote});
+  PosReturnService({required SalesReturnCommandRepository commandRepository})
+      : _commandRepository = commandRepository;
 
-  final SalesRemoteDataSource _remote;
+  final SalesReturnCommandRepository _commandRepository;
 
   Future<PosSale> processReturn({
     required PosSale originalSale,
@@ -64,83 +47,81 @@ class PosReturnService {
       (sum, item) => sum + item.lineTotal,
     );
 
-    try {
-      final returnDoc = await _remote.createDocument(
-        CreateSalesDocumentRequest(
-          documentType: 'sales_return',
-          documentSeries: 'POS-RET',
-          partyId: originalSale.partyId ?? PosConstants.walkInPartyId,
-          convertedFromId: originalSale.id,
-        ),
-      );
-
-      for (var i = 0; i < returnItems.length; i++) {
-        final item = returnItems[i];
-        await _remote.addLine(
-          returnDoc.id,
-          CreateSalesLineRequest(
-            itemId: item.itemId,
-            quantity: item.quantity.toString(),
-            unit: item.unit,
-            unitPrice: item.unitPrice,
-            sortOrder: i,
-          ),
-        );
-      }
-
-      await _remote.finalizeDocument(returnDoc.id);
-      final finalizedDto = await _remote.getDocument(returnDoc.id);
-
-      await _remote.createPayment(
-        CreatePaymentRequest(
-          partyId: originalSale.partyId ?? PosConstants.walkInPartyId,
-          direction: 'paid',
-          amount: totalRefundAmount.toStringAsFixed(2),
-          paymentMode: _paymentModeToApi(refundMode),
-          allocations: [
-            PaymentAllocationRequest(
-              salesDocumentId: returnDoc.id,
-              allocatedAmount: totalRefundAmount.toStringAsFixed(2),
+    final draftInput = SalesDocumentDraftInput(
+      documentType: SalesDocumentType.salesReturn,
+      documentSeries: 'POS-RET',
+      partyId: originalSale.partyId ?? PosConstants.walkInPartyId,
+      convertedFromId: originalSale.id,
+      documentDate: DateTime.now(),
+      items: returnItems
+          .map(
+            (item) => SaleLineItem(
+              id: _uuid.v4(),
+              itemId: item.itemId,
+              itemName: item.name,
+              qty: item.quantity.toDouble(),
+              unit: item.unit,
+              pricePerUnit: double.tryParse(item.unitPrice) ?? 0,
+              discountPercent: 0,
+              mrp: double.tryParse(item.unitPrice) ?? 0,
             ),
-          ],
-        ),
-      );
+          )
+          .toList(),
+      taxOption: _posReturnTaxOption,
+      notes: 'Return for ${originalSale.docNumber}',
+    );
 
-      final completedAt =
-          DateTime.tryParse(finalizedDto.createdAt) ?? DateTime.now();
+    final itemNameToId = {
+      for (final item in returnItems) item.name: item.itemId,
+    };
 
-      return PosSale(
-        id: finalizedDto.id,
-        docNumber: finalizedDto.documentNumber ?? finalizedDto.id,
-        partyId: originalSale.partyId,
-        customerName: originalSale.customerName,
-        items: returnItems
-            .map(
-              (item) => PosSaleLineItem(
-                name: item.name,
-                quantity: item.quantity,
-                lineTotal: item.lineTotal,
-                itemId: item.itemId,
-                unit: item.unit,
-                unitPrice: double.tryParse(item.unitPrice),
-              ),
-            )
-            .toList(),
-        payments: [
-          PaymentEntry(mode: refundMode, amount: totalRefundAmount),
-        ],
-        paymentMethod: _paymentModeToApi(refundMode),
-        totalAmount: totalRefundAmount,
-        taxAmount: double.tryParse(finalizedDto.taxAmount) ?? 0,
-        finalAmount: totalRefundAmount,
-        completedAt: completedAt,
-        itemCount: returnItems.fold<int>(0, (sum, item) => sum + item.quantity),
-        notes: 'Return for ${originalSale.docNumber}',
-      );
-    } on DioException catch (error) {
-      final salesError = mapSalesError(error);
-      throw PosRepositoryException(message: salesError.message);
-    }
+    final draft = await _commandRepository.saveDraft(
+      draftInput,
+      itemNameToId: itemNameToId,
+    );
+
+    await _commandRepository.finalize(
+      documentId: draft.id,
+      localDocumentNumber: draft.documentNumber,
+      payment: FinalizeSalePaymentCommand(
+        amount: totalRefundAmount.toStringAsFixed(2),
+        paymentMode: _paymentModeToApi(refundMode),
+      ),
+    );
+
+    final finalizedDto =
+        await _commandRepository.getDocument(draft.id) ?? draft;
+    final completedAt =
+        DateTime.tryParse(finalizedDto.createdAt) ?? DateTime.now();
+
+    return PosSale(
+      id: finalizedDto.id,
+      docNumber: finalizedDto.documentNumber ?? finalizedDto.id,
+      partyId: originalSale.partyId,
+      customerName: originalSale.customerName,
+      items: returnItems
+          .map(
+            (item) => PosSaleLineItem(
+              name: item.name,
+              quantity: item.quantity,
+              lineTotal: item.lineTotal,
+              itemId: item.itemId,
+              unit: item.unit,
+              unitPrice: double.tryParse(item.unitPrice),
+            ),
+          )
+          .toList(),
+      payments: [
+        PaymentEntry(mode: refundMode, amount: totalRefundAmount),
+      ],
+      paymentMethod: _paymentModeToApi(refundMode),
+      totalAmount: totalRefundAmount,
+      taxAmount: double.tryParse(finalizedDto.taxAmount) ?? 0,
+      finalAmount: totalRefundAmount,
+      completedAt: completedAt,
+      itemCount: returnItems.fold<int>(0, (sum, item) => sum + item.quantity),
+      notes: 'Return for ${originalSale.docNumber}',
+    );
   }
 
   String _paymentModeToApi(PaymentMode mode) => switch (mode) {

@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

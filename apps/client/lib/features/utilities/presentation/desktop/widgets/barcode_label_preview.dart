@@ -11,6 +11,7 @@ class BarcodeLabelPreview extends StatelessWidget {
     required this.line2,
     required this.line3,
     required this.line4,
+    this.showBarcode = true,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class BarcodeLabelPreview extends StatelessWidget {
   final String line2;
   final String line3;
   final String line4;
+  final bool showBarcode;
 
   static final Barcode _barcode = Barcode.code128();
 
@@ -65,35 +67,37 @@ class BarcodeLabelPreview extends StatelessWidget {
                   : const Color(0xFF424242),
             ),
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 52,
-            width: double.infinity,
-            child: code.isEmpty
-                ? const _BarcodePlaceholder()
-                : SvgPicture.string(
-                    _barcode.toSvg(
-                      code,
-                      width: 128,
-                      height: 52,
-                      drawText: false,
+          if (showBarcode) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 52,
+              width: double.infinity,
+              child: code.isEmpty
+                  ? const _BarcodePlaceholder()
+                  : SvgPicture.string(
+                      _barcode.toSvg(
+                        code,
+                        width: 128,
+                        height: 52,
+                        drawText: false,
+                      ),
                     ),
-                  ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            displayCode,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isPlaceholder
-                  ? const Color(0xFF9E9E9E)
-                  : const Color(0xFF212121),
             ),
-          ),
+            const SizedBox(height: 6),
+            Text(
+              displayCode,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isPlaceholder
+                    ? const Color(0xFF9E9E9E)
+                    : const Color(0xFF212121),
+              ),
+            ),
+          ],
           const SizedBox(height: 4),
           _PreviewLine(text: displayLine1, isPlaceholder: line1.trim().isEmpty),
           _PreviewLine(text: displayLine2, isPlaceholder: line2.trim().isEmpty),

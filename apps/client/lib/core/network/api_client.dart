@@ -12,6 +12,7 @@ class ApiClient {
     Dio? dio,
     StorageService? storage,
     TokenRefreshCallback? onRefreshToken,
+    AccessTokenFallback? accessTokenFallback,
   }) : _dio = dio ?? Dio() {
     _dio
       ..options = BaseOptions(
@@ -25,6 +26,7 @@ class ApiClient {
           AuthInterceptor(
             storage: storage,
             onRefreshToken: onRefreshToken,
+            accessTokenFallback: accessTokenFallback,
           ),
         if (AppConfig.authDebugLogging) BusinessProfileDebugInterceptor(),
         ...buildInterceptors(),

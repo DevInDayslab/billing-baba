@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/pick_media_image.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -9,6 +8,7 @@ import 'package:billing_baba/features/parties/data/party_profile_image_repositor
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/pick_media_image.dart';
 import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

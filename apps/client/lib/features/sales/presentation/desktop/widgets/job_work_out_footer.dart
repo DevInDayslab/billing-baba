@@ -1,7 +1,7 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/job_work_out_form_provider.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

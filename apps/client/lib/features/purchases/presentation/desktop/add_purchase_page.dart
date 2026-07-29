@@ -203,8 +203,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 label: 'Bill Number',
                 child: _PurchaseTextField(
                   initialValue: form.billNumber,
-                  hintText: 'Bill number',
-                  onChanged: notifier.updateBillNumber,
+                  hintText: 'Assigned on save',
+                  readOnly: true,
+                  onChanged: (_) {},
                 ),
               ),
             ),
@@ -497,11 +498,13 @@ class _PurchaseTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.readOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool readOnly;
 
   @override
   State<_PurchaseTextField> createState() => _PurchaseTextFieldState();
@@ -533,11 +536,11 @@ class _PurchaseTextFieldState extends State<_PurchaseTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return SaleTextField(
       controller: _controller,
-      style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(hint: widget.hintText),
-      onChanged: widget.onChanged,
+      readOnly: widget.readOnly,
+      hint: widget.hintText,
+      onChanged: widget.readOnly ? null : widget.onChanged,
     );
   }
 }

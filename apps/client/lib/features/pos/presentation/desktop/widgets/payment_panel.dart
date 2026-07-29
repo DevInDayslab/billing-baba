@@ -1,5 +1,5 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
@@ -8,6 +8,7 @@ import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/split_payment_sheet.dart';
 import 'package:billing_baba/features/pos/repositories/pos_repository.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -264,7 +265,7 @@ class _CustomerSearchResults extends StatelessWidget {
       error: (error, _) => Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Text(
-          'Search failed: $error',
+          OfflineUiMessages.messageFor(error),
           style: PosStyles.metadataStyle.copyWith(color: AppColors.error),
         ),
       ),

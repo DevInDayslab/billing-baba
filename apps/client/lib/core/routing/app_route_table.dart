@@ -4,6 +4,7 @@ import 'package:billing_baba/features/auth/presentation/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/splash_page.dart';
 import 'package:billing_baba/features/auth/presentation/user_profile_page.dart';
 import 'package:billing_baba/features/auth/presentation/verify_otp_page.dart';
+import 'package:billing_baba/features/backup/presentation/desktop/backup_restore_page.dart';
 import 'package:billing_baba/features/business/presentation/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/edit_profile_page.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
@@ -25,11 +26,8 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
-<<<<<<< Updated upstream
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
-=======
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
->>>>>>> Stashed changes
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
@@ -136,6 +134,14 @@ GoRouter createAppRouter({
           if (!onOtp) return AppRoutes.verifyOtp;
         case AuthStatus.needsBusinessCreation:
         case AuthStatus.needsBusinessSelection:
+          // Always leave auth screens once login succeeded.
+          if (onLogin || onOtp) {
+            SwitchCompanyDebugLog.nav(
+              'GoRouter redirect $location → ${AppRoutes.businessList} '
+              '(${auth.status.name}, from auth screen)',
+            );
+            return AppRoutes.businessList;
+          }
           if (!onBusinessList) {
             SwitchCompanyDebugLog.nav(
               'GoRouter redirect $location → ${AppRoutes.businessList} '
@@ -584,8 +590,7 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.settingsBackup,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Backup & Restore'),
+            builder: (context, state) => const BackupRestorePage(),
           ),
           GoRoute(
             path: AppRoutes.plansPricing,

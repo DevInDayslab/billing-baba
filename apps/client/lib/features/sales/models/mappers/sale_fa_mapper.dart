@@ -5,6 +5,7 @@ import 'package:billing_baba/features/sales/models/sale_fa_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
 import 'package:flutter/material.dart';
 
 class SaleFaMapper {
@@ -48,7 +49,7 @@ class SaleFaMapper {
         .toDouble();
 
     final items = dto.assets.isEmpty
-        ? [SaleFixedAssetLineItem.empty(id: 'line_1')]
+        ? [SaleFixedAssetLineItem.empty(id: newDocumentLineId())]
         : dto.assets
               .map(
                 (asset) => SaleFixedAssetLineItem(

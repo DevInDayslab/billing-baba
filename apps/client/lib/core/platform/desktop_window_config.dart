@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/layout/dashboard_layout.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
+import 'package:billing_baba/shared/layout/dashboard_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';

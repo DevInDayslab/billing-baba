@@ -1,9 +1,12 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
+import 'package:billing_baba/core/sync/models/sync_state.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
-import 'package:billing_baba/core/widgets/app_loader.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_load_helper.dart';
 import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/app_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -190,6 +193,9 @@ class ReportAsyncBody<T> extends ConsumerWidget {
     );
 
     final isReloading = reportIsTableReloading(value, isTableLoading);
+    final isOffline =
+        ref.watch(connectivityStatusProvider).value ==
+        SyncConnectivityStatus.offline;
 
 
 
@@ -214,6 +220,13 @@ class ReportAsyncBody<T> extends ConsumerWidget {
           if (empty != null &&
 
               (isEmpty?.call(result) ?? _defaultIsEmpty(result))) {
+
+            if (isOffline) {
+              return AppError(
+                message: OfflineUiMessages.noLocalDataYet,
+                onRetry: onRetry,
+              );
+            }
 
             return empty!;
 

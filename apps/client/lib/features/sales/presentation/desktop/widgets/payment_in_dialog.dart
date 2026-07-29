@@ -1,9 +1,4 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/short_payment_handling_dialog.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
@@ -14,6 +9,11 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fo
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -318,6 +318,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               style: saleFieldTextStyle,
                               decoration: buildSaleFieldDecoration(
                                 hint: 'Add description...',
+                                fixedHeight: false,
                               ),
                             ),
                           ],

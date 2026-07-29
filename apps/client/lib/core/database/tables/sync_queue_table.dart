@@ -1,12 +1,37 @@
 import 'package:drift/drift.dart';
 
-/// Local-only queue for offline writes awaiting background sync.
+/// Local-only queue for offline mutations awaiting background sync.
+@TableIndex(name: 'idx_sync_queue_status', columns: {#status})
+@TableIndex(name: 'idx_sync_queue_business_id', columns: {#businessId})
+@TableIndex(
+  name: 'idx_sync_queue_status_business_id',
+  columns: {#status, #businessId},
+)
 class SyncQueue extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get businessId => text()();
+  TextColumn get id => text()();
+  TextColumn get mutationId => text()();
+  TextColumn get kind => text()();
   TextColumn get entityType => text()();
-  TextColumn get entityId => text()();
+  TextColumn get entityId => text().nullable()();
   TextColumn get operation => text()();
   TextColumn get payload => text()();
-  TextColumn get createdAt => text()();
+  TextColumn get businessId => text()();
+  TextColumn get deviceId => text().nullable()();
+  TextColumn get commandId => text().nullable()();
+  TextColumn get status => text()();
+  IntColumn get priority => integer().withDefault(const Constant(1))();
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get scheduledAt => dateTime().nullable()();
+  DateTimeColumn get lastAttemptAt => dateTime().nullable()();
+  DateTimeColumn get nextRetryAt => dateTime().nullable()();
+  TextColumn get lastError => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {mutationId},
+  ];
 }

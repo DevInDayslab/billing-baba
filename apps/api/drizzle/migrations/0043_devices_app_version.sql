@@ -1,0 +1,1 @@
+ALTER TABLE "devices" ADD COLUMN IF NOT EXISTS "app_version" text DEFAULT '0.0.0' NOT NULL;

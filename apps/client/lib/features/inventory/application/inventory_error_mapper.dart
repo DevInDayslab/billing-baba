@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:dio/dio.dart';
 
 class InventoryOfflineException implements Exception {
@@ -87,7 +88,7 @@ abstract final class InventoryErrorMapper {
     }
     if (error is InventoryException) return error.message;
     if (error is InventoryOfflineException) {
-      return 'Unable to reach the server. Check your connection and try again.';
+      return OfflineUiMessages.workingOffline;
     }
     if (error is DioException) {
       final validation = ApiErrorParser.parseValidation(error);
@@ -111,7 +112,7 @@ abstract final class InventoryErrorMapper {
       }
 
       if (isOfflineError(error)) {
-        return 'Unable to connect to the server. Check your network and try again.';
+        return OfflineUiMessages.workingOffline;
       }
 
       final statusCode = error.response?.statusCode;
@@ -185,17 +186,12 @@ abstract final class InventoryErrorMapper {
   static String messageFor(Object error) {
     if (error is InventoryException) return error.message;
     if (error is InventoryOfflineException) {
-      return 'Network unavailable. Please check your connection.';
+      return OfflineUiMessages.workingOffline;
     }
     if (error is ApiValidationException) return validationMessage(error);
     if (error is DioException) return messageForSaveItem(error);
-    return 'Unable to load inventory data. Please try again.';
+    return OfflineUiMessages.messageFor(error);
   }
 
-  static bool _isOffline(DioException error) {
-    return error.response == null ||
-        error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout;
-  }
+  static bool _isOffline(DioException error) => ApiErrorParser.isOffline(error);
 }

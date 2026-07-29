@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_outlined_pill_tabs.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_outlined_pill_tabs.dart';
 import 'package:billing_baba/features/notifications/presentation/mobile/mobile_notifications_theme.dart';
 import 'package:flutter/material.dart';
 

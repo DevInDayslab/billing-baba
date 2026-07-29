@@ -1,13 +1,10 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
+import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
 import 'package:billing_baba/features/sales/models/credit_note_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
@@ -16,17 +13,17 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'credit_note_form_provider.g.dart';
 
-int _creditNoteLineItemCounter = 0;
-
-String _nextCreditNoteLineItemId() {
-  _creditNoteLineItemCounter += 1;
-  return 'credit_note_line_$_creditNoteLineItemCounter';
-}
+String _nextCreditNoteLineItemId() => newDocumentLineId();
 
 CreditNoteFormState _initialCreditNoteFormState() {
   final now = DateTime.now();
@@ -47,7 +44,7 @@ class CreditNoteForm extends _$CreditNoteForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -109,7 +106,7 @@ class CreditNoteForm extends _$CreditNoteForm {
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
     return [
       for (final line in items)
@@ -364,6 +361,39 @@ class CreditNoteForm extends _$CreditNoteForm {
     taxOption: state.taxOption,
   );
 
+  Future<String?> saveDraft() async {
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
+
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final document = await service.saveDocumentDraft(
+        _draftInput(),
+        itemNameToId: _itemNameToId(),
+      );
+      ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
+      state = state.copyWith(
+        documentId: document.id,
+        isSaving: false,
+        isDirty: false,
+      );
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
+  }
+
+  FinalizeSalePaymentCommand? _finalizePayment() {
+    if (state.paymentAmount <= 0) return null;
+    return FinalizeSalePaymentCommand(
+      amount: state.paymentAmount.toStringAsFixed(4),
+      paymentMode: SalesPaymentModes.toApi(state.paymentType),
+    );
+  }
+
   Future<String?> save() async {
     if (state.isSaving) return null;
     if (!validate()) return _validationError();
@@ -375,6 +405,7 @@ class CreditNoteForm extends _$CreditNoteForm {
         _draftInput(),
         itemNameToId: _itemNameToId(),
         godownId: state.godownId,
+        payment: _finalizePayment(),
       );
       final synced = await syncTransactionAttachments(
         ref,

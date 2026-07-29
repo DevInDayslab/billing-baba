@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -75,19 +75,16 @@ Widget buildAdditionalPhoneInput({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            SaleTextField(
               controller: controller,
+              hint: 'Additional Mobile',
+              hasError: errorText != null,
               keyboardType: TextInputType.number,
               maxLength: 10,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(
-                hint: 'Additional Mobile',
-                hasError: errorText != null,
-              ),
               onChanged: (_) => onChanged(),
             ),
             if (errorText != null)

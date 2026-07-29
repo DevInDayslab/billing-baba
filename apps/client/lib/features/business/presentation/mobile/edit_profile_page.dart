@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';

@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 
 const _fieldBorder = Color(0xFFCCCCCC);

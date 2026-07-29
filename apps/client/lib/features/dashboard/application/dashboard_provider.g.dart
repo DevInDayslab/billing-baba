@@ -66,7 +66,7 @@ abstract class _$DashboardPeriodFilter extends $Notifier<DashboardPeriod> {
 final dashboardProvider = DashboardProvider._();
 
 final class DashboardProvider
-    extends $AsyncNotifierProvider<Dashboard, DashboardModel> {
+    extends $AsyncNotifierProvider<Dashboard, DashboardViewState> {
   DashboardProvider._()
     : super(
         from: null,
@@ -86,19 +86,20 @@ final class DashboardProvider
   Dashboard create() => Dashboard();
 }
 
-String _$dashboardHash() => r'f7d946376356e838435d54d7a84d2a96c7ebb4ca';
+String _$dashboardHash() => r'2d942b9937f5a0df4134832ea8b937dbb3f2daf9';
 
-abstract class _$Dashboard extends $AsyncNotifier<DashboardModel> {
-  FutureOr<DashboardModel> build();
+abstract class _$Dashboard extends $AsyncNotifier<DashboardViewState> {
+  FutureOr<DashboardViewState> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<DashboardModel>, DashboardModel>;
+    final ref =
+        this.ref as $Ref<AsyncValue<DashboardViewState>, DashboardViewState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<DashboardModel>, DashboardModel>,
-              AsyncValue<DashboardModel>,
+              AnyNotifier<AsyncValue<DashboardViewState>, DashboardViewState>,
+              AsyncValue<DashboardViewState>,
               Object?,
               Object?
             >;

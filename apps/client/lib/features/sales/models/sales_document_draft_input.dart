@@ -17,6 +17,7 @@ class SalesDocumentDraftInput {
     this.isGstFormal = false,
     this.convertedFromId,
     this.taxOption = 'NONE',
+    this.posSessionId,
   });
 
   final String? documentId;
@@ -31,4 +32,5 @@ class SalesDocumentDraftInput {
   final String? convertedFromId;
   final List<SaleLineItem> items;
   final String taxOption;
+  final String? posSessionId;
 }

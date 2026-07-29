@@ -8,6 +8,14 @@ enum SaleInvoiceStatus {
   cancelled,
 }
 
+enum SaleInvoiceSyncState {
+  none,
+  savedLocally,
+  syncing,
+  synced,
+  conflict,
+}
+
 class SaleInvoiceSummaryData {
   const SaleInvoiceSummaryData({
     required this.totalSalesAmount,
@@ -43,6 +51,7 @@ class SaleInvoiceModel {
     this.firm = 'Main Firm',
     this.loyaltyRedeemed = 0,
     this.dueDate,
+    this.syncState = SaleInvoiceSyncState.none,
   });
 
   final String id;
@@ -62,6 +71,7 @@ class SaleInvoiceModel {
   final String firm;
   final double loyaltyRedeemed;
   final DateTime? dueDate;
+  final SaleInvoiceSyncState syncState;
 
   bool get isDraft => documentStatus == SalesDocumentStatus.draft;
 
@@ -85,6 +95,7 @@ class SaleInvoiceModel {
     String? firm,
     double? loyaltyRedeemed,
     DateTime? dueDate,
+    SaleInvoiceSyncState? syncState,
   }) {
     return SaleInvoiceModel(
       id: id ?? this.id,
@@ -104,6 +115,7 @@ class SaleInvoiceModel {
       firm: firm ?? this.firm,
       loyaltyRedeemed: loyaltyRedeemed ?? this.loyaltyRedeemed,
       dueDate: dueDate ?? this.dueDate,
+      syncState: syncState ?? this.syncState,
     );
   }
 }

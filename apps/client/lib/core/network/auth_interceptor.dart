@@ -4,23 +4,28 @@ import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 
 typedef TokenRefreshCallback = Future<String?> Function();
+typedef AccessTokenFallback = Future<String?> Function();
 
 class AuthInterceptor extends Interceptor {
   AuthInterceptor({
     required this._storage,
     this._onRefreshToken,
+    this._accessTokenFallback,
   });
 
   final StorageService _storage;
   final TokenRefreshCallback? _onRefreshToken;
-  bool _isRefreshing = false;
+  final AccessTokenFallback? _accessTokenFallback;
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _storage.readSecure(StorageKeys.accessToken);
+    var token = await _storage.readSecure(StorageKeys.accessToken);
+    if ((token == null || token.isEmpty) && _accessTokenFallback != null) {
+      token = await _accessTokenFallback.call();
+    }
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -35,13 +40,12 @@ class AuthInterceptor extends Interceptor {
     final onRefreshToken = _onRefreshToken;
     if (err.response?.statusCode != 401 ||
         onRefreshToken == null ||
-        _isRefreshing ||
         err.requestOptions.extra['retried'] == true) {
       return handler.next(err);
     }
 
-    _isRefreshing = true;
     try {
+      // AuthService._withRefreshLock serializes refresh across all callers.
       final newToken = await onRefreshToken();
       if (newToken == null || newToken.isEmpty) {
         return handler.next(err);
@@ -63,8 +67,6 @@ class AuthInterceptor extends Interceptor {
       return handler.resolve(response);
     } on Object catch (_) {
       return handler.next(err);
-    } finally {
-      _isRefreshing = false;
     }
   }
 }

@@ -7,6 +7,7 @@ import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -59,6 +60,8 @@ Future<void> main() async {
 
       final container = ProviderContainer();
       await container.read(storageServiceProvider.future);
+      final engine = await container.read(commandAwareSyncEngineProvider.future);
+      await engine.initialize();
 
       runApp(
         UncontrolledProviderScope(

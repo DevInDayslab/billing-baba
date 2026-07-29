@@ -127,6 +127,10 @@ abstract final class AppConfig {
   /// Default OTP for local development when MSG91 is not configured.
   static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
 
+  /// Shows sync diagnostics dropdown (cursor, queue internals, view logs).
+  static bool get showSyncDiagnostics =>
+      showDeveloperMenu || diagnosticsEnabled;
+
   /// Logs resolved config once at startup (console when verbose, file per [minLogLevel]).
   static void logStartupConfig() {
     if (!consoleVerbose && !shouldLog(LogLevel.info)) return;

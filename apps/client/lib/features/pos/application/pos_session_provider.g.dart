@@ -44,7 +44,7 @@ final class PosSessionProvider
   }
 }
 
-String _$posSessionHash() => r'217dd2d1c4bbccb2dc64b8bd2c0391fc39d3d5ea';
+String _$posSessionHash() => r'32d568a711ea8a39134a2f61a2b3b7c1d42f1fb1';
 
 /// POS terminal UI state plus backend cash-drawer session.
 

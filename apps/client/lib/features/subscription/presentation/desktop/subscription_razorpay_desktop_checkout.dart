@@ -196,6 +196,13 @@ String _checkoutHtml(Map<String, dynamic> options) {
 ''';
 }
 
+/// Snap logical sizes to whole physical pixels to avoid macOS WKWebView frame
+/// drift (AppKit fights Flutter over fractional platform-view widths).
+double _snapToPhysical(double logical, double devicePixelRatio) {
+  if (devicePixelRatio <= 0) return logical.floorToDouble();
+  return (logical * devicePixelRatio).round() / devicePixelRatio;
+}
+
 class _RazorpayDesktopCheckoutDialog extends StatefulWidget {
   const _RazorpayDesktopCheckoutDialog({
     required this.orderFuture,
@@ -218,11 +225,44 @@ class _RazorpayDesktopCheckoutDialogState
     extends State<_RazorpayDesktopCheckoutDialog> {
   CreateOrderResult? _order;
   var _isResolvingOrder = true;
+  var _resultSent = false;
+
+  /// Captured once so MediaQuery / window resize rebuilds do not recreate
+  /// the WKWebView (which was thrashing memory and freezing checkout).
+  late final double _dialogWidth;
+  late final double _dialogHeight;
+  late final Size _screenSizeAtOpen;
+  var _sizesReady = false;
+
+  String? _html;
 
   @override
   void initState() {
     super.initState();
     unawaited(_resolveOrder());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_sizesReady) return;
+
+    final media = MediaQuery.of(context);
+    final screenSize = media.size;
+    final dpr = media.devicePixelRatio;
+    _screenSizeAtOpen = screenSize;
+
+    final rawWidth = screenSize.width > 800 ? 1000.0 : 440.0;
+    final rawHeight = screenSize.width > 800 ? 580.0 : 680.0;
+    _dialogWidth = _snapToPhysical(rawWidth, dpr);
+    _dialogHeight = _snapToPhysical(rawHeight, dpr);
+    _sizesReady = true;
+
+    debugPrint(
+      '[checkout] host ${_dialogWidth}x$_dialogHeight '
+      '(window=${screenSize.width.toStringAsFixed(0)}x'
+      '${screenSize.height.toStringAsFixed(0)}, dpr=$dpr)',
+    );
   }
 
   Future<void> _resolveOrder() async {
@@ -231,9 +271,10 @@ class _RazorpayDesktopCheckoutDialogState
       if (!mounted) return;
 
       if (order == null) {
-        final message = widget.orderErrorMessage() ??
+        final message =
+            widget.orderErrorMessage() ??
             'Unable to create payment order. Please try again.';
-        widget.onResult(
+        _emitResult(
           SubscriptionPaymentHostResult(
             payment: PaymentBridgeFailed(message),
             orderErrorMessage: message,
@@ -242,20 +283,31 @@ class _RazorpayDesktopCheckoutDialogState
         return;
       }
 
+      final options = razorpayCheckoutOptions(
+        order: order,
+        planType: widget.planType,
+      );
       setState(() {
         _order = order;
+        _html = _checkoutHtml(options);
         _isResolvingOrder = false;
       });
     } on Object catch (error) {
       if (!mounted) return;
       final message = error.toString();
-      widget.onResult(
+      _emitResult(
         SubscriptionPaymentHostResult(
           payment: PaymentBridgeFailed(message),
           orderErrorMessage: message,
         ),
       );
     }
+  }
+
+  void _emitResult(SubscriptionPaymentHostResult? result) {
+    if (_resultSent) return;
+    _resultSent = true;
+    widget.onResult(result);
   }
 
   String _desktopUserAgent() {
@@ -301,9 +353,7 @@ class _RazorpayDesktopCheckoutDialogState
         return;
     }
 
-    widget.onResult(
-      SubscriptionPaymentHostResult(order: order, payment: payment),
-    );
+    _emitResult(SubscriptionPaymentHostResult(order: order, payment: payment));
   }
 
   InAppWebViewSettings _webViewSettings() {
@@ -323,30 +373,23 @@ class _RazorpayDesktopCheckoutDialogState
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final double dialogWidth;
-    final double dialogHeight;
-    if (screenSize.width > 800) {
-      dialogWidth = 1000;
-      dialogHeight = 580;
-    } else {
-      dialogWidth = 440;
-      dialogHeight = 680;
+    if (!_sizesReady) {
+      return const SizedBox.shrink();
     }
 
     return Center(
       child: Material(
         color: Colors.transparent,
         child: SizedBox(
-          width: dialogWidth,
-          height: dialogHeight,
+          width: _dialogWidth,
+          height: _dialogHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: ColoredBox(
               color: AppColors.surface,
               child: _isResolvingOrder
                   ? const Center(child: CircularProgressIndicator())
-                  : _buildCheckoutWebView(screenSize),
+                  : _buildCheckoutWebView(),
             ),
           ),
         ),
@@ -354,25 +397,17 @@ class _RazorpayDesktopCheckoutDialogState
     );
   }
 
-  Widget _buildCheckoutWebView(Size screenSize) {
+  Widget _buildCheckoutWebView() {
     final order = _order;
-    if (order == null) {
+    final html = _html;
+    if (order == null || html == null) {
       return const SizedBox.shrink();
     }
-
-    final options = razorpayCheckoutOptions(order: order, planType: widget.planType);
-
-    debugPrint(
-      '[checkout] host ${screenSize.width > 800 ? 1000 : 440}x'
-      '${screenSize.width > 800 ? 580 : 680} '
-      '(window=${screenSize.width.toStringAsFixed(0)}x'
-      '${screenSize.height.toStringAsFixed(0)})',
-    );
 
     return InAppWebView(
       key: ValueKey(order.paymentUuid),
       initialData: InAppWebViewInitialData(
-        data: _checkoutHtml(options),
+        data: html,
         encoding: 'utf-8',
         baseUrl: WebUri('https://checkout.razorpay.com'),
       ),
@@ -390,9 +425,19 @@ class _RazorpayDesktopCheckoutDialogState
       },
       onCreateWindow: (controller, createWindowAction) async {
         if (!context.mounted) return true;
-        final popupWidth = screenSize.width > 900 ? 900.0 : screenSize.width - 32;
-        final popupHeight =
-            screenSize.height > 750 ? 700.0 : screenSize.height - 80;
+        final dpr = MediaQuery.devicePixelRatioOf(context);
+        final popupWidth = _snapToPhysical(
+          _screenSizeAtOpen.width > 900
+              ? 900.0
+              : _screenSizeAtOpen.width - 32,
+          dpr,
+        );
+        final popupHeight = _snapToPhysical(
+          _screenSizeAtOpen.height > 750
+              ? 700.0
+              : _screenSizeAtOpen.height - 80,
+          dpr,
+        );
 
         unawaited(
           showDialog<void>(

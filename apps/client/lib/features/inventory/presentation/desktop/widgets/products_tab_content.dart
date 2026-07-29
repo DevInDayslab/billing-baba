@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
@@ -18,7 +19,8 @@ class ProductsTabContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final products = ref.watch(productsProvider);
-    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final pageAsync = ref.watch(inventoryItemsProvider);
+    final itemsAsync = pageAsync.itemsOnly;
     final selectedId = ref.watch(selectedProductIdProvider);
     final searchQuery = ref.watch(productSearchQueryProvider);
     final backendSearchQuery = ref.watch(productBackendSearchProvider);
@@ -26,6 +28,9 @@ class ProductsTabContent extends ConsumerWidget {
     return InventoryItemWorkspace(
       items: products,
       itemsAsync: itemsAsync,
+      hasMore: pageAsync.value?.hasMore ?? false,
+      isLoadingMore: pageAsync.value?.isLoadingMore ?? false,
+      onLoadMore: () => ref.read(inventoryItemsProvider.notifier).loadMore(),
       selectedId: selectedId,
       searchQuery: searchQuery,
       backendSearchQuery: backendSearchQuery,
@@ -59,7 +64,7 @@ class ProductsTabContent extends ConsumerWidget {
       onSelectionChangedSideEffects: (previousId, nextId) {
         ref.read(productTransactionFiltersProvider.notifier).reset();
         ref.read(selectedProductTransactionIdProvider.notifier).select(null);
-        final items = ref.read(inventoryItemsProvider).value ?? [];
+        final items = ref.read(inventoryItemListProvider);
         final item = items.where((entry) => entry.id == nextId).firstOrNull;
         if (item != null) {
           ref.read(inventoryListImageWarmupProvider).warmItem(item);

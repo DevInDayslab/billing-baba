@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/add_items_barcode_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/add_items_barcode_screen.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class AddItemsBarcodeScreen extends StatelessWidget {

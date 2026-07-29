@@ -1,7 +1,3 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
@@ -16,17 +12,17 @@ import 'package:billing_baba/features/sales/models/sales_document_draft_input.da
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_document_form_provider.g.dart';
 
-int _documentLineItemCounter = 0;
-
-String _nextDocumentLineItemId() {
-  _documentLineItemCounter += 1;
-  return 'doc_line_$_documentLineItemCounter';
-}
+String _nextDocumentLineItemId() => newDocumentLineId();
 
 SaleDocumentFormState _initialDocumentFormState(SaleDocumentType documentType) {
   final now = DateTime.now();
@@ -59,7 +55,7 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -161,7 +157,7 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
 
     return [

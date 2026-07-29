@@ -23,6 +23,7 @@ abstract final class StorageKeys {
       'sale_line_item_column_visibility';
   static const dashboardTasks = 'dashboard_tasks';
   static const dashboardSideWidgets = 'dashboard_side_widgets';
+  static const dashboardSnapshots = 'dashboard_snapshots';
   static const barcodeImportDraft = 'barcode_import_draft';
   static const printSettings = 'print_settings';
   static const whatsappSettings = 'whatsapp_settings';
@@ -31,4 +32,26 @@ abstract final class StorageKeys {
   static const recentSearchPageIds = 'recent_search_page_ids';
   static const collaborationMembers = 'collaboration_members';
   static const collaborationInvitations = 'collaboration_invitations';
+
+  /// Stable install-lifetime sync device id (UUID).
+  static const syncDeviceId = 'sync_device_id';
+  /// Legacy global keys — migrated to per-business keys on first read.
+  static const syncPullCursor = 'sync_pull_cursor';
+  static const syncBootstrappedAt = 'sync_bootstrapped_at';
+  static const syncLastServerSchemaVersion = 'sync_last_server_schema_version';
+
+  static const syncLocalSchemaVersion = 'sync_local_schema_version';
+
+  static String syncPullCursorFor(String businessId) =>
+      'sync_pull_cursor_$businessId';
+
+  static String syncBootstrappedAtFor(String businessId) =>
+      'sync_bootstrapped_at_$businessId';
+
+  static String syncLastServerSchemaVersionFor(String businessId) =>
+      'sync_last_server_schema_version_$businessId';
+
+  /// Per-business local POS session id used while offline.
+  static String localPosSessionId(String businessId) =>
+      'local_pos_session_$businessId';
 }

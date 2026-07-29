@@ -1,7 +1,7 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_option_sheet.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheets.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_list_controller.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
 
 /// Opens the reusable party filter bottom sheet.
