@@ -40,7 +40,7 @@ class LeadRepository {
     await _local.upsertLead(lead);
     await _enqueue(
       businessId: lead.businessId,
-      entityType: 'lead',
+      entityType: 'leads',
       entityId: lead.id,
       operation: operation,
       payload: lead.toJson(),
@@ -55,7 +55,7 @@ class LeadRepository {
     await _local.upsertActivity(activity);
     await _enqueue(
       businessId: activity.businessId,
-      entityType: 'lead_activity',
+      entityType: 'lead_activities',
       entityId: activity.id,
       operation: operation,
       payload: activity.toJson(),

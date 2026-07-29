@@ -57,11 +57,18 @@ loadTransactionAttachments(
         documents: <SaleFormAttachment>[],
       );
     }
-    final attachments = await service.fetchAttachments(
+    final remote = await service.fetchAttachments(
       entityType: entityType,
       entityId: entityId,
     );
-    return splitTransactionAttachments(attachments);
+    final offline = await restoreOfflineTransactionAttachments(
+      entityType: entityType,
+      entityId: entityId,
+    );
+    return _mergeTransactionAttachments(
+      remote: splitTransactionAttachments(remote),
+      offline: offline,
+    );
   } on Object {
     return (images: <SaleFormAttachment>[], documents: <SaleFormAttachment>[]);
   }
@@ -104,11 +111,21 @@ Future<void> persistOfflineAttachmentMetadata({
   required List<SaleFormAttachment> documents,
 }) async {
   final pending = [...images, ...documents].where(
-    (attachment) => attachment.syncStatus == AttachmentSyncStatus.local,
+    (attachment) =>
+        attachment.syncStatus == AttachmentSyncStatus.local &&
+        attachment.localBytes != null,
   );
   if (pending.isEmpty) return;
 
   final store = await AttachmentOfflineMetadataStore.create();
+  for (final attachment in pending) {
+    await store.saveBytes(
+      entityType: entityType,
+      entityId: entityId,
+      attachmentId: attachment.id,
+      bytes: attachment.localBytes!,
+    );
+  }
   await store.save(
     entityType,
     entityId,
@@ -123,6 +140,53 @@ Future<void> persistOfflineAttachmentMetadata({
           ),
         )
         .toList(),
+  );
+}
+
+Future<
+  ({
+    List<SaleFormAttachment> images,
+    List<SaleFormAttachment> documents,
+  })
+>
+restoreOfflineTransactionAttachments({
+  required String entityType,
+  required String entityId,
+}) async {
+  final store = await AttachmentOfflineMetadataStore.create();
+  final restored = await store.loadAttachments(
+    entityType: entityType,
+    entityId: entityId,
+  );
+  return splitTransactionAttachments(restored);
+}
+
+({
+  List<SaleFormAttachment> images,
+  List<SaleFormAttachment> documents,
+}) _mergeTransactionAttachments({
+  required ({
+    List<SaleFormAttachment> images,
+    List<SaleFormAttachment> documents,
+  }) remote,
+  required ({
+    List<SaleFormAttachment> images,
+    List<SaleFormAttachment> documents,
+  }) offline,
+}) {
+  final remoteIds = {
+    for (final attachment in [...remote.images, ...remote.documents])
+      attachment.id,
+  };
+  final offlineImages = offline.images
+      .where((attachment) => !remoteIds.contains(attachment.id))
+      .toList();
+  final offlineDocuments = offline.documents
+      .where((attachment) => !remoteIds.contains(attachment.id))
+      .toList();
+  return (
+    images: [...remote.images, ...offlineImages],
+    documents: [...remote.documents, ...offlineDocuments],
   );
 }
 
@@ -162,11 +226,32 @@ Future<void> transactionAddImage({
           SnackBar(content: Text('Upload failed: $error')),
         );
       }
+      onAdded(picked);
+      if (entityId.isNotEmpty) {
+        unawaited(
+          persistOfflineAttachmentMetadata(
+            entityType: entityType,
+            entityId: entityId,
+            images: picked.isImage ? [picked] : const [],
+            documents: picked.isImage ? const [] : [picked],
+          ),
+        );
+      }
       return;
     }
   }
 
   onAdded(picked);
+  if (entityType != null && entityId != null && entityId.isNotEmpty) {
+    unawaited(
+      persistOfflineAttachmentMetadata(
+        entityType: entityType,
+        entityId: entityId,
+        images: picked.isImage ? [picked] : const [],
+        documents: picked.isImage ? const [] : [picked],
+      ),
+    );
+  }
 }
 
 Future<void> transactionAddDocument({
@@ -205,11 +290,32 @@ Future<void> transactionAddDocument({
           SnackBar(content: Text('Upload failed: $error')),
         );
       }
+      onAdded(picked);
+      if (entityId.isNotEmpty) {
+        unawaited(
+          persistOfflineAttachmentMetadata(
+            entityType: entityType,
+            entityId: entityId,
+            images: picked.isImage ? [picked] : const [],
+            documents: picked.isImage ? const [] : [picked],
+          ),
+        );
+      }
       return;
     }
   }
 
   onAdded(picked);
+  if (entityType != null && entityId != null && entityId.isNotEmpty) {
+    unawaited(
+      persistOfflineAttachmentMetadata(
+        entityType: entityType,
+        entityId: entityId,
+        images: picked.isImage ? [picked] : const [],
+        documents: picked.isImage ? const [] : [picked],
+      ),
+    );
+  }
 }
 
 Future<void> transactionRemoveAttachment({

@@ -1132,4 +1132,40 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
     },
     INTEGRATION_TIMEOUT_MS,
   );
+
+  test(
+    'rejects push batches larger than max_push_mutations',
+    async () => {
+      const mutations = Array.from({ length: 101 }, (_, index) => ({
+        mutation_id: randomUUID(),
+        kind: 'row' as const,
+        entity_type: 'categories',
+        entity_id: randomUUID(),
+        operation: 'create' as const,
+        base_sync_version: 0,
+        payload: {
+          name: `Batch Category ${suffix}-${index}`,
+        },
+        client_updated_at: new Date().toISOString(),
+      }));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: randomUUID(),
+          mutations,
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = response.json() as {
+        error: { code: string };
+      };
+      expect(body.error.code).toBe('BATCH_TOO_LARGE');
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
 });

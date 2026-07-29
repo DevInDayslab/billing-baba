@@ -87,35 +87,6 @@ class SalesInvoiceCommandRepository {
     final documentType = input.documentType.apiValue;
     final syncPosSessionId = _syncPosSessionId(input.posSessionId);
 
-    await _local.upsertDocument(
-      id: documentId,
-      businessId: businessId,
-      documentType: documentType,
-      status: 'draft',
-      documentNumber: documentNumber,
-      documentSeries: input.documentSeries,
-      partyId: input.partyId,
-      isGstFormal: input.isGstFormal,
-      subtotal: totals.subtotal,
-      discountTotal: totals.discountTotal,
-      taxAmount: totals.taxAmount,
-      totalAmount: totals.totalAmount,
-      documentDate: documentDate,
-      convertedFromId: input.convertedFromId,
-      notes: input.notes,
-      godownId: input.godownId,
-      paidAmount: existing?.paidAmount ?? '0',
-      paymentMode: existing?.paymentMode,
-      syncVersion: existing == null
-          ? 0
-          : (await _local.getHeaderSyncVersion(documentId) ?? 0),
-      createdAt: existing == null
-          ? now
-          : DateTime.parse(existing.createdAt).toUtc(),
-      updatedAt: now,
-      deviceId: _deviceIdReader?.call(),
-    );
-
     final lineRows = <SalesDocumentLineLocalData>[];
     var sortOrder = 0;
     for (final item in input.items) {
@@ -151,6 +122,43 @@ class SalesInvoiceCommandRepository {
       );
     }
 
+    await _local.runInTransaction(() async {
+      await _local.upsertDocument(
+        id: documentId,
+        businessId: businessId,
+        documentType: documentType,
+        status: 'draft',
+        documentNumber: documentNumber,
+        documentSeries: input.documentSeries,
+        partyId: input.partyId,
+        isGstFormal: input.isGstFormal,
+        subtotal: totals.subtotal,
+        discountTotal: totals.discountTotal,
+        taxAmount: totals.taxAmount,
+        totalAmount: totals.totalAmount,
+        documentDate: documentDate,
+        convertedFromId: input.convertedFromId,
+        notes: input.notes,
+        godownId: input.godownId,
+        paidAmount: existing?.paidAmount ?? '0',
+        paymentMode: existing?.paymentMode,
+        syncVersion: existing == null
+            ? 0
+            : (await _local.getHeaderSyncVersion(documentId) ?? 0),
+        createdAt: existing == null
+            ? now
+            : DateTime.parse(existing.createdAt).toUtc(),
+        updatedAt: now,
+        deviceId: _deviceIdReader?.call(),
+      );
+
+      await _local.replaceLines(
+        businessId: businessId,
+        salesDocumentId: documentId,
+        lines: lineRows,
+      );
+    });
+
     final newLineIds = lineRows.map((line) => line.id).toSet();
     final removedLineIds = existingLineIds.difference(newLineIds);
     for (final removedId in removedLineIds) {
@@ -164,12 +172,6 @@ class SalesInvoiceCommandRepository {
         clientUpdatedAt: now,
       );
     }
-
-    await _local.replaceLines(
-      businessId: businessId,
-      salesDocumentId: documentId,
-      lines: lineRows,
-    );
 
     final headerPayload = buildSalesDocumentRowPayload(
       documentType: documentType,

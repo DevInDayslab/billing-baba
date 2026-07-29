@@ -8,6 +8,10 @@ class SalesLocalDataSource {
 
   final AppDatabase _db;
 
+  Future<T> runInTransaction<T>(Future<T> Function() action) {
+    return _db.transaction(action);
+  }
+
   Future<SalesDocumentDto?> getDocument(String id) async {
     final header = await (_db.select(_db.salesDocumentsLocal)
           ..where((t) => t.id.equals(id) & t.isDeleted.equals(false)))

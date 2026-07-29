@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/sync/application/sync_activity_log.dart';
 import 'package:billing_baba/core/sync/application/sync_ui_state.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
@@ -222,7 +223,10 @@ final syncUiStateProvider = Provider<SyncUiSnapshot>((ref) {
     pendingCommands: pending.pendingCommands,
     queueSize: pending.queueSize,
     currentOperation: currentOperation,
-    progress: syncState.lastResultMessage,
+    progress: syncState.connectivity == SyncConnectivityStatus.offline &&
+            pending.queueSize > 0
+        ? OfflineUiMessages.syncWhenOnline
+        : syncState.lastResultMessage,
     lastSyncTime: syncState.lastSyncTime,
     lastError: syncState.errorMessage,
     lastSyncDuration: lastDuration,

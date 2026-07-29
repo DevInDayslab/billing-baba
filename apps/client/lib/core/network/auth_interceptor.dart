@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/http_logging_interceptor.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
@@ -13,7 +15,7 @@ class AuthInterceptor extends Interceptor {
 
   final StorageService _storage;
   final TokenRefreshCallback? _onRefreshToken;
-  bool _isRefreshing = false;
+  Completer<String?>? _refreshCompleter;
 
   @override
   Future<void> onRequest(
@@ -35,14 +37,12 @@ class AuthInterceptor extends Interceptor {
     final onRefreshToken = _onRefreshToken;
     if (err.response?.statusCode != 401 ||
         onRefreshToken == null ||
-        _isRefreshing ||
         err.requestOptions.extra['retried'] == true) {
       return handler.next(err);
     }
 
-    _isRefreshing = true;
     try {
-      final newToken = await onRefreshToken();
+      final newToken = await _refreshAccessToken(onRefreshToken);
       if (newToken == null || newToken.isEmpty) {
         return handler.next(err);
       }
@@ -63,8 +63,20 @@ class AuthInterceptor extends Interceptor {
       return handler.resolve(response);
     } on Object catch (_) {
       return handler.next(err);
-    } finally {
-      _isRefreshing = false;
     }
+  }
+
+  Future<String?> _refreshAccessToken(TokenRefreshCallback onRefreshToken) {
+    final inFlight = _refreshCompleter;
+    if (inFlight != null) {
+      return inFlight.future;
+    }
+
+    final completer = Completer<String?>();
+    _refreshCompleter = completer;
+    onRefreshToken().then(completer.complete).catchError(completer.completeError);
+    return completer.future.whenComplete(() {
+      _refreshCompleter = null;
+    });
   }
 }

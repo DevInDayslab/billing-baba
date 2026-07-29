@@ -66,16 +66,26 @@ class HttpLoggingInterceptor extends Interceptor {
     );
 
     if (AppConfig.consoleVerbose) {
-      LoggingService.instance.error(
-        '✗ ${err.requestOptions.method} ${err.requestOptions.uri}\n'
-        '  Type: ${err.type}\n'
-        '  Status: $status\n'
-        '  Duration: ${duration.inMilliseconds}ms\n'
-        '  Message: ${err.message}\n'
-        '  Response: $body',
-        err,
-        err.stackTrace,
-      );
+      final isRecoverableAuth401 =
+          status == 401 &&
+          err.requestOptions.path.contains('/auth/me');
+      final message =
+          '✗ ${err.requestOptions.method} ${err.requestOptions.uri}\n'
+          '  Type: ${err.type}\n'
+          '  Status: $status\n'
+          '  Duration: ${duration.inMilliseconds}ms\n'
+          '  Message: ${err.message}\n'
+          '  Response: $body';
+
+      if (isRecoverableAuth401) {
+        LoggingService.instance.info(message);
+      } else {
+        LoggingService.instance.error(
+          message,
+          err,
+          err.stackTrace,
+        );
+      }
     }
 
     DiagnosticsStore.instance.recordApiCall(

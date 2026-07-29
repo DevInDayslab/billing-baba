@@ -38,4 +38,22 @@ abstract final class JwtUtils {
     if (value == null) return null;
     return value.toString();
   }
+
+  /// Returns true when the JWT `exp` claim is in the past (with optional leeway).
+  static bool isExpired(
+    String? token, {
+    Duration leeway = const Duration(seconds: 30),
+  }) {
+    if (token == null || token.isEmpty) return true;
+
+    final payload = decodePayload(token);
+    final exp = payload?['exp'];
+    if (exp is! num) return false;
+
+    final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+      exp.toInt() * 1000,
+      isUtc: true,
+    );
+    return DateTime.now().toUtc().add(leeway).isAfter(expiresAt);
+  }
 }

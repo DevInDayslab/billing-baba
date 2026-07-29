@@ -44,7 +44,7 @@ class ContactRepository {
     await _local.upsertContact(contact);
     await _enqueue(
       businessId: contact.businessId,
-      entityType: 'contact',
+      entityType: 'contacts',
       entityId: contact.id,
       operation: operation,
       payload: contact.toJson(),
@@ -59,7 +59,7 @@ class ContactRepository {
     await _local.upsertActivity(activity);
     await _enqueue(
       businessId: activity.businessId,
-      entityType: 'contact_activity',
+      entityType: 'contact_activities',
       entityId: activity.id,
       operation: operation,
       payload: activity.toJson(),

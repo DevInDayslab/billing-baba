@@ -171,23 +171,30 @@ class SyncQueue {
 
   Future<int> count() => pendingCount();
 
-  Future<int> pendingCount({DateTime? now}) async {
-    final rows = await listPending(now: now);
+  Future<int> pendingCount({DateTime? now, String? businessId}) async {
+    final rows = await listPending(now: now, businessId: businessId);
     return rows.length;
   }
 
-  Stream<int> streamPendingCount() {
-    return watchPending().map((jobs) => jobs.length);
+  Stream<int> streamPendingCount({String? businessId}) {
+    return watchPending(businessId: businessId).map((jobs) => jobs.length);
   }
 
-  Future<List<SyncJob>> listPending({DateTime? now}) async {
-    final rows = await _listPendingRows(now: now);
+  Future<List<SyncJob>> listPending({DateTime? now, String? businessId}) async {
+    final rows = await _listPendingRows(now: now, businessId: businessId);
     return rows.map(_fromRow).toList();
   }
 
-  Stream<List<SyncJob>> watchPending() {
+  Stream<List<SyncJob>> watchPending({String? businessId}) {
     return (_db.select(_db.syncQueue)
-          ..where((t) => t.status.equals(SyncQueueStatus.pending.wire))
+          ..where((t) {
+            final statusMatch =
+                t.status.equals(SyncQueueStatus.pending.wire);
+            if (businessId == null || businessId.isEmpty) {
+              return statusMatch;
+            }
+            return statusMatch & t.businessId.equals(businessId);
+          })
           ..orderBy([
             (t) => OrderingTerm.asc(t.priority),
             (t) => OrderingTerm.asc(t.createdAt),
@@ -203,6 +210,39 @@ class SyncQueue {
           .map(_fromRow)
           .toList();
     });
+  }
+
+  /// Resets jobs stuck in `running` after a crash back to `pending`.
+  Future<int> resetRunningToPending({String? businessId}) async {
+    final query = _db.update(_db.syncQueue)
+      ..where((t) {
+        final running = t.status.equals(SyncQueueStatus.running.wire);
+        if (businessId == null || businessId.isEmpty) return running;
+        return running & t.businessId.equals(businessId);
+      });
+    return query.write(
+      const SyncQueueCompanion(status: Value('pending')),
+    );
+  }
+
+  /// Re-queues failed jobs whose [nextRetryAt] has elapsed.
+  Future<int> requeueRetryableFailures({DateTime? now, String? businessId}) async {
+    final at = now ?? DateTime.now().toUtc();
+    final rows = await (_db.select(_db.syncQueue)
+          ..where((t) {
+            final failed = t.status.equals(SyncQueueStatus.failed.wire) &
+                t.nextRetryAt.isNotNull() &
+                t.nextRetryAt.isSmallerOrEqualValue(at);
+            if (businessId == null || businessId.isEmpty) return failed;
+            return failed & t.businessId.equals(businessId);
+          }))
+        .get();
+    var count = 0;
+    for (final row in rows) {
+      await retry(row.id);
+      count += 1;
+    }
+    return count;
   }
 
   Future<SyncJob> _enqueue({
@@ -247,15 +287,16 @@ class SyncQueue {
         .write(companion);
   }
 
-  Future<SyncQueueData?> _nextPendingRow({DateTime? now}) {
+  Future<SyncQueueData?> _nextPendingRow({DateTime? now, String? businessId}) {
     final at = now ?? DateTime.now().toUtc();
     return (_db.select(_db.syncQueue)
-          ..where(
-            (t) =>
-                t.status.equals(SyncQueueStatus.pending.wire) &
+          ..where((t) {
+            final pending = t.status.equals(SyncQueueStatus.pending.wire) &
                 (t.nextRetryAt.isNull() |
-                    t.nextRetryAt.isSmallerOrEqualValue(at)),
-          )
+                    t.nextRetryAt.isSmallerOrEqualValue(at));
+            if (businessId == null || businessId.isEmpty) return pending;
+            return pending & t.businessId.equals(businessId);
+          })
           ..orderBy([
             (t) => OrderingTerm.asc(t.priority),
             (t) => OrderingTerm.asc(t.createdAt),
@@ -264,15 +305,19 @@ class SyncQueue {
         .getSingleOrNull();
   }
 
-  Future<List<SyncQueueData>> _listPendingRows({DateTime? now}) {
+  Future<List<SyncQueueData>> _listPendingRows({
+    DateTime? now,
+    String? businessId,
+  }) {
     final at = now ?? DateTime.now().toUtc();
     return (_db.select(_db.syncQueue)
-          ..where(
-            (t) =>
-                t.status.equals(SyncQueueStatus.pending.wire) &
+          ..where((t) {
+            final pending = t.status.equals(SyncQueueStatus.pending.wire) &
                 (t.nextRetryAt.isNull() |
-                    t.nextRetryAt.isSmallerOrEqualValue(at)),
-          )
+                    t.nextRetryAt.isSmallerOrEqualValue(at));
+            if (businessId == null || businessId.isEmpty) return pending;
+            return pending & t.businessId.equals(businessId);
+          })
           ..orderBy([
             (t) => OrderingTerm.asc(t.priority),
             (t) => OrderingTerm.asc(t.createdAt),

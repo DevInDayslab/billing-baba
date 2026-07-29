@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/pos/data/pos_local_data_source.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
@@ -20,11 +21,14 @@ class PosSalesList extends _$PosSalesList {
     final db = ref.watch(appDatabaseProvider);
     final local = PosLocalDataSource(db);
     final rows = await local.getAllSales(businessId);
+    final linesBySaleId = await local.getLinesBySaleIds(
+      businessId,
+      rows.map((row) => row.id),
+    );
     final sales = <PosSale>[];
     for (final row in rows) {
-      final lines = await local.getSaleWithLines(businessId, row.id);
       final lineItems =
-          lines?.$2
+          (linesBySaleId[row.id] ?? const <SaleLineLocal>[])
               .map(
                 (line) => PosSaleLineItem(
                   name: line.itemName,
@@ -38,8 +42,7 @@ class PosSalesList extends _$PosSalesList {
                   igstAmount: line.igstAmount,
                 ),
               )
-              .toList() ??
-          const [];
+              .toList();
       sales.add(
         PosSale(
           id: row.id,

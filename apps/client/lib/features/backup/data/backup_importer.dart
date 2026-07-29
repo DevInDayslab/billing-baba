@@ -123,7 +123,7 @@ class BackupImporter {
     final restoredDb = AppDatabase(NativeDatabase(dbFile));
     try {
       await _restoreBusinessPrefs(manifest.businessId, businessPrefs);
-      await _restoreSyncMetadata(syncMetadata);
+      await _restoreSyncMetadata(manifest.businessId, syncMetadata);
       final deviceId = deviceJson['device_id']?.toString();
       if (deviceId != null && deviceId.isNotEmpty) {
         await _storage.write(StorageKeys.syncDeviceId, deviceId);
@@ -178,21 +178,25 @@ class BackupImporter {
     }
   }
 
-  Future<void> _restoreSyncMetadata(BackupSyncMetadata metadata) async {
+  Future<void> _restoreSyncMetadata(
+    String businessId,
+    BackupSyncMetadata metadata,
+  ) async {
     if (metadata.pullCursor != null && metadata.pullCursor!.isNotEmpty) {
-      await _metadata.setPullCursor(metadata.pullCursor!);
+      await _metadata.setPullCursorFor(businessId, metadata.pullCursor!);
     }
     if (metadata.bootstrappedAt != null && metadata.bootstrappedAt!.isNotEmpty) {
       final parsed = DateTime.tryParse(metadata.bootstrappedAt!);
       if (parsed != null) {
-        await _metadata.setBootstrappedAt(parsed);
+        await _metadata.setBootstrappedAtFor(businessId, parsed);
       }
     }
     if (metadata.localSchemaVersion != null) {
       await _metadata.setLocalSchemaVersion(metadata.localSchemaVersion!);
     }
     if (metadata.lastServerSchemaVersion != null) {
-      await _metadata.setLastServerSchemaVersion(
+      await _metadata.setLastServerSchemaVersionFor(
+        businessId,
         metadata.lastServerSchemaVersion!,
       );
     }

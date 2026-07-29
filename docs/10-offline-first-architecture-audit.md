@@ -1,9 +1,10 @@
 # Offline-First Architecture Audit
 
-**Status:** Audit complete — design blueprint only (no offline engine implementation)  
-**Date:** 2026-07-26  
-**Scope:** Flutter client (`apps/client`) · Fastify API (`apps/api`) · PostgreSQL (Drizzle) · Drift (partial)  
-**Related:** [01-architecture.md](01-architecture.md) · [04-database.md](04-database.md) · [05-api.md](05-api.md) · [09-decisions.md](09-decisions.md) · [11-sync-api-contract.md](11-sync-api-contract.md) (normative sync protocol) · [ADR-025](09-decisions.md#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
+**Status:** Superseded by stabilization implementation (2026-07-29) — see git history and audit plan for current state.  
+**Date:** 2026-07-26 (original); updated 2026-07-29  
+**Scope:** Flutter client (`apps/client`) · Fastify API (`apps/api`) · PostgreSQL (Drizzle) · Drift  
+
+> **Note:** The original audit below described the codebase as "operationally online-first" with an unimplemented sync API. That is **no longer accurate**. As of 2026-07-29, row/command sync, 22+ Drift tables, per-business sync cursors, brands/expenses offline paths, and `/api/v1/sync/*` endpoints are implemented. Retained for historical context; do not use for current architecture decisions.
 
 ---
 

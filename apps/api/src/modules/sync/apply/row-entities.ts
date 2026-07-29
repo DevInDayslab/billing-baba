@@ -1,9 +1,19 @@
 import { categories, items, parties } from '../../../db/schema';
 import {
+  brands,
   godowns,
   unitDefinitions,
 } from '../../../db/schema/inventory/tables';
 import {
+  contactActivities,
+  contacts,
+  deals,
+  leadActivities,
+  leads,
+} from '../../../db/schema/crm/tables';
+import {
+  expenses,
+  expenseCategories,
   purchaseDocumentLines,
   purchaseDocuments,
 } from '../../../db/schema/purchases/tables';
@@ -167,6 +177,85 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
     entityType: 'godowns',
     table: godowns,
     allowedColumns: ['name', 'address', 'isDefault'],
+  }),
+  brands: defineEntity({
+    entityType: 'brands',
+    table: brands,
+    allowedColumns: ['name'],
+  }),
+  leads: defineEntity({
+    entityType: 'leads',
+    table: leads,
+    allowedColumns: [
+      'name',
+      'company',
+      'phone',
+      'email',
+      'leadSource',
+      'status',
+      'assignedTo',
+      'notes',
+    ],
+  }),
+  lead_activities: defineEntity({
+    entityType: 'lead_activities',
+    table: leadActivities,
+    allowedColumns: ['leadId', 'type', 'notes', 'addedBy'],
+  }),
+  contacts: defineEntity({
+    entityType: 'contacts',
+    table: contacts,
+    allowedColumns: [
+      'name',
+      'firstName',
+      'lastName',
+      'salutation',
+      'accountName',
+      'phone',
+      'email',
+      'assignedTo',
+      'title',
+      'description',
+    ],
+  }),
+  contact_activities: defineEntity({
+    entityType: 'contact_activities',
+    table: contactActivities,
+    allowedColumns: ['contactId', 'type', 'notes', 'addedBy'],
+  }),
+  deals: defineEntity({
+    entityType: 'deals',
+    table: deals,
+    allowedColumns: [
+      'name',
+      'stage',
+      'accountName',
+      'assignedTo',
+      'amount',
+      'expectedCloseDate',
+      'description',
+    ],
+  }),
+  expense_categories: defineEntity({
+    entityType: 'expense_categories',
+    table: expenseCategories,
+    allowedColumns: ['name', 'categoryType', 'isSystem'],
+  }),
+  expenses: defineEntity({
+    entityType: 'expenses',
+    table: expenses,
+    allowedColumns: [
+      'categoryId',
+      'partyId',
+      'amount',
+      'taxAmount',
+      'taxRate',
+      'description',
+      'notes',
+      'referenceNumber',
+      'expenseDate',
+      'paymentMode',
+    ],
   }),
   business_settings: defineEntity({
     entityType: 'business_settings',

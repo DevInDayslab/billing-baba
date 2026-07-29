@@ -33,7 +33,7 @@ class DealRepository {
     await _local.upsertDeal(deal);
     await _enqueue(
       businessId: deal.businessId,
-      entityType: 'deal',
+      entityType: 'deals',
       entityId: deal.id,
       operation: operation,
       payload: deal.toJson(),

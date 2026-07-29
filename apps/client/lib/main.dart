@@ -60,7 +60,7 @@ Future<void> main() async {
       final container = ProviderContainer();
       await container.read(storageServiceProvider.future);
       final engine = await container.read(commandAwareSyncEngineProvider.future);
-      await engine.start();
+      await engine.initialize();
 
       runApp(
         UncontrolledProviderScope(

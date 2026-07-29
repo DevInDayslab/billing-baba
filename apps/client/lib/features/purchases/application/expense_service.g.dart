@@ -46,4 +46,4 @@ final class ExpenseServiceProvider
   }
 }
 
-String _$expenseServiceHash() => r'5302d22693e1208f261690d2d3df2a6e8f1a6fce';
+String _$expenseServiceHash() => r'1332513a66d8da00dcbffe480f8255d966aaa696';

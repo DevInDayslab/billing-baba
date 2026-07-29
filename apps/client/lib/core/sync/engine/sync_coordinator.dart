@@ -5,16 +5,20 @@ import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
+import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/models/sync_result.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/crm/data/crm_sync.dart';
+import 'package:billing_baba/features/inventory/data/brand_sync.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/purchases/data/expense_sync.dart';
 import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart';
 import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
@@ -35,6 +39,7 @@ class SyncCoordinator {
     required this._metadata,
     required this._storage,
     this._categorySync,
+    this._brandSync,
     this._partySync,
     this._itemSync,
     this._unitSync,
@@ -43,8 +48,16 @@ class SyncCoordinator {
     this._businessSettingsSync,
     this._salesDocumentSync,
     this._purchaseDocumentSync,
+    this._leadSync,
+    this._leadActivitySync,
+    this._contactSync,
+    this._contactActivitySync,
+    this._dealSync,
+    this._expenseSync,
+    this._expenseCategorySync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
+    this.brandEntityType = 'brands',
     this.partyEntityType = 'parties',
     this.itemEntityType = 'items',
     this.unitEntityType = 'unit_definitions',
@@ -55,6 +68,13 @@ class SyncCoordinator {
     this.salesDocumentLinesEntityType = 'sales_document_lines',
     this.purchaseDocumentsEntityType = 'purchase_documents',
     this.purchaseDocumentLinesEntityType = 'purchase_document_lines',
+    this.leadsEntityType = 'leads',
+    this.leadActivitiesEntityType = 'lead_activities',
+    this.contactsEntityType = 'contacts',
+    this.contactActivitiesEntityType = 'contact_activities',
+    this.dealsEntityType = 'deals',
+    this.expensesEntityType = 'expenses',
+    this.expenseCategoriesEntityType = 'expense_categories',
   })  : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
@@ -63,6 +83,7 @@ class SyncCoordinator {
   final SyncMetadataStore _metadata;
   final StorageService _storage;
   final CategorySync? _categorySync;
+  final BrandSync? _brandSync;
   final PartySync? _partySync;
   final ItemSync? _itemSync;
   final UnitSync? _unitSync;
@@ -71,8 +92,16 @@ class SyncCoordinator {
   final BusinessSettingsSync? _businessSettingsSync;
   final SalesDocumentSync? _salesDocumentSync;
   final PurchaseDocumentSync? _purchaseDocumentSync;
+  final LeadSync? _leadSync;
+  final LeadActivitySync? _leadActivitySync;
+  final ContactSync? _contactSync;
+  final ContactActivitySync? _contactActivitySync;
+  final DealSync? _dealSync;
+  final ExpenseSync? _expenseSync;
+  final ExpenseCategorySync? _expenseCategorySync;
   final Uuid _uuid;
   final String categoryEntityType;
+  final String brandEntityType;
   final String partyEntityType;
   final String itemEntityType;
   final String unitEntityType;
@@ -83,16 +112,27 @@ class SyncCoordinator {
   final String salesDocumentLinesEntityType;
   final String purchaseDocumentsEntityType;
   final String purchaseDocumentLinesEntityType;
+  final String leadsEntityType;
+  final String leadActivitiesEntityType;
+  final String contactsEntityType;
+  final String contactActivitiesEntityType;
+  final String dealsEntityType;
+  final String expensesEntityType;
+  final String expenseCategoriesEntityType;
 
   String get _pullEntityTypes =>
-      '$categoryEntityType,$partyEntityType,$itemEntityType,'
+      '$categoryEntityType,$brandEntityType,$partyEntityType,$itemEntityType,'
       '$unitEntityType,$taxRateEntityType,$godownEntityType,'
       '$businessSettingsEntityType,$salesDocumentsEntityType,'
       '$salesDocumentLinesEntityType,$purchaseDocumentsEntityType,'
-      '$purchaseDocumentLinesEntityType';
+      '$purchaseDocumentLinesEntityType,$leadsEntityType,'
+      '$leadActivitiesEntityType,$contactsEntityType,'
+      '$contactActivitiesEntityType,$dealsEntityType,'
+      '$expensesEntityType,$expenseCategoriesEntityType';
 
   bool _isRowEntity(String? type) =>
       type == categoryEntityType ||
+      type == brandEntityType ||
       type == partyEntityType ||
       type == itemEntityType ||
       type == unitEntityType ||
@@ -102,9 +142,19 @@ class SyncCoordinator {
       type == salesDocumentsEntityType ||
       type == salesDocumentLinesEntityType ||
       type == purchaseDocumentsEntityType ||
-      type == purchaseDocumentLinesEntityType;
+      type == purchaseDocumentLinesEntityType ||
+      type == leadsEntityType ||
+      type == leadActivitiesEntityType ||
+      type == contactsEntityType ||
+      type == contactActivitiesEntityType ||
+      type == dealsEntityType ||
+      type == expensesEntityType ||
+      type == expenseCategoriesEntityType;
 
   bool _busy = false;
+  int _lastMaxPushMutations = 100;
+
+  int get lastMaxPushMutations => _lastMaxPushMutations;
 
   /// Runs one full sync pass. Returns a [SyncResult].
   Future<SyncResult> orchestrate({
@@ -122,6 +172,12 @@ class SyncCoordinator {
     var failures = 0;
 
     try {
+      if (SyncPauseGate.instance.isPaused) {
+        return SyncResult.noop(message: 'Sync paused during business switch');
+      }
+
+      final syncGeneration = SyncPauseGate.instance.generation;
+
       if (currentState.connectivity == SyncConnectivityStatus.offline) {
         emit(
           (s) => s.copyWith(
@@ -190,28 +246,37 @@ class SyncCoordinator {
       }
 
       final serverSchema = _readInt(statusPayload['schema_version']);
+      _lastMaxPushMutations =
+          _readInt(statusPayload['max_push_mutations']) ?? 100;
+      final pullCursor = _metadata.pullCursorFor(businessId);
+      final bootstrappedAt = _metadata.bootstrappedAtFor(businessId);
+      final lastServerSchemaVersion =
+          _metadata.lastServerSchemaVersionFor(businessId);
       final needsBootstrap = _needsBootstrap(
         businessId: businessId,
-        pullCursor: _metadata.pullCursor,
-        bootstrappedAt: _metadata.bootstrappedAt,
+        pullCursor: pullCursor,
+        bootstrappedAt: bootstrappedAt,
         localSchemaVersion: _metadata.localSchemaVersion,
-        lastServerSchemaVersion: _metadata.lastServerSchemaVersion,
+        lastServerSchemaVersion: lastServerSchemaVersion,
         serverSchemaVersion: serverSchema,
       );
+
+      await _queue.resetRunningToPending(businessId: businessId);
+      await _queue.requeueRetryableFailures(businessId: businessId);
 
       // Empty DB / no cursor → pull from epoch until done.
       if (needsBootstrap) {
         try {
-          await _metadata.setPullCursor(epochSyncCursor());
+          await _metadata.setPullCursorFor(businessId, epochSyncCursor());
           final downloaded = await _pullAll(
             businessId: businessId,
             deviceId: deviceId,
             appVersion: appVersion,
           );
           rowsDownloaded += downloaded;
-          await _metadata.setBootstrappedAt(DateTime.now().toUtc());
+          await _metadata.setBootstrappedAtFor(businessId, DateTime.now().toUtc());
           if (serverSchema != null) {
-            await _metadata.setLastServerSchemaVersion(serverSchema);
+            await _metadata.setLastServerSchemaVersionFor(businessId, serverSchema);
           }
         } on Object catch (error) {
           return _finishFailure(
@@ -222,11 +287,12 @@ class SyncCoordinator {
         }
       }
 
-      final pending = await _safePendingJobs();
+      final pending = await _safePendingJobs(businessId: businessId);
       final rowJobs = pending
           .where(
             (j) =>
                 j.kind == SyncQueueKind.row &&
+                j.businessId == businessId &&
                 _isRowEntity(j.entityType) &&
                 j.status == SyncQueueStatus.pending,
           )
@@ -234,17 +300,33 @@ class SyncCoordinator {
 
       if (rowJobs.isNotEmpty) {
         try {
-          final pushStats = await _pushRowJobs(
-            deviceId: deviceId,
-            appVersion: appVersion,
-            jobs: rowJobs,
-          );
-          rowsUploaded += pushStats.uploaded;
-          conflicts += pushStats.conflicts;
-          failures += pushStats.failures;
+          for (var offset = 0; offset < rowJobs.length; offset += _lastMaxPushMutations) {
+            if (SyncPauseGate.instance.isStale(syncGeneration)) {
+              return SyncResult.noop(
+                message: 'Sync aborted during business switch',
+              );
+            }
+            final chunkEnd =
+                (offset + _lastMaxPushMutations).clamp(0, rowJobs.length);
+            final chunk = rowJobs.sublist(offset, chunkEnd);
+            final pushStats = await _pushRowJobs(
+              deviceId: deviceId,
+              appVersion: appVersion,
+              jobs: chunk,
+            );
+            rowsUploaded += pushStats.uploaded;
+            conflicts += pushStats.conflicts;
+            failures += pushStats.failures;
+          }
         } on Object catch (error) {
           for (final job in rowJobs) {
-            await _queue.markFailed(job.id, reason: 'push failed: $error');
+            if (job.status == SyncQueueStatus.running) {
+              await _queue.markFailed(
+                job.id,
+                reason: 'push failed: $error',
+                nextRetryAt: _nextRetryAt(job.attemptCount),
+              );
+            }
           }
           return _finishFailure(
             emit: emit,
@@ -269,7 +351,7 @@ class SyncCoordinator {
         );
       }
 
-      final remaining = await _safePendingJobs();
+      final remaining = await _safePendingJobs(businessId: businessId);
       final message =
           'Sync complete (push=$rowsUploaded, pull=$rowsDownloaded, '
           'conflicts=$conflicts, failures=$failures)';
@@ -426,6 +508,9 @@ class SyncCoordinator {
       await _queue.markFailed(
         job.id,
         reason: item['message']?.toString() ?? jsonEncode(item),
+        nextRetryAt: _isTransientPushError(item)
+            ? _nextRetryAt(job.attemptCount)
+            : null,
       );
       failures += 1;
     }
@@ -439,7 +524,7 @@ class SyncCoordinator {
     required String appVersion,
   }) async {
     var downloaded = 0;
-    var cursor = _metadata.pullCursor ?? epochSyncCursor();
+    var cursor = _metadata.pullCursorFor(businessId) ?? epochSyncCursor();
     var pages = 0;
     const maxPages = 50;
 
@@ -490,7 +575,7 @@ class SyncCoordinator {
       final next = response['next_cursor']?.toString();
       if (next != null && next.isNotEmpty) {
         cursor = next;
-        await _metadata.setPullCursor(next);
+        await _metadata.setPullCursorFor(businessId, next);
       }
 
       final hasMore = response['has_more'] == true;
@@ -514,6 +599,17 @@ class SyncCoordinator {
     switch (entityType) {
       case 'categories':
         await _categorySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'brands':
+        await _brandSync?.applyChange(
           businessId: businessId,
           entityId: entityId,
           syncVersion: syncVersion,
@@ -615,6 +711,83 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'leads':
+        await _leadSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'lead_activities':
+        await _leadActivitySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'contacts':
+        await _contactSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'contact_activities':
+        await _contactActivitySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'deals':
+        await _dealSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'expenses':
+        await _expenseSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'expense_categories':
+        await _expenseCategorySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       default:
         // Unknown entity — ignore until that entity ships.
         break;
@@ -631,6 +804,13 @@ class SyncCoordinator {
     switch (entityType) {
       case 'categories':
         await _categorySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'brands':
+        await _brandSync?.updateAckMeta(
           entityId: entityId,
           syncVersion: syncVersion,
           updatedAt: updatedAt,
@@ -696,6 +876,55 @@ class SyncCoordinator {
           updatedAt: updatedAt,
           deviceId: deviceId,
         );
+      case 'leads':
+        await _leadSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'lead_activities':
+        await _leadActivitySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'contacts':
+        await _contactSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'contact_activities':
+        await _contactActivitySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'deals':
+        await _dealSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'expenses':
+        await _expenseSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'expense_categories':
+        await _expenseCategorySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
       default:
         break;
     }
@@ -729,12 +958,26 @@ class SyncCoordinator {
     );
   }
 
-  Future<List<SyncJob>> _safePendingJobs() async {
+  Future<List<SyncJob>> _safePendingJobs({required String businessId}) async {
     try {
-      return await _queue.listPending();
+      return await _queue.listPending(businessId: businessId);
     } on Object {
       return const [];
     }
+  }
+
+  static DateTime _nextRetryAt(int attemptCount) {
+    const baseSeconds = [1, 2, 4, 8, 16, 32];
+    final index = attemptCount.clamp(0, baseSeconds.length - 1);
+    return DateTime.now().toUtc().add(Duration(seconds: baseSeconds[index]));
+  }
+
+  static bool _isTransientPushError(Map<String, dynamic> item) {
+    final code = item['code']?.toString().toUpperCase() ?? '';
+    return code.contains('TIMEOUT') ||
+        code.contains('BUSY') ||
+        code.contains('UNAVAILABLE') ||
+        code.contains('NETWORK');
   }
 
   static List<Map<String, dynamic>> _asList(Object? value) {

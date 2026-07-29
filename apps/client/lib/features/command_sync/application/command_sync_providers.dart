@@ -91,6 +91,7 @@ final purchaseReturnCommandRepositoryProvider =
 final commandSyncRunnerProvider =
     FutureProvider<CommandSyncRunner>((ref) async {
   final api = await ref.watch(syncApiProvider.future);
+  final storage = await ref.watch(storageServiceProvider.future);
   final identity = await ref.watch(syncDeviceIdentityProvider.future);
   final db = ref.watch(appDatabaseProvider);
   final salesRecovery = SalesSyncRecovery(
@@ -106,6 +107,7 @@ final commandSyncRunnerProvider =
     queue: ref.watch(syncQueueProvider),
     identity: identity,
     ackApplier: CommandAckApplier(db: db),
+    storage: storage,
     onCommandConflict: (job, code) async {
       if (code == 'DOCUMENT_ALREADY_FINALIZED' &&
           job.entityType == 'sales_documents' &&

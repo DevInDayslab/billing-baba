@@ -10,24 +10,26 @@ class LocalDocumentNumberService {
   Future<String> allocate({
     required String businessId,
     required String documentSeries,
-  }) async {
-    final existing = await (_db.select(_db.localDocumentCounters)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.documentSeries.equals(documentSeries),
-          ))
-        .getSingleOrNull();
+  }) {
+    return _db.transaction(() async {
+      final existing = await (_db.select(_db.localDocumentCounters)
+            ..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.documentSeries.equals(documentSeries),
+            ))
+          .getSingleOrNull();
 
-    final next = existing?.nextNumber ?? 1;
-    await _db.into(_db.localDocumentCounters).insertOnConflictUpdate(
-          LocalDocumentCountersCompanion.insert(
-            businessId: businessId,
-            documentSeries: documentSeries,
-            nextNumber: Value(next + 1),
-          ),
-        );
+      final next = existing?.nextNumber ?? 1;
+      await _db.into(_db.localDocumentCounters).insertOnConflictUpdate(
+            LocalDocumentCountersCompanion.insert(
+              businessId: businessId,
+              documentSeries: documentSeries,
+              nextNumber: Value(next + 1),
+            ),
+          );
 
-    return 'LOCAL-${next.toString().padLeft(6, '0')}';
+      return 'LOCAL-${next.toString().padLeft(6, '0')}';
+    });
   }
 }

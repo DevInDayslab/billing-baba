@@ -8,6 +8,7 @@ import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
 
 class AuthService {
@@ -80,11 +81,22 @@ class AuthService {
       );
     }
 
+    final selectedId = await _storage.readSecure(
+      StorageKeys.selectedBusinessId,
+    );
+
+    if (JwtUtils.isExpired(accessToken)) {
+      AuthDebugLogger.log(
+        'loadStoredSession: access token expired — refreshing',
+      );
+      return refreshStoredSession(
+        refreshToken: refreshToken,
+        businessId: selectedId,
+      );
+    }
+
     try {
       final me = await _repository.me(accessToken);
-      final selectedId = await _storage.readSecure(
-        StorageKeys.selectedBusinessId,
-      );
       if (selectedId != null &&
           selectedId.isNotEmpty &&
           me.businesses.length > 1 &&
@@ -104,8 +116,8 @@ class AuthService {
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        final selectedId = await _storage.readSecure(
-          StorageKeys.selectedBusinessId,
+        AuthDebugLogger.log(
+          'loadStoredSession: /auth/me returned 401 — refreshing',
         );
         return refreshStoredSession(
           refreshToken: refreshToken,

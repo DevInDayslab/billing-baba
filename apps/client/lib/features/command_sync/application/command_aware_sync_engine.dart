@@ -32,7 +32,9 @@ class CommandAwareSyncEngine {
 
   Future<SyncResult> syncNow() async {
     final rowResult = await _engine.syncNow();
-    final commandResult = await _commandRunner.runPending();
+    final commandResult = await _commandRunner.runPending(
+      maxPushMutations: _engine.coordinator.lastMaxPushMutations,
+    );
     if (commandResult.message?.contains('No pending command jobs') ?? false) {
       return rowResult;
     }

@@ -1,8 +1,10 @@
 import 'package:billing_baba/core/database/drift_database_paths.dart';
+import 'package:billing_baba/core/database/tables/brands_table.dart';
 import 'package:billing_baba/core/database/tables/business_settings_table.dart';
 import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
+import 'package:billing_baba/core/database/tables/expenses_tables.dart';
 import 'package:billing_baba/core/database/tables/godowns_table.dart';
 import 'package:billing_baba/core/database/tables/inventory_stock_tables.dart';
 import 'package:billing_baba/core/database/tables/items_table.dart';
@@ -32,6 +34,7 @@ part 'database.g.dart';
     Deals,
     SyncQueue,
     CategoriesLocal,
+    BrandsLocal,
     PartiesLocal,
     ItemsLocal,
     UnitDefinitionsLocal,
@@ -45,13 +48,15 @@ part 'database.g.dart';
     LocalDocumentCounters,
     InventoryMovementsLocal,
     StockLevelsLocal,
+    ExpenseCategoriesLocal,
+    ExpensesLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -152,8 +157,38 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(inventoryMovementsLocal);
         await m.createTable(stockLevelsLocal);
       }
+      if (from < 18) {
+        await m.createTable(brandsLocal);
+        await m.createTable(expenseCategoriesLocal);
+        await m.createTable(expensesLocal);
+      }
+      if (from < 19) {
+        await _createBusinessIdIndexes(m);
+      }
     },
   );
+
+  static Future<void> _createBusinessIdIndexes(Migrator m) async {
+    const tables = [
+      'sync_queue',
+      'parties_local',
+      'items_local',
+      'categories_local',
+      'brands_local',
+      'sales_documents_local',
+      'purchase_documents_local',
+      'expenses_local',
+      'expense_categories_local',
+      'leads',
+      'contacts',
+      'deals',
+    ];
+    for (final table in tables) {
+      await m.database.customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_${table}_business_id ON $table (business_id)',
+      );
+    }
+  }
 
   static Future<void> _addColumnIfMissing(
     Migrator m,

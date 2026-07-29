@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/features/inventory/data/models/item_alternative_dto.dart';
 import 'package:billing_baba/features/inventory/data/models/item_recommendations_dto.dart';
@@ -12,7 +13,9 @@ class ItemAlternativesRemoteDataSource {
     final response = await _dio.get<Map<String, dynamic>>(
       ApiEndpoints.listAlternatives(itemId),
     );
-    print('RAW ALTERNATIVES RESPONSE: ${response.data}');
+    if (kDebugMode) {
+      debugPrint('RAW ALTERNATIVES RESPONSE: ${response.data}');
+    }
     final data = response.data?['data'];
     if (data is! List) return const [];
     return data

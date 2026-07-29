@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
@@ -7,6 +8,7 @@ import 'package:billing_baba/features/business/utils/business_open_debug_log.dar
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/crm/application/contacts_provider.dart';
 import 'package:billing_baba/features/crm/application/deals_provider.dart';
 import 'package:billing_baba/features/crm/application/leads_provider.dart';
@@ -14,6 +16,7 @@ import 'package:billing_baba/features/dashboard/application/dashboard_provider.d
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
+import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
 import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
@@ -29,6 +32,8 @@ import 'package:billing_baba/features/subscription/application/plans_pricing_vie
 import 'package:billing_baba/features/subscription/application/purchase_history_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_plans_provider.dart';
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Non-null while a business open/switch initialization is in progress.
@@ -134,7 +139,14 @@ void invalidateAllBusinessScopedProviders(
     ..invalidate(currentSubscriptionStateProvider)
     ..invalidate(subscriptionPlansProvider)
     ..invalidate(purchaseHistoryStateProvider)
-    ..invalidate(plansPricingViewProvider);
+    ..invalidate(plansPricingViewProvider)
+    ..invalidate(imageServiceProvider)
+    ..invalidate(partyOptimisticProfileImagesProvider)
+    ..invalidate(documentAttachmentServiceProvider)
+    ..invalidate(syncMetadataStoreProvider)
+    ..invalidate(syncCoordinatorProvider)
+    ..invalidate(syncEngineProvider)
+    ..invalidate(commandAwareSyncEngineProvider);
 
   if (includeBusinessService) {
     ref.invalidate(businessServiceProvider);

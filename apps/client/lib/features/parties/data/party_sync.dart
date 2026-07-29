@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/database/database.dart';
+import 'package:billing_baba/core/sync/engine/sync_apply_guard.dart';
 import 'package:drift/drift.dart';
 
 /// Applies pull/ack updates for `entity_type: parties` into Drift.
@@ -20,6 +21,14 @@ class PartySync {
     final existing = await (_db.select(_db.partiesLocal)
           ..where((t) => t.id.equals(entityId)))
         .getSingleOrNull();
+
+    if (!shouldApplyPullChange(
+      incomingSyncVersion: syncVersion,
+      existingSyncVersion: existing?.syncVersion,
+      isDeleted: isDeleted,
+    )) {
+      return;
+    }
 
     if (isDeleted) {
       await _db.into(_db.partiesLocal).insertOnConflictUpdate(

@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
@@ -11,11 +12,14 @@ import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/crm/data/crm_sync.dart';
+import 'package:billing_baba/features/inventory/data/brand_sync.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/purchases/data/expense_sync.dart';
 import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart';
 import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
@@ -33,11 +37,29 @@ final syncQueueProvider = Provider<SyncQueue>((ref) {
 });
 
 final syncPendingCountProvider = StreamProvider<int>((ref) {
-  return ref.watch(syncQueueProvider).streamPendingCount();
+  final storageAsync = ref.watch(storageServiceProvider);
+  return storageAsync.when(
+    data: (storage) {
+      final businessId = storage.read(StorageKeys.lastOpenedBusinessId);
+      return ref
+          .watch(syncQueueProvider)
+          .streamPendingCount(businessId: businessId);
+    },
+    loading: () => ref.watch(syncQueueProvider).streamPendingCount(),
+    error: (_, _) => ref.watch(syncQueueProvider).streamPendingCount(),
+  );
 });
 
 final syncPendingJobsProvider = StreamProvider<List<SyncJob>>((ref) {
-  return ref.watch(syncQueueProvider).watchPending();
+  final storageAsync = ref.watch(storageServiceProvider);
+  return storageAsync.when(
+    data: (storage) {
+      final businessId = storage.read(StorageKeys.lastOpenedBusinessId);
+      return ref.watch(syncQueueProvider).watchPending(businessId: businessId);
+    },
+    loading: () => ref.watch(syncQueueProvider).watchPending(),
+    error: (_, _) => ref.watch(syncQueueProvider).watchPending(),
+  );
 });
 
 final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
@@ -76,6 +98,7 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     metadata: metadata,
     storage: storage,
     categorySync: CategorySync(db),
+    brandSync: BrandSync(db),
     partySync: PartySync(db),
     itemSync: ItemSync(db),
     unitSync: UnitSync(db),
@@ -84,6 +107,13 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     businessSettingsSync: BusinessSettingsSync(db),
     salesDocumentSync: SalesDocumentSync(db),
     purchaseDocumentSync: PurchaseDocumentSync(db),
+    leadSync: LeadSync(db),
+    leadActivitySync: LeadActivitySync(db),
+    contactSync: ContactSync(db),
+    contactActivitySync: ContactActivitySync(db),
+    dealSync: DealSync(db),
+    expenseSync: ExpenseSync(db),
+    expenseCategorySync: ExpenseCategorySync(db),
   );
 });
 

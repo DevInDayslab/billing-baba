@@ -8,6 +8,7 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/business_local_data_cleanup.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
+import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
@@ -19,6 +20,7 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
@@ -512,47 +514,56 @@ class BusinessList extends _$BusinessList {
   Future<void> openBusiness(String id) async {
     BusinessOpenDebugLog.step('openBusiness', 'start id=$id');
     _ensureOpenRefMounted('openBusiness start');
+    SyncPauseGate.instance.pause();
 
-    final service = await ref.read(businessServiceProvider.future);
-    _ensureOpenRefMounted('after resolve BusinessService');
+    try {
+      final service = await ref.read(businessServiceProvider.future);
+      _ensureOpenRefMounted('after resolve BusinessService');
 
-    final previousId = await service.readActiveBusinessId();
-    final isSwitch =
-        previousId != null && previousId.isNotEmpty && previousId != id;
-    BusinessOpenDebugLog.step(
-      'openBusiness',
-      'previousId=${previousId ?? '(none)'} isSwitch=$isSwitch',
-    );
-
-    if (isSwitch) {
-      BusinessOpenDebugLog.step('openBusiness', 'clear stale profile cache');
-      await service.clearCachedBusinessProfile();
-      ref.invalidate(posCartProvider);
-    }
-
-    await _activateBusiness(id);
-    _ensureOpenRefMounted('after activateBusiness');
-
-    BusinessOpenDebugLog.step('openBusiness', 'verify JWT scope');
-    if (!await service.isJwtScopedToBusiness(id)) {
-      throw const BusinessSelectionFailed(
-        'Could not scope session to company. Please try again.',
+      final previousId = await service.readActiveBusinessId();
+      final isSwitch =
+          previousId != null && previousId.isNotEmpty && previousId != id;
+      BusinessOpenDebugLog.step(
+        'openBusiness',
+        'previousId=${previousId ?? '(none)'} isSwitch=$isSwitch',
       );
+
+      if (isSwitch) {
+        BusinessOpenDebugLog.step('openBusiness', 'clear stale profile cache');
+        await service.clearCachedBusinessProfile();
+        ref.invalidate(posCartProvider);
+      }
+
+      await _activateBusiness(id);
+      _ensureOpenRefMounted('after activateBusiness');
+
+      BusinessOpenDebugLog.step('openBusiness', 'verify JWT scope');
+      if (!await service.isJwtScopedToBusiness(id)) {
+        throw const BusinessSelectionFailed(
+          'Could not scope session to company. Please try again.',
+        );
+      }
+
+      BusinessOpenDebugLog.step(
+        'openBusiness',
+        'invalidate providers (keep BusinessService alive)',
+      );
+      invalidateAllBusinessScopedProviders(
+        ref,
+        includeBusinessService: false,
+      );
+      _ensureOpenRefMounted('after invalidate');
+
+      BusinessOpenDebugLog.step('openBusiness', 'warm providers');
+      await warmBusinessScopedProviders(ref, businessId: id);
+      BusinessOpenDebugLog.step('openBusiness', 'complete');
+    } finally {
+      SyncPauseGate.instance.resume();
     }
 
-    BusinessOpenDebugLog.step(
-      'openBusiness',
-      'invalidate providers (keep BusinessService alive)',
-    );
-    invalidateAllBusinessScopedProviders(
-      ref,
-      includeBusinessService: false,
-    );
-    _ensureOpenRefMounted('after invalidate');
-
-    BusinessOpenDebugLog.step('openBusiness', 'warm providers');
-    await warmBusinessScopedProviders(ref, businessId: id);
-    BusinessOpenDebugLog.step('openBusiness', 'complete');
+    final syncEngine = await ref.read(commandAwareSyncEngineProvider.future);
+    await syncEngine.start();
+    unawaited(syncEngine.syncNow());
   }
 
   void _ensureOpenRefMounted(String step) {

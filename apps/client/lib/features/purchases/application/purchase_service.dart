@@ -25,6 +25,7 @@ import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/shared/documents/document_line_sync.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -745,27 +746,35 @@ class PurchaseService {
     String? mimeType,
   }) async {
     try {
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument request filename=$filename bytes=${bytes.length}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument request filename=$filename bytes=${bytes.length}',
+        );
+      }
       final result = await _repository.parseDocument(
         filename: filename,
         bytes: bytes,
         mimeType: mimeType,
       );
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument response lines=${result.lines.length}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument response lines=${result.lines.length}',
+        );
+      }
       return result;
     } on DioException catch (error, stackTrace) {
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument DioException: $error\n$stackTrace',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument DioException: $error\n$stackTrace',
+        );
+      }
       throw mapPurchaseError(error);
     } on Object catch (error, stackTrace) {
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument error: $error\n$stackTrace',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument error: $error\n$stackTrace',
+        );
+      }
       rethrow;
     }
   }

@@ -7,6 +7,8 @@ import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/data/brand_local_source.dart';
+import 'package:billing_baba/features/inventory/data/brand_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/category_local_source.dart';
 import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
 import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
@@ -111,6 +113,13 @@ Future<InventoryService> inventoryService(Ref ref) async {
     ),
     godowns: GodownMasterRepository(
       local: GodownLocalSource(db),
+      syncQueue: queue,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
+    ),
+    brands: BrandMasterRepository(
+      local: BrandLocalSource(db),
       syncQueue: queue,
       remote: remote,
       businessIdReader: businessIdReader,

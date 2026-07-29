@@ -35,10 +35,21 @@ abstract final class StorageKeys {
 
   /// Stable install-lifetime sync device id (UUID).
   static const syncDeviceId = 'sync_device_id';
+  /// Legacy global keys — migrated to per-business keys on first read.
   static const syncPullCursor = 'sync_pull_cursor';
   static const syncBootstrappedAt = 'sync_bootstrapped_at';
-  static const syncLocalSchemaVersion = 'sync_local_schema_version';
   static const syncLastServerSchemaVersion = 'sync_last_server_schema_version';
+
+  static const syncLocalSchemaVersion = 'sync_local_schema_version';
+
+  static String syncPullCursorFor(String businessId) =>
+      'sync_pull_cursor_$businessId';
+
+  static String syncBootstrappedAtFor(String businessId) =>
+      'sync_bootstrapped_at_$businessId';
+
+  static String syncLastServerSchemaVersionFor(String businessId) =>
+      'sync_last_server_schema_version_$businessId';
 
   /// Per-business local POS session id used while offline.
   static String localPosSessionId(String businessId) =>

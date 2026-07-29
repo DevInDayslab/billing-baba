@@ -4,6 +4,7 @@ import 'package:billing_baba/features/business/application/commerce_settings_pro
 import 'package:billing_baba/features/business/models/commerce_settings_model.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/features/settings/application/tax_rate_providers.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
@@ -81,6 +82,7 @@ class _TaxesSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(commerceSettingsProvider);
+    final taxRatesAsync = ref.watch(taxRatesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -155,6 +157,39 @@ class _TaxesSettingsScreenState
                 'Used for new invoice lines when an item has no default GST rate. '
                 'The most recently selected line GST rate is remembered per business.',
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              const Text(
+                'Tax rates (offline)',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Synced tax rates stored locally for offline invoicing.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              taxRatesAsync.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (error, _) => Text(OfflineUiMessages.messageFor(error)),
+                data: (rates) => rates.isEmpty
+                    ? const Text(
+                        'No tax rates yet. They will sync when you connect.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      )
+                    : Column(
+                        children: [
+                          for (final rate in rates)
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(rate.name),
+                              subtitle: Text('${rate.rate}%'),
+                              trailing: rate.isDefault
+                                  ? const Chip(label: Text('Default'))
+                                  : null,
+                            ),
+                        ],
+                      ),
               ),
             ],
           );

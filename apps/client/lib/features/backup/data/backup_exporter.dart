@@ -25,6 +25,10 @@ class BackupExportResult {
 }
 
 /// Builds a `.biba` ZIP archive from the local Drift database and sync metadata.
+///
+/// **Multi-tenant note:** The archive includes the full SQLite file (all
+/// businesses on this device) plus per-business sync metadata and queue slices
+/// for [businessId]. Treat backups as sensitive; restore only on trusted devices.
 class BackupExporter {
   BackupExporter({
     required this._database,
@@ -57,10 +61,12 @@ class BackupExporter {
 
     final dbBytes = await dbFile.readAsBytes();
     final syncMetadata = BackupSyncMetadata(
-      pullCursor: _metadata.pullCursor,
-      bootstrappedAt: _metadata.bootstrappedAt?.toUtc().toIso8601String(),
+      pullCursor: _metadata.pullCursorFor(businessId),
+      bootstrappedAt:
+          _metadata.bootstrappedAtFor(businessId)?.toUtc().toIso8601String(),
       localSchemaVersion: _metadata.localSchemaVersion,
-      lastServerSchemaVersion: _metadata.lastServerSchemaVersion,
+      lastServerSchemaVersion:
+          _metadata.lastServerSchemaVersionFor(businessId),
     );
     final deviceJson = jsonEncode({
       'device_id': _storage.read(StorageKeys.syncDeviceId),

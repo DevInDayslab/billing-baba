@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/inventory/data/brand_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
@@ -44,6 +45,7 @@ class InventoryRepository {
     required this._movementProjector,
     this._units,
     this._godowns,
+    this._brands,
     this._deviceIdReader,
     this._stockApplier,
   });
@@ -57,6 +59,7 @@ class InventoryRepository {
   final InventoryMovementProjector _movementProjector;
   final UnitMasterRepository? _units;
   final GodownMasterRepository? _godowns;
+  final BrandMasterRepository? _brands;
   final String? Function()? _deviceIdReader;
   final InventoryDocumentStockApplier? _stockApplier;
 
@@ -215,17 +218,22 @@ class InventoryRepository {
   }
 
   Future<PaginatedBrandsDto> getBrands(BrandListQuery query) =>
-      _remote.listBrands(query);
+      _brands?.list(query) ?? _remote.listBrands(query);
 
-  Future<BrandDto> getBrand(String id) => _remote.getBrand(id);
+  Future<BrandDto> getBrand(String id) async {
+    final local = await _brands?.getActive(id);
+    if (local != null) return local;
+    return _remote.getBrand(id);
+  }
 
   Future<BrandDto> createBrand(CreateBrandRequest request) =>
-      _remote.createBrand(request);
+      _brands?.create(request) ?? _remote.createBrand(request);
 
   Future<BrandDto> updateBrand(String id, UpdateBrandRequest request) =>
-      _remote.updateBrand(id, request);
+      _brands?.update(id, request) ?? _remote.updateBrand(id, request);
 
-  Future<void> deleteBrand(String id) => _remote.deleteBrand(id);
+  Future<void> deleteBrand(String id) =>
+      _brands?.softDelete(id) ?? _remote.deleteBrand(id);
 
   Future<PaginatedUnitsDto> getUnits(UnitListQuery query) =>
       _units?.list(query) ?? _remote.listUnits(query);
