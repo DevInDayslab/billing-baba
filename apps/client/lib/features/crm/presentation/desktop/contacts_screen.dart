@@ -531,28 +531,7 @@ class _ContactsTitleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actionButtons = [
-      if (!isCompact)
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.refresh),
-          color: AppColors.textSecondary,
-          tooltip: 'Refresh',
-        ),
-      if (!isCompact)
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.settings_outlined),
-          color: AppColors.textSecondary,
-          tooltip: 'Settings',
-        ),
-      IconButton(
-        onPressed: () {},
-        icon: const Icon(Icons.more_vert),
-        color: AppColors.textSecondary,
-        tooltip: 'More options',
-      ),
-    ];
+    final actionButtons = <Widget>[];
 
     final deleteButton = onDelete == null
         ? null

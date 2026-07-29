@@ -20,10 +20,24 @@ class _GlobalSearchFieldState extends ConsumerState<GlobalSearchField> {
   final _layerLink = LayerLink();
   final _debouncer = Debouncer();
   OverlayEntry? _overlayEntry;
+  var _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    final focused = _focusNode.hasFocus;
+    if (focused == _focused) return;
+    setState(() => _focused = focused);
+  }
 
   @override
   void dispose() {
     _removeOverlay();
+    _focusNode.removeListener(_onFocusChange);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -42,6 +56,8 @@ class _GlobalSearchFieldState extends ConsumerState<GlobalSearchField> {
 
   void _showOverlay() {
     _removeOverlay();
+    final fieldWidth =
+        (context.findRenderObject() as RenderBox?)?.size.width ?? 520;
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -59,7 +75,7 @@ class _GlobalSearchFieldState extends ConsumerState<GlobalSearchField> {
               elevation: 8,
               borderRadius: AppRadius.mdBorder,
               child: SizedBox(
-                width: 520,
+                width: fieldWidth,
                 child: _SearchResults(onSelected: _removeOverlay),
               ),
             ),
@@ -95,16 +111,27 @@ class _GlobalSearchFieldState extends ConsumerState<GlobalSearchField> {
             size: 20,
           ),
           filled: true,
-          fillColor: AppColors.background,
+          // Blends with top bar when idle; grey fill when focused.
+          fillColor: _focused ? AppColors.background : AppColors.surface,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
+            vertical: 12,
           ),
           border: OutlineInputBorder(
             borderRadius: AppRadius.mdBorder,
             borderSide: BorderSide.none,
           ),
-          isDense: true,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: AppRadius.mdBorder,
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppRadius.mdBorder,
+            borderSide: BorderSide(
+              color: AppColors.primary.withValues(alpha: 0.35),
+            ),
+          ),
+          isDense: false,
         ),
         style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
       ),

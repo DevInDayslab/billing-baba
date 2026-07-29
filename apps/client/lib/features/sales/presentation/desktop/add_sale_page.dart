@@ -226,7 +226,6 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
               ),
               child: SalePageTitleBar(
                 currentRoute: AppRoutes.saleInvoices,
-                onSettingsTap: () {},
                 onBack: _handleClose,
               ),
             ),

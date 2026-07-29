@@ -190,6 +190,10 @@ abstract final class InventoryErrorMapper {
     }
     if (error is ApiValidationException) return validationMessage(error);
     if (error is DioException) return messageForSaveItem(error);
+    if (error is StateError &&
+        error.message.contains('No business selected')) {
+      return 'Select a business to load items.';
+    }
     return OfflineUiMessages.messageFor(error);
   }
 

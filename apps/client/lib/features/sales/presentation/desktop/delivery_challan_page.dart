@@ -31,7 +31,6 @@ class DesktopDeliveryChallanPage extends ConsumerWidget {
               children: [
                 SalePageTitleBar(
                   currentRoute: AppRoutes.saleDeliveryChallan,
-                  onSettingsTap: () {},
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const DeliveryChallanFilterBar(),

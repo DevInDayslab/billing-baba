@@ -38,7 +38,6 @@ class DesktopPaymentInPage extends ConsumerWidget {
                   addButtonLabel: 'Add Payment-In',
                   addButtonColor: _addPaymentInRed,
                   onAddTap: () => showPaymentInDialog(context),
-                  onSettingsTap: () => debugPrint('Settings tapped'),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const PaymentInFilterBar(),

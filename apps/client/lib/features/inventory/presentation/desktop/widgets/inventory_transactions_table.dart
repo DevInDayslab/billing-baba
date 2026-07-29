@@ -27,7 +27,6 @@ const _dateColWidth = 132.0;
 const _qtyColWidth = 80.0;
 const _priceColWidth = 92.0;
 const _statusColWidth = 88.0;
-const _actionsColWidth = 40.0;
 
 class InventoryTransactionsTable extends ConsumerWidget {
   const InventoryTransactionsTable({
@@ -275,16 +274,6 @@ class InventoryTransactionTableRows {
           child: Text(priceText),
         ),
         _DataCell(child: _TransactionStatusText(status: transaction.status)),
-        _DataCell(
-          child: IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert, size: 16),
-            color: AppColors.textSecondary,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            tooltip: 'Actions',
-          ),
-        ),
       ],
     );
   }
@@ -484,13 +473,6 @@ class _InventoryTransactionTableColumns {
             ),
           ),
         ),
-      ),
-      const ResizableDataColumn(
-        initialWidth: _actionsColWidth,
-        minWidth: _actionsColWidth,
-        maxWidth: _actionsColWidth,
-        resizable: false,
-        header: SizedBox.shrink(),
       ),
     ];
   }

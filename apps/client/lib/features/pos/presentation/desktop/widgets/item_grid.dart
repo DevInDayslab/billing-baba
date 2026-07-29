@@ -183,12 +183,28 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
         const SizedBox(height: AppSpacing.sm),
         Expanded(
           child: inventoryAsync.when(
+            skipLoadingOnReload: true,
+            skipError: inventoryAsync.hasValue,
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(
-              child: Text(
-                InventoryErrorMapper.messageFor(error),
-                style: PosStyles.emptyStateStyle,
-                textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      InventoryErrorMapper.messageFor(error),
+                      style: PosStyles.emptyStateStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton(
+                      onPressed: () =>
+                          ref.invalidate(inventoryItemsProvider),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
               ),
             ),
             data: (_) {

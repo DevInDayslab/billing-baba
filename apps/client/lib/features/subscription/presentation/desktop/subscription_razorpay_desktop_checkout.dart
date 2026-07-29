@@ -7,7 +7,15 @@ import 'package:billing_baba/features/subscription/domain/models/create_order_re
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/payment_bridge_result.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
+/// How long to wait before surfacing a "taking too long" cancel hint.
+const _checkoutStuckTimeout = Duration(seconds: 90);
+
+/// Height reserved for Flutter cancel chrome above the WebView.
+/// Kept outside the WKWebView platform-view frame so clicks are not stolen.
+const _checkoutChromeHeight = 48.0;
 
 /// Result from the desktop Razorpay host, including the server order when known.
 class SubscriptionPaymentHostResult {
@@ -37,8 +45,6 @@ Future<SubscriptionPaymentHostResult?> showRazorpayDesktopCheckout(
 
   await showGeneralDialog<void>(
     context: context,
-    useRootNavigator: true,
-    barrierDismissible: false,
     barrierLabel: 'Razorpay Checkout',
     barrierColor: Colors.black54,
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
@@ -226,6 +232,9 @@ class _RazorpayDesktopCheckoutDialogState
   CreateOrderResult? _order;
   var _isResolvingOrder = true;
   var _resultSent = false;
+  var _isStuck = false;
+  Timer? _stuckTimer;
+  final FocusNode _focusNode = FocusNode();
 
   /// Captured once so MediaQuery / window resize rebuilds do not recreate
   /// the WKWebView (which was thrashing memory and freezing checkout).
@@ -243,6 +252,13 @@ class _RazorpayDesktopCheckoutDialogState
   }
 
   @override
+  void dispose() {
+    _stuckTimer?.cancel();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_sizesReady) return;
@@ -253,6 +269,7 @@ class _RazorpayDesktopCheckoutDialogState
     _screenSizeAtOpen = screenSize;
 
     final rawWidth = screenSize.width > 800 ? 1000.0 : 440.0;
+    // Chrome sits above the WebView; keep total host height stable.
     final rawHeight = screenSize.width > 800 ? 580.0 : 680.0;
     _dialogWidth = _snapToPhysical(rawWidth, dpr);
     _dialogHeight = _snapToPhysical(rawHeight, dpr);
@@ -292,6 +309,7 @@ class _RazorpayDesktopCheckoutDialogState
         _html = _checkoutHtml(options);
         _isResolvingOrder = false;
       });
+      _startStuckTimer();
     } on Object catch (error) {
       if (!mounted) return;
       final message = error.toString();
@@ -304,9 +322,27 @@ class _RazorpayDesktopCheckoutDialogState
     }
   }
 
+  void _startStuckTimer() {
+    _stuckTimer?.cancel();
+    _stuckTimer = Timer(_checkoutStuckTimeout, () {
+      if (!mounted || _resultSent) return;
+      setState(() => _isStuck = true);
+    });
+  }
+
+  void _cancelCheckout() {
+    _emitResult(
+      SubscriptionPaymentHostResult(
+        order: _order,
+        payment: const PaymentBridgeCancelled(),
+      ),
+    );
+  }
+
   void _emitResult(SubscriptionPaymentHostResult? result) {
     if (_resultSent) return;
     _resultSent = true;
+    _stuckTimer?.cancel();
     widget.onResult(result);
   }
 
@@ -358,8 +394,6 @@ class _RazorpayDesktopCheckoutDialogState
 
   InAppWebViewSettings _webViewSettings() {
     return InAppWebViewSettings(
-      javaScriptEnabled: true,
-      domStorageEnabled: true,
       javaScriptCanOpenWindowsAutomatically: true,
       supportMultipleWindows: true,
       useShouldOverrideUrlLoading: true,
@@ -377,22 +411,99 @@ class _RazorpayDesktopCheckoutDialogState
       return const SizedBox.shrink();
     }
 
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: SizedBox(
-          width: _dialogWidth,
-          height: _dialogHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: ColoredBox(
-              color: AppColors.surface,
-              child: _isResolvingOrder
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildCheckoutWebView(),
+    // Stack cancel OUTSIDE the WebView's native frame. On macOS, WKWebView
+    // platform views steal hits from overlapping Flutter widgets — so Cancel
+    // must live in a region that does not contain the platform view.
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape) {
+          _cancelCheckout();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Center(
+            child: Material(
+              color: Colors.transparent,
+              elevation: 8,
+              borderRadius: BorderRadius.circular(8),
+              clipBehavior: Clip.antiAlias,
+              child: SizedBox(
+                width: _dialogWidth,
+                height: _dialogHeight,
+                child: ColoredBox(
+                  color: AppColors.surface,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // SizedBox(
+                      //   height: _checkoutChromeHeight,
+                      //   child: _CheckoutHostChrome(
+                      //     isStuck: _isStuck,
+                      //     onCancel: _cancelCheckout,
+                      //   ),
+                      // ),
+                      if (_isStuck) const _CheckoutStuckBanner(),
+                      Expanded(
+                        child: _isResolvingOrder
+                            ? const Center(child: CircularProgressIndicator())
+                            : _buildCheckoutWebView(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          // Extra escape hatch above the dialog — never overlaps WKWebView.
+          // Positioned(
+          //   top: 12,
+          //   right: 12,
+          //   child: Material(
+          //     elevation: 6,
+          //     color: AppColors.surface,
+          //     borderRadius: BorderRadius.circular(24),
+          //     child: InkWell(
+          //       borderRadius: BorderRadius.circular(24),
+          //       onTap: _cancelCheckout,
+          //       child: Padding(
+          //         padding: const EdgeInsets.symmetric(
+          //           horizontal: AppSpacing.md,
+          //           vertical: AppSpacing.sm,
+          //         ),
+          //         child: Row(
+          //           mainAxisSize: MainAxisSize.min,
+          //           children: [
+          //             Icon(
+          //               Icons.close,
+          //               size: AppIconSize.md,
+          //               color: _isStuck
+          //                   ? AppColors.error
+          //                   : AppColors.textSecondary,
+          //             ),
+          //             const SizedBox(width: AppSpacing.xs),
+          //             Text(
+          //               'Cancel payment',
+          //               style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          //                 color: _isStuck
+          //                     ? AppColors.error
+          //                     : AppColors.textPrimary,
+          //                 fontWeight: FontWeight.w600,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
+        ],
       ),
     );
   }
@@ -442,7 +553,6 @@ class _RazorpayDesktopCheckoutDialogState
         unawaited(
           showDialog<void>(
             context: context,
-            useRootNavigator: true,
             barrierDismissible: false,
             builder: (popupContext) {
               return Dialog(
@@ -462,17 +572,29 @@ class _RazorpayDesktopCheckoutDialogState
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: InAppWebView(
-                        windowId: createWindowAction.windowId,
-                        initialSettings: InAppWebViewSettings(
-                          javaScriptEnabled: true,
-                          domStorageEnabled: true,
-                          useShouldOverrideUrlLoading: true,
-                          transparentBackground: true,
-                        ),
-                        onCloseWindow: (_) {
-                          Navigator.of(popupContext).pop();
-                        },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _BankPopupChrome(
+                            onClose: () {
+                              Navigator.of(popupContext).pop();
+                            },
+                          ),
+                          Expanded(
+                            child: InAppWebView(
+                              windowId: createWindowAction.windowId,
+                              initialSettings: InAppWebViewSettings(
+                                useShouldOverrideUrlLoading: true,
+                                transparentBackground: true,
+                              ),
+                              onCloseWindow: (_) {
+                                if (Navigator.of(popupContext).canPop()) {
+                                  Navigator.of(popupContext).pop();
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -483,6 +605,118 @@ class _RazorpayDesktopCheckoutDialogState
         );
         return true;
       },
+    );
+  }
+}
+
+/// Flutter chrome above the WebView so Cancel stays outside the platform view.
+class _CheckoutHostChrome extends StatelessWidget {
+  const _CheckoutHostChrome({
+    required this.isStuck,
+    required this.onCancel,
+  });
+
+  final bool isStuck;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                isStuck ? 'Payment is taking too long' : 'Complete payment',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isStuck ? AppColors.error : AppColors.textPrimary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: onCancel,
+              style: TextButton.styleFrom(
+                foregroundColor: isStuck
+                    ? AppColors.error
+                    : AppColors.textSecondary,
+              ),
+              child: const Text('Cancel'),
+            ),
+            IconButton(
+              tooltip: 'Cancel payment (Esc)',
+              onPressed: onCancel,
+              icon: Icon(
+                Icons.close,
+                color: isStuck ? AppColors.error : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CheckoutStuckBanner extends StatelessWidget {
+  const _CheckoutStuckBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.error.withValues(alpha: 0.08),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Text(
+          'The bank page is taking too long. You can cancel and try again '
+          'with a different payment method.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.error,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BankPopupChrome extends StatelessWidget {
+  const _BankPopupChrome({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      child: SizedBox(
+        height: _checkoutChromeHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Bank payment',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close',
+                onPressed: onClose,
+                icon: const Icon(Icons.close, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

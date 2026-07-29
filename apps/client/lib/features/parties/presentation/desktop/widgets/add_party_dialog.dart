@@ -1083,21 +1083,6 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               ),
             ),
             IconButton(
-              onPressed: _isSaving
-                  ? null
-                  : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Party settings coming soon'),
-                        ),
-                      );
-                    },
-              icon: const Icon(Icons.settings_outlined, size: 20),
-              color: AppColors.textSecondary,
-              tooltip: 'Settings',
-              visualDensity: VisualDensity.compact,
-            ),
-            IconButton(
               onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
               icon: const Icon(Icons.close, color: AppColors.textSecondary),
               visualDensity: VisualDensity.compact,
@@ -1175,29 +1160,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       },
     );
 
-    final billingNameField = _isEditMode
-        ? SaleFieldChrome(
-            child: Text(
-              widget.partyToEdit!.name,
-              style: saleFieldTextStyle,
-              overflow: TextOverflow.ellipsis,
-            ),
-          )
-        : null;
-
     final rowOneCells = <FormGridCell>[
-      FormGridCell(
-        span: _isEditMode ? 4 : 4,
-        child: partyNameField,
-      ),
+      FormGridCell(span: 4, child: partyNameField),
       FormGridCell(span: 4, child: legalNameField),
       FormGridCell(span: 4, child: aliasField),
-      if (billingNameField != null)
-        FormGridCell(span: 4, child: billingNameField),
-      FormGridCell(
-        span: 4,
-        child: gstinField,
-      ),
+      FormGridCell(span: 4, child: gstinField),
       FormGridCell(span: 4, child: phoneField),
       FormGridCell(span: 4, child: _buildPartyGroupControls()),
       FormGridCell(span: 4, child: areaCodeField),

@@ -117,7 +117,6 @@ class _SaleDocumentFormState extends ConsumerState<SaleDocumentForm> {
                     Expanded(
                       child: SalePageTitleBar(
                         currentRoute: widget.route,
-                        onSettingsTap: () {},
                       ),
                     ),
                   ],
@@ -125,7 +124,6 @@ class _SaleDocumentFormState extends ConsumerState<SaleDocumentForm> {
               else
                 SalePageTitleBar(
                   currentRoute: widget.route,
-                  onSettingsTap: () {},
                 ),
               const SizedBox(height: AppSpacing.md),
               if (form.isFormOpen || widget.onClose != null)

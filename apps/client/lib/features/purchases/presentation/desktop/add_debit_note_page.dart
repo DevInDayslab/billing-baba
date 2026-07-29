@@ -41,7 +41,6 @@ class DesktopAddDebitNotePage extends ConsumerWidget {
               children: [
                 PurchasePageTitleBar(
                   currentRoute: AppRoutes.purchaseReturnDebitNote,
-                  onSettingsTap: () {},
                   onBack: () => leaveTransactionFormPage(
                     context: context,
                     isDirty: form.isDirty,

@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_menu_grid_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/features/reports/models/business_status_report_subsection.dart';
@@ -108,17 +109,14 @@ List<MobileMenuGridItem> mobileTransactionMoreOptionsItems({
     MobileMenuGridItem(
       label: 'Print Settings',
       icon: Icons.print_outlined,
-      onTap: () => onPushRoute(AppRoutes.settingsPrint),
-    ),
-    MobileMenuGridItem(
-      label: 'Txn SMS Settings',
-      icon: Icons.sms_outlined,
-      onTap: () => onPushRoute(AppRoutes.settingsWhatsapp),
+      onTap: () => onPushRoute(AppRoutes.settingsTab(SettingsTab.print.id)),
     ),
     MobileMenuGridItem(
       label: 'Txn Settings',
-      icon: Icons.settings_outlined,
-      onTap: () => onPushRoute(AppRoutes.settingsTransactionMessages),
+      icon: Icons.sms_outlined,
+      onTap: () => onPushRoute(
+        AppRoutes.settingsTab(SettingsTab.transactionMessages.id),
+      ),
     ),
   ];
 }
@@ -154,12 +152,6 @@ List<MobileMenuGridItem> mobilePartyMoreOptionsItems({
       label: 'Reminder Settings',
       icon: Icons.notifications_active_outlined,
       onTap: () => onPushRoute(AppRoutes.settingsPreferences),
-    ),
-    MobileMenuGridItem(
-      label: 'WhatsApp Marketing',
-      icon: Icons.chat_rounded,
-      iconColor: const Color(0xFF25D366),
-      onTap: () => onPushRoute(AppRoutes.settingsWhatsapp),
     ),
     MobileMenuGridItem(
       label: 'Import Party',

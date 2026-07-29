@@ -126,7 +126,6 @@ class _AddSaleOrderPageState extends ConsumerState<DesktopAddSaleOrderPage> {
             ),
             child: SalePageTitleBar(
               currentRoute: AppRoutes.saleOrder,
-              onSettingsTap: () {},
               onBack: _handleBack,
             ),
           ),

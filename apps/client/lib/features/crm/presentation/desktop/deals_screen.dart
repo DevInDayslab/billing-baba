@@ -214,13 +214,6 @@ class _DealsTitleBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        if (!isCompact) ...[
-          IconButton(
-            tooltip: 'More actions',
-            onPressed: () {},
-            icon: const Icon(Icons.more_horiz),
-          ),
-        ],
       ],
     );
   }

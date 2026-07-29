@@ -359,13 +359,6 @@ class _LineItemsHeader extends StatelessWidget{
               child: SaleLineItemColumnPickerButton(
                 visibility: visibility,
                 onToggle: onToggleColumn,
-                onMoreSettings: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Invoice column settings coming soon'),
-                    ),
-                  );
-                },
               ),
             ),
           ],

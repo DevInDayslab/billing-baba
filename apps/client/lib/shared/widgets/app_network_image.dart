@@ -115,6 +115,13 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
     await _refreshSignedUrlAndRetry();
   }
 
+  void _scheduleLoadErrorRetry() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_handleLoadError());
+    });
+  }
+
   int? _effectiveMemCacheWidth(BuildContext context) {
     if (widget.memCacheWidth != null) return widget.memCacheWidth;
     final width = widget.width;
@@ -159,7 +166,7 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
       fadeOutDuration: Duration.zero,
       placeholder: (_, _) => widget.placeholder ?? _defaultPlaceholder(),
       errorWidget: (_, _, _) {
-        unawaited(_handleLoadError());
+        _scheduleLoadErrorRetry();
         return widget.errorWidget ?? _defaultErrorWidget();
       },
     );

@@ -105,7 +105,6 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyGroups,
                 onAddGroup: () => _openAddGroupDialog(context, ref),
-                onSettingsTap: () {},
               ),
               const SizedBox(height: AppSpacing.md),
               Expanded(

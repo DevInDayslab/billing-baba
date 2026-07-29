@@ -56,8 +56,11 @@ part 'database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  /// Drift schema version — keep in sync with [schemaVersion].
+  static const currentSchemaVersion = 20;
+
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => currentSchemaVersion;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
