@@ -251,6 +251,9 @@ class Auth extends _$Auth {
     _backendLoginInFlight = false;
     _resendInFlight = false;
     AuthFlowLogger.reset();
+    // Drop any leftover company session from a prior login so GoRouter can
+    // navigate off /login when status is needsBusinessSelection.
+    ref.read(companySessionProvider.notifier).clear();
     final nextStatus = _statusForSession(session);
     _setAuthStatus(nextStatus);
     state = state.copyWith(
@@ -1049,6 +1052,7 @@ class Auth extends _$Auth {
       await service.logout();
       await _invalidateBusinessProviders(includeList: true);
     } finally {
+      ref.read(companySessionProvider.notifier).clear();
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }

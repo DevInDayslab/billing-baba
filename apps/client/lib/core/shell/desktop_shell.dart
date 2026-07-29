@@ -74,6 +74,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
+  ProviderContainer? _providerContainer;
   final _shellShortcutFocusNode = FocusNode(debugLabel: 'shellShortcuts');
 
   @override
@@ -84,7 +85,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       _registerSearchDialog();
       _ensureShellShortcutFocus();
       final businessId = ref.read(sidebarBusinessProvider).id;
-      if (businessId!.isNotEmpty) {
+      if (businessId != null && businessId.isNotEmpty) {
         unawaited(
           ref.read(imageStartupWarmupProvider).run(businessId: businessId),
         );
@@ -94,7 +95,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
   @override
   void dispose() {
-    ref.read(searchDialogProvider.notifier).unregister();
+    _providerContainer?.read(searchDialogProvider.notifier).unregister();
     _shellShortcutFocusNode.dispose();
     super.dispose();
   }
@@ -117,6 +118,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _providerContainer = ProviderScope.containerOf(context);
     if (!_expandInitialized) {
       _expandInitialized = true;
       final location = GoRouterState.of(context).uri.path;

@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
@@ -22,8 +21,21 @@ import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
 import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
+import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
+import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_fa_provider.dart';
 import 'package:billing_baba/features/reports/application/report_refresh_provider.dart';
+import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
+import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
+import 'package:billing_baba/features/sales/application/job_work_orders_provider.dart';
+import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_fa_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/settings/application/print_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/transaction_message_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/whatsapp_settings_provider.dart';
@@ -106,16 +118,22 @@ Future<void> switchToBusinessSelection(
 }
 
 /// Invalidates providers that cache or display business-scoped data.
+///
+/// Uses [ProviderContainer.invalidate] (not [Ref.invalidate]) so callers like
+/// [authProvider] can clear dependents that watch auth without hitting
+/// CircularDependencyError (e.g. [businessProfileProvider]).
 void invalidateAllBusinessScopedProviders(
   Ref ref, {
   bool includeBusinessList = false,
   bool includeBusinessService = true,
 }) {
+  final container = ref.container;
+
   if (includeBusinessList) {
-    ref.invalidate(businessListProvider);
+    container.invalidate(businessListProvider);
   }
 
-  ref
+  container
     ..invalidate(businessProfileProvider)
     ..invalidate(currentBusinessProvider)
     ..invalidate(sidebarBusinessProvider)
@@ -156,19 +174,30 @@ void invalidateAllBusinessScopedProviders(
     ..invalidate(commandAwareSyncEngineProvider);
 
   if (includeBusinessService) {
-    ref.invalidate(businessServiceProvider);
+    container.invalidate(businessServiceProvider);
   }
 
-  invalidateSaleLists(ref);
-  invalidatePurchaseLists(ref);
-  invalidatePaymentInLists(ref);
-  invalidatePaymentOutLists(ref);
-  invalidateExpenseLists(ref);
-  invalidateSaleFaLists(ref);
-  invalidatePurchaseFaLists(ref);
-  invalidateJobWorkLists(ref);
-  invalidateReports(ref);
-  bumpReportDataEpoch(ref);
+  container
+    ..invalidate(saleInvoicesProvider)
+    ..invalidate(saleOrdersProvider)
+    ..invalidate(saleReturnsProvider)
+    ..invalidate(estimateQuotationsProvider)
+    ..invalidate(deliveryChallansProvider)
+    ..invalidate(salesDocumentsListProvider(saleOrderListScope()))
+    ..invalidate(salesDocumentsListProvider(deliveryChallanListScope()))
+    ..invalidate(salesDocumentsListProvider(salesReturnListScope()))
+    ..invalidate(salesDocumentsListProvider(estimateListScope()))
+    ..invalidate(salesDocumentsListProvider(proformaListScope()))
+    ..invalidate(saleFaProvider)
+    ..invalidate(purchaseBillsProvider)
+    ..invalidate(paymentInRecordsProvider)
+    ..invalidate(paymentOutRecordsProvider)
+    ..invalidate(expenseCategoriesProvider)
+    ..invalidate(expenseTransactionsProvider)
+    ..invalidate(purchaseFaProvider)
+    ..invalidate(jobWorkOrdersListProvider);
+
+  container.read(reportDataEpochProvider.notifier).bump();
 }
 
 /// Seeds sidebar/profile UI immediately from list-card data before API warm-up.
