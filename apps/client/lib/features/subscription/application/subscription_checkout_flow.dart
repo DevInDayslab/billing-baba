@@ -9,7 +9,6 @@ import 'package:billing_baba/features/subscription/application/subscription_plan
 import 'package:billing_baba/features/subscription/application/subscription_service_provider.dart';
 import 'package:billing_baba/features/subscription/domain/models/create_order_result.dart';
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
-import 'package:billing_baba/features/subscription/presentation/desktop/payment_bridge_result.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/subscription_payment_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
