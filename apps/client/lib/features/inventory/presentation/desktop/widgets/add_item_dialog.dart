@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/add_item_form_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
@@ -11,10 +10,12 @@ import 'package:billing_baba/features/inventory/application/inventory_items_prov
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternatives_section.dart';
@@ -23,6 +24,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/online_store_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/stock_section.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/suppliers_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/tier_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/select_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
@@ -31,6 +33,7 @@ import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -100,7 +103,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   String? _rackPhotoUrl;
   double _initialOpeningQty = 0;
 
-  int _tabCountFor(ItemType type) => type == ItemType.product ? 5 : 2;
+  int _tabCountFor(ItemType type) => type == ItemType.product ? 6 : 2;
 
   @override
   void initState() {
@@ -202,7 +205,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final detailDto = await service.fetchItemDetailDto(item.id);
-      final tiers = await service.fetchItemTierPrices(item.id);
+      var tiers = const <TierPriceModel>[];
+      try {
+        tiers = await service.fetchItemTierPrices(item.id);
+      } on Object {
+        // Tier prices may be unavailable offline; form still opens from local item.
+      }
 
       await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
 
@@ -321,6 +329,17 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     } catch (_) {
       // Keep list-item fields if detail fetch fails.
     }
+
+    try {
+      await ref.read(localItemSuppliersProvider.notifier).ensureInitialized();
+      final localSuppliers =
+          ref.read(localItemSuppliersProvider.notifier).suppliersFor(item.id);
+      if (localSuppliers.isNotEmpty) {
+        notifier.setSupplierPartyIds(localSuppliers);
+      }
+    } on Object {
+      // Local suppliers cache is best-effort.
+    }
   }
 
   void _handleItemTypeChange(ItemType type) {
@@ -420,6 +439,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         ref
             .read(localItemTierPricesProvider.notifier)
             .setTierPrices(editItem.id, form.tierPriceMap);
+        ref
+            .read(localItemSuppliersProvider.notifier)
+            .setSuppliers(editItem.id, form.supplierPartyIds);
       } else {
         savedItem = await ref
             .read(inventoryItemsProvider.notifier)
@@ -428,6 +450,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           ref
               .read(localItemTierPricesProvider.notifier)
               .setTierPrices(savedItem.id, form.tierPriceMap);
+          ref
+              .read(localItemSuppliersProvider.notifier)
+              .setSuppliers(savedItem.id, form.supplierPartyIds);
         }
       }
 
@@ -567,41 +592,29 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         color: AppColors.surface,
         borderRadius: AppRadius.lgBorder,
         clipBehavior: Clip.antiAlias,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            const dividerHeight = 1.0;
-            final bodyMaxHeight = (constraints.maxHeight -
-                    FormSpacing.headerHeight -
-                    FormSpacing.footerHeight -
-                    (dividerHeight * 2))
-                .clamp(0.0, double.infinity);
-
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildHeader(form),
-                const Divider(height: dividerHeight, color: _cardBorder),
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: bodyMaxHeight),
-                  child: SingleChildScrollView(
-                    child: buildFormBody(
-                      form,
-                      notifier,
-                      categories,
-                      categoryOptions,
-                      selectedCategory,
-                      brands,
-                      brandOptions,
-                      selectedBrand,
-                    ),
-                  ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildHeader(form),
+            const Divider(height: 1, color: _cardBorder),
+            Flexible(
+              child: SingleChildScrollView(
+                child: buildFormBody(
+                  form,
+                  notifier,
+                  categories,
+                  categoryOptions,
+                  selectedCategory,
+                  brands,
+                  brandOptions,
+                  selectedBrand,
                 ),
-                const Divider(height: dividerHeight, color: _cardBorder),
-                _buildFooter(),
-              ],
-            );
-          },
+              ),
+            ),
+            const Divider(height: 1, color: _cardBorder),
+            _buildFooter(),
+          ],
         ),
       ),
     );
@@ -617,12 +630,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     List<String> brandOptions,
     String? selectedBrand,
   ) {
-    final isService = form.itemType == ItemType.service;
-    final bodyPadding = EdgeInsets.fromLTRB(
+    const bodyPadding = EdgeInsets.fromLTRB(
       FormSpacing.page,
       FormSpacing.section,
       FormSpacing.page,
-      isService ? FormSpacing.section : FormSpacing.page,
+      FormSpacing.page,
     );
 
     return Padding(
@@ -709,19 +721,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             ),
             const Spacer(),
             IconButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Item settings coming soon')),
-                );
-              },
-              icon: const Icon(
-                Icons.settings_outlined,
-                color: AppColors.textSecondary,
-              ),
-              tooltip: 'Settings',
-              visualDensity: VisualDensity.compact,
-            ),
-            IconButton(
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.close, color: AppColors.textSecondary),
               visualDensity: VisualDensity.compact,
@@ -749,7 +748,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       1 => _buildStockTab(form, notifier),
       2 => _buildOnlineStoreTab(form, notifier),
       3 => _buildManufacturingTab(form, notifier),
-      _ => _buildAlternativesTab(),
+      4 => _buildAlternativesTab(),
+      _ => _buildSuppliersTab(form, notifier),
     };
   }
 
@@ -862,9 +862,23 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  Widget _buildSuppliersTab(AddItemFormState form, AddItemForm notifier) {
+    return SuppliersSection(
+      selectedPartyIds: form.supplierPartyIds,
+      onChanged: notifier.setSupplierPartyIds,
+    );
+  }
+
   Widget _buildTabBar(AddItemFormState form) {
     final tabs = form.itemType == ItemType.product
-        ? const ['Pricing', 'Stock', 'Online Store', 'Manufacturing', 'Alternatives']
+        ? const [
+            'Pricing',
+            'Stock',
+            'Online Store',
+            'Manufacturing',
+            'Alternatives',
+            'Suppliers',
+          ]
         : const ['Pricing', 'Online Store'];
 
     return TabBar(

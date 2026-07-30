@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
-import 'package:billing_baba/core/network/offline_utils.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:dio/dio.dart';
 
 class PurchaseException implements Exception {
@@ -18,11 +18,11 @@ class PurchaseOfflineException extends PurchaseException {
 }
 
 PurchaseException mapPurchaseError(Object error) {
-  if (isOfflineError(error)) {
-    return const PurchaseOfflineException(OfflineMessages.connectToInternet);
-  }
-
   if (error is DioException) {
+    if (ApiErrorParser.isOffline(error)) {
+      return const PurchaseOfflineException(OfflineUiMessages.workingOffline);
+    }
+
     final validation = ApiErrorParser.parseValidation(error);
     if (validation != null) {
       return PurchaseException(
@@ -36,7 +36,7 @@ PurchaseException mapPurchaseError(Object error) {
 
     final code = ApiErrorParser.errorCode(error);
     final message =
-        ApiErrorParser.errorMessage(error) ?? error.message ?? 'Request failed';
+        ApiErrorParser.errorMessage(error) ?? 'Unable to complete purchase.';
 
     return PurchaseException(
       _friendlyMessage(code, message),
@@ -45,8 +45,11 @@ PurchaseException mapPurchaseError(Object error) {
   }
 
   if (error is PurchaseException) return error;
+  if (OfflineUiMessages.isOfflineError(error)) {
+    return const PurchaseOfflineException(OfflineUiMessages.workingOffline);
+  }
 
-  return PurchaseException(error.toString());
+  return PurchaseException(OfflineUiMessages.messageFor(error));
 }
 
 String _friendlyMessage(String? code, String fallback) {

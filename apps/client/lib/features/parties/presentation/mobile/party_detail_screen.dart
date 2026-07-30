@@ -1,6 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_list_section.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -11,6 +9,8 @@ import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_more_actions_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_quick_actions.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_transaction_settings_panel.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_list_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

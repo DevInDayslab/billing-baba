@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -158,9 +159,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
         context.go(AppRoutes.collaborationSyncShare);
       case CompanyCardMenuAction.backup:
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup is not available yet.')),
-        );
+        context.go(AppRoutes.settingsBackup);
       case CompanyCardMenuAction.leave:
         final sessionService = await ref.read(
           companySessionServiceProvider.future,
@@ -239,7 +238,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
       );
     }
   }
@@ -259,7 +258,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
       );
     }
   }

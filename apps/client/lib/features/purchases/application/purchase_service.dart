@@ -1,11 +1,16 @@
-import 'package:billing_baba/core/documents/document_line_sync.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
-import 'package:billing_baba/core/utils/date_time_utils.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_remote_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
+import 'package:billing_baba/features/purchases/data/purchase_return_command_repository.dart';
+import 'package:billing_baba/features/purchases/data/purchase_sync_status.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/mappers/purchase_document_mapper.dart';
@@ -17,7 +22,11 @@ import 'package:billing_baba/features/purchases/models/purchase_order_model.dart
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
+import 'package:billing_baba/shared/documents/document_line_sync.dart';
+import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -100,12 +109,19 @@ class PaginatedPurchaseDocuments {
 Future<PurchaseService> purchaseService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
+  final commandRepo =
+      await ref.watch(purchaseBillCommandRepositoryProvider.future);
+  final returnCommandRepo =
+      await ref.watch(purchaseReturnCommandRepositoryProvider.future);
   return PurchaseService(
     repository: PurchaseRepository(
       remote: PurchaseRemoteDataSource(api.dio),
-      local: const PurchaseLocalDataSource(),
+      local: PurchaseLocalDataSource(ref.watch(appDatabaseProvider)),
     ),
     partyService: partyService,
+    commandRepository: commandRepo,
+    returnCommandRepository: returnCommandRepo,
+    syncQueue: ref.watch(syncQueueProvider),
   );
 }
 
@@ -113,10 +129,16 @@ class PurchaseService {
   PurchaseService({
     required this._repository,
     required this._partyService,
+    this._commandRepository,
+    this._returnCommandRepository,
+    this._syncQueue,
   });
 
   final PurchaseRepository _repository;
   final PartyService _partyService;
+  final PurchaseBillCommandRepository? _commandRepository;
+  final PurchaseReturnCommandRepository? _returnCommandRepository;
+  final SyncQueue? _syncQueue;
 
   Future<Map<String, String>> _partyNameMap() async {
     final parties = await _partyService.fetchParties();
@@ -147,6 +169,15 @@ class PurchaseService {
   Future<PaginatedPurchaseBills> fetchBillsPage(
     PurchaseDocumentListQuery query,
   ) async {
+    var localDocs = const <PurchaseDocumentDto>[];
+    if (_commandRepository != null) {
+      try {
+        localDocs = await _commandRepository.listPurchaseBills();
+      } on Object {
+        localDocs = const [];
+      }
+    }
+
     try {
       final partyNames = await _partyNameMap();
       final response = await _repository.listDocuments(
@@ -154,24 +185,159 @@ class PurchaseService {
           documentType: PurchaseDocumentType.purchaseBill.apiValue,
         ),
       );
-      final items = response.documents
+      final remoteDocs = response.documents;
+
+      final mergedDocs = localDocs.isNotEmpty
+          ? _mergePurchaseBillDocuments(remoteDocs, localDocs)
+          : remoteDocs;
+
+      final items = mergedDocs
           .map(
             (dto) => PurchaseDocumentMapper.toBillModel(
               dto,
               partyName: partyNames[dto.partyId] ?? '',
             ),
           )
-          .toList();
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
 
-      return _paginateBills(
-        items,
-        query.page,
-        query.limit,
-        response.meta.total,
+      final total = localDocs.isNotEmpty ? items.length : response.meta.total;
+      final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+      final start = (query.page - 1) * query.limit;
+      final pageItems = await _enrichBillSyncState(
+        items.skip(start).take(query.limit).toList(),
+      );
+
+      return PaginatedPurchaseBills(
+        items: pageItems,
+        currentPage: query.page,
+        totalPages: totalPages,
+        totalItems: total,
       );
     } on DioException catch (error) {
+      if (localDocs.isNotEmpty) {
+        final partyNames = await _partyNameMap();
+        final sortedDocs = [...localDocs]
+          ..sort((a, b) {
+            final aDate = DateTimeUtils.parseApiDateTime(a.documentDate);
+            final bDate = DateTimeUtils.parseApiDateTime(b.documentDate);
+            return bDate.compareTo(aDate);
+          });
+        final items = sortedDocs
+            .map(
+              (dto) => PurchaseDocumentMapper.toBillModel(
+                dto,
+                partyName: partyNames[dto.partyId] ?? '',
+              ),
+            )
+            .toList();
+
+        final total = items.length;
+        final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+        final start = (query.page - 1) * query.limit;
+        final pageItems = await _enrichBillSyncState(
+          items.skip(start).take(query.limit).toList(),
+        );
+
+        return PaginatedPurchaseBills(
+          items: pageItems,
+          currentPage: query.page,
+          totalPages: totalPages,
+          totalItems: total,
+        );
+      }
       throw mapPurchaseError(error);
     }
+  }
+
+  List<PurchaseDocumentDto> _mergePurchaseBillDocuments(
+    List<PurchaseDocumentDto> remote,
+    List<PurchaseDocumentDto> local,
+  ) {
+    final merged = <String, PurchaseDocumentDto>{
+      for (final doc in remote) doc.id: doc,
+    };
+
+    for (final localDoc in local) {
+      final remoteDoc = merged[localDoc.id];
+      if (remoteDoc == null ||
+          localDoc.status == 'draft' ||
+          (localDoc.documentNumber?.startsWith('LOCAL-') ?? false) ||
+          _shouldPreferLocalPurchaseBill(localDoc, remoteDoc)) {
+        merged[localDoc.id] = localDoc;
+      }
+    }
+
+    return merged.values.toList();
+  }
+
+  bool _shouldPreferLocalPurchaseBill(
+    PurchaseDocumentDto local,
+    PurchaseDocumentDto remote,
+  ) {
+    if (local.status == 'finalized' && remote.status == 'draft') {
+      return true;
+    }
+
+    final localUpdated = DateTime.tryParse(local.updatedAt);
+    final remoteUpdated = DateTime.tryParse(remote.updatedAt);
+    if (localUpdated != null && remoteUpdated != null) {
+      return localUpdated.isAfter(remoteUpdated);
+    }
+    return false;
+  }
+
+  Future<List<PurchaseBillModel>> _enrichBillSyncState(
+    List<PurchaseBillModel> bills,
+  ) async {
+    if (_syncQueue == null || bills.isEmpty) {
+      return bills;
+    }
+
+    final enriched = <PurchaseBillModel>[];
+    for (final bill in bills) {
+      final jobs = await _syncQueue.listJobsForEntity(bill.id);
+      enriched.add(
+        bill.copyWith(
+          syncState: resolvePurchaseBillSyncState(
+            jobs: jobs,
+            isDraft: bill.isDraft,
+            invoiceNo: bill.invoiceNo,
+          ),
+        ),
+      );
+    }
+    return enriched;
+  }
+
+  List<PurchaseDocumentDto> _mergePurchaseReturnDocuments(
+    List<PurchaseDocumentDto> remote,
+    List<PurchaseDocumentDto> local,
+  ) {
+    return _mergePurchaseBillDocuments(remote, local);
+  }
+
+  Future<List<PurchaseReturnModel>> _enrichReturnSyncState(
+    List<PurchaseReturnModel> returns,
+  ) async {
+    if (_syncQueue == null || returns.isEmpty) {
+      return returns;
+    }
+
+    final enriched = <PurchaseReturnModel>[];
+    for (final purchaseReturn in returns) {
+      final jobs = await _syncQueue.listJobsForEntity(purchaseReturn.id);
+      enriched.add(
+        purchaseReturn.copyWith(
+          syncState: resolvePurchaseBillSyncState(
+            jobs: jobs,
+            isDraft: purchaseReturn.isDraft,
+            invoiceNo: purchaseReturn.debitNoteNo,
+          ),
+        ),
+      );
+    }
+    return enriched;
   }
 
   Future<PaginatedPurchaseOrders> fetchOrdersPage(
@@ -207,6 +373,15 @@ class PurchaseService {
   Future<PaginatedPurchaseReturns> fetchReturnsPage(
     PurchaseDocumentListQuery query,
   ) async {
+    var localDocs = const <PurchaseDocumentDto>[];
+    if (_returnCommandRepository != null) {
+      try {
+        localDocs = await _returnCommandRepository.listPurchaseReturns();
+      } on Object {
+        localDocs = const [];
+      }
+    }
+
     try {
       final partyNames = await _partyNameMap();
       final response = await _repository.listDocuments(
@@ -214,22 +389,67 @@ class PurchaseService {
           documentType: PurchaseDocumentType.purchaseReturn.apiValue,
         ),
       );
-      final items = response.documents
+      final remoteDocs = response.documents;
+
+      final mergedDocs = localDocs.isNotEmpty
+          ? _mergePurchaseReturnDocuments(remoteDocs, localDocs)
+          : remoteDocs;
+
+      final items = mergedDocs
           .map(
             (dto) => PurchaseDocumentMapper.toReturnModel(
               dto,
               partyName: partyNames[dto.partyId] ?? '',
             ),
           )
-          .toList();
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+
+      final total = localDocs.isNotEmpty ? items.length : response.meta.total;
+      final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+      final start = (query.page - 1) * query.limit;
+      final pageItems = await _enrichReturnSyncState(
+        items.skip(start).take(query.limit).toList(),
+      );
 
       return _paginateReturns(
-        items,
+        pageItems,
         query.page,
         query.limit,
-        response.meta.total,
+        total,
       );
     } on DioException catch (error) {
+      if (localDocs.isNotEmpty) {
+        final partyNames = await _partyNameMap();
+        final sortedDocs = [...localDocs]
+          ..sort((a, b) {
+            final aDate = DateTimeUtils.parseApiDateTime(a.documentDate);
+            final bDate = DateTimeUtils.parseApiDateTime(b.documentDate);
+            return bDate.compareTo(aDate);
+          });
+        final items = sortedDocs
+            .map(
+              (dto) => PurchaseDocumentMapper.toReturnModel(
+                dto,
+                partyName: partyNames[dto.partyId] ?? '',
+              ),
+            )
+            .toList();
+
+        final total = items.length;
+        final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+        final start = (query.page - 1) * query.limit;
+        final pageItems = await _enrichReturnSyncState(
+          items.skip(start).take(query.limit).toList(),
+        );
+
+        return PaginatedPurchaseReturns(
+          items: pageItems,
+          currentPage: query.page,
+          totalPages: totalPages,
+          totalItems: total,
+        );
+      }
       throw mapPurchaseError(error);
     }
   }
@@ -277,40 +497,64 @@ class PurchaseService {
     String documentId,
     PurchaseDocumentType type,
   ) async {
-    try {
-      final document = await _repository.getDocument(documentId);
-      final partyNames = await _partyNameMap();
-      final partyName = partyNames[document.partyId] ?? '';
-      final date = DateTime.tryParse(document.documentDate) ?? DateTime.now();
-      final dueDate = document.dueDate != null
-          ? DateTime.tryParse(document.dueDate!)
-          : null;
-      final items = _linesToPurchaseLineItems(document.lines);
-
-      return AddPurchaseFormState(
-        documentId: document.id,
-        partyId: document.partyId,
-        party: partyName,
-        billingName: partyName,
-        billNumber: document.documentNumber ?? 'Draft',
-        billDate: DateTime(date.year, date.month, date.day),
-        billTime: TimeOfDay.fromDateTime(date),
-        dueDate: dueDate != null
-            ? DateTime(dueDate.year, dueDate.month, dueDate.day)
-            : null,
-        description: document.notes ?? '',
-        eWayBillNo: document.supplierInvoiceNumber ?? '',
-        items: items,
-      );
-    } on DioException catch (error) {
-      throw mapPurchaseError(error);
+    PurchaseDocumentDto? document;
+    if (type == PurchaseDocumentType.purchaseBill && _commandRepository != null) {
+      document = await _commandRepository.getDocument(documentId);
+    } else if (type == PurchaseDocumentType.purchaseReturn &&
+        _returnCommandRepository != null) {
+      document = await _returnCommandRepository.getDocument(documentId);
     }
+
+    if (document == null) {
+      try {
+        document = await _repository.getDocument(documentId);
+      } on DioException catch (error) {
+        throw mapPurchaseError(error);
+      }
+    }
+
+    final partyNames = await _partyNameMap();
+    final partyName = partyNames[document.partyId] ?? '';
+    final date = DateTime.tryParse(document.documentDate) ?? DateTime.now();
+    final dueDate = document.dueDate != null
+        ? DateTime.tryParse(document.dueDate!)
+        : null;
+    final items = _linesToPurchaseLineItems(document.lines);
+
+    return AddPurchaseFormState(
+      documentId: document.id,
+      partyId: document.partyId,
+      party: partyName,
+      billingName: partyName,
+      billNumber: document.documentNumber ?? 'Draft',
+      billDate: DateTime(date.year, date.month, date.day),
+      billTime: TimeOfDay.fromDateTime(date),
+      dueDate: dueDate != null
+          ? DateTime(dueDate.year, dueDate.month, dueDate.day)
+          : null,
+      description: document.notes ?? '',
+      eWayBillNo: document.supplierInvoiceNumber ?? '',
+      items: items,
+    );
   }
 
   Future<PurchaseDocumentDto> saveDocumentDraft(
     PurchaseDocumentDraftInput input, {
     required Map<String, String> itemNameToId,
   }) async {
+    if (input.documentType == PurchaseDocumentType.purchaseBill &&
+        _commandRepository != null) {
+      return _commandRepository.saveDraft(input, itemNameToId: itemNameToId);
+    }
+
+    if (input.documentType == PurchaseDocumentType.purchaseReturn &&
+        _returnCommandRepository != null) {
+      return _returnCommandRepository.saveDraft(
+        input,
+        itemNameToId: itemNameToId,
+      );
+    }
+
     try {
       final document = input.documentId == null
           ? await _repository.createDocument(
@@ -347,16 +591,60 @@ class PurchaseService {
     PurchaseDocumentDraftInput input, {
     required Map<String, String> itemNameToId,
     String? godownId,
+    FinalizePurchasePaymentCommand? payment,
   }) async {
     if (input.partyId == null || input.partyId!.isEmpty) {
       throw const PurchaseException('Please select a supplier');
     }
 
+    if (input.documentType == PurchaseDocumentType.purchaseBill &&
+        _commandRepository != null) {
+      final draft = await _commandRepository.saveDraft(
+        input,
+        itemNameToId: itemNameToId,
+      );
+      await _commandRepository.finalize(
+        documentId: draft.id,
+        localDocumentNumber: draft.documentNumber,
+        godownId: godownId ?? input.godownId,
+        payment: payment,
+      );
+      return (await _commandRepository.getDocument(draft.id)) ?? draft;
+    }
+
+    if (input.documentType == PurchaseDocumentType.purchaseReturn &&
+        _returnCommandRepository != null) {
+      final draft = await _returnCommandRepository.saveDraft(
+        input,
+        itemNameToId: itemNameToId,
+      );
+      await _returnCommandRepository.finalize(
+        documentId: draft.id,
+        localDocumentNumber: draft.documentNumber,
+        godownId: godownId ?? input.godownId,
+        payment: payment,
+      );
+      return (await _returnCommandRepository.getDocument(draft.id)) ?? draft;
+    }
+
     final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);
-    return _repository.finalizeDocument(
+    await _repository.finalizeDocument(
       draft.id,
       godownId: godownId ?? input.godownId,
     );
+
+    if (payment != null &&
+        double.tryParse(payment.amount) != null &&
+        double.parse(payment.amount) > 0) {
+      await recordPurchaseBillPayment(
+        partyId: input.partyId!,
+        purchaseDocumentId: draft.id,
+        amount: double.parse(payment.amount),
+        paymentModeUi: PurchasePaymentModes.toUi(payment.paymentMode),
+      );
+    }
+
+    return _repository.getDocument(draft.id);
   }
 
   Future<PurchaseDocumentDto> convertPurchaseOrder(String orderId) async {
@@ -459,27 +747,35 @@ class PurchaseService {
     String? mimeType,
   }) async {
     try {
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument request filename=$filename bytes=${bytes.length}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument request filename=$filename bytes=${bytes.length}',
+        );
+      }
       final result = await _repository.parseDocument(
         filename: filename,
         bytes: bytes,
         mimeType: mimeType,
       );
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument response lines=${result.lines.length}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument response lines=${result.lines.length}',
+        );
+      }
       return result;
     } on DioException catch (error, stackTrace) {
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument DioException: $error\n$stackTrace',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument DioException: $error\n$stackTrace',
+        );
+      }
       throw mapPurchaseError(error);
     } on Object catch (error, stackTrace) {
-      debugPrint(
-        '[PurchaseParse] parsePurchaseDocument error: $error\n$stackTrace',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          '[PurchaseParse] parsePurchaseDocument error: $error\n$stackTrace',
+        );
+      }
       rethrow;
     }
   }
@@ -685,6 +981,15 @@ class PurchaseService {
   }
 
   Future<void> deleteDraft(String documentId) async {
+    if (_commandRepository != null) {
+      final local = await _commandRepository.getDocument(documentId);
+      if (local != null &&
+          local.documentType == PurchaseDocumentType.purchaseBill.apiValue) {
+        await _commandRepository.deleteDraft(documentId);
+        return;
+      }
+    }
+
     try {
       await _repository.deleteDocument(documentId);
     } on DioException catch (error) {
@@ -696,6 +1001,20 @@ class PurchaseService {
     String documentId, {
     String? godownId,
   }) async {
+    if (_commandRepository != null) {
+      final local = await _commandRepository.getDocument(documentId);
+      if (local != null &&
+          local.documentType == PurchaseDocumentType.purchaseBill.apiValue &&
+          local.status == 'draft') {
+        await _commandRepository.finalize(
+          documentId: documentId,
+          localDocumentNumber: local.documentNumber,
+          godownId: godownId,
+        );
+        return (await _commandRepository.getDocument(documentId)) ?? local;
+      }
+    }
+
     try {
       return _repository.finalizeDocument(documentId, godownId: godownId);
     } on DioException catch (error) {
@@ -928,7 +1247,7 @@ class PurchaseService {
     List<PurchaseDocumentLineDto> lines,
   ) {
     if (lines.isEmpty) {
-      return [PurchaseLineItem.empty(id: 'line_1')];
+      return [PurchaseLineItem.empty(id: newDocumentLineId())];
     }
 
     return lines.map((line) {

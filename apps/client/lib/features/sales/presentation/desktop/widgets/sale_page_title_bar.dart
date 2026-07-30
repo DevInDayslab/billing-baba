@@ -145,13 +145,14 @@ class _SalePageTitleBarState extends ConsumerState<SalePageTitleBar> {
                 ),
               const SizedBox(width: AppSpacing.xs),
             ],
-            IconButton(
-              onPressed: widget.onSettingsTap,
-              icon: const Icon(Icons.settings_outlined),
-              color: AppColors.textSecondary,
-              tooltip: 'Settings',
-              visualDensity: VisualDensity.compact,
-            ),
+            if (widget.onSettingsTap != null)
+              IconButton(
+                onPressed: widget.onSettingsTap,
+                icon: const Icon(Icons.settings_outlined),
+                color: AppColors.textSecondary,
+                tooltip: 'Settings',
+                visualDensity: VisualDensity.compact,
+              ),
           ],
         );
       },

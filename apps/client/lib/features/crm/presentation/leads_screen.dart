@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/leads_screen.dart';
 import 'package:billing_baba/features/crm/presentation/mobile/leads_screen.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class LeadsScreen extends StatelessWidget {

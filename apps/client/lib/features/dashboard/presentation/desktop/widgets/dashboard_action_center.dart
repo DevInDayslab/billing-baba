@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/layout/dashboard_navigation.dart';
+import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';

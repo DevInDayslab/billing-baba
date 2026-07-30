@@ -9,6 +9,7 @@ import 'package:billing_baba/features/collaboration/data/collaboration_api.dart'
 import 'package:billing_baba/features/collaboration/data/collaboration_cache.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
 import 'package:billing_baba/features/collaboration/data/fake_collaboration_repository.dart';
+import 'package:billing_baba/features/collaboration/data/unavailable_collaboration_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -69,25 +70,24 @@ CollaborationRepository collaborationRepository(Ref ref) {
     );
   }
 
-  final dio = apiAsync.maybeWhen(
-    data: (client) => client.dio,
-    orElse: () => null,
-  );
-
-  if (dio == null) {
-    return FakeCollaborationRepository(
+  return apiAsync.when(
+    data: (client) => BackendCollaborationRepository(
+      api: CollaborationApi(client.dio),
+      companyId: businessId,
+      companyName: businessName,
+      sessionContext: sessionContext,
+      cache: cache,
+    ),
+    loading: () => UnavailableCollaborationRepository(
       businessId: businessId,
       businessName: businessName,
       sessionContext: sessionContext,
-    );
-  }
-
-  return BackendCollaborationRepository(
-    api: CollaborationApi(dio),
-    companyId: businessId,
-    companyName: businessName,
-    sessionContext: sessionContext,
-    cache: cache,
+    ),
+    error: (_, _) => UnavailableCollaborationRepository(
+      businessId: businessId,
+      businessName: businessName,
+      sessionContext: sessionContext,
+    ),
   );
 }
 

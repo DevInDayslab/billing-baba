@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import {
   money,
@@ -74,6 +75,7 @@ export const parties = pgTable(
       .where(sql`${table.isDeleted} = false AND ${table.mobile} IS NOT NULL`),
     sql`CHECK (${table.creditLimit} >= 0)`,
     sql`CHECK (${table.hiddenLedgerBalance} >= 0)`,
+    syncPullIndex('parties', table.businessId, table.updatedAt, table.isDeleted),
   ],
 );
 
@@ -218,44 +220,67 @@ export const loyaltyTransactions = pgTable(
   ],
 );
 
-export const leads = pgTable('leads', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-  company: text('company'),
-  phone: text('phone'),
-  email: text('email'),
-  leadSource: leadSourceEnum('lead_source'),
-  status: leadStatusEnum('status').notNull().default('new'),
-  assignedTo: text('assigned_to'),
-  notes: text('notes'),
-});
+export const leads = pgTable(
+  'leads',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    company: text('company'),
+    phone: text('phone'),
+    email: text('email'),
+    leadSource: leadSourceEnum('lead_source'),
+    status: leadStatusEnum('status').notNull().default('new'),
+    assignedTo: text('assigned_to'),
+    notes: text('notes'),
+  },
+  (table) => [
+    syncPullIndex('leads', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
-export const leadActivities = pgTable('lead_activities', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  leadId: uuid('lead_id')
-    .notNull()
-    .references(() => leads.id),
-  type: leadActivityTypeEnum('type').notNull(),
-  notes: text('notes'),
-  addedBy: text('added_by'),
-});
+export const leadActivities = pgTable(
+  'lead_activities',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    leadId: uuid('lead_id')
+      .notNull()
+      .references(() => leads.id),
+    type: leadActivityTypeEnum('type').notNull(),
+    notes: text('notes'),
+    addedBy: text('added_by'),
+  },
+  (table) => [
+    syncPullIndex(
+      'lead_activities',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
+  ],
+);
 
-export const contacts = pgTable('contacts', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-  firstName: text('first_name'),
-  lastName: text('last_name'),
-  salutation: text('salutation'),
-  accountName: text('account_name'),
-  phone: text('phone'),
-  email: text('email'),
-  assignedTo: text('assigned_to'),
-  title: text('title'),
-  description: text('description'),
-});
+export const contacts = pgTable(
+  'contacts',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    firstName: text('first_name'),
+    lastName: text('last_name'),
+    salutation: text('salutation'),
+    accountName: text('account_name'),
+    phone: text('phone'),
+    email: text('email'),
+    assignedTo: text('assigned_to'),
+    title: text('title'),
+    description: text('description'),
+  },
+  (table) => [
+    syncPullIndex('contacts', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 /** Seller-only shortfall ledger — never exposed on customer-facing documents */
 export const hiddenLedgerEntries = pgTable(
@@ -303,25 +328,42 @@ export const hiddenLedgerRecoveryRecords = pgTable(
   (table) => [sql`CHECK (${table.recoveredAmount} > 0)`],
 );
 
-export const contactActivities = pgTable('contact_activities', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  contactId: uuid('contact_id')
-    .notNull()
-    .references(() => contacts.id),
-  type: contactActivityTypeEnum('type').notNull(),
-  notes: text('notes'),
-  addedBy: text('added_by'),
-});
+export const contactActivities = pgTable(
+  'contact_activities',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    contactId: uuid('contact_id')
+      .notNull()
+      .references(() => contacts.id),
+    type: contactActivityTypeEnum('type').notNull(),
+    notes: text('notes'),
+    addedBy: text('added_by'),
+  },
+  (table) => [
+    syncPullIndex(
+      'contact_activities',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
+  ],
+);
 
-export const deals = pgTable('deals', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-  stage: dealStageEnum('stage').notNull().default('qualification'),
-  accountName: text('account_name'),
-  assignedTo: text('assigned_to'),
-  amount: money('amount').notNull().default('0'),
-  expectedCloseDate: date('expected_close_date'),
-  description: text('description'),
-});
+export const deals = pgTable(
+  'deals',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    stage: dealStageEnum('stage').notNull().default('qualification'),
+    accountName: text('account_name'),
+    assignedTo: text('assigned_to'),
+    amount: money('amount').notNull().default('0'),
+    expectedCloseDate: date('expected_close_date'),
+    description: text('description'),
+  },
+  (table) => [
+    syncPullIndex('deals', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);

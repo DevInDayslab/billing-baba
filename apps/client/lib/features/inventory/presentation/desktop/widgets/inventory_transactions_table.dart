@@ -1,8 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/date_time_utils.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
-import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
@@ -10,6 +6,10 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_movement_indicator.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/utils/date_time_utils.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +27,6 @@ const _dateColWidth = 132.0;
 const _qtyColWidth = 80.0;
 const _priceColWidth = 92.0;
 const _statusColWidth = 88.0;
-const _actionsColWidth = 40.0;
 
 class InventoryTransactionsTable extends ConsumerWidget {
   const InventoryTransactionsTable({
@@ -275,16 +274,6 @@ class InventoryTransactionTableRows {
           child: Text(priceText),
         ),
         _DataCell(child: _TransactionStatusText(status: transaction.status)),
-        _DataCell(
-          child: IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert, size: 16),
-            color: AppColors.textSecondary,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            tooltip: 'Actions',
-          ),
-        ),
       ],
     );
   }
@@ -484,13 +473,6 @@ class _InventoryTransactionTableColumns {
             ),
           ),
         ),
-      ),
-      const ResizableDataColumn(
-        initialWidth: _actionsColWidth,
-        minWidth: _actionsColWidth,
-        maxWidth: _actionsColWidth,
-        resizable: false,
-        header: SizedBox.shrink(),
       ),
     ];
   }

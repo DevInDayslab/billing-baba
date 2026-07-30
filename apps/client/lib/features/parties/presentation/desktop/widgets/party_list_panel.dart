@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
@@ -14,6 +13,7 @@ import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_result.dart';
@@ -113,7 +113,10 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
     setState(() => _sort = _sort.toggle(column));
   }
 
-  List<PartyModel> _sortedParties(List<PartyModel> parties) {
+  List<PartyModel> _sortedParties(
+    List<PartyModel> parties,
+    Map<String, double>? outstandingIndex,
+  ) {
     if (_sort.direction == PartyListSortDirection.none) {
       return parties;
     }
@@ -125,9 +128,10 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
           PartyListSortColumn.name => a.name.toLowerCase().compareTo(
             b.name.toLowerCase(),
           ),
-          PartyListSortColumn.amount => a.balance.abs().compareTo(
-            b.balance.abs(),
-          ),
+          PartyListSortColumn.amount =>
+            projectedPartyBalance(a, outstandingIndex).abs().compareTo(
+              projectedPartyBalance(b, outstandingIndex).abs(),
+            ),
         };
         return ascending ? comparison : -comparison;
       });
@@ -148,7 +152,11 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
   @override
   Widget build(BuildContext context) {
     final partiesAsync = ref.watch(partyListProvider);
-    final parties = _sortedParties(ref.watch(partiesListProvider));
+    final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
+    final parties = _sortedParties(
+      ref.watch(partiesListProvider),
+      outstandingIndex,
+    );
     final selectedId = ref.watch(selectedPartyIdProvider);
     final activeFilter = ref.watch(partyListFilterProvider);
     final searchQuery = ref.watch(partySearchQueryProvider);
@@ -232,6 +240,10 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                     }
                     return _PartyListTile(
                       party: party,
+                      displayBalance: projectedPartyBalance(
+                        party,
+                        outstandingIndex,
+                      ),
                       index: index,
                       isSelected: party.id == selectedId,
                       searchQuery: searchQuery,
@@ -272,6 +284,7 @@ PartyListFilter _fromSelectFilter(FilterResult? result) {
 class _PartyListTile extends StatelessWidget {
   const _PartyListTile({
     required this.party,
+    required this.displayBalance,
     required this.index,
     required this.isSelected,
     required this.searchQuery,
@@ -279,6 +292,7 @@ class _PartyListTile extends StatelessWidget {
   });
 
   final PartyModel party;
+  final double displayBalance;
   final int index;
   final bool isSelected;
   final String searchQuery;
@@ -286,12 +300,12 @@ class _PartyListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amountColor = party.hasReceivable
+    final amountColor = displayBalance > 0
         ? inventoryPositiveColor
-        : party.hasPayable
+        : displayBalance < 0
         ? inventoryNegativeColor
         : AppColors.textSecondary;
-    final amountText = PartyModel.displayOutstanding(party.balance);
+    final amountText = PartyModel.displayOutstanding(displayBalance);
 
     return InventoryListTableRow(
       index: index,
@@ -412,7 +426,7 @@ class _OfflineBanner extends StatelessWidget {
         border: Border.all(color: Colors.orange.shade200),
       ),
       child: Text(
-        'Offline — showing cached parties',
+        'Working offline · Showing locally synchronized data.',
         style: TextStyle(color: Colors.orange.shade900, fontSize: 12),
       ),
     );

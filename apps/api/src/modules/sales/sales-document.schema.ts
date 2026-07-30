@@ -171,6 +171,51 @@ export type CloneWithAlternativesBody = z.infer<
   typeof cloneWithAlternativesBodySchema
 >;
 
+const finalizePaymentModeValues = [
+  'cash',
+  'upi',
+  'card',
+  'cheque',
+  'bank_transfer',
+  'other',
+] as const;
+
+const shortPaymentHandlingValues = ['official_balance', 'unrecovered'] as const;
+
+export const finalizeSalePaymentBodySchema = z
+  .object({
+    amount: moneyString,
+    payment_mode: z.enum(finalizePaymentModeValues),
+    short_payment_handling: z.enum(shortPaymentHandlingValues).optional(),
+    shortfall_amount: moneyString.optional(),
+    payment_date: z.iso.datetime().optional(),
+  })
+  .superRefine((body, ctx) => {
+    if (body.short_payment_handling === 'unrecovered') {
+      if (!body.shortfall_amount) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'shortfall_amount is required when short_payment_handling is unrecovered',
+          path: ['shortfall_amount'],
+        });
+        return;
+      }
+
+      if (parseFloat(body.shortfall_amount) <= 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'shortfall_amount must be greater than zero',
+          path: ['shortfall_amount'],
+        });
+      }
+    }
+  });
+
+export type FinalizeSalePaymentBody = z.infer<
+  typeof finalizeSalePaymentBodySchema
+>;
+
 export const finalizeSalesDocumentBodySchema = z.object({
   godown_id: z.uuid().optional(),
   loyalty_points_redeemed: z
@@ -182,6 +227,7 @@ export const finalizeSalesDocumentBodySchema = z.object({
       (value) => value === undefined || parseFloat(value) >= 0,
       'Loyalty points must be >= 0',
     ),
+  payment: finalizeSalePaymentBodySchema.optional(),
 });
 
 export type FinalizeSalesDocumentBody = z.infer<

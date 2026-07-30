@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/crm/application/crm_assignee_options_provider.dart';
 import 'package:billing_baba/features/crm/application/deal_error_mapper.dart';
 import 'package:billing_baba/features/crm/application/deals_provider.dart';
 import 'package:billing_baba/features/crm/application/deals_selection_providers.dart';
@@ -126,7 +127,7 @@ class _DealsScreenState extends ConsumerState<DesktopDealsScreen> {
                     accountLabel: filters.accountLabel,
                     onOwnerSelected: (value) {
                       filtersNotifier.setAssignedTo(
-                        value == 'All Owners' ? null : value,
+                        value == crmOwnerAllOption ? null : value,
                       );
                     },
                     onAccountSelected: (value) {
@@ -214,13 +215,6 @@ class _DealsTitleBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        if (!isCompact) ...[
-          IconButton(
-            tooltip: 'More actions',
-            onPressed: () {},
-            icon: const Icon(Icons.more_horiz),
-          ),
-        ],
       ],
     );
   }
@@ -312,7 +306,7 @@ class _DealsToolbar extends StatelessWidget {
   }
 }
 
-class _DealsFilterChips extends StatelessWidget {
+class _DealsFilterChips extends ConsumerWidget {
   const _DealsFilterChips({
     required this.ownerLabel,
     required this.accountLabel,
@@ -326,7 +320,12 @@ class _DealsFilterChips extends StatelessWidget {
   final ValueChanged<String> onAccountSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownerOptions = ref.watch(crmAssigneeFilterOptionsProvider).maybeWhen(
+      data: (options) => options,
+      orElse: () => const [crmOwnerAllOption],
+    );
+
     return Wrap(
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.xs,
@@ -335,12 +334,7 @@ class _DealsFilterChips extends StatelessWidget {
           label: ownerLabel,
           chipBackgroundColor: _filterChipBg,
           chipBorderColor: _filterChipBorder,
-          options: const [
-            'All Owners',
-            'Saksham Kochhar',
-            'Priya Mehta',
-            'Amit Verma',
-          ],
+          options: ownerOptions,
           selected: ownerLabel,
           onSelected: onOwnerSelected,
         ),

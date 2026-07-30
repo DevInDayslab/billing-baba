@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/pos/application/pos_receipt_printer.dart';
@@ -138,7 +139,11 @@ class ReceiptViewWidget extends ConsumerWidget {
                         } catch (error) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Print failed: $error')),
+                            SnackBar(
+                              content: Text(
+                                OfflineUiMessages.messageFor(error),
+                              ),
+                            ),
                           );
                         }
                       },

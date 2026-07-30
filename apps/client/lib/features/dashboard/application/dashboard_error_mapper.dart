@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
-import 'package:billing_baba/core/network/offline_utils.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:dio/dio.dart';
 
 class DashboardException implements Exception {
@@ -14,18 +14,29 @@ class DashboardException implements Exception {
 
 DashboardException mapDashboardError(Object error) {
   if (error is DioException) {
+    if (ApiErrorParser.isOffline(error)) {
+      return const DashboardException(
+        OfflineUiMessages.dashboardNeedsNetwork,
+        code: 'OFFLINE',
+      );
+    }
     final code = ApiErrorParser.errorCode(error);
     final message =
-        ApiErrorParser.errorMessage(error) ?? error.message ?? 'Request failed';
+        ApiErrorParser.errorMessage(error) ?? 'Unable to load dashboard.';
     return DashboardException(message, code: code);
   }
   if (error is DashboardException) return error;
-  return DashboardException(error.toString());
+  if (OfflineUiMessages.isOfflineError(error)) {
+    return const DashboardException(
+      OfflineUiMessages.dashboardNeedsNetwork,
+      code: 'OFFLINE',
+    );
+  }
+  return DashboardException(OfflineUiMessages.messageFor(error));
 }
 
 abstract final class DashboardErrorMapper {
   static String messageFor(Object error) {
-    if (isOfflineError(error)) return OfflineMessages.connectToInternet;
     if (error is DashboardException) return error.message;
     return mapDashboardError(error).message;
   }

@@ -354,9 +354,7 @@ class _NotesFieldState extends State<_NotesField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(
-        hint: 'Thanks for doing business with us!',
-      ),
+      decoration: buildSaleFieldDecoration(hint: 'Thanks for doing business with us!', fixedHeight: false),
       minLines: 3,
       maxLines: 4,
       onChanged: widget.onChanged,
@@ -444,7 +442,7 @@ class _DescriptionFieldState extends State<_DescriptionField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(hint: 'Add description'),
+      decoration: buildSaleFieldDecoration(hint: 'Add description', fixedHeight: false),
       minLines: 2,
       maxLines: 3,
       onChanged: widget.onChanged,

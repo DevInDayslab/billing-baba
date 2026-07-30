@@ -404,6 +404,15 @@ export class SalesDocumentService extends SalesServiceBase {
       userId,
       godownId: input.godown_id,
       loyaltyPointsRedeemed: input.loyalty_points_redeemed ?? '0',
+      payment: input.payment
+        ? {
+            amount: input.payment.amount,
+            paymentMode: input.payment.payment_mode,
+            shortPaymentHandling: input.payment.short_payment_handling ?? null,
+            shortfallAmount: input.payment.shortfall_amount ?? null,
+            paymentDate: input.payment.payment_date,
+          }
+        : undefined,
     });
 
     return {
@@ -412,6 +421,12 @@ export class SalesDocumentService extends SalesServiceBase {
       document_number: result.documentNumber,
       status: 'finalized',
       ...(result.loyalty ? { loyalty: result.loyalty } : {}),
+      ...(parseFloat(result.paidAmount) > 0
+        ? {
+            paid_amount: result.paidAmount,
+            payment_mode: result.paymentMode,
+          }
+        : {}),
     };
   }
 

@@ -1,5 +1,11 @@
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/data/expense_local_data_source.dart';
+import 'package:billing_baba/features/purchases/data/expense_master_repository.dart';
 import 'package:billing_baba/features/purchases/data/expense_remote_data_source.dart';
 import 'package:billing_baba/features/purchases/data/expense_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/expense_dto.dart';
@@ -14,9 +20,29 @@ part 'expense_service.g.dart';
 @Riverpod(keepAlive: true)
 Future<ExpenseService> expenseService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
+  final storage = await ref.watch(storageServiceProvider.future);
+  final db = ref.watch(appDatabaseProvider);
+  final queue = ref.watch(syncQueueProvider);
+  String? deviceId;
+  try {
+    final identity = await ref.watch(syncDeviceIdentityProvider.future);
+    deviceId = await identity.deviceId();
+  } on Object {
+    deviceId = null;
+  }
+  final remote = ExpenseRemoteDataSource(api.dio);
+  final businessIdReader =
+      () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
   return ExpenseService(
     repository: ExpenseRepository(
-      remote: ExpenseRemoteDataSource(api.dio),
+      remote: remote,
+      master: ExpenseMasterRepository(
+        local: ExpenseLocalDataSource(db),
+        remote: remote,
+        syncQueue: queue,
+        businessIdReader: businessIdReader,
+        deviceIdReader: () => deviceId,
+      ),
     ),
   );
 }

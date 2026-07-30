@@ -1,9 +1,9 @@
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:intl/intl.dart';
 
 class PartyModel {

@@ -111,12 +111,13 @@ class _PurchasePageTitleBarState extends State<PurchasePageTitleBar> {
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
-        IconButton(
-          onPressed: widget.onSettingsTap,
-          icon: const Icon(Icons.settings_outlined),
-          color: AppColors.textSecondary,
-          tooltip: 'Settings',
-        ),
+        if (widget.onSettingsTap != null)
+          IconButton(
+            onPressed: widget.onSettingsTap,
+            icon: const Icon(Icons.settings_outlined),
+            color: AppColors.textSecondary,
+            tooltip: 'Settings',
+          ),
       ],
     );
   }

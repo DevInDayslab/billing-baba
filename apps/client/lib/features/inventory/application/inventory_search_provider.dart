@@ -10,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Precomputed search index rebuilt when inventory metadata changes.
 final inventorySearchEngineProvider = Provider<InventorySearchEngine>((ref) {
-  final items = ref.watch(inventoryItemsProvider).value ?? const [];
+  final items = ref.watch(inventoryItemListProvider);
   final categories = ref.watch(inventoryCategoriesProvider).value ?? const [];
   final brands = ref.watch(inventoryBrandsProvider).value ?? const [];
   final units = ref.watch(inventoryUnitsProvider).value ?? const [];

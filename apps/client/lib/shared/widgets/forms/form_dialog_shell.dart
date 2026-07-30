@@ -21,10 +21,10 @@ class FormDialogShell extends StatelessWidget {
   final FormDialogSize size;
 
   double get _maxWidth => switch (size) {
-        FormDialogSize.compact => FormSpacing.dialogCompactMaxWidth,
-        FormDialogSize.medium => FormSpacing.dialogMediumMaxWidth,
-        FormDialogSize.large => FormSpacing.dialogMaxWidth,
-      };
+    FormDialogSize.compact => FormSpacing.dialogCompactMaxWidth,
+    FormDialogSize.medium => FormSpacing.dialogMediumMaxWidth,
+    FormDialogSize.large => FormSpacing.dialogMaxWidth,
+  };
 
   @override
   Widget build(BuildContext context) {

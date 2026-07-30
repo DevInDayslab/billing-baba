@@ -85,7 +85,7 @@ final class PrintDataServiceProvider
   }
 }
 
-String _$printDataServiceHash() => r'80af26773aee377474ae88bb6c59b7c3a85912b2';
+String _$printDataServiceHash() => r'97b2393f8e2cf61e55e7d135a99ec9ba78995cef';
 
 @ProviderFor(templateRegistry)
 final templateRegistryProvider = TemplateRegistryProvider._();

@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_outlined_pill_tabs.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_outlined_pill_tabs.dart';
 import 'package:billing_baba/features/notifications/application/mobile_notifications_models.dart';
 import 'package:billing_baba/features/notifications/application/mobile_notifications_provider.dart';import 'package:billing_baba/features/notifications/presentation/mobile/mobile_notifications_theme.dart';
 import 'package:billing_baba/features/notifications/presentation/mobile/widgets/mobile_notifications_app_bar.dart';

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/network/api_endpoints.dart';
-import 'package:billing_baba/core/storage/media_upload_client.dart';
+import 'package:billing_baba/shared/media/media_upload_client.dart';
 import 'package:dio/dio.dart';
 
 class BusinessBrandingRepository {

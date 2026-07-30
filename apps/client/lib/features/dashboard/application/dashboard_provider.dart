@@ -1,23 +1,11 @@
-import 'package:billing_baba/core/network/offline_utils.dart';
+import 'dart:async';
+
 import 'package:billing_baba/features/dashboard/application/dashboard_service.dart';
-import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
+import 'package:billing_baba/features/dashboard/models/dashboard_view_state.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_provider.g.dart';
-
-final dashboardUsingCacheProvider =
-    NotifierProvider<DashboardUsingCacheNotifier, bool>(
-      DashboardUsingCacheNotifier.new,
-    );
-
-class DashboardUsingCacheNotifier extends Notifier<bool> {
-  @override
-  bool build() => false;
-
-  void setValue(bool value) => state = value;
-}
 
 @Riverpod(keepAlive: true)
 class DashboardPeriodFilter extends _$DashboardPeriodFilter {
@@ -29,51 +17,73 @@ class DashboardPeriodFilter extends _$DashboardPeriodFilter {
 
 @Riverpod(keepAlive: true)
 class Dashboard extends _$Dashboard {
-  DashboardModel? _cached;
-
   @override
-  Future<DashboardModel> build() async {
+  Future<DashboardViewState> build() async {
     final period = ref.watch(dashboardPeriodFilterProvider);
-    return _fetch(period);
+    return _load(period);
   }
 
-  Future<DashboardModel> _fetch(DashboardPeriod period) async {
+  Future<DashboardViewState> _load(DashboardPeriod period) async {
+    final service = await ref.read(dashboardServiceProvider.future);
+    final query = DashboardQuery(period: period);
+    final cached = service.readCachedViewState(query);
+    if (cached != null) {
+      unawaited(_refreshInBackground(period, hadCache: true));
+      return cached;
+    }
+    return service.fetchDashboard(query);
+  }
+
+  Future<void> _refreshInBackground(
+    DashboardPeriod period, {
+    required bool hadCache,
+  }) async {
     try {
       final service = await ref.read(dashboardServiceProvider.future);
-      final result = await service.fetchDashboard(DashboardQuery(period: period));
-      _cached = result;
-      ref.read(dashboardUsingCacheProvider.notifier).setValue(false);
-      return result;
-    } catch (error) {
-      if (_cached != null && isOfflineError(error)) {
-        ref.read(dashboardUsingCacheProvider.notifier).setValue(true);
-        return _cached!;
+      final fresh = await service.fetchDashboard(DashboardQuery(period: period));
+      if (!ref.mounted) return;
+      state = AsyncData(
+        hadCache ? fresh.copyWith(isRefreshing: false) : fresh,
+      );
+    } on Object {
+      // Keep showing cached snapshot when background refresh fails.
+      if (!ref.mounted || !hadCache) return;
+      final current = state.value;
+      if (current != null && current.isCachedSnapshot) {
+        state = AsyncData(current.copyWith(isRefreshing: false));
       }
-      ref.read(dashboardUsingCacheProvider.notifier).setValue(false);
-      rethrow;
     }
   }
 
   Future<void> refresh() async {
-    final previous = state.value ?? _cached;
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => _fetch(ref.read(dashboardPeriodFilterProvider)),
-    );
-    if (state.hasError && previous != null && isOfflineError(state.error)) {
-      ref.read(dashboardUsingCacheProvider.notifier).setValue(true);
-      state = AsyncData(previous);
+    final period = ref.read(dashboardPeriodFilterProvider);
+    final previous = state.value;
+    if (previous?.isCachedSnapshot == true) {
+      state = AsyncData(previous!.copyWith(isRefreshing: true));
+    } else {
+      state = const AsyncLoading();
     }
+    state = await AsyncValue.guard(() => _loadFresh(period));
   }
 
   Future<void> setPeriod(DashboardPeriod period) async {
     ref.read(dashboardPeriodFilterProvider.notifier).setPeriod(period);
-    final previous = state.value ?? _cached;
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetch(period));
-    if (state.hasError && previous != null && isOfflineError(state.error)) {
-      ref.read(dashboardUsingCacheProvider.notifier).setValue(true);
-      state = AsyncData(previous);
+    final previous = state.value;
+    final service = await ref.read(dashboardServiceProvider.future);
+    final cached = service.readCachedViewState(DashboardQuery(period: period));
+    if (cached != null) {
+      state = AsyncData(cached.copyWith(isRefreshing: true));
+      unawaited(_refreshInBackground(period, hadCache: true));
+      return;
     }
+    if (previous == null) {
+      state = const AsyncLoading();
+    }
+    state = await AsyncValue.guard(() => _loadFresh(period));
+  }
+
+  Future<DashboardViewState> _loadFresh(DashboardPeriod period) async {
+    final service = await ref.read(dashboardServiceProvider.future);
+    return service.fetchDashboard(DashboardQuery(period: period));
   }
 }

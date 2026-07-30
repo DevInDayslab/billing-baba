@@ -142,16 +142,12 @@ class CompactNumberFieldState extends State<CompactNumberField> {
 
   @override
   Widget build(BuildContext context) {
-    final field = TextField(
+    final field = SaleTextField(
       controller: _controller,
       focusNode: _focusNode,
-      style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
-      textAlignVertical: TextAlignVertical.center,
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        compact: true,
-        borderless: widget.borderless,
-      ),
+      hint: widget.hintText,
+      compact: true,
+      borderless: widget.borderless || !widget.useFieldBox,
       keyboardType: widget.integerOnly
           ? SaleQuantityInput.integerKeyboardType
           : SalePriceInput.keyboardType,
@@ -162,7 +158,9 @@ class CompactNumberFieldState extends State<CompactNumberField> {
       onSubmitted: (_) => _commitValue(),
     );
 
-    if (!widget.useFieldBox) return field;
-    return SaleCompactFieldBox(child: field);
+    if (!widget.useFieldBox || widget.borderless) {
+      return SaleCompactFieldBox(child: field);
+    }
+    return field;
   }
 }

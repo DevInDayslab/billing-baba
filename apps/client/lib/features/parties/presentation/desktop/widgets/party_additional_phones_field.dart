@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +12,8 @@ typedef AdditionalPhoneFieldBuilder =
       required VoidCallback onChanged,
     });
 
+const kMaxPartyAdditionalPhones = 4;
+
 class PartyAdditionalPhonesField extends StatelessWidget {
   const PartyAdditionalPhonesField({
     required this.controllers,
@@ -20,6 +22,7 @@ class PartyAdditionalPhonesField extends StatelessWidget {
     required this.onRemove,
     required this.onChanged,
     required this.fieldBuilder,
+    this.maxCount = kMaxPartyAdditionalPhones,
     super.key,
   });
 
@@ -29,6 +32,7 @@ class PartyAdditionalPhonesField extends StatelessWidget {
   final void Function(int index) onRemove;
   final void Function(int index) onChanged;
   final AdditionalPhoneFieldBuilder fieldBuilder;
+  final int maxCount;
 
   @override
   Widget build(BuildContext context) {
@@ -44,19 +48,20 @@ class PartyAdditionalPhonesField extends StatelessWidget {
             onChanged: () => onChanged(index),
           ),
         ],
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Add another number'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
+        if (controllers.length < maxCount)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add another number'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -75,19 +80,16 @@ Widget buildAdditionalPhoneInput({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            SaleTextField(
               controller: controller,
+              hint: 'Additional Mobile',
+              hasError: errorText != null,
               keyboardType: TextInputType.number,
               maxLength: 10,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(10),
               ],
-              style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(
-                hint: 'Additional Mobile',
-                hasError: errorText != null,
-              ),
               onChanged: (_) => onChanged(),
             ),
             if (errorText != null)

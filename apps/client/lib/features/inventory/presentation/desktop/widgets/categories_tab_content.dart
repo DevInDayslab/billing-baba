@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
@@ -20,6 +20,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/select_items_for_category_dialog.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -258,7 +259,7 @@ class _CategoryDetailPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(categoryItemsProvider(category.id));
-    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final itemsAsync = ref.watch(inventoryItemsProvider).itemsOnly;
     final searchQuery = ref.watch(categoryItemSearchQueryProvider);
     final sort = ref.watch(categoryItemSortProvider);
     final sortNotifier = ref.read(categoryItemSortProvider.notifier);

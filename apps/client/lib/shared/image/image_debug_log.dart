@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/app_logger.dart';
+import 'package:billing_baba/shared/utils/app_logger.dart';
 
 /// Debug-only logging for the shared image system.
 abstract final class ImageDebugLog {

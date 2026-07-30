@@ -19,6 +19,7 @@ class BarcodeGeneratorDraft {
     this.line2 = '',
     this.line3 = '',
     this.line4 = '',
+    this.noBarcode = false,
     this.showValidation = false,
   });
 
@@ -31,18 +32,21 @@ class BarcodeGeneratorDraft {
   final String line2;
   final String line3;
   final String line4;
+  final bool noBarcode;
   final bool showValidation;
 
   bool get canAdd =>
       itemName.trim().isNotEmpty &&
-      itemCode.trim().isNotEmpty &&
+      (noBarcode || itemCode.trim().isNotEmpty) &&
       (int.tryParse(noOfLabels.trim()) ?? 0) > 0;
 
   String? get itemNameError =>
       showValidation && itemName.trim().isEmpty ? 'Item name is required' : null;
 
   String? get itemCodeError =>
-      showValidation && itemCode.trim().isEmpty ? 'Item code is required' : null;
+      showValidation && !noBarcode && itemCode.trim().isEmpty
+          ? 'Item code is required'
+          : null;
 
   String? get noOfLabelsError {
     if (!showValidation) return null;
@@ -62,6 +66,7 @@ class BarcodeGeneratorDraft {
     String? line2,
     String? line3,
     String? line4,
+    bool? noBarcode,
     bool? showValidation,
   }) {
     return BarcodeGeneratorDraft(
@@ -74,6 +79,7 @@ class BarcodeGeneratorDraft {
       line2: line2 ?? this.line2,
       line3: line3 ?? this.line3,
       line4: line4 ?? this.line4,
+      noBarcode: noBarcode ?? this.noBarcode,
       showValidation: showValidation ?? this.showValidation,
     );
   }
@@ -208,6 +214,7 @@ class BarcodeGeneratorNotifier extends Notifier<BarcodeGeneratorState> {
       line2: draft.line2.trim(),
       line3: draft.line3.trim(),
       line4: draft.line4.trim(),
+      noBarcode: draft.noBarcode,
     );
 
     state = state.copyWith(

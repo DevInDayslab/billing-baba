@@ -1,7 +1,8 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
-import 'package:billing_baba/core/utils/jwt_utils.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
@@ -9,6 +10,9 @@ import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
+import 'package:billing_baba/features/business/data/business_cache.dart';
+import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
 
 class AuthService {
@@ -17,12 +21,34 @@ class AuthService {
     required this._storage,
   });
 
+  /// Serializes every `/auth/refresh` call across Dio clients and business selection.
+  static Future<void> _refreshMutexChain = Future<void>.value();
+
+  static Future<T> _withRefreshLock<T>(Future<T> Function() action) {
+    final operation = _refreshMutexChain.then((_) => action());
+    _refreshMutexChain = operation.then((_) {}, onError: (_) {});
+    return operation;
+  }
+
   /// Local-only developer session — never sent to the API.
   static const devAccessToken = 'dev-offline-access-token';
   static const devRefreshToken = 'dev-offline-refresh-token';
 
   final AuthRepository _repository;
   final StorageService _storage;
+
+  static bool isOfflineDevSession(AuthSession session) =>
+      isOfflineDevToken(session.accessToken);
+
+  static BusinessProfileModel offlineDevBusinessProfile(AuthSession session) {
+    final business = session.businesses.first;
+    return BusinessProfileModel(
+      id: business.id,
+      name: business.name,
+      ownerName: session.user.name,
+      phone: session.user.phone,
+    );
+  }
 
   static bool isOfflineDevToken(String accessToken) =>
       accessToken == devAccessToken ||
@@ -68,11 +94,22 @@ class AuthService {
       );
     }
 
+    final selectedId = await _storage.readSecure(
+      StorageKeys.selectedBusinessId,
+    );
+
+    if (JwtUtils.isExpired(accessToken)) {
+      AuthDebugLogger.log(
+        'loadStoredSession: access token expired — refreshing',
+      );
+      return refreshStoredSession(
+        refreshToken: refreshToken,
+        businessId: selectedId,
+      );
+    }
+
     try {
       final me = await _repository.me(accessToken);
-      final selectedId = await _storage.readSecure(
-        StorageKeys.selectedBusinessId,
-      );
       if (selectedId != null &&
           selectedId.isNotEmpty &&
           me.businesses.length > 1 &&
@@ -83,17 +120,19 @@ class AuthService {
           businessId: selectedId,
         );
       }
-      return AuthSession(
+      final session = AuthSession(
         accessToken: accessToken,
         refreshToken: refreshToken,
         expiresIn: 0,
         user: me.user,
         businesses: me.businesses,
       );
+      await seedBusinessListCache(session);
+      return session;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        final selectedId = await _storage.readSecure(
-          StorageKeys.selectedBusinessId,
+        AuthDebugLogger.log(
+          'loadStoredSession: /auth/me returned 401 — refreshing',
         );
         return refreshStoredSession(
           refreshToken: refreshToken,
@@ -101,9 +140,10 @@ class AuthService {
         );
       }
       if (NetworkExceptionClassifier.isConnectivityError(e)) {
-        final phone = _storage.read(StorageKeys.accountPhone) ?? '';
-        final payload = JwtUtils.decodePayload(accessToken);
-        final userId = payload?['sub']?.toString() ?? 'offline';
+        final storedPhone = _storage.read(StorageKeys.accountPhone) ?? '';
+        final phone = JwtUtils.phone(accessToken) ?? storedPhone;
+        // API JWTs use account_id / user_id — never `sub`.
+        final userId = JwtUtils.sessionUserId(accessToken) ?? 'offline';
         return AuthSession(
           accessToken: accessToken,
           refreshToken: refreshToken,
@@ -132,6 +172,15 @@ class AuthService {
       return null;
     }
 
+    final accessToken = await _storage.readSecure(StorageKeys.accessToken);
+    if (isOfflineDevToken(accessToken ?? '')) {
+      final phone = _storage.read(StorageKeys.accountPhone) ?? '919999999999';
+      return offlineDevSession(phone: phone).copyWith(
+        accessToken: accessToken!,
+        refreshToken: token,
+      );
+    }
+
     final storedBusinessId = preserveBusinessScope
         ? await _storage.readSecure(StorageKeys.selectedBusinessId)
         : null;
@@ -141,25 +190,33 @@ class AuthService {
             ? storedBusinessId
             : null);
 
-    try {
-      final session = await _repository.refresh(
-        refreshToken: token,
-        businessId: effectiveBusinessId,
-      );
-      final persistBusinessId = _businessIdForSession(
-        session,
-        explicitBusinessId: businessId ?? effectiveBusinessId,
-      );
-      await persistSession(session, businessId: persistBusinessId);
-      return session;
-    } on DioException catch (e) {
-      if (NetworkExceptionClassifier.isConnectivityError(e)) {
-        // Keep stored tokens when the backend is unreachable.
+    return _withRefreshLock(() async {
+      try {
+        final session = await _repository.refresh(
+          refreshToken: token,
+          businessId: effectiveBusinessId,
+        );
+        final persistBusinessId = _businessIdForSession(
+          session,
+          explicitBusinessId: businessId ?? effectiveBusinessId,
+        );
+        await persistSession(session, businessId: persistBusinessId);
+        return session;
+      } on DioException catch (e) {
+        if (NetworkExceptionClassifier.isConnectivityError(e)) {
+          // Keep stored tokens when the backend is unreachable.
+          return null;
+        }
+        // Only wipe local credentials on definitive auth failures. Clearing on
+        // every Dio error (timeouts, 5xx) left Switch Company with Headers:{}
+        // and endless "Could not load businesses" 401 loops.
+        final status = e.response?.statusCode;
+        if (status == 401 || status == 403) {
+          await clearSession();
+        }
         return null;
       }
-      await clearSession();
-      return null;
-    }
+    });
   }
 
   Future<AuthSession> loginWithMsg91Token({
@@ -181,13 +238,11 @@ class AuthService {
   }
 
   Future<AuthSession> devLogin() async {
-    AuthDebugLogger.log(
-      'AuthService.devLogin: offline local session (no API)',
-    );
-    final session = AuthService.offlineDevSession();
-    await persistSession(session);
+    AuthDebugLogger.log('AuthService.devLogin: POST /auth/dev-login');
+    final session = await _repository.devLogin();
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
+    await persistSession(session);
     return session;
   }
 
@@ -195,12 +250,14 @@ class AuthService {
     required String businessId,
     required String refreshToken,
   }) async {
-    final session = await _repository.refresh(
-      refreshToken: refreshToken,
-      businessId: businessId,
-    );
-    await persistSession(session, businessId: businessId);
-    return session;
+    return _withRefreshLock(() async {
+      final session = await _repository.refresh(
+        refreshToken: refreshToken,
+        businessId: businessId,
+      );
+      await persistSession(session, businessId: businessId);
+      return session;
+    });
   }
 
   Future<void> logout() async {
@@ -244,6 +301,47 @@ class AuthService {
     } else {
       await _storage.deleteSecure(StorageKeys.selectedBusinessId);
     }
+
+    await seedBusinessListCache(session);
+  }
+
+  /// Seeds SharedPreferences business-list cache from auth session summaries so
+  /// company selection works offline even if GET /businesses was never called.
+  Future<void> seedBusinessListCache(AuthSession session) async {
+    if (session.businesses.isEmpty) return;
+    if (isOfflineDevSession(session)) return;
+
+    final accountId =
+        JwtUtils.accountId(session.accessToken) ?? session.user.id;
+    if (accountId.isEmpty || accountId == 'offline') return;
+
+    final cache = BusinessCache(_storage);
+    final existing = await cache.readBusinesses();
+    final cachedAccountId = cache.readCachedBusinessesAccountId();
+    if (existing.isNotEmpty &&
+        cachedAccountId != null &&
+        JwtUtils.isSameAccountCacheKey(
+          cachedAccountId: cachedAccountId,
+          sessionUserId: session.user.id,
+          accessToken: session.accessToken,
+        )) {
+      // Keep a richer list from GET /businesses when already present.
+      return;
+    }
+
+    await cache.saveBusinesses(
+      session.businesses
+          .map(
+            (b) => <String, dynamic>{
+              'id': b.id,
+              'name': b.name,
+              'role': b.role,
+              'gstin': b.gstin,
+            },
+          )
+          .toList(),
+      accountId: accountId,
+    );
   }
 
   String? _businessIdForSession(

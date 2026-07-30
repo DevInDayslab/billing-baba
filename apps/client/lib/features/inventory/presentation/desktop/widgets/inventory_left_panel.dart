@@ -1,9 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
-import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
@@ -42,6 +40,9 @@ class InventoryLeftPanel extends ConsumerWidget {
     required this.onItemSelected,
     required this.onAddPressed,
     required this.onMenuSelected,
+    this.onLoadMore,
+    this.hasMore = false,
+    this.isLoadingMore = false,
     this.leadingIcon = Icons.inventory_2_outlined,
     this.showListFilters = true,
     super.key,
@@ -67,6 +68,9 @@ class InventoryLeftPanel extends ConsumerWidget {
   final VoidCallback onArrowUp;
   final VoidCallback onEnter;
   final Future<void> Function() onRefresh;
+  final VoidCallback? onLoadMore;
+  final bool hasMore;
+  final bool isLoadingMore;
   final ValueChanged<String> onItemSelected;
   final VoidCallback onAddPressed;
   final void Function(String value, InventoryItem item) onMenuSelected;
@@ -75,12 +79,9 @@ class InventoryLeftPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final usingCatalog = ref.watch(inventoryUsingCatalogProvider);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (usingCatalog) const OfflineStatusBanner(),
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
@@ -145,6 +146,9 @@ class InventoryLeftPanel extends ConsumerWidget {
             showCachedWhileLoading: true,
             estimatedItemExtent: inventoryItemListRowHeight,
             onRefresh: onRefresh,
+            onLoadMore: onLoadMore,
+            hasMore: hasMore,
+            isLoadingMore: isLoadingMore,
             emptyMessage: emptyMessage,
             onPrefetchItems: (window) {
               ref.read(inventoryListImageWarmupProvider).warmItems(window);

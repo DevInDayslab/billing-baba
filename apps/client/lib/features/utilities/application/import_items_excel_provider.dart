@@ -107,7 +107,8 @@ class ImportItemsExcelNotifier extends Notifier<ImportItemsExcelState> {
       await Future<void>.delayed(Duration.zero);
 
       final parsed = ImportItemsExcelParser.parse(bytes);
-      final existingItems = await ref.read(inventoryItemsProvider.future);
+      await ref.read(inventoryItemsProvider.future);
+      final existingItems = ref.read(inventoryItemListProvider);
       final units = await _loadUnitsForImport();
 
       if (units.isEmpty) {

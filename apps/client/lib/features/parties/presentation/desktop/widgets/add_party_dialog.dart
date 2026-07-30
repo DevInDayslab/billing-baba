@@ -1,8 +1,5 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
-import 'package:billing_baba/core/widgets/text_input_dialog.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
@@ -19,7 +16,10 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -330,13 +330,16 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     }
     _additionalPhoneControllers.clear();
     _additionalPhoneErrors.clear();
-    for (final phone in phones) {
+    for (final phone in phones.take(kMaxPartyAdditionalPhones)) {
       _additionalPhoneControllers.add(TextEditingController(text: phone));
       _additionalPhoneErrors.add(null);
     }
   }
 
   void _addAdditionalPhoneField() {
+    if (_additionalPhoneControllers.length >= kMaxPartyAdditionalPhones) {
+      return;
+    }
     setState(() {
       _additionalPhoneControllers.add(TextEditingController());
       _additionalPhoneErrors.add(null);
@@ -548,10 +551,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   bool _validate() {
-    final partyNameError = Validators.required(
-      _partyNameController.text,
-      fieldName: 'Party name',
-    );
+    final partyNameError = Validators.partyName(_partyNameController.text);
     final phoneError = Validators.requiredPhone(_phoneController.text);
     final emailError = Validators.email(_emailController.text);
     final gstinError = _validateGstinField();
@@ -1007,28 +1007,28 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             children: [
               _buildHeader(),
               const Divider(height: 1, color: _cardBorder),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        FormSpacing.page,
-                        FormSpacing.section,
-                        FormSpacing.page,
-                        FormSpacing.section,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          FormSpacing.page,
+                          FormSpacing.section,
+                          FormSpacing.page,
+                          FormSpacing.section,
+                        ),
+                        child: _buildTopFields(),
                       ),
-                      child: _buildTopFields(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: FormSpacing.page,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: FormSpacing.page,
+                        ),
+                        child: _buildTabBar(),
                       ),
-                      child: _buildTabBar(),
-                    ),
-                    const Divider(height: 1, color: _cardBorder),
-                    Expanded(
-                      child: SingleChildScrollView(
+                      const Divider(height: 1, color: _cardBorder),
+                      Padding(
                         padding: const EdgeInsets.all(FormSpacing.page),
                         child: AnimatedBuilder(
                           animation: _tabController,
@@ -1041,8 +1041,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                           },
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const Divider(height: 1, color: _cardBorder),
@@ -1083,21 +1083,6 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               ),
             ),
             IconButton(
-              onPressed: _isSaving
-                  ? null
-                  : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Party settings coming soon'),
-                        ),
-                      );
-                    },
-              icon: const Icon(Icons.settings_outlined, size: 20),
-              color: AppColors.textSecondary,
-              tooltip: 'Settings',
-              visualDensity: VisualDensity.compact,
-            ),
-            IconButton(
               onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
               icon: const Icon(Icons.close, color: AppColors.textSecondary),
               visualDensity: VisualDensity.compact,
@@ -1115,6 +1100,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       hasError: _partyNameError != null,
       errorText: _partyNameError,
       autofocus: !_isEditMode,
+      maxLength: Validators.partyNameMaxLength,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(Validators.partyNameMaxLength),
+        FilteringTextInputFormatter.allow(Validators.businessNameInputPattern),
+      ],
       onChanged: (_) {
         if (_partyNameError != null) {
           setState(() => _partyNameError = null);
@@ -1150,6 +1140,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         icon: const Icon(Icons.info_outline, size: 18),
         color: AppColors.textSecondary,
         tooltip: '15-character GST identification number',
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(
+          width: saleFieldHeight - 8,
+          height: saleFieldHeight - 2,
+        ),
+        visualDensity: VisualDensity.compact,
       ),
     );
 
@@ -1169,33 +1165,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       },
     );
 
-    final billingNameField = _isEditMode
-        ? InputDecorator(
-            decoration: buildSaleFieldDecoration(hint: 'Billing Name'),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                widget.partyToEdit!.name,
-                style: saleFieldTextStyle,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-        : null;
-
     final rowOneCells = <FormGridCell>[
-      FormGridCell(
-        span: _isEditMode ? 4 : 4,
-        child: partyNameField,
-      ),
+      FormGridCell(span: 4, child: partyNameField),
       FormGridCell(span: 4, child: legalNameField),
       FormGridCell(span: 4, child: aliasField),
-      if (billingNameField != null)
-        FormGridCell(span: 4, child: billingNameField),
-      FormGridCell(
-        span: 4,
-        child: gstinField,
-      ),
+      FormGridCell(span: 4, child: gstinField),
       FormGridCell(span: 4, child: phoneField),
       FormGridCell(span: 4, child: _buildPartyGroupControls()),
       FormGridCell(span: 4, child: areaCodeField),
@@ -1382,26 +1356,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
+        SaleTextField(
           controller: controller,
+          hint: hint,
+          hasError: hasError,
           autofocus: autofocus,
-          style: saleFieldTextStyle,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           maxLength: maxLength,
-          buildCounter: maxLength == null
-              ? null
-              : (
-                  context, {
-                  required currentLength,
-                  required isFocused,
-                  maxLength,
-                }) => null,
-          decoration: buildSaleFieldDecoration(
-            hint: hint,
-            hasError: hasError,
-            suffixIcon: suffixIcon,
-          ),
+          suffixIcon: suffixIcon,
           onChanged: onChanged,
         ),
         if (hasError && errorText != null)
@@ -1518,12 +1481,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  SaleTextField(
                     controller: _emailController,
-                    style: saleFieldTextStyle,
-                    decoration: buildSaleFieldDecoration(
-                      hasError: _emailError != null,
-                    ),
+                    hasError: _emailError != null,
                     keyboardType: TextInputType.emailAddress,
                     onChanged: (_) {
                       if (_emailError != null) {
@@ -1698,7 +1658,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: TextField(
             controller: addressController,
             style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(),
+            decoration: buildSaleFieldDecoration(fixedHeight: false),
             minLines: 4,
             maxLines: 4,
           ),
@@ -1758,22 +1718,18 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
         final addressLineField = _LabeledField(
           label: 'Address',
-          child: TextField(
+          child: SaleTextField(
             controller: addressLineController,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(
-              hint: 'Street, building, area',
-            ),
+            hint: 'Street, building, area',
             textCapitalization: TextCapitalization.sentences,
           ),
         );
 
         final cityField = _LabeledField(
           label: 'City',
-          child: TextField(
+          child: SaleTextField(
             controller: cityController,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: 'City'),
+            hint: 'City',
             textCapitalization: TextCapitalization.words,
           ),
         );
@@ -1789,19 +1745,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
         final pincodeField = _LabeledField(
           label: 'Pincode',
-          child: TextField(
+          child: SaleTextField(
             controller: pincodeController,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: 'Pincode'),
+            hint: 'Pincode',
             keyboardType: TextInputType.number,
             maxLength: 6,
-            buildCounter:
-                (
-                  context, {
-                  required currentLength,
-                  required isFocused,
-                  maxLength,
-                }) => null,
           ),
         );
 
@@ -1926,13 +1874,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
+              SaleTextField(
                 controller: _loyaltyPointsOpeningBalanceController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(
-                  hint: _defaultDecimal,
-                  hasError: _loyaltyBalanceError != null,
-                ),
+                hint: _defaultDecimal,
+                hasError: _loyaltyBalanceError != null,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -2007,13 +1952,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
+              SaleTextField(
                 controller: amountController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(
-                  hint: _defaultDecimal,
-                  hasError: amountError != null,
-                ),
+                hint: _defaultDecimal,
+                hasError: amountError != null,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -2071,13 +2013,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
+                SaleTextField(
                   controller: _creditLimitController,
-                  style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
-                    hint: _defaultDecimal,
-                    hasError: _creditLimitError != null,
-                  ).copyWith(prefixText: '₹ '),
+                  hint: _defaultDecimal,
+                  hasError: _creditLimitError != null,
+                  prefix: const Text('₹ ', style: saleFieldTextStyle),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -2226,11 +2166,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         ),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
-          child: TextField(
+          child: SaleTextField(
             controller: controller,
             enabled: enabled,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: label),
+            hint: label,
           ),
         ),
       ],

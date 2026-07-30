@@ -63,7 +63,6 @@ class _PurchaseReturnPageState extends ConsumerState<DesktopPurchaseReturnPage> 
           children: [
             PurchasePageTitleBar(
               currentRoute: AppRoutes.purchaseReturnDebitNote,
-              onSettingsTap: () => debugPrint('Settings tapped'),
             ),
             const SizedBox(height: AppSpacing.md),
             PurchaseSectionAsyncContent(

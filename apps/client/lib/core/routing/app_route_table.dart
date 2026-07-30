@@ -4,6 +4,7 @@ import 'package:billing_baba/features/auth/presentation/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/splash_page.dart';
 import 'package:billing_baba/features/auth/presentation/user_profile_page.dart';
 import 'package:billing_baba/features/auth/presentation/verify_otp_page.dart';
+import 'package:billing_baba/features/backup/presentation/desktop/backup_restore_page.dart';
 import 'package:billing_baba/features/business/presentation/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/edit_profile_page.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
@@ -58,11 +59,10 @@ import 'package:billing_baba/features/sales/presentation/sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_return_page.dart';
+import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/settings/presentation/print_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/settings_screen.dart';
-import 'package:billing_baba/features/settings/presentation/taxes_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/transaction_messages_screen.dart';
-import 'package:billing_baba/features/settings/presentation/whatsapp_settings_screen.dart';
 import 'package:billing_baba/features/utilities/presentation/barcode_generator_page.dart';
 import 'package:billing_baba/features/utilities/presentation/import_items_page.dart';
 import 'package:flutter/material.dart';
@@ -133,6 +133,14 @@ GoRouter createAppRouter({
           if (!onOtp) return AppRoutes.verifyOtp;
         case AuthStatus.needsBusinessCreation:
         case AuthStatus.needsBusinessSelection:
+          // Always leave auth screens once login succeeded.
+          if (onLogin || onOtp) {
+            SwitchCompanyDebugLog.nav(
+              'GoRouter redirect $location → ${AppRoutes.businessList} '
+              '(${auth.status.name}, from auth screen)',
+            );
+            return AppRoutes.businessList;
+          }
           if (!onBusinessList) {
             SwitchCompanyDebugLog.nav(
               'GoRouter redirect $location → ${AppRoutes.businessList} '
@@ -550,18 +558,21 @@ GoRouter createAppRouter({
             redirect: (context, state) => AppRoutes.settingsPreferences,
           ),
           GoRoute(
-            path: AppRoutes.settingsUsers,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Users & Roles'),
+            path: '/settings/users',
+            redirect: (context, state) => AppRoutes.settingsPreferences,
+          ),
+          GoRoute(
+            path: '/settings/invoice-templates',
+            redirect: (context, state) => AppRoutes.settingsPreferences,
+          ),
+          GoRoute(
+            path: '/settings/whatsapp',
+            redirect: (context, state) =>
+                AppRoutes.settingsTab(SettingsTab.transactionMessages.id),
           ),
           GoRoute(
             path: AppRoutes.settingsTaxes,
-            builder: (context, state) => const TaxesSettingsScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.settingsInvoiceTemplates,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Invoice Templates'),
+            redirect: (context, state) => AppRoutes.settingsPreferences,
           ),
           GoRoute(
             path: AppRoutes.settingsPreferences,
@@ -572,17 +583,12 @@ GoRouter createAppRouter({
             builder: (context, state) => const PrintSettingsScreen(),
           ),
           GoRoute(
-            path: AppRoutes.settingsWhatsapp,
-            builder: (context, state) => const WhatsAppSettingsScreen(),
-          ),
-          GoRoute(
             path: AppRoutes.settingsTransactionMessages,
             builder: (context, state) => const TransactionMessagesScreen(),
           ),
           GoRoute(
             path: AppRoutes.settingsBackup,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Backup & Restore'),
+            builder: (context, state) => const BackupRestorePage(),
           ),
           GoRoute(
             path: AppRoutes.plansPricing,

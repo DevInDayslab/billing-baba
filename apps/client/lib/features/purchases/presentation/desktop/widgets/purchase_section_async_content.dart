@@ -1,6 +1,4 @@
-import 'package:billing_baba/core/network/offline_utils.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,30 +33,28 @@ class PurchaseSectionAsyncContent<T> extends StatelessWidget {
         const Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => _loadingShell(
-        isOfflineError(error)
-            ? OfflineConnectPrompt(onRetry: onRetry)
-            : Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        PurchaseErrorMapper.messageFor(error),
-                        style: const TextStyle(color: AppColors.error),
-                        textAlign: TextAlign.center,
-                      ),
-                      if (onRetry != null) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        OutlinedButton(
-                          onPressed: onRetry,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ],
-                  ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  PurchaseErrorMapper.messageFor(error),
+                  style: const TextStyle(color: AppColors.error),
+                  textAlign: TextAlign.center,
                 ),
-              ),
+                if (onRetry != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: onRetry,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
       data: builder,
     );

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
@@ -25,12 +26,19 @@ void invalidateDashboard(Ref ref) {
 }
 
 void invalidatePartyBalances(Ref ref) {
-  ref.invalidate(partyListProvider);
+  ref
+    ..invalidate(partyListProvider)
+    ..invalidate(partyOutstandingIndexProvider);
 }
 
 void invalidatePartyTimeline(Ref ref, String partyId) {
-  ref..invalidate(partyTimelineProvider(partyId))
-  ..invalidate(partyLedgerProvider(partyId));
+  final service = ref.read(partyLedgerServiceProvider).asData?.value;
+  service?.invalidateCache(partyId: partyId);
+
+  ref
+    ..invalidate(partyTimelineProvider(partyId))
+    ..invalidate(partyLedgerProvider(partyId))
+    ..invalidate(partyProfileProjectionProvider(partyId));
 }
 
 void invalidatePartyLedger(Ref ref, String partyId) {
@@ -44,6 +52,7 @@ void _schedulePartyLedgerRefresh(
 ) {
   final timeline = partyTimelineProvider(partyId);
   final ledger = partyLedgerProvider(partyId);
+  final projection = partyProfileProjectionProvider(partyId);
 
   // Auto-dispose providers must not be invalidated then refreshed, and must
   // only be refreshed while a listener still holds them alive.
@@ -57,6 +66,12 @@ void _schedulePartyLedgerRefresh(
     refreshTasks.add(ref.read(ledger.notifier).refresh());
   } else {
     ref.invalidate(ledger);
+  }
+
+  if (ref.exists(projection)) {
+    refreshTasks.add(ref.read(projection.notifier).refresh());
+  } else {
+    ref.invalidate(projection);
   }
 }
 

@@ -3,12 +3,12 @@ import 'package:billing_baba/features/subscription/application/create_order_prov
 import 'package:billing_baba/features/subscription/application/current_subscription_provider.dart';
 import 'package:billing_baba/features/subscription/application/plans_pricing_view_provider.dart';
 import 'package:billing_baba/features/subscription/application/purchase_history_provider.dart';
+import 'package:billing_baba/features/subscription/application/subscription_checkout_busy_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
 import 'package:billing_baba/features/subscription/application/subscription_plans_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_service_provider.dart';
 import 'package:billing_baba/features/subscription/domain/models/create_order_result.dart';
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
-import 'package:billing_baba/features/subscription/presentation/desktop/payment_bridge_result.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/subscription_payment_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,41 +19,50 @@ class SubscriptionCheckoutFlow {
   const SubscriptionCheckoutFlow._();
 
   /// Starts checkout immediately and creates the Razorpay order in parallel.
+  ///
+  /// Marks [subscriptionCheckoutBusyProvider] while the host WebView is open so
+  /// background Sync & Share refresh does not freeze macOS under Razorpay.
   static Future<void> start(
     BuildContext context,
     WidgetRef ref, {
     required Future<CreateOrderResult?> orderFuture,
     required SubscriptionPlanType planType,
   }) async {
-    final hostResult = await showSubscriptionPaymentHost(
-      context,
-      orderFuture: orderFuture,
-      planType: planType,
-      orderErrorMessage: () =>
-          ref.read(createOrderControllerProvider.notifier).errorMessage(),
-    );
+    ref.read(subscriptionCheckoutBusyProvider.notifier).begin();
+    try {
+      final hostResult = await showSubscriptionPaymentHost(
+        context,
+        orderFuture: orderFuture,
+        planType: planType,
+        orderErrorMessage: () =>
+            ref.read(createOrderControllerProvider.notifier).errorMessage(),
+      );
 
-    if (!context.mounted || hostResult == null) return;
+      if (!context.mounted || hostResult == null) return;
 
-    final order = hostResult.order;
-    final bridgeResult = hostResult.payment;
+      final order = hostResult.order;
+      final bridgeResult = hostResult.payment;
 
-    if (order == null) {
-      final message = hostResult.orderErrorMessage ??
-          switch (bridgeResult) {
-            PaymentBridgeFailed(:final message) => message,
-            _ => 'Unable to create payment order. Please try again.',
-          };
-      _showErrorSnackBar(context, message);
-      return;
+      if (order == null) {
+        final message =
+            hostResult.orderErrorMessage ??
+            switch (bridgeResult) {
+              PaymentBridgeFailed(:final message) => message,
+              _ => 'Unable to create payment order. Please try again.',
+            };
+        _showErrorSnackBar(context, message);
+        return;
+      }
+
+      await _handlePaymentBridgeResult(
+        context,
+        ref,
+        order: order,
+        bridgeResult: bridgeResult,
+      );
+    } finally {
+      ref.read(subscriptionCheckoutBusyProvider.notifier).end();
     }
-
-    await _handlePaymentBridgeResult(
-      context,
-      ref,
-      order: order,
-      bridgeResult: bridgeResult,
-    );
   }
 
   static Future<void> _handlePaymentBridgeResult(

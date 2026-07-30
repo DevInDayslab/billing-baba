@@ -31,7 +31,7 @@ class _ItemDetailReportContentState
   Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
     final selectedItemId = filters.itemId;
-    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    final items = ref.watch(inventoryItemListProvider);
     var selectedItemName = 'Select Item';
     if (selectedItemId != null) {
       for (final item in items) {

@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
 import 'package:billing_baba/features/inventory/data/models/item_alternative_dto.dart';
 import 'package:billing_baba/features/inventory/data/models/item_recommendations_dto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -17,8 +18,8 @@ class OutOfStockDialog extends ConsumerWidget {
 
   final String itemId;
   final String itemName;
-  final void Function(RecommendedItemDto) onSelectAlternative;
-  final void Function() onContinueAnyway;
+  final Future<void> Function(RecommendedItemDto) onSelectAlternative;
+  final Future<void> Function() onContinueAnyway;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,7 +51,9 @@ class OutOfStockDialog extends ConsumerWidget {
                         ),
                       ),
                       error: (error, stack) {
-                        print('ALTERNATIVES ERROR: $error');
+                        if (kDebugMode) {
+                          debugPrint('ALTERNATIVES ERROR: $error');
+                        }
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.all(32),
@@ -62,7 +65,11 @@ class OutOfStockDialog extends ConsumerWidget {
                         );
                       },
                       data: (alternatives) {
-                        print('ALTERNATIVES for $itemId: count=${alternatives.length}');
+                        if (kDebugMode) {
+                          debugPrint(
+                            'ALTERNATIVES for $itemId: count=${alternatives.length}',
+                          );
+                        }
                         return _buildAlternativesList(context, alternatives);
                       },
                     ),
@@ -207,8 +214,8 @@ class OutOfStockDialog extends ConsumerWidget {
         side: BorderSide(color: Colors.grey.shade300),
       ),
       child: InkWell(
-        onTap: () {
-          onSelectAlternative(RecommendedItemDto(
+        onTap: () async {
+          await onSelectAlternative(RecommendedItemDto(
             id: item.id,
             name: item.name,
             barcode: item.barcode,
@@ -217,7 +224,7 @@ class OutOfStockDialog extends ConsumerWidget {
             salePrice: item.salePrice,
             stockQuantity: item.stockQuantity,
           ));
-          Navigator.of(context).pop();
+          if (context.mounted) Navigator.of(context).pop();
         },
         borderRadius: BorderRadius.circular(8),
         child: Padding(
@@ -319,9 +326,9 @@ class OutOfStockDialog extends ConsumerWidget {
           ),
           const SizedBox(width: 12),
           ElevatedButton(
-            onPressed: () {
-              onContinueAnyway();
-              Navigator.of(context).pop();
+            onPressed: () async {
+              await onContinueAnyway();
+              if (context.mounted) Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

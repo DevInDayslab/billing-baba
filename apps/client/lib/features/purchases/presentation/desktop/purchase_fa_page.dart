@@ -62,7 +62,6 @@ class _PurchaseFaPageState extends ConsumerState<DesktopPurchaseFaPage> {
           children: [
             PurchasePageTitleBar(
               currentRoute: AppRoutes.purchaseFa,
-              onSettingsTap: () => debugPrint('Settings tapped'),
             ),
             const SizedBox(height: AppSpacing.md),
             PurchaseSectionAsyncContent(

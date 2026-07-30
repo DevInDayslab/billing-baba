@@ -14,6 +14,7 @@ import 'package:billing_baba/features/pos/models/held_bill.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -42,8 +43,8 @@ class PosCart extends _$PosCart {
   String? get _businessId => ref.read(currentBusinessProvider)?.id;
 
   PosItem? _livePosItem(PosItem item) {
-    final inventoryItems = ref.read(inventoryItemsProvider).value;
-    if (inventoryItems == null) return item;
+    final inventoryItems = ref.read(inventoryItemListProvider);
+    if (inventoryItems.isEmpty) return item;
     final categories = ref.read(inventoryCategoriesProvider).value ?? const [];
     return findLivePosItem(
           itemId: item.id,
@@ -162,12 +163,15 @@ class PosCart extends _$PosCart {
   }
 
   void updatePaymentAmount(PaymentMode mode, double amount) {
-    final updated = state.payments.map((p) {
-      if (p.mode == mode) {
-        return p.copyWith(amount: amount);
-      }
-      return p;
-    }).toList();
+    final index = state.payments.indexWhere((payment) => payment.mode == mode);
+    if (index < 0) return;
+
+    final updated = applySplitPaymentCascade(
+      payments: state.payments,
+      editedIndex: index,
+      amount: amount,
+      totalPayable: state.totalPayable,
+    );
     state = state.copyWith(payments: updated);
   }
 
@@ -289,7 +293,7 @@ class PosCart extends _$PosCart {
     } on PosRepositoryException {
       rethrow;
     } catch (error) {
-      throw PosRepositoryException(message: error.toString());
+      throw PosRepositoryException(message: OfflineUiMessages.messageFor(error));
     }
   }
 

@@ -70,6 +70,8 @@ class HttpLoggingInterceptor extends Interceptor {
       LogSanitizer.sanitizeBody(err.response?.data),
     );
 
+    final isRecoverableAuth401 =
+        status == 401 && err.requestOptions.path.contains('/auth/me');
     final message =
         '✗ ${err.requestOptions.method} ${err.requestOptions.uri}\n'
         '  Type: ${err.type}\n'
@@ -79,7 +81,11 @@ class HttpLoggingInterceptor extends Interceptor {
         '  Response: $body';
 
     if (AppConfig.consoleVerbose || AppConfig.fileLoggingEnabled) {
-      LoggingService.instance.error(message, err, err.stackTrace);
+      if (isRecoverableAuth401) {
+        LoggingService.instance.info(message);
+      } else {
+        LoggingService.instance.error(message, err, err.stackTrace);
+      }
     }
 
     DiagnosticsStore.instance.recordApiCall(

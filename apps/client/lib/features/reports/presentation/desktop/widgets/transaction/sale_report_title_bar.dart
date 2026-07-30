@@ -40,15 +40,6 @@ class SaleReportTitleBar extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
-        const Tooltip(
-          message: 'Report settings coming soon',
-          child: IconButton(
-            onPressed: null,
-            icon: Icon(Icons.settings_outlined),
-            color: AppColors.textSecondary,
-          ),
-        ),
       ],
     );
   }

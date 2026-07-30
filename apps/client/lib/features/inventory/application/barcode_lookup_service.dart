@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/constants/app_constants.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/features/inventory/application/barcode_confidence.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
@@ -13,7 +14,8 @@ class BarcodeLookupService {
     required this._repository,
     required this._remoteDataSource,
     Dio? openFoodFactsDio,
-  })  : _openFoodFactsDio = openFoodFactsDio ?? Dio();
+  })  : _openFoodFactsDio = openFoodFactsDio ??
+            (Dio()..httpClientAdapter = createBypassSslHttpClientAdapter());
 
   final InventoryRepository _repository;
   final InventoryRemoteDataSource _remoteDataSource;

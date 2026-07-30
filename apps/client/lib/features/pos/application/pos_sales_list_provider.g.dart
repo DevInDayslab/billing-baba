@@ -33,7 +33,7 @@ final class PosSalesListProvider
   PosSalesList create() => PosSalesList();
 }
 
-String _$posSalesListHash() => r'57ead5229e4f354928fbfd2caade9274c991c5c1';
+String _$posSalesListHash() => r'cd954c66198e1831cba226034ffed70ad04cc2bc';
 
 abstract class _$PosSalesList extends $AsyncNotifier<List<PosSale>> {
   FutureOr<List<PosSale>> build();

@@ -62,7 +62,6 @@ class _PaymentOutPageState extends ConsumerState<DesktopPaymentOutPage> {
           children: [
             PurchasePageTitleBar(
               currentRoute: AppRoutes.purchasePaymentOut,
-              onSettingsTap: () => debugPrint('Settings tapped'),
             ),
             const SizedBox(height: AppSpacing.md),
             PurchaseSectionAsyncContent(

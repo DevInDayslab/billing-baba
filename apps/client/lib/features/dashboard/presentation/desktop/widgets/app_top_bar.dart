@@ -1,11 +1,10 @@
-import 'package:billing_baba/core/providers/connectivity_provider.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/global_search_field.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/sync_toolbar_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +17,6 @@ class AppTopBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isOnline = ref.watch(networkConnectivityProvider);
-
     return Container(
       width: double.infinity,
       height: DashboardSpacing.topBarHeight,
@@ -63,28 +60,8 @@ class AppTopBar extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
               ],
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minWidth: 320,
-                      maxWidth: 600,
-                    ),
-                    child: const GlobalSearchField(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              if (!isOnline)
-                const Tooltip(
-                  message: 'You are offline',
-                  child: Icon(
-                    Icons.cloud_off_outlined,
-                    size: 18,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              if (!isOnline) const SizedBox(width: AppSpacing.sm),
+              const Expanded(child: GlobalSearchField()),
+              const SizedBox(width: AppSpacing.md),
               _TopBarActions(showQuickButtons: !isCompact),
             ],
           );
@@ -122,17 +99,8 @@ class _TopBarActions extends ConsumerWidget {
         ],
         const QuickCreateMenuButton(),
         const SizedBox(width: AppSpacing.xs),
-        _TopBarIconButton(
-          tooltip: 'Refresh',
-          icon: Icons.refresh,
-          onPressed: () => ref.read(dashboardProvider.notifier).refresh(),
-        ),
-        _TopBarIconButton(
-          tooltip: 'Cloud Sync',
-          icon: Icons.cloud_done_outlined,
-          iconColor: Colors.green.shade600,
-          onPressed: () {},
-        ),
+        const SyncNowToolbarButton(),
+        const CloudSyncToolbarButton(),
       ],
     );
   }
@@ -143,19 +111,17 @@ class _TopBarIconButton extends StatelessWidget {
     required this.tooltip,
     required this.icon,
     required this.onPressed,
-    this.iconColor,
   });
 
   final String tooltip;
   final IconData icon;
   final VoidCallback onPressed;
-  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       tooltip: tooltip,
-      icon: Icon(icon, size: 20, color: iconColor ?? AppColors.textSecondary),
+      icon: Icon(icon, size: 20, color: AppColors.textSecondary),
       onPressed: onPressed,
       padding: const EdgeInsets.all(AppSpacing.sm),
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -184,17 +150,18 @@ class _QuickActionButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: backgroundColor,
         foregroundColor: Colors.white,
+        elevation: 0,
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm + 2,
         ),
-        minimumSize: const Size(0, 34),
+        minimumSize: const Size(0, 40),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
       ),
-      icon: Icon(icon, size: 15),
+      icon: Icon(icon, size: 18),
       label: Text(
         label,
         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),

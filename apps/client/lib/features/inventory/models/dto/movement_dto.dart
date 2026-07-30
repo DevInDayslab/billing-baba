@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/json_field_parsers.dart';
+import 'package:billing_baba/shared/utils/json_field_parsers.dart';
 import 'package:billing_baba/features/inventory/models/dto/pagination_meta_dto.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
