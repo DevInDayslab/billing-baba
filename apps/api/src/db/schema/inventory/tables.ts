@@ -2,11 +2,13 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   integer,
+  jsonb,
   pgTable,
   text,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import {
   money,
@@ -24,17 +26,79 @@ import { users } from '../identity/tables';
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
 
-export const categories = pgTable('categories', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-});
+export { itemAlternatives } from './item-alternatives.table';
 
-export const brands = pgTable('brands', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-});
+export const categories = pgTable(
+  'categories',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+  },
+  (table) => [
+    syncPullIndex('categories', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
+
+export const unitDefinitions = pgTable(
+  'unit_definitions',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    shortName: text('short_name').notNull(),
+    symbol: text('symbol'),
+    decimalPlaces: integer('decimal_places').notNull().default(0),
+    isSystem: boolean('is_system').notNull().default(false),
+    isActive: boolean('is_active').notNull().default(true),
+  },
+  (table) => [
+    uniqueIndex('uq_unit_definitions_business_name_active')
+      .on(table.businessId, sql`lower(${table.name})`)
+      .where(sql`${table.isDeleted} = false`),
+    uniqueIndex('uq_unit_definitions_business_short_name_active')
+      .on(table.businessId, sql`lower(${table.shortName})`)
+      .where(sql`${table.isDeleted} = false`),
+    syncPullIndex(
+      'unit_definitions',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
+  ],
+);
+
+export const unitConversions = pgTable(
+  'unit_conversions',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    fromUnitId: uuid('from_unit_id')
+      .notNull()
+      .references(() => unitDefinitions.id),
+    toUnitId: uuid('to_unit_id')
+      .notNull()
+      .references(() => unitDefinitions.id),
+    conversionFactor: money('conversion_factor').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_unit_conversions_business_pair_active')
+      .on(table.businessId, table.fromUnitId, table.toUnitId)
+      .where(sql`${table.isDeleted} = false`),
+  ],
+);
+
+export const brands = pgTable(
+  'brands',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+  },
+  (table) => [
+    syncPullIndex('brands', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 export const items = pgTable(
   'items',
@@ -42,6 +106,9 @@ export const items = pgTable(
     ...syncedBusinessColumns,
     businessId: businessId(),
     name: text('name').notNull(),
+    shortName: text('short_name'),
+    alias: text('alias'),
+    searchKeywords: text('search_keywords'),
     description: text('description'),
     itemType: itemTypeEnum('item_type').notNull().default('product'),
     hasStockTracking: boolean('has_stock_tracking').notNull().default(true),
@@ -56,12 +123,14 @@ export const items = pgTable(
     salePrice: money('sale_price').notNull().default('0'),
     purchasePrice: money('purchase_price').notNull().default('0'),
     reorderLevel: money('reorder_level'),
+    defaultTaxRate: money('default_tax_rate'),
     primaryImageUrl: text('primary_image_url'),
   },
   (table) => [
     uniqueIndex('uq_items_business_barcode_active')
       .on(table.businessId, table.barcode)
       .where(sql`${table.isDeleted} = false AND ${table.barcode} IS NOT NULL`),
+    syncPullIndex('items', table.businessId, table.updatedAt, table.isDeleted),
   ],
 );
 
@@ -72,6 +141,7 @@ export const itemImages = pgTable('item_images', {
     .notNull()
     .references(() => items.id),
   imageUrl: text('image_url').notNull(),
+  mediaAssetId: uuid('media_asset_id'),
   sortOrder: integer('sort_order').notNull().default(0),
   isPrimary: boolean('is_primary').notNull().default(false),
 });
@@ -126,13 +196,19 @@ export const itemPriceHistory = pgTable('item_price_history', {
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
 
-export const godowns = pgTable('godowns', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-  address: text('address'),
-  isDefault: boolean('is_default').notNull().default(false),
-});
+export const godowns = pgTable(
+  'godowns',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    address: text('address'),
+    isDefault: boolean('is_default').notNull().default(false),
+  },
+  (table) => [
+    syncPullIndex('godowns', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 export const itemLocations = pgTable('item_locations', {
   ...syncedBusinessColumns,
@@ -146,6 +222,7 @@ export const itemLocations = pgTable('item_locations', {
   rack: text('rack'),
   shelf: text('shelf'),
   photoUrl: text('photo_url'),
+  photoMediaAssetId: uuid('photo_media_asset_id'),
   photoTakenAt: timestamptz('photo_taken_at'),
 });
 
@@ -188,8 +265,10 @@ export const inventoryMovements = pgTable('inventory_movements', {
   movementType: inventoryMovementTypeEnum('movement_type').notNull(),
   quantityDelta: money('quantity_delta').notNull(),
   costPerUnit: money('cost_per_unit'),
+  unit: text('unit'),
   referenceId: uuid('reference_id'),
   referenceType: text('reference_type'),
+  notes: text('notes'),
   createdAt: timestamptz('created_at').notNull().defaultNow(),
   createdBy: uuid('created_by').references(() => users.id),
 });

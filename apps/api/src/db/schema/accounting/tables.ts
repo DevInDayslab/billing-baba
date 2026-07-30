@@ -12,6 +12,7 @@ import {
   ledgerEntryTypeEnum,
   paymentDirectionEnum,
   paymentModeEnum,
+  paymentSourceEnum,
   shortPaymentHandlingEnum,
 } from '../enums';
 import { purchaseDocuments } from '../purchases/tables';
@@ -56,8 +57,10 @@ export const payments = pgTable('payments', {
   amount: money('amount').notNull(),
   paymentMode: paymentModeEnum('payment_mode').notNull(),
   paymentDate: timestamptz('payment_date').notNull().defaultNow(),
+  source: paymentSourceEnum('source').notNull().default('manual'),
   referenceNumber: text('reference_number'),
   notes: text('notes'),
+  discountAmount: money('discount_amount').notNull().default('0'),
   shortPaymentHandling: shortPaymentHandlingEnum('short_payment_handling'),
 });
 

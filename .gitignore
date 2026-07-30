@@ -46,9 +46,12 @@ htmlcov/
 *.o
 *.so
 *.dylib
+installer/deps/*.exe
 
 # Secrets — never commit
 *.pem
 *.key
 credentials.json
 secrets/
+.vercel
+.env*

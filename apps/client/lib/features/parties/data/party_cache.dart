@@ -22,8 +22,10 @@ class PartyLocalExtension {
     this.openingBalanceAsOfDate,
     this.loyaltyPointsOpeningBalance = '',
     this.loyaltyPointsAsOfDate,
+    this.loyaltyPointsBalance = '',
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.defaultPriceTier = '',
   });
 
   factory PartyLocalExtension.fromJson(Map<String, dynamic> json) {
@@ -48,8 +50,10 @@ class PartyLocalExtension {
       loyaltyPointsAsOfDate: json['loyalty_points_as_of_date'] != null
           ? DateTime.tryParse(json['loyalty_points_as_of_date'] as String)
           : null,
+      loyaltyPointsBalance: json['loyalty_points_balance'] as String? ?? '',
       additionalField1: json['additional_field_1'] as String? ?? '',
       additionalField2: json['additional_field_2'] as String? ?? '',
+      defaultPriceTier: json['default_price_tier'] as String? ?? '',
     );
   }
 
@@ -70,12 +74,16 @@ class PartyLocalExtension {
       openingBalanceAsOfDate: result.openingBalanceAsOfDate,
       loyaltyPointsOpeningBalance: result.loyaltyPointsOpeningBalance,
       loyaltyPointsAsOfDate: result.loyaltyPointsAsOfDate,
+      loyaltyPointsBalance: _initialLoyaltyBalance(
+        result.loyaltyPointsOpeningBalance,
+      ),
       additionalField1: result.additionalField1Enabled
           ? result.additionalField1
           : '',
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2
           : '',
+      defaultPriceTier: result.defaultPriceTier,
     );
   }
 
@@ -94,8 +102,10 @@ class PartyLocalExtension {
   final DateTime? openingBalanceAsOfDate;
   final String loyaltyPointsOpeningBalance;
   final DateTime? loyaltyPointsAsOfDate;
+  final String loyaltyPointsBalance;
   final String additionalField1;
   final String additionalField2;
+  final String defaultPriceTier;
 
   Map<String, dynamic> toJson() => {
     'gst_type': gstType,
@@ -115,9 +125,16 @@ class PartyLocalExtension {
     'loyalty_points_opening_balance': loyaltyPointsOpeningBalance,
     if (loyaltyPointsAsOfDate != null)
       'loyalty_points_as_of_date': loyaltyPointsAsOfDate!.toIso8601String(),
+    'loyalty_points_balance': loyaltyPointsBalance,
     'additional_field_1': additionalField1,
     'additional_field_2': additionalField2,
+    'default_price_tier': defaultPriceTier,
   };
+}
+
+String _initialLoyaltyBalance(String openingBalance) {
+  final opening = double.tryParse(openingBalance) ?? 0;
+  return opening > 0 ? openingBalance : '';
 }
 
 class PartyCache {
@@ -139,6 +156,9 @@ class PartyCache {
 
   String _selectedKey(String businessId) =>
       '${StorageKeys.selectedPartyId}_$businessId';
+
+  String _groupNamesKey(String businessId) =>
+      '${StorageKeys.partyGroupNames}_$businessId';
 
   Future<void> saveParties(
     String businessId,
@@ -174,7 +194,7 @@ class PartyCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -202,7 +222,7 @@ class PartyCache {
           ),
         ),
       );
-    } catch (_) {
+    } on Object catch (_) {
       return {};
     }
   }
@@ -266,12 +286,31 @@ class PartyCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
 
   Future<void> clearPendingOperations(String businessId) async {
     await _storage.write(_pendingKey(businessId), '[]');
+  }
+
+  Future<void> savePartyGroupNames(
+    String businessId,
+    List<String> names,
+  ) async {
+    await _storage.write(_groupNamesKey(businessId), jsonEncode(names));
+  }
+
+  List<String> readPartyGroupNames(String businessId) {
+    final raw = _storage.read(_groupNamesKey(businessId));
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      return decoded.map((item) => item.toString()).toList();
+    } on Object catch (_) {
+      return [];
+    }
   }
 }

@@ -1,12 +1,24 @@
+import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import {
+  applyHiddenLedgerVisibility,
+  applyHiddenLedgerVisibilityList,
+} from '../../shared/hidden-ledger/party-hidden-ledger';
+import { resolvePartyPricingTier } from '../../shared/pricing/pricing-tier';
+import { PartyProfileImageService } from './party-profile-image.service';
+import type { UserRole } from '../auth/auth.types';
 import { PartyRepository } from './party.repository';
 import type {
   CreatePartyBody,
   ListPartiesQuery,
   UpdatePartyBody,
 } from './party.schema';
-import type { PartyRecord } from './party.types';
+import type {
+  PartyDeleteAction,
+  PartyDeleteStatus,
+  PartyRecord,
+} from './party.types';
 import {
   normalizeGstin,
   normalizeMobile,
@@ -18,8 +30,9 @@ import {
 
 export class PartyService {
   private readonly repository: PartyRepository;
+  private readonly profileImages: PartyProfileImageService | null;
 
-  constructor() {
+  constructor(config?: AppConfig) {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -29,12 +42,16 @@ export class PartyService {
       );
     }
     this.repository = new PartyRepository(db);
+    this.profileImages = config
+      ? new PartyProfileImageService({ config, repository: this.repository })
+      : null;
   }
 
   async listParties(
     businessId: string,
     accountId: string,
     query: ListPartiesQuery,
+    role?: UserRole,
   ): Promise<{
     data: PartyRecord[];
     meta: { page: number; limit: number; total: number };
@@ -52,8 +69,16 @@ export class PartyService {
       order: query.order,
     });
 
+    const enriched = this.profileImages
+      ? await this.profileImages.enrichParties(
+          businessId,
+          accountId,
+          result.rows,
+        )
+      : result.rows;
+
     return {
-      data: result.rows,
+      data: applyHiddenLedgerVisibilityList(enriched, role),
       meta: {
         page: query.page,
         limit: query.limit,
@@ -66,6 +91,7 @@ export class PartyService {
     businessId: string,
     accountId: string,
     partyId: string,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -74,7 +100,8 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return party;
+    const enriched = await this.enrich(businessId, accountId, party);
+    return applyHiddenLedgerVisibility(enriched, role);
   }
 
   async createParty(
@@ -82,6 +109,7 @@ export class PartyService {
     accountId: string,
     userId: string | undefined,
     input: CreatePartyBody,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -103,14 +131,31 @@ export class PartyService {
       await this.assertMobileAvailable(businessId, mobile);
     }
 
-    return this.repository.create({
+    const additionalPhones = this.normalizeAdditionalPhones(
+      input.additional_phones,
+      mobile,
+    );
+    await this.assertAdditionalPhonesAvailable(
+      businessId,
+      additionalPhones,
+    );
+
+    if (gstin) {
+      await this.assertGstinAvailable(businessId, gstin);
+    }
+
+    const created = await this.repository.create({
       businessId,
       name: input.name.trim(),
+      legalName: input.legal_name?.trim() || null,
+      alias: input.alias?.trim() || null,
       mobile,
       email: input.email?.trim() || null,
       partyType: input.party_type,
       partyCategory: input.party_category ?? null,
-      pricingTier: input.pricing_tier,
+      partyGroup: input.party_group?.trim() || null,
+      areaCode: input.area_code?.trim() || null,
+      pricingTier: resolvePartyPricingTier(input) ?? 'tier_1',
       gstin,
       stateCode: resolveStateCode(input.state, input.state_code),
       areaId: input.area_id ?? null,
@@ -121,6 +166,23 @@ export class PartyService {
       createdBy: userId ?? null,
       updatedBy: userId ?? null,
     });
+
+    if (additionalPhones.length > 0) {
+      await this.repository.replaceAdditionalPhones(
+        businessId,
+        created.id,
+        additionalPhones,
+        userId ?? null,
+      );
+    }
+
+    const refreshed = await this.repository.findById(businessId, created.id);
+    const enriched = await this.enrich(
+      businessId,
+      accountId,
+      refreshed ?? created,
+    );
+    return applyHiddenLedgerVisibility(enriched, role);
   }
 
   async updateParty(
@@ -129,6 +191,7 @@ export class PartyService {
     userId: string | undefined,
     partyId: string,
     input: UpdatePartyBody,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -159,8 +222,37 @@ export class PartyService {
       await this.assertMobileAvailable(businessId, mobile, partyId);
     }
 
+    if (gstin) {
+      await this.assertGstinAvailable(businessId, gstin, partyId);
+    }
+
+    const resolvedPrimaryMobile = mobile ?? existing.mobile;
+    const additionalPhones =
+      input.additional_phones !== undefined
+        ? this.normalizeAdditionalPhones(
+            input.additional_phones,
+            resolvedPrimaryMobile,
+          )
+        : undefined;
+
+    if (additionalPhones !== undefined) {
+      await this.assertAdditionalPhonesAvailable(
+        businessId,
+        additionalPhones,
+        partyId,
+      );
+    }
+
+    const resolvedPricingTier = resolvePartyPricingTier(input);
+
     const updated = await this.repository.update(businessId, partyId, {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+      ...(input.legal_name !== undefined
+        ? { legalName: input.legal_name?.trim() || null }
+        : {}),
+      ...(input.alias !== undefined
+        ? { alias: input.alias?.trim() || null }
+        : {}),
       ...(mobile !== undefined ? { mobile } : {}),
       ...(input.email !== undefined
         ? { email: input.email?.trim() || null }
@@ -171,8 +263,14 @@ export class PartyService {
       ...(input.party_category !== undefined
         ? { partyCategory: input.party_category ?? null }
         : {}),
-      ...(input.pricing_tier !== undefined
-        ? { pricingTier: input.pricing_tier }
+      ...(input.party_group !== undefined
+        ? { partyGroup: input.party_group?.trim() || null }
+        : {}),
+      ...(input.area_code !== undefined
+        ? { areaCode: input.area_code?.trim() || null }
+        : {}),
+      ...(resolvedPricingTier !== undefined
+        ? { pricingTier: resolvedPricingTier }
         : {}),
       ...(gstin !== undefined ? { gstin } : {}),
       ...(input.state !== undefined || input.state_code !== undefined
@@ -198,15 +296,29 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return updated;
+    if (additionalPhones !== undefined) {
+      await this.repository.replaceAdditionalPhones(
+        businessId,
+        partyId,
+        additionalPhones,
+        userId ?? null,
+      );
+    }
+
+    const refreshed = await this.repository.findById(businessId, partyId);
+    const enriched = await this.enrich(
+      businessId,
+      accountId,
+      refreshed ?? updated,
+    );
+    return applyHiddenLedgerVisibility(enriched, role);
   }
 
-  async deleteParty(
+  async getPartyDeleteStatus(
     businessId: string,
     accountId: string,
-    userId: string | undefined,
     partyId: string,
-  ): Promise<void> {
+  ): Promise<PartyDeleteStatus> {
     await this.assertBusinessAccess(businessId, accountId);
 
     const existing = await this.repository.findById(businessId, partyId);
@@ -214,28 +326,72 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    const dependencyCount = await this.repository.countDocumentDependencies(
+    const references = await this.repository.countDeleteReferences(
       businessId,
       partyId,
     );
 
-    if (dependencyCount > 0) {
-      throw new AppError(
-        'PARTY_HAS_DEPENDENCIES',
-        'Cannot delete party with existing documents or ledger entries',
-        422,
-      );
+    const hasReferences = Object.values(references).some((count) => count > 0);
+    if (!hasReferences) {
+      return { canDelete: true };
     }
 
-    const deleted = await this.repository.softDelete(
-      businessId,
-      partyId,
-      userId ?? null,
-    );
+    return { canDelete: false, references };
+  }
 
-    if (!deleted) {
+  async deleteParty(
+    businessId: string,
+    accountId: string,
+    userId: string | undefined,
+    partyId: string,
+  ): Promise<PartyDeleteAction> {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    const existing = await this.repository.findById(businessId, partyId);
+    if (!existing) {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
+
+    const references = await this.repository.countDeleteReferences(
+      businessId,
+      partyId,
+    );
+
+    const hasReferences = Object.values(references).some((count) => count > 0);
+
+    if (!hasReferences) {
+      const deleted = await this.repository.softDelete(
+        businessId,
+        partyId,
+        userId ?? null,
+      );
+
+      if (!deleted) {
+        throw new AppError('NOT_FOUND', 'Party not found', 404);
+      }
+
+      return 'deleted';
+    }
+
+    const deactivated = await this.repository.update(businessId, partyId, {
+      isActive: false,
+      updatedBy: userId ?? null,
+    });
+
+    if (!deactivated) {
+      throw new AppError('NOT_FOUND', 'Party not found', 404);
+    }
+
+    return 'deactivated';
+  }
+
+  private async enrich(
+    businessId: string,
+    accountId: string,
+    party: PartyRecord,
+  ): Promise<PartyRecord> {
+    if (!this.profileImages) return party;
+    return this.profileImages.enrichParty(businessId, accountId, party);
   }
 
   private async assertBusinessAccess(
@@ -270,6 +426,56 @@ export class PartyService {
     if (conflictId) {
       throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
         mobile: ['This mobile number is already registered to another party'],
+      });
+    }
+  }
+
+  private normalizeAdditionalPhones(
+    phones: string[] | undefined,
+    primaryMobile: string | null,
+  ): string[] {
+    const seen = new Set<string>();
+    if (primaryMobile) {
+      seen.add(primaryMobile);
+    }
+
+    const normalized: string[] = [];
+    for (const phone of phones ?? []) {
+      const mobile = normalizeMobile(phone);
+      if (!mobile || !validateNormalizedMobile(mobile) || seen.has(mobile)) {
+        continue;
+      }
+      seen.add(mobile);
+      normalized.push(mobile);
+    }
+
+    return normalized;
+  }
+
+  private async assertAdditionalPhonesAvailable(
+    businessId: string,
+    mobiles: string[],
+    excludePartyId?: string,
+  ): Promise<void> {
+    for (const mobile of mobiles) {
+      await this.assertMobileAvailable(businessId, mobile, excludePartyId);
+    }
+  }
+
+  private async assertGstinAvailable(
+    businessId: string,
+    gstin: string,
+    excludePartyId?: string,
+  ): Promise<void> {
+    const conflictId = await this.repository.findActiveGstinConflict(
+      businessId,
+      gstin,
+      excludePartyId,
+    );
+
+    if (conflictId) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        gstin: ['This GSTIN is already registered to another party'],
       });
     }
   }

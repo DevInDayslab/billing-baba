@@ -1,10 +1,14 @@
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:flutter/material.dart';
 
 class DebitNoteFormState {
   const DebitNoteFormState({
+    this.documentId,
+    this.partyId,
+    this.godownId,
     this.party = '',
     this.returnNo = '1',
     this.billNumber = '',
@@ -21,8 +25,14 @@ class DebitNoteFormState {
     this.roundOff = true,
     this.showValidationErrors = false,
     this.isDirty = false,
+    this.isLoading = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
+  final String? documentId;
+  final String? partyId;
+  final String? godownId;
   final String party;
   final String returnNo;
   final String billNumber;
@@ -39,6 +49,9 @@ class DebitNoteFormState {
   final bool roundOff;
   final bool showValidationErrors;
   final bool isDirty;
+  final bool isLoading;
+  final bool isSaving;
+  final String? saveError;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -57,16 +70,24 @@ class DebitNoteFormState {
     return roundOff ? grand.roundToDouble() : grand;
   }
 
-  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError =>
+      showValidationErrors && (partyId == null || partyId!.isEmpty);
 
-  bool get hasValidLineItems =>
-      items.any((item) => item.itemName.trim().isNotEmpty);
+  bool get hasValidLineItems => hasValidNamedLineItems<SaleLineItem>(
+    items: items,
+    nameOf: (item) => item.itemName,
+    qtyOf: (item) => item.qty,
+  );
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      (partyId != null && partyId!.isNotEmpty) && hasValidLineItems;
 
   DebitNoteFormState copyWith({
+    String? documentId,
+    String? partyId,
+    String? godownId,
     String? party,
     String? returnNo,
     String? billNumber,
@@ -83,8 +104,16 @@ class DebitNoteFormState {
     bool? roundOff,
     bool? showValidationErrors,
     bool? isDirty,
+    bool? isLoading,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
+    bool clearPartyId = false,
   }) {
     return DebitNoteFormState(
+      documentId: documentId ?? this.documentId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
+      godownId: godownId ?? this.godownId,
       party: party ?? this.party,
       returnNo: returnNo ?? this.returnNo,
       billNumber: billNumber ?? this.billNumber,
@@ -101,6 +130,9 @@ class DebitNoteFormState {
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
 }

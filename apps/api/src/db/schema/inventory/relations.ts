@@ -13,11 +13,37 @@ import {
   itemTierPrices,
   itemUnits,
   stockLevels,
+  unitConversions,
+  unitDefinitions,
 } from './tables';
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   items: many(items),
 }));
+
+export const unitDefinitionsRelations = relations(
+  unitDefinitions,
+  ({ many }) => ({
+    fromConversions: many(unitConversions, { relationName: 'fromUnit' }),
+    toConversions: many(unitConversions, { relationName: 'toUnit' }),
+  }),
+);
+
+export const unitConversionsRelations = relations(
+  unitConversions,
+  ({ one }) => ({
+    fromUnit: one(unitDefinitions, {
+      fields: [unitConversions.fromUnitId],
+      references: [unitDefinitions.id],
+      relationName: 'fromUnit',
+    }),
+    toUnit: one(unitDefinitions, {
+      fields: [unitConversions.toUnitId],
+      references: [unitDefinitions.id],
+      relationName: 'toUnit',
+    }),
+  }),
+);
 
 export const brandsRelations = relations(brands, ({ many }) => ({
   items: many(items),

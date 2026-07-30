@@ -7,7 +7,9 @@ export type BusinessListItem = {
   email: string | null;
   state_code: string;
   address: string | null;
+  owner_name: string | null;
   is_shared: boolean;
+  logo_url: string | null;
 };
 
 export type BusinessDetail = BusinessListItem;
@@ -31,4 +33,13 @@ export type BusinessProfile = {
   language: string;
   logo_url: string | null;
   signature_url: string | null;
+  stamp_url: string | null;
+  upi_qr_url: string | null;
+  /** UPI VPA for Scan-to-Pay (e.g. merchant@upi) */
+  upi_id: string | null;
+};
+
+export type CommerceSettings = {
+  pricing_tier_labels: Record<string, string>;
+  default_invoice_tax_rate: string | null;
 };

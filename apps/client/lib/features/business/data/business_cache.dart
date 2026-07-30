@@ -41,7 +41,7 @@ class BusinessCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -60,7 +60,7 @@ class BusinessCache {
       return AccountProfile.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
@@ -88,7 +88,7 @@ class BusinessCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -111,7 +111,7 @@ class BusinessCache {
       return BusinessProfileModel.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
@@ -150,5 +150,35 @@ class BusinessCache {
   Future<void> updateSelectedBusiness(BusinessProfileModel profile) async {
     await saveBusinessProfile(profile);
     await saveLastOpenedBusinessId(profile.id);
+  }
+
+  Future<void> removeBusiness(String businessId) async {
+    final businesses = await readBusinesses();
+    if (businesses.isEmpty) return;
+
+    final updated = businesses
+        .where((business) => business['id'] != businessId)
+        .toList();
+
+    final accountId = readCachedBusinessesAccountId();
+    if (accountId == null || accountId.isEmpty) {
+      await _storage.write(
+        StorageKeys.cachedBusinesses,
+        jsonEncode(updated),
+      );
+      return;
+    }
+
+    await saveBusinesses(updated, accountId: accountId);
+  }
+
+  Future<void> clearSelectedBusiness() async {
+    await _storage.write(StorageKeys.lastOpenedBusinessId, '');
+    await _storage.write(StorageKeys.cachedBusinessProfile, '');
+    await _storage.deleteSecure(StorageKeys.selectedBusinessId);
+  }
+
+  Future<void> clearBusinessProfile() async {
+    await _storage.write(StorageKeys.cachedBusinessProfile, '');
   }
 }

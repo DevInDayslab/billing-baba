@@ -1,0 +1,65 @@
+# Flutter CI for Billing Baba client.
+# Runs on pull requests and pushes targeting `develop`.
+#
+# Does not build desktop binaries — desktop builds run only in the release workflow.
+
+name: Flutter CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+  
+concurrency:
+  group: flutter-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_WORKING_DIRECTORY: apps/client
+
+jobs:
+  ci:
+    name: Analyze and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Flutter .env
+        working-directory: .
+        env:
+          FLUTTER_ENV_DIR: apps/client
+          APP_ENV: ${{ vars.APP_ENV }}
+          DEBUG: ${{ vars.DEBUG }}
+          ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+          DEV_OTP: ${{ vars.DEV_OTP }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+          MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        run: bash .github/scripts/setup-flutter-env.sh
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        # Fail only on analyzer errors; info/warnings are reported but non-blocking.
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Test
+        run: flutter test

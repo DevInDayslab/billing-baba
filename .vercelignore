@@ -1,0 +1,7 @@
+apps/client
+apps/api
+docs
+coverage
+scripts
+.cursor
+.github

@@ -10,6 +10,7 @@ class PaymentOutModel {
     required this.status,
     required this.totalAmount,
     required this.paidAmount,
+    this.partyId,
     this.discount = 0,
     this.description = '',
     this.user = 'Admin',
@@ -20,6 +21,7 @@ class PaymentOutModel {
   final String receiptNo;
   final DateTime date;
   final String partyName;
+  final String? partyId;
   final String paymentType;
   final PaymentOutStatus status;
   final double totalAmount;

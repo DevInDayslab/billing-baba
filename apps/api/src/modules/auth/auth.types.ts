@@ -16,6 +16,7 @@ export type AccountRecord = {
   name: string | null;
   email: string | null;
   avatarUrl: string | null;
+  avatarMediaAssetId: string | null;
   timezone: string;
   language: string;
   createdAt: Date;

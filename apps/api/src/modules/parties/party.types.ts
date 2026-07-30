@@ -1,6 +1,10 @@
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
+
 export type PartyRecord = {
   id: string;
   name: string;
+  legal_name: string | null;
+  alias: string | null;
   mobile: string | null;
   email: string | null;
   party_type: 'customer' | 'supplier' | 'both';
@@ -11,7 +15,10 @@ export type PartyRecord = {
     | 'manufacturer'
     | 'custom'
     | null;
-  pricing_tier: 'tier_1' | 'tier_2' | 'tier_3';
+  party_group: string | null;
+  area_code: string | null;
+  pricing_tier: PricingTier;
+  default_price_tier: PricingTier;
   gstin: string | null;
   state_code: string | null;
   state: string | null;
@@ -19,8 +26,12 @@ export type PartyRecord = {
   credit_limit: string;
   opening_balance: string;
   balance: string;
+  hidden_ledger_balance?: string;
   is_active: boolean;
   notes: string | null;
+  profile_image_url: string | null;
+  profile_media_asset_id: string | null;
+  additional_phones: string[];
   created_at: string;
   updated_at: string;
 };
@@ -38,6 +49,8 @@ export type PaginatedPartiesResponse = {
 export type PartyInsertValues = {
   businessId: string;
   name: string;
+  legalName?: string | null;
+  alias?: string | null;
   mobile: string | null;
   email: string | null;
   partyType: 'customer' | 'supplier' | 'both';
@@ -48,7 +61,9 @@ export type PartyInsertValues = {
     | 'manufacturer'
     | 'custom'
     | null;
-  pricingTier: 'tier_1' | 'tier_2' | 'tier_3';
+  partyGroup?: string | null;
+  areaCode?: string | null;
+  pricingTier: PricingTier;
   gstin: string | null;
   stateCode: string | null;
   areaId?: string | null;
@@ -64,6 +79,7 @@ export type PartyUpdateValues = Partial<
   Omit<PartyInsertValues, 'businessId' | 'createdBy'>
 > & {
   updatedBy?: string | null;
+  hiddenLedgerBalance?: string;
 };
 
 export type ListPartiesParams = {
@@ -76,3 +92,17 @@ export type ListPartiesParams = {
   sort: 'name' | 'created_at' | 'opening_balance';
   order: 'asc' | 'desc';
 };
+
+export type PartyDeleteReferences = {
+  sales: number;
+  purchases: number;
+  payments: number;
+  salesReturns: number;
+  purchaseReturns: number;
+};
+
+export type PartyDeleteStatus =
+  | { canDelete: true }
+  | { canDelete: false; references: PartyDeleteReferences };
+
+export type PartyDeleteAction = 'deleted' | 'deactivated';

@@ -4,6 +4,7 @@ import { businesses } from '../../db/schema/business/tables';
 import { users } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
 import { expenseCategories } from '../../db/schema/purchases/tables';
+import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
 import {
   businessSettings,
   documentNumberSequences,
@@ -12,11 +13,22 @@ import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
 } from './business.schema';
+import type { BrandingKind } from './business-branding.constants';
 import type {
   BusinessDetail,
   BusinessListItem,
   BusinessProfile,
+  CommerceSettings,
 } from './business.types';
+import {
+  defaultPricingTierLabels,
+  PRICING_TIER_VALUES,
+} from '../../shared/pricing/pricing-tier';
+import type { UpdateCommerceSettingsBody } from './business-commerce-settings.schema';
+
+export type BusinessListItemRow = BusinessListItem & {
+  logoMediaAssetId: string | null;
+};
 import {
   currentFiscalYearLabel,
   resolveStateCode,
@@ -26,7 +38,7 @@ import {
 export class BusinessRepository {
   constructor(private readonly db: Database) {}
 
-  async listByAccountId(accountId: string): Promise<BusinessListItem[]> {
+  async listByAccountId(accountId: string): Promise<BusinessListItemRow[]> {
     const rows = await this.db
       .select({
         id: businesses.id,
@@ -37,6 +49,8 @@ export class BusinessRepository {
         email: businesses.email,
         stateCode: businesses.stateCode,
         address: businesses.address,
+        logoUrl: businesses.logoUrl,
+        logoMediaAssetId: businesses.logoMediaAssetId,
       })
       .from(users)
       .innerJoin(businesses, eq(users.businessId, businesses.id))
@@ -49,6 +63,10 @@ export class BusinessRepository {
         ),
       );
 
+    const ownerNames = await this.loadOwnerNamesByBusinessIds(
+      rows.map((row) => row.id),
+    );
+
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -58,8 +76,72 @@ export class BusinessRepository {
       email: row.email,
       state_code: row.stateCode,
       address: row.address,
+      owner_name: ownerNames.get(row.id) ?? null,
       is_shared: row.role !== 'owner',
+      logo_url: row.logoUrl,
+      logoMediaAssetId: row.logoMediaAssetId,
     }));
+  }
+
+  private async loadOwnerNamesByBusinessIds(
+    businessIds: string[],
+  ): Promise<Map<string, string>> {
+    if (businessIds.length === 0) return new Map();
+
+    const owners = await this.db
+      .select({
+        businessId: users.businessId,
+        name: users.name,
+      })
+      .from(users)
+      .where(and(eq(users.role, 'owner'), eq(users.isDeleted, false)));
+
+    const map = new Map<string, string>();
+    for (const owner of owners) {
+      if (businessIds.includes(owner.businessId)) {
+        map.set(owner.businessId, owner.name);
+      }
+    }
+    return map;
+  }
+
+  async softDelete(businessId: string, accountId: string): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const [membership] = await tx
+        .select({ role: users.role })
+        .from(users)
+        .innerJoin(businesses, eq(users.businessId, businesses.id))
+        .where(
+          and(
+            eq(users.businessId, businessId),
+            eq(users.accountId, accountId),
+            eq(users.role, 'owner'),
+            eq(users.isActive, true),
+            eq(users.isDeleted, false),
+            eq(businesses.isDeleted, false),
+          ),
+        )
+        .limit(1);
+
+      if (!membership) {
+        return false;
+      }
+
+      const [updated] = await tx
+        .update(businesses)
+        .set({
+          isDeleted: true,
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+          syncVersion: sql`${businesses.syncVersion} + 1`,
+        })
+        .where(
+          and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+        )
+        .returning({ id: businesses.id });
+
+      return updated != null;
+    });
   }
 
   async getProfile(
@@ -102,6 +184,11 @@ export class BusinessRepository {
         language: businesses.language,
         logoUrl: businesses.logoUrl,
         signatureUrl: businesses.signatureUrl,
+        logoMediaAssetId: businesses.logoMediaAssetId,
+        signatureMediaAssetId: businesses.signatureMediaAssetId,
+        stampMediaAssetId: businesses.stampMediaAssetId,
+        upiQrMediaAssetId: businesses.upiQrMediaAssetId,
+        upiId: businesses.upiId,
       })
       .from(businesses)
       .where(
@@ -185,6 +272,9 @@ export class BusinessRepository {
           businessType: input.business_type?.trim() || null,
           businessCategory: input.business_category?.trim() || null,
           pincode: input.pincode?.trim() || null,
+          ...(input.upi_id !== undefined
+            ? { upiId: input.upi_id?.trim() || null }
+            : {}),
           ...(stateCode ? { stateCode } : {}),
           updatedAt: new Date(),
           syncVersion: sql`${businesses.syncVersion} + 1`,
@@ -208,6 +298,7 @@ export class BusinessRepository {
           language: businesses.language,
           logoUrl: businesses.logoUrl,
           signatureUrl: businesses.signatureUrl,
+          upiId: businesses.upiId,
         });
 
       if (!updated) {
@@ -230,6 +321,104 @@ export class BusinessRepository {
     });
   }
 
+  async getCommerceSettings(
+    businessId: string,
+    accountId: string,
+  ): Promise<CommerceSettings | null> {
+    const hasAccess = await this.hasBusinessMembership(businessId, accountId);
+    if (!hasAccess) return null;
+
+    const [row] = await this.db
+      .select({
+        pricingTierLabels: businessSettings.pricingTierLabels,
+        defaultInvoiceTaxRate: businessSettings.defaultInvoiceTaxRate,
+      })
+      .from(businessSettings)
+      .where(eq(businessSettings.businessId, businessId))
+      .limit(1);
+
+    return this.toCommerceSettings(row);
+  }
+
+  async updateCommerceSettings(
+    businessId: string,
+    accountId: string,
+    input: UpdateCommerceSettingsBody,
+  ): Promise<CommerceSettings | null> {
+    const hasAccess = await this.hasBusinessMembership(businessId, accountId);
+    if (!hasAccess) return null;
+
+    const updates: {
+      updatedAt: Date;
+      syncVersion: ReturnType<typeof sql>;
+      pricingTierLabels?: Record<string, string>;
+      defaultInvoiceTaxRate?: string | null;
+    } = {
+      updatedAt: new Date(),
+      syncVersion: sql`${businessSettings.syncVersion} + 1`,
+    };
+
+    if (input.pricing_tier_labels !== undefined) {
+      updates.pricingTierLabels = input.pricing_tier_labels;
+    }
+    if (input.default_invoice_tax_rate !== undefined) {
+      updates.defaultInvoiceTaxRate =
+        input.default_invoice_tax_rate == null
+          ? null
+          : String(input.default_invoice_tax_rate);
+    }
+
+    await this.db
+      .update(businessSettings)
+      .set(updates)
+      .where(eq(businessSettings.businessId, businessId));
+
+    return this.getCommerceSettings(businessId, accountId);
+  }
+
+  private async hasBusinessMembership(
+    businessId: string,
+    accountId: string,
+  ): Promise<boolean> {
+    const [membership] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .innerJoin(businesses, eq(users.businessId, businesses.id))
+      .where(
+        and(
+          eq(users.businessId, businessId),
+          eq(users.accountId, accountId),
+          eq(users.isActive, true),
+          eq(users.isDeleted, false),
+          eq(businesses.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return membership != null;
+  }
+
+  private toCommerceSettings(
+    row:
+      | {
+          pricingTierLabels: Record<string, string> | null;
+          defaultInvoiceTaxRate: string | null;
+        }
+      | undefined,
+  ): CommerceSettings {
+    const defaults = defaultPricingTierLabels();
+    const custom = row?.pricingTierLabels ?? {};
+    const pricing_tier_labels: Record<string, string> = {};
+    for (const tier of PRICING_TIER_VALUES) {
+      pricing_tier_labels[tier] = custom[tier]?.trim() || defaults[tier];
+    }
+
+    return {
+      pricing_tier_labels,
+      default_invoice_tax_rate: row?.defaultInvoiceTaxRate ?? null,
+    };
+  }
+
   private toProfile(
     business: {
       id: string;
@@ -247,6 +436,11 @@ export class BusinessRepository {
       language: string;
       logoUrl: string | null;
       signatureUrl: string | null;
+      logoMediaAssetId?: string | null;
+      signatureMediaAssetId?: string | null;
+      stampMediaAssetId?: string | null;
+      upiQrMediaAssetId?: string | null;
+      upiId?: string | null;
     },
     ownerName: string | null,
   ): BusinessProfile {
@@ -267,7 +461,79 @@ export class BusinessRepository {
       language: business.language,
       logo_url: business.logoUrl,
       signature_url: business.signatureUrl,
+      stamp_url: null,
+      upi_qr_url: null,
+      upi_id: business.upiId ?? null,
     };
+  }
+
+  async getBrandingBindings(businessId: string): Promise<{
+    logoMediaAssetId: string | null;
+    signatureMediaAssetId: string | null;
+    stampMediaAssetId: string | null;
+    upiQrMediaAssetId: string | null;
+  }> {
+    const [row] = await this.db
+      .select({
+        logoMediaAssetId: businesses.logoMediaAssetId,
+        signatureMediaAssetId: businesses.signatureMediaAssetId,
+        stampMediaAssetId: businesses.stampMediaAssetId,
+        upiQrMediaAssetId: businesses.upiQrMediaAssetId,
+      })
+      .from(businesses)
+      .where(
+        and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+      )
+      .limit(1);
+
+    return {
+      logoMediaAssetId: row?.logoMediaAssetId ?? null,
+      signatureMediaAssetId: row?.signatureMediaAssetId ?? null,
+      stampMediaAssetId: row?.stampMediaAssetId ?? null,
+      upiQrMediaAssetId: row?.upiQrMediaAssetId ?? null,
+    };
+  }
+
+  async getBrandingMediaAssetId(
+    businessId: string,
+    kind: BrandingKind,
+  ): Promise<string | null> {
+    const bindings = await this.getBrandingBindings(businessId);
+    return brandingColumnValue(bindings, kind);
+  }
+
+  async bindBrandingAsset(
+    businessId: string,
+    kind: BrandingKind,
+    assetId: string,
+    url: string,
+  ): Promise<void> {
+    await this.db
+      .update(businesses)
+      .set({
+        ...brandingBindSet(kind, assetId, url),
+        updatedAt: new Date(),
+        syncVersion: sql`${businesses.syncVersion} + 1`,
+      })
+      .where(
+        and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+      );
+  }
+
+  async clearBrandingAsset(
+    businessId: string,
+    kind: BrandingKind,
+  ): Promise<void> {
+    await this.db
+      .update(businesses)
+      .set({
+        ...brandingClearSet(kind),
+        updatedAt: new Date(),
+        syncVersion: sql`${businesses.syncVersion} + 1`,
+      })
+      .where(
+        and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+      );
   }
 
   async createWithBootstrap(
@@ -349,11 +615,14 @@ export class BusinessRepository {
         fiscalYear,
       });
 
-      await tx.insert(expenseCategories).values([
-        { businessId: business.id, name: 'Rent', isSystem: true },
-        { businessId: business.id, name: 'Utilities', isSystem: true },
-        { businessId: business.id, name: 'Salaries', isSystem: true },
-      ]);
+      await tx.insert(expenseCategories).values(
+        SYSTEM_EXPENSE_CATEGORIES.map((category) => ({
+          businessId: business.id,
+          name: category.name,
+          categoryType: category.categoryType,
+          isSystem: true,
+        })),
+      );
 
       await tx.insert(categories).values([
         { businessId: business.id, name: 'General' },
@@ -369,8 +638,71 @@ export class BusinessRepository {
         email: business.email,
         state_code: business.stateCode,
         address: business.address,
+        owner_name: ownerName,
+        logo_url: null,
         is_shared: false,
       };
     });
+  }
+}
+
+function brandingColumnValue(
+  bindings: {
+    logoMediaAssetId: string | null;
+    signatureMediaAssetId: string | null;
+    stampMediaAssetId: string | null;
+    upiQrMediaAssetId: string | null;
+  },
+  kind: BrandingKind,
+): string | null {
+  switch (kind) {
+    case 'logo':
+      return bindings.logoMediaAssetId;
+    case 'signature':
+      return bindings.signatureMediaAssetId;
+    case 'stamp':
+      return bindings.stampMediaAssetId;
+    case 'upi_qr':
+      return bindings.upiQrMediaAssetId;
+  }
+}
+
+function brandingBindSet(
+  kind: BrandingKind,
+  assetId: string,
+  url: string,
+): Record<string, string | null> {
+  switch (kind) {
+    case 'logo':
+      return {
+        logoMediaAssetId: assetId,
+        logoUrl: url,
+      };
+    case 'signature':
+      return {
+        signatureMediaAssetId: assetId,
+        signatureUrl: url,
+      };
+    case 'stamp':
+      return {
+        stampMediaAssetId: assetId,
+      };
+    case 'upi_qr':
+      return {
+        upiQrMediaAssetId: assetId,
+      };
+  }
+}
+
+function brandingClearSet(kind: BrandingKind): Record<string, null> {
+  switch (kind) {
+    case 'logo':
+      return { logoMediaAssetId: null, logoUrl: null };
+    case 'signature':
+      return { signatureMediaAssetId: null, signatureUrl: null };
+    case 'stamp':
+      return { stampMediaAssetId: null };
+    case 'upi_qr':
+      return { upiQrMediaAssetId: null };
   }
 }

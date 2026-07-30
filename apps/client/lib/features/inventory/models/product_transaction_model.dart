@@ -9,8 +9,15 @@ class ProductTransaction {
     required this.quantity,
     required this.pricePerUnit,
     required this.status,
+    required this.documentLabel,
+    required this.transactionType,
+    required this.referenceNo,
+    required this.movementType,
     this.unit,
     this.isInbound = false,
+    this.godownName,
+    this.createdByName,
+    this.notes,
   });
 
   final String id;
@@ -24,4 +31,15 @@ class ProductTransaction {
   final double pricePerUnit;
   final String status;
   final bool isInbound;
+  final String documentLabel;
+  final String transactionType;
+  final String referenceNo;
+  final String movementType;
+  final String? godownName;
+  final String? createdByName;
+  final String? notes;
+
+  double get signedQuantity => isInbound ? quantity : -quantity;
+
+  double get amount => quantity * pricePerUnit;
 }

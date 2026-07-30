@@ -1,16 +1,32 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/services/business_local_data_cleanup.dart';
+import 'package:billing_baba/core/services/session_cache_cleanup.dart';
+import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
+import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
-import 'package:billing_baba/features/auth/providers/auth_provider.dart';
+import 'package:billing_baba/features/auth/models/auth_session.dart';
+import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/business/data/business_cache.dart';
 import 'package:billing_baba/features/business/data/business_repository.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/models/create_business_request.dart';
+import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
+import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
+import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'business_service.g.dart';
@@ -41,16 +57,21 @@ class BusinessService {
     bool forceRefresh = false,
   }) async {
     final auth = _ref.read(authProvider);
-    final accountId = auth.session?.user.id;
+    final session = auth.session;
+    final accountId = _businessListCacheAccountId(session);
     final selectedId = authHasBusinessScope(auth)
         ? _cache.readLastOpenedBusinessId()
         : null;
 
-    if (accountId != null) {
+    if (accountId != null && session != null) {
       final cachedAccountId = _cache.readCachedBusinessesAccountId();
       if (cachedAccountId != null &&
           cachedAccountId.isNotEmpty &&
-          cachedAccountId != accountId) {
+          !JwtUtils.isSameAccountCacheKey(
+            cachedAccountId: cachedAccountId,
+            sessionUserId: session.user.id,
+            accessToken: session.accessToken,
+          )) {
         await _cache.clearAll();
       }
     }
@@ -77,6 +98,16 @@ class BusinessService {
       if (cached.isNotEmpty) return cached;
       rethrow;
     }
+  }
+
+  /// Stable SharedPreferences key: JWT `account_id` when present, else user.id.
+  String? _businessListCacheAccountId(AuthSession? session) {
+    if (session == null) return null;
+    final fromJwt = JwtUtils.accountId(session.accessToken);
+    if (fromJwt != null && fromJwt.isNotEmpty) return fromJwt;
+    final id = session.user.id;
+    if (id.isEmpty || id == 'offline') return null;
+    return id;
   }
 
   Future<void> _refreshInBackground(
@@ -154,6 +185,133 @@ class BusinessService {
 
   Future<AccountProfile?> readCachedProfile() => _cache.readProfile();
 
+  Future<BusinessProfileModel?> readCachedBusinessProfile() =>
+      _cache.readBusinessProfile();
+
+  /// Business list from local storage only — no network calls.
+  Future<List<BusinessModel>> readCachedBusinesses() async {
+    final selectedId = _cache.readLastOpenedBusinessId();
+    return _loadFromCache(selectedId);
+  }
+
+  Future<String?> resolveActiveBusinessId() => _resolveBusinessIdForScope();
+
+  Future<String?> _resolveBusinessIdForScope() async {
+    final fromCache = _cache.readLastOpenedBusinessId();
+    if (fromCache != null && fromCache.isNotEmpty) return fromCache;
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    final selected = await storage.readSecure(StorageKeys.selectedBusinessId);
+    if (selected != null && selected.isNotEmpty) return selected;
+
+    final auth = _ref.read(authProvider);
+    if (auth.session?.businesses.length == 1) {
+      return auth.session!.businesses.first.id;
+    }
+
+    return null;
+  }
+
+  Future<void> seedOfflineDevSession(AuthSession session) async {
+    if (!AuthService.isOfflineDevSession(session)) return;
+    if (session.businesses.isEmpty) return;
+
+    final businessSummary = session.businesses.first;
+    final profile = AuthService.offlineDevBusinessProfile(session);
+
+    await _cache.saveBusinessProfile(profile);
+    await rememberLastOpened(businessSummary.id);
+    await _cache.saveBusinesses(
+      [
+        {
+          'id': businessSummary.id,
+          'name': businessSummary.name,
+          'role': businessSummary.role,
+          'owner_name': session.user.name,
+          'phone': session.user.phone,
+        },
+      ],
+      accountId: session.user.id,
+    );
+  }
+
+  Future<bool> _isOfflineDevSession() async {
+    final storage = await _ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    return AuthService.isOfflineDevToken(token ?? '');
+  }
+
+  Future<void> ensureProfileApiBusinessScope({
+    bool forceReselect = false,
+  }) async {
+    final businessId = await _resolveBusinessIdForScope();
+    if (businessId != null &&
+        businessId.isNotEmpty &&
+        BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      BusinessSelectionRetryGuard.logBlockedOnce(
+        'ensureProfileApiBusinessScope',
+        businessId,
+      );
+      return;
+    }
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+
+    if (token != null && AuthService.isOfflineDevToken(token)) {
+      final businessId = await _resolveBusinessIdForScope();
+      if (businessId != null && businessId.isNotEmpty) {
+        await rememberLastOpened(businessId);
+      }
+      return;
+    }
+
+    final jwtBusinessId = JwtUtils.businessId(token);
+    final jwtRole = JwtUtils.role(token);
+
+    BusinessProfileDebugLog.section('PROFILE API SCOPE CHECK');
+    BusinessProfileDebugLog.log(
+      'jwt business_id=${jwtBusinessId ?? '(missing)'} role=${jwtRole ?? '(missing)'}',
+    );
+    BusinessProfileDebugLog.log(
+      'authHasBusinessScope=${authHasBusinessScope(_ref.read(authProvider))}',
+    );
+
+    if (!forceReselect && jwtBusinessId != null && jwtBusinessId.isNotEmpty) {
+      final expectedId = _cache.readLastOpenedBusinessId();
+      if (expectedId == null ||
+          expectedId.isEmpty ||
+          jwtBusinessId == expectedId) {
+        return;
+      }
+      BusinessProfileDebugLog.log(
+        'JWT scoped to $jwtBusinessId but expected $expectedId — re-scoping',
+      );
+    }
+
+    BusinessProfileDebugLog.log(
+      'resolved business_id=${businessId ?? '(none)'} forceReselect=$forceReselect',
+    );
+
+    if (businessId == null || businessId.isEmpty) {
+      throw const BusinessProfileScopeRequired();
+    }
+
+    BusinessProfileDebugLog.log(
+      'Re-selecting business to scope JWT: $businessId',
+    );
+    await scopeJwtToBusiness(businessId);
+  }
+
+  /// Re-scopes the JWT to [businessId] without touching business list/profile providers.
+  Future<void> scopeJwtToBusiness(String businessId) async {
+    if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      return;
+    }
+    await rememberLastOpened(businessId);
+    await _ref.read(authProvider.notifier).selectBusiness(businessId);
+  }
+
   Future<BusinessProfileModel> fetchBusinessProfile({
     bool forceRefresh = false,
   }) async {
@@ -162,21 +320,75 @@ class BusinessService {
       throw const BusinessProfileScopeRequired();
     }
 
+    final session = auth.session;
+    if (session != null && AuthService.isOfflineDevSession(session)) {
+      final selectedBusinessId = _cache.readLastOpenedBusinessId();
+      if (!forceRefresh) {
+        final cached = await _cache.readBusinessProfile();
+        if (cached != null &&
+            (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+          return cached;
+        }
+      }
+      final profile = AuthService.offlineDevBusinessProfile(session);
+      await _cache.saveBusinessProfile(profile);
+      return profile;
+    }
+
     final selectedBusinessId = _cache.readLastOpenedBusinessId();
+    final scopeId = await _resolveBusinessIdForScope();
+
+    if (scopeId != null &&
+        scopeId.isNotEmpty &&
+        BusinessSelectionRetryGuard.isBlocked(scopeId)) {
+      final cached = await _cache.readBusinessProfile();
+      if (cached != null &&
+          (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+        BusinessProfileDebugLog.log(
+          'Returning cached business profile (backend unreachable)',
+        );
+        return cached;
+      }
+      throw const BusinessServerUnavailable();
+    }
 
     if (!forceRefresh) {
       final cached = await _cache.readBusinessProfile();
       if (cached != null &&
           (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+        BusinessProfileDebugLog.log('Returning cached business profile');
         return cached;
       }
     }
+
+    await ensureProfileApiBusinessScope();
 
     try {
       final remote = await _repository.getBusinessProfile();
       await _cache.saveBusinessProfile(remote);
       return remote;
-    } on DioException {
+    } on DioException catch (e) {
+      if (NetworkExceptionClassifier.isConnectivityError(e)) {
+        final cached = await _cache.readBusinessProfile();
+        if (cached != null &&
+            (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+          BusinessProfileDebugLog.log(
+            'Returning cached business profile (connectivity error)',
+          );
+          return cached;
+        }
+        throw const BusinessServerUnavailable();
+      }
+
+      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED' &&
+          e.response != null &&
+          !BusinessSelectionRetryGuard.isBlocked(scopeId)) {
+        await ensureProfileApiBusinessScope(forceReselect: true);
+        final remote = await _repository.getBusinessProfile();
+        await _cache.saveBusinessProfile(remote);
+        return remote;
+      }
+
       final cached = await _cache.readBusinessProfile();
       if (cached != null &&
           (selectedBusinessId == null || cached.id == selectedBusinessId)) {
@@ -189,9 +401,31 @@ class BusinessService {
   Future<BusinessProfileModel> updateBusinessProfile(
     UpdateBusinessProfileInput input,
   ) async {
+    final request = input.toRequest();
+    BusinessProfileDebugLog.section('UPDATE PROFILE REQUEST');
+    BusinessProfileDebugLog.log('payload: ${request.toJson()}');
+
+    await ensureProfileApiBusinessScope();
+
     try {
-      return await _repository.updateBusinessProfile(input.toRequest());
+      return await _repository.updateBusinessProfile(request);
     } on DioException catch (e) {
+      if (NetworkExceptionClassifier.isConnectivityError(e)) {
+        throw const BusinessServerUnavailable();
+      }
+      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED' &&
+          e.response != null) {
+        final scopeId = await _resolveBusinessIdForScope();
+        if (BusinessSelectionRetryGuard.isBlocked(scopeId)) {
+          throw const BusinessServerUnavailable();
+        }
+        BusinessProfileDebugLog.log(
+          'BUSINESS_NOT_SELECTED — retrying after re-scope',
+        );
+        await ensureProfileApiBusinessScope(forceReselect: true);
+        return _repository.updateBusinessProfile(request);
+      }
+
       final validation = ApiErrorParser.parseValidation(e);
       if (validation != null) throw validation;
       rethrow;
@@ -208,14 +442,36 @@ class BusinessService {
           name: profile.name,
           gstin: profile.gstin,
         );
-    final businesses = _ref.read(businessListProvider).asData?.value;
-    if (businesses != null) {
-      _ref.read(businessListProvider.notifier).applyProfileUpdate(profile);
-    }
   }
 
   Future<void> rememberLastOpened(String businessId) =>
       _cache.saveLastOpenedBusinessId(businessId);
+
+  Future<void> clearCachedBusinessProfile() => _cache.clearBusinessProfile();
+
+  Future<bool> isJwtScopedToBusiness(String businessId) async {
+    if (await _isOfflineDevSession()) {
+      final selected = _cache.readLastOpenedBusinessId();
+      return selected == businessId;
+    }
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    final jwtBusinessId = JwtUtils.businessId(token);
+    final role = JwtUtils.role(token);
+    return jwtBusinessId == businessId && role != null && role.isNotEmpty;
+  }
+
+  /// Scopes JWT to [businessId] and clears stale profile cache before API calls.
+  Future<void> prepareScopeForBusiness(String businessId) async {
+    await clearCachedBusinessProfile();
+    await scopeJwtToBusiness(businessId);
+    if (!await isJwtScopedToBusiness(businessId)) {
+      throw const BusinessSelectionFailed(
+        'Could not open company for editing. Please try again.',
+      );
+    }
+  }
 
   BusinessModel _toModel(BusinessDetailDto dto, String? selectedId) {
     return BusinessModel(
@@ -224,6 +480,13 @@ class BusinessService {
       syncStatus: SyncStatus.on,
       isShared: dto.isShared,
       isCurrent: selectedId != null && selectedId == dto.id,
+      gstin: dto.gstin,
+      ownerName: dto.ownerName,
+      phone: dto.phone,
+      email: dto.email,
+      address: dto.address,
+      role: dto.role,
+      logoUrl: dto.logoUrl,
     );
   }
 
@@ -236,12 +499,60 @@ class BusinessService {
     'email': dto.email,
     'state_code': dto.stateCode,
     'address': dto.address,
+    'owner_name': dto.ownerName,
     'is_shared': dto.isShared,
+    'logo_url': dto.logoUrl,
   };
+
+  Future<void> deleteBusiness(String businessId) async {
+    await _repository.deleteBusiness(businessId);
+    await _cache.removeBusiness(businessId);
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    await SessionCacheCleanup(storage).clearBusinessData(businessId);
+
+    final db = _ref.read(appDatabaseProvider);
+    await BusinessLocalDataCleanup(db).clearBusiness(businessId);
+
+    final selectedId = _cache.readLastOpenedBusinessId();
+    if (selectedId == businessId) {
+      await _cache.clearSelectedBusiness();
+      await storage.deleteSecure(StorageKeys.selectedBusinessId);
+    }
+  }
+
+  Future<String?> readActiveBusinessId() async {
+    final fromCache = _cache.readLastOpenedBusinessId();
+    if (fromCache != null && fromCache.isNotEmpty) return fromCache;
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    final selected = await storage.readSecure(StorageKeys.selectedBusinessId);
+    if (selected != null && selected.isNotEmpty) return selected;
+
+    final auth = _ref.read(authProvider);
+    if (auth.session?.user.role != null) {
+      final profile = await _cache.readBusinessProfile();
+      return profile?.id;
+    }
+
+    return null;
+  }
 }
 
 class BusinessProfileScopeRequired implements Exception {
   const BusinessProfileScopeRequired();
+
+  @override
+  String toString() => 'BusinessProfileScopeRequired';
+}
+
+class BusinessSelectionFailed implements Exception {
+  const BusinessSelectionFailed([this.message = 'Could not select business']);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 bool authHasBusinessScope(AuthState auth) =>
@@ -249,6 +560,15 @@ bool authHasBusinessScope(AuthState auth) =>
 
 class BusinessOfflineException implements Exception {
   const BusinessOfflineException();
+}
+
+/// Backend is unreachable (connection refused, timeout, etc.).
+class BusinessServerUnavailable implements Exception {
+  const BusinessServerUnavailable();
+
+  @override
+  String toString() =>
+      'Server is unavailable. Check your connection and try again.';
 }
 
 @Riverpod(keepAlive: true)
@@ -269,23 +589,100 @@ class BusinessList extends _$BusinessList {
 
   Future<void> _activateBusiness(String id) async {
     final service = await ref.read(businessServiceProvider.future);
+    if (BusinessSelectionRetryGuard.isBlocked(id)) {
+      BusinessSelectionRetryGuard.logBlockedOnce('activateBusiness', id);
+      await service.rememberLastOpened(id);
+      return;
+    }
+
+    BusinessOpenDebugLog.step('activate', 'rememberLastOpened $id');
     await service.rememberLastOpened(id);
+    BusinessOpenDebugLog.step('activate', 'selectBusiness (JWT refresh)');
     await ref.read(authProvider.notifier).selectBusiness(id);
+    _ensureOpenRefMounted('after selectBusiness');
+    BusinessOpenDebugLog.step('activate', 'selectBusiness done');
   }
 
-  Future<void> selectBusiness(String id) async {
-    await _activateBusiness(id);
-    ref.invalidate(businessProfileProvider);
-    ref.invalidateSelf();
+  /// Scopes the session, clears stale caches, reloads providers, and pre-warms
+  /// dashboard data before navigating into the app shell.
+  Future<void> openBusiness(String id) async {
+    BusinessOpenDebugLog.step('openBusiness', 'start id=$id');
+    _ensureOpenRefMounted('openBusiness start');
+    SyncPauseGate.instance.pause();
+
+    try {
+      final service = await ref.read(businessServiceProvider.future);
+      _ensureOpenRefMounted('after resolve BusinessService');
+
+      final previousId = await service.readActiveBusinessId();
+      final isSwitch =
+          previousId != null && previousId.isNotEmpty && previousId != id;
+      BusinessOpenDebugLog.step(
+        'openBusiness',
+        'previousId=${previousId ?? '(none)'} isSwitch=$isSwitch',
+      );
+
+      if (isSwitch) {
+        BusinessOpenDebugLog.step('openBusiness', 'clear stale profile cache');
+        await service.clearCachedBusinessProfile();
+        ref.invalidate(posCartProvider);
+      }
+
+      await _activateBusiness(id);
+      _ensureOpenRefMounted('after activateBusiness');
+
+      BusinessOpenDebugLog.step('openBusiness', 'verify JWT scope');
+      if (!await service.isJwtScopedToBusiness(id)) {
+        throw const BusinessSelectionFailed(
+          'Could not scope session to company. Please try again.',
+        );
+      }
+
+      BusinessOpenDebugLog.step(
+        'openBusiness',
+        'invalidate providers (keep BusinessService alive)',
+      );
+      invalidateAllBusinessScopedProviders(
+        ref,
+        includeBusinessService: false,
+      );
+      _ensureOpenRefMounted('after invalidate');
+
+      BusinessOpenDebugLog.step('openBusiness', 'warm providers');
+      await warmBusinessScopedProviders(ref, businessId: id);
+      BusinessOpenDebugLog.step('openBusiness', 'complete');
+    } finally {
+      SyncPauseGate.instance.resume();
+    }
+
+    final syncEngine = await ref.read(commandAwareSyncEngineProvider.future);
+    await syncEngine.start();
+    unawaited(syncEngine.syncNow());
+  }
+
+  void _ensureOpenRefMounted(String step) {
+    if (ref.mounted) return;
+    BusinessOpenDebugLog.step(step, 'aborted — BusinessList ref disposed');
+    throw const BusinessSelectionFailed(
+      'Company switch was interrupted. Please try again.',
+    );
   }
 
   Future<BusinessModel> createBusiness(CreateBusinessRequest request) async {
     final service = await ref.read(businessServiceProvider.future);
     final created = await service.createBusiness(request);
     await _activateBusiness(created.id);
+    _ensureOpenRefMounted('createBusiness after activate');
+
     await ref.read(authProvider.notifier).refreshBusinesses();
-    ref.invalidate(businessProfileProvider);
-    ref.invalidateSelf();
+    invalidateAllBusinessScopedProviders(
+      ref,
+      includeBusinessService: false,
+    );
+    _ensureOpenRefMounted('createBusiness after invalidate');
+
+    await warmBusinessScopedProviders(ref, businessId: created.id);
+    await refresh();
     return created;
   }
 
@@ -297,11 +694,65 @@ class BusinessList extends _$BusinessList {
       businesses
           .map(
             (business) => business.id == profile.id
-                ? business.copyWith(name: profile.name)
+                ? business.copyWith(
+                    name: profile.name,
+                    logoUrl: profile.logoUrl,
+                  )
                 : business,
           )
           .toList(),
     );
+  }
+
+  Future<void> deleteBusiness(String id) async {
+    _ensureOpenRefMounted('deleteBusiness start');
+    final service = await ref.read(businessServiceProvider.future);
+    final activeId = await service.readActiveBusinessId();
+    final wasActive = activeId == id;
+
+    await service.deleteBusiness(id);
+    _ensureOpenRefMounted('deleteBusiness after API');
+
+    if (wasActive) {
+      await ref.read(authProvider.notifier).enterBusinessSelection();
+      // enterBusinessSelection invalidates businessListProvider — stop here.
+      return;
+    }
+
+    await ref.read(authProvider.notifier).refreshBusinesses();
+    _ensureOpenRefMounted('deleteBusiness after refreshBusinesses');
+
+    _removeBusinessFromState(id);
+
+    invalidateAllBusinessScopedProviders(
+      ref,
+      includeBusinessService: false,
+    );
+    await refresh();
+  }
+
+  void _removeBusinessFromState(String id) {
+    final businesses = state.asData?.value;
+    if (businesses == null) return;
+
+    state = AsyncData(
+      businesses.where((business) => business.id != id).toList(),
+    );
+  }
+
+  Future<BusinessProfileModel> fetchProfileForEdit(String businessId) async {
+    final service = await ref.read(businessServiceProvider.future);
+
+    await service.prepareScopeForBusiness(businessId);
+
+    final profile = await service.fetchBusinessProfile(forceRefresh: true);
+    if (profile.id != businessId) {
+      throw const BusinessSelectionFailed(
+        'Could not load company details. Please try again.',
+      );
+    }
+
+    return profile;
   }
 }
 
@@ -317,12 +768,55 @@ String loggedInPhone(Ref ref) {
 class BusinessProfile extends _$BusinessProfile {
   @override
   Future<BusinessProfileModel> build() async {
-    final auth = ref.watch(authProvider);
-    if (!authHasBusinessScope(auth)) {
+    final authScope = ref.watch(
+      authProvider.select(businessProfileAuthScope),
+    );
+    if (!businessProfileHasScope(authScope)) {
       throw const BusinessProfileScopeRequired();
     }
 
     final service = await ref.watch(businessServiceProvider.future);
+    final businessId = await service.resolveActiveBusinessId();
+    if (businessId != null &&
+        businessId.isNotEmpty &&
+        BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      final cached = await service.readCachedBusinessProfile();
+      if (cached != null) {
+        return cached;
+      }
+
+      final cachedBusinesses = await service.readCachedBusinesses();
+      for (final business in cachedBusinesses) {
+        if (business.id == businessId) {
+          return BusinessProfileModel(
+            id: business.id,
+            name: business.name,
+            ownerName: business.ownerName,
+            phone: business.phone,
+            email: business.email,
+            gstin: business.gstin,
+            address: business.address,
+            logoUrl: business.logoUrl,
+          );
+        }
+      }
+
+      final authBusinesses = ref.read(authProvider).session?.businesses;
+      if (authBusinesses != null) {
+        for (final business in authBusinesses) {
+          if (business.id == businessId) {
+            return BusinessProfileModel(
+              id: business.id,
+              name: business.name,
+              gstin: business.gstin,
+            );
+          }
+        }
+      }
+
+      throw const BusinessServerUnavailable();
+    }
+
     return service.fetchBusinessProfile();
   }
 
@@ -332,8 +826,14 @@ class BusinessProfile extends _$BusinessProfile {
     final service = await ref.read(businessServiceProvider.future);
     final updated = await service.updateBusinessProfile(input);
     await service.persistSavedProfile(updated);
+    ref.read(businessListProvider.notifier).applyProfileUpdate(updated);
     state = AsyncData(updated);
     return updated;
+  }
+
+  /// Seeds provider state after a business switch without awaiting [.future].
+  void replaceWith(BusinessProfileModel profile) {
+    state = AsyncData(profile);
   }
 }
 
@@ -350,6 +850,7 @@ SidebarBusiness sidebarBusiness(Ref ref) {
       id: profile.id,
       name: profile.name,
       seed: profile.id,
+      logoUrl: profile.logoUrl,
     );
   }
 
@@ -364,9 +865,11 @@ class SidebarBusiness {
     required this.name,
     required this.seed,
     this.id,
+    this.logoUrl,
   });
 
   final String? id;
   final String name;
   final String seed;
+  final String? logoUrl;
 }

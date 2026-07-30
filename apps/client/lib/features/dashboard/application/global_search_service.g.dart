@@ -1,0 +1,52 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'global_search_service.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(globalSearchService)
+final globalSearchServiceProvider = GlobalSearchServiceProvider._();
+
+final class GlobalSearchServiceProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<GlobalSearchService>,
+          GlobalSearchService,
+          FutureOr<GlobalSearchService>
+        >
+    with
+        $FutureModifier<GlobalSearchService>,
+        $FutureProvider<GlobalSearchService> {
+  GlobalSearchServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'globalSearchServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$globalSearchServiceHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<GlobalSearchService> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<GlobalSearchService> create(Ref ref) {
+    return globalSearchService(ref);
+  }
+}
+
+String _$globalSearchServiceHash() =>
+    r'e7c1cbc53b2be3975fa16bdaed6c60df3682b757';

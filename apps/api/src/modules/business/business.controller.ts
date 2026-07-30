@@ -1,17 +1,14 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
-import type { ApiSuccessResponse } from '../../shared/types';
+import { sendData } from '../../shared/http/response';
 import {
   createBusinessBodySchema,
   updateBusinessProfileBodySchema,
 } from './business.schema';
+import { updateCommerceSettingsBodySchema } from './business-commerce-settings.schema';
 import { BusinessService } from './business.service';
-import type {
-  BusinessDetail,
-  BusinessListItem,
-  BusinessProfile,
-} from './business.types';
 
 function formatZodError(error: ZodError): Record<string, string[]> {
   const errors: Record<string, string[]> = {};
@@ -23,26 +20,28 @@ function formatZodError(error: ZodError): Record<string, string[]> {
   return errors;
 }
 
-export function createBusinessController() {
+export function createBusinessController(config: AppConfig) {
+  const service = new BusinessService(config);
+
   return {
     list: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessListItem[]>> => {
+    ): Promise<FastifyReply> => {
       const accountId = request.accountId;
       if (!accountId) {
         throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
       }
 
-      const service = new BusinessService();
+      const service = new BusinessService(config);
       const data = await service.listBusinesses(accountId);
-      return reply.send({ success: true, data });
+      return sendData(reply, data);
     },
 
     create: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessDetail>> => {
+    ): Promise<FastifyReply> => {
       try {
         const accountId = request.accountId;
         const phone = request.phone;
@@ -51,9 +50,9 @@ export function createBusinessController() {
         }
 
         const body = createBusinessBodySchema.parse(request.body);
-        const service = new BusinessService();
+        const service = new BusinessService(config);
         const data = await service.createBusiness(accountId, phone, body);
-        return reply.status(201).send({ success: true, data });
+        return sendData(reply, data, 201);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -70,22 +69,21 @@ export function createBusinessController() {
     getProfile: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessProfile>> => {
+    ): Promise<FastifyReply> => {
       const accountId = request.accountId;
       const businessId = request.businessId;
       if (!accountId || !businessId) {
         throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
       }
 
-      const service = new BusinessService();
       const data = await service.getProfile(businessId, accountId);
-      return reply.send({ success: true, data });
+      return sendData(reply, data);
     },
 
     updateProfile: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessProfile>> => {
+    ): Promise<FastifyReply> => {
       try {
         const accountId = request.accountId;
         const businessId = request.businessId;
@@ -94,9 +92,8 @@ export function createBusinessController() {
         }
 
         const body = updateBusinessProfileBodySchema.parse(request.body);
-        const service = new BusinessService();
         const data = await service.updateProfile(businessId, accountId, body);
-        return reply.send({ success: true, data });
+        return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -108,6 +105,66 @@ export function createBusinessController() {
         }
         throw error;
       }
+    },
+
+    getCommerceSettings: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      const businessId = request.businessId;
+      if (!accountId || !businessId) {
+        throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+      }
+
+      const data = await service.getCommerceSettings(businessId, accountId);
+      return sendData(reply, data);
+    },
+
+    updateCommerceSettings: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      try {
+        const accountId = request.accountId;
+        const businessId = request.businessId;
+        if (!accountId || !businessId) {
+          throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+        }
+
+        const body = updateCommerceSettingsBodySchema.parse(request.body);
+        const data = await service.updateCommerceSettings(
+          businessId,
+          accountId,
+          body,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    delete: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      if (!accountId) {
+        throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+      }
+
+      const businessId = (request.params as { id: string }).id;
+      const service = new BusinessService(config);
+      await service.deleteBusiness(businessId, accountId);
+      return reply.status(204).send();
     },
   };
 }

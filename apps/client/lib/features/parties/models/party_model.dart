@@ -2,6 +2,8 @@ import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:intl/intl.dart';
 
 class PartyModel {
@@ -9,8 +11,12 @@ class PartyModel {
     required this.id,
     required this.name,
     required this.phone,
+    this.legalName = '',
+    this.alias = '',
+    this.additionalPhones = const [],
     this.partyType = 'customer',
     this.balance = 0,
+    this.unrecoveredAmount = 0,
     this.openingBalance = 0,
     this.isActive = true,
     this.gstin = '',
@@ -21,6 +27,7 @@ class PartyModel {
     this.billingAddress = '',
     this.shippingAddress = '',
     this.partyGroup = '',
+    this.areaCode = '',
     this.addressLine = '',
     this.city = '',
     this.pincode = '',
@@ -36,6 +43,9 @@ class PartyModel {
     this.creditLimit = '',
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.defaultPriceTier = PriceTier.retail,
+    this.profileImageUrl,
+    this.profileMediaAssetId,
     this.createdAt,
     this.updatedAt,
   });
@@ -51,9 +61,16 @@ class PartyModel {
     return PartyModel(
       id: dto.id,
       name: dto.name,
+      legalName: dto.legalName ?? '',
+      alias: dto.alias ?? '',
       phone: _formatPhone(dto.mobile),
+      additionalPhones: dto.additionalPhones
+          .map(_formatPhone)
+          .where((phone) => phone.isNotEmpty)
+          .toList(),
       partyType: dto.partyType,
       balance: balance,
+      unrecoveredAmount: dto.unrecoveredAmount,
       openingBalance: openingBalance,
       isActive: dto.isActive,
       gstin: dto.gstin ?? '',
@@ -63,7 +80,8 @@ class PartyModel {
       notes: dto.notes ?? '',
       billingAddress: extension.billingAddress,
       shippingAddress: extension.shippingAddress,
-      partyGroup: extension.partyGroup,
+      partyGroup: _resolvePartyGroup(dto.partyGroup, extension.partyGroup),
+      areaCode: dto.areaCode ?? '',
       addressLine: extension.addressLine,
       city: extension.city,
       pincode: extension.pincode,
@@ -79,6 +97,11 @@ class PartyModel {
       creditLimit: dto.creditLimit,
       additionalField1: extension.additionalField1,
       additionalField2: extension.additionalField2,
+      defaultPriceTier: extension.defaultPriceTier.isNotEmpty
+          ? PriceTier.normalizeTierKey(extension.defaultPriceTier)
+          : PriceTier.normalizeTierKey(dto.pricingTier),
+      profileImageUrl: dto.profileImageUrl,
+      profileMediaAssetId: dto.profileMediaAssetId,
       createdAt: DateTime.tryParse(dto.createdAt),
       updatedAt: DateTime.tryParse(dto.updatedAt),
     );
@@ -88,8 +111,16 @@ class PartyModel {
     return PartyModel(
       id: json['id'] as String,
       name: json['name'] as String,
+      legalName: json['legal_name'] as String? ?? '',
+      alias: json['alias'] as String? ?? '',
       phone:
           json['phone'] as String? ?? _formatPhone(json['mobile'] as String?),
+      additionalPhones: json['additional_phones'] is List
+          ? (json['additional_phones'] as List)
+                .map((phone) => _formatPhone(phone.toString()))
+                .where((phone) => phone.isNotEmpty)
+                .toList()
+          : const [],
       partyType: json['party_type'] as String? ?? 'customer',
       balance:
           (json['balance'] as num?)?.toDouble() ??
@@ -106,6 +137,8 @@ class PartyModel {
       creditLimit: json['credit_limit']?.toString() ?? '',
       state: json['state'] as String? ?? '',
       hasCustomCreditLimit: (json['credit_limit']?.toString() ?? '0') != '0',
+      profileImageUrl: json['profile_image_url'] as String?,
+      profileMediaAssetId: json['profile_media_asset_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)
           : null,
@@ -124,7 +157,14 @@ class PartyModel {
     return PartyModel(
       id: id,
       name: result.partyName.trim(),
+      legalName: result.legalName.trim(),
+      alias: result.alias.trim(),
       phone: result.phone.trim(),
+      additionalPhones: result.additionalPhones
+          .map(_formatPhone)
+          .where((phone) => phone.isNotEmpty)
+          .toList(),
+      partyType: result.partyType,
       balance: openingBalance,
       openingBalance: openingBalance,
       gstin: result.gstin.trim(),
@@ -134,6 +174,7 @@ class PartyModel {
       billingAddress: result.billingAddress.trim(),
       shippingAddress: result.shippingAddress.trim(),
       partyGroup: result.partyGroup.trim(),
+      areaCode: result.areaCode.trim(),
       addressLine: result.addressLine.trim(),
       city: result.city.trim(),
       pincode: result.pincode.trim(),
@@ -153,16 +194,21 @@ class PartyModel {
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2.trim()
           : '',
+      defaultPriceTier: result.defaultPriceTier,
     );
   }
 
   final String id;
   final String name;
+  final String legalName;
+  final String alias;
   final String phone;
+  final List<String> additionalPhones;
   final String partyType;
 
   /// Positive = amount to receive. Negative = amount to pay.
   final double balance;
+  final double unrecoveredAmount;
   final double openingBalance;
   final bool isActive;
   final String gstin;
@@ -173,6 +219,7 @@ class PartyModel {
   final String billingAddress;
   final String shippingAddress;
   final String partyGroup;
+  final String areaCode;
   final String addressLine;
   final String city;
   final String pincode;
@@ -188,6 +235,9 @@ class PartyModel {
   final String creditLimit;
   final String additionalField1;
   final String additionalField2;
+  final String defaultPriceTier;
+  final String? profileImageUrl;
+  final String? profileMediaAssetId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -208,26 +258,56 @@ class PartyModel {
     return trimmed.isEmpty ? '—' : trimmed;
   }
 
-  static String displayCurrency(double? value) {
-    if (value == null || value == 0) return '—';
-    return NumberFormat.currency(
-      locale: 'en_IN',
-      symbol: '₹',
-      decimalDigits: 2,
-    ).format(value);
+  static final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 2,
+  );
+
+  /// Always formats monetary values (including zero) as currency.
+  static String formatCurrency(double value) => _currencyFormat.format(value);
+
+  static String displayCurrency(double? value) => formatCurrency(value ?? 0);
+
+  static String displayOutstanding(double balance) =>
+      formatCurrency(balance.abs());
+
+  static String displayCreditLimit({
+    required bool hasCustomCreditLimit,
+    required String creditLimit,
+  }) {
+    if (!hasCustomCreditLimit) return 'No Limit';
+    final parsed = double.tryParse(creditLimit.replaceAll(',', '')) ?? 0;
+    return formatCurrency(parsed);
   }
+
+  /// Two-decimal string for numeric form fields.
+  static String formatDecimalInput(double value) => value.toStringAsFixed(2);
 
   static String displayDate(DateTime? value) {
     if (value == null) return '—';
     return DateFormat('dd/MM/yyyy').format(value);
   }
 
+  static String displayPhones(PartyModel party) {
+    final phones = <String>[
+      if (party.phone.trim().isNotEmpty) party.phone,
+      ...party.additionalPhones,
+    ];
+    if (phones.isEmpty) return '—';
+    return phones.join(', ');
+  }
+
   PartyModel copyWith({
     String? id,
     String? name,
+    String? legalName,
+    String? alias,
     String? phone,
+    List<String>? additionalPhones,
     String? partyType,
     double? balance,
+    double? unrecoveredAmount,
     double? openingBalance,
     bool? isActive,
     String? gstin,
@@ -238,6 +318,7 @@ class PartyModel {
     String? billingAddress,
     String? shippingAddress,
     String? partyGroup,
+    String? areaCode,
     String? addressLine,
     String? city,
     String? pincode,
@@ -253,15 +334,23 @@ class PartyModel {
     String? creditLimit,
     String? additionalField1,
     String? additionalField2,
+    String? defaultPriceTier,
+    String? profileImageUrl,
+    String? profileMediaAssetId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool clearProfileImage = false,
   }) {
     return PartyModel(
       id: id ?? this.id,
       name: name ?? this.name,
+      legalName: legalName ?? this.legalName,
+      alias: alias ?? this.alias,
       phone: phone ?? this.phone,
+      additionalPhones: additionalPhones ?? this.additionalPhones,
       partyType: partyType ?? this.partyType,
       balance: balance ?? this.balance,
+      unrecoveredAmount: unrecoveredAmount ?? this.unrecoveredAmount,
       openingBalance: openingBalance ?? this.openingBalance,
       isActive: isActive ?? this.isActive,
       gstin: gstin ?? this.gstin,
@@ -272,6 +361,7 @@ class PartyModel {
       billingAddress: billingAddress ?? this.billingAddress,
       shippingAddress: shippingAddress ?? this.shippingAddress,
       partyGroup: partyGroup ?? this.partyGroup,
+      areaCode: areaCode ?? this.areaCode,
       addressLine: addressLine ?? this.addressLine,
       city: city ?? this.city,
       pincode: pincode ?? this.pincode,
@@ -290,6 +380,13 @@ class PartyModel {
       creditLimit: creditLimit ?? this.creditLimit,
       additionalField1: additionalField1 ?? this.additionalField1,
       additionalField2: additionalField2 ?? this.additionalField2,
+      defaultPriceTier: defaultPriceTier ?? this.defaultPriceTier,
+      profileImageUrl: clearProfileImage
+          ? null
+          : (profileImageUrl ?? this.profileImageUrl),
+      profileMediaAssetId: clearProfileImage
+          ? null
+          : (profileMediaAssetId ?? this.profileMediaAssetId),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -312,21 +409,53 @@ class PartyModel {
     return digits;
   }
 
+  static String? _optionalNormalizedGstin(String gstin) {
+    final trimmed = gstin.trim();
+    if (trimmed.isEmpty) return null;
+    return trimmed.toUpperCase();
+  }
+
+  static String _resolvePartyGroup(String? apiValue, String localValue) {
+    final api = apiValue?.trim() ?? '';
+    if (api.isNotEmpty) return api;
+    return localValue.trim();
+  }
+
+  static List<String> _normalizeAdditionalPhones(List<String> phones) {
+    final seen = <String>{};
+    final normalized = <String>[];
+    for (final phone in phones) {
+      final digits = normalizePhone(phone);
+      if (digits.length != 10 || seen.contains(digits)) continue;
+      seen.add(digits);
+      normalized.add(digits);
+    }
+    return normalized;
+  }
+
   static CreatePartyRequest createRequestFromResult(AddPartyResult result) {
+    final primaryMobile = normalizePhone(result.phone);
     return CreatePartyRequest(
       name: result.partyName.trim(),
-      mobile: normalizePhone(result.phone).isEmpty
+      legalName: result.legalName.trim().isEmpty
           ? null
-          : normalizePhone(result.phone),
+          : result.legalName.trim(),
+      alias: result.alias.trim().isEmpty ? null : result.alias.trim(),
+      mobile: primaryMobile,
+      additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),
       email: result.email.trim().isEmpty ? null : result.email.trim(),
-      gstin: result.gstin.trim().isEmpty ? null : result.gstin.trim(),
-      state: result.state.trim().isEmpty ? null : result.state.trim(),
-      creditLimit: result.hasCustomCreditLimit && result.creditLimit.isNotEmpty
-          ? result.creditLimit.trim()
-          : null,
-      openingBalance: result.openingBalance.trim().isEmpty
+      gstin: _optionalNormalizedGstin(result.gstin),
+      partyType: result.partyType,
+      partyGroup: result.partyGroup.trim().isEmpty
           ? null
-          : result.openingBalance.trim(),
+          : result.partyGroup.trim(),
+      areaCode: result.areaCode.trim().isEmpty ? null : result.areaCode.trim(),
+      state: result.state.trim().isEmpty ? null : result.state.trim(),
+      creditLimit: result.hasCustomCreditLimit
+          ? Validators.normalizeDecimalString(result.creditLimit)
+          : null,
+      openingBalance: Validators.normalizeDecimalString(result.openingBalance),
+      pricingTier: PriceTier.toApiTier(result.defaultPriceTier),
     );
   }
 
@@ -336,18 +465,21 @@ class PartyModel {
   }) {
     return UpdatePartyRequest(
       name: result.partyName.trim(),
-      mobile: normalizePhone(result.phone).isEmpty
-          ? null
-          : normalizePhone(result.phone),
+      legalName: result.legalName.trim(),
+      alias: result.alias.trim(),
+      mobile: normalizePhone(result.phone),
+      additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),
       email: result.email.trim().isEmpty ? null : result.email.trim(),
-      gstin: result.gstin.trim().isEmpty ? null : result.gstin.trim(),
+      gstin: _optionalNormalizedGstin(result.gstin),
+      partyType: result.partyType,
+      partyGroup: result.partyGroup.trim(),
+      areaCode: result.areaCode.trim(),
       state: result.state.trim().isEmpty ? null : result.state.trim(),
-      creditLimit: result.hasCustomCreditLimit && result.creditLimit.isNotEmpty
-          ? result.creditLimit.trim()
+      creditLimit: result.hasCustomCreditLimit
+          ? Validators.normalizeDecimalString(result.creditLimit) ?? '0'
           : '0',
-      openingBalance: result.openingBalance.trim().isEmpty
-          ? '0'
-          : result.openingBalance.trim(),
+      openingBalance:
+          Validators.normalizeDecimalString(result.openingBalance) ?? '0',
       isActive: isActive,
     );
   }

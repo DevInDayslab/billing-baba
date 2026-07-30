@@ -1,18 +1,19 @@
 import type { FastifyError, FastifyInstance } from 'fastify';
-import { AppError } from '../shared/errors';
+import { AppError, serializeErrorForLog } from '../shared/errors';
 import type { ApiErrorResponse } from '../shared/types';
 
 function buildErrorResponse(
   requestId: string,
   code: string,
   message: string,
-  errors: Record<string, string[]> | null = null,
+  details: Record<string, string[]> | null = null,
 ): ApiErrorResponse {
   return {
-    success: false,
-    message,
-    code,
-    errors,
+    error: {
+      code,
+      message,
+      ...(details ? { details } : {}),
+    },
     requestId,
   };
 }
@@ -42,7 +43,12 @@ export function registerErrorHandler(app: FastifyInstance): void {
         );
     }
 
-    request.log.error({ err: error, requestId: request.id });
+    const validation =
+      'validation' in error && error.validation !== undefined
+        ? { validation: error.validation }
+        : {};
+
+    request.log.error({ ...serializeErrorForLog(error), ...validation });
 
     const statusCode = error.statusCode ?? 500;
     const message =

@@ -1,13 +1,22 @@
-export type ApiSuccessResponse<T> = {
-  success: true;
+import type { PaginationMeta } from '../http/pagination';
+
+export type ApiDataResponse<T> = {
   data: T;
 };
 
-export type ApiErrorResponse = {
-  success: false;
-  message: string;
+export type ApiPaginatedResponse<T> = {
+  data: T[];
+  meta: PaginationMeta;
+};
+
+export type ApiErrorBody = {
   code: string;
-  errors: Record<string, string[]> | null;
+  message: string;
+  details?: Record<string, string[]> | null;
+};
+
+export type ApiErrorResponse = {
+  error: ApiErrorBody;
   requestId: string;
 };
 

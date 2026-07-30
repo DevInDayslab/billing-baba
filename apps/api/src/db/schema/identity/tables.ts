@@ -2,7 +2,9 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  integer,
   pgTable,
+  primaryKey,
   text,
   uniqueIndex,
   uuid,
@@ -23,6 +25,7 @@ export const accounts = pgTable(
     name: text('name'),
     email: text('email'),
     avatarUrl: text('avatar_url'),
+    avatarMediaAssetId: uuid('avatar_media_asset_id'),
     timezone: text('timezone').notNull().default('Asia/Kolkata'),
     language: text('language').notNull().default('en'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
@@ -60,14 +63,30 @@ export const users = pgTable(
   ],
 );
 
-export const devices = pgTable('devices', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  userId: uuid('user_id').references(() => users.id),
-  deviceName: text('device_name').notNull(),
-  platform: text('platform').notNull(),
-  lastSyncAt: timestamptz('last_sync_at'),
-});
+/** Client device UUID is stored in `id`; PK is (business_id, id) for multi-business sync. */
+export const devices = pgTable(
+  'devices',
+  {
+    id: uuid('id').notNull(),
+    businessId: businessId(),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+    deletedAt: timestamptz('deleted_at'),
+    isDeleted: boolean('is_deleted').notNull().default(false),
+    createdBy: uuid('created_by'),
+    updatedBy: uuid('updated_by'),
+    syncVersion: integer('sync_version').notNull().default(1),
+    deviceId: uuid('device_id'),
+    userId: uuid('user_id').references(() => users.id),
+    deviceName: text('device_name').notNull(),
+    platform: text('platform').notNull(),
+    appVersion: text('app_version').notNull().default('0.0.0'),
+    lastSyncAt: timestamptz('last_sync_at'),
+  },
+  (table) => [
+    primaryKey({ columns: [table.businessId, table.id], name: 'devices_pkey' }),
+  ],
+);
 
 export const refreshTokens = pgTable('refresh_tokens', {
   id: uuid('id').primaryKey().defaultRandom(),

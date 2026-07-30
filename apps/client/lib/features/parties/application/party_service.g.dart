@@ -46,7 +46,7 @@ final class PartyServiceProvider
   }
 }
 
-String _$partyServiceHash() => r'c665d20b56d332f9cb9fe44c6d1afe1f2daa42c8';
+String _$partyServiceHash() => r'88372bab6091519cdf6f44eb8b0570178228cc20';
 
 @ProviderFor(PartyList)
 final partyListProvider = PartyListProvider._();
@@ -72,7 +72,7 @@ final class PartyListProvider
   PartyList create() => PartyList();
 }
 
-String _$partyListHash() => r'fb04288ad4267d7abb4db5a90de9ae47571ff43c';
+String _$partyListHash() => r'b240ee5047d3ce5f553a5a6e66292feac590da9c';
 
 abstract class _$PartyList extends $AsyncNotifier<List<PartyModel>> {
   FutureOr<List<PartyModel>> build();
@@ -134,7 +134,7 @@ final class PartyDetailProvider
   }
 }
 
-String _$partyDetailHash() => r'6cf6264ed453621bef9caa5934ced16911838a77';
+String _$partyDetailHash() => r'f398c681b37ca2247c8c52dfe39ba04659d1f0a8';
 
 final class PartyDetailFamily extends $Family
     with
@@ -215,7 +215,7 @@ final class PartyBackendSearchProvider
 }
 
 String _$partyBackendSearchHash() =>
-    r'5bc9ec566a3f00390f1f5a92dfbf661c16f68949';
+    r'3a7ec4ddc4d452e07badadf6d80443b17cf5e339';
 
 abstract class _$PartyBackendSearch extends $Notifier<String> {
   String build();

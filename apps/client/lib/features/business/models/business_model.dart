@@ -11,6 +11,13 @@ class BusinessModel {
     this.lastSaleAt,
     this.isCurrent = false,
     this.isShared = false,
+    this.gstin,
+    this.ownerName,
+    this.phone,
+    this.email,
+    this.address,
+    this.role,
+    this.logoUrl,
   });
 
   final String id;
@@ -19,6 +26,15 @@ class BusinessModel {
   final SyncStatus syncStatus;
   final bool isCurrent;
   final bool isShared;
+  final String? gstin;
+  final String? ownerName;
+  final String? phone;
+  final String? email;
+  final String? address;
+  final String? role;
+  final String? logoUrl;
+
+  bool get isOwner => role == 'owner';
 
   BusinessModel copyWith({
     String? id,
@@ -27,6 +43,13 @@ class BusinessModel {
     SyncStatus? syncStatus,
     bool? isCurrent,
     bool? isShared,
+    String? gstin,
+    String? ownerName,
+    String? phone,
+    String? email,
+    String? address,
+    String? role,
+    String? logoUrl,
   }) {
     return BusinessModel(
       id: id ?? this.id,
@@ -35,6 +58,13 @@ class BusinessModel {
       syncStatus: syncStatus ?? this.syncStatus,
       isCurrent: isCurrent ?? this.isCurrent,
       isShared: isShared ?? this.isShared,
+      gstin: gstin ?? this.gstin,
+      ownerName: ownerName ?? this.ownerName,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      address: address ?? this.address,
+      role: role ?? this.role,
+      logoUrl: logoUrl ?? this.logoUrl,
     );
   }
 }

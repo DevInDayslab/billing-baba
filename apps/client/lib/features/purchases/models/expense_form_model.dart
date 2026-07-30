@@ -82,10 +82,12 @@ class ExpensePaymentEntry {
 
 class AddExpenseFormState {
   const AddExpenseFormState({
+    this.expenseId,
     this.gstEnabled = false,
     this.category = '',
     this.categoryId = '',
     this.party = '',
+    this.partyId,
     this.expenseNumber = '',
     this.expenseDate,
     this.expenseTime,
@@ -100,12 +102,17 @@ class AddExpenseFormState {
     this.roundOff = false,
     this.isDirty = false,
     this.showValidationErrors = false,
+    this.isLoading = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
+  final String? expenseId;
   final bool gstEnabled;
   final String category;
   final String categoryId;
   final String party;
+  final String? partyId;
   final String expenseNumber;
   final DateTime? expenseDate;
   final DateTime? dueDate;
@@ -120,10 +127,16 @@ class AddExpenseFormState {
   final bool roundOff;
   final bool isDirty;
   final bool showValidationErrors;
+  final bool isLoading;
+  final bool isSaving;
+  final String? saveError;
 
   bool get categoryHasError => showValidationErrors && category.trim().isEmpty;
 
-  bool get partyHasError => showValidationErrors && gstEnabled && party.isEmpty;
+  bool get partyHasError =>
+      showValidationErrors &&
+      gstEnabled &&
+      (partyId == null || partyId!.isEmpty);
 
   bool get lineItemsHasError =>
       showValidationErrors &&
@@ -155,14 +168,16 @@ class AddExpenseFormState {
 
   bool get isValid =>
       category.trim().isNotEmpty &&
-      (!gstEnabled || party.trim().isNotEmpty) &&
+      (!gstEnabled || (partyId != null && partyId!.isNotEmpty)) &&
       items.any((item) => item.itemName.trim().isNotEmpty && item.qty > 0);
 
   AddExpenseFormState copyWith({
+    String? expenseId,
     bool? gstEnabled,
     String? category,
     String? categoryId,
     String? party,
+    String? partyId,
     String? expenseNumber,
     DateTime? expenseDate,
     DateTime? dueDate,
@@ -177,12 +192,19 @@ class AddExpenseFormState {
     bool? roundOff,
     bool? isDirty,
     bool? showValidationErrors,
+    bool? isLoading,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
+    bool clearPartyId = false,
   }) {
     return AddExpenseFormState(
+      expenseId: expenseId ?? this.expenseId,
       gstEnabled: gstEnabled ?? this.gstEnabled,
       category: category ?? this.category,
       categoryId: categoryId ?? this.categoryId,
       party: party ?? this.party,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       expenseNumber: expenseNumber ?? this.expenseNumber,
       expenseDate: expenseDate ?? this.expenseDate,
       dueDate: dueDate ?? this.dueDate,
@@ -197,6 +219,9 @@ class AddExpenseFormState {
       roundOff: roundOff ?? this.roundOff,
       isDirty: isDirty ?? this.isDirty,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
 }

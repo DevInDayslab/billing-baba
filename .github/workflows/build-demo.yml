@@ -1,13 +1,22 @@
-# Internal alpha/demo desktop builds for Billing Baba.
-# Produces an unsigned Windows Release zip — no signing, notarization, or publishing.
+# Windows desktop release pipeline for Billing Baba.
+#
+# Outputs (all under dist/):
+#   BillingBabaSetup-v<version>.exe  — Inno Setup installer with VC++ runtime
+#   BillingBaba-Windows-v<version>.zip — portable Release folder
+#   SHA256SUMS.txt                     — checksums for the above
 #
 # Triggers:
-#   - Manual run (workflow_dispatch)
-#   - Push to the `demo` branch
+#   Branch push (demo, develop)  → build + GitHub Artifacts
+#   Tag push v*                  → build + GitHub Release + GitHub Artifacts
+#   workflow_dispatch            → build + GitHub Artifacts (Release only when run on a v* tag)
 #
-# Configuration is injected at build time via a generated `.env` asset and
-# `--dart-define` (see AppConfig.apiBaseUrl). Values are hardcoded here
-# intentionally for internal demo builds — not stored in GitHub Secrets.
+# Re-pushing the same tag updates the existing release; assets with matching names are
+# replaced (softprops/action-gh-release overwrite_files, default true).
+#
+# Future placeholders (not implemented):
+#   - Windows Authenticode signing (SignTool / certificate)
+#   - Auto-updater (e.g. winsparkle, custom delta updates)
+#   - MSIX packaging for Microsoft Store distribution
 
 name: Build Demo
 
@@ -16,38 +25,72 @@ on:
   push:
     branches:
       - demo
+      - develop
+    tags:
+      - "v*"
 
-# Always build from the `demo` branch so manual runs and CI use the same source.
+permissions:
+  contents: write
+
 env:
   FLUTTER_WORKING_DIRECTORY: apps/client
+  DIST_DIR: dist
+  VC_REDIST_URL: https://aka.ms/vs/17/release/vc_redist.x64.exe
+  VC_REDIST_CACHE_KEY: vc-redist-x64-v17
 
 jobs:
   build-windows:
     name: Windows Release
     runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
 
     defaults:
       run:
         working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
 
     steps:
-      - name: Checkout demo branch
-        uses: actions/checkout@v4
-        with:
-          ref: demo
+      # ── Checkout & version ──────────────────────────────────────────────────────
 
-      # Demo/production config — bundled as a Flutter asset and read by flutter_dotenv.
-      - name: Inject demo environment configuration
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Read version from pubspec.yaml
+        id: version
         shell: pwsh
         run: |
-          @(
-            'APP_ENV=production',
-            'DEBUG=false',
-            'ENABLE_DEV_LOGIN=false',
-            'API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app',
-            'MSG91_WIDGET_ID=366468674b74383638333530',
-            'MSG91_WIDGET_AUTH_TOKEN=506896TywM6h0I69d61233P1'
-          ) | Set-Content -Path .env -Encoding utf8
+          $line = Select-String -Path pubspec.yaml -Pattern '^version:' | Select-Object -First 1
+          if (-not $line) {
+            Write-Error "Could not find version in pubspec.yaml"
+            exit 1
+          }
+          $version = ($line.Line -replace 'version:\s*', '').Trim().Split('+')[0]
+          Write-Host "Application version: $version"
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Prepare dist output directory
+        shell: pwsh
+        working-directory: .
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ env.DIST_DIR }}" | Out-Null
+          Write-Host "Output directory: $(Resolve-Path '${{ env.DIST_DIR }}')"
+
+      - name: Generate Flutter .env
+        working-directory: .
+        env:
+          FLUTTER_ENV_DIR: apps/client
+          APP_ENV: ${{ vars.APP_ENV }}
+          DEBUG: ${{ vars.DEBUG }}
+          ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+          DEV_OTP: ${{ vars.DEV_OTP }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          WEBSITE_URL: https://billingbaba.com
+          MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+          MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        run: bash .github/scripts/setup-flutter-env.sh
+
+      # ── Flutter build ─────────────────────────────────────────────────────────
 
       - name: Set up Flutter (stable, with SDK + pub cache)
         uses: subosito/flutter-action@v2
@@ -66,15 +109,18 @@ jobs:
       - name: Build Windows release
         run: >
           flutter build windows --release
-          --dart-define=API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app
+          --dart-define=API_BASE_URL=$env:API_BASE_URL
+          --dart-define=WEBSITE_URL=https://billingbaba.com
+          --dart-define=GIT_COMMIT=${{ github.sha }}
 
-      - name: Verify build output and package artifact
+      # ── Verify build output ───────────────────────────────────────────────────
+
+      - name: Verify Windows release build output
+        id: build_output
         shell: pwsh
         run: |
-          $releaseDir = "build/windows/x64/runner/Release"
+          $releaseDir = Join-Path $PWD "build/windows/x64/runner/Release"
           $exePath = Join-Path $releaseDir "billing_baba.exe"
-
-          Write-Host "Build output directory: $(Resolve-Path $releaseDir)"
 
           if (-not (Test-Path $exePath)) {
             Write-Error "Build output missing: expected executable at '$exePath'"
@@ -82,18 +128,153 @@ jobs:
           }
 
           Write-Host "Verified executable: $exePath"
+          "release_dir=$releaseDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
-          # Zip the full Release folder (exe, DLLs, data/, and runtime deps) — not just the .exe.
-          $zipPath = Join-Path $PWD "BillingBaba-Windows.zip"
-          if (Test-Path $zipPath) {
-            Remove-Item $zipPath -Force
+      # ── VC++ Redistributable ──────────────────────────────────────────────────
+
+      - name: Restore VC++ Redistributable cache
+        id: vc_redist_cache
+        uses: actions/cache@v4
+        with:
+          path: installer/deps
+          key: ${{ env.VC_REDIST_CACHE_KEY }}
+
+      - name: Download VC++ Redistributable
+        if: steps.vc_redist_cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        working-directory: .
+        run: |
+          New-Item -ItemType Directory -Force -Path installer/deps | Out-Null
+          Invoke-WebRequest -Uri "${{ env.VC_REDIST_URL }}" -OutFile installer/deps/vc_redist.x64.exe
+
+      - name: Verify VC++ Redistributable
+        shell: pwsh
+        working-directory: .
+        run: |
+          if (-not (Test-Path installer/deps/vc_redist.x64.exe)) {
+            Write-Error "VC++ Redistributable missing at installer/deps/vc_redist.x64.exe"
+            exit 1
           }
-          Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath -Force
-          Write-Host "Created artifact: $zipPath"
 
-      - name: Upload Windows artifact
+      # ── Inno Setup installer ──────────────────────────────────────────────────
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            Write-Error "Inno Setup compiler not found at '$iscc'"
+            exit 1
+          }
+
+      - name: Compile Inno Setup installer
+        shell: pwsh
+        working-directory: .
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $version = $env:APP_VERSION
+          $releaseDir = "${{ steps.build_output.outputs.release_dir }}"
+          $distDir = Join-Path $PWD "${{ env.DIST_DIR }}"
+          $setupExe = Join-Path $distDir "BillingBabaSetup-v$version.exe"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+
+          & $iscc `
+            "/DAppVersion=$version" `
+            "/DReleaseDir=$releaseDir" `
+            "/DOutputDir=$distDir" `
+            "/DVCRedistPath=$(Join-Path $PWD 'installer/deps/vc_redist.x64.exe')" `
+            "/DSetupIcon=$(Join-Path $PWD 'apps/client/windows/runner/resources/app_icon.ico')" `
+            "$(Join-Path $PWD 'installer/BillingBaba.iss')"
+
+          if (-not (Test-Path $setupExe)) {
+            Write-Error "Installer output missing: expected '$setupExe'"
+            exit 1
+          }
+
+          Write-Host "Created installer: $setupExe"
+
+      # ── Portable ZIP package ──────────────────────────────────────────────────
+
+      - name: Package portable Windows ZIP
+        shell: pwsh
+        working-directory: .
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $version = $env:APP_VERSION
+          $releaseDir = Join-Path $PWD "apps/client/build/windows/x64/runner/Release"
+          $zipPath = Join-Path $PWD "${{ env.DIST_DIR }}/BillingBaba-Windows-v$version.zip"
+
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+
+          # Archive only Release contents (exe, DLLs, data/) — no repo path prefixes.
+          Push-Location $releaseDir
+          try {
+            Compress-Archive -Path * -DestinationPath $zipPath -Force
+          } finally {
+            Pop-Location
+          }
+
+          if (-not (Test-Path $zipPath)) {
+            Write-Error "ZIP output missing: expected '$zipPath'"
+            exit 1
+          }
+
+          Write-Host "Created portable ZIP: $zipPath"
+
+      # ── SHA256 checksums ──────────────────────────────────────────────────────
+
+      - name: Generate SHA256 checksums
+        shell: pwsh
+        working-directory: .
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $version = $env:APP_VERSION
+          $distDir = "${{ env.DIST_DIR }}"
+          $setupName = "BillingBabaSetup-v$version.exe"
+          $zipName = "BillingBaba-Windows-v$version.zip"
+          $setupExe = Join-Path $distDir $setupName
+          $zipFile = Join-Path $distDir $zipName
+          $checksumFile = Join-Path $distDir "SHA256SUMS.txt"
+
+          foreach ($file in @($setupExe, $zipFile)) {
+            if (-not (Test-Path $file)) {
+              Write-Error "Missing file for checksum: '$file'"
+              exit 1
+            }
+          }
+
+          $setupHash = (Get-FileHash -Path $setupExe -Algorithm SHA256).Hash.ToLower()
+          $zipHash = (Get-FileHash -Path $zipFile -Algorithm SHA256).Hash.ToLower()
+
+          @(
+            "$setupHash  $setupName"
+            "$zipHash  $zipName"
+          ) | Set-Content -Path $checksumFile -Encoding utf8
+
+          Write-Host "Generated checksums:"
+          Get-Content $checksumFile | ForEach-Object { Write-Host $_ }
+
+      # ── GitHub Release (tag v* only) ──────────────────────────────────────────
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Billing Baba v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          overwrite_files: true
+          files: ${{ env.DIST_DIR }}/*
+
+      # ── GitHub Artifacts ──────────────────────────────────────────────────────
+
+      - name: Upload Windows release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: BillingBaba-Windows
-          path: ${{ env.FLUTTER_WORKING_DIRECTORY }}/BillingBaba-Windows.zip
+          name: BillingBaba-Windows-v${{ steps.version.outputs.version }}
+          path: ${{ env.DIST_DIR }}/
           retention-days: 30

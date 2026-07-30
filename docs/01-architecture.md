@@ -854,7 +854,7 @@ Phase 1 ships multi-tenant SaaS infrastructure (`business_id` on every row). Eac
 | Devices | 2–5 devices per business | Sync queue scales with batch push |
 | Data volume | Millions of invoices across platform; ~100k/year per business | Partitioning by `business_id` + `entry_date`; indexes per [04-database.md](04-database.md#indexes) |
 | Read load | Reports run on client SQLite | Heavy reports can move to API read replicas |
-| File storage | Party attachments, item images | Object storage (S3-compatible) behind API |
+| File storage | Party attachments, item images | Object storage (S3-compatible) via `StorageService` — see [04-backend/storage.md](04-backend/storage.md) |
 | API throughput | Sync bursts on reconnect | Rate limiting, batch endpoints |
 
 Modular monolith allows extracting **Sync** or **Reports** into separate services if load demands — boundaries are already module-aligned.

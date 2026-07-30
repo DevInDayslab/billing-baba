@@ -2,7 +2,13 @@ import { relations } from 'drizzle-orm';
 import { parties } from '../crm/tables';
 import { users } from '../identity/tables';
 import { items } from '../inventory/tables';
-import { posSessions, salesDocumentLines, salesDocuments } from './tables';
+import {
+  posSessions,
+  saleFaBatches,
+  saleFixedAssets,
+  salesDocumentLines,
+  salesDocuments,
+} from './tables';
 
 export const posSessionsRelations = relations(posSessions, ({ one, many }) => ({
   user: one(users, {
@@ -42,6 +48,27 @@ export const salesDocumentLinesRelations = relations(
     item: one(items, {
       fields: [salesDocumentLines.itemId],
       references: [items.id],
+    }),
+  }),
+);
+
+export const saleFaBatchesRelations = relations(
+  saleFaBatches,
+  ({ one, many }) => ({
+    party: one(parties, {
+      fields: [saleFaBatches.partyId],
+      references: [parties.id],
+    }),
+    assets: many(saleFixedAssets),
+  }),
+);
+
+export const saleFixedAssetsRelations = relations(
+  saleFixedAssets,
+  ({ one }) => ({
+    batch: one(saleFaBatches, {
+      fields: [saleFixedAssets.batchId],
+      references: [saleFaBatches.id],
     }),
   }),
 );

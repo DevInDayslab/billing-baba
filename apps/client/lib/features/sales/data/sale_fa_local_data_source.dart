@@ -1,0 +1,3 @@
+class SaleFaLocalDataSource {
+  const SaleFaLocalDataSource();
+}

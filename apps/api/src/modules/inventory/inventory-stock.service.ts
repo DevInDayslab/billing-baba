@@ -1,0 +1,207 @@
+import { and, eq } from 'drizzle-orm';
+import type { Database } from '../../db/client';
+import {
+  godowns,
+  inventoryMovements,
+  stockLevels,
+} from '../../db/schema/inventory/tables';
+import { AppError } from '../../shared/errors/app-error';
+import {
+  calculateMovingAverageCost,
+  normalizeMoney,
+  parseMoney,
+} from './inventory.utils';
+
+type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+
+export type RecordMovementParams = {
+  businessId: string;
+  itemId: string;
+  godownId: string;
+  movementType:
+    | 'opening'
+    | 'purchase'
+    | 'sale'
+    | 'sales_return'
+    | 'purchase_return'
+    | 'challan'
+    | 'adjustment';
+  quantityDelta: string;
+  costPerUnit?: string | null;
+  unit?: string | null;
+  referenceId?: string | null;
+  referenceType?: string | null;
+  createdBy?: string | null;
+  occurredAt?: Date | null;
+  notes?: string | null;
+};
+
+export type GodownRow = {
+  id: string;
+  name: string;
+  isDefault: boolean;
+};
+
+type StockLevelRow = {
+  id: string;
+  quantity: string;
+  averageCost: string;
+};
+
+export async function getDefaultGodown(
+  db: Database | DbTransaction,
+  businessId: string,
+): Promise<GodownRow> {
+  const [godown] = await db
+    .select({
+      id: godowns.id,
+      name: godowns.name,
+      isDefault: godowns.isDefault,
+    })
+    .from(godowns)
+    .where(
+      and(
+        eq(godowns.businessId, businessId),
+        eq(godowns.isDefault, true),
+        eq(godowns.isDeleted, false),
+      ),
+    )
+    .limit(1);
+
+  if (!godown) {
+    throw new AppError(
+      'DEFAULT_GODOWN_NOT_FOUND',
+      'Default godown not found for this business',
+      422,
+    );
+  }
+
+  return godown;
+}
+
+async function lockStockLevelRow(
+  tx: DbTransaction,
+  params: Pick<RecordMovementParams, 'businessId' | 'itemId' | 'godownId'>,
+): Promise<StockLevelRow> {
+  const predicate = and(
+    eq(stockLevels.businessId, params.businessId),
+    eq(stockLevels.itemId, params.itemId),
+    eq(stockLevels.godownId, params.godownId),
+    eq(stockLevels.isDeleted, false),
+  );
+
+  const selectLocked = () =>
+    tx
+      .select({
+        id: stockLevels.id,
+        quantity: stockLevels.quantity,
+        averageCost: stockLevels.averageCost,
+      })
+      .from(stockLevels)
+      .where(predicate)
+      .limit(1)
+      .for('update');
+
+  let [row] = await selectLocked();
+  if (row) {
+    return row;
+  }
+
+  await tx
+    .insert(stockLevels)
+    .values({
+      businessId: params.businessId,
+      itemId: params.itemId,
+      godownId: params.godownId,
+      quantity: '0',
+      averageCost: '0',
+    })
+    .onConflictDoNothing({
+      target: [
+        stockLevels.businessId,
+        stockLevels.itemId,
+        stockLevels.godownId,
+      ],
+    });
+
+  [row] = await selectLocked();
+  if (!row) {
+    throw new Error('Failed to lock stock level row');
+  }
+
+  return row;
+}
+
+export async function recordMovementAndUpdateStock(
+  _db: Database,
+  tx: DbTransaction,
+  params: RecordMovementParams,
+): Promise<{ movementId: string; stockLevelId: string }> {
+  const quantityDelta = normalizeMoney(params.quantityDelta);
+  const delta = parseMoney(quantityDelta);
+
+  if (delta === 0) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'Quantity delta must not be zero',
+      400,
+      { quantity_delta: ['Quantity delta must not be zero'] },
+    );
+  }
+
+  const existingStock = await lockStockLevelRow(tx, params);
+
+  const currentQty = existingStock.quantity;
+  const currentAvg = existingStock.averageCost;
+  const newQty = parseMoney(currentQty) + delta;
+
+  const costPerUnit =
+    params.costPerUnit !== undefined && params.costPerUnit !== null
+      ? normalizeMoney(params.costPerUnit)
+      : null;
+
+  const [movement] = await tx
+    .insert(inventoryMovements)
+    .values({
+      businessId: params.businessId,
+      itemId: params.itemId,
+      godownId: params.godownId,
+      movementType: params.movementType,
+      quantityDelta,
+      costPerUnit,
+      unit: params.unit ?? null,
+      referenceId: params.referenceId ?? null,
+      referenceType: params.referenceType ?? null,
+      notes: params.notes ?? null,
+      createdBy: params.createdBy ?? null,
+      createdAt: params.occurredAt ?? new Date(),
+    })
+    .returning({ id: inventoryMovements.id });
+
+  if (!movement) {
+    throw new Error('Failed to record inventory movement');
+  }
+
+  const newAverageCost = calculateMovingAverageCost(
+    currentQty,
+    currentAvg,
+    quantityDelta,
+    costPerUnit,
+  );
+
+  const [updated] = await tx
+    .update(stockLevels)
+    .set({
+      quantity: normalizeMoney(newQty),
+      averageCost: newAverageCost,
+      updatedAt: new Date(),
+    })
+    .where(eq(stockLevels.id, existingStock.id))
+    .returning({ id: stockLevels.id });
+
+  if (!updated) {
+    throw new Error('Failed to update stock level');
+  }
+
+  return { movementId: movement.id, stockLevelId: updated.id };
+}

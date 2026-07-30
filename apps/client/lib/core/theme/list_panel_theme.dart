@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 
 const listPanelCardBorder = Color(0xFFE0E0E0);
 const listPanelSelectedRowColor = Color(0xFFE3F2FD);
+const listPanelSelectedRowPressedColor = Color(0xFFBBDEFB);
+const listPanelZebraRowColor = Color(0xFFFAFAFA);
+const listPanelRowHoverColor = Color(0xFFF5F9FF);
+const listPanelRowFocusColor = Color(0xFFF5F9FF);
+const listPanelRowPressedColor = Color(0xFFE8F0FE);
 const listPanelNegativeColor = Color(0xFFD32F2F);
 const listPanelPositiveColor = Color(0xFF2E7D32);
 
@@ -13,8 +18,9 @@ const listPanelPopupMenuShape = RoundedRectangleBorder(
 
 const listPanelPopupMenuConstraints = BoxConstraints(minWidth: 180);
 
-const listPanelPopupMenuItemStyle = TextStyle(
-  fontSize: 14,
+const TextStyle listPanelPopupMenuItemStyle = TextStyle(
+  fontFamily: AppTypography.fontFamily,
+  fontSize: AppTypography.bodyMediumSize,
   color: AppColors.textPrimary,
 );
 
@@ -85,22 +91,25 @@ class ListPanelPopupMenuButton<T> extends StatelessWidget {
 }
 
 abstract final class ListPanelStyles {
-  static const listHeaderStyle = TextStyle(
-    fontSize: 11,
+  static const TextStyle listHeaderStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.labelSmallSize,
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
     letterSpacing: 0.5,
   );
 
-  static const panelTitleStyle = TextStyle(
-    fontSize: 16,
+  static const TextStyle panelTitleStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.titleMediumSize,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     letterSpacing: 0.3,
   );
 
-  static const emptyStateStyle = TextStyle(
-    fontSize: 14,
+  static const TextStyle emptyStateStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.bodyMediumSize,
     color: AppColors.textSecondary,
   );
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PRICING_TIER_INPUT_VALUES } from '../../shared/pricing/pricing-tier';
 
 const partyTypeValues = ['customer', 'supplier', 'both'] as const;
 const partyCategoryValues = [
@@ -8,7 +9,7 @@ const partyCategoryValues = [
   'manufacturer',
   'custom',
 ] as const;
-const pricingTierValues = ['tier_1', 'tier_2', 'tier_3'] as const;
+const pricingTierInput = z.enum(PRICING_TIER_INPUT_VALUES);
 const sortFieldValues = ['name', 'created_at', 'opening_balance'] as const;
 const sortOrderValues = ['asc', 'desc'] as const;
 
@@ -24,6 +25,37 @@ const optionalMobile = z
   .trim()
   .optional()
   .transform((value) => (value === '' ? undefined : value));
+
+const requiredMobile = z
+  .string()
+  .trim()
+  .min(1, 'Mobile number is required')
+  .transform((value) => value.replace(/\D/g, '').slice(-10))
+  .refine((value) => value.length === 10, {
+    message: 'Phone must be exactly 10 digits',
+  });
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .transform((value) => (value === '' ? undefined : value));
+
+const additionalPhonesField = z
+  .array(
+    z
+      .string()
+      .trim()
+      .min(1)
+      .transform((value) => value.replace(/\D/g, '').slice(-10))
+      .refine((value) => value.length === 10, {
+        message: 'Each phone must be exactly 10 digits',
+      }),
+  )
+  .optional()
+  .default([]);
 
 const optionalGstin = z
   .string()
@@ -85,12 +117,18 @@ export type ListPartiesQuery = z.infer<typeof listPartiesQuerySchema>;
 
 export const createPartyBodySchema = z.object({
   name: z.string().trim().min(1, 'Party name is required').max(200),
-  mobile: optionalMobile,
+  legal_name: optionalText(200),
+  alias: optionalText(200),
+  mobile: requiredMobile,
+  additional_phones: additionalPhonesField,
   email: optionalEmail,
   gstin: optionalGstin,
   party_type: z.enum(partyTypeValues).default('customer'),
   party_category: z.enum(partyCategoryValues).optional(),
-  pricing_tier: z.enum(pricingTierValues).default('tier_1'),
+  party_group: optionalText(100),
+  area_code: optionalText(50),
+  pricing_tier: pricingTierInput.optional(),
+  default_price_tier: pricingTierInput.optional(),
   state_code: z
     .string()
     .trim()
@@ -119,6 +157,9 @@ export const createPartyBodySchema = z.object({
 export type CreatePartyBody = z.infer<typeof createPartyBodySchema>;
 
 export const updatePartyBodySchema = createPartyBodySchema
+  .extend({
+    mobile: optionalMobile,
+  })
   .partial()
   .refine((body) => Object.keys(body).length > 0, {
     message: 'At least one field is required',

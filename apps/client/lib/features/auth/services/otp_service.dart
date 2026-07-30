@@ -9,12 +9,14 @@ class OtpException implements Exception {
     this.code,
     this.isNetwork = false,
     this.isConsumed = false,
+    this.cause,
   });
 
   final String message;
   final int? code;
   final bool isNetwork;
   final bool isConsumed;
+  final Object? cause;
 
   @override
   String toString() => message;
@@ -75,6 +77,7 @@ class OtpService {
 
     try {
       final result = await OTPWidget.sendOTP({'identifier': identifier});
+      AuthDebugLogger.logSdkResponse('sendOTP', result);
       if (result == null) {
         throw const OtpException('Unable to send OTP. Please try again later.');
       }
@@ -94,7 +97,7 @@ class OtpService {
       throw const OtpException(
         'OTP was sent but the session expired. Go back and try again.',
       );
-    } catch (e) {
+    } on Object catch (e) {
       throw _wrapSendError(e);
     }
   }
@@ -116,11 +119,26 @@ class OtpService {
 
     try {
       final result = await OTPWidget.retryOTP({'reqId': trimmed});
-      if (result != null && _isErrorType(result)) {
+      AuthDebugLogger.logSdkResponse('retryOTP', result);
+      if (result == null) {
+        throw const OtpException('Failed to resend OTP. Please try again.');
+      }
+      if (_isErrorType(result)) {
         throw _mapSdkError(result, fallback: 'Failed to resend OTP');
       }
-      return trimmed;
-    } catch (e) {
+
+      final type = result['type']?.toString().toLowerCase() ?? '';
+      if (type != 'success') {
+        final message = result['message']?.toString().trim();
+        throw OtpException(
+          message == null || message.isEmpty
+              ? 'Failed to resend OTP'
+              : message,
+        );
+      }
+
+      return _parseReqId(result) ?? trimmed;
+    } on Object catch (e) {
       if (e is OtpException) rethrow;
       throw _wrapNetworkError(e);
     }
@@ -170,7 +188,7 @@ class OtpService {
       }
 
       return accessToken;
-    } catch (e) {
+    } on Object catch (e) {
       if (e is OtpException) rethrow;
       throw _wrapNetworkError(e);
     }
@@ -225,9 +243,9 @@ class OtpService {
         text.contains('network') ||
         text.contains('timeout') ||
         text.contains('connection')) {
-      return OtpException(fallback, isNetwork: true);
+      return OtpException(fallback, isNetwork: true, cause: error);
     }
-    return OtpException(fallback);
+    return OtpException(fallback, cause: error);
   }
 
   String? _extractAccessToken(Map<String, dynamic> result) {
@@ -269,6 +287,18 @@ class OtpService {
   }
 
   String? _parseReqId(Map<String, dynamic> result) {
+    // MSG91's Flutter SDK stores reqId from `message` on success responses.
+    final type = result['type']?.toString().toLowerCase() ?? '';
+    if (type == 'success') {
+      final message = result['message']?.toString().trim();
+      if (message != null &&
+          message.isNotEmpty &&
+          message != 'AuthenticationFailure' &&
+          !_looksLikeJwt(message)) {
+        return message;
+      }
+    }
+
     for (final key in ['request_id', 'reqId', 'requestId']) {
       final value = result[key];
       if (value != null && value.toString().trim().isNotEmpty) {

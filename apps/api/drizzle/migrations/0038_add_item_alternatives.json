@@ -1,0 +1,15 @@
+{
+  "id": "0024_add_item_alternatives",
+  "prevId": "0023_expense_special_categories",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -9,6 +9,8 @@ enum PurchaseFaStatus {
 class PurchaseFaModel {
   const PurchaseFaModel({
     required this.id,
+    required this.batchId,
+    required this.partyId,
     required this.invoiceNo,
     required this.date,
     required this.partyName,
@@ -19,9 +21,12 @@ class PurchaseFaModel {
     required this.dueDate,
     this.user = 'Admin',
     this.firm = 'All Firms',
+    this.godown = 'Main Godown',
   });
 
   final String id;
+  final String batchId;
+  final String partyId;
   final String invoiceNo;
   final DateTime date;
   final String partyName;
@@ -32,6 +37,7 @@ class PurchaseFaModel {
   final DateTime dueDate;
   final String user;
   final String firm;
+  final String godown;
 
   double get paidAmount => amount - balanceDue;
 }

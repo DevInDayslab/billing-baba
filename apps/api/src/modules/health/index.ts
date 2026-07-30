@@ -1,7 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { AppConfig } from '../../config/app_config';
 import { checkDatabaseHealth } from '../../db';
-import type { ApiSuccessResponse } from '../../shared/types';
+import { sendData } from '../../shared/http/response';
+import type { ApiDataResponse } from '../../shared/types';
 
 const startTime = Date.now();
 
@@ -31,26 +32,24 @@ function buildHealthData(config: AppConfig): HealthData {
 
 export function createHealthModule(config: AppConfig): FastifyPluginAsync {
   return async (app) => {
-    const healthHandler = async (): Promise<
-      ApiSuccessResponse<HealthData>
-    > => ({
-      success: true,
+    const healthHandler = async (): Promise<ApiDataResponse<HealthData>> => ({
       data: buildHealthData(config),
     });
 
-    app.get('/health', healthHandler);
-    app.get('/ready', healthHandler);
+    app.get('/health', async (_request, reply) => {
+      const payload = await healthHandler();
+      return sendData(reply, payload.data);
+    });
+    app.get('/ready', async (_request, reply) => {
+      const payload = await healthHandler();
+      return sendData(reply, payload.data);
+    });
 
     app.get('/health/db', async (_request, reply) => {
       const database = await checkDatabaseHealth();
       const statusCode = database === 'disconnected' ? 503 : 200;
-
-      const response: ApiSuccessResponse<DatabaseHealthData> = {
-        success: true,
-        data: { database },
-      };
-
-      return reply.status(statusCode).send(response);
+      const data: DatabaseHealthData = { database };
+      return sendData(reply, data, statusCode);
     });
   };
 }

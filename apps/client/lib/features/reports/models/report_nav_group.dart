@@ -4,6 +4,9 @@ enum ReportNavGroup {
   gst,
   itemStock,
   businessStatus,
+  taxes,
   expenseReport,
   salePurchaseOrderReport,
+  otherIncomeReport,
+  loanAccounts,
 }

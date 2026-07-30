@@ -2,7 +2,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
-import type { ApiSuccessResponse } from '../../shared/types';
+import { sendData } from '../../shared/http/response';
+import type { ApiDataResponse } from '../../shared/types';
 import {
   loginBodySchema,
   logoutBodySchema,
@@ -30,12 +31,12 @@ export function createAuthController(config: AppConfig) {
     login: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<AuthSessionResponse>> => {
+    ): Promise<ApiDataResponse<AuthSessionResponse>> => {
       try {
         const body = loginBodySchema.parse(request.body);
         const service = new AuthService(request.server, config);
         const data = await service.login(body.access_token, body.phone);
-        return reply.send({ success: true, data });
+        return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -52,7 +53,7 @@ export function createAuthController(config: AppConfig) {
     refresh: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<AuthSessionResponse>> => {
+    ): Promise<ApiDataResponse<AuthSessionResponse>> => {
       try {
         const body = refreshBodySchema.parse(request.body);
         const service = new AuthService(request.server, config);
@@ -60,7 +61,7 @@ export function createAuthController(config: AppConfig) {
           body.refresh_token,
           body.business_id,
         );
-        return reply.send({ success: true, data });
+        return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -77,15 +78,12 @@ export function createAuthController(config: AppConfig) {
     logout: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<{ message: string }>> => {
+    ): Promise<ApiDataResponse<{ message: string }>> => {
       try {
         const body = logoutBodySchema.parse(request.body);
         const service = new AuthService(request.server, config);
         await service.logout(body.refresh_token);
-        return reply.send({
-          success: true,
-          data: { message: 'Logged out successfully' },
-        });
+        return sendData(reply, { message: 'Logged out successfully' });
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -102,20 +100,20 @@ export function createAuthController(config: AppConfig) {
     me: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<MeResponse>> => {
+    ): Promise<ApiDataResponse<MeResponse>> => {
       const payload = request.user as JwtAccessPayload;
       const service = new AuthService(request.server, config);
       const data = await service.getMe(payload);
-      return reply.send({ success: true, data });
+      return sendData(reply, data);
     },
 
     devLogin: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<AuthSessionResponse>> => {
+    ): Promise<ApiDataResponse<AuthSessionResponse>> => {
       const service = new AuthService(request.server, config);
       const data = await service.devLogin();
-      return reply.send({ success: true, data });
+      return sendData(reply, data);
     },
   };
 }

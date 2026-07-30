@@ -6,5 +6,15 @@ export async function registerSwaggerUiPlugin(
 ): Promise<void> {
   await app.register(swaggerUi, {
     routePrefix: '/docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: true,
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      tryItOutEnabled: true,
+      syntaxHighlight: { activate: true, theme: 'monokai' },
+    },
+    staticCSP: true,
   });
 }

@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/network/http_logging_interceptor.dart';
 import 'package:dio/dio.dart';
 
 /// Ensures POST/PUT/PATCH requests with JSON content-type always include a body.
@@ -5,12 +7,22 @@ import 'package:dio/dio.dart';
 Interceptor buildJsonBodyInterceptor() {
   return InterceptorsWrapper(
     onRequest: (options, handler) {
+      if (options.data is FormData) {
+        options.headers.remove(Headers.contentTypeHeader);
+        options.contentType = null;
+      }
+
       final method = options.method.toUpperCase();
       if (method == 'POST' || method == 'PUT' || method == 'PATCH') {
         final contentType = _jsonContentType(options);
         if (contentType != null && options.data == null) {
           options.data = <String, dynamic>{};
         }
+      } else if ((method == 'DELETE' || method == 'GET') &&
+          options.data == null) {
+        // Fastify rejects application/json with an empty body on bodyless requests.
+        options.headers.remove(Headers.contentTypeHeader);
+        options.contentType = null;
       }
       handler.next(options);
     },
@@ -33,10 +45,6 @@ String? _jsonContentType(RequestOptions options) {
 List<Interceptor> buildInterceptors() {
   return [
     buildJsonBodyInterceptor(),
-    InterceptorsWrapper(
-      onRequest: (options, handler) => handler.next(options),
-      onResponse: (response, handler) => handler.next(response),
-      onError: (error, handler) => handler.next(error),
-    ),
+    if (AppConfig.diagnosticsEnabled) HttpLoggingInterceptor(),
   ];
 }

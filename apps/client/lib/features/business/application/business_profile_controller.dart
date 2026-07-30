@@ -2,6 +2,7 @@ import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
 import 'package:billing_baba/features/business/utils/edit_business_profile_validator.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -45,17 +46,31 @@ class EditBusinessProfileForm extends _$EditBusinessProfileForm {
   @override
   EditBusinessProfileFormState build() => const EditBusinessProfileFormState();
 
+  void clearErrors() {
+    state = state.copyWith(
+      clearFieldErrors: true,
+      clearGeneralError: true,
+    );
+  }
+
   Future<BusinessProfileModel?> submit(UpdateBusinessProfileInput input) async {
     if (state.isSubmitting) return null;
 
     final clientErrors = EditBusinessProfileValidator.validate(input);
     if (clientErrors.isNotEmpty) {
+      BusinessProfileDebugLog.section('CLIENT VALIDATION FAILED');
+      for (final entry in clientErrors.entries) {
+        BusinessProfileDebugLog.log('${entry.key}: ${entry.value}');
+      }
       state = state.copyWith(
         fieldErrors: clientErrors,
         clearGeneralError: true,
       );
       return null;
     }
+
+    BusinessProfileDebugLog.section('SUBMIT UPDATE PROFILE');
+    BusinessProfileDebugLog.log('input: ${input.toRequest().toJson()}');
 
     state = state.copyWith(
       isSubmitting: true,
@@ -70,12 +85,28 @@ class EditBusinessProfileForm extends _$EditBusinessProfileForm {
       state = state.copyWith(isSubmitting: false);
       return updated;
     } on ApiValidationException catch (e) {
+      BusinessProfileDebugLog.log('API validation: ${e.fieldErrors}');
       state = state.copyWith(
         isSubmitting: false,
         fieldErrors: e.fieldErrors,
       );
       return null;
-    } on DioException catch (e) {
+    } on BusinessProfileScopeRequired catch (_) {
+      const message =
+          'No company is selected in your session. Open a company from the Company List, then try again.';
+      BusinessProfileDebugLog.log('BusinessProfileScopeRequired: $message');
+      state = state.copyWith(
+        isSubmitting: false,
+        generalError: message,
+      );
+      return null;
+    } on DioException catch (e, stack) {
+      BusinessProfileDebugLog.section('DIO EXCEPTION');
+      BusinessProfileDebugLog.log('type: ${e.type}');
+      BusinessProfileDebugLog.log('status: ${e.response?.statusCode}');
+      BusinessProfileDebugLog.log('response: ${e.response?.data}');
+      BusinessProfileDebugLog.log('stack: $stack');
+
       final validation = ApiErrorParser.parseValidation(e);
       if (validation != null) {
         state = state.copyWith(
@@ -89,25 +120,24 @@ class EditBusinessProfileForm extends _$EditBusinessProfileForm {
         generalError: _messageFromDio(e),
       );
       return null;
-    } catch (_) {
+    } on Object catch (e, stack) {
+      BusinessProfileDebugLog.section('UNEXPECTED ERROR');
+      BusinessProfileDebugLog.log('error: $e');
+      BusinessProfileDebugLog.log('stack: $stack');
       state = state.copyWith(
         isSubmitting: false,
-        generalError: 'Unable to save business profile. Please try again.',
+        generalError: e is BusinessProfileScopeRequired
+            ? 'No company is selected in your session. Open a company from the Company List, then try again.'
+            : 'Unable to save business profile. Please try again.',
       );
       return null;
     }
   }
 
   String _messageFromDio(DioException error) {
-    final data = error.response?.data;
-    if (data is Map<String, dynamic>) {
-      final message = data['message']?.toString();
-      if (message != null && message.isNotEmpty) return message;
-    }
-    if (error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout) {
-      return 'Unable to connect to Billing Baba server.';
-    }
-    return 'Unable to save business profile. Please try again.';
+    final fieldDetail = ApiErrorParser.firstValidationDetail(error);
+    if (fieldDetail != null && fieldDetail.isNotEmpty) return fieldDetail;
+
+    return ApiErrorParser.userFacingMessage(error);
   }
 }
