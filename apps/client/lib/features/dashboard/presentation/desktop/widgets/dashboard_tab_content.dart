@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/layout/dashboard_layout.dart';
 import 'package:billing_baba/core/layout/dashboard_navigation.dart';
+import 'package:billing_baba/core/network/offline_utils.dart';
 import 'package:billing_baba/core/widgets/app_error.dart';
+import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_error_mapper.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
@@ -20,14 +22,23 @@ class DashboardTabContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsync = ref.watch(dashboardProvider);
     final period = ref.watch(dashboardPeriodFilterProvider);
+    final usingCache = ref.watch(dashboardUsingCacheProvider);
 
     return dashboardAsync.when(
       loading: () => const _DashboardGridShell(child: DashboardSkeleton()),
-      error: (error, _) => AppError(
-        message: DashboardErrorMapper.messageFor(error),
-        onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
-      ),
+      error: (error, _) {
+        if (isOfflineError(error)) {
+          return OfflineConnectPrompt(
+            onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
+          );
+        }
+        return AppError(
+          message: DashboardErrorMapper.messageFor(error),
+          onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
+        );
+      },
       data: (dashboard) => _DashboardGridShell(
+        showOfflineBanner: usingCache,
         child: _DashboardGrid(
           dashboard: dashboard,
           period: period,
@@ -44,9 +55,13 @@ class DashboardTabContent extends ConsumerWidget {
 }
 
 class _DashboardGridShell extends StatelessWidget {
-  const _DashboardGridShell({required this.child});
+  const _DashboardGridShell({
+    required this.child,
+    this.showOfflineBanner = false,
+  });
 
   final Widget child;
+  final bool showOfflineBanner;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +75,15 @@ class _DashboardGridShell extends StatelessWidget {
             child: SizedBox(
               width: metrics.contentWidth,
               height: metrics.contentHeight,
-              child: child,
+              child: showOfflineBanner
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const OfflineStatusBanner(),
+                        Expanded(child: child),
+                      ],
+                    )
+                  : child,
             ),
           ),
         );

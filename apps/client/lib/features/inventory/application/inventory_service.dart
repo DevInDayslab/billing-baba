@@ -896,18 +896,10 @@ class InventoryService {
     required List<InventoryCategory> categories,
     required List<InventoryItem> items,
   }) {
-    final uncategorizedCount = items
-        .where(
-          (item) =>
-              item.categoryId == null ||
-              item.categoryId == uncategorizedCategoryId,
-        )
-        .length;
-
-    return [
-      CategoryMapper.uncategorized(itemCount: uncategorizedCount),
-      ...categories.where((category) => !category.isUncategorized),
-    ];
+    return CategoryMapper.withSyncedItemCounts(
+      categories: categories,
+      items: items,
+    );
   }
 
   InventoryUnit? _resolveUnit(String? unitId, List<InventoryUnit> units) {

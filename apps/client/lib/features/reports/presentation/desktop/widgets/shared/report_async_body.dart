@@ -1,6 +1,8 @@
+import 'package:billing_baba/core/network/offline_utils.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_error.dart';
 import 'package:billing_baba/core/widgets/app_loader.dart';
+import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_load_helper.dart';
 import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
@@ -193,45 +195,75 @@ class ReportAsyncBody<T> extends ConsumerWidget {
 
 
 
-    return ReportReloadScope(
+    return LayoutBuilder(
 
-      isReloading: isReloading,
+      builder: (context, constraints) {
 
-      child: value.when(
+        return ReportReloadScope(
 
-        loading: () => AppLoader(message: loadingMessage),
+          isReloading: isReloading,
 
-        error: (error, _) => AppError(
+          child: value.when(
 
-          message: ReportsErrorMapper.messageFor(error),
+            loading: () => AppLoader(message: loadingMessage),
 
-          onRetry: onRetry,
+            error: (error, _) {
+              if (isOfflineError(error)) {
+                return OfflineConnectPrompt(onRetry: onRetry);
+              }
+              return AppError(
+                message: ReportsErrorMapper.messageFor(error),
+                onRetry: onRetry,
+              );
+            },
 
-        ),
+            data: (result) {
 
-        data: (result) {
+              if (empty != null &&
 
-          if (empty != null &&
+                  (isEmpty?.call(result) ?? _defaultIsEmpty(result))) {
 
-              (isEmpty?.call(result) ?? _defaultIsEmpty(result))) {
+                return empty!;
 
-            return empty!;
+              }
 
-          }
+              final content = data(result);
 
-          return RefreshIndicator(
+              if (!constraints.maxHeight.isFinite) {
 
-            onRefresh: () async => onRetry(),
+                return content;
 
-            child: data(result),
+              }
 
-          );
+              return RefreshIndicator(
 
-        },
+                onRefresh: () async => onRetry(),
 
-        skipLoadingOnReload: true,
+                child: SingleChildScrollView(
 
-      ),
+                  physics: const AlwaysScrollableScrollPhysics(),
+
+                  child: SizedBox(
+
+                    height: constraints.maxHeight,
+
+                    child: content,
+
+                  ),
+
+                ),
+
+              );
+
+            },
+
+            skipLoadingOnReload: true,
+
+          ),
+
+        );
+
+      },
 
     );
 

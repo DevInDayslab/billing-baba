@@ -41,7 +41,7 @@ final class GlobalSearchQueryProvider
   }
 }
 
-String _$globalSearchQueryHash() => r'ae4501293e5b7e65772cbdd6bd7c380be6f24af0';
+String _$globalSearchQueryHash() => r'0a3d92cb82ac503d10b7a727b2983fdf3391889f';
 
 abstract class _$GlobalSearchQuery extends $Notifier<String> {
   String build();
@@ -60,45 +60,3 @@ abstract class _$GlobalSearchQuery extends $Notifier<String> {
     return element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(globalSearchResults)
-final globalSearchResultsProvider = GlobalSearchResultsProvider._();
-
-final class GlobalSearchResultsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<GlobalSearchResult>>,
-          List<GlobalSearchResult>,
-          FutureOr<List<GlobalSearchResult>>
-        >
-    with
-        $FutureModifier<List<GlobalSearchResult>>,
-        $FutureProvider<List<GlobalSearchResult>> {
-  GlobalSearchResultsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'globalSearchResultsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$globalSearchResultsHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<GlobalSearchResult>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<GlobalSearchResult>> create(Ref ref) {
-    return globalSearchResults(ref);
-  }
-}
-
-String _$globalSearchResultsHash() =>
-    r'486a5961dd9c8df6958f4d8ee312710257331843';

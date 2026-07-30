@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/network/offline_utils.dart';
 import 'package:dio/dio.dart';
 
 class InventoryOfflineException implements Exception {
@@ -166,7 +167,7 @@ abstract final class InventoryErrorMapper {
         );
     }
 
-    if (_isOffline(error)) {
+    if (isOfflineError(error)) {
       throw const InventoryOfflineException();
     }
 
@@ -180,9 +181,8 @@ abstract final class InventoryErrorMapper {
     );
   }
 
-  static bool isOfflineError(DioException error) => _isOffline(error);
-
   static String messageFor(Object error) {
+    if (isOfflineError(error)) return OfflineMessages.connectToInternet;
     if (error is InventoryException) return error.message;
     if (error is InventoryOfflineException) {
       return 'Network unavailable. Please check your connection.';
@@ -190,12 +190,5 @@ abstract final class InventoryErrorMapper {
     if (error is ApiValidationException) return validationMessage(error);
     if (error is DioException) return messageForSaveItem(error);
     return 'Unable to load inventory data. Please try again.';
-  }
-
-  static bool _isOffline(DioException error) {
-    return error.response == null ||
-        error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout;
   }
 }

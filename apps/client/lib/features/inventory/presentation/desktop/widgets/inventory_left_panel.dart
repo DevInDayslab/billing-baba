@@ -1,7 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
+import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
@@ -73,9 +75,12 @@ class InventoryLeftPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final usingCatalog = ref.watch(inventoryUsingCatalogProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (usingCatalog) const OfflineStatusBanner(),
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,

@@ -1,7 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -176,74 +178,22 @@ class OtherIncomeReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? _emptyTable(
-                                  message:
-                                      'No other income records found for the selected period.',
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: _incomeHeaders,
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                100,
-                                                child: Text(
-                                                  formatReportDate(
-                                                    rows[i].date,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                100,
-                                                child: Text(rows[i].incomeNo),
-                                              ),
-                                              ReportAlignedCell.flex(
-                                                child: Text(rows[i].partyName),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                child: Text(rows[i].category),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                child: Text(
-                                                  rows[i].paymentType,
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                100,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].amount,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                100,
-                                                child: Text(
-                                                  formatReportDate(
-                                                    rows[i].dueDate,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                90,
-                                                child: Text(rows[i].status),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportOtherIncomeRow>(
+                              reportScope: otherIncomeReportScope,
+                              columns: otherIncomeReportColumns(),
+                              rows: rows,
+                              emptyState: const Center(
+                                child: Text(
+                                  'No other income records found for the selected period.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         _TotalFooter(
                           label: 'Total Amount: ',
                           amount: formatReportCurrency(totalAmount),
@@ -272,44 +222,6 @@ class OtherIncomeReportContent extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  static const List<Widget> _incomeHeaders = [
-    ReportAlignedHeaderCell(label: 'DATE', width: 100),
-    ReportAlignedHeaderCell(label: 'INC NO', width: 100),
-    Expanded(child: ReportAlignedHeaderCell(label: 'PARTY')),
-    ReportAlignedHeaderCell(label: 'CATEGORY', width: 130),
-    ReportAlignedHeaderCell(label: 'PAYMENT TYPE', width: 120),
-    ReportAlignedHeaderCell(
-      label: 'AMOUNT',
-      width: 100,
-      alignment: Alignment.centerRight,
-    ),
-    ReportAlignedHeaderCell(label: 'DUE DATE', width: 100),
-    ReportAlignedHeaderCell(label: 'STATUS', width: 90),
-  ];
-
-  Widget _emptyTable({required String message}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const ReportSyncScrollTable(
-          headerChildren: _incomeHeaders,
-          rows: [],
-        ),
-        Expanded(
-          child: Center(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -438,43 +350,23 @@ class OtherIncomeCategoryReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? _categoryEmptyTable()
-                              : ReportSyncScrollTable(
-                                    headerChildren: _categoryHeaders,
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.flex(
-                                                child: Text(rows[i].category),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('${rows[i].count}'),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].amount,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<
+                                ReportOtherIncomeCategoryRow>(
+                              reportScope: otherIncomeCategoryReportScope,
+                              columns: otherIncomeCategoryReportColumns(),
+                              rows: rows,
+                              emptyState: const Center(
+                                child: Text(
+                                  'No other income records found for the selected period.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         _TotalFooter(
                           label: 'Total Income: ',
                           amount: formatReportCurrency(totalIncome),
@@ -489,45 +381,6 @@ class OtherIncomeCategoryReportContent extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  static const List<Widget> _categoryHeaders = [
-    Expanded(
-      child: ReportAlignedHeaderCell(label: 'INCOME CATEGORY'),
-    ),
-    ReportAlignedHeaderCell(
-      label: 'COUNT',
-      width: 120,
-      alignment: Alignment.centerRight,
-    ),
-    ReportAlignedHeaderCell(
-      label: 'AMOUNT',
-      width: 140,
-      alignment: Alignment.centerRight,
-    ),
-  ];
-
-  Widget _categoryEmptyTable() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ReportSyncScrollTable(
-          headerChildren: _categoryHeaders,
-          rows: [],
-        ),
-        Expanded(
-          child: Center(
-            child: Text(
-              'No other income records found for the selected period.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -656,41 +509,22 @@ class OtherIncomeItemReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? _itemEmptyTable()
-                              : ReportSyncScrollTable(
-                                    headerChildren: _itemHeaders,
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.flex(
-                                                child: Text(rows[i].itemName),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                180,
-                                                child: Text(rows[i].category),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].amount,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportOtherIncomeItemRow>(
+                              reportScope: otherIncomeItemReportScope,
+                              columns: otherIncomeItemReportColumns(),
+                              rows: rows,
+                              emptyState: const Center(
+                                child: Text(
+                                  'No other income records found for the selected period.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         _TotalFooter(
                           label: 'Total Income: ',
                           amount: formatReportCurrency(totalIncome),
@@ -705,41 +539,6 @@ class OtherIncomeItemReportContent extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  static const List<Widget> _itemHeaders = [
-    Expanded(
-      child: ReportAlignedHeaderCell(label: 'INCOME ITEM'),
-    ),
-    ReportAlignedHeaderCell(label: 'CATEGORY', width: 180),
-    ReportAlignedHeaderCell(
-      label: 'AMOUNT',
-      width: 140,
-      alignment: Alignment.centerRight,
-    ),
-  ];
-
-  Widget _itemEmptyTable() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ReportSyncScrollTable(
-          headerChildren: _itemHeaders,
-          rows: [],
-        ),
-        Expanded(
-          child: Center(
-            child: Text(
-              'No other income records found for the selected period.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

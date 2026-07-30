@@ -1,4 +1,6 @@
+import 'package:billing_baba/core/network/offline_utils.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
@@ -125,6 +127,18 @@ class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
         );
       },
       error: (error, _) {
+        if (widget.items.isEmpty && isOfflineError(error)) {
+          return RefreshIndicator(
+            onRefresh: widget.onRefresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                OfflineConnectPrompt(onRetry: widget.onRefresh),
+              ],
+            ),
+          );
+        }
+
         final message = InventoryErrorMapper.messageFor(error);
         if (widget.items.isNotEmpty) {
           return Column(

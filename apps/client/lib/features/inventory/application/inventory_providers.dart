@@ -10,6 +10,7 @@ import 'package:billing_baba/features/inventory/application/inventory_units_prov
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
 import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
@@ -26,9 +27,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'item_images_provider.dart';
 
+final inventoryLowStockOnlyProvider =
+    NotifierProvider<InventoryLowStockOnly, bool>(InventoryLowStockOnly.new);
+
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
+  final lowStockOnly = ref.watch(inventoryLowStockOnlyProvider);
   final engine = ref.watch(inventorySearchEngineProvider);
   final products = (ref.watch(inventoryItemsProvider).value ?? [])
       .where((item) => item.type == ItemType.product);
@@ -37,6 +42,7 @@ final productsProvider = Provider<List<InventoryItem>>((ref) {
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )
+      .where((item) => !lowStockOnly || isInventoryLowStock(item))
       .toList();
 });
 
@@ -58,17 +64,13 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
   final query = ref.watch(categorySearchQueryProvider).toLowerCase();
   final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
   final items = ref.watch(inventoryItemsProvider).value ?? [];
-  final serviceAsync = ref.watch(inventoryServiceProvider);
 
-  final withUncategorized = serviceAsync.maybeWhen(
-    data: (service) => service.withUncategorizedCategory(
-      categories: categories,
-      items: items,
-    ),
-    orElse: () => categories,
+  final withSyncedCounts = CategoryMapper.withSyncedItemCounts(
+    categories: categories,
+    items: items,
   );
 
-  return withUncategorized
+  return withSyncedCounts
       .where(
         (category) =>
             query.isEmpty || category.name.toLowerCase().contains(query),
@@ -155,6 +157,16 @@ class InventoryItemsTabIndex extends Notifier<int> {
         ? inventoryProductsTabIndex
         : inventoryServicesTabIndex;
   }
+}
+
+class InventoryLowStockOnly extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  bool get enabled => state;
+  set enabled(bool value) => state = value;
+
+  void clear() => state = false;
 }
 
 final selectedProductIdProvider = NotifierProvider<SelectedProductId, String?>(

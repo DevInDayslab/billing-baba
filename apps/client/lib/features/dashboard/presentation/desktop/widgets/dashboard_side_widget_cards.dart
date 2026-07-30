@@ -1,12 +1,13 @@
 import 'package:billing_baba/core/layout/dashboard_layout.dart';
-import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/core/layout/dashboard_navigation.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_empty_state.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 final _currencyFormat = NumberFormat.currency(
@@ -122,14 +123,16 @@ class DashboardExpensesSideWidget extends StatelessWidget {
   }
 }
 
-class DashboardLowStockSideWidget extends StatelessWidget {
+class DashboardLowStockSideWidget extends ConsumerWidget {
   const DashboardLowStockSideWidget({required this.inventory, super.key});
 
   final DashboardInventoryModel inventory;
 
   @override
-  Widget build(BuildContext context) {
-    final items = inventory.lowStockItems;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = inventory.lowStockItems
+        .where((item) => item.quantity < inventoryLowStockThreshold)
+        .toList();
 
     return _SideWidgetBlock(
       alignTop: true,
@@ -148,7 +151,8 @@ class DashboardLowStockSideWidget extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => context.go(AppRoutes.items),
+                onPressed: () =>
+                    DashboardNavigation.openLowStockInventory(context, ref),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   padding: EdgeInsets.zero,

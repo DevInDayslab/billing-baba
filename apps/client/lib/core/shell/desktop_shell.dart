@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/providers/connectivity_provider.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
@@ -374,6 +376,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     }
     ref.watch(companySessionBootstrapProvider);
     final permissions = ref.watch(permissionServiceProvider);
+    final isOnline = ref.watch(networkConnectivityProvider);
 
     return _ShellSidebarStateScope(
       builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
@@ -403,6 +406,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                   children: [
                     if (showTopBar) ...[
                       const CustomerSupportStrip(),
+                      if (!isOnline) const OfflineStatusBanner(),
                       AppTopBar(showMenuButton: useOverlaySidebar),
                     ],
                     Expanded(child: widget.child),

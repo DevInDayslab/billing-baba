@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/json_field_parsers.dart';
 import 'package:billing_baba/features/inventory/models/dto/pagination_meta_dto.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -13,9 +14,11 @@ abstract class MovementDto with _$MovementDto {
     @JsonKey(name: 'godown_id') required String godownId,
     @JsonKey(name: 'godown_name') required String godownName,
     @JsonKey(name: 'movement_type') required String movementType,
-    @JsonKey(name: 'quantity_delta') required String quantityDelta,
+    @JsonKey(name: 'quantity_delta', fromJson: decimalStringFromJson)
+    required String quantityDelta,
     @JsonKey(name: 'created_at') required String createdAt,
-    @JsonKey(name: 'cost_per_unit') String? costPerUnit,
+    @JsonKey(name: 'cost_per_unit', fromJson: nullableDecimalStringFromJson)
+    String? costPerUnit,
     String? unit,
     @JsonKey(name: 'reference_id') String? referenceId,
     @JsonKey(name: 'reference_type') String? referenceType,

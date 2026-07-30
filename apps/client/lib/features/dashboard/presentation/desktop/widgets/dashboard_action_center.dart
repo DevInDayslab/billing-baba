@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/layout/dashboard_navigation.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
@@ -5,6 +7,7 @@ import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/das
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/action_center_tasks_section.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// Single right-column panel: Low Stock, Today's Tasks, Quick Reports.
@@ -63,14 +66,16 @@ class DashboardActionCenter extends StatelessWidget {
   }
 }
 
-class _ActionCenterLowStock extends StatelessWidget {
+class _ActionCenterLowStock extends ConsumerWidget {
   const _ActionCenterLowStock({required this.inventory});
 
   final DashboardInventoryModel inventory;
 
   @override
-  Widget build(BuildContext context) {
-    final items = inventory.lowStockItems;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = inventory.lowStockItems
+        .where((item) => item.quantity < inventoryLowStockThreshold)
+        .toList();
     final isEmpty = items.isEmpty;
 
     return ConstrainedBox(
@@ -89,7 +94,8 @@ class _ActionCenterLowStock extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => context.go(AppRoutes.items),
+                onPressed: () =>
+                    DashboardNavigation.openLowStockInventory(context, ref),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   padding: EdgeInsets.zero,

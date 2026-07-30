@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/offline_utils.dart';
 import 'package:dio/dio.dart';
 
 class ReportsException implements Exception {
@@ -24,6 +25,7 @@ ReportsException mapReportsError(Object error) {
 
 abstract final class ReportsErrorMapper {
   static String messageFor(Object error) {
+    if (isOfflineError(error)) return OfflineMessages.connectToInternet;
     if (error is ReportsException) return error.message;
     return mapReportsError(error).message;
   }

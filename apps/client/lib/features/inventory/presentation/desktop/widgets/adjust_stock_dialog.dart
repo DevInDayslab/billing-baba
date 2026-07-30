@@ -98,9 +98,13 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
         ),
       );
 
-      await ref
-          .read(inventoryItemsProvider.notifier)
-          .refreshAfterStockAdjustment(widget.item.id);
+      try {
+        await ref
+            .read(inventoryItemsProvider.notifier)
+            .refreshAfterStockAdjustment(widget.item.id);
+      } on Object {
+        // Adjustment is already saved; refresh is best-effort.
+      }
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -110,7 +114,7 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
         _isLoading = false;
         _errorMessage = error.message;
       });
-    } catch (error) {
+    } on Object catch (error) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;

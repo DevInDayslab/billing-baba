@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/offline_utils.dart';
 import 'package:dio/dio.dart';
 
 class PurchaseException implements Exception {
@@ -17,6 +18,10 @@ class PurchaseOfflineException extends PurchaseException {
 }
 
 PurchaseException mapPurchaseError(Object error) {
+  if (isOfflineError(error)) {
+    return const PurchaseOfflineException(OfflineMessages.connectToInternet);
+  }
+
   if (error is DioException) {
     final validation = ApiErrorParser.parseValidation(error);
     if (validation != null) {

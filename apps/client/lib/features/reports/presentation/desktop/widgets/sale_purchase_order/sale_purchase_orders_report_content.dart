@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/sale_purchase_order/sale_purchase_order_report_filters.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
@@ -7,6 +8,7 @@ import 'package:billing_baba/features/reports/presentation/desktop/widgets/share
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
+import 'package:billing_baba/features/reports/utils/report_order_filter_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,14 +18,15 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(salePurchaseOrdersReportProvider);
+    final filters = ref.watch(reportFiltersProvider);
 
     return ReportAsyncBody(
       value: reportAsync,
       onRetry: () =>
           ref.read(salePurchaseOrdersReportProvider.notifier).refresh(),
       data: (report) {
-        final rows = report.rows;
-        final totalAmount = report.totalAmount;
+        final rows = filterSalePurchaseOrderRows(report.rows, filters);
+        final totalAmount = rows.fold<double>(0, (sum, row) => sum + row.amount);
         const exportHeaders = [
           'Date',
           'Order No.',

@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/output_error_mapper.dart';
+import 'package:billing_baba/core/widgets/offline_status_banner.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
@@ -91,16 +92,28 @@ class _BarcodeGeneratorContentState
     final state = ref.watch(barcodeGeneratorProvider);
     final notifier = ref.read(barcodeGeneratorProvider.notifier);
     final draft = state.draft;
-    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final items = itemsAsync.value ?? [];
+    final usingCatalog = ref.watch(inventoryUsingCatalogProvider);
 
     return ColoredBox(
       color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            UtilitiesPageTitleBar(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (usingCatalog) const OfflineStatusBanner(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: itemsAsync.hasError && items.isEmpty
+                  ? OfflineConnectPrompt(
+                      onRetry: () =>
+                          ref.read(inventoryItemsProvider.notifier).refresh(),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        UtilitiesPageTitleBar(
               currentRoute: AppRoutes.utilitiesBarcodeGenerator,
               trailing: _HeaderControls(
                 printer: state.printer,
@@ -222,8 +235,11 @@ class _BarcodeGeneratorContentState
                 );
               },
             ),
-          ],
-        ),
+                      ],
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

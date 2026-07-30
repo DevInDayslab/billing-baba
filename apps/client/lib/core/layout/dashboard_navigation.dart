@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/layout/dashboard_layout.dart' show DashboardLayout;
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_side_widget.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
@@ -52,7 +53,7 @@ abstract final class DashboardNavigation {
       case DashboardSideWidget.expenses:
         context.go(AppRoutes.purchaseExpenses);
       case DashboardSideWidget.lowStock:
-        context.go(AppRoutes.items);
+        openLowStockInventory(context, ref);
       case DashboardSideWidget.stockValue:
         _openReports(
           context,
@@ -76,6 +77,13 @@ abstract final class DashboardNavigation {
           ),
         );
     }
+  }
+
+  static void openLowStockInventory(BuildContext context, WidgetRef ref) {
+    ref.read(inventoryLowStockOnlyProvider.notifier).enabled = true;
+    ref.read(inventoryItemsTabIndexProvider.notifier).tabIndex =
+        inventoryProductsTabIndex;
+    context.go(AppRoutes.items);
   }
 
   static void _openParties(

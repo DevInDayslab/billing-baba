@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
@@ -20,6 +21,27 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'inventory_items_provider.g.dart';
+
+final inventoryUsingCatalogProvider =
+    NotifierProvider<InventoryUsingCatalogNotifier, bool>(
+      InventoryUsingCatalogNotifier.new,
+    );
+
+class InventoryUsingCatalogNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setValue(bool value) => state = value;
+}
+
+/// Refetches item detail, stock levels, and stock history immediately.
+Future<void> refreshItemStockViews(Ref ref, String itemId) {
+  return Future.wait([
+    ref.refresh(productDetailProvider(itemId).future),
+    ref.refresh(itemStockLevelsProvider(itemId).future),
+    ref.refresh(productTransactionsProvider(itemId).future),
+  ]);
+}
 
 /// Clears cached detail/tier data for a single item after mutations.
 ///
@@ -77,6 +99,7 @@ Future<List<InventoryItem>> _fetchItemsWithCatalogFallback(
   String? searchQuery,
   ItemType? type,
   String? categoryId,
+  void Function(bool usingCatalog)? onSourceResolved,
 }) async {
   try {
     final items = await service.fetchItems(
@@ -84,10 +107,14 @@ Future<List<InventoryItem>> _fetchItemsWithCatalogFallback(
       type: type,
       categoryId: categoryId,
     );
-    if (items.isNotEmpty) return items;
+    if (items.isNotEmpty) {
+      onSourceResolved?.call(false);
+      return items;
+    }
   } catch (_) {
     // Fall through to local catalog when API is empty or unavailable.
   }
+  onSourceResolved?.call(true);
   return _catalogItems(
     searchQuery: searchQuery,
     type: type,
@@ -146,8 +173,14 @@ class InventoryItems extends _$InventoryItems {
   Future<List<InventoryItem>> build() async {
     try {
       final service = await ref.watch(inventoryServiceProvider.future);
-      return _fetchItemsWithCatalogFallback(service);
+      return _fetchItemsWithCatalogFallback(
+        service,
+        onSourceResolved: (usingCatalog) {
+          ref.read(inventoryUsingCatalogProvider.notifier).setValue(usingCatalog);
+        },
+      );
     } catch (_) {
+      ref.read(inventoryUsingCatalogProvider.notifier).setValue(true);
       return _catalogItems();
     }
   }
@@ -166,9 +199,15 @@ class InventoryItems extends _$InventoryItems {
           searchQuery: searchQuery,
           type: type,
           categoryId: categoryId,
+          onSourceResolved: (usingCatalog) {
+            ref.read(inventoryUsingCatalogProvider.notifier).setValue(
+                  usingCatalog,
+                );
+          },
         );
         return mergeFetchedWithPendingLocalInventoryItems(fetched, previous);
       } catch (_) {
+        ref.read(inventoryUsingCatalogProvider.notifier).setValue(true);
         return mergeFetchedWithPendingLocalInventoryItems(
           _catalogItems(
             searchQuery: searchQuery,
@@ -324,21 +363,36 @@ class InventoryItems extends _$InventoryItems {
         categoryId: categoryId,
         removeFromExistingCategory: removeFromExistingCategory,
       );
-      await refresh(searchQuery: ref.read(productBackendSearchProvider));
-      await refreshAfterItemMutation(ref);
-      return null;
     } on InventoryException catch (error) {
       return error.message;
+    } on ApiValidationException catch (error) {
+      return InventoryErrorMapper.validationMessage(error);
     } catch (error) {
-      return InventoryErrorMapper.messageFor(error);
+      return InventoryErrorMapper.messageForSaveItem(error);
     }
+
+    unawaited(() async {
+      try {
+        await refresh(searchQuery: ref.read(productBackendSearchProvider));
+        await refreshAfterItemMutation(
+          ref,
+          context: (partyId: null, itemIds: itemIds),
+        );
+        await ref.read(inventoryCategoriesProvider.notifier).refresh(
+          searchQuery: ref.read(categoryBackendSearchProvider),
+        );
+      } on Object {
+        // Items are already moved; refresh is best-effort.
+      }
+    }());
+
+    return null;
   }
 
   Future<void> refreshAfterStockAdjustment(String itemId) async {
-    await refreshAfterItemMutation(
-      ref,
-      context: (partyId: null, itemIds: [itemId]),
-    );
+    await refreshItemStockViews(ref, itemId);
+    invalidateDashboard(ref);
+    unawaited(refresh());
   }
 
   /// Keeps list/POS catalog in sync after gallery uploads without a full refetch.

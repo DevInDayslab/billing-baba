@@ -2,6 +2,8 @@ import 'package:billing_baba/features/inventory/application/inventory_error_mapp
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
+import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -113,6 +115,29 @@ void main() {
     test('toApiCategoryId clears uncategorized sentinel', () {
       expect(CategoryMapper.toApiCategoryId(uncategorizedCategoryId), isNull);
       expect(CategoryMapper.toApiCategoryId('real-id'), 'real-id');
+    });
+
+    test('withSyncedItemCounts derives counts from loaded items', () {
+      const generalId = 'general-id';
+      final synced = CategoryMapper.withSyncedItemCounts(
+        categories: const [
+          InventoryCategory(id: generalId, name: 'General'),
+        ],
+        items: const [
+          InventoryItem(id: '1', name: 'A', type: ItemType.product, categoryId: generalId),
+          InventoryItem(id: '2', name: 'B', type: ItemType.product, categoryId: generalId),
+          InventoryItem(id: '3', name: 'C', type: ItemType.product),
+        ],
+      );
+
+      expect(
+        synced.firstWhere((category) => category.id == generalId).itemCount,
+        2,
+      );
+      expect(
+        synced.firstWhere((category) => category.isUncategorized).itemCount,
+        1,
+      );
     });
   });
 

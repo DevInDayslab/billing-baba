@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/connectivity_provider.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
@@ -17,6 +18,8 @@ class AppTopBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isOnline = ref.watch(networkConnectivityProvider);
+
     return Container(
       width: double.infinity,
       height: DashboardSpacing.topBarHeight,
@@ -72,6 +75,16 @@ class AppTopBar extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
+              if (!isOnline)
+                const Tooltip(
+                  message: 'You are offline',
+                  child: Icon(
+                    Icons.cloud_off_outlined,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              if (!isOnline) const SizedBox(width: AppSpacing.sm),
               _TopBarActions(showQuickButtons: !isCompact),
             ],
           );
