@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/providers/connectivity_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
@@ -8,6 +9,7 @@ import 'package:billing_baba/features/utilities/application/import_items_excel_p
 import 'package:billing_baba/features/utilities/application/import_items_excel_provider.dart';
 import 'package:billing_baba/features/utilities/models/import_item_preview_row.dart';
 import 'package:billing_baba/shared/utils/platform_file_output.dart';
+import 'package:billing_baba/shared/widgets/offline_status_banner.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -99,20 +101,30 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
     WidgetRef ref,
     ImportItemsExcelState state,
   ) {
+    final isOnline = ref.watch(networkConnectivityProvider);
+
     return ColoredBox(
       color: AppColors.background,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: AppSpacing.lg),
-                DecoratedBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!isOnline)
+            const OfflineStatusBanner(
+              message: 'Offline — connect to the internet to import items',
+            ),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: AppSpacing.lg),
+                      DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: AppRadius.lgBorder,
@@ -186,6 +198,9 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
             ),
           ),
         ),
+            ),
+          ),
+        ],
       ),
     );
   }

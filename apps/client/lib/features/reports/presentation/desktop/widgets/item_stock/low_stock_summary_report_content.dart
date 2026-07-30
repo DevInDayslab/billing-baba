@@ -1,7 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
@@ -181,113 +183,22 @@ class LowStockSummaryReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'ITEM NAME',
-                                          ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'MINIMUM STOCK QTY',
-                                          width: 150,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'STOCK QTY',
-                                          width: 110,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'STOCK VALUE',
-                                          width: 120,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No low stock items found based on the selected filters.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: const [
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'ITEM NAME',
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'MINIMUM STOCK QTY',
-                                        width: 150,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'STOCK QTY',
-                                        width: 110,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'STOCK VALUE',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.flex(
-                                                child: Text(rows[i].itemName),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                150,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].minStock
-                                                      .toStringAsFixed(0),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                110,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].currentStock
-                                                      .toStringAsFixed(0),
-                                                ),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('—'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportLowStockRow>(
+                              reportScope: lowStockReportScope,
+                              columns: lowStockColumns(),
+                              rows: rows,
+                              emptyState: const Center(
+                                child: Text(
+                                  'No low stock items found based on the selected filters.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         ReportPaginationBar(
                           page: report.meta.page,
                           totalPages: report.meta.totalPages,

@@ -10,7 +10,20 @@ class ReportFilters extends _$ReportFilters {
   ReportFiltersState build() => const ReportFiltersState();
 
   void setPeriod(ReportPeriod period) {
-    state = state.copyWith(period: period, currentPage: 1);
+    if (period == ReportPeriod.custom && state.period != ReportPeriod.custom) {
+      state = state.copyWith(
+        period: period,
+        customDateRange: state.effectiveDateRange,
+        currentPage: 1,
+        isTableLoading: true,
+      );
+      return;
+    }
+    state = state.copyWith(
+      period: period,
+      currentPage: 1,
+      isTableLoading: true,
+    );
   }
 
   void setCustomDateRange(DateTimeRange range) {
@@ -18,6 +31,7 @@ class ReportFilters extends _$ReportFilters {
       period: ReportPeriod.custom,
       customDateRange: range,
       currentPage: 1,
+      isTableLoading: true,
     );
   }
 
@@ -91,6 +105,7 @@ class ReportFilters extends _$ReportFilters {
       documentType: documentType,
       clearDocumentType: documentType == null || documentType.isEmpty,
       currentPage: 1,
+      isTableLoading: true,
     );
   }
 
@@ -131,6 +146,7 @@ class ReportFilters extends _$ReportFilters {
       status: status,
       clearStatus: status == null || status.isEmpty,
       currentPage: 1,
+      isTableLoading: true,
     );
   }
 

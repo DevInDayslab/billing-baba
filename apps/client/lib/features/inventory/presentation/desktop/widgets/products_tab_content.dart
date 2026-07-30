@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
@@ -24,72 +26,97 @@ class ProductsTabContent extends ConsumerWidget {
     final selectedId = ref.watch(selectedProductIdProvider);
     final searchQuery = ref.watch(productSearchQueryProvider);
     final backendSearchQuery = ref.watch(productBackendSearchProvider);
+    final lowStockOnly = ref.watch(inventoryLowStockOnlyProvider);
 
-    return InventoryItemWorkspace(
-      items: products,
-      itemsAsync: itemsAsync,
-      hasMore: pageAsync.value?.hasMore ?? false,
-      isLoadingMore: pageAsync.value?.isLoadingMore ?? false,
-      onLoadMore: () => ref.read(inventoryItemsProvider.notifier).loadMore(),
-      selectedId: selectedId,
-      searchQuery: searchQuery,
-      backendSearchQuery: backendSearchQuery,
-      detailMode: InventoryDetailHeaderMode.product,
-      searchHint: 'Search products',
-      addButtonLabel: 'Add Item',
-      emptyMessage: 'No products found',
-      placeholderMessage: 'Select an item to view ledger',
-      primaryColumnLabel: 'ITEM',
-      secondaryColumnLabel: 'QUANTITY',
-      trailingValueBuilder: (item) {
-        final metrics = InventoryStockCalculator.metricsFromItem(item);
-        return formatQuantityValue(metrics.physicalQuantity);
-      },
-      trailingColorBuilder: (item) {
-        final metrics = InventoryStockCalculator.metricsFromItem(item);
-        return listQuantityColor(
-          metrics.physicalQuantity,
-          reorderLevel: item.reorderLevel,
-        );
-      },
-      onLocalSearchChanged: (query) {
-        ref.read(productSearchQueryProvider.notifier).query = query;
-      },
-      onBackendSearchChanged: (query) {
-        ref.read(productBackendSearchProvider.notifier).query = query;
-      },
-      onSelectedIdChanged: (id) {
-        ref.read(selectedProductIdProvider.notifier).selected = id;
-      },
-      onSelectionChangedSideEffects: (previousId, nextId) {
-        ref.read(productTransactionFiltersProvider.notifier).reset();
-        ref.read(selectedProductTransactionIdProvider.notifier).select(null);
-        final items = ref.read(inventoryItemListProvider);
-        final item = items.where((entry) => entry.id == nextId).firstOrNull;
-        if (item != null) {
-          ref.read(inventoryListImageWarmupProvider).warmItem(item);
-        }
-      },
-      onRefresh: () => ref
-          .read(inventoryItemsProvider.notifier)
-          .refresh(
-            searchQuery: ref.read(productBackendSearchProvider),
-          ),
-      onAddPressed: () => unawaited(showAddItemDialog(context)),
-      onMenuSelected: (value, item) {
-        switch (value) {
-          case 'Edit':
-            unawaited(
-              showAddItemDialog(
-                context,
-                initialType: item.type,
-                editItem: item,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (lowStockOnly)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: InputChip(
+                label: Text(
+                  'Low stock (qty < $inventoryLowStockThreshold)',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                onDeleted: () =>
+                    ref.read(inventoryLowStockOnlyProvider.notifier).clear(),
               ),
-            );
-          case 'Delete':
-            unawaited(_confirmDelete(context, ref, item));
-        }
-      },
+            ),
+          ),
+        Expanded(
+          child: InventoryItemWorkspace(
+            items: products,
+            itemsAsync: itemsAsync,
+            hasMore: pageAsync.value?.hasMore ?? false,
+            isLoadingMore: pageAsync.value?.isLoadingMore ?? false,
+            onLoadMore: () => ref.read(inventoryItemsProvider.notifier).loadMore(),
+            selectedId: selectedId,
+            searchQuery: searchQuery,
+            backendSearchQuery: backendSearchQuery,
+            detailMode: InventoryDetailHeaderMode.product,
+            searchHint: 'Search products',
+            addButtonLabel: 'Add Item',
+            emptyMessage: lowStockOnly
+                ? 'No products with quantity below $inventoryLowStockThreshold'
+                : 'No products found',
+            placeholderMessage: 'Select an item to view ledger',
+            primaryColumnLabel: 'ITEM',
+            secondaryColumnLabel: 'QUANTITY',
+            trailingValueBuilder: (item) {
+              final metrics = InventoryStockCalculator.metricsFromItem(item);
+              return formatQuantityValue(metrics.physicalQuantity);
+            },
+            trailingColorBuilder: (item) {
+              final metrics = InventoryStockCalculator.metricsFromItem(item);
+              return listQuantityColor(
+                metrics.physicalQuantity,
+                reorderLevel: item.reorderLevel,
+              );
+            },
+            onLocalSearchChanged: (query) {
+              ref.read(productSearchQueryProvider.notifier).query = query;
+            },
+            onBackendSearchChanged: (query) {
+              ref.read(productBackendSearchProvider.notifier).query = query;
+            },
+            onSelectedIdChanged: (id) {
+              ref.read(selectedProductIdProvider.notifier).selected = id;
+            },
+            onSelectionChangedSideEffects: (previousId, nextId) {
+              ref.read(productTransactionFiltersProvider.notifier).reset();
+              ref.read(selectedProductTransactionIdProvider.notifier).select(null);
+              final items = ref.read(inventoryItemListProvider);
+              final item = items.where((entry) => entry.id == nextId).firstOrNull;
+              if (item != null) {
+                ref.read(inventoryListImageWarmupProvider).warmItem(item);
+              }
+            },
+            onRefresh: () => ref
+                .read(inventoryItemsProvider.notifier)
+                .refresh(
+                  searchQuery: ref.read(productBackendSearchProvider),
+                ),
+            onAddPressed: () => unawaited(showAddItemDialog(context)),
+            onMenuSelected: (value, item) {
+              switch (value) {
+                case 'Edit':
+                  unawaited(
+                    showAddItemDialog(
+                      context,
+                      initialType: item.type,
+                      editItem: item,
+                    ),
+                  );
+                case 'Delete':
+                  unawaited(_confirmDelete(context, ref, item));
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 }

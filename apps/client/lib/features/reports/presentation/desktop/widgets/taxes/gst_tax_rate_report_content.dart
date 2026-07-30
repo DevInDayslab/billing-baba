@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/taxes/taxes_report_filter_bar.dart';
@@ -100,93 +102,11 @@ class GstTaxRateReportContent extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportSyncScrollTable(
+                            child: ReportFilterableSyncTable<ReportGstTaxRateRow>(
+                              reportScope: gstTaxRateReportScope,
                               minWidth: 980,
-                              headerChildren: const [
-                                ReportAlignedHeaderCell(
-                                  label: 'Tax Name',
-                                  width: 140,
-                                ),
-                                ReportAlignedHeaderCell(
-                                  label: 'Tax Percent',
-                                  width: 110,
-                                  alignment: Alignment.centerRight,
-                                ),
-                                ReportAlignedHeaderCell(
-                                  label: 'Taxable Sale Amount',
-                                  width: 170,
-                                  alignment: Alignment.centerRight,
-                                ),
-                                ReportAlignedHeaderCell(
-                                  label: 'Tax In',
-                                  width: 110,
-                                  alignment: Alignment.centerRight,
-                                ),
-                                ReportAlignedHeaderCell(
-                                  label: 'Taxable Purchase/Expense Amount',
-                                  width: 240,
-                                  alignment: Alignment.centerRight,
-                                ),
-                                ReportAlignedHeaderCell(
-                                  label: 'Tax Out',
-                                  width: 110,
-                                  alignment: Alignment.centerRight,
-                                ),
-                              ],
-                              rows: [
-                                for (var i = 0; i < rows.length; i++)
-                                  ReportAlignedRowStrip(
-                                    index: i,
-                                    child: ReportAlignedDataRow(
-                                      cells: [
-                                        ReportAlignedCell.fixed(
-                                          140,
-                                          child: Text(rows[i].taxName),
-                                        ),
-                                        ReportAlignedCell.fixed(
-                                          110,
-                                          alignment: Alignment.centerRight,
-                                          child: Text('${rows[i].taxPercent}%'),
-                                        ),
-                                        ReportAlignedCell.fixed(
-                                          170,
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            formatReportCurrency(
-                                              rows[i].taxableSaleAmount,
-                                            ),
-                                          ),
-                                        ),
-                                        ReportAlignedCell.fixed(
-                                          110,
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            formatReportCurrency(rows[i].taxIn),
-                                          ),
-                                        ),
-                                        ReportAlignedCell.fixed(
-                                          240,
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            formatReportCurrency(
-                                              rows[i]
-                                                  .taxablePurchaseExpenseAmount,
-                                            ),
-                                          ),
-                                        ),
-                                        ReportAlignedCell.fixed(
-                                          110,
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            formatReportCurrency(
-                                              rows[i].taxOut,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
+                              columns: gstTaxRateColumns(),
+                              rows: rows,
                             ),
                           ),
                         

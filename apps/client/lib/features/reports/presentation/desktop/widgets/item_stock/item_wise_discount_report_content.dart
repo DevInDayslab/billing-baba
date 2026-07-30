@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -232,182 +234,22 @@ class _ItemWiseDiscountReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: '#',
-                                          width: 40,
-                                          showFilter: false,
-                                        ),
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'ITEM NAME',
-                                            showFilter: false,
-                                          ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'TOTAL QTY SOLD',
-                                          width: 120,
-                                          showFilter: false,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'TOTAL SALE AMOUNT',
-                                          width: 140,
-                                          showFilter: false,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'TOTAL DISC. AMOUNT',
-                                          width: 140,
-                                          showFilter: false,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'AVG. DISC. (%)',
-                                          width: 110,
-                                          showFilter: false,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'DETAILS',
-                                          width: 80,
-                                          showFilter: false,
-                                          alignment: Alignment.center,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No Items',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: const [
-                                      ReportAlignedHeaderCell(
-                                        label: '#',
-                                        width: 40,
-                                        showFilter: false,
-                                      ),
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'ITEM NAME',
-                                          showFilter: false,
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'TOTAL QTY SOLD',
-                                        width: 120,
-                                        showFilter: false,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'TOTAL SALE AMOUNT',
-                                        width: 140,
-                                        showFilter: false,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'TOTAL DISC. AMOUNT',
-                                        width: 140,
-                                        showFilter: false,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'AVG. DISC. (%)',
-                                        width: 110,
-                                        showFilter: false,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'DETAILS',
-                                        width: 80,
-                                        showFilter: false,
-                                        alignment: Alignment.center,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                40,
-                                                child: Text('${i + 1}'),
-                                              ),
-                                              ReportAlignedCell.flex(
-                                                child: Text(rows[i].itemName),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].saleQty
-                                                      .toStringAsFixed(0),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].saleQty * 200,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].discountAmount,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                110,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  '${rows[i].discountPercent.toStringAsFixed(1)}%',
-                                                ),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                80,
-                                                alignment: Alignment.center,
-                                                child: Icon(
-                                                  Icons.info_outline,
-                                                  size: 16,
-                                                  color:
-                                                      AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportItemDiscountRow>(
+                              reportScope: itemWiseDiscountReportScope,
+                              columns: itemWiseDiscountColumns(),
+                              rows: rows,
+                              emptyState: const Center(
+                                child: Text(
+                                  'No Items',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: const BoxDecoration(

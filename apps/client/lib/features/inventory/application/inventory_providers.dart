@@ -26,9 +26,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'item_images_provider.dart';
 
+final inventoryLowStockOnlyProvider =
+    NotifierProvider<InventoryLowStockOnly, bool>(InventoryLowStockOnly.new);
+
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
+  final lowStockOnly = ref.watch(inventoryLowStockOnlyProvider);
   final engine = ref.watch(inventorySearchEngineProvider);
   final products = ref
       .watch(inventoryItemListProvider)
@@ -38,6 +42,7 @@ final productsProvider = Provider<List<InventoryItem>>((ref) {
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )
+      .where((item) => !lowStockOnly || isInventoryLowStock(item))
       .toList();
 });
 
@@ -157,6 +162,16 @@ class InventoryItemsTabIndex extends Notifier<int> {
         ? inventoryProductsTabIndex
         : inventoryServicesTabIndex;
   }
+}
+
+class InventoryLowStockOnly extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  bool get enabled => state;
+  set enabled(bool value) => state = value;
+
+  void clear() => state = false;
 }
 
 final selectedProductIdProvider = NotifierProvider<SelectedProductId, String?>(

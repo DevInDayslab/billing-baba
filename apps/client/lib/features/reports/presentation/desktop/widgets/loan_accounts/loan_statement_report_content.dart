@@ -2,7 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -25,27 +26,6 @@ class LoanStatementReportContent extends ConsumerWidget {
     'Business Term Loan',
     'Working Capital Loan',
     'Vehicle Loan',
-  ];
-
-  static const List<Widget> _headers = [
-    ReportAlignedHeaderCell(label: 'DATE', width: 110),
-    ReportAlignedHeaderCell(label: 'REF NO.', width: 100),
-    Expanded(child: ReportAlignedHeaderCell(label: 'PARTICULARS')),
-    ReportAlignedHeaderCell(
-      label: 'DEBIT',
-      width: 130,
-      alignment: Alignment.centerRight,
-    ),
-    ReportAlignedHeaderCell(
-      label: 'CREDIT',
-      width: 130,
-      alignment: Alignment.centerRight,
-    ),
-    ReportAlignedHeaderCell(
-      label: 'OUTSTANDING',
-      width: 140,
-      alignment: Alignment.centerRight,
-    ),
   ];
 
   @override
@@ -229,104 +209,24 @@ class LoanStatementReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: !loanSelected
-                              ? _emptyState(
-                                  message:
-                                      'Select a loan account to view the statement.',
-                                )
-                              : rows.isEmpty
-                              ? _emptyState(
-                                  message:
-                                      'No transactions for the selected period.',
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: _headers,
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                110,
-                                                child: Text(
-                                                  formatReportDate(
-                                                    rows[i].date,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                100,
-                                                child: Text(rows[i].refNo),
-                                              ),
-                                              ReportAlignedCell.flex(
-                                                child: Text(
-                                                  rows[i].description,
-                                                  style: TextStyle(
-                                                    fontWeight:
-                                                        rows[i].isOpening
-                                                        ? FontWeight.w600
-                                                        : FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].debit > 0
-                                                      ? formatReportCurrency(
-                                                          rows[i].debit,
-                                                        )
-                                                      : '-',
-                                                  style: TextStyle(
-                                                    color: rows[i].debit > 0
-                                                        ? const Color(
-                                                            0xFFE53935,
-                                                          )
-                                                        : AppColors.textPrimary,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].credit > 0
-                                                      ? formatReportCurrency(
-                                                          rows[i].credit,
-                                                        )
-                                                      : '-',
-                                                  style: TextStyle(
-                                                    color: rows[i].credit > 0
-                                                        ? reportTeal
-                                                        : AppColors.textPrimary,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].balance,
-                                                  ),
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportLoanStatementRow>(
+                              reportScope: loanStatementReportScope,
+                              columns: loanStatementColumns(),
+                              rows: loanSelected ? rows : const [],
+                              emptyState: Center(
+                                child: Text(
+                                  !loanSelected
+                                      ? 'Select a loan account to view the statement.'
+                                      : 'No transactions for the selected period.',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,
@@ -370,29 +270,6 @@ class LoanStatementReportContent extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _emptyState({required String message}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const ReportSyncScrollTable(
-          headerChildren: _headers,
-          rows: [],
-        ),
-        Expanded(
-          child: Center(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

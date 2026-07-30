@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -36,11 +38,14 @@ class _ItemWiseProfitLossReportContentState
           ref.read(itemWiseProfitLossReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
-        final totalSale = rows.fold<double>(
+        final tableRows = _itemsHavingSale
+            ? rows.where((row) => row.saleAmount > 0).toList()
+            : rows;
+        final totalSale = tableRows.fold<double>(
           0,
           (sum, row) => sum + row.saleAmount,
         );
-        final totalProfit = rows.fold<double>(
+        final totalProfit = tableRows.fold<double>(
           0,
           (sum, row) => sum + row.profit,
         );
@@ -194,253 +199,23 @@ class _ItemWiseProfitLossReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      minWidth: 1320,
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: 'ITEM NAME',
-                                          width: 140,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'SALE',
-                                          width: 90,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'CR. NOTE / SALE RETURN',
-                                          width: 150,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'PURCHASE',
-                                          width: 100,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'DR. NOTE / PURCHASE RETURN',
-                                          width: 170,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'OPENING STOCK',
-                                          width: 120,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'CLOSING STOCK',
-                                          width: 120,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'TAX RECEIVABLE',
-                                          width: 120,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'TAX PAYABLE',
-                                          width: 110,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'MFG. COST',
-                                          width: 100,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'CONSUMPTION COST',
-                                          width: 140,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'NET PROFIT/LOSS',
-                                          width: 120,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No data for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
-                                    minWidth: 1320,
-                                    headerChildren: const [
-                                      ReportAlignedHeaderCell(
-                                        label: 'ITEM NAME',
-                                        width: 140,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'SALE',
-                                        width: 90,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'CR. NOTE / SALE RETURN',
-                                        width: 150,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PURCHASE',
-                                        width: 100,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'DR. NOTE / PURCHASE RETURN',
-                                        width: 170,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'OPENING STOCK',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'CLOSING STOCK',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'TAX RECEIVABLE',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'TAX PAYABLE',
-                                        width: 110,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'MFG. COST',
-                                        width: 100,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'CONSUMPTION COST',
-                                        width: 140,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'NET PROFIT/LOSS',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                140,
-                                                child: Text(rows[i].itemName),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                90,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].saleAmount,
-                                                  ),
-                                                ),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                150,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                100,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].purchaseAmount,
-                                                  ),
-                                                ),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                170,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                110,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                100,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].profit,
-                                                  ),
-                                                  style: TextStyle(
-                                                    color: rows[i].profit >= 0
-                                                        ? reportTeal
-                                                        : reportAddRed,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportItemWiseProfitLossRow>(
+                              reportScope: itemWiseProfitLossReportScope,
+                              minWidth: 1320,
+                              columns: itemWiseProfitLossColumns(),
+                              rows: tableRows,
+                              emptyState: const Center(
+                                child: Text(
+                                  'No data for the selected period.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,
