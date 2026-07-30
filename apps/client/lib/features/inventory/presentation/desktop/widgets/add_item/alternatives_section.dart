@@ -6,6 +6,7 @@ import 'package:billing_baba/features/inventory/application/inventory_items_prov
 import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -426,7 +427,7 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
   }
 
   Widget _buildItemsList() {
-    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final itemsAsync = ref.watch(inventoryItemsProvider).itemsOnly;
 
     return itemsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),

@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_detail_page.dart';
 import 'package:flutter/material.dart';
 
 class MobileComingSoonPage extends StatelessWidget {

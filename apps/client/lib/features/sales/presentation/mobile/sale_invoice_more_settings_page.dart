@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_tiles.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_detail_page.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_tiles.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';

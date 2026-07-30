@@ -44,37 +44,39 @@ class SaleLineItemColumnPickerButton extends StatelessWidget {
                   value: visibility.isVisible(column),
                   onChanged: (_) => onToggle(column),
                 ),
-              const Divider(
-                height: 1,
-                color: SaleLineItemTableLayout.gridBorderColor,
-              ),
-              InkWell(
-                onTap: onMoreSettings,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.settings_outlined,
-                        size: 16,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'More Settings',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+              if (onMoreSettings != null) ...[
+                const Divider(
+                  height: 1,
+                  color: SaleLineItemTableLayout.gridBorderColor,
+                ),
+                InkWell(
+                  onTap: onMoreSettings,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.settings_outlined,
+                          size: 16,
                           color: AppColors.primary,
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 8),
+                        Text(
+                          'More Settings',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

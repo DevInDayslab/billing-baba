@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
@@ -13,6 +12,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_ge
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_item_serial_no_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_item_column_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_items_table_layout.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -125,7 +125,8 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
                           }
                         });
                       },
-                      onItemSelected: (catalogItem) => _handleItemSelected(i, catalogItem),
+                      onItemSelected: (catalogItem) =>
+                          _handleItemSelected(i, items[i].id, catalogItem),
                     ),
                   _TotalsRow(
                     widths: widths,
@@ -202,6 +203,7 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
 
   Future<void> _handleItemSelected(
     int index,
+    String lineId,
     SaleItemOption catalogItem,
   ) async {
     final notifier = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey).notifier);
@@ -215,8 +217,8 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
         builder: (context) => OutOfStockDialog(
           itemId: catalogItem.id,
           itemName: catalogItem.name,
-          onSelectAlternative: (alternative) {
-            notifier.selectCatalogItem(
+          onSelectAlternative: (alternative) async {
+            await notifier.selectCatalogItem(
               index,
               SaleItemOption(
                 id: alternative.id,
@@ -226,16 +228,25 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
                 mfgCost: 0,
                 stock: alternative.stockQuantity,
               ),
+              lineId: lineId,
             );
           },
-          onContinueAnyway: () {
-            notifier.selectCatalogItem(index, catalogItem);
+          onContinueAnyway: () async {
+            await notifier.selectCatalogItem(
+              index,
+              catalogItem,
+              lineId: lineId,
+            );
           },
         ),
       );
     } else {
       // Item has stock, proceed normally
-      notifier.selectCatalogItem(index, catalogItem);
+      await notifier.selectCatalogItem(
+        index,
+        catalogItem,
+        lineId: lineId,
+      );
     }
   }
 }
@@ -359,13 +370,6 @@ class _LineItemsHeader extends StatelessWidget{
               child: SaleLineItemColumnPickerButton(
                 visibility: visibility,
                 onToggle: onToggleColumn,
-                onMoreSettings: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Invoice column settings coming soon'),
-                    ),
-                  );
-                },
               ),
             ),
           ],
@@ -968,19 +972,13 @@ class _CompactTextFieldState extends State<_CompactTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return SaleCompactFieldBox(
-      child: TextField(
-        controller: _controller,
-        style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
-        textAlignVertical: TextAlignVertical.center,
-        decoration: buildSaleFieldDecoration(
-          hint: widget.hintText,
-          compact: true,
-          borderless: widget.borderless,
-          suffixIcon: widget.suffixIcon,
-        ),
-        onChanged: widget.onChanged,
-      ),
+    return SaleTextField(
+      controller: _controller,
+      hint: widget.hintText,
+      compact: true,
+      borderless: widget.borderless,
+      suffixIcon: widget.suffixIcon,
+      onChanged: widget.onChanged,
     );
   }
 }

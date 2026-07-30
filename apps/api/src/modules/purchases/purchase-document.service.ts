@@ -374,6 +374,15 @@ export class PurchaseDocumentService extends PurchasesServiceBase {
       documentId,
       userId,
       godownId: input.godown_id,
+      payment: input.payment
+        ? {
+            amount: input.payment.amount,
+            paymentMode: input.payment.payment_mode,
+            shortPaymentHandling: input.payment.short_payment_handling ?? null,
+            shortfallAmount: input.payment.shortfall_amount ?? null,
+            paymentDate: input.payment.payment_date,
+          }
+        : undefined,
     });
 
     return {
@@ -381,6 +390,8 @@ export class PurchaseDocumentService extends PurchasesServiceBase {
       message: 'Document finalized',
       document_number: result.documentNumber,
       status: 'finalized',
+      paid_amount: result.paidAmount,
+      payment_mode: result.paymentMode,
     };
   }
 

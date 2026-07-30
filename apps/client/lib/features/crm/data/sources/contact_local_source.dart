@@ -77,28 +77,6 @@ class ContactLocalSource {
         .insertOnConflictUpdate(_activityToCompanion(activity));
   }
 
-  Future<void> enqueueSyncOperation({
-    required String businessId,
-    required String entityType,
-    required String entityId,
-    required String operation,
-    required String payload,
-    required String createdAt,
-  }) async {
-    await _db
-        .into(_db.syncQueue)
-        .insert(
-          SyncQueueCompanion.insert(
-            businessId: businessId,
-            entityType: entityType,
-            entityId: entityId,
-            operation: operation,
-            payload: payload,
-            createdAt: createdAt,
-          ),
-        );
-  }
-
   Contact _contactFromRow(ContactTableData row) {
     return Contact(
       id: row.id,

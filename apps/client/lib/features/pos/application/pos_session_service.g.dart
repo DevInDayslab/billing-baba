@@ -48,4 +48,4 @@ final class PosSessionServiceProvider
   }
 }
 
-String _$posSessionServiceHash() => r'623ba4317a73d68618aa2993ca717b847121a206';
+String _$posSessionServiceHash() => r'e11422c3ed3fd686bb02a8b179fc8fac6e9744c1';

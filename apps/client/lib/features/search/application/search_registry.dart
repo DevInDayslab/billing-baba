@@ -9,6 +9,7 @@ import 'package:billing_baba/features/search/application/search_registry_reports
 import 'package:billing_baba/features/search/application/search_registry_visibility.dart';
 import 'package:billing_baba/features/search/domain/search_category.dart';
 import 'package:billing_baba/features/search/domain/search_item.dart';
+import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:flutter/material.dart';
 
@@ -52,14 +53,14 @@ abstract final class SearchRegistry {
       route: AppRoutes.home,
       keywords: ['dashboard', 'home', 'dash'],
     ),
-    const SearchItem(
+    SearchItem(
       id: 'page_business_profile',
       title: 'Business Profile',
       subtitle: 'Company details',
       icon: Icons.business_outlined,
       category: SearchCategory.page,
-      route: AppRoutes.editProfile,
-      keywords: ['business', 'profile', 'company'],
+      route: AppRoutes.settingsTab(SettingsTab.profile.id),
+      keywords: ['business', 'profile', 'company', 'settings'],
     ),
     const SearchItem(
       id: 'page_business_switcher',
@@ -124,29 +125,21 @@ abstract final class SearchRegistry {
       route: AppRoutes.settingsPreferences,
       keywords: ['settings', 'setting', 'preferences', 'config'],
     ),
-    const SearchItem(
+    SearchItem(
       id: 'page_settings_print',
       title: 'Print Settings',
       icon: Icons.print_outlined,
       category: SearchCategory.page,
-      route: AppRoutes.settingsPrint,
-      keywords: ['print', 'printer', 'invoice', 'settings'],
+      route: AppRoutes.settingsTab(SettingsTab.print.id),
+      keywords: const ['print', 'printer', 'invoice', 'settings'],
     ),
-    const SearchItem(
-      id: 'page_settings_whatsapp',
-      title: 'WhatsApp',
-      icon: Icons.chat_outlined,
-      category: SearchCategory.page,
-      route: AppRoutes.settingsWhatsapp,
-      keywords: ['whatsapp', 'messaging', 'twilio', 'settings', 'notify'],
-    ),
-    const SearchItem(
+    SearchItem(
       id: 'page_settings_transaction_messages',
       title: 'Transaction Messages',
       icon: Icons.sms_outlined,
       category: SearchCategory.page,
-      route: AppRoutes.settingsTransactionMessages,
-      keywords: [
+      route: AppRoutes.settingsTab(SettingsTab.transactionMessages.id),
+      keywords: const [
         'transaction',
         'messages',
         'whatsapp',
@@ -155,13 +148,21 @@ abstract final class SearchRegistry {
         'settings',
       ],
     ),
-    const SearchItem(
+    SearchItem(
       id: 'page_settings_backup',
       title: 'Backup & Restore',
       icon: Icons.backup_outlined,
       category: SearchCategory.page,
-      route: AppRoutes.settingsBackup,
-      keywords: ['backup', 'restore', 'database', 'settings'],
+      route: AppRoutes.settingsTab(SettingsTab.backup.id),
+      keywords: const ['backup', 'restore', 'database', 'settings'],
+    ),
+    SearchItem(
+      id: 'page_settings_about',
+      title: 'About',
+      icon: Icons.info_outline,
+      category: SearchCategory.page,
+      route: AppRoutes.settingsTab(SettingsTab.about.id),
+      keywords: const ['about', 'version', 'build', 'settings'],
     ),
     const SearchItem(
       id: 'page_plans_pricing',
@@ -321,25 +322,25 @@ abstract final class SearchRegistry {
       trackAsRecentPage: false,
       keywords: ['barcode', 'generate', 'label'],
     ),
-    const SearchItem(
+    SearchItem(
       id: 'cmd_backup_database',
       title: 'Backup Database',
       icon: Icons.backup_outlined,
       category: SearchCategory.command,
-      route: AppRoutes.settingsBackup,
+      route: AppRoutes.settingsTab(SettingsTab.backup.id),
       action: SearchActionKind.routeGo,
       trackAsRecentPage: false,
-      keywords: ['backup', 'database'],
+      keywords: const ['backup', 'database'],
     ),
-    const SearchItem(
+    SearchItem(
       id: 'cmd_restore_backup',
       title: 'Restore Backup',
       icon: Icons.restore_outlined,
       category: SearchCategory.command,
-      route: AppRoutes.settingsBackup,
+      route: AppRoutes.settingsTab(SettingsTab.backup.id),
       action: SearchActionKind.routeGo,
       trackAsRecentPage: false,
-      keywords: ['restore', 'backup', 'database'],
+      keywords: const ['restore', 'backup', 'database'],
     ),
   ];
 

@@ -46,4 +46,4 @@ final class DealServiceProvider
   }
 }
 
-String _$dealServiceHash() => r'2eb05793efe3f34b5932a50fb9314e28ed1a325d';
+String _$dealServiceHash() => r'e0c8a6575964a5975670869ceb917909a2388123';

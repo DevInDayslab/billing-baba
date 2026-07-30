@@ -1,12 +1,6 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/documents/document_line_sync.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/hidden_ledger/application/hidden_ledger_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
@@ -29,18 +23,20 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
+import 'package:billing_baba/shared/documents/document_line_sync.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'add_sale_form_provider.g.dart';
 
-int _lineItemCounter = 0;
-
-String _nextLineItemId() {
-  _lineItemCounter += 1;
-  return 'line_$_lineItemCounter';
-}
+String _nextLineItemId() => newDocumentLineId();
 
 AddSaleFormState _defaultFormState({String? documentId}) {
   final now = DateTime.now();
@@ -58,7 +54,6 @@ AddSaleFormState _defaultFormState({String? documentId}) {
 class AddSaleForm extends _$AddSaleForm {
   @override
   AddSaleFormState build({String sessionKey = 'default'}) {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _defaultFormState();
   }
 
@@ -224,7 +219,7 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
 
     return [
@@ -285,7 +280,7 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -504,7 +499,7 @@ class AddSaleForm extends _$AddSaleForm {
 
   Future<void> _repriceLineItemsForPartyTierAsync() async {
     await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     if (inventory.isNotEmpty) {
       await ref
           .read(itemApiTierPricesProvider.notifier)
@@ -518,7 +513,7 @@ class AddSaleForm extends _$AddSaleForm {
     final fallback = await readInvoiceFallbackTaxPercent(ref);
     final localStore = ref.read(localItemTierPricesProvider);
     final apiStore = ref.read(itemApiTierPricesProvider);
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final inventoryById = {for (final item in inventory) item.id: item};
 
     final items = state.items.map((line) {
@@ -688,7 +683,11 @@ class AddSaleForm extends _$AddSaleForm {
     rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -697,9 +696,15 @@ class AddSaleForm extends _$AddSaleForm {
       catalogItem,
       partyPriceTier: state.partyPriceTier,
     )).copyWith(mrp: catalogItem.salePrice);
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
+    );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
+      targetIndex: targetIndex,
       appliedLine: applied,
       nextLineId: _nextLineItemId,
     );

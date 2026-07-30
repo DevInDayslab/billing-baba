@@ -30,7 +30,6 @@ class DesktopEstimateQuotationPage extends ConsumerWidget {
               addButtonLabel: 'Add Estimate',
               addButtonColor: AppColors.error,
               onAddTap: () => context.push(AppRoutes.addEstimate),
-              onSettingsTap: () => debugPrint('Settings tapped'),
             ),
             const SizedBox(height: AppSpacing.md),
             const EstimateQuotationFilterBar(),

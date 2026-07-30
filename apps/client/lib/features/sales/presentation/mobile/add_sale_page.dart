@@ -4,11 +4,11 @@ import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart'
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/close_form_dialog.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_bottom_navigation.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_option_sheet.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheet_models.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheets.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';

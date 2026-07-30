@@ -1,18 +1,20 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
-import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/business_local_data_cleanup.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
-import 'package:billing_baba/core/utils/jwt_utils.dart';
+import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
+import 'package:billing_baba/features/auth/models/auth_session.dart';
+import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/business/data/business_cache.dart';
 import 'package:billing_baba/features/business/data/business_repository.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
@@ -20,7 +22,9 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
+import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -53,16 +57,21 @@ class BusinessService {
     bool forceRefresh = false,
   }) async {
     final auth = _ref.read(authProvider);
-    final accountId = auth.session?.user.id;
+    final session = auth.session;
+    final accountId = _businessListCacheAccountId(session);
     final selectedId = authHasBusinessScope(auth)
         ? _cache.readLastOpenedBusinessId()
         : null;
 
-    if (accountId != null) {
+    if (accountId != null && session != null) {
       final cachedAccountId = _cache.readCachedBusinessesAccountId();
       if (cachedAccountId != null &&
           cachedAccountId.isNotEmpty &&
-          cachedAccountId != accountId) {
+          !JwtUtils.isSameAccountCacheKey(
+            cachedAccountId: cachedAccountId,
+            sessionUserId: session.user.id,
+            accessToken: session.accessToken,
+          )) {
         await _cache.clearAll();
       }
     }
@@ -89,6 +98,16 @@ class BusinessService {
       if (cached.isNotEmpty) return cached;
       rethrow;
     }
+  }
+
+  /// Stable SharedPreferences key: JWT `account_id` when present, else user.id.
+  String? _businessListCacheAccountId(AuthSession? session) {
+    if (session == null) return null;
+    final fromJwt = JwtUtils.accountId(session.accessToken);
+    if (fromJwt != null && fromJwt.isNotEmpty) return fromJwt;
+    final id = session.user.id;
+    if (id.isEmpty || id == 'offline') return null;
+    return id;
   }
 
   Future<void> _refreshInBackground(
@@ -193,6 +212,35 @@ class BusinessService {
     return null;
   }
 
+  Future<void> seedOfflineDevSession(AuthSession session) async {
+    if (!AuthService.isOfflineDevSession(session)) return;
+    if (session.businesses.isEmpty) return;
+
+    final businessSummary = session.businesses.first;
+    final profile = AuthService.offlineDevBusinessProfile(session);
+
+    await _cache.saveBusinessProfile(profile);
+    await rememberLastOpened(businessSummary.id);
+    await _cache.saveBusinesses(
+      [
+        {
+          'id': businessSummary.id,
+          'name': businessSummary.name,
+          'role': businessSummary.role,
+          'owner_name': session.user.name,
+          'phone': session.user.phone,
+        },
+      ],
+      accountId: session.user.id,
+    );
+  }
+
+  Future<bool> _isOfflineDevSession() async {
+    final storage = await _ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    return AuthService.isOfflineDevToken(token ?? '');
+  }
+
   Future<void> ensureProfileApiBusinessScope({
     bool forceReselect = false,
   }) async {
@@ -209,6 +257,15 @@ class BusinessService {
 
     final storage = await _ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
+
+    if (token != null && AuthService.isOfflineDevToken(token)) {
+      final businessId = await _resolveBusinessIdForScope();
+      if (businessId != null && businessId.isNotEmpty) {
+        await rememberLastOpened(businessId);
+      }
+      return;
+    }
+
     final jwtBusinessId = JwtUtils.businessId(token);
     final jwtRole = JwtUtils.role(token);
 
@@ -261,6 +318,21 @@ class BusinessService {
     final auth = _ref.read(authProvider);
     if (!authHasBusinessScope(auth)) {
       throw const BusinessProfileScopeRequired();
+    }
+
+    final session = auth.session;
+    if (session != null && AuthService.isOfflineDevSession(session)) {
+      final selectedBusinessId = _cache.readLastOpenedBusinessId();
+      if (!forceRefresh) {
+        final cached = await _cache.readBusinessProfile();
+        if (cached != null &&
+            (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+          return cached;
+        }
+      }
+      final profile = AuthService.offlineDevBusinessProfile(session);
+      await _cache.saveBusinessProfile(profile);
+      return profile;
     }
 
     final selectedBusinessId = _cache.readLastOpenedBusinessId();
@@ -378,6 +450,11 @@ class BusinessService {
   Future<void> clearCachedBusinessProfile() => _cache.clearBusinessProfile();
 
   Future<bool> isJwtScopedToBusiness(String businessId) async {
+    if (await _isOfflineDevSession()) {
+      final selected = _cache.readLastOpenedBusinessId();
+      return selected == businessId;
+    }
+
     final storage = await _ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
     final jwtBusinessId = JwtUtils.businessId(token);
@@ -531,47 +608,56 @@ class BusinessList extends _$BusinessList {
   Future<void> openBusiness(String id) async {
     BusinessOpenDebugLog.step('openBusiness', 'start id=$id');
     _ensureOpenRefMounted('openBusiness start');
+    SyncPauseGate.instance.pause();
 
-    final service = await ref.read(businessServiceProvider.future);
-    _ensureOpenRefMounted('after resolve BusinessService');
+    try {
+      final service = await ref.read(businessServiceProvider.future);
+      _ensureOpenRefMounted('after resolve BusinessService');
 
-    final previousId = await service.readActiveBusinessId();
-    final isSwitch =
-        previousId != null && previousId.isNotEmpty && previousId != id;
-    BusinessOpenDebugLog.step(
-      'openBusiness',
-      'previousId=${previousId ?? '(none)'} isSwitch=$isSwitch',
-    );
-
-    if (isSwitch) {
-      BusinessOpenDebugLog.step('openBusiness', 'clear stale profile cache');
-      await service.clearCachedBusinessProfile();
-      ref.invalidate(posCartProvider);
-    }
-
-    await _activateBusiness(id);
-    _ensureOpenRefMounted('after activateBusiness');
-
-    BusinessOpenDebugLog.step('openBusiness', 'verify JWT scope');
-    if (!await service.isJwtScopedToBusiness(id)) {
-      throw const BusinessSelectionFailed(
-        'Could not scope session to company. Please try again.',
+      final previousId = await service.readActiveBusinessId();
+      final isSwitch =
+          previousId != null && previousId.isNotEmpty && previousId != id;
+      BusinessOpenDebugLog.step(
+        'openBusiness',
+        'previousId=${previousId ?? '(none)'} isSwitch=$isSwitch',
       );
+
+      if (isSwitch) {
+        BusinessOpenDebugLog.step('openBusiness', 'clear stale profile cache');
+        await service.clearCachedBusinessProfile();
+        ref.invalidate(posCartProvider);
+      }
+
+      await _activateBusiness(id);
+      _ensureOpenRefMounted('after activateBusiness');
+
+      BusinessOpenDebugLog.step('openBusiness', 'verify JWT scope');
+      if (!await service.isJwtScopedToBusiness(id)) {
+        throw const BusinessSelectionFailed(
+          'Could not scope session to company. Please try again.',
+        );
+      }
+
+      BusinessOpenDebugLog.step(
+        'openBusiness',
+        'invalidate providers (keep BusinessService alive)',
+      );
+      invalidateAllBusinessScopedProviders(
+        ref,
+        includeBusinessService: false,
+      );
+      _ensureOpenRefMounted('after invalidate');
+
+      BusinessOpenDebugLog.step('openBusiness', 'warm providers');
+      await warmBusinessScopedProviders(ref, businessId: id);
+      BusinessOpenDebugLog.step('openBusiness', 'complete');
+    } finally {
+      SyncPauseGate.instance.resume();
     }
 
-    BusinessOpenDebugLog.step(
-      'openBusiness',
-      'invalidate providers (keep BusinessService alive)',
-    );
-    invalidateAllBusinessScopedProviders(
-      ref,
-      includeBusinessService: false,
-    );
-    _ensureOpenRefMounted('after invalidate');
-
-    BusinessOpenDebugLog.step('openBusiness', 'warm providers');
-    await warmBusinessScopedProviders(ref, businessId: id);
-    BusinessOpenDebugLog.step('openBusiness', 'complete');
+    final syncEngine = await ref.read(commandAwareSyncEngineProvider.future);
+    await syncEngine.start();
+    unawaited(syncEngine.syncNow());
   }
 
   void _ensureOpenRefMounted(String step) {

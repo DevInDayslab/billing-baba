@@ -1,15 +1,16 @@
-import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_empty_state.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_metric_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class DashboardInventorySection extends StatelessWidget {
+class DashboardInventorySection extends ConsumerWidget {
   const DashboardInventorySection({required this.inventory, super.key});
 
   final DashboardInventoryModel inventory;
@@ -17,7 +18,10 @@ class DashboardInventorySection extends StatelessWidget {
   static final _qtyFormat = NumberFormat.decimalPattern('en_IN');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lowStockItems = inventory.lowStockItems
+        .where((item) => item.quantity < inventoryLowStockThreshold)
+        .toList();
 
     return DashboardMetricCard(
       child: Column(
@@ -37,7 +41,7 @@ class DashboardInventorySection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DashboardSpacing.headerGap),
-          if (inventory.lowStockItems.isEmpty)
+          if (lowStockItems.isEmpty)
             const DashboardEmptyState(
               icon: Icons.inventory_2_outlined,
               title: 'All items are sufficiently stocked',
@@ -67,7 +71,7 @@ class DashboardInventorySection extends StatelessWidget {
                             _TableHeader('Reorder Level'),
                           ],
                         ),
-                        for (final item in inventory.lowStockItems)
+                        for (final item in lowStockItems)
                           TableRow(
                             children: [
                               Padding(
@@ -113,12 +117,13 @@ class DashboardInventorySection extends StatelessWidget {
                 );
               },
             ),
-          if (inventory.lowStockItems.isNotEmpty) ...[
+          if (lowStockItems.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () => context.go(AppRoutes.items),
+                onPressed: () =>
+                    DashboardNavigation.openLowStockInventory(context, ref),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   padding: EdgeInsets.zero,

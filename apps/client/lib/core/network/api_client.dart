@@ -3,6 +3,7 @@ import 'package:billing_baba/core/constants/app_constants.dart';
 import 'package:billing_baba/core/network/auth_interceptor.dart';
 import 'package:billing_baba/core/network/business_profile_debug_interceptor.dart';
 import 'package:billing_baba/core/network/interceptors.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 
@@ -12,6 +13,7 @@ class ApiClient {
     Dio? dio,
     StorageService? storage,
     TokenRefreshCallback? onRefreshToken,
+    AccessTokenFallback? accessTokenFallback,
   }) : _dio = dio ?? Dio() {
     _dio
       ..options = BaseOptions(
@@ -20,11 +22,13 @@ class ApiClient {
         receiveTimeout: AppConstants.receiveTimeout,
         headers: {'Content-Type': 'application/json'},
       )
+      ..httpClientAdapter = createBypassSslHttpClientAdapter()
       ..interceptors.addAll([
         if (storage != null)
           AuthInterceptor(
             storage: storage,
             onRefreshToken: onRefreshToken,
+            accessTokenFallback: accessTokenFallback,
           ),
         if (AppConfig.authDebugLogging) BusinessProfileDebugInterceptor(),
         ...buildInterceptors(),

@@ -52,28 +52,6 @@ class DealLocalSource {
     await _db.into(_db.deals).insertOnConflictUpdate(_dealToCompanion(deal));
   }
 
-  Future<void> enqueueSyncOperation({
-    required String businessId,
-    required String entityType,
-    required String entityId,
-    required String operation,
-    required String payload,
-    required String createdAt,
-  }) async {
-    await _db
-        .into(_db.syncQueue)
-        .insert(
-          SyncQueueCompanion.insert(
-            businessId: businessId,
-            entityType: entityType,
-            entityId: entityId,
-            operation: operation,
-            payload: payload,
-            createdAt: createdAt,
-          ),
-        );
-  }
-
   Deal _dealFromRow(DealTableData row) {
     return Deal(
       id: row.id,

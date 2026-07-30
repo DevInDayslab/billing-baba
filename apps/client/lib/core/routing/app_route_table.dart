@@ -4,6 +4,7 @@ import 'package:billing_baba/features/auth/presentation/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/splash_page.dart';
 import 'package:billing_baba/features/auth/presentation/user_profile_page.dart';
 import 'package:billing_baba/features/auth/presentation/verify_otp_page.dart';
+import 'package:billing_baba/features/backup/presentation/desktop/backup_restore_page.dart';
 import 'package:billing_baba/features/business/presentation/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/edit_profile_page.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
@@ -25,9 +26,11 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/categories_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/item_details_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/mobile_item_settings_page.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/mobile_stock_summary_page.dart';
+import 'package:billing_baba/features/inventory/presentation/units_screen.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
@@ -49,6 +52,9 @@ import 'package:billing_baba/features/purchases/presentation/purchase_bills_page
 import 'package:billing_baba/features/purchases/presentation/purchase_fa_page.dart';
 import 'package:billing_baba/features/purchases/presentation/purchase_order_page.dart';
 import 'package:billing_baba/features/purchases/presentation/purchase_return_page.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_item_detail_report_screen.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_stock_summary_screen.dart';
 import 'package:billing_baba/features/reports/presentation/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_delivery_challan_page.dart';
@@ -66,11 +72,10 @@ import 'package:billing_baba/features/sales/presentation/sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_return_page.dart';
+import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/settings/presentation/print_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/settings_screen.dart';
-import 'package:billing_baba/features/settings/presentation/taxes_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/transaction_messages_screen.dart';
-import 'package:billing_baba/features/settings/presentation/whatsapp_settings_screen.dart';
 import 'package:billing_baba/features/utilities/presentation/barcode_generator_page.dart';
 import 'package:billing_baba/features/utilities/presentation/import_items_page.dart';
 import 'package:flutter/material.dart';
@@ -141,6 +146,14 @@ GoRouter createAppRouter({
           if (!onOtp) return AppRoutes.verifyOtp;
         case AuthStatus.needsBusinessCreation:
         case AuthStatus.needsBusinessSelection:
+          // Always leave auth screens once login succeeded.
+          if (onLogin || onOtp) {
+            SwitchCompanyDebugLog.nav(
+              'GoRouter redirect $location → ${AppRoutes.businessList} '
+              '(${auth.status.name}, from auth screen)',
+            );
+            return AppRoutes.businessList;
+          }
           if (!onBusinessList) {
             SwitchCompanyDebugLog.nav(
               'GoRouter redirect $location → ${AppRoutes.businessList} '
@@ -228,21 +241,20 @@ GoRouter createAppRouter({
             builder: (context, state) => const ItemsPage(),
           ),
           GoRoute(
-            path: AppRoutes.itemsStockSummary,
-            builder: (context, state) => const MobileStockSummaryPage(),
-          ),
-          GoRoute(
-            path: AppRoutes.itemsSettings,
-            builder: (context, state) => const MobileItemSettingsPage(),
+            path: '${AppRoutes.itemsDetail}/:itemId',
+            name: 'itemDetails',
+            builder: (context, state) => ItemDetailsScreen(
+              itemId: state.pathParameters['itemId']!,
+              fallbackItem: state.extra,
+            ),
           ),
           GoRoute(
             path: AppRoutes.itemsCategories,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Categories'),
+            builder: (context, state) => const CategoriesScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsUnits,
-            builder: (context, state) => const ComingSoonPage(title: 'Units'),
+            builder: (context, state) => const UnitsScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsGodowns,
@@ -252,6 +264,10 @@ GoRouter createAppRouter({
             path: AppRoutes.itemsStockTransfer,
             builder: (context, state) =>
                 const ComingSoonPage(title: 'Stock Transfer'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsSettings,
+            builder: (context, state) => const ItemSettingsScreen(),
           ),
           GoRoute(
             path: AppRoutes.sale,
@@ -508,7 +524,19 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.reportsStock,
-            redirect: (context, state) => AppRoutes.reports,
+            redirect: (context, state) => AppRoutes.reportsStockSummary,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsStockSummary,
+            builder: (context, state) => MobileStockSummaryScreen(
+              initialStockFilter: StockSummaryMobileFilters.stockFilterFromQuery(
+                state.uri.queryParameters['stock'],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsItemDetail,
+            builder: (context, state) => const MobileItemDetailReportScreen(),
           ),
           GoRoute(
             path: AppRoutes.reportsParty,
@@ -571,18 +599,21 @@ GoRouter createAppRouter({
             redirect: (context, state) => AppRoutes.settingsPreferences,
           ),
           GoRoute(
-            path: AppRoutes.settingsUsers,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Users & Roles'),
+            path: '/settings/users',
+            redirect: (context, state) => AppRoutes.settingsPreferences,
+          ),
+          GoRoute(
+            path: '/settings/invoice-templates',
+            redirect: (context, state) => AppRoutes.settingsPreferences,
+          ),
+          GoRoute(
+            path: '/settings/whatsapp',
+            redirect: (context, state) =>
+                AppRoutes.settingsTab(SettingsTab.transactionMessages.id),
           ),
           GoRoute(
             path: AppRoutes.settingsTaxes,
-            builder: (context, state) => const TaxesSettingsScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.settingsInvoiceTemplates,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Invoice Templates'),
+            redirect: (context, state) => AppRoutes.settingsPreferences,
           ),
           GoRoute(
             path: AppRoutes.settingsPreferences,
@@ -593,17 +624,12 @@ GoRouter createAppRouter({
             builder: (context, state) => const PrintSettingsScreen(),
           ),
           GoRoute(
-            path: AppRoutes.settingsWhatsapp,
-            builder: (context, state) => const WhatsAppSettingsScreen(),
-          ),
-          GoRoute(
             path: AppRoutes.settingsTransactionMessages,
             builder: (context, state) => const TransactionMessagesScreen(),
           ),
           GoRoute(
             path: AppRoutes.settingsBackup,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Backup & Restore'),
+            builder: (context, state) => const BackupRestorePage(),
           ),
           GoRoute(
             path: AppRoutes.plansPricing,

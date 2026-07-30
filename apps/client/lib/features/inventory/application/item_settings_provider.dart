@@ -1,43 +1,30 @@
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/inventory/models/item_settings_state.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/repositories/item_settings_repository.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-typedef ItemSettingsUpdater = ItemSettingsState Function(
-  ItemSettingsState settings,
-);
+part 'item_settings_provider.g.dart';
 
-final itemSettingsRepositoryProvider =
-    FutureProvider<ItemSettingsRepository>((ref) async {
-      final storage = await ref.watch(storageServiceProvider.future);
-      final businessId = ref.watch(currentBusinessProvider)?.id ?? '';
-      return ItemSettingsRepository(storage, businessId);
-    });
+@Riverpod(keepAlive: true)
+Future<ItemSettingsRepository> itemSettingsRepository(Ref ref) async {
+  final storage = await ref.watch(storageServiceProvider.future);
+  final businessId = ref.watch(currentBusinessProvider)?.id ?? '';
+  return ItemSettingsRepository(storage, businessId);
+}
 
-final itemSettingsProvider =
-    AsyncNotifierProvider<ItemSettingsNotifier, ItemSettingsState>(
-      ItemSettingsNotifier.new,
-    );
-
-class ItemSettingsNotifier extends AsyncNotifier<ItemSettingsState> {
+@Riverpod(keepAlive: true)
+class ItemSettingsNotifier extends _$ItemSettingsNotifier {
   @override
-  Future<ItemSettingsState> build() async {
-    ref.listen(currentBusinessProvider, (_, _) {
-      ref.invalidateSelf();
-    });
+  Future<ItemSettings> build() async {
+    ref.watch(currentBusinessProvider);
     final repository = await ref.watch(itemSettingsRepositoryProvider.future);
     return repository.load();
   }
 
-  Future<void> updateSettings(ItemSettingsUpdater updater) async {
-    final current = state;
-    if (!current.hasValue) return;
-
-    final next = updater(current.requireValue);
-    state = AsyncData(next);
-
+  Future<void> save(ItemSettings settings) async {
     final repository = await ref.read(itemSettingsRepositoryProvider.future);
-    await repository.save(next);
+    await repository.save(settings);
+    state = AsyncData(settings);
   }
 }

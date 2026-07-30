@@ -1,9 +1,9 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_sheet_models.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheets.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_whatsapp_actions.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_payment_sheets.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

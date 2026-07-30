@@ -1,9 +1,11 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/application/pos_receipt_printer.dart';
 import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/receipt_view_widget.dart';
 import 'package:billing_baba/features/pos/presentation/pos_return_page.dart';
+import 'package:billing_baba/shared/utils/output_error_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -38,7 +40,7 @@ class DesktopPosSalesHistoryPage extends ConsumerWidget {
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $error')),
+        SnackBar(content: Text(OutputErrorMapper.printMessage(error))),
       );
     }
   }
@@ -78,7 +80,7 @@ class DesktopPosSalesHistoryPage extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
-              error.toString(),
+              OfflineUiMessages.messageFor(error),
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.error),
             ),

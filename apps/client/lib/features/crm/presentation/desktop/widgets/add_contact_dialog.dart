@@ -1,14 +1,17 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/features/crm/application/crm_assignee_options_provider.dart';
 import 'package:billing_baba/features/crm/domain/models/lead.dart';
+import 'package:billing_baba/features/crm/presentation/desktop/widgets/crm_owner_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 const _dialogMaxWidth = 960.0;
@@ -17,12 +20,6 @@ const _saveRed = Color(0xFFE53935);
 const _requiredAccent = Color(0xFFD32F2F);
 
 const _salutationOptions = ['-None-', 'Mr.', 'Mrs.', 'Ms.', 'Dr.'];
-const _ownerOptions = [
-  '-None-',
-  'Saksham Kochhar',
-  'Priya Mehta',
-  'Amit Verma',
-];
 
 class AddContactInput {
   const AddContactInput({
@@ -82,16 +79,16 @@ Future<AddContactInput?> showAddContactDialog(
   );
 }
 
-class AddContactDialog extends StatefulWidget {
+class AddContactDialog extends ConsumerStatefulWidget {
   const AddContactDialog({this.onSaveAndNew, super.key});
 
   final ValueChanged<AddContactInput>? onSaveAndNew;
 
   @override
-  State<AddContactDialog> createState() => _AddContactDialogState();
+  ConsumerState<AddContactDialog> createState() => _AddContactDialogState();
 }
 
-class _AddContactDialogState extends State<AddContactDialog> {
+class _AddContactDialogState extends ConsumerState<AddContactDialog> {
   final _formKey = GlobalKey<FormState>();
   final _dobPickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
 
@@ -113,7 +110,8 @@ class _AddContactDialogState extends State<AddContactDialog> {
   final _dobDisplayController = TextEditingController();
 
   String _salutation = '-None-';
-  String _owner = '-None-';
+  String _owner = crmOwnerNoneOption;
+  bool _ownerInitialized = false;
   String? _leadSourceLabel;
   DateTime? _dateOfBirth;
   bool _emailOptOut = false;
@@ -171,7 +169,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
       phone: _resolvePhone(),
       email: _nullable(_emailController.text),
       accountName: _nullable(_accountController.text),
-      owner: _owner == '-None-' ? null : _owner,
+      owner: _owner == crmOwnerNoneOption ? null : _owner,
       salutation: _salutation == '-None-' ? null : _salutation,
       firstName: _nullable(_firstNameController.text),
       lastName: _nullable(_lastNameController.text),
@@ -228,7 +226,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
     _dobDisplayController.clear();
     setState(() {
       _salutation = '-None-';
-      _owner = '-None-';
+      _owner = ref.read(crmDefaultOwnerNameProvider) ?? crmOwnerNoneOption;
       _leadSourceLabel = null;
       _dateOfBirth = null;
       _emailOptOut = false;
@@ -281,6 +279,12 @@ class _AddContactDialogState extends State<AddContactDialog> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(crmDefaultOwnerNameProvider, (previous, next) {
+      if (_ownerInitialized || next == null) return;
+      _ownerInitialized = true;
+      setState(() => _owner = next);
+    });
+
     final size = MediaQuery.sizeOf(context);
     final dialogWidth = math.min(
       size.width - (size.width < 640 ? AppSpacing.sm * 2 : AppSpacing.lg * 2),
@@ -333,10 +337,8 @@ class _AddContactDialogState extends State<AddContactDialog> {
                                 span: 6,
                                 child: AppFormField(
                                   label: 'Contact Owner',
-                                  child: SaleGenericSelectDropdown(
+                                  child: CrmOwnerSelectDropdown(
                                     value: _owner,
-                                    hintText: '-None-',
-                                    options: _ownerOptions,
                                     onSelected: (value) =>
                                         setState(() => _owner = value),
                                   ),

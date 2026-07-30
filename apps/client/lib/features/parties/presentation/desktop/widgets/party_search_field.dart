@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -7,6 +6,7 @@ import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -348,47 +348,61 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
         : widget.value;
     final canEditParty = widget.value.isNotEmpty;
 
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: InkWell(
-        onTap: _toggleMenu,
-        borderRadius: BorderRadius.circular(8),
-        child: InputDecorator(
-          decoration:
-              buildSaleFieldDecoration(
-                hasError: widget.hasError,
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (canEditParty)
-                      IconButton(
-                        onPressed: _openEditPartyDialog,
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        color: AppColors.textSecondary,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        tooltip: 'Edit party',
-                      ),
-                    const Icon(Icons.arrow_drop_down),
-                    const SizedBox(width: 4),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CompositedTransformTarget(
+          link: _layerLink,
+          child: SaleFieldTrigger(
+            onTap: _toggleMenu,
+            hasError: widget.hasError,
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppEllipsisText(
+                    displayValue,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1,
+                      color: widget.value.isEmpty
+                          ? Colors.grey.shade400
+                          : AppColors.textPrimary,
+                    ),
+                  ),
                 ),
-              ).copyWith(
-                errorText: widget.hasError ? widget.errorMessage : null,
-              ),
-          child: AppEllipsisText(
-            displayValue,
-            style: TextStyle(
-              color: widget.value.isEmpty
-                  ? AppColors.textSecondary
-                  : AppColors.textPrimary,
+                if (canEditParty)
+                  IconButton(
+                    onPressed: _openEditPartyDialog,
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    color: AppColors.textSecondary,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    tooltip: 'Edit party',
+                  ),
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
+              ],
             ),
           ),
         ),
-      ),
+        if (widget.hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 2),
+            child: Text(
+              widget.errorMessage,
+              style: const TextStyle(
+                fontSize: 11,
+                color: saleFieldErrorColor,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

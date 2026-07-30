@@ -83,6 +83,7 @@ class BarcodeLabelPdfBuilder {
     double height,
   ) {
     final barcodeData = entry.itemCode.trim();
+    final showBarcode = !entry.noBarcode && barcodeData.isNotEmpty;
     final lines = [
       if (entry.line1.trim().isNotEmpty) entry.line1.trim(),
       if (entry.line2.trim().isNotEmpty) entry.line2.trim(),
@@ -111,28 +112,26 @@ class BarcodeLabelPdfBuilder {
                 fontStyle: pw.FontStyle.italic,
               ),
             ),
-          pw.Expanded(
-            child: pw.Center(
-              child: barcodeData.isEmpty
-                  ? pw.SizedBox()
-                  : pw.BarcodeWidget(
-                      barcode: _code128,
-                      data: barcodeData,
-                      width: width - 6,
-                      height: height * 0.38,
-                      drawText: false,
-                    ),
+          if (showBarcode) ...[
+            pw.SizedBox(height: 1),
+            pw.BarcodeWidget(
+              barcode: _code128,
+              data: barcodeData,
+              width: width - 6,
+              height: height * 0.38,
+              drawText: false,
             ),
-          ),
-          pw.Text(
-            barcodeData,
-            textAlign: pw.TextAlign.center,
-            maxLines: 1,
-            style: pw.TextStyle(
-              fontSize: 7,
-              fontWeight: pw.FontWeight.bold,
+            pw.SizedBox(height: 1),
+            pw.Text(
+              barcodeData,
+              textAlign: pw.TextAlign.center,
+              maxLines: 1,
+              style: pw.TextStyle(
+                fontSize: 7,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
-          ),
+          ],
           for (final line in lines)
             pw.Text(
               line,

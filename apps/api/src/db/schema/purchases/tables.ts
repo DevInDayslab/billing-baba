@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import { parties } from '../crm/tables';
@@ -41,6 +42,12 @@ export const expenseCategories = pgTable(
     uniqueIndex('uq_expense_categories_business_name')
       .on(table.businessId, sql`lower(${table.name})`)
       .where(sql`${table.isDeleted} = false`),
+    syncPullIndex(
+      'expense_categories',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 
@@ -74,6 +81,12 @@ export const purchaseDocuments = pgTable(
     uniqueIndex('uq_purchase_documents_business_series_number')
       .on(table.businessId, table.documentSeries, table.documentNumber)
       .where(sql`${table.documentNumber} IS NOT NULL`),
+    syncPullIndex(
+      'purchase_documents',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 
@@ -100,31 +113,45 @@ export const purchaseDocumentLines = pgTable(
     lineTotal: money('line_total').notNull(),
     sortOrder: integer('sort_order').notNull().default(0),
   },
-  (table) => [sql`CHECK (${table.quantity} > 0)`],
+  (table) => [
+    sql`CHECK (${table.quantity} > 0)`,
+    syncPullIndex(
+      'purchase_document_lines',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
+  ],
 );
 
-export const expenses = pgTable('expenses', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  categoryId: uuid('category_id')
-    .notNull()
-    .references(() => expenseCategories.id),
-  partyId: uuid('party_id').references(() => parties.id),
-  amount: money('amount').notNull(),
-  taxAmount: money('tax_amount').notNull().default('0'),
-  taxRate: money('tax_rate').notNull().default('0'),
-  description: text('description'),
-  notes: text('notes'),
-  referenceNumber: text('reference_number'),
-  attachments: jsonb('attachments').$type<string[]>().default([]),
-  expenseDate: date('expense_date').notNull(),
-  paymentMode: paymentModeEnum('payment_mode'),
-  sourceReferenceId: uuid('source_reference_id'),
-  sourceReferenceType: text('source_reference_type'),
-  loyaltyPoints: money('loyalty_points'),
-  dueDate: date('due_date'),
-  balanceDue: money('balance_due').default('0'),
-});
+export const expenses = pgTable(
+  'expenses',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => expenseCategories.id),
+    partyId: uuid('party_id').references(() => parties.id),
+    amount: money('amount').notNull(),
+    taxAmount: money('tax_amount').notNull().default('0'),
+    taxRate: money('tax_rate').notNull().default('0'),
+    description: text('description'),
+    notes: text('notes'),
+    referenceNumber: text('reference_number'),
+    attachments: jsonb('attachments').$type<string[]>().default([]),
+    expenseDate: date('expense_date').notNull(),
+    paymentMode: paymentModeEnum('payment_mode'),
+    sourceReferenceId: uuid('source_reference_id'),
+    sourceReferenceType: text('source_reference_type'),
+    loyaltyPoints: money('loyalty_points'),
+    dueDate: date('due_date'),
+    balanceDue: money('balance_due').default('0'),
+  },
+  (table) => [
+    syncPullIndex('expenses', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 export const purchaseFaBatches = pgTable('purchase_fa_batches', {
   ...syncedBusinessColumns,

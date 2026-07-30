@@ -21,68 +21,71 @@ class PosLocalDataSource {
     required List<CartItem> items,
     required List<SalesDocumentLineDto> lineDtos,
     required List<PaymentEntry> payments,
-  }) async {
-    final createdAt = DateTime.tryParse(dto.createdAt) ?? DateTime.now();
-    final totalAmount = double.tryParse(dto.subtotal) ?? 0;
-    final taxAmount = double.tryParse(dto.taxAmount) ?? 0;
-    final finalAmount = double.tryParse(dto.totalAmount) ?? 0;
+  }) {
+    return _db.transaction(() async {
+      final createdAt = DateTime.tryParse(dto.createdAt) ?? DateTime.now();
+      final totalAmount = double.tryParse(dto.subtotal) ?? 0;
+      final taxAmount = double.tryParse(dto.taxAmount) ?? 0;
+      final finalAmount = double.tryParse(dto.totalAmount) ?? 0;
 
-    await _db
-        .into(_db.salesLocal)
-        .insertOnConflictUpdate(
-          SalesLocalCompanion(
-            id: Value(dto.id),
-            businessId: Value(businessId),
-            docNumber: Value(dto.documentNumber ?? dto.id),
-            partyId: Value(dto.partyId),
-            totalAmount: Value(totalAmount),
-            taxAmount: Value(taxAmount),
-            finalAmount: Value(finalAmount),
-            createdAt: Value(createdAt),
-            paymentMethod: Value(
-              payments.map((p) => _paymentModeToApi(p.mode)).join(','),
-            ),
-            apiResponseJson: Value(jsonEncode(_documentToJson(dto))),
-          ),
-        );
-
-    await (_db.delete(_db.salesLineLocal)..where(
-          (line) =>
-              line.saleId.equals(dto.id) & line.businessId.equals(businessId),
-        ))
-        .go();
-
-    for (var i = 0; i < items.length; i++) {
-      final cartItem = items[i];
-      final lineDto = i < lineDtos.length ? lineDtos[i] : null;
       await _db
-          .into(_db.salesLineLocal)
-          .insert(
-            SalesLineLocalCompanion(
-              id: Value(lineDto?.id ?? _uuid.v4()),
+          .into(_db.salesLocal)
+          .insertOnConflictUpdate(
+            SalesLocalCompanion(
+              id: Value(dto.id),
               businessId: Value(businessId),
-              saleId: Value(dto.id),
-              itemId: Value(cartItem.item.id),
-              itemName: Value(cartItem.item.name),
-              quantity: Value(cartItem.quantity),
-              rate: Value(cartItem.item.price),
-              lineTotal: Value(
-                lineDto != null
-                    ? (double.tryParse(lineDto.lineTotal) ?? cartItem.lineTotal)
-                    : cartItem.lineTotal,
+              docNumber: Value(dto.documentNumber ?? dto.id),
+              partyId: Value(dto.partyId),
+              totalAmount: Value(totalAmount),
+              taxAmount: Value(taxAmount),
+              finalAmount: Value(finalAmount),
+              createdAt: Value(createdAt),
+              paymentMethod: Value(
+                payments.map((p) => _paymentModeToApi(p.mode)).join(','),
               ),
-              cgstAmount: Value(
-                double.tryParse(lineDto?.cgstAmount ?? '0') ?? 0,
-              ),
-              sgstAmount: Value(
-                double.tryParse(lineDto?.sgstAmount ?? '0') ?? 0,
-              ),
-              igstAmount: Value(
-                double.tryParse(lineDto?.igstAmount ?? '0') ?? 0,
-              ),
+              apiResponseJson: Value(jsonEncode(_documentToJson(dto))),
             ),
           );
-    }
+
+      await (_db.delete(_db.salesLineLocal)..where(
+            (line) =>
+                line.saleId.equals(dto.id) & line.businessId.equals(businessId),
+          ))
+          .go();
+
+      for (var i = 0; i < items.length; i++) {
+        final cartItem = items[i];
+        final lineDto = i < lineDtos.length ? lineDtos[i] : null;
+        await _db
+            .into(_db.salesLineLocal)
+            .insert(
+              SalesLineLocalCompanion(
+                id: Value(lineDto?.id ?? _uuid.v4()),
+                businessId: Value(businessId),
+                saleId: Value(dto.id),
+                itemId: Value(cartItem.item.id),
+                itemName: Value(cartItem.item.name),
+                quantity: Value(cartItem.quantity),
+                rate: Value(cartItem.item.price),
+                lineTotal: Value(
+                  lineDto != null
+                      ? (double.tryParse(lineDto.lineTotal) ??
+                            cartItem.lineTotal)
+                      : cartItem.lineTotal,
+                ),
+                cgstAmount: Value(
+                  double.tryParse(lineDto?.cgstAmount ?? '0') ?? 0,
+                ),
+                sgstAmount: Value(
+                  double.tryParse(lineDto?.sgstAmount ?? '0') ?? 0,
+                ),
+                igstAmount: Value(
+                  double.tryParse(lineDto?.igstAmount ?? '0') ?? 0,
+                ),
+              ),
+            );
+      }
+    });
   }
 
   Future<(SaleLocal, List<SaleLineLocal>)?> getSaleWithLines(
@@ -114,6 +117,27 @@ class PosLocalDataSource {
             (row) => OrderingTerm.desc(row.createdAt),
           ]))
         .get();
+  }
+
+  Future<Map<String, List<SaleLineLocal>>> getLinesBySaleIds(
+    String businessId,
+    Iterable<String> saleIds,
+  ) async {
+    final ids = saleIds.toList();
+    if (ids.isEmpty) return const {};
+
+    final rows = await (_db.select(_db.salesLineLocal)
+          ..where(
+            (row) =>
+                row.businessId.equals(businessId) & row.saleId.isIn(ids),
+          ))
+        .get();
+
+    final grouped = <String, List<SaleLineLocal>>{};
+    for (final row in rows) {
+      grouped.putIfAbsent(row.saleId, () => []).add(row);
+    }
+    return grouped;
   }
 
   Future<void> saveHeldBill(String businessId, HeldBill bill) async {

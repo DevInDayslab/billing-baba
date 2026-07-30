@@ -1,7 +1,7 @@
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
-import 'package:billing_baba/features/parties/data/party_repository.dart';
+import 'package:billing_baba/features/parties/data/party_master_repository.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';
 import 'package:billing_baba/features/print/data/print_repository.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
@@ -34,7 +34,7 @@ class PrintDataService {
     required this._inventoryRepository,
     required this._printRepository,
     required this._businessService,
-    required this._partyRepository,
+    required this._partyMasterRepository,
     required this._expenseRepository,
     required this._purchaseFaRepository,
     required this._saleFaRepository,
@@ -47,7 +47,7 @@ class PrintDataService {
   final InventoryRepository _inventoryRepository;
   final PrintRepository _printRepository;
   final BusinessService _businessService;
-  final PartyRepository _partyRepository;
+  final PartyMasterRepository _partyMasterRepository;
   final ExpenseRepository _expenseRepository;
   final PurchaseFaRepository _purchaseFaRepository;
   final SaleFaRepository _saleFaRepository;
@@ -486,7 +486,8 @@ class PrintDataService {
     if (partyId == null || partyId.isEmpty) {
       return null;
     }
-    final dto = await _partyRepository.getParty(partyId);
+    final dto = await _partyMasterRepository.getActive(partyId);
+    if (dto == null) return null;
     return PrintableParty(dto: dto);
   }
 

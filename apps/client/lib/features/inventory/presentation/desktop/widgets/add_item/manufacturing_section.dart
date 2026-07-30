@@ -67,60 +67,74 @@ class ManufacturingSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: _cardBorder),
-              borderRadius: FormSpacing.cardBorderRadius,
-            ),
-            child: Column(
-              children: [
-                const _ManufacturingTableHeader(),
-                ...form.rawMaterials.asMap().entries.map(
-                  (entry) => _RawMaterialRow(
-                    index: entry.key + 1,
-                    row: entry.value,
-                    nameController: rawControllerFor(
-                      entry.value.id,
-                      entry.value.itemName,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tableWidth = constraints.maxWidth < 560
+                  ? 560.0
+                  : constraints.maxWidth;
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: _cardBorder),
+                      borderRadius: FormSpacing.cardBorderRadius,
                     ),
-                    onChanged: onUpdateRawMaterial,
-                    onRemove: () => onRemoveRawMaterial(entry.value.id),
-                    canRemove: form.rawMaterials.length > 1,
+                    child: Column(
+                      children: [
+                        const _ManufacturingTableHeader(),
+                        ...form.rawMaterials.asMap().entries.map(
+                          (entry) => _RawMaterialRow(
+                            index: entry.key + 1,
+                            row: entry.value,
+                            nameController: rawControllerFor(
+                              entry.value.id,
+                              entry.value.itemName,
+                            ),
+                            onChanged: onUpdateRawMaterial,
+                            onRemove: () => onRemoveRawMaterial(entry.value.id),
+                            canRemove: form.rawMaterials.length > 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              TextButton.icon(
+                                onPressed: onAddRawMaterial,
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text(
+                                  'Add Row',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                'TOTAL: ${currency.format(form.rawMaterialTotal)}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      TextButton.icon(
-                        onPressed: onAddRawMaterial,
-                        icon: const Icon(Icons.add, size: 16),
-                        label: const Text(
-                          'Add Row',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'TOTAL: ${currency.format(form.rawMaterialTotal)}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(

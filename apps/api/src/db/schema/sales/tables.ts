@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import { parties } from '../crm/tables';
@@ -65,6 +66,12 @@ export const salesDocuments = pgTable(
     uniqueIndex('uq_sales_documents_business_series_number')
       .on(table.businessId, table.documentSeries, table.documentNumber)
       .where(sql`${table.documentNumber} IS NOT NULL`),
+    syncPullIndex(
+      'sales_documents',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 
@@ -92,7 +99,15 @@ export const salesDocumentLines = pgTable(
     lineTotal: money('line_total').notNull(),
     sortOrder: integer('sort_order').notNull().default(0),
   },
-  (table) => [sql`CHECK (${table.quantity} > 0)`],
+  (table) => [
+    sql`CHECK (${table.quantity} > 0)`,
+    syncPullIndex(
+      'sales_document_lines',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
+  ],
 );
 
 export const saleFaBatches = pgTable('sale_fa_batches', {

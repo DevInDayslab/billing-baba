@@ -19,6 +19,9 @@ class InventoryAsyncList<T> extends ConsumerStatefulWidget {
     this.onPrefetchItems,
     this.prefetchLookahead = 30,
     this.estimatedItemExtent = 56,
+    this.onLoadMore,
+    this.hasMore = false,
+    this.isLoadingMore = false,
     super.key,
   });
 
@@ -33,6 +36,9 @@ class InventoryAsyncList<T> extends ConsumerStatefulWidget {
   final void Function(List<T> items)? onPrefetchItems;
   final int prefetchLookahead;
   final double estimatedItemExtent;
+  final VoidCallback? onLoadMore;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   @override
   ConsumerState<InventoryAsyncList<T>> createState() =>
@@ -67,6 +73,13 @@ class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
 
   void _prefetchAhead() {
     if (widget.items.isEmpty) return;
+
+    if (widget.hasMore &&
+        !widget.isLoadingMore &&
+        widget.onLoadMore != null &&
+        _scrollController.position.extentAfter < widget.estimatedItemExtent * 4) {
+      widget.onLoadMore!();
+    }
 
     final firstVisible = AppImagePrefetcher.estimateFirstVisibleIndex(
       _scrollController,
@@ -167,9 +180,16 @@ class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
     return ListView.builder(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: widget.items.length,
-      itemBuilder: (context, index) =>
-          widget.itemBuilder(context, widget.items[index], index),
+      itemCount: widget.items.length + (widget.isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= widget.items.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+        return widget.itemBuilder(context, widget.items[index], index);
+      },
     );
   }
 }

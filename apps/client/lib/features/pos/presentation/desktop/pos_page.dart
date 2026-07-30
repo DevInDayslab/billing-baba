@@ -36,7 +36,6 @@ class DesktopPosPage extends ConsumerWidget {
                   ),
                 );
               },
-              onSettingsTap: () {},
             ),
             const SizedBox(height: AppSpacing.md),
             DecoratedBox(

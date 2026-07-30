@@ -114,6 +114,7 @@ class AddItemFormState {
     this.additionalCosts = const [],
     this.tierPrices = const [],
     this.alternativeItemIds = const [],
+    this.supplierPartyIds = const [],
     this.itemNameError = false,
     this.isDirty = false,
   });
@@ -153,6 +154,7 @@ class AddItemFormState {
   final List<AdditionalCostRow> additionalCosts;
   final List<ItemTierPriceRow> tierPrices;
   final List<String> alternativeItemIds;
+  final List<String> supplierPartyIds;
   final bool itemNameError;
   final bool isDirty;
 
@@ -210,6 +212,7 @@ class AddItemFormState {
     List<AdditionalCostRow>? additionalCosts,
     List<ItemTierPriceRow>? tierPrices,
     List<String>? alternativeItemIds,
+    List<String>? supplierPartyIds,
     bool? itemNameError,
     bool? isDirty,
   }) {
@@ -253,6 +256,7 @@ class AddItemFormState {
       additionalCosts: additionalCosts ?? this.additionalCosts,
       tierPrices: tierPrices ?? this.tierPrices,
       alternativeItemIds: alternativeItemIds ?? this.alternativeItemIds,
+      supplierPartyIds: supplierPartyIds ?? this.supplierPartyIds,
       itemNameError: itemNameError ?? this.itemNameError,
       isDirty: isDirty ?? this.isDirty,
     );

@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_tiles.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_detail_page.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_tiles.dart';
 import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

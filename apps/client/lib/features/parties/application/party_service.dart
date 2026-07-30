@@ -1,24 +1,25 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
+import 'package:billing_baba/features/parties/data/party_local_source.dart';
+import 'package:billing_baba/features/parties/data/party_master_repository.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
 import 'package:billing_baba/features/parties/models/delete_status_dto.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
-import 'package:billing_baba/features/parties/models/party_list_query.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
-import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:uuid/uuid.dart';
 
 export 'party_error_mapper.dart'
     show
@@ -29,26 +30,44 @@ export 'party_error_mapper.dart'
 
 part 'party_service.g.dart';
 
-const _uuid = Uuid();
 
 @Riverpod(keepAlive: true)
 Future<PartyService> partyService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final storage = await ref.watch(storageServiceProvider.future);
+  final db = ref.watch(appDatabaseProvider);
+  final queue = ref.watch(syncQueueProvider);
+  String? deviceId;
+  try {
+    final identity = await ref.watch(syncDeviceIdentityProvider.future);
+    deviceId = await identity.deviceId();
+  } on Object {
+    deviceId = null;
+  }
+  final repository = PartyRepository(api.dio);
+  final local = PartyLocalSource(db);
+  final master = PartyMasterRepository(
+    local: local,
+    syncQueue: queue,
+    remote: repository,
+    businessIdReader: () =>
+        storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+    deviceIdReader: () => deviceId,
+  );
   return PartyService(
-    repository: PartyRepository(api.dio),
     cache: PartyCache(storage),
+    master: master,
   );
 }
 
 class PartyService {
   PartyService({
-    required this._repository,
     required this._cache,
+    required this._master,
   });
 
-  final PartyRepository _repository;
   final PartyCache _cache;
+  final PartyMasterRepository _master;
 
   bool _isShowingCachedData = false;
   bool get isShowingCachedData => _isShowingCachedData;
@@ -66,107 +85,32 @@ class PartyService {
     }
 
     _isShowingCachedData = false;
-
-    try {
-      final remote = await _fetchRemoteParties(
-        searchQuery: searchQuery,
-        filter: filter,
-        typeFilter: typeFilter,
-      );
-      await _persistParties(businessId, remote);
-      final merged = await _mergeWithExtensions(businessId, remote);
-      return _applyClientFilters(
-        merged,
-        searchQuery,
-        filter,
-        typeFilter,
-      );
-    } on DioException catch (e) {
-      final cached = await _loadFromCache(businessId);
-      if (cached.isNotEmpty) {
-        _isShowingCachedData = true;
-        return _applyClientFilters(
-          cached,
-          searchQuery,
-          filter,
-          typeFilter,
-        );
-      }
-      PartyErrorMapper.mapAndThrow(e);
-    }
+    final remote = await _master.listActive(searchQuery: searchQuery);
+    final merged = await _mergeWithExtensions(businessId, remote);
+    return _applyClientFilters(
+      merged,
+      searchQuery,
+      filter,
+      typeFilter,
+    );
   }
 
   Future<PartyModel> getParty(String partyId) async {
     final businessId = _requireBusinessId();
-
-    final cachedParties = await _loadFromCache(businessId);
-    final cached = cachedParties
-        .where((party) => party.id == partyId)
-        .firstOrNull;
-    if (cached != null) {
-      unawaited(_fetchPartyInBackground(businessId, partyId));
-      return cached;
+    final dto = await _master.getActive(partyId);
+    if (dto == null) {
+      throw const PartyException('Party not found');
     }
-
-    try {
-      final dto = await _repository.getParty(partyId);
-      await _cache.upsertParty(businessId, dto.toJson());
-      return _dtoToModel(businessId, dto);
-    } on DioException catch (e) {
-      PartyErrorMapper.mapAndThrow(e);
-    }
+    return _dtoToModel(businessId, dto);
   }
 
   Future<PartyModel> createParty(AddPartyResult result) async {
     final businessId = _requireBusinessId();
     final request = PartyModel.createRequestFromResult(result);
     final extension = PartyLocalExtension.fromAddPartyResult(result);
-
-    try {
-      await _syncPendingOperations();
-      final created = await _repository.createParty(request);
-      await _cache.upsertLocalExtension(businessId, created.id, extension);
-      await _cache.upsertParty(businessId, created.toJson());
-      return PartyModel.fromDto(created, extension: extension);
-    } on DioException catch (e) {
-      final validation = ApiErrorParser.parseValidation(e);
-      if (validation != null) throw validation;
-
-      if (_isOffline(e)) {
-        final localId = _uuid.v4();
-        await _cache.queuePendingOperation(businessId, {
-          'type': 'create',
-          'local_id': localId,
-          'request': request.toJson(),
-          'extension': extension.toJson(),
-        });
-        await _cache.upsertLocalExtension(businessId, localId, extension);
-
-        final offlineDto = PartyDto(
-          id: localId,
-          name: result.partyName.trim(),
-          mobile: PartyModel.normalizePhone(result.phone),
-          email: result.email.trim().isEmpty ? null : result.email.trim(),
-          partyType: result.partyType,
-          pricingTier: 'tier_1',
-          gstin: result.gstin.trim().isEmpty ? null : result.gstin.trim(),
-          state: result.state.trim().isEmpty ? null : result.state.trim(),
-          creditLimit: result.hasCustomCreditLimit ? result.creditLimit : '0',
-          openingBalance: result.openingBalance.trim().isEmpty
-              ? '0'
-              : result.openingBalance.trim(),
-          balance: result.openingBalance.trim().isEmpty
-              ? '0'
-              : result.openingBalance.trim(),
-          isActive: true,
-          createdAt: DateTime.now().toIso8601String(),
-          updatedAt: DateTime.now().toIso8601String(),
-        );
-        await _cache.upsertParty(businessId, offlineDto.toJson());
-        throw const PartyOfflineException();
-      }
-      PartyErrorMapper.mapAndThrow(e);
-    }
+    final created = await _master.create(request);
+    await _cache.upsertLocalExtension(businessId, created.id, extension);
+    return PartyModel.fromDto(created, extension: extension);
   }
 
   Future<PartyModel> updateParty(
@@ -180,29 +124,9 @@ class PartyService {
       isActive: isActive,
     );
     final extension = PartyLocalExtension.fromAddPartyResult(result);
-
-    try {
-      await _syncPendingOperations();
-      final updated = await _repository.updateParty(partyId, request);
-      await _cache.upsertLocalExtension(businessId, partyId, extension);
-      await _cache.upsertParty(businessId, updated.toJson());
-      return PartyModel.fromDto(updated, extension: extension);
-    } on DioException catch (e) {
-      final validation = ApiErrorParser.parseValidation(e);
-      if (validation != null) throw validation;
-
-      if (_isOffline(e)) {
-        await _cache.queuePendingOperation(businessId, {
-          'type': 'update',
-          'party_id': partyId,
-          'request': request.toJson(),
-          'extension': extension.toJson(),
-        });
-        await _cache.upsertLocalExtension(businessId, partyId, extension);
-        throw const PartyOfflineException();
-      }
-      PartyErrorMapper.mapAndThrow(e);
-    }
+    final updated = await _master.update(partyId, request);
+    await _cache.upsertLocalExtension(businessId, partyId, extension);
+    return PartyModel.fromDto(updated, extension: extension);
   }
 
   Future<PartyModel> setPartyActive(
@@ -210,139 +134,30 @@ class PartyService {
     required bool isActive,
   }) async {
     final businessId = _requireBusinessId();
-    final request = UpdatePartyRequest(isActive: isActive);
-
-    try {
-      await _syncPendingOperations();
-      final updated = await _repository.updateParty(partyId, request);
-      await _cache.upsertParty(businessId, updated.toJson());
-      return await _dtoToModel(businessId, updated);
-    } on DioException catch (e) {
-      if (_isOffline(e)) {
-        await _cache.queuePendingOperation(businessId, {
-          'type': 'update',
-          'party_id': partyId,
-          'request': request.toJson(),
-        });
-        final cachedParties = await _loadFromCache(businessId);
-        final cached = cachedParties
-            .where((party) => party.id == partyId)
-            .firstOrNull;
-        if (cached != null) {
-          final offlineParty = cached.copyWith(
-            isActive: isActive,
-            updatedAt: DateTime.now(),
-          );
-          await _cache.upsertParty(
-            businessId,
-            PartyDto(
-              id: offlineParty.id,
-              name: offlineParty.name,
-              mobile: PartyModel.normalizePhone(offlineParty.phone),
-              email: offlineParty.email.isEmpty ? null : offlineParty.email,
-              partyType: offlineParty.partyType,
-              pricingTier: 'tier_1',
-              gstin: offlineParty.gstin.isEmpty ? null : offlineParty.gstin,
-              state: offlineParty.state.isEmpty ? null : offlineParty.state,
-              creditLimit: offlineParty.hasCustomCreditLimit
-                  ? offlineParty.creditLimit
-                  : '0',
-              openingBalance: offlineParty.openingBalance.toString(),
-              balance: offlineParty.balance.toString(),
-              isActive: isActive,
-              createdAt:
-                  offlineParty.createdAt?.toIso8601String() ??
-                  DateTime.now().toIso8601String(),
-              updatedAt: DateTime.now().toIso8601String(),
-            ).toJson(),
-          );
-          return offlineParty;
-        }
-        throw const PartyOfflineException();
-      }
-      PartyErrorMapper.mapAndThrow(e);
-    }
+    final updated = await _master.update(
+      partyId,
+      UpdatePartyRequest(isActive: isActive),
+    );
+    return _dtoToModel(businessId, updated);
   }
 
   /// Upgrades customer-only parties so they can be used on purchase documents.
   Future<void> ensureSupplierRole(String partyId) async {
-    final businessId = _requireBusinessId();
     final party = await getParty(partyId);
     if (party.partyType == 'supplier' || party.partyType == 'both') {
       return;
     }
-
-    try {
-      await _syncPendingOperations();
-      final updated = await _repository.updateParty(
-        partyId,
-        const UpdatePartyRequest(partyType: 'both'),
-      );
-      await _cache.upsertParty(businessId, updated.toJson());
-    } on DioException catch (e) {
-      PartyErrorMapper.mapAndThrow(e);
-    }
+    await _master.update(
+      partyId,
+      const UpdatePartyRequest(partyType: 'both'),
+    );
   }
 
   Future<PartyDeleteAction> deleteParty(String partyId) async {
     final businessId = _requireBusinessId();
-
-    try {
-      try {
-        await _syncPendingOperations();
-      } on Object {
-        // Do not block delete when pending sync fails.
-      }
-      final action = await _repository.deleteParty(partyId);
-      if (action == PartyDeleteAction.deleted) {
-        await _cache.removeLocalExtension(businessId, partyId);
-        await _cache.removeParty(businessId, partyId);
-      } else {
-        final cachedParties = await _loadFromCache(businessId);
-        final cached = cachedParties
-            .where((party) => party.id == partyId)
-            .firstOrNull;
-        if (cached != null) {
-          final inactiveParty = cached.copyWith(
-            isActive: false,
-            updatedAt: DateTime.now(),
-          );
-          await _cache.upsertParty(
-            businessId,
-            PartyDto(
-              id: inactiveParty.id,
-              name: inactiveParty.name,
-              mobile: PartyModel.normalizePhone(inactiveParty.phone),
-              email: inactiveParty.email.isEmpty ? null : inactiveParty.email,
-              partyType: inactiveParty.partyType,
-              pricingTier: 'tier_1',
-              gstin: inactiveParty.gstin.isEmpty ? null : inactiveParty.gstin,
-              state: inactiveParty.state.isEmpty ? null : inactiveParty.state,
-              creditLimit: inactiveParty.hasCustomCreditLimit
-                  ? inactiveParty.creditLimit
-                  : '0',
-              openingBalance: inactiveParty.openingBalance.toString(),
-              balance: inactiveParty.balance.toString(),
-              isActive: false,
-              createdAt:
-                  inactiveParty.createdAt?.toIso8601String() ??
-                  DateTime.now().toIso8601String(),
-              updatedAt: DateTime.now().toIso8601String(),
-            ).toJson(),
-          );
-        }
-      }
-      return action;
-    } on DioException catch (e) {
-      if (_isOffline(e)) {
-        await _cache.queuePendingOperation(businessId, {
-          'type': 'delete',
-          'party_id': partyId,
-        });
-        throw const PartyOfflineException();
-      }
-      PartyErrorMapper.mapAndThrow(e);
-    }
+    await _master.softDelete(partyId);
+    await _cache.removeLocalExtension(businessId, partyId);
+    return PartyDeleteAction.deleted;
   }
 
   Future<void> syncPendingOperations() => _syncPendingOperations();
@@ -409,17 +224,6 @@ class PartyService {
     }
   }
 
-  Future<void> _fetchPartyInBackground(
-    String businessId,
-    String partyId,
-  ) async {
-    try {
-      final dto = await _repository.getParty(partyId);
-      await _cache.upsertParty(businessId, dto.toJson());
-    } on DioException {
-      // Keep cached detail; avoid touching partyDetailProvider during its build.
-    }
-  }
 
   /// Writes profile image fields into the local party cache so detail reloads
   /// do not flash back to a missing avatar after upload.
@@ -431,96 +235,39 @@ class PartyService {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) return;
 
-    final parties = await _cache.readParties(businessId);
-    if (parties.isEmpty) return;
-
-    final next = parties.map((json) {
-      if (json['id'] != partyId) return json;
-      return {
-        ...json,
-        'profile_image_url': profileImageUrl,
-        'profile_media_asset_id': profileMediaAssetId,
-      };
-    }).toList();
-
-    await _cache.saveParties(businessId, next);
-  }
-
-  Future<List<PartyDto>> _fetchRemoteParties({
-    String? searchQuery,
-    PartyListFilter filter = PartyListFilter.all,
-    PartyTypeFilter typeFilter = PartyTypeFilter.all,
-  }) async {
-    // Split multi-word queries into individual words.
-    // Backend does single-substring ILIKE, so "distributor b" won't match
-    // "Britannia Distributor". We fetch results for each word separately,
-    // then intersect by id so only parties matching ALL words are returned.
-    final words =
-        searchQuery
-            ?.trim()
-            .split(RegExp(r'\s+'))
-            .where((w) => w.isNotEmpty)
-            .toList() ??
-        [];
-
-    // Single word or empty — use existing single-fetch logic
-    if (words.length <= 1) {
-      return _fetchAllPages(
-        searchQuery: words.isEmpty ? null : words.first,
-        filter: filter,
-      );
-    }
-
-    // Multi-word: fetch each word independently, then intersect results
-    final wordResults = await Future.wait(
-      words.map(
-        (word) => _fetchAllPages(searchQuery: word, filter: filter),
-      ),
+    final row = await _master.local.getById(partyId);
+    if (row == null) return;
+    await _master.local.upsertRow(
+      id: row.id,
+      businessId: row.businessId,
+      name: row.name,
+      legalName: row.legalName,
+      alias: row.alias,
+      mobile: row.mobile,
+      email: row.email,
+      partyGroup: row.partyGroup,
+      areaCode: row.areaCode,
+      partyType: row.partyType,
+      partyCategory: row.partyCategory,
+      pricingTier: row.pricingTier,
+      gstin: row.gstin,
+      stateCode: row.stateCode,
+      areaId: row.areaId,
+      creditLimit: row.creditLimit,
+      openingBalance: row.openingBalance,
+      hiddenLedgerBalance: row.hiddenLedgerBalance,
+      profileImageUrl: profileImageUrl,
+      profileMediaAssetId: profileMediaAssetId,
+      connectedSince: row.connectedSince,
+      notes: row.notes,
+      isActive: row.isActive,
+      syncVersion: row.syncVersion,
+      createdAt: row.createdAt,
+      updatedAt: DateTime.now().toUtc(),
+      deletedAt: row.deletedAt,
+      isDeleted: row.isDeleted,
+      deviceId: row.deviceId,
     );
-
-    // Start with the first word's result set
-    final firstIds = wordResults.first.map((p) => p.id).toSet();
-
-    // Keep only parties whose id appears in every word's result set
-    final intersectedIds = wordResults.skip(1).fold(
-      firstIds,
-      (ids, wordParties) {
-        final wordIds = wordParties.map((p) => p.id).toSet();
-        return ids.intersection(wordIds);
-      },
-    );
-
-    // Return de-duped parties from the first result set that passed intersection
-    final seen = <String>{};
-    return wordResults.first
-        .where((p) => intersectedIds.contains(p.id) && seen.add(p.id))
-        .toList();
-  }
-
-  /// Fetches all pages for a single search term from the backend.
-  Future<List<PartyDto>> _fetchAllPages({
-    String? searchQuery,
-    PartyListFilter filter = PartyListFilter.all,
-  }) async {
-    final allParties = <PartyDto>[];
-    var page = 1;
-    const limit = 100;
-    var total = 0;
-    do {
-      final response = await _repository.listParties(
-        PartyListQuery.fromFilter(
-          search: searchQuery,
-          filter: filter,
-          page: page,
-        ).copyWith(limit: limit),
-      );
-      allParties.addAll(response.parties);
-      total = response.total;
-      page++;
-    } while (allParties.length < total);
-    final seen = <String>{};
-    allParties.retainWhere((p) => seen.add(p.id));
-    return allParties;
   }
 
   List<PartyModel> _applyClientFilters(
@@ -566,19 +313,9 @@ class PartyService {
   }
 
   Future<List<PartyModel>> _loadFromCache(String businessId) async {
-    final cached = await _cache.readParties(businessId);
-    if (cached.isEmpty) return [];
-
-    final extensions = await _cache.readLocalExtensions(businessId);
-    return cached
-        .map(
-          (json) => PartyModel.fromDto(
-            PartyDto.fromJson(json),
-            extension:
-                extensions[json['id'] as String] ?? const PartyLocalExtension(),
-          ),
-        )
-        .toList();
+    final dtos = await _master.local.listActive(businessId);
+    if (dtos.isEmpty) return [];
+    return _mergeWithExtensions(businessId, dtos);
   }
 
   Future<List<PartyModel>> _mergeWithExtensions(
@@ -604,136 +341,11 @@ class PartyService {
     );
   }
 
-  Future<void> _persistParties(
-    String businessId,
-    List<PartyDto> parties,
-  ) async {
-    await _cache.saveParties(
-      businessId,
-      parties.map((party) => party.toJson()).toList(),
-    );
-  }
 
   Future<void> _syncPendingOperations() async {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) return;
-
-    final pending = await _cache.readPendingOperations(businessId);
-    if (pending.isEmpty) return;
-
-    for (final operation in pending) {
-      final type = operation['type'] as String?;
-      switch (type) {
-        case 'create':
-          final requestJson = Map<String, dynamic>.from(
-            operation['request'] as Map,
-          );
-          final created = await _repository.createParty(
-            CreatePartyRequest(
-              name: requestJson['name'] as String,
-              mobile:
-                  requestJson['mobile'] as String? ??
-                  PartyModel.normalizePhone(
-                    requestJson['mobile']?.toString() ?? '',
-                  ),
-              legalName: requestJson['legal_name'] as String?,
-              alias: requestJson['alias'] as String?,
-              additionalPhones: requestJson['additional_phones'] is List
-                  ? (requestJson['additional_phones'] as List)
-                        .map((phone) => phone.toString())
-                        .toList()
-                  : const [],
-              email: requestJson['email'] as String?,
-              gstin: requestJson['gstin'] as String?,
-              partyType: requestJson['party_type'] as String? ?? 'customer',
-              partyGroup: requestJson['party_group'] as String?,
-              areaCode: requestJson['area_code'] as String?,
-              state: requestJson['state'] as String?,
-              creditLimit: requestJson['credit_limit']?.toString(),
-              openingBalance: requestJson['opening_balance']?.toString(),
-              isActive: requestJson['is_active'] as bool? ?? true,
-            ),
-          );
-          final extensionJson = operation['extension'];
-          if (extensionJson is Map) {
-            await _cache.upsertLocalExtension(
-              businessId,
-              created.id,
-              PartyLocalExtension.fromJson(
-                Map<String, dynamic>.from(extensionJson),
-              ),
-            );
-          }
-          await _cache.upsertParty(businessId, created.toJson());
-        case 'update':
-          final partyId = operation['party_id'] as String;
-          final requestJson = Map<String, dynamic>.from(
-            operation['request'] as Map,
-          );
-          final updated = await _repository.updateParty(
-            partyId,
-            UpdatePartyRequest(
-              name: requestJson['name'] as String?,
-              mobile: requestJson['mobile'] as String?,
-              email: requestJson['email'] as String?,
-              gstin: requestJson['gstin'] as String?,
-              partyType: requestJson['party_type'] as String?,
-              state: requestJson['state'] as String?,
-              creditLimit: requestJson['credit_limit']?.toString(),
-              openingBalance: requestJson['opening_balance']?.toString(),
-              isActive: requestJson['is_active'] as bool?,
-            ),
-          );
-          final extensionJson = operation['extension'];
-          if (extensionJson is Map) {
-            await _cache.upsertLocalExtension(
-              businessId,
-              partyId,
-              PartyLocalExtension.fromJson(
-                Map<String, dynamic>.from(extensionJson),
-              ),
-            );
-          }
-          await _cache.upsertParty(businessId, updated.toJson());
-        case 'delete':
-          final partyId = operation['party_id'] as String;
-          final action = await _repository.deleteParty(partyId);
-          if (action == PartyDeleteAction.deleted) {
-            await _cache.removeParty(businessId, partyId);
-          } else {
-            final cachedParties = await _loadFromCache(businessId);
-            final cached = cachedParties
-                .where((party) => party.id == partyId)
-                .firstOrNull;
-            if (cached != null) {
-              await _cache.upsertParty(
-                businessId,
-                PartyDto(
-                  id: cached.id,
-                  name: cached.name,
-                  mobile: PartyModel.normalizePhone(cached.phone),
-                  email: cached.email.isEmpty ? null : cached.email,
-                  partyType: cached.partyType,
-                  pricingTier: 'tier_1',
-                  gstin: cached.gstin.isEmpty ? null : cached.gstin,
-                  state: cached.state.isEmpty ? null : cached.state,
-                  creditLimit: cached.hasCustomCreditLimit
-                      ? cached.creditLimit
-                      : '0',
-                  openingBalance: cached.openingBalance.toString(),
-                  balance: cached.balance.toString(),
-                  isActive: false,
-                  createdAt:
-                      cached.createdAt?.toIso8601String() ??
-                      DateTime.now().toIso8601String(),
-                  updatedAt: DateTime.now().toIso8601String(),
-                ).toJson(),
-              );
-            }
-          }
-      }
-    }
-
+    // Legacy prefs pending-ops retired — master CRUD uses SyncQueue.
     await _cache.clearPendingOperations(businessId);
   }
 
@@ -745,32 +357,6 @@ class PartyService {
     return businessId;
   }
 
-  bool _isOffline(DioException e) =>
-      e.response == null ||
-      e.type == DioExceptionType.connectionError ||
-      e.type == DioExceptionType.connectionTimeout;
-}
-
-extension on PartyListQuery {
-  PartyListQuery copyWith({
-    int? page,
-    int? limit,
-    String? q,
-    String? partyType,
-    bool? isActive,
-    String? sort,
-    String? order,
-  }) {
-    return PartyListQuery(
-      page: page ?? this.page,
-      limit: limit ?? this.limit,
-      q: q ?? this.q,
-      partyType: partyType ?? this.partyType,
-      isActive: isActive ?? this.isActive,
-      sort: sort ?? this.sort,
-      order: order ?? this.order,
-    );
-  }
 }
 
 @Riverpod(keepAlive: true)

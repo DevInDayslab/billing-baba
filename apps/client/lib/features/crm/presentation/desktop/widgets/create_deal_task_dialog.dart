@@ -1,7 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/crm/application/crm_assignee_options_provider.dart';
+import 'package:billing_baba/features/crm/presentation/desktop/widgets/crm_owner_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _saveBlue = Color(0xFF1A62D6);
 
@@ -29,30 +32,27 @@ Future<CreateDealTaskInput?> showCreateDealTaskDialog(
   );
 }
 
-class CreateDealTaskDialog extends StatefulWidget {
+class CreateDealTaskDialog extends ConsumerStatefulWidget {
   const CreateDealTaskDialog({required this.dealName, super.key});
 
   final String dealName;
 
   @override
-  State<CreateDealTaskDialog> createState() => _CreateDealTaskDialogState();
+  ConsumerState<CreateDealTaskDialog> createState() =>
+      _CreateDealTaskDialogState();
 }
 
-class _CreateDealTaskDialogState extends State<CreateDealTaskDialog> {
+class _CreateDealTaskDialogState extends ConsumerState<CreateDealTaskDialog> {
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _dueDateController = TextEditingController();
   String _priority = 'High';
-  String _owner = 'Saksham Kochhar';
+  String _owner = crmOwnerNoneOption;
+  bool _ownerInitialized = false;
   bool _reminder = false;
   bool _repeat = false;
 
   static const _priorityOptions = ['High', 'Normal', 'Low'];
-  static const _ownerOptions = [
-    'Saksham Kochhar',
-    'Priya Mehta',
-    'Amit Verma',
-  ];
 
   @override
   void dispose() {
@@ -87,13 +87,19 @@ class _CreateDealTaskDialogState extends State<CreateDealTaskDialog> {
             ? null
             : DateTime.tryParse(_dueDateController.text),
         priority: _priority,
-        owner: _owner,
+        owner: _owner == crmOwnerNoneOption ? null : _owner,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(crmDefaultOwnerNameProvider, (previous, next) {
+      if (_ownerInitialized || next == null) return;
+      _ownerInitialized = true;
+      setState(() => _owner = next);
+    });
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBorder),
       child: ConstrainedBox(
@@ -148,9 +154,8 @@ class _CreateDealTaskDialogState extends State<CreateDealTaskDialog> {
                   onSelected: (value) => setState(() => _priority = value),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                SaleGenericSelectDropdown(
+                CrmOwnerSelectDropdown(
                   value: _owner,
-                  options: _ownerOptions,
                   hintText: 'Owner',
                   onSelected: (value) => setState(() => _owner = value),
                 ),

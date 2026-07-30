@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_trend_chart.dart';

@@ -62,7 +62,6 @@ class _PurchaseOrderPageState extends ConsumerState<DesktopPurchaseOrderPage> {
           children: [
             PurchasePageTitleBar(
               currentRoute: AppRoutes.purchaseOrder,
-              onSettingsTap: () => debugPrint('Settings tapped'),
             ),
             const SizedBox(height: AppSpacing.md),
             PurchaseSectionAsyncContent(

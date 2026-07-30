@@ -4,6 +4,7 @@ import 'package:billing_baba/features/reports/presentation/desktop/widgets/share
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
+import 'package:billing_baba/features/reports/utils/report_order_filter_utils.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,27 +19,12 @@ class SalePurchaseOrderReportFilters extends ConsumerWidget {
   final VoidCallback? onExportExcel;
   final VoidCallback? onPrint;
 
-  static const _orderTypeOptions = [
-    'SALE ORDER',
-    'PURCHASE ORDER',
-    'SALE RETURN ORDER',
-    'PURCHASE RETURN ORDER',
-  ];
-
-  static const _statusOptions = [
-    'All Orders',
-    'Open',
-    'Closed',
-    'Partial',
-    'Cancelled',
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(reportFiltersProvider);
     final notifier = ref.read(reportFiltersProvider.notifier);
-    final documentType = filters.documentType ?? _orderTypeOptions.first;
-    final status = filters.status ?? _statusOptions.first;
+    final documentType = salePurchaseOrderTypeLabel(filters.documentType);
+    final status = salePurchaseOrderStatusLabel(filters.status);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -124,18 +110,18 @@ class SalePurchaseOrderReportFilters extends ConsumerWidget {
               ),
               SaleFilterDropdown(
                 label: documentType,
-                options: _orderTypeOptions,
+                options: salePurchaseOrderTypeOptions,
                 selected: documentType,
-                onSelected: notifier.setDocumentType,
+                onSelected: (value) {
+                  notifier.setDocumentType(salePurchaseOrderTypeValue(value));
+                },
               ),
               SaleFilterDropdown(
                 label: status,
-                options: _statusOptions,
+                options: salePurchaseOrderStatusOptions,
                 selected: status,
                 onSelected: (value) {
-                  notifier.setStatus(
-                    value == _statusOptions.first ? null : value,
-                  );
+                  notifier.setStatus(salePurchaseOrderStatusValue(value));
                 },
               ),
             ],

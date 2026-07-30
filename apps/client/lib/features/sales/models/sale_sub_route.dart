@@ -41,9 +41,6 @@ abstract final class SaleSubRoutes {
       pageTitle: 'Sale Return',
     ),
     SaleSubRoute(route: AppRoutes.saleFa, label: 'Sale FA'),
-    SaleSubRoute(route: AppRoutes.crmLeads, label: 'Leads'),
-    SaleSubRoute(route: AppRoutes.crmContacts, label: 'Contacts'),
-    SaleSubRoute(route: AppRoutes.crmDeals, label: 'Deals'),
   ];
 
   static String labelForRoute(String route) {

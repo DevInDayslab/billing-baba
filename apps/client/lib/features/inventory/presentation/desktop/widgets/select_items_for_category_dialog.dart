@@ -140,7 +140,7 @@ class _SelectItemsForCategoryDialogState
 
   @override
   Widget build(BuildContext context) {
-    final allItems = ref.watch(inventoryItemsProvider).value ?? [];
+    final allItems = ref.watch(inventoryItemListProvider);
     final visibleItems = _filteredItems(allItems);
     final allVisibleSelected =
         visibleItems.isNotEmpty &&

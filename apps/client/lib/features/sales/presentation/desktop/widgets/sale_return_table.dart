@@ -3,9 +3,6 @@ import 'dart:async';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
-import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/application/credit_note_form_provider.dart';
@@ -16,6 +13,9 @@ import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_document_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_empty_state_card.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_status_badge.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -224,7 +224,23 @@ class SaleReturnTableRows {
       cells: [
         _DataCell(child: Text('$rowNumber')),
         _DataCell(child: Text(_dateFormat.format(item.date))),
-        _DataCell(child: Text(item.invoiceNo)),
+        _DataCell(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  item.invoiceNo,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (item.syncState != SaleInvoiceSyncState.none)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: _SyncStateBadge(state: item.syncState),
+                ),
+            ],
+          ),
+        ),
         _DataCell(
           child: Text(
             item.partyName,
@@ -979,6 +995,43 @@ class _EmptyTransactionsState extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SyncStateBadge extends StatelessWidget {
+  const _SyncStateBadge({required this.state});
+
+  final SaleInvoiceSyncState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (state) {
+      SaleInvoiceSyncState.savedLocally => ('Local', const Color(0xFF1565C0)),
+      SaleInvoiceSyncState.syncing => ('Syncing', const Color(0xFFF57C00)),
+      SaleInvoiceSyncState.synced => ('Synced', const Color(0xFF2E7D32)),
+      SaleInvoiceSyncState.conflict => ('Conflict', const Color(0xFFC62828)),
+      SaleInvoiceSyncState.none => ('', Colors.transparent),
+    };
+
+    if (label.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }

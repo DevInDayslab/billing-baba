@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_card.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_tiles.dart';
-import 'package:billing_baba/core/widgets/mobile/setting_tile.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_detail_page.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_tiles.dart';
+import 'package:billing_baba/shared/widgets/mobile/setting_tile.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_settings_state.dart';
 import 'package:flutter/material.dart';

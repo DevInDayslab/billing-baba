@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/party_details_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class PartyDetailsPage extends StatelessWidget {

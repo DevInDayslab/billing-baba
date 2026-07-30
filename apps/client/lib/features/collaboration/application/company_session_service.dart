@@ -172,6 +172,9 @@ class CompanySessionService {
     invalidateAllBusinessScopedProviders(
       _ref,
       includeBusinessService: false,
+      // Seeded below; also remounts via auth scope in selectBusiness — do not
+      // invalidate again or warm races a second profile GET.
+      includeBusinessProfile: false,
     );
     seedBusinessProfilePreview(_ref, entry: entry);
     BusinessOpenDebugLog.step('scopeOwnedApiCompany', 'complete');

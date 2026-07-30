@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
 import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
@@ -324,7 +325,7 @@ class _DocumentPdfPreviewPane extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '$error',
+                OfflineUiMessages.messageFor(error),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 12,

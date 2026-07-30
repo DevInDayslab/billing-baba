@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/layout/dashboard_layout.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/shared/layout/dashboard_layout.dart';
 import 'package:flutter/material.dart';
 
 /// Fixed dashboard typography — no viewport scaling.

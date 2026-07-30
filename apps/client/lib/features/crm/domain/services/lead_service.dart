@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/crm/data/repositories/lead_repository.dart';
 import 'package:billing_baba/features/crm/data/sources/lead_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/lead_remote_source.dart';
@@ -23,6 +24,7 @@ Future<LeadService> leadService(Ref ref) async {
   final repository = LeadRepository(
     local: LeadLocalSource(db, storage),
     remote: LeadRemoteSource(api.dio),
+    syncQueue: ref.watch(syncQueueProvider),
   );
   return LeadService(repository);
 }

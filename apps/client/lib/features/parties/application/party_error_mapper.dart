@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:dio/dio.dart';
 
 class PartyOfflineException implements Exception {
@@ -84,9 +85,19 @@ abstract final class PartyErrorMapper {
       return 'Business not selected. Please select a business first.';
     }
     if (error is PartyOfflineException) {
-      return 'Network unavailable. Showing cached data.';
+      return OfflineUiMessages.workingOffline;
     }
     if (error is ApiValidationException) return error.message;
+    if (error is DioException && _isOffline(error)) {
+      return OfflineUiMessages.workingOffline;
+    }
+    if (OfflineUiMessages.isOfflineError(error)) {
+      return OfflineUiMessages.workingOffline;
+    }
+    if (error is StateError &&
+        error.message.contains('Party not found in local database')) {
+      return 'Party ledger is not available yet. Sync this business once while online.';
+    }
     if (error is StateError &&
         error.message.contains('Business must be selected')) {
       return 'Business not selected. Please select a business first.';

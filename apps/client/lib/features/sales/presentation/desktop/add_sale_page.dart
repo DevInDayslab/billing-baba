@@ -1,11 +1,7 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/close_form_dialog.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_recovery_dialog.dart';
@@ -29,6 +25,10 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_pa
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_tabs_bar.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
+import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -226,7 +226,6 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
               ),
               child: SalePageTitleBar(
                 currentRoute: AppRoutes.saleInvoices,
-                onSettingsTap: () {},
                 onBack: _handleClose,
               ),
             ),
@@ -1304,6 +1303,21 @@ class _SaleTextFieldState extends State<_SaleTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final isSingleLine = widget.minLines <= 1 && widget.maxLines <= 1;
+    if (isSingleLine) {
+      return SaleTextField(
+        controller: _controller,
+        hint: widget.hintText,
+        hasError: widget.hasError,
+        compact: widget.compact,
+        filled: widget.filled,
+        readOnly: widget.readOnly,
+        keyboardType: widget.keyboardType,
+        inputFormatters: widget.inputFormatters,
+        onChanged: widget.onChanged,
+      );
+    }
+
     return TextField(
       controller: _controller,
       readOnly: widget.readOnly,
@@ -1315,6 +1329,7 @@ class _SaleTextFieldState extends State<_SaleTextField> {
         filled: widget.filled,
         compact: widget.compact,
         hasError: widget.hasError,
+        fixedHeight: false,
       ).copyWith(
         errorText: widget.hasError ? widget.errorText : null,
       ),

@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/pick_media_image.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';
@@ -12,13 +10,21 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/pick_media_image.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class DesktopEditProfilePage extends ConsumerStatefulWidget {
-  const DesktopEditProfilePage({super.key});
+  const DesktopEditProfilePage({this.embedded = false, super.key});
+
+  /// When true, omit page chrome meant for the standalone `/edit-profile` route
+  /// (used inside the Settings Business Profile tab).
+  final bool embedded;
 
   @override
   ConsumerState<DesktopEditProfilePage> createState() => _EditProfilePageState();
@@ -458,6 +464,12 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
           child: _OutlinedField(
             controller: _businessNameController,
             hintText: 'Business Name',
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(Validators.businessNameMaxLength),
+              FilteringTextInputFormatter.allow(
+                Validators.businessNameInputPattern,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -468,6 +480,10 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             controller: _phoneController,
             hintText: 'Phone Number',
             keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -477,6 +493,11 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
           child: _OutlinedField(
             controller: _gstinController,
             hintText: 'GSTIN',
+            inputFormatters: [
+              const UpperCaseTextFormatter(),
+              LengthLimitingTextInputFormatter(15),
+              FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -487,6 +508,10 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             controller: _emailController,
             hintText: 'Email ID',
             keyboardType: TextInputType.emailAddress,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(200),
+              FilteringTextInputFormatter.allow(RegExp(r'[\w\-.@+'']')),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -550,6 +575,10 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             controller: _pincodeController,
             hintText: 'Pincode',
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -559,6 +588,10 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
           child: _OutlinedField(
             controller: _upiIdController,
             hintText: 'merchant@upi',
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(100),
+              FilteringTextInputFormatter.allow(RegExp(r'[\w.\-@]')),
+            ],
           ),
         ),
       ],
@@ -596,15 +629,17 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Edit Profile',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                if (!widget.embedded) ...[
+                  const Text(
+                    'Edit Profile',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
                 if (formState.generalError != null) ...[
                   Container(
                     width: double.infinity,
@@ -720,19 +755,50 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          OutlinedButton(
-                            onPressed: formState.isSubmitting
-                                ? null
-                                : () => context.pop(),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg,
-                                vertical: AppSpacing.sm + 4,
+                          if (!widget.embedded) ...[
+                            OutlinedButton(
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : () => context.pop(),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.lg,
+                                  vertical: AppSpacing.sm + 4,
+                                ),
                               ),
+                              child: const Text('Cancel'),
                             ),
-                            child: const Text('Cancel'),
-                          ),
-                          const SizedBox(width: AppSpacing.sm + 4),
+                            const SizedBox(width: AppSpacing.sm + 4),
+                          ] else ...[
+                            OutlinedButton(
+                              onPressed: formState.isSubmitting
+                                  ? null
+                                  : () {
+                                      final current = ref
+                                          .read(businessProfileProvider)
+                                          .asData
+                                          ?.value;
+                                      if (current == null) return;
+                                      setState(
+                                        () => _hydrateFromProfile(current),
+                                      );
+                                      ref
+                                          .read(
+                                            editBusinessProfileFormProvider
+                                                .notifier,
+                                          )
+                                          .clearErrors();
+                                    },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.lg,
+                                  vertical: AppSpacing.sm + 4,
+                                ),
+                              ),
+                              child: const Text('Reset'),
+                            ),
+                            const SizedBox(width: AppSpacing.sm + 4),
+                          ],
                           FilledButton(
                             onPressed: formState.isSubmitting ? null : _save,
                             style: FilledButton.styleFrom(
@@ -874,6 +940,7 @@ class _OutlinedField extends StatelessWidget {
     this.keyboardType,
     this.minLines = 1,
     this.maxLines = 1,
+    this.inputFormatters,
   });
 
   static const _fieldBorder = OutlineInputBorder(
@@ -886,6 +953,7 @@ class _OutlinedField extends StatelessWidget {
   final TextInputType? keyboardType;
   final int minLines;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -894,6 +962,7 @@ class _OutlinedField extends StatelessWidget {
       keyboardType: keyboardType,
       minLines: minLines,
       maxLines: maxLines,
+      inputFormatters: inputFormatters,
       style: const TextStyle(color: Colors.black87),
       decoration: InputDecoration(
         hintText: hintText,

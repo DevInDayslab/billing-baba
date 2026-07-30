@@ -46,7 +46,7 @@ final class PartyServiceProvider
   }
 }
 
-String _$partyServiceHash() => r'3e85483e3c4ff838ab6476e607e5a07882e14681';
+String _$partyServiceHash() => r'88372bab6091519cdf6f44eb8b0570178228cc20';
 
 @ProviderFor(PartyList)
 final partyListProvider = PartyListProvider._();

@@ -5,6 +5,7 @@ import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/logging/diagnostics_store.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -21,7 +22,7 @@ class NetworkDiagnosticsService {
         receiveTimeout: const Duration(seconds: 10),
         headers: {'Content-Type': 'application/json'},
       ),
-    );
+    )..httpClientAdapter = createBypassSslHttpClientAdapter();
   }
 
   Future<ConnectivityTestResult> runConnectivityTest({

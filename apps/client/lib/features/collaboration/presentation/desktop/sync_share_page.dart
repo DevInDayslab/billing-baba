@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/platform/app_platform.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_init_provider.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
@@ -23,10 +23,8 @@ import 'package:billing_baba/features/collaboration/presentation/desktop/widgets
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/logged_in_status_bar.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/member_form_dialog.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/members_table.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:window_manager/window_manager.dart';
 
 class DesktopSyncSharePage extends ConsumerStatefulWidget {
   const DesktopSyncSharePage({super.key});
@@ -35,47 +33,12 @@ class DesktopSyncSharePage extends ConsumerStatefulWidget {
   ConsumerState<DesktopSyncSharePage> createState() => _SyncSharePageState();
 }
 
-class _SyncSharePageState extends ConsumerState<DesktopSyncSharePage>
-    with WidgetsBindingObserver, WindowListener {
-  bool get _supportsWindowFocus {
-    if (kIsWeb) return false;
-    return AppPlatform.current.isDesktop;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    if (_supportsWindowFocus) {
-      windowManager.addListener(this);
-    }
-  }
-
-  @override
-  void dispose() {
-    if (_supportsWindowFocus) {
-      windowManager.removeListener(this);
-    }
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _silentRefresh(SyncShareRefreshTrigger.appResume);
-    }
-  }
-
-  @override
-  void onWindowFocus() {
-    _silentRefresh(SyncShareRefreshTrigger.windowFocus);
-  }
-
+class _SyncSharePageState extends ConsumerState<DesktopSyncSharePage> {
   void _silentRefresh(SyncShareRefreshTrigger trigger) {
     unawaited(
       ref.read(syncShareRefreshProvider.notifier).refresh(
             trigger: trigger,
+            manual: trigger == SyncShareRefreshTrigger.manual,
           ),
     );
   }
@@ -100,7 +63,7 @@ class _SyncSharePageState extends ConsumerState<DesktopSyncSharePage>
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: CollaborationSectionEmptyState(
           title: 'Could not load collaboration',
-          message: error.toString(),
+          message: OfflineUiMessages.messageFor(error),
           actionLabel: 'Retry',
           onAction: () => ref.invalidate(collaborationInitProvider),
           showIllustration: false,

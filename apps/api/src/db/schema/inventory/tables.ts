@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import {
   money,
@@ -27,11 +28,17 @@ const businessId = () =>
 
 export { itemAlternatives } from './item-alternatives.table';
 
-export const categories = pgTable('categories', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-});
+export const categories = pgTable(
+  'categories',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+  },
+  (table) => [
+    syncPullIndex('categories', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 export const unitDefinitions = pgTable(
   'unit_definitions',
@@ -52,6 +59,12 @@ export const unitDefinitions = pgTable(
     uniqueIndex('uq_unit_definitions_business_short_name_active')
       .on(table.businessId, sql`lower(${table.shortName})`)
       .where(sql`${table.isDeleted} = false`),
+    syncPullIndex(
+      'unit_definitions',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 
@@ -75,11 +88,17 @@ export const unitConversions = pgTable(
   ],
 );
 
-export const brands = pgTable('brands', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-});
+export const brands = pgTable(
+  'brands',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+  },
+  (table) => [
+    syncPullIndex('brands', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 export const items = pgTable(
   'items',
@@ -111,6 +130,7 @@ export const items = pgTable(
     uniqueIndex('uq_items_business_barcode_active')
       .on(table.businessId, table.barcode)
       .where(sql`${table.isDeleted} = false AND ${table.barcode} IS NOT NULL`),
+    syncPullIndex('items', table.businessId, table.updatedAt, table.isDeleted),
   ],
 );
 
@@ -176,13 +196,19 @@ export const itemPriceHistory = pgTable('item_price_history', {
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
 
-export const godowns = pgTable('godowns', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-  address: text('address'),
-  isDefault: boolean('is_default').notNull().default(false),
-});
+export const godowns = pgTable(
+  'godowns',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    address: text('address'),
+    isDefault: boolean('is_default').notNull().default(false),
+  },
+  (table) => [
+    syncPullIndex('godowns', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 export const itemLocations = pgTable('item_locations', {
   ...syncedBusinessColumns,

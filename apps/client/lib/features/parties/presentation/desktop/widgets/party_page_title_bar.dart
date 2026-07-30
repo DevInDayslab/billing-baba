@@ -82,12 +82,13 @@ class _PartyPageTitleBarState extends ConsumerState<PartyPageTitleBar> {
                 children: [
                   if (_addAction != null)
                     Expanded(child: _buildAddButton(compact: true)),
-                  IconButton(
-                    onPressed: widget.onSettingsTap,
-                    icon: const Icon(Icons.settings_outlined),
-                    color: AppColors.textSecondary,
-                    tooltip: 'Settings',
-                  ),
+                  if (widget.onSettingsTap != null)
+                    IconButton(
+                      onPressed: widget.onSettingsTap,
+                      icon: const Icon(Icons.settings_outlined),
+                      color: AppColors.textSecondary,
+                      tooltip: 'Settings',
+                    ),
                   _buildMoreMenu(context),
                 ],
               ),
@@ -99,12 +100,13 @@ class _PartyPageTitleBarState extends ConsumerState<PartyPageTitleBar> {
           children: [
             Expanded(child: _buildTitleSwitcher(currentLabel)),
             if (_addAction != null) _buildAddButton(compact: false),
-            IconButton(
-              onPressed: widget.onSettingsTap,
-              icon: const Icon(Icons.settings_outlined),
-              color: AppColors.textSecondary,
-              tooltip: 'Settings',
-            ),
+            if (widget.onSettingsTap != null)
+              IconButton(
+                onPressed: widget.onSettingsTap,
+                icon: const Icon(Icons.settings_outlined),
+                color: AppColors.textSecondary,
+                tooltip: 'Settings',
+              ),
             _buildMoreMenu(context),
           ],
         );

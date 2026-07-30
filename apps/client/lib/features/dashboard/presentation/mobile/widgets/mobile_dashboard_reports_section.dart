@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/layout/dashboard_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_dashboard_mock_data.dart';
 import 'package:flutter/material.dart';

@@ -11,6 +11,10 @@ import {
 } from '../inventory/inventory-stock.service';
 import type { PurchaseDocumentRepository } from './purchase-document.repository';
 import type { PurchaseDocumentType } from './purchase-document.types';
+import {
+  recordPurchaseFinalizePayment,
+  type FinalizePurchasePaymentInput,
+} from './purchase-finalize-payment.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -74,10 +78,13 @@ export async function finalizePurchaseDocument(
     documentId: string;
     userId?: string;
     godownId?: string;
+    payment?: FinalizePurchasePaymentInput;
   },
 ): Promise<{
   documentNumber: string | null;
   documentType: PurchaseDocumentType;
+  paidAmount: string;
+  paymentMode: string | null;
 }> {
   const document = await repository.findRowById(
     params.businessId,
@@ -234,9 +241,29 @@ export async function finalizePurchaseDocument(
       throw new AppError('NOT_FOUND', 'Purchase document not found', 404);
     }
 
+    let paidAmount = '0';
+    let paymentMode: string | null = null;
+
+    if (params.payment) {
+      const paymentResult = await recordPurchaseFinalizePayment(tx, {
+        businessId: params.businessId,
+        documentId: params.documentId,
+        partyId: document.partyId,
+        documentTotal: document.totalAmount,
+        documentDate: document.documentDate,
+        documentType: document.documentType as PurchaseDocumentType,
+        userId: params.userId,
+        payment: params.payment,
+      });
+      paidAmount = paymentResult.paidAmount;
+      paymentMode = paymentResult.paymentMode;
+    }
+
     return {
       documentNumber,
       documentType: document.documentType as PurchaseDocumentType,
+      paidAmount,
+      paymentMode,
     };
   });
 }

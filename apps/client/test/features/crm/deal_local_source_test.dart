@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/crm/data/deal_mock_data.dart';
 import 'package:billing_baba/features/crm/data/repositories/deal_repository.dart';
 import 'package:billing_baba/features/crm/data/sources/deal_local_source.dart';
@@ -33,10 +34,12 @@ void main() {
     });
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
+    final queue = SyncQueue(db);
 
     final repository = DealRepository(
       local: DealLocalSource(db, storage),
       remote: DealRemoteSource(Dio()),
+      syncQueue: queue,
     );
     final service = DealService(repository);
 
@@ -66,10 +69,12 @@ void main() {
     });
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
+    final queue = SyncQueue(db);
 
     final repository = DealRepository(
       local: DealLocalSource(db, storage),
       remote: DealRemoteSource(Dio()),
+      syncQueue: queue,
     );
     final service = DealService(repository);
 

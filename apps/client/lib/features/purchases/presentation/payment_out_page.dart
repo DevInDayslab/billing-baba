@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/payment_out_page.dart';
 import 'package:billing_baba/features/purchases/presentation/mobile/payment_out_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class PaymentOutPage extends StatelessWidget {

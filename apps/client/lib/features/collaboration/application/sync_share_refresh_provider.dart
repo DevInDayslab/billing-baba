@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
+import 'package:billing_baba/features/subscription/application/subscription_checkout_busy_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sync_share_refresh_provider.g.dart';
@@ -18,6 +19,10 @@ class SyncShareRefresh extends _$SyncShareRefresh {
     bool manual = false,
     SyncShareRefreshTrigger trigger = SyncShareRefreshTrigger.poll,
   }) async {
+    // Background refreshes under an open Razorpay WebView freeze macOS.
+    if (!manual && ref.read(subscriptionCheckoutBusyProvider)) {
+      return;
+    }
     if (_inFlight != null) return _inFlight!;
 
     state = true;

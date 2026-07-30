@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_sheets.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/features/plans_pricing/application/plans_pricing_license_constants.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/desktop/widgets/buy_licenses_dialog.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_navigation.dart';

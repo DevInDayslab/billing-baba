@@ -2,7 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -210,203 +211,24 @@ class BankStatementReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: !bankSelected
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: 'DATE',
-                                          width: 110,
-                                        ),
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'DESCRIPTION',
-                                          ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'WITHDRAWAL AMOUNT',
-                                          width: 150,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'DEPOSIT AMOUNT',
-                                          width: 130,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'BALANCE AMOUNT',
-                                          width: 130,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'Select a bank account to view the statement.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: 'DATE',
-                                          width: 110,
-                                        ),
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'DESCRIPTION',
-                                          ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'WITHDRAWAL AMOUNT',
-                                          width: 150,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'DEPOSIT AMOUNT',
-                                          width: 130,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'BALANCE AMOUNT',
-                                          width: 130,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No transactions for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: const [
-                                      ReportAlignedHeaderCell(
-                                        label: 'DATE',
-                                        width: 110,
-                                      ),
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'DESCRIPTION',
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'WITHDRAWAL AMOUNT',
-                                        width: 150,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'DEPOSIT AMOUNT',
-                                        width: 130,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'BALANCE AMOUNT',
-                                        width: 130,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                110,
-                                                child: Text(
-                                                  formatReportDate(
-                                                    rows[i].date,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.flex(
-                                                child: Text(
-                                                  rows[i].description,
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                150,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].moneyOut > 0
-                                                      ? formatReportCurrency(
-                                                          rows[i].moneyOut,
-                                                        )
-                                                      : '-',
-                                                  style: TextStyle(
-                                                    color: rows[i].moneyOut > 0
-                                                        ? const Color(
-                                                            0xFFE53935,
-                                                          )
-                                                        : AppColors.textPrimary,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].moneyIn > 0
-                                                      ? formatReportCurrency(
-                                                          rows[i].moneyIn,
-                                                        )
-                                                      : '-',
-                                                  style: TextStyle(
-                                                    color: rows[i].moneyIn > 0
-                                                        ? reportTeal
-                                                        : AppColors.textPrimary,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].balance,
-                                                  ),
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportBankStatementRow>(
+                              reportScope: bankStatementReportScope,
+                              columns: bankStatementColumns(),
+                              rows: bankSelected ? rows : const [],
+                              emptyState: Center(
+                                child: Text(
+                                  !bankSelected
+                                      ? 'Select a bank account to view the statement.'
+                                      : 'No transactions for the selected period.',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

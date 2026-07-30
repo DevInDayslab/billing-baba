@@ -100,5 +100,66 @@ void main() {
       expect(result[0].qty, 1);
       expect(result[1].itemId, 'item-1');
     });
+
+    test('treats name-only row as draft when clubbing duplicate item', () {
+      final items = [
+        line(id: 'a', itemId: 'item-1', itemName: 'Widget', qty: 2),
+        line(id: 'b', itemName: 'Widget'),
+      ];
+      final applied = line(
+        id: 'b',
+        itemId: 'item-1',
+        itemName: 'Widget',
+        qty: 1,
+      );
+
+      final result = selectCatalogItemOnSaleLines(
+        items: items,
+        targetIndex: 1,
+        appliedLine: applied,
+        nextLineId: () => 'new',
+      );
+
+      expect(result, hasLength(2));
+      expect(result[0].qty, 3);
+      expect(isEmptySaleLineDraft(result[1]), isTrue);
+    });
+  });
+
+  group('isEmptySaleLineDraft', () {
+    test('name without item id is a draft', () {
+      final line = SaleLineItem(
+        id: 'a',
+        itemName: 'Almond',
+        qty: 0,
+      );
+
+      expect(isEmptySaleLineDraft(line), isTrue);
+    });
+
+    test('name with item id and zero qty is not a draft', () {
+      final line = SaleLineItem(
+        id: 'a',
+        itemId: 'item-1',
+        itemName: 'Almond',
+        qty: 0,
+      );
+
+      expect(isEmptySaleLineDraft(line), isFalse);
+    });
+  });
+
+  group('resolveSaleLineIndex', () {
+    test('prefers line id over fallback index', () {
+      final items = [
+        SaleLineItem(id: 'line-a'),
+        SaleLineItem(id: 'line-b'),
+      ];
+
+      expect(
+        resolveSaleLineIndex(items, fallbackIndex: 0, lineId: 'line-b'),
+        1,
+      );
+    });
   });
 }

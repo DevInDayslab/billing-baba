@@ -1,9 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
-import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_category_style.dart';
+import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_item_thumbnail.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -34,19 +35,7 @@ class CartRow extends ConsumerWidget {
             flex: 3,
             child: Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: PosCategoryStyle.backgroundColor(item.categoryStyleKey),
-                    borderRadius: AppRadius.smBorder,
-                  ),
-                  child: Icon(
-                    PosCategoryStyle.icon(item.categoryStyleKey),
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                PosItemThumbnail(item: item, size: 32),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -89,15 +78,22 @@ class CartRow extends ConsumerWidget {
                       cartItem.quantity - 1,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xs,
-                    ),
-                    child: Text(
-                      '${cartItem.quantity}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                  InkWell(
+                    onTap: () => _showQuantityDialog(context, ref),
+                    borderRadius: AppRadius.smBorder,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        '${cartItem.quantity}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -182,6 +178,54 @@ class CartRow extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showQuantityDialog(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(text: '${cartItem.quantity}');
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Quantity — ${cartItem.item.name}'),
+          content: SizedBox(
+            width: 280,
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                labelText: 'Quantity',
+                hintText: 'Enter quantity',
+              ),
+              autofocus: true,
+              onSubmitted: (_) {
+                final value = int.tryParse(controller.text.trim()) ?? 0;
+                Navigator.of(dialogContext).pop(value);
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = int.tryParse(controller.text.trim()) ?? 0;
+                Navigator.of(dialogContext).pop(value);
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+    if (result != null) {
+      ref.read(posCartProvider.notifier).updateQuantity(cartItem.item.id, result);
+    }
   }
 
   Future<void> _showDiscountDialog(BuildContext context, WidgetRef ref) async {

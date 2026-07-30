@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/pos_page.dart';
 import 'package:billing_baba/features/pos/presentation/mobile/pos_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/widgets.dart';
 
 class PosPage extends StatelessWidget {

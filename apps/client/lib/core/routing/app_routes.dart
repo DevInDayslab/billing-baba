@@ -15,12 +15,12 @@ abstract final class AppRoutes {
   static const crmContacts = '/crm/contacts';
   static const crmDeals = '/crm/deals';
   static const items = '/items';
-  static const itemsStockSummary = '/items/stock-summary';
-  static const itemsSettings = '/items/settings';
+  static const itemsDetail = '/items/details';
   static const itemsCategories = '/items/categories';
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
   static const itemsStockTransfer = '/items/stock-transfer';
+  static const itemsSettings = '/items/settings';
   static const pos = '/pos';
   static const sale = '/sale';
   static const saleInvoices = '/sale/invoices';
@@ -70,6 +70,8 @@ abstract final class AppRoutes {
   static const reportsSales = '/reports/sales';
   static const reportsPurchase = '/reports/purchase';
   static const reportsStock = '/reports/stock';
+  static const reportsStockSummary = '/reports/stock-summary';
+  static const reportsItemDetail = '/reports/item-detail';
   static const reportsParty = '/reports/party';
   static const reportsGst = '/reports/gst';
   static const collaboration = '/collaboration';
@@ -99,14 +101,16 @@ abstract final class AppRoutes {
   static const developerComponentsEmptyStates =
       '/developer/components/empty-states';
   static const settings = '/settings';
-  static const settingsUsers = '/settings/users';
   static const settingsTaxes = '/settings/taxes';
-  static const settingsInvoiceTemplates = '/settings/invoice-templates';
   static const settingsPreferences = '/settings/preferences';
   static const settingsPrint = '/settings/print';
-  static const settingsWhatsapp = '/settings/whatsapp';
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
+
+  /// Settings hub deep-link with tab query (`general`, `print`, …).
+  static String settingsTab(String tabId) =>
+      '$settingsPreferences?tab=$tabId';
+
   static const plansPricing = '/plans-pricing';
   static const subscriptionReview = '/plans-pricing/review';
   static const subscriptionPaymentProcessing = '/plans-pricing/payment-processing';

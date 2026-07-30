@@ -33,6 +33,16 @@ abstract final class ApiEndpoints {
   static const crmDeals = '/api/v1/crm/deals';
   static String crmDeal(String id) => '/api/v1/crm/deals/$id';
   static const sync = '/api/v1/sync';
+  static const syncDevices = '$sync/devices';
+  static const syncStatus = '$sync/status';
+  static const syncBootstrap = '$sync/bootstrap';
+  static String syncBootstrapChunk(String bootstrapId, int chunkIndex) =>
+      '$syncBootstrap/$bootstrapId/chunks/$chunkIndex';
+  static const syncPush = '$sync/push';
+  static const syncPull = '$sync/pull';
+  static const syncMediaUploads = '$sync/media/uploads';
+  static const syncMediaUploadsComplete = '$sync/media/uploads/complete';
+  static String syncMediaUrl(String assetId) => '$sync/media/$assetId/url';
   static const health = '/api/v1/health';
 
   static const inventory = '/api/v1/inventory';

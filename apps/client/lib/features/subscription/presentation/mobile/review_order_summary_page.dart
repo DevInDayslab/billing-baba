@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/features/subscription/application/payment_state_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_order_pricing.dart';
