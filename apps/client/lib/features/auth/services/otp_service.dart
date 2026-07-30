@@ -1,8 +1,7 @@
 import 'package:billing_baba/core/config/app_config.dart';
-import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sendotp_flutter_sdk/sendotp_flutter_sdk.dart';
 
 class OtpException implements Exception {
   const OtpException(
@@ -23,30 +22,8 @@ class OtpException implements Exception {
   String toString() => message;
 }
 
-/// MSG91 widget OTP over Dio (TLS bypass applied) — avoids the SDK's
-/// package:http path that ignores our HttpClient overrides on some desktops.
 class OtpService {
-  OtpService({Dio? dio}) : _dio = dio ?? _createDio();
-
-  static const _baseUrl = 'https://control.msg91.com/api/v5/widget';
-  static const _timeout = Duration(seconds: 15);
-
   static var _initialized = false;
-  static String _widgetId = '';
-  static String _tokenAuth = '';
-
-  final Dio _dio;
-
-  static Dio _createDio() {
-    return createBypassSslDio(
-      options: BaseOptions(
-        baseUrl: _baseUrl,
-        connectTimeout: _timeout,
-        receiveTimeout: _timeout,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-      ),
-    );
-  }
 
   static void markInitialized() {
     _initialized = true;
@@ -73,8 +50,7 @@ class OtpService {
     if (widgetId.isEmpty || authToken.isEmpty) {
       return;
     }
-    _widgetId = widgetId;
-    _tokenAuth = authToken;
+    OTPWidget.initializeWidget(widgetId, authToken);
     markInitialized();
     AuthDebugLogger.widgetInitialized(
       widgetId: widgetId,
@@ -100,9 +76,10 @@ class OtpService {
     final identifier = formatIdentifier(mobileNumber);
 
     try {
-      final result = await _post('/sendOtpMobile', {
-        'identifier': identifier,
-      });
+      final result = await OTPWidget.sendOTP({'identifier': identifier});
+      if (result == null) {
+        throw const OtpException('Unable to send OTP. Please try again later.');
+      }
 
       if (_isErrorType(result) ||
           result['message'] == 'AuthenticationFailure') {
@@ -140,8 +117,8 @@ class OtpService {
     }
 
     try {
-      final result = await _post('/retryOtp', {'reqId': trimmed});
-      if (_isErrorType(result)) {
+      final result = await OTPWidget.retryOTP({'reqId': trimmed});
+      if (result != null && _isErrorType(result)) {
         throw _mapSdkError(result, fallback: 'Failed to resend OTP');
       }
       return trimmed;
@@ -172,10 +149,14 @@ class OtpService {
     }
 
     try {
-      final result = await _post('/verifyOtp', {
+      final result = await OTPWidget.verifyOTP({
         'otp': otp,
         'reqId': trimmedReqId,
       });
+
+      if (result == null) {
+        throw const OtpException('Invalid OTP. Please check and try again.');
+      }
 
       final type = result['type']?.toString().toLowerCase() ?? '';
       if (type != 'success') {
@@ -195,33 +176,6 @@ class OtpService {
       if (e is OtpException) rethrow;
       throw _wrapNetworkError(e);
     }
-  }
-
-  Future<Map<String, dynamic>> _post(
-    String path,
-    Map<String, dynamic> body,
-  ) async {
-    final payload = {
-      'widgetId': _widgetId,
-      'tokenAuth': _tokenAuth,
-      ...body,
-    };
-
-    final response = await _dio.post<dynamic>(
-      path,
-      data: payload,
-      options: Options(
-        followRedirects: true,
-        maxRedirects: 10,
-        validateStatus: (status) => status != null && status < 400,
-      ),
-    );
-
-    final data = response.data;
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-
-    throw const OtpException('Unable to send OTP. Please try again later.');
   }
 
   OtpException _mapSdkError(
@@ -268,20 +222,11 @@ class OtpService {
     Object error, {
     String fallback = 'Please check your internet connection.',
   }) {
-    if (error is DioException) {
-      return OtpException(
-        fallback,
-        isNetwork: true,
-        cause: error.error ?? error,
-      );
-    }
     final text = error.toString().toLowerCase();
     if (text.contains('socket') ||
         text.contains('network') ||
         text.contains('timeout') ||
-        text.contains('connection') ||
-        text.contains('handshake') ||
-        text.contains('certificate')) {
+        text.contains('connection')) {
       return OtpException(fallback, isNetwork: true, cause: error);
     }
     return OtpException(fallback, cause: error);
