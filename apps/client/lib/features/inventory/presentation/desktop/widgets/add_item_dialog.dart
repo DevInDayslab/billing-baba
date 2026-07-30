@@ -18,7 +18,7 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/add_item_form_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
@@ -30,11 +30,13 @@ import 'package:billing_baba/features/inventory/application/inventory_providers.
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
+import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
+import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternatives_section.dart';
@@ -43,6 +45,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/online_store_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/stock_section.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/suppliers_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/tier_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/select_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
@@ -149,7 +152,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     if (_isMobileFullPage) {
       return type == ItemType.product ? 3 : 2;
     }
-    return type == ItemType.product ? 5 : 2;
+    return type == ItemType.product ? 6 : 2;
   }
 
   List<String> _mobileTabsFor(ItemType type) => type == ItemType.product
@@ -284,7 +287,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final detailDto = await service.fetchItemDetailDto(item.id);
-      final tiers = await service.fetchItemTierPrices(item.id);
+      var tiers = const <TierPriceModel>[];
+      try {
+        tiers = await service.fetchItemTierPrices(item.id);
+      } on Object {
+        // Tier prices may be unavailable offline; form still opens from local item.
+      }
 
       await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
 
@@ -403,6 +411,17 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     } catch (_) {
       // Keep list-item fields if detail fetch fails.
     }
+
+    try {
+      await ref.read(localItemSuppliersProvider.notifier).ensureInitialized();
+      final localSuppliers =
+          ref.read(localItemSuppliersProvider.notifier).suppliersFor(item.id);
+      if (localSuppliers.isNotEmpty) {
+        notifier.setSupplierPartyIds(localSuppliers);
+      }
+    } on Object {
+      // Local suppliers cache is best-effort.
+    }
   }
 
   void _handleItemTypeChange(ItemType type) {
@@ -502,6 +521,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         ref
             .read(localItemTierPricesProvider.notifier)
             .setTierPrices(editItem.id, form.tierPriceMap);
+        ref
+            .read(localItemSuppliersProvider.notifier)
+            .setSuppliers(editItem.id, form.supplierPartyIds);
       } else {
         savedItem = await ref
             .read(inventoryItemsProvider.notifier)
@@ -510,6 +532,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           ref
               .read(localItemTierPricesProvider.notifier)
               .setTierPrices(savedItem.id, form.tierPriceMap);
+          ref
+              .read(localItemSuppliersProvider.notifier)
+              .setSuppliers(savedItem.id, form.supplierPartyIds);
         }
       }
 
@@ -1235,7 +1260,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       1 => _buildStockTab(form, notifier),
       2 => _buildOnlineStoreTab(form, notifier),
       3 => _buildManufacturingTab(form, notifier),
-      _ => _buildAlternativesTab(),
+      4 => _buildAlternativesTab(),
+      _ => _buildSuppliersTab(form, notifier),
     };
   }
 
@@ -1348,9 +1374,23 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  Widget _buildSuppliersTab(AddItemFormState form, AddItemForm notifier) {
+    return SuppliersSection(
+      selectedPartyIds: form.supplierPartyIds,
+      onChanged: notifier.setSupplierPartyIds,
+    );
+  }
+
   Widget _buildTabBar(AddItemFormState form) {
     final tabs = form.itemType == ItemType.product
-        ? const ['Pricing', 'Stock', 'Online Store', 'Manufacturing', 'Alternatives']
+        ? const [
+            'Pricing',
+            'Stock',
+            'Online Store',
+            'Manufacturing',
+            'Alternatives',
+            'Suppliers',
+          ]
         : const ['Pricing', 'Online Store'];
 
     return TabBar(

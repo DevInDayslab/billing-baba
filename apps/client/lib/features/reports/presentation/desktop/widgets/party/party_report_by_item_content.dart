@@ -5,7 +5,9 @@ import 'package:billing_baba/features/reports/application/report_filters_provide
 import 'package:billing_baba/features/reports/application/report_providers.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_data_row.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filter_widgets.dart';
@@ -38,7 +40,7 @@ class _PartyReportByItemContentState
   @override
   Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
-    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    final items = ref.watch(inventoryItemListProvider);
     final selectedItemId = filters.itemId;
     final selectedItemName = _selectedItemName(items, selectedItemId);
     final itemNames = items.map((item) => item.name).toList();
@@ -163,8 +165,13 @@ class _PartyReportByItemContentState
                 Expanded(
                   child: ReportCard(
                     child: ReportTableArea(
-                      child: ReportSyncScrollTable(
+                      child: ReportFilterableSyncTable<ReportPartyByItemRow>(
+                        reportScope: partyReportByItemScope,
                         minWidth: 700,
+                        columns: partyReportByItemColumns(),
+                        rows: selectedItemId == null || selectedItemId.isEmpty
+                            ? const []
+                            : rows,
                         emptyState: SizedBox(
                           height: 200,
                           child: Center(
@@ -179,76 +186,6 @@ class _PartyReportByItemContentState
                             ),
                           ),
                         ),
-                        headerChildren: const [
-                          ReportAlignedHeaderCell(label: '#', width: 40),
-                          Expanded(
-                            child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'SALE QUANTITY',
-                            width: 120,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'SALE AMOUNT',
-                            width: 120,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'PURCHASE QUANTITY',
-                            width: 140,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'PURCHASE AMOUNT',
-                            width: 140,
-                            alignment: Alignment.centerRight,
-                          ),
-                        ],
-                        rows: [
-                          for (var i = 0; i < rows.length; i++)
-                            ReportAlignedRowStrip(
-                              index: i,
-                              child: ReportAlignedDataRow(
-                                cells: [
-                                  ReportAlignedCell.fixed(
-                                    40,
-                                    child: Text('${i + 1}'),
-                                  ),
-                                  ReportAlignedCell.flex(
-                                    child: Text(
-                                      rows[i].partyName,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  ReportAlignedCell.fixed(
-                                    120,
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      rows[i].quantity.toStringAsFixed(0),
-                                    ),
-                                  ),
-                                  ReportAlignedCell.fixed(
-                                    120,
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      formatReportCurrency(rows[i].amount),
-                                    ),
-                                  ),
-                                  const ReportAlignedCell.fixed(
-                                    140,
-                                    alignment: Alignment.centerRight,
-                                    child: Text('—'),
-                                  ),
-                                  const ReportAlignedCell.fixed(
-                                    140,
-                                    alignment: Alignment.centerRight,
-                                    child: Text('—'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
                       ),
                     ),
                   ),

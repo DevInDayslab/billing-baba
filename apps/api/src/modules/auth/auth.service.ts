@@ -264,6 +264,8 @@ export class AuthService {
       });
       memberships = [membership];
     } else if (memberships.length > 1) {
+      // Dev accounts accumulate many test businesses; seeding all of them on
+      // every login is O(n) remote round-trips and blows past Bun's hook timeout.
       const preferred = memberships.find(
         (membership) => membership.businessName === DEV_BUSINESS_NAME,
       );

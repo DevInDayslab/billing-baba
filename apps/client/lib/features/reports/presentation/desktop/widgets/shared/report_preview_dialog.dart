@@ -1,11 +1,12 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/platform_file_output.dart';
 import 'package:billing_baba/features/export/presentation/desktop/widgets/export_actions.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
 import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/utils/report_pdf_builder.dart';
+import 'package:billing_baba/shared/utils/platform_file_output.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
@@ -586,7 +587,7 @@ class _ReportPdfPreviewPane extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '$error',
+                OfflineUiMessages.messageFor(error),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 12,

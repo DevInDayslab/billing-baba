@@ -4,6 +4,7 @@ abstract final class AppRoutes {
   static const login = '/login';
   static const verifyOtp = '/verify-otp';
   static const home = '/home';
+  static const notifications = '/notifications';
   static const businessList = '/business-list';
   static const parties = '/parties';
   static const partyDetails = '/parties/party-details';
@@ -99,14 +100,16 @@ abstract final class AppRoutes {
   static const developerComponentsEmptyStates =
       '/developer/components/empty-states';
   static const settings = '/settings';
-  static const settingsUsers = '/settings/users';
   static const settingsTaxes = '/settings/taxes';
-  static const settingsInvoiceTemplates = '/settings/invoice-templates';
   static const settingsPreferences = '/settings/preferences';
   static const settingsPrint = '/settings/print';
-  static const settingsWhatsapp = '/settings/whatsapp';
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
+
+  /// Settings hub deep-link with tab query (`general`, `print`, …).
+  static String settingsTab(String tabId) =>
+      '$settingsPreferences?tab=$tabId';
+
   static const plansPricing = '/plans-pricing';
   static const editProfile = '/edit-profile';
   static const userProfile = '/my-profile';

@@ -98,12 +98,22 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
         ),
       );
 
+      final currentQty = widget.item.quantity ?? 0;
+      ref
+          .read(inventoryItemsProvider.notifier)
+          .patchItemQuantity(widget.item.id, currentQty + delta);
+
       await ref
           .read(inventoryItemsProvider.notifier)
           .refreshAfterStockAdjustment(widget.item.id);
 
       if (!mounted) return;
       Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Stock updated. Changes will sync when online.'),
+        ),
+      );
     } on InventoryException catch (error) {
       if (!mounted) return;
       setState(() {

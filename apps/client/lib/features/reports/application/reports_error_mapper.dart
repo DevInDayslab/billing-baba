@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:dio/dio.dart';
 
 class ReportsException implements Exception {
@@ -13,13 +14,25 @@ class ReportsException implements Exception {
 
 ReportsException mapReportsError(Object error) {
   if (error is DioException) {
+    if (ApiErrorParser.isOffline(error)) {
+      return const ReportsException(
+        OfflineUiMessages.reportsNeedNetwork,
+        code: 'OFFLINE',
+      );
+    }
     final code = ApiErrorParser.errorCode(error);
     final message =
-        ApiErrorParser.errorMessage(error) ?? error.message ?? 'Request failed';
+        ApiErrorParser.errorMessage(error) ?? 'Unable to load report.';
     return ReportsException(message, code: code);
   }
   if (error is ReportsException) return error;
-  return ReportsException(error.toString());
+  if (OfflineUiMessages.isOfflineError(error)) {
+    return const ReportsException(
+      OfflineUiMessages.reportsNeedNetwork,
+      code: 'OFFLINE',
+    );
+  }
+  return ReportsException(OfflineUiMessages.messageFor(error));
 }
 
 abstract final class ReportsErrorMapper {

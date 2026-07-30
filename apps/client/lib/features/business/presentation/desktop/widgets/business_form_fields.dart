@@ -86,7 +86,6 @@ class BusinessFormField extends StatelessWidget {
         label: label,
         hint: hint,
         icon: icon,
-        errorText: serverError,
       ),
     );
   }
@@ -126,7 +125,6 @@ class BusinessFormDropdown extends StatelessWidget {
       decoration: businessFormFieldDecoration(
         label: label,
         icon: icon,
-        errorText: serverError,
       ),
       items: effectiveItems
           .map(

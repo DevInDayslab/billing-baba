@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
@@ -23,7 +24,8 @@ class ServicesTabContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final services = ref.watch(servicesProvider);
-    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final pageAsync = ref.watch(inventoryItemsProvider);
+    final itemsAsync = pageAsync.itemsOnly;
     final selectedId = ref.watch(selectedServiceIdProvider);
     final searchQuery = ref.watch(serviceSearchQueryProvider);
     final backendSearchQuery = ref.watch(serviceBackendSearchProvider);
@@ -31,6 +33,9 @@ class ServicesTabContent extends ConsumerWidget {
     return InventoryItemWorkspace(
       items: services,
       itemsAsync: itemsAsync,
+      hasMore: pageAsync.value?.hasMore ?? false,
+      isLoadingMore: pageAsync.value?.isLoadingMore ?? false,
+      onLoadMore: () => ref.read(inventoryItemsProvider.notifier).loadMore(),
       selectedId: selectedId,
       searchQuery: searchQuery,
       backendSearchQuery: backendSearchQuery,

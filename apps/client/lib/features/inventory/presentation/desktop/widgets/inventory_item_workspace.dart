@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_detail_panel.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_left_panel.dart';
@@ -32,6 +33,9 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
     required this.onRefresh,
     required this.onAddPressed,
     required this.onMenuSelected,
+    this.hasMore = false,
+    this.isLoadingMore = false,
+    this.onLoadMore,
     this.leadingIcon = Icons.inventory_2_outlined,
     this.showListFilters = true,
     super.key,
@@ -39,6 +43,9 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
 
   final List<InventoryItem> items;
   final AsyncValue<List<InventoryItem>> itemsAsync;
+  final bool hasMore;
+  final bool isLoadingMore;
+  final VoidCallback? onLoadMore;
   final String? selectedId;
   final String searchQuery;
   final String backendSearchQuery;
@@ -183,6 +190,9 @@ class _InventoryItemWorkspaceState
           onArrowUp: () => _moveFocus(-1),
           onEnter: _selectFocused,
           onRefresh: widget.onRefresh,
+          onLoadMore: widget.onLoadMore,
+          hasMore: widget.hasMore,
+          isLoadingMore: widget.isLoadingMore,
           onItemSelected: _selectItem,
           onAddPressed: widget.onAddPressed,
           onMenuSelected: widget.onMenuSelected,

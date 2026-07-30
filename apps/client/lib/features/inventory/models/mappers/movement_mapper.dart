@@ -1,7 +1,7 @@
-import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/shared/utils/date_time_utils.dart';
 
 abstract final class MovementMapper {
   static final _uuidPattern = RegExp(

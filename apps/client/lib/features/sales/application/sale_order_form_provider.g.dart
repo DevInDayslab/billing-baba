@@ -59,7 +59,7 @@ final class SaleOrderFormNotifierProvider
 }
 
 String _$saleOrderFormNotifierHash() =>
-    r'3705dd7fd946590c86eb9136400aaa1ad4b6b691';
+    r'809714e2356732f25497f039db412846bd91b53b';
 
 final class SaleOrderFormNotifierFamily extends $Family
     with

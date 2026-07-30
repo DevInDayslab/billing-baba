@@ -4,9 +4,12 @@ import 'package:billing_baba/app.dart';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/logging/device_info_collector.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
+import 'package:billing_baba/core/network/windows_cert_injector.dart';
 import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -17,10 +20,14 @@ Future<void> main() async {
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      // TODO: remove before production — temporary BoringSSL cert bypass.
+      installSslBypass();
+      WindowsCertInjector.injectSystemCertificates();
       await configureDesktopWindow();
       GoogleFonts.config.allowRuntimeFetching = false;
 
       await dotenv.load();
+      await AppConfig.initialize();
       await LoggingService.instance.initialize();
 
       AppConfig.logStartupConfig();
@@ -58,6 +65,8 @@ Future<void> main() async {
 
       final container = ProviderContainer();
       await container.read(storageServiceProvider.future);
+      final engine = await container.read(commandAwareSyncEngineProvider.future);
+      await engine.initialize();
 
       runApp(
         UncontrolledProviderScope(
@@ -73,7 +82,7 @@ Future<void> main() async {
 }
 
 Future<void> _logStartupDiagnostics() async {
-  if (!AppConfig.consoleVerbose) return;
+  if (!AppConfig.fileLoggingEnabled && !AppConfig.consoleVerbose) return;
 
   try {
     final deviceInfo = await DeviceInfoCollector.collect();

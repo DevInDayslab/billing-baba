@@ -36,7 +36,6 @@ class DesktopJobWorkOutPage extends ConsumerWidget {
               addButtonLabel: 'Job Work Out',
               addButtonColor: AppColors.error,
               onAddTap: () => _openForm(context, ref),
-              onSettingsTap: () => debugPrint('Settings tapped'),
             ),
             const SizedBox(height: AppSpacing.md),
             const JobWorkOutTable(),

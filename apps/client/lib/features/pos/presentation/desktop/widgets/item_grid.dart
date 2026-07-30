@@ -1,12 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/item_card.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
 import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,7 +56,7 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
 
   @override
   Widget build(BuildContext context) {
-    final inventoryAsync = ref.watch(inventoryItemsProvider);
+    final inventoryAsync = ref.watch(inventoryItemsProvider).itemsOnly;
     final categoriesAsync = ref.watch(inventoryCategoriesProvider);
     final categoryOptions = ref.watch(posCategoriesProvider);
 
@@ -181,12 +183,28 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
         const SizedBox(height: AppSpacing.sm),
         Expanded(
           child: inventoryAsync.when(
+            skipLoadingOnReload: true,
+            skipError: inventoryAsync.hasValue,
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(
-              child: Text(
-                'Failed to load items: $error',
-                style: PosStyles.emptyStateStyle,
-                textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      InventoryErrorMapper.messageFor(error),
+                      style: PosStyles.emptyStateStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton(
+                      onPressed: () =>
+                          ref.invalidate(inventoryItemsProvider),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
               ),
             ),
             data: (_) {

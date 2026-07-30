@@ -1,18 +1,19 @@
-import 'dart:convert';
-
+import 'package:billing_baba/core/sync/models/sync_job.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/crm/data/sources/deal_local_source.dart';
 import 'package:billing_baba/features/crm/data/sources/deal_remote_source.dart';
 import 'package:billing_baba/features/crm/domain/models/deal.dart';
-import 'package:billing_baba/features/crm/domain/services/deal_service_types.dart';
 
 class DealRepository {
   DealRepository({
     required this._local,
     required this._remote,
+    required this._syncQueue,
   });
 
   final DealLocalSource _local;
   final DealRemoteSource _remote;
+  final SyncQueue _syncQueue;
 
   DealRemoteSource get remote => _remote;
 
@@ -29,20 +30,15 @@ class DealRepository {
       _local.getDealById(businessId, dealId);
 
   Future<Deal> saveDeal(Deal deal, {required String operation}) async {
-    try {
-      await _local.upsertDeal(deal);
-      await _enqueue(
-        businessId: deal.businessId,
-        entityType: 'deal',
-        entityId: deal.id,
-        operation: operation,
-        payload: deal.toJson(),
-        createdAt: deal.updatedAt.toUtc().toIso8601String(),
-      );
-      return deal;
-    } on Object catch (error) {
-      throw DealValidationException('Failed to save deal locally: $error');
-    }
+    await _local.upsertDeal(deal);
+    await _enqueue(
+      businessId: deal.businessId,
+      entityType: 'deals',
+      entityId: deal.id,
+      operation: operation,
+      payload: deal.toJson(),
+    );
+    return deal;
   }
 
   Future<void> _enqueue({
@@ -51,15 +47,13 @@ class DealRepository {
     required String entityId,
     required String operation,
     required Map<String, dynamic> payload,
-    required String createdAt,
-  }) async {
-    await _local.enqueueSyncOperation(
+  }) {
+    return _syncQueue.enqueueRowMutation(
       businessId: businessId,
       entityType: entityType,
       entityId: entityId,
-      operation: operation,
-      payload: jsonEncode(payload),
-      createdAt: createdAt,
+      operation: SyncQueueOperation.fromWire(operation),
+      payload: payload,
     );
   }
 }

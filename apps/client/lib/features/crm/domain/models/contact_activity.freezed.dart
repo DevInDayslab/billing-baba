@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ContactActivity {
 
- String get id;@JsonKey(name: 'contact_id') String get contactId;@JsonKey(name: 'business_id') String get businessId; ContactActivityType get type; String? get notes;@JsonKey(name: 'added_by') String? get addedBy;@JsonKey(name: 'sync_version') int get syncVersion;@JsonKey(name: 'is_deleted') bool get isDeleted;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'deleted_at') DateTime? get deletedAt;@JsonKey(name: 'device_id') String get deviceId;@JsonKey(name: 'sync_status') String get syncStatus;@JsonKey(name: 'created_at') DateTime get createdAt;
+ String get id;@JsonKey(name: 'contact_id') String get contactId;@JsonKey(name: 'business_id') String get businessId; ContactActivityType get type;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'created_at') DateTime get createdAt; String? get notes;@JsonKey(name: 'added_by') String? get addedBy;@JsonKey(name: 'sync_version') int get syncVersion;@JsonKey(name: 'is_deleted') bool get isDeleted;@JsonKey(name: 'deleted_at') DateTime? get deletedAt;@JsonKey(name: 'device_id') String get deviceId;@JsonKey(name: 'sync_status') String get syncStatus;
 /// Create a copy of ContactActivity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ContactActivityCopyWith<ContactActivity> get copyWith => _$ContactActivityCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactActivity&&(identical(other.id, id) || other.id == id)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.type, type) || other.type == type)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.addedBy, addedBy) || other.addedBy == addedBy)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactActivity&&(identical(other.id, id) || other.id == id)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.type, type) || other.type == type)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.addedBy, addedBy) || other.addedBy == addedBy)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,contactId,businessId,type,notes,addedBy,syncVersion,isDeleted,updatedAt,deletedAt,deviceId,syncStatus,createdAt);
+int get hashCode => Object.hash(runtimeType,id,contactId,businessId,type,updatedAt,createdAt,notes,addedBy,syncVersion,isDeleted,deletedAt,deviceId,syncStatus);
 
 @override
 String toString() {
-  return 'ContactActivity(id: $id, contactId: $contactId, businessId: $businessId, type: $type, notes: $notes, addedBy: $addedBy, syncVersion: $syncVersion, isDeleted: $isDeleted, updatedAt: $updatedAt, deletedAt: $deletedAt, deviceId: $deviceId, syncStatus: $syncStatus, createdAt: $createdAt)';
+  return 'ContactActivity(id: $id, contactId: $contactId, businessId: $businessId, type: $type, updatedAt: $updatedAt, createdAt: $createdAt, notes: $notes, addedBy: $addedBy, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAt: $deletedAt, deviceId: $deviceId, syncStatus: $syncStatus)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ContactActivityCopyWith<$Res>  {
   factory $ContactActivityCopyWith(ContactActivity value, $Res Function(ContactActivity) _then) = _$ContactActivityCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'contact_id') String contactId,@JsonKey(name: 'business_id') String businessId, ContactActivityType type, String? notes,@JsonKey(name: 'added_by') String? addedBy,@JsonKey(name: 'sync_version') int syncVersion,@JsonKey(name: 'is_deleted') bool isDeleted,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'deleted_at') DateTime? deletedAt,@JsonKey(name: 'device_id') String deviceId,@JsonKey(name: 'sync_status') String syncStatus,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'contact_id') String contactId,@JsonKey(name: 'business_id') String businessId, ContactActivityType type,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_at') DateTime createdAt, String? notes,@JsonKey(name: 'added_by') String? addedBy,@JsonKey(name: 'sync_version') int syncVersion,@JsonKey(name: 'is_deleted') bool isDeleted,@JsonKey(name: 'deleted_at') DateTime? deletedAt,@JsonKey(name: 'device_id') String deviceId,@JsonKey(name: 'sync_status') String syncStatus
 });
 
 
@@ -65,22 +65,22 @@ class _$ContactActivityCopyWithImpl<$Res>
 
 /// Create a copy of ContactActivity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? contactId = null,Object? businessId = null,Object? type = null,Object? notes = freezed,Object? addedBy = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? updatedAt = null,Object? deletedAt = freezed,Object? deviceId = null,Object? syncStatus = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? contactId = null,Object? businessId = null,Object? type = null,Object? updatedAt = null,Object? createdAt = null,Object? notes = freezed,Object? addedBy = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAt = freezed,Object? deviceId = null,Object? syncStatus = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,contactId: null == contactId ? _self.contactId : contactId // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as ContactActivityType,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as ContactActivityType,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String?,addedBy: freezed == addedBy ? _self.addedBy : addedBy // ignore: cast_nullable_to_non_nullable
 as String?,syncVersion: null == syncVersion ? _self.syncVersion : syncVersion // ignore: cast_nullable_to_non_nullable
 as int,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
-as bool,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,deviceId: null == deviceId ? _self.deviceId : deviceId // ignore: cast_nullable_to_non_nullable
 as String,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String,
   ));
 }
 
@@ -165,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'contact_id')  String contactId, @JsonKey(name: 'business_id')  String businessId,  ContactActivityType type,  String? notes, @JsonKey(name: 'added_by')  String? addedBy, @JsonKey(name: 'sync_version')  int syncVersion, @JsonKey(name: 'is_deleted')  bool isDeleted, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'deleted_at')  DateTime? deletedAt, @JsonKey(name: 'device_id')  String deviceId, @JsonKey(name: 'sync_status')  String syncStatus, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'contact_id')  String contactId, @JsonKey(name: 'business_id')  String businessId,  ContactActivityType type, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_at')  DateTime createdAt,  String? notes, @JsonKey(name: 'added_by')  String? addedBy, @JsonKey(name: 'sync_version')  int syncVersion, @JsonKey(name: 'is_deleted')  bool isDeleted, @JsonKey(name: 'deleted_at')  DateTime? deletedAt, @JsonKey(name: 'device_id')  String deviceId, @JsonKey(name: 'sync_status')  String syncStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ContactActivity() when $default != null:
-return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.notes,_that.addedBy,_that.syncVersion,_that.isDeleted,_that.updatedAt,_that.deletedAt,_that.deviceId,_that.syncStatus,_that.createdAt);case _:
+return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.updatedAt,_that.createdAt,_that.notes,_that.addedBy,_that.syncVersion,_that.isDeleted,_that.deletedAt,_that.deviceId,_that.syncStatus);case _:
   return orElse();
 
 }
@@ -186,10 +186,10 @@ return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.notes
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'contact_id')  String contactId, @JsonKey(name: 'business_id')  String businessId,  ContactActivityType type,  String? notes, @JsonKey(name: 'added_by')  String? addedBy, @JsonKey(name: 'sync_version')  int syncVersion, @JsonKey(name: 'is_deleted')  bool isDeleted, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'deleted_at')  DateTime? deletedAt, @JsonKey(name: 'device_id')  String deviceId, @JsonKey(name: 'sync_status')  String syncStatus, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'contact_id')  String contactId, @JsonKey(name: 'business_id')  String businessId,  ContactActivityType type, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_at')  DateTime createdAt,  String? notes, @JsonKey(name: 'added_by')  String? addedBy, @JsonKey(name: 'sync_version')  int syncVersion, @JsonKey(name: 'is_deleted')  bool isDeleted, @JsonKey(name: 'deleted_at')  DateTime? deletedAt, @JsonKey(name: 'device_id')  String deviceId, @JsonKey(name: 'sync_status')  String syncStatus)  $default,) {final _that = this;
 switch (_that) {
 case _ContactActivity():
-return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.notes,_that.addedBy,_that.syncVersion,_that.isDeleted,_that.updatedAt,_that.deletedAt,_that.deviceId,_that.syncStatus,_that.createdAt);case _:
+return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.updatedAt,_that.createdAt,_that.notes,_that.addedBy,_that.syncVersion,_that.isDeleted,_that.deletedAt,_that.deviceId,_that.syncStatus);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +206,10 @@ return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.notes
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'contact_id')  String contactId, @JsonKey(name: 'business_id')  String businessId,  ContactActivityType type,  String? notes, @JsonKey(name: 'added_by')  String? addedBy, @JsonKey(name: 'sync_version')  int syncVersion, @JsonKey(name: 'is_deleted')  bool isDeleted, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'deleted_at')  DateTime? deletedAt, @JsonKey(name: 'device_id')  String deviceId, @JsonKey(name: 'sync_status')  String syncStatus, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'contact_id')  String contactId, @JsonKey(name: 'business_id')  String businessId,  ContactActivityType type, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_at')  DateTime createdAt,  String? notes, @JsonKey(name: 'added_by')  String? addedBy, @JsonKey(name: 'sync_version')  int syncVersion, @JsonKey(name: 'is_deleted')  bool isDeleted, @JsonKey(name: 'deleted_at')  DateTime? deletedAt, @JsonKey(name: 'device_id')  String deviceId, @JsonKey(name: 'sync_status')  String syncStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _ContactActivity() when $default != null:
-return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.notes,_that.addedBy,_that.syncVersion,_that.isDeleted,_that.updatedAt,_that.deletedAt,_that.deviceId,_that.syncStatus,_that.createdAt);case _:
+return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.updatedAt,_that.createdAt,_that.notes,_that.addedBy,_that.syncVersion,_that.isDeleted,_that.deletedAt,_that.deviceId,_that.syncStatus);case _:
   return null;
 
 }
@@ -221,22 +221,22 @@ return $default(_that.id,_that.contactId,_that.businessId,_that.type,_that.notes
 @JsonSerializable()
 
 class _ContactActivity implements ContactActivity {
-  const _ContactActivity({required this.id, @JsonKey(name: 'contact_id') required this.contactId, @JsonKey(name: 'business_id') required this.businessId, required this.type, this.notes, @JsonKey(name: 'added_by') this.addedBy, @JsonKey(name: 'sync_version') this.syncVersion = 1, @JsonKey(name: 'is_deleted') this.isDeleted = false, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'deleted_at') this.deletedAt, @JsonKey(name: 'device_id') this.deviceId = '', @JsonKey(name: 'sync_status') this.syncStatus = 'pending', @JsonKey(name: 'created_at') required this.createdAt});
+  const _ContactActivity({required this.id, @JsonKey(name: 'contact_id') required this.contactId, @JsonKey(name: 'business_id') required this.businessId, required this.type, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'created_at') required this.createdAt, this.notes, @JsonKey(name: 'added_by') this.addedBy, @JsonKey(name: 'sync_version') this.syncVersion = 1, @JsonKey(name: 'is_deleted') this.isDeleted = false, @JsonKey(name: 'deleted_at') this.deletedAt, @JsonKey(name: 'device_id') this.deviceId = '', @JsonKey(name: 'sync_status') this.syncStatus = 'pending'});
   factory _ContactActivity.fromJson(Map<String, dynamic> json) => _$ContactActivityFromJson(json);
 
 @override final  String id;
 @override@JsonKey(name: 'contact_id') final  String contactId;
 @override@JsonKey(name: 'business_id') final  String businessId;
 @override final  ContactActivityType type;
+@override@JsonKey(name: 'updated_at') final  DateTime updatedAt;
+@override@JsonKey(name: 'created_at') final  DateTime createdAt;
 @override final  String? notes;
 @override@JsonKey(name: 'added_by') final  String? addedBy;
 @override@JsonKey(name: 'sync_version') final  int syncVersion;
 @override@JsonKey(name: 'is_deleted') final  bool isDeleted;
-@override@JsonKey(name: 'updated_at') final  DateTime updatedAt;
 @override@JsonKey(name: 'deleted_at') final  DateTime? deletedAt;
 @override@JsonKey(name: 'device_id') final  String deviceId;
 @override@JsonKey(name: 'sync_status') final  String syncStatus;
-@override@JsonKey(name: 'created_at') final  DateTime createdAt;
 
 /// Create a copy of ContactActivity
 /// with the given fields replaced by the non-null parameter values.
@@ -251,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ContactActivity&&(identical(other.id, id) || other.id == id)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.type, type) || other.type == type)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.addedBy, addedBy) || other.addedBy == addedBy)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ContactActivity&&(identical(other.id, id) || other.id == id)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.type, type) || other.type == type)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.addedBy, addedBy) || other.addedBy == addedBy)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,contactId,businessId,type,notes,addedBy,syncVersion,isDeleted,updatedAt,deletedAt,deviceId,syncStatus,createdAt);
+int get hashCode => Object.hash(runtimeType,id,contactId,businessId,type,updatedAt,createdAt,notes,addedBy,syncVersion,isDeleted,deletedAt,deviceId,syncStatus);
 
 @override
 String toString() {
-  return 'ContactActivity(id: $id, contactId: $contactId, businessId: $businessId, type: $type, notes: $notes, addedBy: $addedBy, syncVersion: $syncVersion, isDeleted: $isDeleted, updatedAt: $updatedAt, deletedAt: $deletedAt, deviceId: $deviceId, syncStatus: $syncStatus, createdAt: $createdAt)';
+  return 'ContactActivity(id: $id, contactId: $contactId, businessId: $businessId, type: $type, updatedAt: $updatedAt, createdAt: $createdAt, notes: $notes, addedBy: $addedBy, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAt: $deletedAt, deviceId: $deviceId, syncStatus: $syncStatus)';
 }
 
 
@@ -271,7 +271,7 @@ abstract mixin class _$ContactActivityCopyWith<$Res> implements $ContactActivity
   factory _$ContactActivityCopyWith(_ContactActivity value, $Res Function(_ContactActivity) _then) = __$ContactActivityCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'contact_id') String contactId,@JsonKey(name: 'business_id') String businessId, ContactActivityType type, String? notes,@JsonKey(name: 'added_by') String? addedBy,@JsonKey(name: 'sync_version') int syncVersion,@JsonKey(name: 'is_deleted') bool isDeleted,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'deleted_at') DateTime? deletedAt,@JsonKey(name: 'device_id') String deviceId,@JsonKey(name: 'sync_status') String syncStatus,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'contact_id') String contactId,@JsonKey(name: 'business_id') String businessId, ContactActivityType type,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_at') DateTime createdAt, String? notes,@JsonKey(name: 'added_by') String? addedBy,@JsonKey(name: 'sync_version') int syncVersion,@JsonKey(name: 'is_deleted') bool isDeleted,@JsonKey(name: 'deleted_at') DateTime? deletedAt,@JsonKey(name: 'device_id') String deviceId,@JsonKey(name: 'sync_status') String syncStatus
 });
 
 
@@ -288,22 +288,22 @@ class __$ContactActivityCopyWithImpl<$Res>
 
 /// Create a copy of ContactActivity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? contactId = null,Object? businessId = null,Object? type = null,Object? notes = freezed,Object? addedBy = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? updatedAt = null,Object? deletedAt = freezed,Object? deviceId = null,Object? syncStatus = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? contactId = null,Object? businessId = null,Object? type = null,Object? updatedAt = null,Object? createdAt = null,Object? notes = freezed,Object? addedBy = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAt = freezed,Object? deviceId = null,Object? syncStatus = null,}) {
   return _then(_ContactActivity(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,contactId: null == contactId ? _self.contactId : contactId // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as ContactActivityType,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as ContactActivityType,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String?,addedBy: freezed == addedBy ? _self.addedBy : addedBy // ignore: cast_nullable_to_non_nullable
 as String?,syncVersion: null == syncVersion ? _self.syncVersion : syncVersion // ignore: cast_nullable_to_non_nullable
 as int,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
-as bool,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,deviceId: null == deviceId ? _self.deviceId : deviceId // ignore: cast_nullable_to_non_nullable
 as String,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String,
   ));
 }
 

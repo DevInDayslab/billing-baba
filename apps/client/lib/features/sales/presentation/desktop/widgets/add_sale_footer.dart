@@ -1,6 +1,3 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
@@ -8,6 +5,9 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -493,9 +493,7 @@ class _NotesFieldState extends State<_NotesField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(
-        hint: 'Thanks for doing business with us!',
-      ),
+      decoration: buildSaleFieldDecoration(hint: 'Thanks for doing business with us!', fixedHeight: false),
       minLines: 3,
       maxLines: 4,
       onChanged: widget.onChanged,
@@ -583,9 +581,7 @@ class _DescriptionFieldState extends State<_DescriptionField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(
-        hint: 'Write your description here',
-      ),
+      decoration: buildSaleFieldDecoration(hint: 'Write your description here', fixedHeight: false),
       minLines: 3,
       maxLines: 4,
       onChanged: widget.onChanged,

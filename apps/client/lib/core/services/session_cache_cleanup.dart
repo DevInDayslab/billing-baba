@@ -58,6 +58,7 @@ class SessionCacheCleanup {
             key.startsWith('${StorageKeys.selectedPartyId}_') ||
             key.startsWith('${StorageKeys.partyGroupNames}_') ||
             key.startsWith('${StorageKeys.localItemTierPrices}_') ||
+            key.startsWith('${StorageKeys.localItemSuppliers}_') ||
             key.startsWith('${StorageKeys.saleLineItemColumnVisibility}_') ||
             key.startsWith('${StorageKeys.dashboardTasks}_') ||
             key.startsWith('${StorageKeys.dashboardSideWidgets}_') ||
@@ -75,6 +76,7 @@ class SessionCacheCleanup {
         key.startsWith('${StorageKeys.selectedPartyId}_') ||
         key.startsWith('${StorageKeys.partyGroupNames}_') ||
         key.startsWith('${StorageKeys.localItemTierPrices}_') ||
+        key.startsWith('${StorageKeys.localItemSuppliers}_') ||
         key.startsWith('${StorageKeys.saleLineItemColumnVisibility}_') ||
         key.startsWith('${StorageKeys.dashboardTasks}_') ||
         key.startsWith('${StorageKeys.dashboardSideWidgets}_') ||

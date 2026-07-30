@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/crm/application/lead_detail_provider.dart';
+import 'package:billing_baba/features/crm/application/lead_error_mapper.dart';
 import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/lead_activity_table.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/lead_status_chip.dart';
@@ -27,7 +28,7 @@ class LeadDetailPanel extends ConsumerWidget {
     return detailAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => _LeadDetailError(
-        message: error.toString(),
+        message: LeadErrorMapper.messageFor(error),
         onRetry: () => ref.invalidate(leadDetailProvider(leadId)),
       ),
       data: (detail) {

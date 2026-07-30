@@ -29,6 +29,25 @@ export function generateInvitationToken(): string {
 export class CollaborationRepository {
   constructor(private readonly db: Database) {}
 
+  async hasActiveCompanyMembership(
+    companyId: string,
+    accountId: string,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: companyMembers.id })
+      .from(companyMembers)
+      .where(
+        and(
+          eq(companyMembers.companyId, companyId),
+          eq(companyMembers.accountId, accountId),
+          eq(companyMembers.status, 'active'),
+        ),
+      )
+      .limit(1);
+
+    return Boolean(row);
+  }
+
   async isBusinessOwner(
     businessId: string,
     accountId: string,

@@ -1,7 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/output_error_mapper.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';
@@ -14,6 +12,8 @@ import 'package:billing_baba/features/utilities/application/barcode_label_pdf_bu
 import 'package:billing_baba/features/utilities/models/barcode_label_entry.dart';
 import 'package:billing_baba/features/utilities/presentation/desktop/widgets/barcode_label_preview.dart';
 import 'package:billing_baba/features/utilities/presentation/desktop/widgets/utilities_page_title_bar.dart';
+import 'package:billing_baba/shared/utils/output_error_mapper.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,7 +91,7 @@ class _BarcodeGeneratorContentState
     final state = ref.watch(barcodeGeneratorProvider);
     final notifier = ref.read(barcodeGeneratorProvider.notifier);
     final draft = state.draft;
-    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    final items = ref.watch(inventoryItemListProvider);
 
     return ColoredBox(
       color: AppColors.background,
@@ -141,42 +141,40 @@ class _BarcodeGeneratorContentState
                           ),
                         ],
                       )
-                    : IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              flex: 7,
-                              child: _EntryFormCard(
-                                key: ValueKey(state.formSession),
-                                draft: draft,
-                                items: items,
-                                onDraftChanged: notifier.updateDraft,
-                                onItemSelected: notifier.selectInventoryItem,
-                                onItemNameChanged: (name, linkedItem) {
-                                  if (linkedItem != null &&
-                                      linkedItem.name.trim() != name.trim()) {
-                                    notifier.unlinkItemSelection(itemName: name);
-                                    return;
-                                  }
-                                  notifier.updateDraft(
-                                    draft.copyWith(itemName: name),
-                                  );
-                                },
-                                onAdd: notifier.addEntry,
-                              ),
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 7,
+                            child: _EntryFormCard(
+                              key: ValueKey(state.formSession),
+                              draft: draft,
+                              items: items,
+                              onDraftChanged: notifier.updateDraft,
+                              onItemSelected: notifier.selectInventoryItem,
+                              onItemNameChanged: (name, linkedItem) {
+                                if (linkedItem != null &&
+                                    linkedItem.name.trim() != name.trim()) {
+                                  notifier.unlinkItemSelection(itemName: name);
+                                  return;
+                                }
+                                notifier.updateDraft(
+                                  draft.copyWith(itemName: name),
+                                );
+                              },
+                              onAdd: notifier.addEntry,
                             ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              flex: 3,
-                              child: _PreviewCard(
-                                draft: draft,
-                                canAdd: draft.canAdd,
-                                onAdd: notifier.addEntry,
-                              ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            flex: 3,
+                            child: _PreviewCard(
+                              draft: draft,
+                              canAdd: draft.canAdd,
+                              onAdd: notifier.addEntry,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       );
 
                 return Column(
@@ -271,11 +269,6 @@ class _HeaderControls extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        IconButton(
-          tooltip: 'Settings',
-          onPressed: () {},
-          icon: Icon(Icons.settings_outlined, color: Colors.grey.shade600),
-        ),
       ],
     );
   }
@@ -405,7 +398,7 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: _LabeledField(
-                    label: 'Item Code*',
+                    label: draft.noBarcode ? 'Item Code' : 'Item Code*',
                     error: draft.itemCodeError,
                     child: TextFormField(
                       controller: _itemCodeController,
@@ -513,6 +506,40 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.md),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: InkWell(
+                onTap: () => onDraftChanged(
+                  draft.copyWith(noBarcode: !draft.noBarcode),
+                ),
+                borderRadius: BorderRadius.circular(6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: draft.noBarcode,
+                        onChanged: (value) => onDraftChanged(
+                          draft.copyWith(noBarcode: value ?? false),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'No barcode',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -542,6 +569,7 @@ class _PreviewCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
@@ -559,16 +587,15 @@ class _PreviewCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            Expanded(
-              child: Center(
-                child: BarcodeLabelPreview(
-                  header: draft.header,
-                  itemCode: draft.itemCode,
-                  line1: draft.line1,
-                  line2: draft.line2,
-                  line3: draft.line3,
-                  line4: draft.line4,
-                ),
+            Center(
+              child: BarcodeLabelPreview(
+                header: draft.header,
+                itemCode: draft.itemCode,
+                line1: draft.line1,
+                line2: draft.line2,
+                line3: draft.line3,
+                line4: draft.line4,
+                showBarcode: !draft.noBarcode,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

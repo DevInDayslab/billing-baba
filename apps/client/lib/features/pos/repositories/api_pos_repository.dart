@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/application/pos_sale_service.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
@@ -17,14 +18,13 @@ class ApiPosRepository implements PosRepository {
     try {
       return await _posSaleService.completeSale(
         businessId: businessId,
-        items: cart.items,
-        payments: cart.payments,
+        cart: cart,
         customerName: cart.customerName,
       );
     } on PosRepositoryException {
       rethrow;
     } catch (error) {
-      throw PosRepositoryException(message: error.toString());
+      throw PosRepositoryException(message: OfflineUiMessages.messageFor(error));
     }
   }
 

@@ -91,12 +91,11 @@ class _PosReturnPageState extends ConsumerState<DesktopPosReturnPage> {
     setState(() => _isProcessing = true);
 
     try {
-      final returnSale = await ref.read(
-        processPosReturnProvider(
-          originalSale: widget.originalSale,
-          returnItems: returnItems,
-          refundMode: _refundMode,
-        ).future,
+      final service = await ref.read(posReturnServiceProvider.future);
+      final returnSale = await service.processReturn(
+        originalSale: widget.originalSale,
+        returnItems: returnItems,
+        refundMode: _refundMode,
       );
 
       if (!mounted) return;

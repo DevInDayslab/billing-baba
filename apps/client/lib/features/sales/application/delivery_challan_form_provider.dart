@@ -1,7 +1,3 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
@@ -17,17 +13,17 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'delivery_challan_form_provider.g.dart';
 
-int _challanLineItemCounter = 0;
-
-String _nextChallanLineItemId() {
-  _challanLineItemCounter += 1;
-  return 'challan_line_$_challanLineItemCounter';
-}
+String _nextChallanLineItemId() => newDocumentLineId();
 
 DeliveryChallanFormState _initialChallanFormState() {
   final now = DateTime.now();
@@ -44,12 +40,11 @@ DeliveryChallanFormState _initialChallanFormState() {
 class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   @override
   DeliveryChallanFormState build() {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _initialChallanFormState();
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -164,7 +159,7 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
     return [
       for (final line in items)
@@ -329,7 +324,11 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -337,9 +336,15 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
+    );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
+      targetIndex: targetIndex,
       appliedLine: applied,
       nextLineId: _nextChallanLineItemId,
     );

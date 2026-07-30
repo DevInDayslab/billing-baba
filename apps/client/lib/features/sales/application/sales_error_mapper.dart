@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:dio/dio.dart';
 
 class SalesException implements Exception {
@@ -18,6 +19,10 @@ class SalesOfflineException extends SalesException {
 
 SalesException mapSalesError(Object error) {
   if (error is DioException) {
+    if (ApiErrorParser.isOffline(error)) {
+      return const SalesOfflineException(OfflineUiMessages.workingOffline);
+    }
+
     final validation = ApiErrorParser.parseValidation(error);
     if (validation != null) {
       return SalesException(
@@ -30,14 +35,17 @@ SalesException mapSalesError(Object error) {
     }
 
     return SalesException(
-      ApiErrorParser.errorMessage(error) ?? error.message ?? 'Request failed',
+      ApiErrorParser.userFacingMessage(error),
       code: ApiErrorParser.errorCode(error),
     );
   }
 
   if (error is SalesException) return error;
+  if (OfflineUiMessages.isOfflineError(error)) {
+    return const SalesOfflineException(OfflineUiMessages.workingOffline);
+  }
 
-  return SalesException(error.toString());
+  return SalesException(OfflineUiMessages.messageFor(error));
 }
 
 abstract final class SalesErrorMapper {

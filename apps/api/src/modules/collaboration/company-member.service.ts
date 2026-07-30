@@ -24,20 +24,47 @@ export class CompanyMemberService {
     this.repository = new CollaborationRepository(db);
   }
 
-  private async assertOwner(businessId: string, accountId: string) {
+  private async assertOwner(
+    businessId: string,
+    accountId: string,
+    action: 'members:update' | 'members:delete',
+  ) {
     const isOwner = await this.repository.isBusinessOwner(
       businessId,
       accountId,
     );
-    assertCollaborationAction(isOwner, 'members:read');
+    assertCollaborationAction(isOwner, action);
     return isOwner;
+  }
+
+  private async assertCanReadMembers(
+    businessId: string,
+    accountId: string,
+  ): Promise<void> {
+    const isOwner = await this.repository.isBusinessOwner(
+      businessId,
+      accountId,
+    );
+    if (isOwner) return;
+
+    const isMember = await this.repository.hasActiveCompanyMembership(
+      businessId,
+      accountId,
+    );
+    if (!isMember) {
+      throw new AppError(
+        'FORBIDDEN',
+        'You do not have access to this company',
+        403,
+      );
+    }
   }
 
   async listMembers(
     businessId: string,
     accountId: string,
   ): Promise<CompanyMemberDto[]> {
-    await this.assertOwner(businessId, accountId);
+    await this.assertCanReadMembers(businessId, accountId);
 
     const owner = await this.repository.getBusinessOwnerInfo(businessId);
     if (!owner) {
@@ -72,7 +99,7 @@ export class CompanyMemberService {
     accountId: string,
     body: UpdateCompanyMemberBody,
   ): Promise<CompanyMemberDto> {
-    await this.assertOwner(businessId, accountId);
+    await this.assertOwner(businessId, accountId, 'members:update');
 
     if (memberId.startsWith('owner-')) {
       throw new AppError(
@@ -153,7 +180,7 @@ export class CompanyMemberService {
     businessId: string,
     accountId: string,
   ): Promise<void> {
-    await this.assertOwner(businessId, accountId);
+    await this.assertOwner(businessId, accountId, 'members:delete');
 
     if (memberId.startsWith('owner-')) {
       throw new AppError(

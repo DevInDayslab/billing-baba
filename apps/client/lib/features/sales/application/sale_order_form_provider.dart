@@ -1,9 +1,4 @@
-import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
-import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -20,18 +15,19 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_id.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_order_form_provider.g.dart';
 
-int _saleOrderLineItemCounter = 0;
-
-String _nextSaleOrderLineItemId() {
-  _saleOrderLineItemCounter += 1;
-  return 'order_line_$_saleOrderLineItemCounter';
-}
+String _nextSaleOrderLineItemId() => newDocumentLineId();
 
 SaleOrderFormState _initialSaleOrderFormState() {
   final now = DateTime.now();
@@ -48,12 +44,11 @@ SaleOrderFormState _initialSaleOrderFormState() {
 class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   @override
   SaleOrderFormState build({String sessionKey = 'default'}) {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _initialSaleOrderFormState();
   }
 
   Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     return {for (final item in items) item.name.trim(): item.id};
   }
 
@@ -113,7 +108,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventory = ref.read(inventoryItemListProvider);
     final itemNames = {for (final item in inventory) item.id: item.name};
     return [
       for (final line in items)
@@ -303,7 +298,11 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -311,9 +310,15 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
+    );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
+      targetIndex: targetIndex,
       appliedLine: applied,
       nextLineId: _nextSaleOrderLineItemId,
     );

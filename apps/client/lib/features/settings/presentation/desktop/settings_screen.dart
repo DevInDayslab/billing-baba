@@ -1,170 +1,114 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/backup/presentation/desktop/backup_restore_page.dart';
+import 'package:billing_baba/features/business/presentation/desktop/edit_profile_page.dart';
+import 'package:billing_baba/features/settings/models/settings_tab.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/about_settings_tab.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/print_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/transaction_messages_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Settings hub — entry point for device-local and business configuration.
-class DesktopSettingsScreen extends StatelessWidget {
+/// Desktop Settings hub — equal-width tabs; no per-tab route pushes.
+class DesktopSettingsScreen extends StatefulWidget {
   const DesktopSettingsScreen({super.key});
 
-  static const _items = <_SettingsNavItem>[
-    _SettingsNavItem(
-      icon: Icons.tune_outlined,
-      title: 'Item Settings',
-      subtitle: 'Barcode scan, pricing, categories, and fields',
-      route: AppRoutes.itemsSettings,
-      push: true,
-    ),
-    _SettingsNavItem(
-      icon: Icons.print_outlined,
-      title: 'Print Settings',
-      subtitle: 'Printer type, layout, and invoice content',
-      route: AppRoutes.settingsPrint,
-      push: true,
-    ),
-    _SettingsNavItem(
-      icon: Icons.receipt_long_outlined,
-      title: 'Taxes',
-      route: AppRoutes.settingsTaxes,
-    ),
-    _SettingsNavItem(
-      icon: Icons.description_outlined,
-      title: 'Invoice Templates',
-      route: AppRoutes.settingsInvoiceTemplates,
-    ),
-    _SettingsNavItem(
-      icon: Icons.chat_outlined,
-      title: 'WhatsApp',
-      subtitle: 'Enable messaging and test delivery',
-      route: AppRoutes.settingsWhatsapp,
-      push: true,
-    ),
-    _SettingsNavItem(
-      icon: Icons.sms_outlined,
-      title: 'Transaction Messages',
-      subtitle: 'Auto-send templates and message content',
-      route: AppRoutes.settingsTransactionMessages,
-      push: true,
-    ),
-    _SettingsNavItem(
-      icon: Icons.people_outline,
-      title: 'Users & Roles',
-      route: AppRoutes.settingsUsers,
-    ),
-    _SettingsNavItem(
-      icon: Icons.backup_outlined,
-      title: 'Backup & Restore',
-      route: AppRoutes.settingsBackup,
-    ),
-  ];
+  @override
+  State<DesktopSettingsScreen> createState() => _DesktopSettingsScreenState();
+}
+
+class _DesktopSettingsScreenState extends State<DesktopSettingsScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  String? _appliedTabQuery;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: EdgeInsets.zero,
-      itemCount: _items.length,
-      separatorBuilder: (_, _) => const Divider(
-        height: 1,
-        thickness: 1,
-        color: listPanelCardBorder,
-      ),
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        return _SettingsNavTile(
-          item: item,
-          onTap: () {
-            if (item.push) {
-              context.push(item.route);
-            } else {
-              context.go(item.route);
-            }
-          },
-        );
-      },
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: SettingsTab.values.length,
+      vsync: this,
     );
   }
-}
 
-class _SettingsNavItem {
-  const _SettingsNavItem({
-    required this.icon,
-    required this.title,
-    required this.route,
-    this.subtitle,
-    this.push = false,
-  });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final tabQuery = GoRouterState.of(context).uri.queryParameters['tab'];
+    if (tabQuery == _appliedTabQuery) return;
+    _appliedTabQuery = tabQuery;
+    final index = SettingsTab.fromQuery(tabQuery).index;
+    if (_tabController.index != index) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _tabController.index != index) {
+          _tabController.index = index;
+        }
+      });
+    }
+  }
 
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final String route;
-  final bool push;
-}
-
-class _SettingsNavTile extends StatelessWidget {
-  const _SettingsNavTile({
-    required this.item,
-    required this.onTap,
-  });
-
-  final _SettingsNavItem item;
-  final VoidCallback onTap;
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: item.subtitle != null ? AppSpacing.md : 18,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                item.icon,
-                size: 24,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      item.title,
-                      style: AppTypography.inter(
-                        fontSize: AppTypography.bodyLargeSize,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: AppColors.surface,
+          child: TabBar(
+            controller: _tabController,
+            labelPadding: EdgeInsets.zero,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicatorColor: AppColors.primary,
+            indicatorWeight: 3,
+            dividerColor: listPanelCardBorder,
+            labelStyle: AppTypography.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: AppTypography.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: [
+              for (final tab in SettingsTab.values)
+                Tab(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(tab.label, textAlign: TextAlign.center),
                     ),
-                    if (item.subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        item.subtitle!,
-                        style: AppTypography.inter(
-                          fontSize: AppTypography.bodySmallSize,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: AppColors.textSecondary,
-              ),
             ],
           ),
         ),
-      ),
+        Expanded(
+          child: AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              return IndexedStack(
+                index: _tabController.index,
+                sizing: StackFit.expand,
+                children: const [
+                  DesktopEditProfilePage(embedded: true),
+                  DesktopPrintSettingsScreen(embedded: true),
+                  DesktopTransactionMessagesScreen(embedded: true),
+                  BackupRestorePage(embedded: true),
+                  AboutSettingsTab(),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

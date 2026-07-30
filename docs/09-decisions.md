@@ -8,7 +8,7 @@ Record significant architectural and technical decisions for Billing Baba. ADRs 
 
 Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 
-**Related docs:** [01-architecture.md](01-architecture.md) · [04-database.md](04-database.md) · [05-api.md](05-api.md)
+**Related docs:** [01-architecture.md](01-architecture.md) · [04-database.md](04-database.md) · [05-api.md](05-api.md) · [11-sync-api-contract.md](11-sync-api-contract.md)
 
 ## Table of Contents
 
@@ -37,6 +37,10 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-022: Provider-Agnostic Outbound Notifications](#adr-022-provider-agnostic-outbound-notifications)
 - [ADR-023: Provider-Agnostic Object Storage](#adr-023-provider-agnostic-object-storage)
 - [ADR-024: Invoice Artifact System](#adr-024-invoice-artifact-system)
+- [ADR-025: Sync Contract (Hybrid + LOCAL Remap + Command Idempotency)](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
+- [ADR-026: MVP Sync Simplicity (No Client Registry)](#adr-026-mvp-sync-simplicity-no-client-registry)
+- [ADR-027: Phase 2 Command Sync Foundation](#adr-027-phase-2-command-sync-foundation)
+- [ADR-041: Allow Negative Stock on Sales](#adr-041-allow-negative-stock-on-sales)
 
 ---
 
@@ -68,6 +72,10 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-022 | Provider-Agnostic Outbound Notifications | July 2026 | Accepted |
 | ADR-023 | Provider-Agnostic Object Storage | July 2026 | Accepted |
 | ADR-024 | Invoice Artifact System | July 2026 | Accepted |
+| ADR-025 | Sync Contract (Hybrid + LOCAL Remap + Command Idempotency) | July 2026 | Accepted |
+| ADR-026 | MVP Sync Simplicity (No Client Registry) | July 2026 | Accepted |
+| ADR-027 | Phase 2 Command Sync Foundation | July 2026 | Accepted |
+| ADR-041 | Allow Negative Stock on Sales | July 2026 | Accepted |
 
 ---
 
@@ -1455,6 +1463,185 @@ Billing Baba targets Windows, macOS, Linux, Android, and iOS from one Flutter cl
 - Import paths for former `providers/` modules now use `application/`.
 - App shells live in `core/shell/` (`DesktopShell`, `MobileShell`). Desktop and mobile each have a dedicated GoRouter in `core/routing/` (`desktop_router.dart`, `mobile_router.dart`); `appRouterProvider` selects by `AppPlatform`. Both routers navigate only to public Adaptive feature pages.
 - Public Adaptive entries live directly under `features/<feature>/presentation/` (not nested `pages/` / `screens/` folders).
+
+---
+
+## ADR-025: Sync Contract (Hybrid + LOCAL Remap + Command Idempotency)
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+Offline-first sync must move writes through Drift → queue → Sync Engine → API without duplicating ERP invariants on the client. Document numbers, stock, and ledger posting already run in Fastify domain transactions. Retries after timeouts must not double-finalize or double-post. A thin “mutations-only” sketch in early API docs was insufficient for production.
+
+### Decision
+
+1. **Hybrid push model** — Masters and draft documents sync as **row** mutations (`create` / `update` / `delete` with `base_sync_version`). Invariant operations sync as **commands** (`finalize_sale`, `finalize_purchase`, `record_payment`, `record_receipt`, `stock_adjustment`, `stock_transfer`, `post_journal_entry`, `finalize_credit_note`, `finalize_debit_note`, …) that invoke existing server domain services.
+2. **Temporary document number remapping (MVP)** — Entity UUID is permanent. Offline display numbers use `LOCAL-######`. On finalize ack, server returns `local_document_number` → `server_document_number`; client updates display only. Lease ranges may be added later via `numbering_strategy` without changing UUIDs.
+3. **Command idempotency** — Every command includes a client-generated `command_id` (UUID). Server persists `(business_id, command_id)` → result and returns the original success payload on replay (`replayed[]`), never re-executing stock/ledger/number allocation.
+
+Normative protocol: [11-sync-api-contract.md](11-sync-api-contract.md). Summary index: [05-api.md](05-api.md#offline-sync-api).
+
+### Consequences
+
+**Positive:**
+
+- Server remains authority for financial and inventory side effects
+- Safe client retries after network loss
+- Clear migration path to leased numbering later
+- Flutter SyncEngine and Fastify `sync` module share one contract
+
+**Negative:**
+
+- Offline-printed `LOCAL-*` documents may need regeneration after remap
+- Push batch schema is richer than simple CRUD
+- Server must store command idempotency records indefinitely in v1
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Rows-only push (client sends movements/ledger) | Duplicates invariants; easy to diverge from Fastify services |
+| Commands-only for all entities | Verbose for masters; poor fit for simple CRUD |
+| Per-device number leases in MVP | More ops complexity; deferred |
+| Online-only finalize | Blocks offline POS goal |
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md), [10-offline-first-architecture-audit.md](10-offline-first-architecture-audit.md), [ADR-007](#adr-007-offline-first)
+
+---
+
+## ADR-026: MVP Sync Simplicity (No Client Registry)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-27 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+### Context
+
+Early sync scaffolding added plan/session/runner/worker layers, a 4-deep queue stack, and a multi-entity server registry before the client had proven offline for more than categories. That slowed shipping and onboarding.
+
+### Decision
+
+For Billing Baba MVP:
+
+1. **Keep only:** SyncEngine, SyncCoordinator, SyncQueue, SyncApi, SyncState, SyncJob, Device Identity, Sync Metadata.
+2. **Client entity apply:** `switch (entityType)` — copy the pattern for each master (`categories`, `parties`, `items`, `unit_definitions`, `tax_rates`, `godowns`, `business_settings`, …). No client registry/adapter/mapper framework.
+3. **Two sync modes only:** row (masters) and command (financial/inventory ops). Media deferred.
+4. **Bootstrap:** if local DB has no cursor → pull from epoch until `has_more=false` → store cursor. No chunk planner / bootstrap session state machine. `POST /bootstrap` may return `initial_cursor` only.
+5. **Conflicts:** optimistic `base_sync_version` gate; on conflict mark queue job, keep local row, show later. No merge framework.
+6. **Triggers:** app startup, connectivity restored, manual refresh, periodic while app open. No OS background workers.
+7. **Server:** register only entities the client syncs (currently `categories`, `parties`, `items`, `unit_definitions`, `tax_rates`, `godowns`, `business_settings`). Status/Zod advertise registered types only.
+
+### Consequences
+
+**Positive:** smaller codebase, easier debugging, faster entity cutovers via duplication.
+
+**Negative:** adding the Nth entity means a bit of copy-paste until a later refactor is justified.
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Client SyncEntityRegistry / adapters | Premature for <10 entities |
+| Chunked bootstrap jobs | Speculative; pull-from-epoch is enough |
+| Silent LWW without version check | Unsafe for multi-device edits |
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md), [ADR-025](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
+
+---
+
+## ADR-027: Phase 2 Command Sync Foundation
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+Phase 2 requires offline-capable sales and purchase invoices without redesigning the frozen Row Sync engine. Transactional finalize operations (number allocation, stock, ledger) must remain server-authoritative and idempotent.
+
+### Decision
+
+1. **Hybrid ADR-025 model** for Phase 2 scope: `tax_invoice` and `purchase_bill` drafts sync as **row** mutations; `finalize_sale` and `finalize_purchase` sync as **commands**.
+2. **Command layer outside `core/sync/`** — `CommandSyncRunner` composes after row sync; uses existing `SyncQueue.enqueueCommand` without queue redesign.
+3. **`sync_command_acks`** stores `(business_id, command_id)` with request-hash mismatch detection.
+4. **LOCAL-###### numbering** on client; server returns `document_number_remap` on finalize ack.
+5. **Projection pull deferred** — stock/ledger projections remain a follow-up; finalize ack + document row pull is sufficient for foundation.
+
+### Consequences
+
+- Row Sync engine stays frozen; document entities register via established coordinator switches only.
+- Client `SalesInvoiceCommandRepository` / `PurchaseBillCommandRepository` never call REST for draft/finalize enqueue.
+- Full offline stock display awaits projection pull milestone.
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md), [ADR-025](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
+
+---
+
+## ADR-028: Client `.biba` Backup Format v1
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-27 |
+| **Status** | Accepted |
+| **Author** | Billing Baba team |
+
+### Context
+
+Offline-first clients need out-of-band full-device backup and restore (per [10-offline-first-architecture-audit.md](10-offline-first-architecture-audit.md)) without redesigning sync v1. Restore must preserve `sync_device_id`, pull cursor, and the full `sync_queue` (including completed jobs) so server idempotency replays already-applied `command_id`s.
+
+### Decision
+
+1. **`.biba` is a ZIP archive** with extension `.biba`, format version `1`, tied to Drift schema version `16`.
+2. **Contents:** `manifest.json` (checksums + metadata), `database.sqlite` (full Drift DB after `PRAGMA wal_checkpoint(FULL)`), and `meta/*.json` for sync cursor, device id, business prefs, document counters, and queue snapshot.
+3. **Client-only** — export/restore runs in Flutter; no cloud upload in v1.
+4. **Restore replaces the SQLite file**, reapplies sync metadata and device identity, then triggers `CommandAwareSyncEngine.syncNow()` without clearing bootstrap state unless schema is incompatible.
+5. **Excludes** auth tokens and other businesses' data.
+
+### Consequences
+
+- Users can migrate devices or recover from data loss without duplicate finalized documents when cursor and command ids are preserved.
+- Format version and schema version gates allow safe rejection of incompatible backups.
+- Backup module lives under `features/backup/` with exporter/importer services and a settings UI at `/settings/backup`.
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md) (out-of-band backup scope)
+
+---
+
+## ADR-041: Allow Negative Stock on Sales
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-30 |
+| **Status** | Accepted |
+| **Author** | Billing Baba team |
+
+### Context
+
+Sale invoices showed an out-of-stock warning for zero-stock items, but clicking **Continue Anyway** could clear the line due to a form-state race (tax fallback provider reset) and clubbing logic treating name-only rows as confirmed lines. Even when the UI allowed override, the API rejected finalize with `INSUFFICIENT_STOCK` when stock would go below zero.
+
+### Decision
+
+1. **Sales may oversell** — finalize deducts stock even when quantity goes negative; negative balances are shown in inventory reports and UI.
+2. **Remove server hard block** — `recordMovementAndUpdateStock` no longer throws `INSUFFICIENT_STOCK` for `newQty < 0`.
+3. **Keep out-of-stock dialog** as a warning with alternatives and **Continue Anyway**; fix client flow so the selected item is applied reliably (no `ref.watch` tax provider in form `build()`, await `selectCatalogItem`, resolve line by id after async).
+4. **Client local stock** already allowed negative quantities; no schema change.
+
+### Consequences
+
+- Businesses can bill items before purchase/receipt; stock reflects backorders as negative quantity.
+- Sync no longer fails on oversold finalize; users must reconcile stock via purchases or adjustments.
+- POS cart still blocks adding beyond available stock (unchanged in this ADR).
+
+**References:** [05-api.md](05-api.md), [ADR-016: Event-based Inventory Ledger](#adr-016-event-based-inventory-ledger)
 
 ---
 

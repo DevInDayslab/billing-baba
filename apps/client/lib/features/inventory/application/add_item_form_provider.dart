@@ -63,6 +63,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
     state = state.copyWith(alternativeItemIds: itemIds, isDirty: true);
   }
 
+  void setSupplierPartyIds(List<String> partyIds) {
+    state = state.copyWith(supplierPartyIds: partyIds, isDirty: true);
+  }
+
   void updateHsn(String value) {
     state = state.copyWith(hsn: value, isDirty: true);
   }

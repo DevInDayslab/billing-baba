@@ -50,7 +50,7 @@ final class SyncShareRefreshProvider
   }
 }
 
-String _$syncShareRefreshHash() => r'7db6363ce94c490b9aaf5b7511e60a5406f0722c';
+String _$syncShareRefreshHash() => r'7049f9cc2b239bfcb43237bccf6f52abac514a1b';
 
 /// Coordinates Sync & Share refresh requests with de-duplication.
 ///

@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 
 class InventoryHighlightedText extends StatelessWidget {

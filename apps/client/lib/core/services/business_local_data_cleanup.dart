@@ -34,6 +34,9 @@ class BusinessLocalDataCleanup {
     await (_db.delete(_db.deals)
           ..where((row) => row.businessId.equals(businessId)))
         .go();
+    await (_db.delete(_db.categoriesLocal)
+          ..where((row) => row.businessId.equals(businessId)))
+        .go();
     await (_db.delete(_db.syncQueue)
           ..where((row) => row.businessId.equals(businessId)))
         .go();

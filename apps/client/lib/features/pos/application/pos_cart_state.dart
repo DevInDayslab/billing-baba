@@ -79,6 +79,40 @@ class PosCartState {
   }
 }
 
+/// After editing a split-payment row, fill the next row with the remaining
+/// balance and clear any rows after that.
+List<PaymentEntry> applySplitPaymentCascade({
+  required List<PaymentEntry> payments,
+  required int editedIndex,
+  required double amount,
+  required double totalPayable,
+}) {
+  if (editedIndex < 0 || editedIndex >= payments.length) return payments;
+
+  final updated = [
+    for (final payment in payments) payment.copyWith(),
+  ];
+  updated[editedIndex] = updated[editedIndex].copyWith(amount: amount);
+
+  if (payments.length <= 1 || editedIndex >= payments.length - 1) {
+    return updated;
+  }
+
+  final allocated = updated
+      .take(editedIndex + 1)
+      .fold<double>(0, (sum, payment) => sum + payment.amount);
+  final remainder = (totalPayable - allocated).clamp(0.0, double.infinity);
+  updated[editedIndex + 1] = updated[editedIndex + 1].copyWith(
+    amount: remainder,
+  );
+
+  for (var index = editedIndex + 2; index < updated.length; index++) {
+    updated[index] = updated[index].copyWith(amount: 0);
+  }
+
+  return updated;
+}
+
 double heldBillTotal(List<CartItem> items) {
   final subtotal = items.fold<double>(0, (sum, item) => sum + item.grossTotal);
   final discount = items.fold<double>(0, (sum, item) => sum + item.discountAmount);

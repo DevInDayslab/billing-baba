@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
+import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:flutter/material.dart';
 
 /// Shows a snackbar when a transaction form save fails.

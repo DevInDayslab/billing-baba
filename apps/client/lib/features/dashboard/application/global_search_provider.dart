@@ -23,7 +23,7 @@ Future<List<GlobalSearchResult>> globalSearchResults(Ref ref) async {
   final partyResults = await service.searchParties(query);
 
   final engine = ref.watch(inventorySearchEngineProvider);
-  final items = ref.watch(inventoryItemsProvider).value ?? const [];
+  final items = ref.watch(inventoryItemListProvider);
   final matchedItems = searchInventoryItems(engine, items, query: query).take(8);
 
   final itemResults = matchedItems

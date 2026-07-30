@@ -32,7 +32,6 @@ class DesktopSaleFaPage extends ConsumerWidget {
               children: [
                 SalePageTitleBar(
                   currentRoute: AppRoutes.saleFa,
-                  onSettingsTap: () => debugPrint('Settings tapped'),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const SaleFaFilterBar(),

@@ -3,19 +3,26 @@ import 'dart:async';
 import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_bottom_navigation.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_option_sheet.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheet_models.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheets.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_mock_data.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_header.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_party_section.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_quick_links.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_search_bar.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_transaction_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_view_toggle.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_more_options_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_share_transaction_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_transaction_menu_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_transaction_type_filter_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +37,6 @@ class MobileHomePage extends ConsumerStatefulWidget {
 
 class _MobileHomePageState extends ConsumerState<MobileHomePage> {
   late final TextEditingController _searchController;
-  String _activeFilterKey = 'all';
 
   @override
   void initState() {
@@ -47,79 +53,68 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
   }
 
   void _showFilterSheet() {
+    final currentFilters =
+        ref.read(mobileHomeControllerProvider).transactionTypeFilters;
     unawaited(
-      showMobileFilterSheet<String>(
+      showMobileTransactionTypeFilterSheet(
         context: context,
-        title: 'Filter Transactions',
-        selected: _activeFilterKey,
-        options: const [
-          MobileOption(
-            value: 'all',
-            label: 'All Transactions',
-            subtitle: 'Show every transaction type',
-          ),
-          MobileOption(
-            value: 'payment_in',
-            label: 'Payment In',
-            subtitle: 'Received payments',
-          ),
-          MobileOption(
-            value: 'sale',
-            label: 'Sales',
-            subtitle: 'Sale invoices',
-          ),
-          MobileOption(
-            value: 'estimate',
-            label: 'Estimates',
-            subtitle: 'Open estimates',
-          ),
-        ],
+        selected: currentFilters,
       ).then((value) {
         if (value == null || !mounted) return;
-        setState(() => _activeFilterKey = value);
+        ref
+            .read(mobileHomeControllerProvider.notifier)
+            .setTransactionTypeFilters(value);
       }),
     );
   }
 
   void _showAddTxnSheet() {
+    unawaited(showMobileTransactionMenuSheet(context: context));
+  }
+
+  void _showMoreOptionsSheet() {
+    final activeView = ref.read(mobileHomeControllerProvider).activeView;
+    final scope = activeView == MobileHomeView.partyDetails
+        ? MobileMoreOptionsScope.party
+        : MobileMoreOptionsScope.transaction;
+
     unawaited(
-      showMobileAddOptionsSheet(
+      showMobileMoreOptionsSheet(
         context: context,
-        title: 'Add Transaction',
-        options: [
-          MobileAddOption(
-            label: 'Sale Invoice',
-            subtitle: 'Create a new sale',
-            icon: Icons.receipt_long_outlined,
-            iconColor: const Color(0xFF43A047),
-            backgroundColor: const Color(0xFFE8F5E9),
-            onTap: () => context.push(AppRoutes.addSale),
-          ),
-          MobileAddOption(
-            label: 'Purchase Bill',
-            subtitle: 'Record a purchase',
-            icon: Icons.shopping_bag_outlined,
-            iconColor: const Color(0xFF1565C0),
-            backgroundColor: const Color(0xFFE3F2FD),
-            onTap: () => context.push(AppRoutes.addPurchase),
-          ),
-          MobileAddOption(
-            label: 'Expense',
-            subtitle: 'Log a business expense',
-            icon: Icons.payments_outlined,
-            iconColor: const Color(0xFFFF9800),
-            backgroundColor: const Color(0xFFFFF3E0),
-            onTap: () => context.push(AppRoutes.purchaseExpenses),
-          ),
-          MobileAddOption(
-            label: 'Estimate',
-            subtitle: 'Create a quotation',
-            icon: Icons.description_outlined,
-            iconColor: const Color(0xFF5D5FEF),
-            backgroundColor: const Color(0xFFEDE7F6),
-            onTap: () => context.push(AppRoutes.addEstimate),
-          ),
-        ],
+        scope: scope,
+        onPushRoute: (route) => context.push(route),
+        onOpenReport: (intent) {
+          ref.read(reportsNavIntentProvider.notifier).setIntent(intent);
+          context.go(AppRoutes.reports);
+        },
+        onImportParty: () => showAddPartyDialog(context),
+        onInviteParty: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invite party coming soon')),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showShareSheet(MobileHomeTransactionItem item) {
+    unawaited(
+      showMobileShareTransactionSheet(
+        context: context,
+        onShareAsImage: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Sharing ${item.documentNumber} as image…'),
+            ),
+          );
+        },
+        onShareAsPdf: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Sharing ${item.documentNumber} as PDF…'),
+            ),
+          );
+        },
       ),
     );
   }
@@ -148,7 +143,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
           MobileSheetAction(
             icon: Icons.share_outlined,
             label: 'Share',
-            onTap: () {},
+            onTap: () => _showShareSheet(item),
           ),
           MobileSheetAction(
             icon: Icons.delete_outline_rounded,
@@ -164,9 +159,11 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
   @override
   Widget build(BuildContext context) {
     final homeState = ref.watch(mobileHomeControllerProvider);
+    final isPartyView = homeState.activeView == MobileHomeView.partyDetails;
     final transactions = filterHomeTransactions(
       MobileHomeMockData.transactions,
       homeState.searchQuery,
+      typeFilters: homeState.transactionTypeFilters,
     );
 
     return MobilePlatformScope(
@@ -177,13 +174,10 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
           child: Column(
             children: [
               MobileHomeHeader(
+                onAvatarTap: () => context.push(AppRoutes.editProfile),
                 onBusinessTap: () => context.push(AppRoutes.businessList),
-                onSettingsTap: () => context.push(AppRoutes.settingsPreferences),
-                onNotificationTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Notifications coming soon')),
-                  );
-                },
+                onSettingsTap: () => context.push(AppRoutes.settings),
+                onNotificationTap: () => context.push(AppRoutes.notifications),
                 onSyncTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Syncing…')),
@@ -192,15 +186,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
               ),
               MobileHomeViewToggle(
                 activeView: homeState.activeView,
-                onChanged: (view) {
-                  ref.read(mobileHomeControllerProvider.notifier).setView(view);
-                  if (view == MobileHomeView.partyDetails) {
-                    unawaited(context.push(AppRoutes.partyDetails));
-                    ref
-                        .read(mobileHomeControllerProvider.notifier)
-                        .setView(MobileHomeView.transactionDetails);
-                  }
-                },
+                onChanged: ref.read(mobileHomeControllerProvider.notifier).setView,
               ),
               const SizedBox(height: AppSpacing.sm),
               Expanded(
@@ -208,50 +194,30 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: MobileHomeQuickLinks(
-                        links: MobileHomeMockData.quickLinks(
-                          onTxnSettings: () => context.push(
-                            AppRoutes.settingsTransactionMessages,
-                          ),
-                          onAddTxn: _showAddTxnSheet,
-                          onSaleReport: () => context.push(AppRoutes.reports),
-                          onShowAll: () {
-                            unawaited(
-                              showMobileMenuSheet(
-                                context: context,
-                                title: 'Show All',
-                                items: [
-                                  MobileSheetAction(
-                                    icon: Icons.receipt_long_outlined,
-                                    label: 'Sales',
-                                    showChevron: true,
-                                    onTap: () =>
-                                        context.push(AppRoutes.saleInvoices),
-                                  ),
-                                  MobileSheetAction(
-                                    icon: Icons.shopping_bag_outlined,
-                                    label: 'Purchases',
-                                    showChevron: true,
-                                    onTap: () =>
-                                        context.push(AppRoutes.purchaseBills),
-                                  ),
-                                  MobileSheetAction(
-                                    icon: Icons.people_outline_rounded,
-                                    label: 'Parties',
-                                    showChevron: true,
-                                    onTap: () =>
-                                        context.push(AppRoutes.partyDetails),
-                                  ),
-                                  MobileSheetAction(
-                                    icon: Icons.bar_chart_rounded,
-                                    label: 'Reports',
-                                    showChevron: true,
-                                    onTap: () => context.push(AppRoutes.reports),
-                                  ),
-                                ],
+                        links: isPartyView
+                            ? MobileHomeMockData.partyQuickLinks(
+                                onNetwork: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Network coming soon'),
+                                    ),
+                                  );
+                                },
+                                onPartyStatement: () =>
+                                    context.push(AppRoutes.reports),
+                                onPartySettings: () =>
+                                    context.push(AppRoutes.settings),
+                                onShowAll: _showMoreOptionsSheet,
+                              )
+                            : MobileHomeMockData.quickLinks(
+                                onTxnSettings: () => context.push(
+                                  AppRoutes.settingsTransactionMessages,
+                                ),
+                                onAddTxn: _showAddTxnSheet,
+                                onSaleReport: () =>
+                                    context.push(AppRoutes.reports),
+                                onShowAll: _showMoreOptionsSheet,
                               ),
-                            );
-                          },
-                        ),
                       ),
                     ),
                     SliverToBoxAdapter(
@@ -261,9 +227,24 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                             .read(mobileHomeControllerProvider.notifier)
                             .setSearch,
                         onFilterTap: _showFilterSheet,
+                        hint: isPartyView
+                            ? 'Search any party'
+                            : 'Search for a transaction...',
+                        showFilter: !isPartyView,
                       ),
                     ),
-                    if (transactions.isEmpty)
+                    if (isPartyView)
+                      SliverFillRemaining(
+                        child: MobileHomePartySection(
+                          searchQuery: homeState.searchQuery,
+                          onSelectParty: (partyId) {
+                            ref.read(selectedPartyIdProvider.notifier).selected =
+                                partyId;
+                            unawaited(context.push(AppRoutes.partyDetails));
+                          },
+                        ),
+                      )
+                    else if (transactions.isEmpty)
                       const SliverFillRemaining(
                         hasScrollBody: false,
                         child: MobileEmptyState(
@@ -289,7 +270,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                             return MobileHomeTransactionCard(
                               item: item,
                               onPrint: () {},
-                              onShare: () {},
+                              onShare: () => _showShareSheet(item),
                               onMore: () => _showMoreActions(item),
                             );
                           },

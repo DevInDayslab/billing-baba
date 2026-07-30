@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_card.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 
 /// Placeholder body for settings screens that are not yet implemented on mobile.

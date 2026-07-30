@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/list_panel_header.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/cart_row.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
+import 'package:billing_baba/shared/widgets/list_panel_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -59,14 +59,6 @@ class CartPanel extends ConsumerWidget {
                   _InfoChip(label: '${cart.totalItems} Items'),
                   const SizedBox(width: AppSpacing.sm),
                   _InfoChip(label: 'Qty: ${cart.totalQty}'),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.more_vert, size: 20),
-                    color: AppColors.textSecondary,
-                    onPressed: () {},
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
                 ],
               ),
             ),
@@ -165,15 +157,21 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class _BillSummary extends ConsumerWidget {
+class _BillSummary extends ConsumerStatefulWidget {
   const _BillSummary({required this.cart});
 
   final PosCartState cart;
 
-  Future<void> _showBillDiscountDialog(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  @override
+  ConsumerState<_BillSummary> createState() => _BillSummaryState();
+}
+
+class _BillSummaryState extends ConsumerState<_BillSummary> {
+  bool _detailsExpanded = false;
+
+  PosCartState get cart => widget.cart;
+
+  Future<void> _showBillDiscountDialog(BuildContext context) async {
     final controller = TextEditingController(
       text: cart.billDiscountPercent > 0
           ? cart.billDiscountPercent.toStringAsFixed(0)
@@ -217,131 +215,183 @@ class _BillSummary extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final balanceColor = cart.balance == 0
         ? posPositiveColor
         : posNegativeColor;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final stackSummary = constraints.maxWidth < 480;
-
-        final leftColumn = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SummaryRow(
-              label: 'Subtotal',
-              value: _currencyFormat.format(cart.subtotal),
-            ),
-            _SummaryRow(
-              label: 'Discount',
-              value: '-${_currencyFormat.format(cart.totalDiscount)}',
-              valueColor: posNegativeColor,
-            ),
-            InkWell(
-              onTap: () => _showBillDiscountDialog(context, ref),
-              child: _SummaryRow(
-                label: 'Bill Discount',
-                value: cart.billDiscountPercent > 0
-                    ? '-${_currencyFormat.format(cart.billDiscountAmount)} (${cart.billDiscountPercent.toStringAsFixed(0)}%)'
-                    : '${cart.billDiscountPercent.toStringAsFixed(0)}%',
-                valueColor: cart.billDiscountPercent > 0
-                    ? posNegativeColor
-                    : AppColors.primary,
-              ),
-            ),
-            _SummaryRow(
-              label: 'Taxable Amount',
-              value: _currencyFormat.format(cart.taxableAfterBillDiscount),
-            ),
-            _SummaryRow(
-              label: 'CGST (9%)',
-              value: _currencyFormat.format(cart.cgst),
-            ),
-            _SummaryRow(
-              label: 'SGST (9%)',
-              value: _currencyFormat.format(cart.sgst),
-            ),
-            _SummaryRow(
-              label: 'Round Off',
-              value: _currencyFormat.format(cart.roundOff),
-            ),
-          ],
-        );
-
-        final rightColumn = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text('Total Payable', style: PosStyles.metadataStyle),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      _currencyFormat.format(cart.totalPayable),
-                      style: PosStyles.totalPayableStyle,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _SummaryRow(
-              label: 'Paid Amount',
-              value: _currencyFormat.format(cart.totalPaid),
-              valueColor: posPositiveColor,
-            ),
-            _SummaryRow(
-              label: 'Balance',
-              value: _currencyFormat.format(cart.balance),
-              valueColor: balanceColor,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatBox(
-                    label: 'Total Items',
-                    value: '${cart.totalItems}',
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _StatBox(
-                    label: 'Total Qty',
-                    value: '${cart.totalQty}',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-
-        return Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: stackSummary
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    leftColumn,
-                    const SizedBox(height: AppSpacing.md),
-                    rightColumn,
-                  ],
-                )
-              : Row(
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: leftColumn),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(child: rightColumn),
+                    _SummaryRow(
+                      label: 'Subtotal',
+                      value: _currencyFormat.format(cart.subtotal),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatBox(
+                            label: 'Total Items',
+                            value: '${cart.totalItems}',
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: _StatBox(
+                            label: 'Total Qty',
+                            value: '${cart.totalQty}',
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-        );
-      },
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Total Payable',
+                          style: PosStyles.metadataStyle,
+                        ),
+                        IconButton(
+                          tooltip: _detailsExpanded
+                              ? 'Hide details'
+                              : 'Show details',
+                          onPressed: () => setState(
+                            () => _detailsExpanded = !_detailsExpanded,
+                          ),
+                          icon: Icon(
+                            _detailsExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            size: 20,
+                            color: AppColors.textSecondary,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        _currencyFormat.format(cart.totalPayable),
+                        style: PosStyles.totalPayableStyle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (_detailsExpanded) ...[
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: 1, color: posCardBorder),
+            const SizedBox(height: AppSpacing.sm),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final stackSummary = constraints.maxWidth < 480;
+
+                final leftColumn = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SummaryRow(
+                      label: 'Discount',
+                      value:
+                          '-${_currencyFormat.format(cart.totalDiscount)}',
+                      valueColor: posNegativeColor,
+                    ),
+                    InkWell(
+                      onTap: () => _showBillDiscountDialog(context),
+                      child: _SummaryRow(
+                        label: 'Bill Discount',
+                        value: cart.billDiscountPercent > 0
+                            ? '-${_currencyFormat.format(cart.billDiscountAmount)} (${cart.billDiscountPercent.toStringAsFixed(0)}%)'
+                            : '${cart.billDiscountPercent.toStringAsFixed(0)}%',
+                        valueColor: cart.billDiscountPercent > 0
+                            ? posNegativeColor
+                            : AppColors.primary,
+                      ),
+                    ),
+                    _SummaryRow(
+                      label: 'Taxable Amount',
+                      value: _currencyFormat
+                          .format(cart.taxableAfterBillDiscount),
+                    ),
+                    _SummaryRow(
+                      label: 'CGST (9%)',
+                      value: _currencyFormat.format(cart.cgst),
+                    ),
+                    _SummaryRow(
+                      label: 'SGST (9%)',
+                      value: _currencyFormat.format(cart.sgst),
+                    ),
+                    _SummaryRow(
+                      label: 'Round Off',
+                      value: _currencyFormat.format(cart.roundOff),
+                    ),
+                  ],
+                );
+
+                final rightColumn = Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SummaryRow(
+                      label: 'Paid Amount',
+                      value: _currencyFormat.format(cart.totalPaid),
+                      valueColor: posPositiveColor,
+                    ),
+                    _SummaryRow(
+                      label: 'Balance',
+                      value: _currencyFormat.format(cart.balance),
+                      valueColor: balanceColor,
+                    ),
+                  ],
+                );
+
+                return stackSummary
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          leftColumn,
+                          const SizedBox(height: AppSpacing.md),
+                          rightColumn,
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: leftColumn),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(child: rightColumn),
+                        ],
+                      );
+              },
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

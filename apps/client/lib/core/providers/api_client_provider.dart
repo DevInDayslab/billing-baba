@@ -16,5 +16,8 @@ Future<ApiClient> apiClient(Ref ref) async {
           .refreshAccessToken();
       return session?.accessToken;
     },
+    accessTokenFallback: () async {
+      return ref.read(authProvider).session?.accessToken;
+    },
   );
 }

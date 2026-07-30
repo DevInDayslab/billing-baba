@@ -372,7 +372,7 @@ class _DescriptionFieldState extends State<_DescriptionField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(hint: 'Description'),
+      decoration: buildSaleFieldDecoration(hint: 'Description', fixedHeight: false),
       maxLines: 3,
       onChanged: widget.onChanged,
     );

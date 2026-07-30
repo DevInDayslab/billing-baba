@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/media/image_display_context.dart';
-import 'package:billing_baba/core/media/media_image_providers.dart';
-import 'package:billing_baba/core/media/media_image_url_resolver.dart';
 import 'package:billing_baba/shared/image/app_image_placeholder.dart';
 import 'package:billing_baba/shared/image/image_cache_manager.dart';
 import 'package:billing_baba/shared/image/image_debug_log.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/media_image_providers.dart';
+import 'package:billing_baba/shared/media/media_image_url_resolver.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,10 +54,10 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
   late Future<String> _resolvedUrlFuture;
 
   String? get _cacheKey => buildImageCacheKey(
-        mediaAssetId: widget.sourceMediaAssetId,
-        displayContext: widget.displayContext,
-        fallbackUrl: widget.imageUrl,
-      );
+    mediaAssetId: widget.sourceMediaAssetId,
+    displayContext: widget.displayContext,
+    fallbackUrl: widget.imageUrl,
+  );
 
   @override
   void initState() {
@@ -115,6 +115,13 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
     await _refreshSignedUrlAndRetry();
   }
 
+  void _scheduleLoadErrorRetry() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_handleLoadError());
+    });
+  }
+
   int? _effectiveMemCacheWidth(BuildContext context) {
     if (widget.memCacheWidth != null) return widget.memCacheWidth;
     final width = widget.width;
@@ -159,7 +166,7 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
       fadeOutDuration: Duration.zero,
       placeholder: (_, _) => widget.placeholder ?? _defaultPlaceholder(),
       errorWidget: (_, _, _) {
-        unawaited(_handleLoadError());
+        _scheduleLoadErrorRetry();
         return widget.errorWidget ?? _defaultErrorWidget();
       },
     );

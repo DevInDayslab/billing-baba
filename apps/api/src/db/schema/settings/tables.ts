@@ -6,6 +6,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns } from '../columns';
 import {
@@ -23,31 +24,48 @@ export const areas = pgTable('areas', {
   name: text('name').notNull(),
 });
 
-export const businessSettings = pgTable('business_settings', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  valuationMethod: valuationMethodEnum('valuation_method')
-    .notNull()
-    .default('average'),
-  defaultTaxType: taxTypeEnum('default_tax_type').notNull().default('none'),
-  invoiceTerms: text('invoice_terms'),
-  enablePriceConflictAlerts: boolean('enable_price_conflict_alerts')
-    .notNull()
-    .default(true),
-  creditLimitAction: creditLimitActionEnum('credit_limit_action')
-    .notNull()
-    .default('warn'),
-  pricingTierLabels: jsonb('pricing_tier_labels').$type<Record<string, string>>(),
-  defaultInvoiceTaxRate: money('default_invoice_tax_rate'),
-});
+export const businessSettings = pgTable(
+  'business_settings',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    valuationMethod: valuationMethodEnum('valuation_method')
+      .notNull()
+      .default('average'),
+    defaultTaxType: taxTypeEnum('default_tax_type').notNull().default('none'),
+    invoiceTerms: text('invoice_terms'),
+    enablePriceConflictAlerts: boolean('enable_price_conflict_alerts')
+      .notNull()
+      .default(true),
+    creditLimitAction: creditLimitActionEnum('credit_limit_action')
+      .notNull()
+      .default('warn'),
+    pricingTierLabels: jsonb('pricing_tier_labels').$type<Record<string, string>>(),
+    defaultInvoiceTaxRate: money('default_invoice_tax_rate'),
+  },
+  (table) => [
+    syncPullIndex(
+      'business_settings',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
+  ],
+);
 
-export const taxRates = pgTable('tax_rates', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-  rate: money('rate').notNull(),
-  isDefault: boolean('is_default').notNull().default(false),
-});
+export const taxRates = pgTable(
+  'tax_rates',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    rate: money('rate').notNull(),
+    isDefault: boolean('is_default').notNull().default(false),
+  },
+  (table) => [
+    syncPullIndex('tax_rates', table.businessId, table.updatedAt, table.isDeleted),
+  ],
+);
 
 export const documentNumberSequences = pgTable(
   'document_number_sequences',

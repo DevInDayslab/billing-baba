@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/hidden_ledger/application/hidden_ledger_service.dart';
@@ -101,7 +102,7 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
                 child: listAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (error, _) => _ErrorState(
-                    message: error.toString(),
+                    message: OfflineUiMessages.messageFor(error),
                     onRetry: () => ref.invalidate(hiddenLedgerListProvider),
                   ),
                   data: (page) {

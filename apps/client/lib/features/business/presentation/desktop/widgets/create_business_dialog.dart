@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/text_input_formatters.dart';
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/create_business_controller.dart';
 import 'package:billing_baba/features/business/models/create_business_input.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_form_fields.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -83,6 +83,7 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   String? _state;
   String _currency = 'INR';
   var _prefilled = false;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   @override
   void didChangeDependencies() {
@@ -131,6 +132,8 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
 
     ref.read(createBusinessFormProvider.notifier).clearErrors();
 
+    setState(() => _autovalidateMode = AutovalidateMode.always);
+
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
@@ -145,7 +148,9 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       return;
     }
 
-    _formKey.currentState?.validate();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _formKey.currentState?.validate();
+    });
   }
 
   void _showGenericErrorDialog() {
@@ -187,6 +192,7 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
 
     final content = _CreateBusinessFormContent(
       formKey: _formKey,
+      autovalidateMode: _autovalidateMode,
       formState: formState,
       businessNameController: _businessNameController,
       ownerNameController: _ownerNameController,
@@ -244,6 +250,7 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
 class _CreateBusinessFormContent extends StatelessWidget {
   const _CreateBusinessFormContent({
     required this.formKey,
+    required this.autovalidateMode,
     required this.formState,
     required this.businessNameController,
     required this.ownerNameController,
@@ -264,6 +271,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
   });
 
   final GlobalKey<FormState> formKey;
+  final AutovalidateMode autovalidateMode;
   final CreateBusinessFormState formState;
   final TextEditingController businessNameController;
   final TextEditingController ownerNameController;
@@ -286,7 +294,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Form(
       key: formKey,
-      autovalidateMode: AutovalidateMode.disabled,
+      autovalidateMode: autovalidateMode,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -342,8 +350,13 @@ class _CreateBusinessFormContent extends StatelessWidget {
             controller: businessNameController,
             textCapitalization: TextCapitalization.words,
             serverError: formState.errorFor('name'),
-            validator: (value) =>
-                Validators.required(value, fieldName: 'Business name'),
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(Validators.businessNameMaxLength),
+              FilteringTextInputFormatter.allow(
+                Validators.businessNameInputPattern,
+              ),
+            ],
+            validator: Validators.businessName,
           ),
           const SizedBox(height: AppSpacing.md),
           BusinessFormField(
@@ -371,8 +384,13 @@ class _CreateBusinessFormContent extends StatelessWidget {
             controller: ownerNameController,
             textCapitalization: TextCapitalization.words,
             serverError: formState.errorFor('owner_name'),
-            validator: (value) =>
-                Validators.required(value, fieldName: 'Owner name'),
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(Validators.ownerNameMaxLength),
+              FilteringTextInputFormatter.allow(
+                Validators.businessNameInputPattern,
+              ),
+            ],
+            validator: Validators.ownerName,
           ),
           const SizedBox(height: AppSpacing.md),
           BusinessFormField(
@@ -394,7 +412,11 @@ class _CreateBusinessFormContent extends StatelessWidget {
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             serverError: formState.errorFor('email'),
-            validator: Validators.email,
+            validator: (value) {
+              final trimmed = value?.trim() ?? '';
+              if (trimmed.isEmpty) return null;
+              return Validators.email(trimmed);
+            },
           ),
           const SizedBox(height: AppSpacing.xl),
           const BusinessFormSectionHeader(

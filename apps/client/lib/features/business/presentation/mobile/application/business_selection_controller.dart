@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
@@ -97,6 +98,7 @@ class MobileBusinessSelectionNotifier
     }
 
     state = state.copyWith(isOpening: true);
+    BusinessSelectionRetryGuard.reset();
     try {
       BusinessOpenDebugLog.step('mobile-ui', 'calling openCompany');
       final sessionService = await ref.read(
@@ -117,6 +119,8 @@ class MobileBusinessSelectionNotifier
       return error.message;
     } on BusinessSelectionFailed catch (error) {
       return error.message;
+    } on BusinessServerUnavailable catch (error) {
+      return error.toString();
     } on Object catch (error) {
       return error is DioException
           ? ApiErrorParser.userFacingMessage(error)

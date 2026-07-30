@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
 import 'package:billing_baba/features/settings/application/whatsapp_settings_provider.dart';
 import 'package:billing_baba/features/settings/presentation/mobile/widgets/mobile_settings_placeholder_body.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

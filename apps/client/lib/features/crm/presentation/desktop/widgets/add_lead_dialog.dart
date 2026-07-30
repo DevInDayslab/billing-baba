@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/domain/services/lead_service_types.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -79,9 +79,12 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
   LeadStatus _status = LeadStatus.newLead;
   bool _emailOptOut = false;
 
-  bool _companyError = false;
-  bool _lastNameError = false;
-  bool _phoneError = false;
+  String? _leadOwnerError;
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _companyError;
+  String? _phoneError;
+  String? _mobileError;
 
   @override
   void dispose() {
@@ -123,7 +126,7 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
     final description = _descriptionController.text.trim();
     return AddLeadInput(
       name: _buildLeadName(),
-      phone: _phoneController.text.trim(),
+      phone: Validators.sanitizePhoneInput(_phoneController.text),
       email: _nullable(_emailController.text),
       company: _nullable(_companyController.text),
       leadSource: _leadSource,
@@ -134,7 +137,7 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
       firstName: _nullable(_firstNameController.text),
       lastName: _nullable(_lastNameController.text),
       title: _nullable(_titleController.text),
-      mobile: _nullable(_mobileController.text),
+      mobile: _nullablePhone(_mobileController.text),
       fax: _nullable(_faxController.text),
       website: _nullable(_websiteController.text),
       industry: _industry == '-None-' ? null : _industry,
@@ -152,18 +155,34 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
     return trimmed.isEmpty ? null : trimmed;
   }
 
+  String? _nullablePhone(String value) {
+    final sanitized = Validators.sanitizePhoneInput(value);
+    return sanitized.isEmpty ? null : sanitized;
+  }
+
   bool _validate() {
-    final companyEmpty = _companyController.text.trim().isEmpty;
-    final lastNameEmpty = _lastNameController.text.trim().isEmpty;
-    final phoneEmpty = _phoneController.text.trim().isEmpty;
+    final leadOwnerError = Validators.leadOwnerName(_leadOwnerController.text);
+    final firstNameError = Validators.leadFirstName(_firstNameController.text);
+    final lastNameError = Validators.leadLastName(_lastNameController.text);
+    final companyError = Validators.leadCompany(_companyController.text);
+    final phoneError = Validators.requiredPhone(_phoneController.text);
+    final mobileError = Validators.phone(_mobileController.text);
 
     setState(() {
-      _companyError = companyEmpty;
-      _lastNameError = lastNameEmpty;
-      _phoneError = phoneEmpty;
+      _leadOwnerError = leadOwnerError;
+      _firstNameError = firstNameError;
+      _lastNameError = lastNameError;
+      _companyError = companyError;
+      _phoneError = phoneError;
+      _mobileError = mobileError;
     });
 
-    return !companyEmpty && !lastNameEmpty && !phoneEmpty;
+    return leadOwnerError == null &&
+        firstNameError == null &&
+        lastNameError == null &&
+        companyError == null &&
+        phoneError == null &&
+        mobileError == null;
   }
 
   void _resetForm() {
@@ -189,9 +208,12 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
       _leadSourceLabel = null;
       _status = LeadStatus.newLead;
       _emailOptOut = false;
-      _companyError = false;
-      _lastNameError = false;
-      _phoneError = false;
+      _leadOwnerError = null;
+      _firstNameError = null;
+      _lastNameError = null;
+      _companyError = null;
+      _phoneError = null;
+      _mobileError = null;
     });
   }
 
@@ -260,16 +282,34 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                 span: 6,
                                 child: AppFormField(
                                   label: 'Lead Owner',
+                                  hasError: _leadOwnerError != null,
+                                  errorText: _leadOwnerError,
                                   child: TextFormField(
                                     controller: _leadOwnerController,
+                                    textCapitalization:
+                                        TextCapitalization.words,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(
+                                        Validators.ownerNameMaxLength,
+                                      ),
+                                      FilteringTextInputFormatter.allow(
+                                        Validators.businessNameInputPattern,
+                                      ),
+                                    ],
                                     decoration: buildSaleFieldDecoration(
                                       hint: 'Lead owner',
+                                      hasError: _leadOwnerError != null,
                                       suffixIcon: const Icon(
                                         Icons.person_outline,
                                         size: 18,
                                         color: AppColors.textSecondary,
                                       ),
                                     ),
+                                    onChanged: (_) {
+                                      if (_leadOwnerError != null) {
+                                        setState(() => _leadOwnerError = null);
+                                      }
+                                    },
                                   ),
                                 ),
                               ),
@@ -277,20 +317,28 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                 span: 6,
                                 child: _RequiredFormField(
                                   label: 'Company',
-                                  hasError: _companyError,
-                                  errorText: _companyError
-                                      ? 'Company is required'
-                                      : null,
+                                  hasError: _companyError != null,
+                                  errorText: _companyError,
                                   child: TextFormField(
                                     controller: _companyController,
+                                    textCapitalization:
+                                        TextCapitalization.words,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(
+                                        Validators.businessNameMaxLength,
+                                      ),
+                                      FilteringTextInputFormatter.allow(
+                                        Validators.businessNameInputPattern,
+                                      ),
+                                    ],
                                     decoration: buildSaleFieldDecoration(
                                       hint: 'Company',
-                                      hasError: _companyError,
+                                      hasError: _companyError != null,
                                       borderless: true,
                                     ),
                                     onChanged: (_) {
-                                      if (_companyError) {
-                                        setState(() => _companyError = false);
+                                      if (_companyError != null) {
+                                        setState(() => _companyError = null);
                                       }
                                     },
                                   ),
@@ -301,6 +349,8 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                 child: AppFormField(
                                   label: 'First Name',
                                   fixedHeight: false,
+                                  hasError: _firstNameError != null,
+                                  errorText: _firstNameError,
                                   child: SizedBox(
                                     height: FormSpacing.inputHeight,
                                     child: FormRow(
@@ -318,9 +368,28 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                         ),
                                         TextFormField(
                                           controller: _firstNameController,
+                                          textCapitalization:
+                                              TextCapitalization.words,
+                                          inputFormatters: [
+                                            LengthLimitingTextInputFormatter(
+                                              Validators.ownerNameMaxLength,
+                                            ),
+                                            FilteringTextInputFormatter.allow(
+                                              Validators
+                                                  .businessNameInputPattern,
+                                            ),
+                                          ],
                                           decoration: buildSaleFieldDecoration(
                                             hint: 'First name',
+                                            hasError: _firstNameError != null,
                                           ),
+                                          onChanged: (_) {
+                                            if (_firstNameError != null) {
+                                              setState(
+                                                () => _firstNameError = null,
+                                              );
+                                            }
+                                          },
                                         ),
                                       ],
                                     ),
@@ -331,20 +400,28 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                 span: 6,
                                 child: _RequiredFormField(
                                   label: 'Last Name',
-                                  hasError: _lastNameError,
-                                  errorText: _lastNameError
-                                      ? 'Last name is required'
-                                      : null,
+                                  hasError: _lastNameError != null,
+                                  errorText: _lastNameError,
                                   child: TextFormField(
                                     controller: _lastNameController,
+                                    textCapitalization:
+                                        TextCapitalization.words,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(
+                                        Validators.ownerNameMaxLength,
+                                      ),
+                                      FilteringTextInputFormatter.allow(
+                                        Validators.businessNameInputPattern,
+                                      ),
+                                    ],
                                     decoration: buildSaleFieldDecoration(
                                       hint: 'Last name',
-                                      hasError: _lastNameError,
+                                      hasError: _lastNameError != null,
                                       borderless: true,
                                     ),
                                     onChanged: (_) {
-                                      if (_lastNameError) {
-                                        setState(() => _lastNameError = false);
+                                      if (_lastNameError != null) {
+                                        setState(() => _lastNameError = null);
                                       }
                                     },
                                   ),
@@ -384,21 +461,23 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                 span: 6,
                                 child: _RequiredFormField(
                                   label: 'Phone',
-                                  hasError: _phoneError,
-                                  errorText: _phoneError
-                                      ? 'Phone is required'
-                                      : null,
+                                  hasError: _phoneError != null,
+                                  errorText: _phoneError,
                                   child: TextFormField(
                                     controller: _phoneController,
                                     keyboardType: TextInputType.phone,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(10),
+                                    ],
                                     decoration: buildSaleFieldDecoration(
                                       hint: 'Phone',
-                                      hasError: _phoneError,
+                                      hasError: _phoneError != null,
                                       borderless: true,
                                     ),
                                     onChanged: (_) {
-                                      if (_phoneError) {
-                                        setState(() => _phoneError = false);
+                                      if (_phoneError != null) {
+                                        setState(() => _phoneError = null);
                                       }
                                     },
                                   ),
@@ -421,12 +500,24 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                 span: 6,
                                 child: AppFormField(
                                   label: 'Mobile',
+                                  hasError: _mobileError != null,
+                                  errorText: _mobileError,
                                   child: TextFormField(
                                     controller: _mobileController,
                                     keyboardType: TextInputType.phone,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(10),
+                                    ],
                                     decoration: buildSaleFieldDecoration(
                                       hint: 'Mobile',
+                                      hasError: _mobileError != null,
                                     ),
+                                    onChanged: (_) {
+                                      if (_mobileError != null) {
+                                        setState(() => _mobileError = null);
+                                      }
+                                    },
                                   ),
                                 ),
                               ),

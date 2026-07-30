@@ -1,12 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
-import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/estimate_quotation_convert_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/estimate_quotation_status_badge.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

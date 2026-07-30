@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/network/network_diagnostics_service.dart';
 import 'package:billing_baba/core/network/network_error_details.dart';
 import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
-import 'package:billing_baba/core/utils/jwt_utils.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
@@ -20,9 +20,15 @@ import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/models/business_model.dart'
+    as business;
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
+import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -41,6 +47,26 @@ enum AuthStatus {
   needsBusinessCreation,
 }
 
+/// Auth inputs that should restart [businessProfileProvider].
+typedef BusinessProfileAuthScope = (
+  AuthStatus status,
+  String? userId,
+  String? userRole,
+);
+
+BusinessProfileAuthScope businessProfileAuthScope(AuthState auth) {
+  final session = auth.session;
+  return (auth.status, session?.user.id, session?.user.role);
+}
+
+bool businessProfileHasScope(BusinessProfileAuthScope scope) {
+  final (status, _, userRole) = scope;
+  return status == AuthStatus.authenticated &&
+      userRole != null &&
+      userRole.isNotEmpty;
+}
+
+@immutable
 class AuthState {
   const AuthState({
     this.status = AuthStatus.initializing,
@@ -151,6 +177,55 @@ class AuthState {
           backendLoginCompleted ?? this.backendLoginCompleted,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AuthState &&
+        other.status == status &&
+        other.otpPhase == otpPhase &&
+        other.phone == phone &&
+        other.reqId == reqId &&
+        other.msg91AccessToken == msg91AccessToken &&
+        other.error == error &&
+        _networkErrorEquals(other.networkError, networkError) &&
+        other.session == session &&
+        other.resendAvailableAt == resendAvailableAt &&
+        other.otpSessionVersion == otpSessionVersion &&
+        other.backendLoginCompleted == backendLoginCompleted;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    status,
+    otpPhase,
+    phone,
+    reqId,
+    msg91AccessToken,
+    error,
+    networkError?.title,
+    networkError?.reason,
+    networkError?.details,
+    networkError?.host,
+    networkError?.httpStatus,
+    session,
+    resendAvailableAt,
+    otpSessionVersion,
+    backendLoginCompleted,
+  );
+}
+
+bool _networkErrorEquals(
+  NetworkErrorDetails? a,
+  NetworkErrorDetails? b,
+) {
+  if (identical(a, b)) return true;
+  if (a == null || b == null) return false;
+  return a.title == b.title &&
+      a.reason == b.reason &&
+      a.details == b.details &&
+      a.host == b.host &&
+      a.httpStatus == b.httpStatus;
 }
 
 @Riverpod(keepAlive: true)
@@ -191,14 +266,19 @@ class Auth extends _$Auth {
   Future<AuthService> _service() => ref.read(authServiceProvider.future);
   OtpService get _otp => ref.read(otpServiceProvider);
 
+  void _commitState(AuthState next) {
+    if (next == state) return;
+    state = next;
+  }
+
   void _setOtpPhase(OtpPhase phase) {
     AuthFlowLogger.otpTransition(phase);
-    state = state.copyWith(otpPhase: phase);
+    _commitState(state.copyWith(otpPhase: phase));
   }
 
   void _setAuthStatus(AuthStatus status) {
     AuthFlowLogger.authStatus(status.name);
-    state = state.copyWith(status: status);
+    _commitState(state.copyWith(status: status));
   }
 
   AuthStatus _statusForSession(AuthSession session) {
@@ -246,7 +326,14 @@ class Auth extends _$Auth {
     _backendLoginInFlight = false;
     _resendInFlight = false;
     AuthFlowLogger.reset();
+    // Drop any leftover company session from a prior login so GoRouter can
+    // navigate off /login when status is needsBusinessSelection.
+    ref.read(companySessionProvider.notifier).clear();
     final nextStatus = _statusForSession(session);
+    if (nextStatus == AuthStatus.needsBusinessSelection ||
+        nextStatus == AuthStatus.needsBusinessCreation) {
+      ref.read(companySessionProvider.notifier).clear();
+    }
     _setAuthStatus(nextStatus);
     state = state.copyWith(
       otpPhase: OtpPhase.idle,
@@ -336,11 +423,6 @@ class Auth extends _$Auth {
       return '$specificMessage\n\nYour OTP is already verified — tap Retry to complete sign-in.';
     }
     return specificMessage;
-  }
-
-  String _debugErrorSuffix(Object error) {
-    if (!AppConfig.authDebugLogging) return '';
-    return '\n\n[debug] $error';
   }
 
   Future<void> _attemptBackendLogin(int generation) async {
@@ -466,6 +548,9 @@ class Auth extends _$Auth {
         otpPhase: OtpPhase.idle,
         backendLoginCompleted: true,
       );
+      if (AuthService.isOfflineDevSession(session)) {
+        await _bootstrapOfflineDevSession(session);
+      }
     } on TimeoutException {
       await splashWait;
       _setAuthStatus(AuthStatus.unauthenticated);
@@ -674,7 +759,7 @@ class Auth extends _$Auth {
       state = state.copyWith(
         error: e.isNetwork
             ? 'Please check your internet connection.'
-            : '${e.message}${_debugErrorSuffix(e)}',
+            : e.message,
       );
     } on Object catch (e, st) {
       AuthDebugLogger.log('verifyOtp exception: $e');
@@ -685,9 +770,7 @@ class Auth extends _$Auth {
         return;
       }
       _setOtpPhase(OtpPhase.otpSent);
-      state = state.copyWith(
-        error: '${_messageFromError(e)}${_debugErrorSuffix(e)}',
-      );
+      state = state.copyWith(error: _messageFromError(e));
     } finally {
       if (!state.backendLoginCompleted &&
           state.otpPhase != OtpPhase.backendLogin) {
@@ -712,7 +795,7 @@ class Auth extends _$Auth {
     if (_devLoginInFlight || state.backendLoginCompleted) return;
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: offline local session (no API)');
+    AuthDebugLogger.log('devLogin: POST /auth/dev-login');
     state = state.copyWith(clearError: true);
     _setOtpPhase(OtpPhase.backendLogin);
 
@@ -727,9 +810,7 @@ class Auth extends _$Auth {
         debugPrint('[AUTH] devLogin stackTrace:\n$st');
       }
       _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(
-        error: '${_devLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
-      );
+      state = state.copyWith(error: _devLoginErrorMessage(e));
     } finally {
       _devLoginInFlight = false;
     }
@@ -752,7 +833,10 @@ class Auth extends _$Auth {
       try {
         reqId = await _otp.retryOtp(state.reqId);
       } on OtpException catch (e) {
-        if (!e.isConsumed) rethrow;
+        if (e.isNetwork) rethrow;
+        AuthDebugLogger.log(
+          'retryOtp failed (${e.message}); falling back to sendOtp',
+        );
         reqId = await _otp.sendOtp(phone).timeout(_sendTimeout);
       }
 
@@ -800,7 +884,44 @@ class Auth extends _$Auth {
     state = state.copyWith(phone: '');
   }
 
+  Future<void> _bootstrapOfflineDevSession(AuthSession session) async {
+    if (!AuthService.isOfflineDevSession(session) || session.businesses.isEmpty) {
+      return;
+    }
+
+    final businessSummary = session.businesses.first;
+    final user = session.user;
+
+    final businessService = await ref.read(businessServiceProvider.future);
+    await businessService.seedOfflineDevSession(session);
+
+    final profile = AuthService.offlineDevBusinessProfile(session);
+    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+
+    ref.read(companySessionProvider.notifier).setSession(
+      CompanySession.owner(
+        entry: CompanyListEntry(
+          id: businessSummary.id,
+          name: businessSummary.name,
+          relationship: CompanyRelationship.owner,
+          syncStatus: business.SyncStatus.on,
+          source: CompanyListSource.apiOwned,
+          ownerName: user.name,
+          phone: user.phone,
+        ),
+        userId: user.id,
+        userName: user.name ?? 'Developer',
+        userPhone: user.phone,
+      ),
+    );
+  }
+
   Future<void> selectBusiness(String businessId) {
+    if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      BusinessSelectionRetryGuard.logBlockedOnce('selectBusiness', businessId);
+      return Future<void>.value();
+    }
+
     final operation = _businessSelectionChain
         .catchError((_) {})
         .then((_) => _selectBusinessInternal(businessId));
@@ -809,22 +930,40 @@ class Auth extends _$Auth {
   }
 
   Future<void> _selectBusinessInternal(String businessId) async {
+    if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
+      return;
+    }
+
     BusinessOpenDebugLog.step('selectBusiness', 'begin id=$businessId');
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) {
       throw const BusinessSelectionFailed('Session expired. Please sign in again.');
     }
 
+    final storage = await ref.read(storageServiceProvider.future);
+    final accessToken = await storage.readSecure(StorageKeys.accessToken);
+    if (accessToken != null && AuthService.isOfflineDevToken(accessToken)) {
+      BusinessOpenDebugLog.step('selectBusiness', 'offline dev — local scope only');
+      final service = await _service();
+      await service.persistSession(state.session!, businessId: businessId);
+      _setAuthStatus(AuthStatus.authenticated);
+      return;
+    }
+
     if (await _isJwtScopedToBusiness(businessId)) {
       BusinessOpenDebugLog.step('selectBusiness', 'JWT already scoped — skip refresh');
+      await _syncSessionRoleFromJwt();
+      BusinessSelectionRetryGuard.recordSuccess(businessId);
       if (state.status != AuthStatus.authenticated) {
         _setAuthStatus(AuthStatus.authenticated);
       }
       return;
     }
 
-    BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh API');
-    state = state.copyWith(clearError: true);
+    BusinessOpenDebugLog.step(
+      'selectBusiness',
+      'JWT refresh API (retryCount=${BusinessSelectionRetryGuard.retryCount})',
+    );
     try {
       final service = await _service();
       final session = await service.selectBusiness(
@@ -836,13 +975,23 @@ class Auth extends _$Auth {
           'Could not select business. Please try again.',
         );
       }
-      _setAuthStatus(AuthStatus.authenticated);
-      state = state.copyWith(session: session);
+      AuthFlowLogger.authStatus(AuthStatus.authenticated.name);
+      _commitState(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          session: session,
+          clearError: true,
+        ),
+      );
+      BusinessSelectionRetryGuard.recordSuccess(businessId);
       BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh done');
     } on BusinessSelectionFailed {
       BusinessOpenDebugLog.step('selectBusiness', 'failed (BusinessSelectionFailed)');
       rethrow;
     } on Object catch (e) {
+      if (NetworkExceptionClassifier.isConnectivityError(e)) {
+        BusinessSelectionRetryGuard.recordConnectivityFailure(businessId, e);
+      }
       BusinessOpenDebugLog.step('selectBusiness', 'failed ($e)');
       throw BusinessSelectionFailed(_messageFromError(e));
     }
@@ -851,9 +1000,33 @@ class Auth extends _$Auth {
   Future<bool> _isJwtScopedToBusiness(String businessId) async {
     final storage = await ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
+    if (token != null && AuthService.isOfflineDevToken(token)) {
+      final selected = await storage.readSecure(StorageKeys.selectedBusinessId);
+      return selected == businessId;
+    }
+
     final jwtBusinessId = JwtUtils.businessId(token);
     final role = JwtUtils.role(token);
     return jwtBusinessId == businessId && role != null && role.isNotEmpty;
+  }
+
+  /// Keeps session user role aligned with the scoped JWT when refresh is skipped.
+  Future<void> _syncSessionRoleFromJwt() async {
+    final session = state.session;
+    if (session == null || session.user.role != null) return;
+
+    final storage = await ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    final role = JwtUtils.role(token);
+    if (role == null || role.isEmpty) return;
+
+    _commitState(
+      state.copyWith(
+        session: session.copyWith(
+          user: session.user.copyWith(role: role),
+        ),
+      ),
+    );
   }
 
   /// Scopes JWT to [businessId] for edit-from-list without invalidating providers.
@@ -876,26 +1049,44 @@ class Auth extends _$Auth {
     SwitchCompanyDebugLog.action('companySession cleared');
     state = state.copyWith(clearError: true);
     try {
-      await _clearActiveBusinessSession();
-      SwitchCompanyDebugLog.invalidate(
-        'active business session + business-scoped providers',
-      );
       final service = await _service();
-      SwitchCompanyDebugLog.api('refreshStoredSession(preserveBusinessScope: false)');
+      // Refresh to an unscoped JWT BEFORE clearing selectedBusinessId /
+      // invalidating providers. Doing it the other way raced 401 retries that
+      // revoked the refresh token and wiped the session (empty Authorization).
+      SwitchCompanyDebugLog.api(
+        'refreshStoredSession(preserveBusinessScope: false)',
+      );
       final session = await service.refreshStoredSession(
         refreshToken: refreshToken,
         preserveBusinessScope: false,
       );
       if (session == null) {
-        AuthFlowLogger.authStatus(AuthStatus.unauthenticated.name);
-        // Single write so auth watchers only rebuild once.
-        state = state.copyWith(
-          status: AuthStatus.unauthenticated,
-          clearSession: true,
+        final stillHasToken = await service.getAccessToken();
+        if (stillHasToken == null || stillHasToken.isEmpty) {
+          AuthFlowLogger.authStatus(AuthStatus.unauthenticated.name);
+          state = state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearSession: true,
+          );
+          SwitchCompanyDebugLog.action(
+            'session null + no token → unauthenticated',
+          );
+          return;
+        }
+        SwitchCompanyDebugLog.action(
+          'refresh failed but tokens kept — abort switch',
         );
-        SwitchCompanyDebugLog.action('session null → unauthenticated (atomic)');
+        state = state.copyWith(
+          error: 'Could not switch company. Please try again.',
+        );
         return;
       }
+
+      await _clearActiveBusinessSession();
+      SwitchCompanyDebugLog.invalidate(
+        'active business session + business-scoped providers',
+      );
+
       // Single write for status + session. Splitting these caused
       // collaborationRepository / companyDirectory to rebuild twice and
       // produced a second loading indicator after Switch Company.
@@ -974,8 +1165,19 @@ class Auth extends _$Auth {
     try {
       final service = await _service();
       await service.logout();
-      await _invalidateBusinessProviders(includeList: true);
+      ref.read(companySessionProvider.notifier).clear();
+      // Defer so invalidation does not run while authProvider is still updating
+      // (businessProfileProvider watches authProvider → circular dependency).
+      Future.microtask(() {
+        if (ref.mounted) {
+          invalidateAllBusinessScopedProviders(
+            ref,
+            includeBusinessList: true,
+          );
+        }
+      });
     } finally {
+      ref.read(companySessionProvider.notifier).clear();
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }

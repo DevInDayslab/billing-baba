@@ -7,11 +7,11 @@ import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
-import 'package:billing_baba/features/collaboration/application/company_session_bootstrap_provider.dart';
 import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
+import 'package:billing_baba/features/crm/models/crm_sub_route.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_executor.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_menu_provider.dart';
 import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
@@ -65,6 +65,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _expandInitialized = false;
   bool _isPartiesExpanded = false;
   bool _partiesExpandInitialized = false;
+  bool _isCrmExpanded = false;
+  bool _crmExpandInitialized = false;
   bool _isUtilitiesExpanded = false;
   bool _utilitiesExpandInitialized = false;
   bool _isCollaborationExpanded = false;
@@ -75,16 +77,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
   final _shellShortcutFocusNode = FocusNode(debugLabel: 'shellShortcuts');
+  SearchDialogNotifier? _searchDialogNotifier;
 
   @override
   void initState() {
     super.initState();
+    _searchDialogNotifier = ref.read(searchDialogProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _registerSearchDialog();
       _ensureShellShortcutFocus();
       final businessId = ref.read(sidebarBusinessProvider).id;
-      if (businessId!.isNotEmpty) {
+      if (businessId != null && businessId.isNotEmpty) {
         unawaited(
           ref.read(imageStartupWarmupProvider).run(businessId: businessId),
         );
@@ -94,7 +98,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
   @override
   void dispose() {
-    ref.read(searchDialogProvider.notifier).unregister();
+    _searchDialogNotifier?.unregister();
     _shellShortcutFocusNode.dispose();
     super.dispose();
   }
@@ -120,8 +124,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (!_expandInitialized) {
       _expandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
-      if (location.startsWith(AppRoutes.sale) ||
-          location.startsWith(AppRoutes.crm)) {
+      if (location.startsWith(AppRoutes.sale)) {
         _isSaleExpanded = true;
       }
       if (location.startsWith(AppRoutes.purchase)) {
@@ -133,6 +136,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       final location = GoRouterState.of(context).uri.path;
       if (location.startsWith(AppRoutes.parties)) {
         _isPartiesExpanded = true;
+      }
+    }
+    if (!_crmExpandInitialized) {
+      _crmExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (location.startsWith(AppRoutes.crm)) {
+        _isCrmExpanded = true;
       }
     }
     if (!_utilitiesExpandInitialized) {
@@ -159,6 +169,10 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   }
 
   static final List<_NavSubItem> _partiesSubItems = PartySubRoutes.items
+      .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
+
+  static final List<_NavSubItem> _crmSubItems = CrmSubRoutes.items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
@@ -211,12 +225,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       isExpandable: true,
       subItems: _partiesSubItems,
     ),
+    _NavItem(
+      icon: Icons.handshake_outlined,
+      label: 'CRM',
+      isExpandable: true,
+      routePrefix: AppRoutes.crm,
+      subItems: _crmSubItems,
+    ),
     const _NavItem(
       route: AppRoutes.items,
       icon: Icons.inventory_2_outlined,
       label: 'Items',
     ),
-    // Only Sale uses expandable sub-items today; generalize if more parents are added.
     _NavItem(
       icon: Icons.receipt_outlined,
       label: 'Sale',
@@ -327,6 +347,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       _isSaleExpanded = false;
       _isPurchaseExpanded = false;
       _isPartiesExpanded = false;
+      _isCrmExpanded = false;
       _isUtilitiesExpanded = false;
       _isCollaborationExpanded = false;
       _isDeveloperExpanded = false;
@@ -370,7 +391,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         }
       });
     }
-    ref.watch(companySessionBootstrapProvider);
+    // Bootstrap is owned by [createAppRouter] (ref.watch there). Watching it
+    // again here is redundant and pulled session/auth listen churn into shell
+    // rebuilds during company open.
     final permissions = ref.watch(permissionServiceProvider);
 
     return _ShellSidebarStateScope(
@@ -632,18 +655,20 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       final isSale = item.routePrefix == AppRoutes.sale;
       final isPurchase = item.routePrefix == AppRoutes.purchase;
       final isParties = item.route == AppRoutes.parties;
+      final isCrm = item.routePrefix == AppRoutes.crm;
       final isUtilities = item.routePrefix == AppRoutes.utilities;
       final isCollaboration = item.routePrefix == AppRoutes.collaboration;
       final isDeveloper = item.routePrefix == AppRoutes.developer;
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
-          ? currentLocation.startsWith(AppRoutes.sale) ||
-                currentLocation.startsWith(AppRoutes.crm)
+          ? currentLocation.startsWith(AppRoutes.sale)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
           : isParties
           ? currentLocation.startsWith(AppRoutes.parties)
+          : isCrm
+          ? currentLocation.startsWith(AppRoutes.crm)
           : isUtilities
           ? currentLocation.startsWith(AppRoutes.utilities)
           : isCollaboration
@@ -656,6 +681,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ? _isPurchaseExpanded
           : isParties
           ? _isPartiesExpanded
+          : isCrm
+          ? _isCrmExpanded
           : isUtilities
           ? _isUtilitiesExpanded
           : isCollaboration
@@ -678,6 +705,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 _isPurchaseExpanded = !_isPurchaseExpanded;
               } else if (isParties) {
                 _isPartiesExpanded = !_isPartiesExpanded;
+              } else if (isCrm) {
+                _isCrmExpanded = !_isCrmExpanded;
               } else if (isUtilities) {
                 _isUtilitiesExpanded = !_isUtilitiesExpanded;
               } else if (isCollaboration) {
@@ -695,6 +724,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                   _isPurchaseExpanded = true;
                 } else if (isParties) {
                   _isPartiesExpanded = true;
+                } else if (isCrm) {
+                  _isCrmExpanded = true;
                 } else if (isUtilities) {
                   _isUtilitiesExpanded = true;
                 } else if (isCollaboration) {

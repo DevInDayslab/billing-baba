@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -172,144 +174,22 @@ class _ItemReportByPartyReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'ITEM NAME',
-                                          ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'SALE QUANTITY',
-                                          width: 120,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'SALE AMOUNT',
-                                          width: 120,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'PURCHASE QUANTITY',
-                                          width: 140,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'PURCHASE AMOUNT',
-                                          width: 140,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No data for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: const [
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'ITEM NAME',
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'SALE QUANTITY',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'SALE AMOUNT',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PURCHASE QUANTITY',
-                                        width: 140,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PURCHASE AMOUNT',
-                                        width: 140,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.flex(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(rows[i].itemName),
-                                                    Text(
-                                                      rows[i].partyName,
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: AppColors
-                                                            .textSecondary,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].quantity
-                                                      .toStringAsFixed(0),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].amount,
-                                                  ),
-                                                ),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
+                            child: ReportFilterableSyncTable<ReportItemByPartyRow>(
+                              reportScope: itemByPartyReportScope,
+                              columns: itemReportByPartyColumns(),
+                              rows: rows,
+                              emptyState: const Center(
+                                child: Text(
+                                  'No data for the selected period.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
-                        
+                              ),
+                            ),
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

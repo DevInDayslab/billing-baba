@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_receipt_printer.dart';
@@ -17,6 +17,8 @@ import 'package:billing_baba/features/pos/presentation/desktop/widgets/payment_p
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/receipt_view_widget.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
+import 'package:billing_baba/shared/utils/output_error_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,7 +100,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $error')),
+        SnackBar(content: Text(OutputErrorMapper.printMessage(error))),
       );
     }
   }
@@ -113,7 +115,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
 
   Future<void> _completeSale() async {
     final session = ref.read(posSessionProvider);
-    if (!session.hasActiveBackendSession) {
+    if (!session.hasActiveSession) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('POS session not open. Please retry.')),
       );
@@ -178,7 +180,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to complete sale: $error')),
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
       );
     }
   }
@@ -378,11 +380,11 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
               },
             ),
           ),
-          if (_showShortcutHints)
-            _ShortcutHintsBar(
-              onToggleHints: () =>
-                  setState(() => _showShortcutHints = !_showShortcutHints),
-            ),
+          _ShortcutHintsBar(
+            showHints: _showShortcutHints,
+            onToggleHints: () =>
+                setState(() => _showShortcutHints = !_showShortcutHints),
+          ),
         ],
       ),
     );
@@ -601,17 +603,6 @@ class _PosToolbar extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     _ToolbarIconButton(
-                      icon: Icons.notifications_outlined,
-                      tooltip: 'Notifications',
-                      badge: 3,
-                      onPressed: () {},
-                    ),
-                    _ToolbarIconButton(
-                      icon: Icons.settings_outlined,
-                      tooltip: 'Settings',
-                      onPressed: () {},
-                    ),
-                    _ToolbarIconButton(
                       icon: Icons.open_in_full,
                       tooltip: 'Fullscreen',
                       onPressed: () {},
@@ -713,35 +704,29 @@ class _ToolbarIconButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
-    this.badge,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
-  final int? badge;
 
   @override
   Widget build(BuildContext context) {
-    final iconWidget = Icon(icon, size: 20, color: AppColors.textSecondary);
-
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      icon: badge != null
-          ? Badge(
-              label: Text('$badge'),
-              backgroundColor: AppColors.error,
-              child: iconWidget,
-            )
-          : iconWidget,
+      icon: Icon(icon, size: 20, color: AppColors.textSecondary),
     );
   }
 }
 
 class _ShortcutHintsBar extends StatelessWidget {
-  const _ShortcutHintsBar({required this.onToggleHints});
+  const _ShortcutHintsBar({
+    required this.showHints,
+    required this.onToggleHints,
+  });
 
+  final bool showHints;
   final VoidCallback onToggleHints;
 
   @override
@@ -772,8 +757,11 @@ class _ShortcutHintsBar extends StatelessWidget {
               ? Center(
                   child: TextButton.icon(
                     onPressed: onToggleHints,
-                    icon: const Icon(Icons.keyboard, size: 16),
-                    label: const Text('Hide shortcuts'),
+                    icon: Icon(
+                      showHints ? Icons.keyboard_hide : Icons.keyboard,
+                      size: 16,
+                    ),
+                    label: Text(showHints ? 'Hide shortcuts' : 'Show shortcuts'),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.textSecondary,
                       textStyle: PosStyles.shortcutHintStyle,
@@ -783,36 +771,42 @@ class _ShortcutHintsBar extends StatelessWidget {
               : Row(
                   children: [
                     Expanded(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: AppSpacing.xs,
-                        runSpacing: AppSpacing.xs,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          for (var i = 0; i < hints.length; i++) ...[
-                            if (i > 0)
-                              const Text(
-                                '|',
-                                style: PosStyles.shortcutHintStyle,
-                              ),
-                            Text(hints[i], style: PosStyles.shortcutHintStyle),
-                          ],
-                        ],
-                      ),
+                      child: showHints
+                          ? Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: AppSpacing.xs,
+                              runSpacing: AppSpacing.xs,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                for (var i = 0; i < hints.length; i++) ...[
+                                  if (i > 0)
+                                    const Text(
+                                      '|',
+                                      style: PosStyles.shortcutHintStyle,
+                                    ),
+                                  Text(
+                                    hints[i],
+                                    style: PosStyles.shortcutHintStyle,
+                                  ),
+                                ],
+                              ],
+                            )
+                          : const SizedBox.shrink(),
                     ),
-                    TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
-                        textStyle: PosStyles.shortcutHintStyle,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    if (showHints)
+                      TextButton(
+                        onPressed: () {},
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          textStyle: PosStyles.shortcutHintStyle,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('Keyboard Shortcuts'),
                       ),
-                      child: const Text('Keyboard Shortcuts'),
-                    ),
                     Checkbox(
-                      value: true,
+                      value: showHints,
                       onChanged: (_) => onToggleHints(),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,

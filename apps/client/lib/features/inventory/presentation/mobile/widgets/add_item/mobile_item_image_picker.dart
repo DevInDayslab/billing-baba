@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_bottom_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_editor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';

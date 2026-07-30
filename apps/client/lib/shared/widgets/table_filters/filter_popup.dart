@@ -70,12 +70,12 @@ class FilterPopup extends StatelessWidget {
         onApply: _applyResult,
       ),
       FilterType.singleSelect => SingleSelectFilterWidget(
-          title: config.title,
-          options: config.values,
-          initialFilter: initialValue as SelectColumnFilter?,
-          searchable: config.searchable,
-          onApply: _applyResult,
-        ),
+        title: config.title,
+        options: config.values,
+        initialFilter: initialValue as SelectColumnFilter?,
+        searchable: config.searchable,
+        onApply: _applyResult,
+      ),
       FilterType.multiSelect => MultiSelectFilterWidget(
         title: config.title,
         options: config.values,

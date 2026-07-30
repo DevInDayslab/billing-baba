@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/layout/dashboard_layout.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/shared/layout/dashboard_layout.dart';
 import 'package:flutter/material.dart';
 
 class DashboardSkeleton extends StatelessWidget {
@@ -18,8 +18,8 @@ class DashboardSkeleton extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                height: metrics.kpiRowHeight,
+              Expanded(
+                flex: metrics.kpiRowFlex,
                 child: Row(
                   children: [
                     const Expanded(child: _SkeletonCard()),
@@ -29,8 +29,8 @@ class DashboardSkeleton extends StatelessWidget {
                 ),
               ),
               SizedBox(height: metrics.gap),
-              SizedBox(
-                height: metrics.chartRowHeight,
+              Expanded(
+                flex: metrics.chartRowFlex,
                 child: Row(
                   children: [
                     Expanded(
@@ -46,8 +46,8 @@ class DashboardSkeleton extends StatelessWidget {
                 ),
               ),
               SizedBox(height: metrics.gap),
-              SizedBox(
-                height: metrics.reportsRowHeight,
+              Expanded(
+                flex: metrics.reportsRowFlex,
                 child: const _SkeletonCard(),
               ),
             ],

@@ -1,9 +1,9 @@
 import 'package:billing_baba/core/config/app_config.dart';
-import 'package:flutter/foundation.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
 
 /// Temporary diagnostics for the Switch Company navigation/loading flow.
 ///
-/// Search console for `[SWITCH_COMPANY]` while reproducing the flicker.
+/// Search logs for `[SWITCH_COMPANY]` while reproducing the flicker.
 /// Opt in via `VERBOSE_LOGGING=true` in `.env`.
 abstract final class SwitchCompanyDebugLog {
   static int _seq = 0;
@@ -11,7 +11,7 @@ abstract final class SwitchCompanyDebugLog {
   static void log(String message) {
     if (!AppConfig.consoleVerbose) return;
     _seq += 1;
-    debugPrint('[SWITCH_COMPANY #$_seq] $message');
+    LoggingService.instance.debug('[SWITCH_COMPANY #$_seq] $message');
   }
 
   static void nav(String detail) => log('NAV $detail');

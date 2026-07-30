@@ -19,20 +19,18 @@ class DashboardTabBar extends ConsumerWidget {
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: DashboardColors.border)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final tab in DashboardHomeTab.values)
-              _DashboardTabItem(
+      child: Row(
+        children: [
+          for (final tab in DashboardHomeTab.values)
+            Expanded(
+              child: _DashboardTabItem(
                 label: tab.label,
                 isActive: activeTab == tab,
                 onTap: () =>
                     ref.read(dashboardActiveTabProvider.notifier).select(tab),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -58,7 +56,6 @@ class _DashboardTabItemState extends State<_DashboardTabItem> {
 
   @override
   Widget build(BuildContext context) {
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -67,7 +64,7 @@ class _DashboardTabItemState extends State<_DashboardTabItem> {
         hoverColor: AppColors.background,
         child: Container(
           height: DashboardSpacing.tabBarHeight,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           decoration: BoxDecoration(
             color: _hovered && !widget.isActive
                 ? AppColors.background.withValues(alpha: 0.6)
@@ -80,13 +77,18 @@ class _DashboardTabItemState extends State<_DashboardTabItem> {
             ),
           ),
           alignment: Alignment.center,
-          child: Text(
-            widget.label,
-            style: DashboardTypography.tabLabel.copyWith(
-              fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
-              color: widget.isActive
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              widget.label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: DashboardTypography.tabLabel.copyWith(
+                fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                color: widget.isActive
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
+              ),
             ),
           ),
         ),

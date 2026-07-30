@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PurchaseHistory {
 
- String get id; SubscriptionPlanType get oldPlan; SubscriptionPlanType get newPlan; String get event; Map<String, dynamic>? get metadata; DateTime get createdAt;
+ String get id; SubscriptionPlanType get oldPlan; SubscriptionPlanType get newPlan; String get event; DateTime get createdAt; Map<String, dynamic>? get metadata;
 /// Create a copy of PurchaseHistory
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $PurchaseHistoryCopyWith<PurchaseHistory> get copyWith => _$PurchaseHistoryCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PurchaseHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.oldPlan, oldPlan) || other.oldPlan == oldPlan)&&(identical(other.newPlan, newPlan) || other.newPlan == newPlan)&&(identical(other.event, event) || other.event == event)&&const DeepCollectionEquality().equals(other.metadata, metadata)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PurchaseHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.oldPlan, oldPlan) || other.oldPlan == oldPlan)&&(identical(other.newPlan, newPlan) || other.newPlan == newPlan)&&(identical(other.event, event) || other.event == event)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.metadata, metadata));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,oldPlan,newPlan,event,const DeepCollectionEquality().hash(metadata),createdAt);
+int get hashCode => Object.hash(runtimeType,id,oldPlan,newPlan,event,createdAt,const DeepCollectionEquality().hash(metadata));
 
 @override
 String toString() {
-  return 'PurchaseHistory(id: $id, oldPlan: $oldPlan, newPlan: $newPlan, event: $event, metadata: $metadata, createdAt: $createdAt)';
+  return 'PurchaseHistory(id: $id, oldPlan: $oldPlan, newPlan: $newPlan, event: $event, createdAt: $createdAt, metadata: $metadata)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $PurchaseHistoryCopyWith<$Res>  {
   factory $PurchaseHistoryCopyWith(PurchaseHistory value, $Res Function(PurchaseHistory) _then) = _$PurchaseHistoryCopyWithImpl;
 @useResult
 $Res call({
- String id, SubscriptionPlanType oldPlan, SubscriptionPlanType newPlan, String event, Map<String, dynamic>? metadata, DateTime createdAt
+ String id, SubscriptionPlanType oldPlan, SubscriptionPlanType newPlan, String event, DateTime createdAt, Map<String, dynamic>? metadata
 });
 
 
@@ -62,15 +62,15 @@ class _$PurchaseHistoryCopyWithImpl<$Res>
 
 /// Create a copy of PurchaseHistory
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? oldPlan = null,Object? newPlan = null,Object? event = null,Object? metadata = freezed,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? oldPlan = null,Object? newPlan = null,Object? event = null,Object? createdAt = null,Object? metadata = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,oldPlan: null == oldPlan ? _self.oldPlan : oldPlan // ignore: cast_nullable_to_non_nullable
 as SubscriptionPlanType,newPlan: null == newPlan ? _self.newPlan : newPlan // ignore: cast_nullable_to_non_nullable
 as SubscriptionPlanType,event: null == event ? _self.event : event // ignore: cast_nullable_to_non_nullable
-as String,metadata: freezed == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,metadata: freezed == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,
   ));
 }
 
@@ -155,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType oldPlan,  SubscriptionPlanType newPlan,  String event,  Map<String, dynamic>? metadata,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType oldPlan,  SubscriptionPlanType newPlan,  String event,  DateTime createdAt,  Map<String, dynamic>? metadata)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PurchaseHistory() when $default != null:
-return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.metadata,_that.createdAt);case _:
+return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.createdAt,_that.metadata);case _:
   return orElse();
 
 }
@@ -176,10 +176,10 @@ return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.metadata,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType oldPlan,  SubscriptionPlanType newPlan,  String event,  Map<String, dynamic>? metadata,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType oldPlan,  SubscriptionPlanType newPlan,  String event,  DateTime createdAt,  Map<String, dynamic>? metadata)  $default,) {final _that = this;
 switch (_that) {
 case _PurchaseHistory():
-return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.metadata,_that.createdAt);case _:
+return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.createdAt,_that.metadata);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +196,10 @@ return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.metadata,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SubscriptionPlanType oldPlan,  SubscriptionPlanType newPlan,  String event,  Map<String, dynamic>? metadata,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SubscriptionPlanType oldPlan,  SubscriptionPlanType newPlan,  String event,  DateTime createdAt,  Map<String, dynamic>? metadata)?  $default,) {final _that = this;
 switch (_that) {
 case _PurchaseHistory() when $default != null:
-return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.metadata,_that.createdAt);case _:
+return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.createdAt,_that.metadata);case _:
   return null;
 
 }
@@ -211,13 +211,14 @@ return $default(_that.id,_that.oldPlan,_that.newPlan,_that.event,_that.metadata,
 
 
 class _PurchaseHistory implements PurchaseHistory {
-  const _PurchaseHistory({required this.id, required this.oldPlan, required this.newPlan, required this.event, final  Map<String, dynamic>? metadata, required this.createdAt}): _metadata = metadata;
+  const _PurchaseHistory({required this.id, required this.oldPlan, required this.newPlan, required this.event, required this.createdAt, final  Map<String, dynamic>? metadata}): _metadata = metadata;
   
 
 @override final  String id;
 @override final  SubscriptionPlanType oldPlan;
 @override final  SubscriptionPlanType newPlan;
 @override final  String event;
+@override final  DateTime createdAt;
  final  Map<String, dynamic>? _metadata;
 @override Map<String, dynamic>? get metadata {
   final value = _metadata;
@@ -227,7 +228,6 @@ class _PurchaseHistory implements PurchaseHistory {
   return EqualUnmodifiableMapView(value);
 }
 
-@override final  DateTime createdAt;
 
 /// Create a copy of PurchaseHistory
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +239,16 @@ _$PurchaseHistoryCopyWith<_PurchaseHistory> get copyWith => __$PurchaseHistoryCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PurchaseHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.oldPlan, oldPlan) || other.oldPlan == oldPlan)&&(identical(other.newPlan, newPlan) || other.newPlan == newPlan)&&(identical(other.event, event) || other.event == event)&&const DeepCollectionEquality().equals(other._metadata, _metadata)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PurchaseHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.oldPlan, oldPlan) || other.oldPlan == oldPlan)&&(identical(other.newPlan, newPlan) || other.newPlan == newPlan)&&(identical(other.event, event) || other.event == event)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other._metadata, _metadata));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,oldPlan,newPlan,event,const DeepCollectionEquality().hash(_metadata),createdAt);
+int get hashCode => Object.hash(runtimeType,id,oldPlan,newPlan,event,createdAt,const DeepCollectionEquality().hash(_metadata));
 
 @override
 String toString() {
-  return 'PurchaseHistory(id: $id, oldPlan: $oldPlan, newPlan: $newPlan, event: $event, metadata: $metadata, createdAt: $createdAt)';
+  return 'PurchaseHistory(id: $id, oldPlan: $oldPlan, newPlan: $newPlan, event: $event, createdAt: $createdAt, metadata: $metadata)';
 }
 
 
@@ -259,7 +259,7 @@ abstract mixin class _$PurchaseHistoryCopyWith<$Res> implements $PurchaseHistory
   factory _$PurchaseHistoryCopyWith(_PurchaseHistory value, $Res Function(_PurchaseHistory) _then) = __$PurchaseHistoryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, SubscriptionPlanType oldPlan, SubscriptionPlanType newPlan, String event, Map<String, dynamic>? metadata, DateTime createdAt
+ String id, SubscriptionPlanType oldPlan, SubscriptionPlanType newPlan, String event, DateTime createdAt, Map<String, dynamic>? metadata
 });
 
 
@@ -276,15 +276,15 @@ class __$PurchaseHistoryCopyWithImpl<$Res>
 
 /// Create a copy of PurchaseHistory
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? oldPlan = null,Object? newPlan = null,Object? event = null,Object? metadata = freezed,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? oldPlan = null,Object? newPlan = null,Object? event = null,Object? createdAt = null,Object? metadata = freezed,}) {
   return _then(_PurchaseHistory(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,oldPlan: null == oldPlan ? _self.oldPlan : oldPlan // ignore: cast_nullable_to_non_nullable
 as SubscriptionPlanType,newPlan: null == newPlan ? _self.newPlan : newPlan // ignore: cast_nullable_to_non_nullable
 as SubscriptionPlanType,event: null == event ? _self.event : event // ignore: cast_nullable_to_non_nullable
-as String,metadata: freezed == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,metadata: freezed == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,
   ));
 }
 

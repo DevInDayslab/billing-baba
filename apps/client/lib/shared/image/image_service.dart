@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/image_display_context.dart';
-import 'package:billing_baba/core/media/media_image_providers.dart';
-import 'package:billing_baba/core/media/media_image_url_resolver.dart';
 import 'package:billing_baba/shared/image/image_cache_manager.dart';
 import 'package:billing_baba/shared/image/image_debug_log.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/media_image_providers.dart';
+import 'package:billing_baba/shared/media/media_image_url_resolver.dart';
 import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

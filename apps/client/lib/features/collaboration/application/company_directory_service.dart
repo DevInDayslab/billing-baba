@@ -28,8 +28,13 @@ class CompanyDirectoryService {
         )
         .toList();
 
-    final shared = await _collaborationRepository.loadCompanies();
-    return [...ownedEntries, ...shared];
+    try {
+      final shared = await _collaborationRepository.loadCompanies();
+      return [...ownedEntries, ...shared];
+    } on Object {
+      // Keep owned companies visible when collaboration APIs are unavailable.
+      return ownedEntries;
+    }
   }
 
   List<CompanyListEntry> ownedCompanies(List<CompanyListEntry> all) {
