@@ -3,7 +3,6 @@ import 'package:billing_baba/core/network/http_logging_interceptor.dart';
 import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 
 typedef TokenRefreshCallback = Future<String?> Function();
 typedef AccessTokenFallback = Future<String?> Function();
@@ -64,9 +63,7 @@ class AuthInterceptor extends Interceptor {
           connectTimeout: options.connectTimeout,
           receiveTimeout: options.receiveTimeout,
         ),
-      )..httpClientAdapter = IOHttpClientAdapter(
-          createHttpClient: createPinnedApiHttpClient,
-        );
+      )..httpClientAdapter = createBypassSslHttpClientAdapter();
       final response = await dio.fetch<dynamic>(options);
       return handler.resolve(response);
     } on Object catch (_) {

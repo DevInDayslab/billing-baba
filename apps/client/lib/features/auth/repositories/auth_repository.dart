@@ -6,7 +6,6 @@ import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthRepository {
@@ -25,9 +24,7 @@ class AuthRepository {
           headers: {'Content-Type': 'application/json'},
         ),
       )
-      ..httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: createPinnedApiHttpClient,
-      )
+      ..httpClientAdapter = createBypassSslHttpClientAdapter()
       ..interceptors.addAll([
         ...buildInterceptors(),
       ]);

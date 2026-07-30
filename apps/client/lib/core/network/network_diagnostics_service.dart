@@ -7,7 +7,6 @@ import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 
 /// Runs DNS, TCP/TLS, and HTTP health checks against the API.
@@ -23,9 +22,7 @@ class NetworkDiagnosticsService {
         receiveTimeout: const Duration(seconds: 10),
         headers: {'Content-Type': 'application/json'},
       ),
-    )..httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: createPinnedApiHttpClient,
-      );
+    )..httpClientAdapter = createBypassSslHttpClientAdapter();
   }
 
   Future<ConnectivityTestResult> runConnectivityTest({

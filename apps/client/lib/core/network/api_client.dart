@@ -6,7 +6,6 @@ import 'package:billing_baba/core/network/interceptors.dart';
 import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 
 /// Configured Dio HTTP client for the Fastify API.
 class ApiClient {
@@ -23,9 +22,7 @@ class ApiClient {
         receiveTimeout: AppConstants.receiveTimeout,
         headers: {'Content-Type': 'application/json'},
       )
-      ..httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: createPinnedApiHttpClient,
-      )
+      ..httpClientAdapter = createBypassSslHttpClientAdapter()
       ..interceptors.addAll([
         if (storage != null)
           AuthInterceptor(

@@ -1,13 +1,35 @@
 import 'dart:io';
 
-/// Creates an [HttpClient] with a temporary full TLS bypass.
+import 'package:dio/io.dart';
+
+/// Temporary full BoringSSL / TLS certificate bypass for the desktop client.
 ///
 /// TODO: Restore strict Let's Encrypt pinning before production release.
-/// Temporary workaround for CERTIFICATE_VERIFY_FAILED on some platforms
-/// (missing local issuer / outdated root stores).
+class BypassSslHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = allowPinnedApiCertificate;
+  }
+}
+
+/// Installs a global [HttpOverrides] so every [HttpClient] accepts all certs.
+void installSslBypass() {
+  HttpOverrides.global = BypassSslHttpOverrides();
+}
+
+/// Creates an [HttpClient] that accepts every certificate.
 HttpClient createPinnedApiHttpClient() {
   return HttpClient(context: SecurityContext.defaultContext)
     ..badCertificateCallback = allowPinnedApiCertificate;
+}
+
+/// Dio adapter that bypasses both handshake and leaf-cert checks.
+IOHttpClientAdapter createBypassSslHttpClientAdapter() {
+  return IOHttpClientAdapter(
+    createHttpClient: createPinnedApiHttpClient,
+    validateCertificate: (cert, host, status) => true,
+  );
 }
 
 /// Temporary full TLS bypass — accepts any host certificate.
