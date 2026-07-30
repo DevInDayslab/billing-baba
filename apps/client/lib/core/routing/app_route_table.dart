@@ -35,6 +35,11 @@ import 'package:billing_baba/features/notifications/presentation/notifications_p
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/payment_processing_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/payment_success_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/review_order_summary_page.dart';
+import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_page.dart';
+import 'package:billing_baba/features/plans_pricing/application/plans_pricing_license_constants.dart';
 import 'package:billing_baba/features/pos/presentation/pos_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_expense_page.dart';
@@ -58,6 +63,7 @@ import 'package:billing_baba/features/sales/presentation/add_sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_page.dart';
 import 'package:billing_baba/features/sales/presentation/delivery_challan_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/sale_invoice_more_settings_page.dart';
 import 'package:billing_baba/features/sales/presentation/estimate_quotation_page.dart';
 import 'package:billing_baba/features/sales/presentation/job_work_out_page.dart';
 import 'package:billing_baba/features/sales/presentation/payment_in_page.dart';
@@ -283,6 +289,11 @@ GoRouter createAppRouter({
                   ? state.extra! as List<String>
                   : null,
             ),
+          ),
+          GoRoute(
+            path: AppRoutes.saleInvoiceMoreSettings,
+            builder: (context, state) =>
+                const MobileSaleInvoiceMoreSettingsPage(),
           ),
           GoRoute(
             path: '${AppRoutes.editSale}/:invoiceId',
@@ -623,6 +634,31 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.plansPricing,
             builder: (context, state) => const PlansPricingPage(),
+            routes: [
+              GoRoute(
+                path: 'review',
+                builder: (context, state) => const ReviewOrderSummaryPage(),
+              ),
+              GoRoute(
+                path: 'payment-processing',
+                builder: (context, state) => const PaymentProcessingPage(),
+              ),
+              GoRoute(
+                path: 'payment-success',
+                builder: (context, state) => const PaymentSuccessPage(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: AppRoutes.plansPricingLicenseInfo,
+            builder: (context, state) {
+              final sectionParam = state.uri.queryParameters['section'];
+              final section = MobileLicenseInfoSection.values.firstWhere(
+                (value) => value.name == sectionParam,
+                orElse: () => MobileLicenseInfoSection.none,
+              );
+              return MobileLicenseInfoPage(initialSection: section);
+            },
           ),
           GoRoute(
             path: AppRoutes.editProfile,

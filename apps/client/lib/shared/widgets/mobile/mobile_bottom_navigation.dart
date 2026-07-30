@@ -26,6 +26,10 @@ class MobileBottomNavigation extends StatelessWidget {
   static const centerButtonProtrusion = 28.0;
   static const centerButtonLowerOffset = 14.0;
 
+  /// Bottom inset for floating actions so they sit above the raised POS button.
+  static double get fabBottomInset =>
+      barHeight + centerButtonProtrusion + centerButtonLowerOffset + AppSpacing.lg;
+
   /// Bottom offset for floating actions sitting above the shell nav bar.
   static double floatingActionBottomOffset(BuildContext context) {
     return barHeight + MediaQuery.paddingOf(context).bottom + AppSpacing.sm;

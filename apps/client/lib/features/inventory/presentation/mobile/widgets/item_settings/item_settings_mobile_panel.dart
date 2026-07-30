@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_card.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_list_section.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_option_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_list_section.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';

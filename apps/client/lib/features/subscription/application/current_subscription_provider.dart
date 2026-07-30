@@ -21,4 +21,9 @@ class CurrentSubscriptionState extends _$CurrentSubscriptionState {
       return service.getCurrent();
     });
   }
+
+  /// Frontend-only: apply a mock purchase without calling the API.
+  void applyLocalPurchase(CurrentSubscription subscription) {
+    state = AsyncData(subscription);
+  }
 }

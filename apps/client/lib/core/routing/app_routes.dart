@@ -42,6 +42,7 @@ abstract final class AppRoutes {
   static const editCreditNote = '/sale/edit-credit-note';
   static const duplicateSale = '/sale/add/duplicate';
   static const addSale = '/sale/add';
+  static const saleInvoiceMoreSettings = '/sale/more-settings';
   static const editSale = '/sale/edit';
   static const viewSale = '/sale/view';
   static const addEstimate = '/sale/add-estimate';
@@ -111,6 +112,10 @@ abstract final class AppRoutes {
       '$settingsPreferences?tab=$tabId';
 
   static const plansPricing = '/plans-pricing';
+  static const subscriptionReview = '/plans-pricing/review';
+  static const subscriptionPaymentProcessing = '/plans-pricing/payment-processing';
+  static const subscriptionPaymentSuccess = '/plans-pricing/payment-success';
+  static const plansPricingLicenseInfo = '/plans-pricing/license-info';
   static const editProfile = '/edit-profile';
   static const userProfile = '/my-profile';
   static const accessDenied = '/access-denied';

@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_search_field.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 

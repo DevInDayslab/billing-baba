@@ -39,6 +39,14 @@ abstract final class SettingsNavCatalog {
       group: SettingsNavGroup.messaging,
     ),
     SettingsNavItem(
+      id: 'plans-pricing',
+      icon: Icons.workspace_premium_outlined,
+      title: 'Plans & Pricing',
+      subtitle: 'Subscription plans and upgrades',
+      route: AppRoutes.plansPricing,
+      group: SettingsNavGroup.account,
+    ),
+    SettingsNavItem(
       id: SettingsTab.backup.id,
       icon: Icons.backup_outlined,
       title: 'Backup & Restore',

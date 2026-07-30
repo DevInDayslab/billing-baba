@@ -624,6 +624,10 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(eWayBillNo: value, isDirty: true);
   }
 
+  void updatePaymentTerms(String value) {
+    state = state.copyWith(paymentTerms: value, isDirty: true);
+  }
+
   void updateTermsTitle(String value) {
     state = state.copyWith(termsTitle: value, isDirty: true);
   }

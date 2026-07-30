@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_error.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_option_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';

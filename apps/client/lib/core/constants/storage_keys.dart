@@ -22,6 +22,8 @@ abstract final class StorageKeys {
   static const localItemSuppliers = 'local_item_suppliers';
   static const saleLineItemColumnVisibility =
       'sale_line_item_column_visibility';
+  static const itemSettings = 'item_settings';
+  static const saleInvoiceSettings = 'sale_invoice_settings';
   static const dashboardTasks = 'dashboard_tasks';
   static const dashboardSideWidgets = 'dashboard_side_widgets';
   static const dashboardSnapshots = 'dashboard_snapshots';
