@@ -64,8 +64,9 @@ class _MobileSettingsScreenState extends State<MobileSettingsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const MobileAppBar(
+      appBar: MobileAppBar(
         title: 'Settings',
+        showBackButton: Navigator.canPop(context),
         showBusinessHeader: false,
         showNotification: false,
         showSettings: false,

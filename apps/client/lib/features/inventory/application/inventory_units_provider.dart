@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
@@ -38,22 +39,50 @@ class AddConversionResult {
   bool get isSuccess => conversion != null;
 }
 
+Future<List<InventoryUnit>> fetchInventoryUnitsWithFallback(
+  Ref ref, {
+  String? searchQuery,
+}) async {
+  try {
+    final service = await ref.read(inventoryServiceProvider.future);
+    final units = await service.fetchUnits(searchQuery: searchQuery);
+    if (units.isNotEmpty) return units;
+  } on Object {
+    // Fall through to local catalog when API is empty or unavailable.
+  }
+  return _catalogUnits(searchQuery: searchQuery);
+}
+
+List<InventoryUnit> _catalogUnits({String? searchQuery}) {
+  final query = searchQuery?.trim().toLowerCase() ?? '';
+  return InventoryCatalog.units
+      .where(
+        (unit) =>
+            query.isEmpty ||
+            unit.fullName.toLowerCase().contains(query) ||
+            unit.shortName.toLowerCase().contains(query),
+      )
+      .toList();
+}
+
 @Riverpod(keepAlive: true)
 class InventoryUnits extends _$InventoryUnits {
   @override
   Future<List<InventoryUnit>> build() async {
-    final service = await ref.watch(inventoryServiceProvider.future);
-    return service.fetchUnits();
+    return fetchInventoryUnitsWithFallback(ref);
   }
 
   Future<void> refresh({String? searchQuery}) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final service = await ref.read(inventoryServiceProvider.future);
-      return service.fetchUnits(
+    final previous = state.value ?? const <InventoryUnit>[];
+    state = await AsyncValue.guard(
+      () => fetchInventoryUnitsWithFallback(
+        ref,
         searchQuery: searchQuery ?? ref.read(unitBackendSearchProvider),
-      );
-    });
+      ),
+    );
+    if (state.hasError && previous.isNotEmpty) {
+      state = AsyncData(previous);
+    }
   }
 
   Future<InventoryUnit?> loadUnitDetail(String id) async {

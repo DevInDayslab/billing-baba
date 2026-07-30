@@ -15,10 +15,12 @@ abstract final class AppRoutes {
   static const crmContacts = '/crm/contacts';
   static const crmDeals = '/crm/deals';
   static const items = '/items';
+  static const itemsDetail = '/items/details';
   static const itemsCategories = '/items/categories';
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
   static const itemsStockTransfer = '/items/stock-transfer';
+  static const itemsSettings = '/items/settings';
   static const pos = '/pos';
   static const sale = '/sale';
   static const saleInvoices = '/sale/invoices';
@@ -67,6 +69,8 @@ abstract final class AppRoutes {
   static const reportsSales = '/reports/sales';
   static const reportsPurchase = '/reports/purchase';
   static const reportsStock = '/reports/stock';
+  static const reportsStockSummary = '/reports/stock-summary';
+  static const reportsItemDetail = '/reports/item-detail';
   static const reportsParty = '/reports/party';
   static const reportsGst = '/reports/gst';
   static const collaboration = '/collaboration';

@@ -370,6 +370,7 @@ class ReportFiltersState {
     DateTimeRange? customDateRange,
     bool clearCustomDateRange = false,
     DateTime? selectedDate,
+    bool clearSelectedDate = false,
     String? godownId,
     String? partyId,
     String? itemId,
@@ -407,7 +408,9 @@ class ReportFiltersState {
       customDateRange: clearCustomDateRange
           ? null
           : (customDateRange ?? this.customDateRange),
-      selectedDate: selectedDate ?? this.selectedDate,
+      selectedDate: clearSelectedDate
+          ? null
+          : (selectedDate ?? this.selectedDate),
       godownId: clearGodownId ? null : (godownId ?? this.godownId),
       partyId: clearPartyId ? null : (partyId ?? this.partyId),
       itemId: clearItemId ? null : (itemId ?? this.itemId),

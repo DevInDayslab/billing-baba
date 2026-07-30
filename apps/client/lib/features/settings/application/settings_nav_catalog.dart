@@ -17,6 +17,13 @@ abstract final class SettingsNavCatalog {
       route: preferencesTab(SettingsTab.profile),
     ),
     SettingsNavItem(
+      id: 'item-settings',
+      icon: Icons.tune_outlined,
+      title: 'Item Settings',
+      subtitle: 'Barcode scan, pricing, categories, and fields',
+      route: AppRoutes.itemsSettings,
+    ),
+    SettingsNavItem(
       id: SettingsTab.print.id,
       icon: Icons.print_outlined,
       title: 'Print',
