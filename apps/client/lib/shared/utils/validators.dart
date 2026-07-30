@@ -1,5 +1,20 @@
 /// Common form field validators.
 abstract final class Validators {
+  static const int businessNameMaxLength = 200;
+  static const int ownerNameMaxLength = 200;
+  static const int partyNameMaxLength = 200;
+
+  /// Single-character filter for business, owner, and party name inputs.
+  static final RegExp businessNameInputPattern = RegExp(
+    r"[\p{L}\p{N}\s.&'\-(),/]",
+    unicode: true,
+  );
+
+  static final RegExp _restrictedNameValuePattern = RegExp(
+    r"^[\p{L}\p{N}\s.&'\-(),/]+$",
+    unicode: true,
+  );
+
   static String? required(String? value, {String fieldName = 'This field'}) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
@@ -13,6 +28,97 @@ abstract final class Validators {
   }) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
+    }
+    return null;
+  }
+
+  static String? businessName(String? value) {
+    return _restrictedName(
+      value,
+      fieldName: 'Business name',
+      maxLength: businessNameMaxLength,
+    );
+  }
+
+  static String? ownerName(String? value) {
+    return _restrictedName(
+      value,
+      fieldName: 'Owner name',
+      maxLength: ownerNameMaxLength,
+    );
+  }
+
+  static String? partyName(String? value) {
+    return _restrictedName(
+      value,
+      fieldName: 'Party name',
+      maxLength: partyNameMaxLength,
+    );
+  }
+
+  static String? leadOwnerName(String? value) {
+    return _optionalRestrictedName(
+      value,
+      fieldName: 'Lead owner',
+      maxLength: ownerNameMaxLength,
+    );
+  }
+
+  static String? leadFirstName(String? value) {
+    return _optionalRestrictedName(
+      value,
+      fieldName: 'First name',
+      maxLength: ownerNameMaxLength,
+    );
+  }
+
+  static String? leadLastName(String? value) {
+    return _restrictedName(
+      value,
+      fieldName: 'Last name',
+      maxLength: ownerNameMaxLength,
+    );
+  }
+
+  static String? leadCompany(String? value) {
+    return _restrictedName(
+      value,
+      fieldName: 'Company',
+      maxLength: businessNameMaxLength,
+    );
+  }
+
+  static String? _optionalRestrictedName(
+    String? value, {
+    required String fieldName,
+    required int maxLength,
+  }) {
+    if (value == null || value.trim().isEmpty) return null;
+
+    final trimmed = value.trim();
+    if (trimmed.length > maxLength) {
+      return '$fieldName must be at most $maxLength characters';
+    }
+    if (!_restrictedNameValuePattern.hasMatch(trimmed)) {
+      return "$fieldName can only contain letters, numbers, spaces, and . & ' - ( ) , /";
+    }
+    return null;
+  }
+
+  static String? _restrictedName(
+    String? value, {
+    required String fieldName,
+    required int maxLength,
+  }) {
+    final requiredError = required(value, fieldName: fieldName);
+    if (requiredError != null) return requiredError;
+
+    final trimmed = value!.trim();
+    if (trimmed.length > maxLength) {
+      return '$fieldName must be at most $maxLength characters';
+    }
+    if (!_restrictedNameValuePattern.hasMatch(trimmed)) {
+      return "$fieldName can only contain letters, numbers, spaces, and . & ' - ( ) , /";
     }
     return null;
   }
@@ -41,6 +147,8 @@ abstract final class Validators {
     r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$',
   );
 
+  static final _upiIdPattern = RegExp(r'^[\w.-]{2,60}@[\w.-]{2,40}$');
+
   static final _decimalAmountPattern = RegExp(r'^-?\d+(\.\d{1,4})?$');
 
   static String? gstin(String? value) {
@@ -68,6 +176,15 @@ abstract final class Validators {
     final digits = normalizePincode(value) ?? '';
     if (digits.length != 6) {
       return 'Pincode must be exactly 6 digits.';
+    }
+    return null;
+  }
+
+  static String? upiId(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final trimmed = value.trim();
+    if (!_upiIdPattern.hasMatch(trimmed)) {
+      return 'UPI ID must look like name@bank';
     }
     return null;
   }

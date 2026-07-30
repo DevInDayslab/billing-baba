@@ -103,7 +103,8 @@ class _CreditNoteLineItemsTableState
                         notifier.confirmLineItem(i);
                         setState(() => _activeRowIndex = i + 1);
                       },
-                      onItemSelected: (catalogItem) => _handleItemSelected(i, catalogItem),
+                      onItemSelected: (catalogItem) =>
+                          _handleItemSelected(i, items[i].id, catalogItem),
                     ),
                   _TotalsRow(
                     widths: widths,
@@ -168,6 +169,7 @@ class _CreditNoteLineItemsTableState
 
   Future<void> _handleItemSelected(
     int index,
+    String lineId,
     SaleItemOption catalogItem,
   ) async {
     final notifier = ref.read(creditNoteFormProvider(sessionKey: widget.sessionKey).notifier);
@@ -181,8 +183,8 @@ class _CreditNoteLineItemsTableState
         builder: (context) => OutOfStockDialog(
           itemId: catalogItem.id,
           itemName: catalogItem.name,
-          onSelectAlternative: (alternative) {
-            notifier.selectCatalogItem(
+          onSelectAlternative: (alternative) async {
+            await notifier.selectCatalogItem(
               index,
               SaleItemOption(
                 id: alternative.id,
@@ -192,16 +194,25 @@ class _CreditNoteLineItemsTableState
                 mfgCost: 0,
                 stock: alternative.stockQuantity,
               ),
+              lineId: lineId,
             );
           },
-          onContinueAnyway: () {
-            notifier.selectCatalogItem(index, catalogItem);
+          onContinueAnyway: () async {
+            await notifier.selectCatalogItem(
+              index,
+              catalogItem,
+              lineId: lineId,
+            );
           },
         ),
       );
     } else {
       // Item has stock, proceed normally
-      notifier.selectCatalogItem(index, catalogItem);
+      await notifier.selectCatalogItem(
+        index,
+        catalogItem,
+        lineId: lineId,
+      );
     }
   }
 }

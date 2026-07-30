@@ -50,7 +50,6 @@ void _invalidateDocumentLists(Ref ref, SaleDocumentType documentType) {
 class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   @override
   SaleDocumentFormState build(SaleDocumentType documentType) {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _initialDocumentFormState(documentType);
   }
 
@@ -311,7 +310,11 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
     rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -319,9 +322,15 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
+    );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
+      targetIndex: targetIndex,
       appliedLine: applied,
       nextLineId: _nextDocumentLineItemId,
     );

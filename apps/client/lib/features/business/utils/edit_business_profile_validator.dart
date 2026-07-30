@@ -9,11 +9,12 @@ abstract final class EditBusinessProfileValidator {
       if (message != null) errors[field] = message;
     }
 
-    add('name', Validators.required(input.name, fieldName: 'Business name'));
+    add('name', Validators.businessName(input.name));
     add('phone', Validators.phone(input.phone));
     add('email', Validators.email(input.email));
-    add('gstin', Validators.gstinMaxLength(input.gstin));
+    add('gstin', Validators.gstin(input.gstin));
     add('pincode', Validators.pincode(input.pincode));
+    add('upi_id', Validators.upiId(input.upiId));
 
     return errors;
   }

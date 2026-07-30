@@ -106,7 +106,7 @@ final class PosCatalogProvider
   }
 }
 
-String _$posCatalogHash() => r'303d24f2c21d9332b74c4789e70daeac2713b25f';
+String _$posCatalogHash() => r'739168163fbfef5456858bc492ebb78f5ecba89a';
 
 /// Inventory categories that currently have at least one POS product.
 
@@ -231,7 +231,7 @@ final class PosFilteredCatalogProvider
 }
 
 String _$posFilteredCatalogHash() =>
-    r'4250ebae8514c47ca5a6b432529ed7d2faf66680';
+    r'41adc801ab79d7d473d1bd5009777d215450486b';
 
 /// Filtered POS catalog using inventory search (name, barcode/SKU, HSN).
 

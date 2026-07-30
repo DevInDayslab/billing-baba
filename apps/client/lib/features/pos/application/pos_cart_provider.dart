@@ -163,12 +163,15 @@ class PosCart extends _$PosCart {
   }
 
   void updatePaymentAmount(PaymentMode mode, double amount) {
-    final updated = state.payments.map((p) {
-      if (p.mode == mode) {
-        return p.copyWith(amount: amount);
-      }
-      return p;
-    }).toList();
+    final index = state.payments.indexWhere((payment) => payment.mode == mode);
+    if (index < 0) return;
+
+    final updated = applySplitPaymentCascade(
+      payments: state.payments,
+      editedIndex: index,
+      amount: amount,
+      totalPayable: state.totalPayable,
+    );
     state = state.copyWith(payments: updated);
   }
 

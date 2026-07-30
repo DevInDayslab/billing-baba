@@ -1,26 +1,22 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/crm/application/crm_assignee_options_provider.dart';
 import 'package:billing_baba/features/crm/domain/models/deal.dart';
 import 'package:billing_baba/features/crm/domain/models/lead.dart';
+import 'package:billing_baba/features/crm/presentation/desktop/widgets/crm_owner_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 const _dialogMaxWidth = 960.0;
 const _cardBorder = Color(0xFFE0E0E0);
 const _saveRed = Color(0xFFE53935);
 const _requiredAccent = Color(0xFFD32F2F);
-
-const _ownerOptions = [
-  '-None-',
-  'Saksham Kochhar',
-  'Priya Mehta',
-  'Amit Verma',
-];
 
 const _typeOptions = [
   '-None-',
@@ -58,16 +54,16 @@ Future<AddDealInput?> showAddDealDialog(
   );
 }
 
-class AddDealDialog extends StatefulWidget {
+class AddDealDialog extends ConsumerStatefulWidget {
   const AddDealDialog({this.onSaveAndNew, super.key});
 
   final ValueChanged<AddDealInput>? onSaveAndNew;
 
   @override
-  State<AddDealDialog> createState() => _AddDealDialogState();
+  ConsumerState<AddDealDialog> createState() => _AddDealDialogState();
 }
 
-class _AddDealDialogState extends State<AddDealDialog> {
+class _AddDealDialogState extends ConsumerState<AddDealDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _accountController = TextEditingController();
@@ -79,7 +75,8 @@ class _AddDealDialogState extends State<AddDealDialog> {
   final _campaignController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  String _owner = 'Saksham Kochhar';
+  String _owner = crmOwnerNoneOption;
+  bool _ownerInitialized = false;
   String _stageLabel = DealStage.qualification.label;
   String _type = '-None-';
   String _leadSource = '-None-';
@@ -186,7 +183,7 @@ class _AddDealDialogState extends State<AddDealDialog> {
       name: _nameController.text.trim(),
       stage: _selectedStage,
       accountName: _nullableValue(_accountController.text),
-      owner: _owner == '-None-' ? null : _owner,
+      owner: _owner == crmOwnerNoneOption ? null : _owner,
       amount: _amount,
       expectedCloseDate: _parseCloseDate(_closeDateController.text),
       description: _nullableValue(_descriptionController.text),
@@ -203,8 +200,9 @@ class _AddDealDialogState extends State<AddDealDialog> {
     _contactController.clear();
     _campaignController.clear();
     _descriptionController.clear();
+    final defaultOwner = ref.read(crmDefaultOwnerNameProvider);
     setState(() {
-      _owner = 'Saksham Kochhar';
+      _owner = defaultOwner ?? crmOwnerNoneOption;
       _stageLabel = DealStage.qualification.label;
       _type = '-None-';
       _leadSource = '-None-';
@@ -227,6 +225,12 @@ class _AddDealDialogState extends State<AddDealDialog> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(crmDefaultOwnerNameProvider, (previous, next) {
+      if (_ownerInitialized || next == null) return;
+      _ownerInitialized = true;
+      setState(() => _owner = next);
+    });
+
     final size = MediaQuery.sizeOf(context);
     final dialogWidth = math.min(
       size.width - (size.width < 640 ? AppSpacing.sm * 2 : AppSpacing.lg * 2),
@@ -279,10 +283,8 @@ class _AddDealDialogState extends State<AddDealDialog> {
                                 span: 6,
                                 child: AppFormField(
                                   label: 'Deal Owner',
-                                  child: SaleGenericSelectDropdown(
+                                  child: CrmOwnerSelectDropdown(
                                     value: _owner,
-                                    hintText: '-None-',
-                                    options: _ownerOptions,
                                     onSelected: (value) =>
                                         setState(() => _owner = value),
                                   ),

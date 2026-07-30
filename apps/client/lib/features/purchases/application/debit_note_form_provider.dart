@@ -57,7 +57,6 @@ List<PurchaseLineItem> _toPurchaseLines(List<SaleLineItem> items) {
 class DebitNoteForm extends _$DebitNoteForm {
   @override
   DebitNoteFormState build({String? debitNoteId}) {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     if (debitNoteId != null) {
       Future.microtask(() => _loadDocument(debitNoteId));
     }
@@ -235,7 +234,11 @@ class DebitNoteForm extends _$DebitNoteForm {
     rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -243,9 +246,15 @@ class DebitNoteForm extends _$DebitNoteForm {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
+    );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
+      targetIndex: targetIndex,
       appliedLine: applied,
       nextLineId: _nextDebitNoteLineItemId,
     );

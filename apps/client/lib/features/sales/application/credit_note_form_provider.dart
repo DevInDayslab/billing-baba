@@ -39,7 +39,6 @@ CreditNoteFormState _initialCreditNoteFormState() {
 class CreditNoteForm extends _$CreditNoteForm {
   @override
   CreditNoteFormState build({String sessionKey = 'default'}) {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _initialCreditNoteFormState();
   }
 
@@ -306,7 +305,11 @@ class CreditNoteForm extends _$CreditNoteForm {
     rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -314,9 +317,15 @@ class CreditNoteForm extends _$CreditNoteForm {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
+    );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
+      targetIndex: targetIndex,
       appliedLine: applied,
       nextLineId: _nextCreditNoteLineItemId,
     );

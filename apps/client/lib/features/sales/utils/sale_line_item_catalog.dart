@@ -33,7 +33,23 @@ SaleLineItem applyCatalogItemToLine(
 }
 
 bool isEmptySaleLineDraft(SaleLineItem line) =>
-    line.itemName.trim().isEmpty && line.qty <= 0;
+    line.qty <= 0 &&
+    (line.itemName.trim().isEmpty || line.itemId == null);
+
+int? resolveSaleLineIndex(
+  List<SaleLineItem> items, {
+  required int fallbackIndex,
+  String? lineId,
+}) {
+  if (lineId != null) {
+    final byId = items.indexWhere((line) => line.id == lineId);
+    if (byId >= 0) return byId;
+  }
+  if (fallbackIndex >= 0 && fallbackIndex < items.length) {
+    return fallbackIndex;
+  }
+  return null;
+}
 
 bool canClubSaleLineItem(SaleLineItem line) =>
     line.itemId != null &&

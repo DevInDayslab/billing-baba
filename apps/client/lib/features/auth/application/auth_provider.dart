@@ -425,11 +425,6 @@ class Auth extends _$Auth {
     return specificMessage;
   }
 
-  String _debugErrorSuffix(Object error) {
-    if (!AppConfig.authDebugLogging) return '';
-    return '\n\n[debug] $error';
-  }
-
   Future<void> _attemptBackendLogin(int generation) async {
     if (generation != _verifyGeneration || state.backendLoginCompleted) {
       AuthDebugLogger.log(
@@ -764,7 +759,7 @@ class Auth extends _$Auth {
       state = state.copyWith(
         error: e.isNetwork
             ? 'Please check your internet connection.'
-            : '${e.message}${_debugErrorSuffix(e)}',
+            : e.message,
       );
     } on Object catch (e, st) {
       AuthDebugLogger.log('verifyOtp exception: $e');
@@ -775,9 +770,7 @@ class Auth extends _$Auth {
         return;
       }
       _setOtpPhase(OtpPhase.otpSent);
-      state = state.copyWith(
-        error: '${_messageFromError(e)}${_debugErrorSuffix(e)}',
-      );
+      state = state.copyWith(error: _messageFromError(e));
     } finally {
       if (!state.backendLoginCompleted &&
           state.otpPhase != OtpPhase.backendLogin) {
@@ -817,9 +810,7 @@ class Auth extends _$Auth {
         debugPrint('[AUTH] devLogin stackTrace:\n$st');
       }
       _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(
-        error: '${_devLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
-      );
+      state = state.copyWith(error: _devLoginErrorMessage(e));
     } finally {
       _devLoginInFlight = false;
     }
@@ -842,7 +833,10 @@ class Auth extends _$Auth {
       try {
         reqId = await _otp.retryOtp(state.reqId);
       } on OtpException catch (e) {
-        if (!e.isConsumed) rethrow;
+        if (e.isNetwork) rethrow;
+        AuthDebugLogger.log(
+          'retryOtp failed (${e.message}); falling back to sendOtp',
+        );
         reqId = await _otp.sendOtp(phone).timeout(_sendTimeout);
       }
 

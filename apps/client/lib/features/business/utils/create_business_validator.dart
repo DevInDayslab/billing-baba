@@ -10,11 +10,8 @@ abstract final class CreateBusinessValidator {
       if (message != null) errors[field] = message;
     }
 
-    add('name', Validators.required(input.name, fieldName: 'Business name'));
-    add(
-      'owner_name',
-      Validators.required(input.ownerName, fieldName: 'Owner name'),
-    );
+    add('name', Validators.businessName(input.name));
+    add('owner_name', Validators.ownerName(input.ownerName));
     add('phone', Validators.requiredPhone(input.phone));
     add('email', Validators.email(input.email));
     add('gstin', Validators.gstin(input.gstin));
