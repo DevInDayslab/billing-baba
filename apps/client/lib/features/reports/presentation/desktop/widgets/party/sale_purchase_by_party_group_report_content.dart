@@ -157,22 +157,25 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<
-                                ReportSalePurchaseByPartyGroupRow>(
-                              reportScope: salePurchaseByPartyGroupReportScope,
-                              minWidth: 700,
-                              columns: salePurchaseByPartyGroupColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No data available for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportSalePurchaseByPartyGroupRow
+                                >(
+                                  reportScope:
+                                      salePurchaseByPartyGroupReportScope,
+                                  minWidth: 700,
+                                  columns: salePurchaseByPartyGroupColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No data available for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

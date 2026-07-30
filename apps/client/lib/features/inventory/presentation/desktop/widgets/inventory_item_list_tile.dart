@@ -95,7 +95,8 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
-            onHighlightChanged: (pressed) => setState(() => _isPressed = pressed),
+            onHighlightChanged: (pressed) =>
+                setState(() => _isPressed = pressed),
             hoverColor: Colors.transparent,
             focusColor: Colors.transparent,
             highlightColor: Colors.transparent,

@@ -33,7 +33,8 @@ class InventoryDocumentStockApplier {
     final movementType = _saleMovementType(document.documentType);
     if (movementType == null) return;
 
-    final resolvedGodown = godownId ??
+    final resolvedGodown =
+        godownId ??
         await _salesLocal.getDocumentGodownId(documentId) ??
         'default';
     final now = DateTime.now().toUtc();
@@ -77,7 +78,8 @@ class InventoryDocumentStockApplier {
     final movementType = _purchaseMovementType(document.documentType);
     if (movementType == null) return;
 
-    final resolvedGodown = godownId ??
+    final resolvedGodown =
+        godownId ??
         await _purchaseLocal.getDocumentGodownId(documentId) ??
         'default';
     final now = DateTime.now().toUtc();
@@ -123,8 +125,9 @@ class InventoryDocumentStockApplier {
       );
     }
 
-    final purchaseDocIds =
-        await _purchaseLocal.listFinalizedDocumentIds(businessId);
+    final purchaseDocIds = await _purchaseLocal.listFinalizedDocumentIds(
+      businessId,
+    );
     for (final documentId in purchaseDocIds) {
       await applyPurchaseDocument(
         businessId: businessId,

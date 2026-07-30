@@ -55,7 +55,8 @@ class HiddenLedgerHistorySection extends ConsumerWidget {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => context.go(AppRoutes.partyHiddenLedger),
+                        onPressed: () =>
+                            context.go(AppRoutes.partyHiddenLedger),
                         child: const Text('View all'),
                       ),
                     ],

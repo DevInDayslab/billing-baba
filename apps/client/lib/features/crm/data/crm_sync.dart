@@ -17,9 +17,9 @@ class LeadSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.leads)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.leads,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -34,7 +34,9 @@ class LeadSync {
     final createdIso =
         _str(payload, 'created_at') ?? existing?.createdAt ?? updatedIso;
 
-    await _db.into(_db.leads).insertOnConflictUpdate(
+    await _db
+        .into(_db.leads)
+        .insertOnConflictUpdate(
           LeadsCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -93,9 +95,9 @@ class LeadActivitySync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.leadActivities)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.leadActivities,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -111,7 +113,9 @@ class LeadActivitySync {
         _str(payload, 'created_at') ?? existing?.createdAt ?? updatedIso;
     final leadId = _str(payload, 'lead_id') ?? existing?.leadId ?? '';
 
-    await _db.into(_db.leadActivities).insertOnConflictUpdate(
+    await _db
+        .into(_db.leadActivities)
+        .insertOnConflictUpdate(
           LeadActivitiesCompanion.insert(
             id: entityId,
             leadId: leadId,
@@ -136,8 +140,9 @@ class LeadActivitySync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.leadActivities)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.leadActivities,
+    )..where((t) => t.id.equals(entityId))).write(
       LeadActivitiesCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc().toIso8601String()),
@@ -163,9 +168,9 @@ class ContactSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.contacts)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.contacts,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -180,7 +185,9 @@ class ContactSync {
     final createdIso =
         _str(payload, 'created_at') ?? existing?.createdAt ?? updatedIso;
 
-    await _db.into(_db.contacts).insertOnConflictUpdate(
+    await _db
+        .into(_db.contacts)
+        .insertOnConflictUpdate(
           ContactsCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -221,8 +228,9 @@ class ContactSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.contacts)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.contacts,
+    )..where((t) => t.id.equals(entityId))).write(
       ContactsCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc().toIso8601String()),
@@ -248,9 +256,9 @@ class ContactActivitySync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.contactActivities)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.contactActivities,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -266,7 +274,9 @@ class ContactActivitySync {
         _str(payload, 'created_at') ?? existing?.createdAt ?? updatedIso;
     final contactId = _str(payload, 'contact_id') ?? existing?.contactId ?? '';
 
-    await _db.into(_db.contactActivities).insertOnConflictUpdate(
+    await _db
+        .into(_db.contactActivities)
+        .insertOnConflictUpdate(
           ContactActivitiesCompanion.insert(
             id: entityId,
             contactId: contactId,
@@ -291,9 +301,9 @@ class ContactActivitySync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.contactActivities)
-          ..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.contactActivities,
+    )..where((t) => t.id.equals(entityId))).write(
       ContactActivitiesCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc().toIso8601String()),
@@ -319,9 +329,9 @@ class DealSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.deals)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.deals,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -337,7 +347,9 @@ class DealSync {
         _str(payload, 'created_at') ?? existing?.createdAt ?? updatedIso;
     final amount = _readDouble(payload?['amount']) ?? existing?.amount ?? 0;
 
-    await _db.into(_db.deals).insertOnConflictUpdate(
+    await _db
+        .into(_db.deals)
+        .insertOnConflictUpdate(
           DealsCompanion.insert(
             id: entityId,
             businessId: businessId,

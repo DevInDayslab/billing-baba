@@ -154,8 +154,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
         menus: [
           PlatformMenuItem(
             label: 'Documentation',
-            onSelected: () =>
-                unawaited(DesktopMenuActions.openDocumentation()),
+            onSelected: () => unawaited(DesktopMenuActions.openDocumentation()),
           ),
           PlatformMenuItem(
             label: 'Contact Support',
@@ -168,8 +167,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
           ),
           PlatformMenuItem(
             label: 'Privacy Policy',
-            onSelected: () =>
-                unawaited(DesktopMenuActions.openPrivacyPolicy()),
+            onSelected: () => unawaited(DesktopMenuActions.openPrivacyPolicy()),
           ),
         ],
       ),
@@ -179,16 +177,14 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
           PlatformMenuItemGroup(
             members: [
               PlatformMenuItem(
-                label:
-                    'Application Version ${_versions.applicationVersion}',
+                label: 'Application Version ${_versions.applicationVersion}',
               ),
               PlatformMenuItem(
                 label: 'Build Version ${_versions.buildVersion}',
               ),
-              
             ],
           ),
-           PlatformMenuItemGroup(
+          PlatformMenuItemGroup(
             members: [
               PlatformMenuItem(
                 label: 'About Billing Baba',
@@ -337,13 +333,11 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
       SubmenuButton(
         menuChildren: [
           MenuItemButton(
-            onPressed: () =>
-                unawaited(DesktopMenuActions.openDocumentation()),
+            onPressed: () => unawaited(DesktopMenuActions.openDocumentation()),
             child: const Text('Documentation'),
           ),
           MenuItemButton(
-            onPressed: () =>
-                unawaited(DesktopMenuActions.openContactSupport()),
+            onPressed: () => unawaited(DesktopMenuActions.openContactSupport()),
             child: const Text('Contact Support'),
           ),
           MenuItemButton(
@@ -351,8 +345,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
             child: const Text('Report an Issue'),
           ),
           MenuItemButton(
-            onPressed: () =>
-                unawaited(DesktopMenuActions.openPrivacyPolicy()),
+            onPressed: () => unawaited(DesktopMenuActions.openPrivacyPolicy()),
             child: const Text('Privacy Policy'),
           ),
         ],
@@ -368,7 +361,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
           MenuItemButton(
             child: Text('Build Version ${_versions.buildVersion}'),
           ),
-         
+
           const Divider(),
           MenuItemButton(
             onPressed: () => DesktopMenuActions.openAbout(ref),

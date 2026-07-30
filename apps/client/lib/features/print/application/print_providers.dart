@@ -135,10 +135,12 @@ PrintOutputService printOutputService(Ref ref) {
 @Riverpod(keepAlive: true)
 Future<PrintService> printService(Ref ref) async {
   final dataService = await ref.watch(printDataServiceProvider.future);
-  final printSettingsRepository =
-      await ref.watch(printSettingsRepositoryProvider.future);
-  final generatedDocumentService =
-      await ref.watch(generatedDocumentServiceProvider.future);
+  final printSettingsRepository = await ref.watch(
+    printSettingsRepositoryProvider.future,
+  );
+  final generatedDocumentService = await ref.watch(
+    generatedDocumentServiceProvider.future,
+  );
   return PrintService(
     dataService: dataService,
     outputService: ref.watch(printOutputServiceProvider),

@@ -17,8 +17,7 @@ class MockPaymentService {
     PaymentOutcome? debugOutcome,
   }) async {
     final random = Random();
-    final delayMs =
-        _minDelayMs + random.nextInt(_maxDelayMs - _minDelayMs + 1);
+    final delayMs = _minDelayMs + random.nextInt(_maxDelayMs - _minDelayMs + 1);
     await Future<void>.delayed(Duration(milliseconds: delayMs));
 
     final outcome = debugOutcome ?? _randomOutcome(random);

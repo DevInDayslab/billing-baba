@@ -143,21 +143,24 @@ class StockTransferReportContent extends ConsumerWidget {
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportStockTransferRow>(
-                              reportScope: stockTransferReportScope,
-                              minWidth: 1040,
-                              columns: stockTransferColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No stock transfer records found for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportStockTransferRow
+                                >(
+                                  reportScope: stockTransferReportScope,
+                                  minWidth: 1040,
+                                  columns: stockTransferColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No stock transfer records found for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

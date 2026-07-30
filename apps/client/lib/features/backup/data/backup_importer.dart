@@ -40,7 +40,7 @@ class BackupImporter {
     BackupDatabasePaths? paths,
     this._onBeforeDatabaseReplace,
     this._onDatabaseReopened,
-  })  : _paths = paths ?? BackupDatabasePaths();
+  }) : _paths = paths ?? BackupDatabasePaths();
 
   final StorageService _storage;
   final SyncMetadataStore _metadata;
@@ -95,19 +95,29 @@ class BackupImporter {
           )
           as Map<String, dynamic>,
     );
-    final deviceJson = jsonDecode(
-      utf8.decode(_readEntry(archive, kBibaDeviceEntry).content as List<int>),
-    ) as Map<String, dynamic>;
-    final businessPrefs = jsonDecode(
-      utf8.decode(
-        _readEntry(archive, kBibaBusinessPrefsEntry).content as List<int>,
-      ),
-    ) as Map<String, dynamic>;
-    final pendingQueue = jsonDecode(
-      utf8.decode(
-        _readEntry(archive, kBibaPendingQueueEntry).content as List<int>,
-      ),
-    ) as List<dynamic>;
+    final deviceJson =
+        jsonDecode(
+              utf8.decode(
+                _readEntry(archive, kBibaDeviceEntry).content as List<int>,
+              ),
+            )
+            as Map<String, dynamic>;
+    final businessPrefs =
+        jsonDecode(
+              utf8.decode(
+                _readEntry(archive, kBibaBusinessPrefsEntry).content
+                    as List<int>,
+              ),
+            )
+            as Map<String, dynamic>;
+    final pendingQueue =
+        jsonDecode(
+              utf8.decode(
+                _readEntry(archive, kBibaPendingQueueEntry).content
+                    as List<int>,
+              ),
+            )
+            as List<dynamic>;
     // pending_queue.json is validated via checksum; rows live in database.sqlite.
 
     await _onBeforeDatabaseReplace?.call();
@@ -129,10 +139,11 @@ class BackupImporter {
         await _storage.write(StorageKeys.syncDeviceId, deviceId);
       }
 
-      final queueCount = await (restoredDb.select(restoredDb.syncQueue)
-            ..where((t) => t.businessId.equals(manifest.businessId)))
-          .get()
-          .then((rows) => rows.length);
+      final queueCount =
+          await (restoredDb.select(restoredDb.syncQueue)
+                ..where((t) => t.businessId.equals(manifest.businessId)))
+              .get()
+              .then((rows) => rows.length);
 
       await _onDatabaseReopened?.call(restoredDb);
 
@@ -185,7 +196,8 @@ class BackupImporter {
     if (metadata.pullCursor != null && metadata.pullCursor!.isNotEmpty) {
       await _metadata.setPullCursorFor(businessId, metadata.pullCursor!);
     }
-    if (metadata.bootstrappedAt != null && metadata.bootstrappedAt!.isNotEmpty) {
+    if (metadata.bootstrappedAt != null &&
+        metadata.bootstrappedAt!.isNotEmpty) {
       final parsed = DateTime.tryParse(metadata.bootstrappedAt!);
       if (parsed != null) {
         await _metadata.setBootstrappedAtFor(businessId, parsed);

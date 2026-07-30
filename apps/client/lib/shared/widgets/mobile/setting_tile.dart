@@ -80,7 +80,9 @@ class SettingTile extends StatelessWidget {
       onTap: enabled && onChanged != null ? () => onChanged(!value) : null,
       trailing: Checkbox(
         value: value,
-        onChanged: enabled ? (checked) => onChanged?.call(checked ?? false) : null,
+        onChanged: enabled
+            ? (checked) => onChanged?.call(checked ?? false)
+            : null,
         activeColor: _settingsBlue,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),

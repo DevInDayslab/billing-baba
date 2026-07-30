@@ -42,9 +42,11 @@ class BarcodeLabelSheetLayout {
   double get gridHeightMm =>
       (rows * labelHeightMm) + (math.max(0, rows - 1) * gapMm);
 
-  double get startXMm => marginMm + math.max(0, (_usableWidthMm - gridWidthMm) / 2);
+  double get startXMm =>
+      marginMm + math.max(0, (_usableWidthMm - gridWidthMm) / 2);
 
-  double get startYMm => marginMm + math.max(0, (_usableHeightMm - gridHeightMm) / 2);
+  double get startYMm =>
+      marginMm + math.max(0, (_usableHeightMm - gridHeightMm) / 2);
 
   double labelLeftMm(int column) => startXMm + column * (labelWidthMm + gapMm);
 

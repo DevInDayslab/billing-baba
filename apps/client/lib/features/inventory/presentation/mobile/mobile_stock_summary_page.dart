@@ -25,7 +25,8 @@ class MobileStockSummaryPage extends ConsumerStatefulWidget {
       _MobileStockSummaryPageState();
 }
 
-class _MobileStockSummaryPageState extends ConsumerState<MobileStockSummaryPage> {
+class _MobileStockSummaryPageState
+    extends ConsumerState<MobileStockSummaryPage> {
   late final TextEditingController _searchController;
 
   @override

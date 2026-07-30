@@ -78,12 +78,18 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _poNumberController = TextEditingController();
 
     if (widget.invoiceId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeEditForm(),
+      );
     } else if (widget.attachOrderIds != null &&
         widget.attachOrderIds!.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeAttachForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeAttachForm(),
+      );
     } else if (widget.duplicateFromId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeDuplicateForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeDuplicateForm(),
+      );
     } else {
       _initialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -222,8 +228,9 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   }
 
   Future<void> _save({required bool saveAndNew}) async {
-    final notifier =
-        ref.read(addSaleFormProvider(sessionKey: _sessionKey).notifier);
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: _sessionKey).notifier,
+    );
     final result = await notifier.saveInvoice();
     if (!mounted) return;
 
@@ -296,8 +303,9 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(addSaleFormProvider(sessionKey: _sessionKey));
-    final notifier =
-        ref.read(addSaleFormProvider(sessionKey: _sessionKey).notifier);
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: _sessionKey).notifier,
+    );
     final grandTotal = ref.watch(
       addSaleGrandTotalProvider(sessionKey: _sessionKey),
     );
@@ -515,7 +523,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
                           amountLabel: _totalLabel(grandTotal),
                         ),
                         const SizedBox(
-                          height: MobileBottomNavigation.barHeight + AppSpacing.md,
+                          height:
+                              MobileBottomNavigation.barHeight + AppSpacing.md,
                         ),
                       ],
                     ),

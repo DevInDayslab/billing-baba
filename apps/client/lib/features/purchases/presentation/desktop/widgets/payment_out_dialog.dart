@@ -324,7 +324,8 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                         context: context,
                                         ref: ref,
                                         entityType: DocumentAttachmentEntityType
-                                            .paymentOut.apiValue,
+                                            .paymentOut
+                                            .apiValue,
                                         entityId: _savedPaymentId,
                                         onAdded: notifier.addImage,
                                       ),
@@ -352,7 +353,8 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                         context: context,
                                         ref: ref,
                                         entityType: DocumentAttachmentEntityType
-                                            .paymentOut.apiValue,
+                                            .paymentOut
+                                            .apiValue,
                                         entityId: _savedPaymentId,
                                         onAdded: notifier.addDocument,
                                       ),
@@ -382,43 +384,49 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                   SaleFormAttachmentChipList(
                                     attachments: form.attachedImages,
                                     attachmentService: ref
-                                        .watch(documentAttachmentServiceProvider)
+                                        .watch(
+                                          documentAttachmentServiceProvider,
+                                        )
                                         .value,
-                                    onRemove: (id) => transactionRemoveAttachment(
-                                      ref: ref,
-                                      attachments: form.attachedImages,
-                                      id: id,
-                                      onRemoved: notifier.removeImage,
-                                    ),
+                                    onRemove: (id) =>
+                                        transactionRemoveAttachment(
+                                          ref: ref,
+                                          attachments: form.attachedImages,
+                                          id: id,
+                                          onRemoved: notifier.removeImage,
+                                        ),
                                     onRename: (id, name) =>
                                         transactionRenameAttachment(
-                                      ref: ref,
-                                      attachments: form.attachedImages,
-                                      id: id,
-                                      name: name,
-                                      onRenamed: notifier.updateImage,
-                                    ),
+                                          ref: ref,
+                                          attachments: form.attachedImages,
+                                          id: id,
+                                          name: name,
+                                          onRenamed: notifier.updateImage,
+                                        ),
                                   ),
                                 if (form.attachedDocuments.isNotEmpty)
                                   SaleFormAttachmentChipList(
                                     attachments: form.attachedDocuments,
                                     attachmentService: ref
-                                        .watch(documentAttachmentServiceProvider)
+                                        .watch(
+                                          documentAttachmentServiceProvider,
+                                        )
                                         .value,
-                                    onRemove: (id) => transactionRemoveAttachment(
-                                      ref: ref,
-                                      attachments: form.attachedDocuments,
-                                      id: id,
-                                      onRemoved: notifier.removeDocument,
-                                    ),
+                                    onRemove: (id) =>
+                                        transactionRemoveAttachment(
+                                          ref: ref,
+                                          attachments: form.attachedDocuments,
+                                          id: id,
+                                          onRemoved: notifier.removeDocument,
+                                        ),
                                     onRename: (id, name) =>
                                         transactionRenameAttachment(
-                                      ref: ref,
-                                      attachments: form.attachedDocuments,
-                                      id: id,
-                                      name: name,
-                                      onRenamed: notifier.updateDocument,
-                                    ),
+                                          ref: ref,
+                                          attachments: form.attachedDocuments,
+                                          id: id,
+                                          name: name,
+                                          onRenamed: notifier.updateDocument,
+                                        ),
                                   ),
                               ],
                             ],

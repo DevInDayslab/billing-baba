@@ -30,8 +30,9 @@ class DashboardTabContent extends ConsumerWidget {
             error is DashboardException && error.code == 'OFFLINE';
         return AppError(
           message: message,
-          onRetry:
-              isOfflineNoCache ? null : () => ref.read(dashboardProvider.notifier).refresh(),
+          onRetry: isOfflineNoCache
+              ? null
+              : () => ref.read(dashboardProvider.notifier).refresh(),
         );
       },
       data: (viewState) => _DashboardGridShell(

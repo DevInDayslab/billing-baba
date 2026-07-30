@@ -217,9 +217,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     if (match == null) {
       try {
         final pickerParties = await ref.read(partyPickerListProvider.future);
-        match = pickerParties
-            .where((item) => item.id == party.id)
-            .firstOrNull;
+        match = pickerParties.where((item) => item.id == party.id).firstOrNull;
       } on Object {
         // Picker refresh is best-effort after edit.
       }

@@ -11,7 +11,8 @@ Future<void> showPaymentFailedDialog(
   required VoidCallback onCancel,
 }) {
   final result = ref.read(paymentStateProvider).result;
-  final message = result?.failureMessage ??
+  final message =
+      result?.failureMessage ??
       ref.read(paymentStateProvider).errorMessage ??
       'Payment could not be completed. Please try again.';
 

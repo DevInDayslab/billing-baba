@@ -44,7 +44,8 @@ class DesktopPartyGroupsPage extends ConsumerStatefulWidget {
   const DesktopPartyGroupsPage({super.key});
 
   @override
-  ConsumerState<DesktopPartyGroupsPage> createState() => _PartyGroupsPageState();
+  ConsumerState<DesktopPartyGroupsPage> createState() =>
+      _PartyGroupsPageState();
 }
 
 class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {

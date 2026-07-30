@@ -57,7 +57,9 @@ class SettingsSection extends StatelessWidget {
     for (var i = 0; i < items.length; i++) {
       result.add(items[i]);
       if (i < items.length - 1) {
-        result.add(const Divider(height: 1, thickness: 1, color: _dividerColor));
+        result.add(
+          const Divider(height: 1, thickness: 1, color: _dividerColor),
+        );
       }
     }
     return result;
@@ -221,8 +223,9 @@ class SwitchTile extends StatelessWidget {
               activeThumbColor: Colors.white,
               activeTrackColor: _settingsBlue,
               inactiveThumbColor: Colors.white,
-              inactiveTrackColor:
-                  AppColors.textSecondary.withValues(alpha: 0.25),
+              inactiveTrackColor: AppColors.textSecondary.withValues(
+                alpha: 0.25,
+              ),
             ),
         ],
       ),
@@ -406,7 +409,10 @@ class _SettingsCountTileState extends State<SettingsCountTile> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: AppRadius.mdBorder,
-                  borderSide: const BorderSide(color: _settingsBlue, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: _settingsBlue,
+                    width: 1.5,
+                  ),
                 ),
               ),
               onSubmitted: (_) => _commit(),
@@ -512,7 +518,10 @@ class _SettingsPrefixTileState extends State<SettingsPrefixTile> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: AppRadius.mdBorder,
-                  borderSide: const BorderSide(color: _settingsBlue, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: _settingsBlue,
+                    width: 1.5,
+                  ),
                 ),
               ),
               onSubmitted: (_) => _commit(),

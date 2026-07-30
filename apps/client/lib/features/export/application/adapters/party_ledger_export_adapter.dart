@@ -14,7 +14,10 @@ ExportSheet buildPartyLedgerExportSheet({
       ExportColumn(header: 'Reference'),
       ExportColumn(header: 'Date/Time', type: ExportCellType.datetime),
       ExportColumn(header: 'Total', type: ExportCellType.currency),
-      ExportColumn(header: 'Balance / Outstanding', type: ExportCellType.currency),
+      ExportColumn(
+        header: 'Balance / Outstanding',
+        type: ExportCellType.currency,
+      ),
       ExportColumn(header: 'Due Date', type: ExportCellType.date),
       ExportColumn(header: 'Status'),
     ],

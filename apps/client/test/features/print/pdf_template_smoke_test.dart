@@ -201,30 +201,33 @@ void main() {
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');
     });
 
-    test('InvoicePrintDocumentService renders sales invoice with print settings',
-        () async {
-      const settings = PrintSettings.defaults();
-      final bytes =
-          await InvoicePrintDocumentService.buildBytesFromPrintableDocument(
-        settings: settings,
-        document: _commercialFixture(),
-      );
+    test(
+      'InvoicePrintDocumentService renders sales invoice with print settings',
+      () async {
+        const settings = PrintSettings.defaults();
+        final bytes =
+            await InvoicePrintDocumentService.buildBytesFromPrintableDocument(
+              settings: settings,
+              document: _commercialFixture(),
+            );
 
-      expect(bytes, isNotEmpty);
-      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
-    });
+        expect(bytes, isNotEmpty);
+        expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+      },
+    );
 
     test('thermal print settings produce a narrow PDF page width', () async {
       const settings = PrintSettings.defaults();
       final bytes =
           await InvoicePrintDocumentService.buildBytesFromPrintableDocument(
-        settings: settings,
-        document: _commercialFixture(),
-      );
+            settings: settings,
+            document: _commercialFixture(),
+          );
 
       final pdfText = String.fromCharCodes(bytes);
-      final mediaBoxMatch =
-          RegExp(r'/MediaBox\s*\[\s*0\s+0\s+([\d.]+)').firstMatch(pdfText);
+      final mediaBoxMatch = RegExp(
+        r'/MediaBox\s*\[\s*0\s+0\s+([\d.]+)',
+      ).firstMatch(pdfText);
       expect(mediaBoxMatch, isNotNull);
 
       final pageWidth = double.parse(mediaBoxMatch!.group(1)!);

@@ -48,12 +48,15 @@ abstract final class DeviceInfoCollector {
     return 'Unknown';
   }
 
-  static Future<_NativeDetails> _nativeDetails(DeviceInfoPlugin deviceInfo) async {
+  static Future<_NativeDetails> _nativeDetails(
+    DeviceInfoPlugin deviceInfo,
+  ) async {
     final platform = AppPlatform.current;
     if (platform.isWindows) {
       final info = await deviceInfo.windowsInfo;
       return _NativeDetails(
-        operatingSystem: 'Windows ${info.majorVersion}.${info.minorVersion} '
+        operatingSystem:
+            'Windows ${info.majorVersion}.${info.minorVersion} '
             'build ${info.buildNumber}',
         windowsVersion: '${info.displayVersion} (${info.buildNumber})',
         cpuArchitecture: '${info.numberOfCores} cores',

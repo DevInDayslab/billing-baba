@@ -587,8 +587,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         ..addAll(additionalPhoneErrors);
     });
 
-    final additionalPhonesValid =
-        additionalPhoneErrors.every((error) => error == null);
+    final additionalPhonesValid = additionalPhoneErrors.every(
+      (error) => error == null,
+    );
 
     final isValid =
         partyNameError == null &&
@@ -1219,7 +1220,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           const SizedBox(height: FormSpacing.section),
           PartyAdditionalPhonesField(
             controllers: _additionalPhoneControllers,
-            errors: _additionalPhoneErrors.length ==
+            errors:
+                _additionalPhoneErrors.length ==
                     _additionalPhoneControllers.length
                 ? _additionalPhoneErrors
                 : List<String?>.filled(
@@ -1229,8 +1231,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             onAdd: _addAdditionalPhoneField,
             onRemove: _removeAdditionalPhoneField,
             onChanged: (_) => setState(() {}),
-            fieldBuilder:
-                buildAdditionalPhoneInput,
+            fieldBuilder: buildAdditionalPhoneInput,
           ),
         ] else ...[
           const SizedBox(height: 8),

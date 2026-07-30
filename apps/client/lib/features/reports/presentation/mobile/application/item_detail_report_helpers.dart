@@ -15,9 +15,15 @@ List<ItemDetailDisplayRow> buildItemDetailDisplayRows({
     final day = DateTime(row.date.year, row.date.month, row.date.day);
     final current = byDate[day] ?? (sale: 0, purchase: 0);
     if (row.type == 'Sale') {
-      byDate[day] = (sale: current.sale + row.quantity, purchase: current.purchase);
+      byDate[day] = (
+        sale: current.sale + row.quantity,
+        purchase: current.purchase,
+      );
     } else {
-      byDate[day] = (sale: current.sale, purchase: current.purchase + row.quantity);
+      byDate[day] = (
+        sale: current.sale,
+        purchase: current.purchase + row.quantity,
+      );
     }
   }
 
@@ -26,7 +32,9 @@ List<ItemDetailDisplayRow> buildItemDetailDisplayRows({
 
   final days = <DateTime>[];
   if (hideInactiveDates) {
-    days.addAll(byDate.keys.where((day) => !day.isBefore(start) && !day.isAfter(end)));
+    days.addAll(
+      byDate.keys.where((day) => !day.isBefore(start) && !day.isAfter(end)),
+    );
     days.sort();
   } else {
     var current = start;

@@ -25,22 +25,26 @@ bool reportMatchesColumnFilters<T>({
 
 bool _matchesFilter(FilterType type, Object? rawFilter, Object? value) {
   return switch (type) {
-    FilterType.text => rawFilter is TextColumnFilter &&
-        rawFilter.matches(_asString(value)),
-    FilterType.number => rawFilter is NumberColumnFilter &&
-        rawFilter.matches(_asDouble(value)),
-    FilterType.date => rawFilter is DateColumnFilter &&
-        value is DateTime &&
-        rawFilter.matches(value),
-    FilterType.singleSelect => rawFilter is SelectColumnFilter &&
-        rawFilter.matches(_asString(value)),
-    FilterType.multiSelect => rawFilter is MultiSelectColumnFilter &&
-        rawFilter.matches(_asString(value)),
-    FilterType.boolean => rawFilter is BooleanColumnFilter &&
-        value is bool &&
-        rawFilter.matches(value),
-    FilterType.rangeSlider => rawFilter is RangeSliderColumnFilter &&
-        rawFilter.matches(_asDouble(value)),
+    FilterType.text =>
+      rawFilter is TextColumnFilter && rawFilter.matches(_asString(value)),
+    FilterType.number =>
+      rawFilter is NumberColumnFilter && rawFilter.matches(_asDouble(value)),
+    FilterType.date =>
+      rawFilter is DateColumnFilter &&
+          value is DateTime &&
+          rawFilter.matches(value),
+    FilterType.singleSelect =>
+      rawFilter is SelectColumnFilter && rawFilter.matches(_asString(value)),
+    FilterType.multiSelect =>
+      rawFilter is MultiSelectColumnFilter &&
+          rawFilter.matches(_asString(value)),
+    FilterType.boolean =>
+      rawFilter is BooleanColumnFilter &&
+          value is bool &&
+          rawFilter.matches(value),
+    FilterType.rangeSlider =>
+      rawFilter is RangeSliderColumnFilter &&
+          rawFilter.matches(_asDouble(value)),
   };
 }
 

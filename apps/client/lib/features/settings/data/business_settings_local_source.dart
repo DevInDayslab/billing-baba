@@ -62,16 +62,16 @@ class BusinessSettingsLocalSource {
   Future<BusinessSettingsTableData?> getByBusinessId(String businessId) {
     return (_db.select(_db.businessSettingsLocal)
           ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            (t) => t.businessId.equals(businessId) & t.isDeleted.equals(false),
           )
           ..limit(1))
         .getSingleOrNull();
   }
 
   Future<BusinessSettingsTableData?> getById(String id) {
-    return (_db.select(_db.businessSettingsLocal)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.businessSettingsLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<BusinessSettingsDto?> getActiveDto(String id) async {
@@ -97,7 +97,9 @@ class BusinessSettingsLocalSource {
     bool isDeleted = false,
     String? deviceId,
   }) {
-    return _db.into(_db.businessSettingsLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.businessSettingsLocal)
+        .insertOnConflictUpdate(
           BusinessSettingsLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -122,8 +124,9 @@ class BusinessSettingsLocalSource {
     required String id,
     required DateTime deletedAt,
   }) async {
-    await (_db.update(_db.businessSettingsLocal)..where((t) => t.id.equals(id)))
-        .write(
+    await (_db.update(
+      _db.businessSettingsLocal,
+    )..where((t) => t.id.equals(id))).write(
       BusinessSettingsLocalCompanion(
         isDeleted: const Value(true),
         deletedAt: Value(deletedAt.toUtc()),

@@ -30,8 +30,7 @@ class _MobileSettingsScreenState extends State<MobileSettingsScreen> {
     final route = switch (tab) {
       SettingsTab.profile || SettingsTab.about => null,
       SettingsTab.print => AppRoutes.settingsPrint,
-      SettingsTab.transactionMessages =>
-        AppRoutes.settingsTransactionMessages,
+      SettingsTab.transactionMessages => AppRoutes.settingsTransactionMessages,
       SettingsTab.backup => AppRoutes.settingsBackup,
     };
     if (route == null) return;

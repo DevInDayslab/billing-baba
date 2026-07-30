@@ -149,15 +149,16 @@ class _InventorySearchFieldState extends State<InventorySearchField> {
           focusNode: _focusNode,
           onChanged: _handleChanged,
           style: saleFieldTextStyle,
-          decoration: buildSaleFieldDecoration(
-            hint: widget.hint,
-            suffixIcon: _buildSuffixIcon(),
-          ).copyWith(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-          ),
+          decoration:
+              buildSaleFieldDecoration(
+                hint: widget.hint,
+                suffixIcon: _buildSuffixIcon(),
+              ).copyWith(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+              ),
         ),
       ),
     );

@@ -21,7 +21,8 @@ class ReviewOrderSummaryPage extends ConsumerStatefulWidget {
       _ReviewOrderSummaryPageState();
 }
 
-class _ReviewOrderSummaryPageState extends ConsumerState<ReviewOrderSummaryPage> {
+class _ReviewOrderSummaryPageState
+    extends ConsumerState<ReviewOrderSummaryPage> {
   var _isPaying = false;
 
   Future<void> _handlePay(double total) async {

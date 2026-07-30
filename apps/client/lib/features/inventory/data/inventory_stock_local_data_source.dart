@@ -7,8 +7,7 @@ String stockLevelLocalId({
   required String businessId,
   required String itemId,
   required String godownId,
-}) =>
-    '$businessId:$itemId:$godownId';
+}) => '$businessId:$itemId:$godownId';
 
 double _parseQty(String? value) => double.tryParse(value ?? '') ?? 0;
 
@@ -30,15 +29,15 @@ class InventoryStockLocalDataSource {
     required String itemId,
     required String godownId,
   }) async {
-    final row = await (_db.select(_db.stockLevelsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.itemId.equals(itemId) &
-                t.godownId.equals(godownId) &
-                t.isDeleted.equals(false),
-          ))
-        .getSingleOrNull();
+    final row =
+        await (_db.select(_db.stockLevelsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.itemId.equals(itemId) &
+                  t.godownId.equals(godownId) &
+                  t.isDeleted.equals(false),
+            ))
+            .getSingleOrNull();
     return _parseQty(row?.currentQuantity);
   }
 
@@ -46,14 +45,14 @@ class InventoryStockLocalDataSource {
     required String businessId,
     required String itemId,
   }) async {
-    final rows = await (_db.select(_db.stockLevelsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.itemId.equals(itemId) &
-                t.isDeleted.equals(false),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.stockLevelsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.itemId.equals(itemId) &
+                  t.isDeleted.equals(false),
+            ))
+            .get();
     return rows.fold<double>(
       0,
       (sum, row) => sum + _parseQty(row.currentQuantity),
@@ -64,12 +63,12 @@ class InventoryStockLocalDataSource {
   Future<Map<String, double>> quantitiesByItem({
     required String businessId,
   }) async {
-    final rows = await (_db.select(_db.stockLevelsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.stockLevelsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            ))
+            .get();
 
     final totals = <String, double>{};
     for (final row in rows) {
@@ -83,13 +82,12 @@ class InventoryStockLocalDataSource {
     required String businessId,
     required String itemId,
   }) {
-    return (_db.select(_db.stockLevelsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.itemId.equals(itemId) &
-                t.isDeleted.equals(false),
-          ))
+    return (_db.select(_db.stockLevelsLocal)..where(
+          (t) =>
+              t.businessId.equals(businessId) &
+              t.itemId.equals(itemId) &
+              t.isDeleted.equals(false),
+        ))
         .get();
   }
 
@@ -104,15 +102,16 @@ class InventoryStockLocalDataSource {
     required String documentId,
     required String documentType,
     required String referenceType,
-    required DateTime createdAt, String? referenceNumber,
+    required DateTime createdAt,
+    String? referenceNumber,
     String? costPerUnit,
     String? unit,
     String? notes,
     String? deviceId,
   }) async {
-    final existing = await (_db.select(_db.inventoryMovementsLocal)
-          ..where((t) => t.id.equals(movementId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.inventoryMovementsLocal,
+    )..where((t) => t.id.equals(movementId))).getSingleOrNull();
     if (existing != null) return;
 
     final beforeQty = await currentQuantity(
@@ -122,7 +121,9 @@ class InventoryStockLocalDataSource {
     );
     final afterQty = beforeQty + quantityDelta;
 
-    await _db.into(_db.inventoryMovementsLocal).insert(
+    await _db
+        .into(_db.inventoryMovementsLocal)
+        .insert(
           InventoryMovementsLocalCompanion.insert(
             id: movementId,
             businessId: businessId,
@@ -160,13 +161,14 @@ class InventoryStockLocalDataSource {
   }
 
   Future<bool> hasAnyMovements({required String businessId}) async {
-    final row = await (_db.select(_db.inventoryMovementsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          )
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (_db.select(_db.inventoryMovementsLocal)
+              ..where(
+                (t) =>
+                    t.businessId.equals(businessId) & t.isDeleted.equals(false),
+              )
+              ..limit(1))
+            .getSingleOrNull();
     return row != null;
   }
 
@@ -206,7 +208,9 @@ class InventoryStockLocalDataSource {
       deviceId: deviceId,
     );
 
-    await _db.into(_db.inventoryMovementsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.inventoryMovementsLocal)
+        .insertOnConflictUpdate(
           InventoryMovementsLocalCompanion.insert(
             id: movement.id,
             businessId: movement.businessId,
@@ -256,7 +260,9 @@ class InventoryStockLocalDataSource {
     String? deviceId,
     bool isDeleted = false,
   }) async {
-    await _db.into(_db.inventoryMovementsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.inventoryMovementsLocal)
+        .insertOnConflictUpdate(
           InventoryMovementsLocalCompanion.insert(
             id: dto.id,
             businessId: businessId,
@@ -287,31 +293,36 @@ class InventoryStockLocalDataSource {
     required String businessId,
     required String itemId,
   }) async {
-    final rows = await (_db.select(_db.inventoryMovementsLocal).join([
-      leftOuterJoin(
-        _db.godownsLocal,
-        _db.godownsLocal.id.equalsExp(_db.inventoryMovementsLocal.godownId) &
-            _db.godownsLocal.businessId.equalsExp(
-              _db.inventoryMovementsLocal.businessId,
-            ),
-      ),
-      leftOuterJoin(
-        _db.itemsLocal,
-        _db.itemsLocal.id.equalsExp(_db.inventoryMovementsLocal.itemId) &
-            _db.itemsLocal.businessId.equalsExp(
-              _db.inventoryMovementsLocal.businessId,
-            ),
-      ),
-    ])
-          ..where(
-            _db.inventoryMovementsLocal.businessId.equals(businessId) &
-                _db.inventoryMovementsLocal.itemId.equals(itemId) &
-                _db.inventoryMovementsLocal.isDeleted.equals(false),
-          )
-          ..orderBy([
-            OrderingTerm.desc(_db.inventoryMovementsLocal.createdAt),
-          ]))
-        .get();
+    final rows =
+        await (_db.select(_db.inventoryMovementsLocal).join([
+                leftOuterJoin(
+                  _db.godownsLocal,
+                  _db.godownsLocal.id.equalsExp(
+                        _db.inventoryMovementsLocal.godownId,
+                      ) &
+                      _db.godownsLocal.businessId.equalsExp(
+                        _db.inventoryMovementsLocal.businessId,
+                      ),
+                ),
+                leftOuterJoin(
+                  _db.itemsLocal,
+                  _db.itemsLocal.id.equalsExp(
+                        _db.inventoryMovementsLocal.itemId,
+                      ) &
+                      _db.itemsLocal.businessId.equalsExp(
+                        _db.inventoryMovementsLocal.businessId,
+                      ),
+                ),
+              ])
+              ..where(
+                _db.inventoryMovementsLocal.businessId.equals(businessId) &
+                    _db.inventoryMovementsLocal.itemId.equals(itemId) &
+                    _db.inventoryMovementsLocal.isDeleted.equals(false),
+              )
+              ..orderBy([
+                OrderingTerm.desc(_db.inventoryMovementsLocal.createdAt),
+              ]))
+            .get();
 
     return [
       for (final row in rows)
@@ -327,15 +338,16 @@ class InventoryStockLocalDataSource {
     required String businessId,
     required String itemId,
   }) async {
-    final movements = await (_db.select(_db.inventoryMovementsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.itemId.equals(itemId) &
-                t.isDeleted.equals(false),
-          )
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .get();
+    final movements =
+        await (_db.select(_db.inventoryMovementsLocal)
+              ..where(
+                (t) =>
+                    t.businessId.equals(businessId) &
+                    t.itemId.equals(itemId) &
+                    t.isDeleted.equals(false),
+              )
+              ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+            .get();
 
     final byGodown = <String, double>{};
     for (final movement in movements) {
@@ -363,14 +375,14 @@ class InventoryStockLocalDataSource {
     required DateTime updatedAt,
     required int syncVersion,
   }) async {
-    final existing = await (_db.select(_db.inventoryMovementsLocal)
-          ..where((t) => t.id.equals(adjustmentId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.inventoryMovementsLocal,
+    )..where((t) => t.id.equals(adjustmentId))).getSingleOrNull();
     if (existing == null) return;
 
-    await (_db.update(_db.inventoryMovementsLocal)
-          ..where((t) => t.id.equals(adjustmentId)))
-        .write(
+    await (_db.update(
+      _db.inventoryMovementsLocal,
+    )..where((t) => t.id.equals(adjustmentId))).write(
       InventoryMovementsLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt),
@@ -408,7 +420,9 @@ class InventoryStockLocalDataSource {
       godownId: godownId,
     );
 
-    await _db.into(_db.stockLevelsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.stockLevelsLocal)
+        .insertOnConflictUpdate(
           StockLevelsLocalCompanion.insert(
             id: id,
             businessId: businessId,

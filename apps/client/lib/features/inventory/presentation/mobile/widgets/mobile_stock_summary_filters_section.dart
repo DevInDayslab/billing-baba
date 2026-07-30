@@ -96,7 +96,9 @@ class MobileStockSummaryFiltersSection extends ConsumerWidget {
                 label: const Text('Filters'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.textPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
                 ),
               ),
             ],

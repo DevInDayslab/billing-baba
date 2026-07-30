@@ -14,12 +14,11 @@ class GeneratedDocumentService {
     required String documentKind,
     required String sourceType,
     required String sourceId,
-  }) =>
-      _repository.lookup(
-        documentKind: documentKind,
-        sourceType: sourceType,
-        sourceId: sourceId,
-      );
+  }) => _repository.lookup(
+    documentKind: documentKind,
+    sourceType: sourceType,
+    sourceId: sourceId,
+  );
 
   Future<GeneratedDocumentDto> refresh({
     required String documentKind,
@@ -27,16 +26,15 @@ class GeneratedDocumentService {
     required String sourceId,
     Uint8List? clientBytes,
     String? fileName,
-  }) =>
-      _repository.ensure(
-        documentKind: documentKind,
-        sourceType: sourceType,
-        sourceId: sourceId,
-        bytes: clientBytes,
-        fileName: fileName,
-        // Professional Flutter PDFs must replace any server MVP fallback.
-        forceRegenerate: clientBytes != null,
-      );
+  }) => _repository.ensure(
+    documentKind: documentKind,
+    sourceType: sourceType,
+    sourceId: sourceId,
+    bytes: clientBytes,
+    fileName: fileName,
+    // Professional Flutter PDFs must replace any server MVP fallback.
+    forceRegenerate: clientBytes != null,
+  );
 
   /// Uploads the Flutter-rendered PDF so cloud/storage matches in-app print.
   Future<GeneratedDocumentDto?> cacheForPrintRequest(

@@ -277,9 +277,15 @@ Future<void> _warmBusinessProfile(
     final cached = await service.readCachedBusinessProfile();
     if (cached != null && ref.mounted) {
       ref.read(businessProfileProvider.notifier).replaceWith(cached);
-      BusinessOpenDebugLog.step('warm', 'profile ok from cache (${cached.name})');
+      BusinessOpenDebugLog.step(
+        'warm',
+        'profile ok from cache (${cached.name})',
+      );
     } else {
-      BusinessOpenDebugLog.step('warm', 'profile skipped — backend unreachable');
+      BusinessOpenDebugLog.step(
+        'warm',
+        'profile skipped — backend unreachable',
+      );
     }
     return;
   }

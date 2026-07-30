@@ -5,7 +5,8 @@ import 'package:flutter/widgets.dart';
 
 class ComingSoonPage extends StatelessWidget {
   const ComingSoonPage({
-    required this.title, super.key,
+    required this.title,
+    super.key,
   });
 
   final String title;

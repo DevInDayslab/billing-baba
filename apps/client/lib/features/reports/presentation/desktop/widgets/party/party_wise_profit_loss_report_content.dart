@@ -151,36 +151,38 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<
-                                ReportPartyWiseProfitLossRow>(
-                              reportScope: partyWiseProfitLossReportScope,
-                              minWidth: 600,
-                              columns: partyWiseProfitLossColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'No data available.',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.textSecondary,
-                                      ),
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportPartyWiseProfitLossRow
+                                >(
+                                  reportScope: partyWiseProfitLossReportScope,
+                                  minWidth: 600,
+                                  columns: partyWiseProfitLossColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'No data available.',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        SizedBox(height: AppSpacing.xs),
+                                        Text(
+                                          'Try adjusting the date range or filters.',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    SizedBox(height: AppSpacing.xs),
-                                    Text(
-                                      'Try adjusting the date range or filters.',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

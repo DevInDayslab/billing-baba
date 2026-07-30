@@ -53,7 +53,9 @@ class MobileAddItemOnlineStoreSection extends StatelessWidget {
               controller: priceController,
               label: priceLabel,
               hint: priceLabel,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [_decimalFormatter],
               onChanged: (v) => onPriceChanged(double.tryParse(v) ?? 0),
               suffixIcon: Icon(

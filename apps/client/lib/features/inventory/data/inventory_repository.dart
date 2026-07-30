@@ -295,12 +295,11 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) =>
-      _items.countActive(
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
-      );
+  }) => _items.countActive(
+    searchQuery: searchQuery,
+    type: type,
+    categoryId: categoryId,
+  );
 
   Future<List<ItemListDto>> listItemsPage({
     required int limit,
@@ -308,14 +307,13 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) =>
-      _items.listPage(
-        limit: limit,
-        offset: offset,
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
-      );
+  }) => _items.listPage(
+    limit: limit,
+    offset: offset,
+    searchQuery: searchQuery,
+    type: type,
+    categoryId: categoryId,
+  );
 
   Stream<List<ItemListDto>> watchItemsPage({
     required int limit,
@@ -323,21 +321,22 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) =>
-      _items.watchPage(
-        limit: limit,
-        offset: offset,
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
-      );
+  }) => _items.watchPage(
+    limit: limit,
+    offset: offset,
+    searchQuery: searchQuery,
+    type: type,
+    categoryId: categoryId,
+  );
 
   Future<Map<String, double>> localStockQuantitiesForItems(
     Iterable<String> itemIds,
   ) async {
     final all = await localStockQuantitiesByItem();
     final ids = itemIds.toSet();
-    return Map.fromEntries(all.entries.where((entry) => ids.contains(entry.key)));
+    return Map.fromEntries(
+      all.entries.where((entry) => ids.contains(entry.key)),
+    );
   }
 
   Future<ItemDetailDto> getItem(String id) async {
@@ -408,7 +407,9 @@ class InventoryRepository {
 
   Future<void> deleteItemLocation(String id) => _remote.deleteItemLocation(id);
 
-  Future<PaginatedStockLevelsDto> getStockLevels(StockLevelListQuery query) async {
+  Future<PaginatedStockLevelsDto> getStockLevels(
+    StockLevelListQuery query,
+  ) async {
     final businessId = _requireBusinessId();
     if (query.itemId != null && query.itemId!.isNotEmpty) {
       final rows = await _stockLocal.listStockLevelRowsForItem(
@@ -463,7 +464,9 @@ class InventoryRepository {
   Future<void> _maybeBackfillBusinessStock(String businessId) async {
     final applier = _stockApplier;
     if (applier == null) return;
-    final hasMovements = await _stockLocal.hasAnyMovements(businessId: businessId);
+    final hasMovements = await _stockLocal.hasAnyMovements(
+      businessId: businessId,
+    );
     if (hasMovements) return;
     await applier.backfillBusinessStock(
       businessId: businessId,

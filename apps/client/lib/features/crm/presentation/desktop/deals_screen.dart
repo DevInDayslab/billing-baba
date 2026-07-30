@@ -321,10 +321,12 @@ class _DealsFilterChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ownerOptions = ref.watch(crmAssigneeFilterOptionsProvider).maybeWhen(
-      data: (options) => options,
-      orElse: () => const [crmOwnerAllOption],
-    );
+    final ownerOptions = ref
+        .watch(crmAssigneeFilterOptionsProvider)
+        .maybeWhen(
+          data: (options) => options,
+          orElse: () => const [crmOwnerAllOption],
+        );
 
     return Wrap(
       spacing: AppSpacing.sm,

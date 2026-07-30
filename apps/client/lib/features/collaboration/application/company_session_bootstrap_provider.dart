@@ -30,46 +30,50 @@ final companySessionBootstrapProvider = Provider<void>((ref) {
           session.businesses.isNotEmpty) {
         final businessSummary = session.businesses.first;
         final user = session.user;
-        ref.read(companySessionProvider.notifier).setSession(
-          CompanySession.owner(
-            entry: CompanyListEntry(
-              id: businessSummary.id,
-              name: businessSummary.name,
-              relationship: CompanyRelationship.owner,
-              syncStatus: business.SyncStatus.on,
-              source: CompanyListSource.apiOwned,
-              ownerName: user.name,
-              phone: user.phone,
-            ),
-            userId: user.id,
-            userName: user.name ?? 'Developer',
-            userPhone: user.phone,
-          ),
-        );
+        ref
+            .read(companySessionProvider.notifier)
+            .setSession(
+              CompanySession.owner(
+                entry: CompanyListEntry(
+                  id: businessSummary.id,
+                  name: businessSummary.name,
+                  relationship: CompanyRelationship.owner,
+                  syncStatus: business.SyncStatus.on,
+                  source: CompanyListSource.apiOwned,
+                  ownerName: user.name,
+                  phone: user.phone,
+                ),
+                userId: user.id,
+                userName: user.name ?? 'Developer',
+                userPhone: user.phone,
+              ),
+            );
       }
       return;
     }
 
     final user = auth.session!.user;
-    ref.read(companySessionProvider.notifier).setSession(
-      CompanySession.owner(
-        entry: CompanyListEntry(
-          id: profile.id,
-          name: profile.name,
-          relationship: CompanyRelationship.owner,
-          syncStatus: business.SyncStatus.on,
-          source: CompanyListSource.apiOwned,
-          gstin: profile.gstin,
-          phone: profile.phone,
-          email: profile.email,
-          address: profile.address,
-          logoUrl: profile.logoUrl,
-        ),
-        userId: user.id,
-        userName: user.name ?? 'User',
-        userPhone: user.phone,
-      ),
-    );
+    ref
+        .read(companySessionProvider.notifier)
+        .setSession(
+          CompanySession.owner(
+            entry: CompanyListEntry(
+              id: profile.id,
+              name: profile.name,
+              relationship: CompanyRelationship.owner,
+              syncStatus: business.SyncStatus.on,
+              source: CompanyListSource.apiOwned,
+              gstin: profile.gstin,
+              phone: profile.phone,
+              email: profile.email,
+              address: profile.address,
+              logoUrl: profile.logoUrl,
+            ),
+            userId: user.id,
+            userName: user.name ?? 'User',
+            userPhone: user.phone,
+          ),
+        );
   }
 
   ref.listen(authProvider, (_, _) => tryBootstrap());

@@ -20,7 +20,8 @@ final mobileBusinessProfileLoaderProvider =
           await service.resolveActiveBusinessId();
 
       final skipApi =
-          businessId != null && BusinessSelectionRetryGuard.isBlocked(businessId);
+          businessId != null &&
+          BusinessSelectionRetryGuard.isBlocked(businessId);
 
       if (!skipApi) {
         final auth = ref.read(authProvider);

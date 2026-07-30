@@ -48,7 +48,8 @@ class DashboardExpandedPanel extends ConsumerStatefulWidget {
       _DashboardExpandedPanelState();
 }
 
-class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel> {
+class _DashboardExpandedPanelState
+    extends ConsumerState<DashboardExpandedPanel> {
   late DashboardTodoScopeFilter _scopeFilter;
   late DashboardTodoStatusChip _statusChip;
 
@@ -74,9 +75,11 @@ class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel>
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
-    final previous = await ref.read(tasksProvider.notifier).toggleComplete(
-      task.id,
-    );
+    final previous = await ref
+        .read(tasksProvider.notifier)
+        .toggleComplete(
+          task.id,
+        );
     if (previous == null || !mounted) return;
 
     final wasCompleting = !previous.isCompleted;

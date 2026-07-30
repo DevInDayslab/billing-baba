@@ -72,8 +72,9 @@ class GodownMasterRepository {
     final now = DateTime.now().toUtc();
     final id = _uuid.v4();
     final name = request.name.trim();
-    final address =
-        request.address?.trim().isEmpty == true ? null : request.address?.trim();
+    final address = request.address?.trim().isEmpty == true
+        ? null
+        : request.address?.trim();
     await _local.upsertRow(
       id: id,
       businessId: businessId,

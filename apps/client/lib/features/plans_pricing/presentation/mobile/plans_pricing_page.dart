@@ -87,8 +87,8 @@ class _PlansPricingBody extends ConsumerWidget {
 
   SubscriptionPlanType _subscriptionTypeFor(PricingPlanType type) =>
       type == PricingPlanType.gold
-          ? SubscriptionPlanType.gold
-          : SubscriptionPlanType.platinum;
+      ? SubscriptionPlanType.gold
+      : SubscriptionPlanType.platinum;
 
   void _openReviewOrder(
     BuildContext context,
@@ -101,7 +101,9 @@ class _PlansPricingBody extends ConsumerWidget {
     final pricing = plan.pricingFor(platform, duration);
     final metadata = metadataFor(planType);
 
-    ref.read(subscriptionCheckoutSessionProvider.notifier).startSession(
+    ref
+        .read(subscriptionCheckoutSessionProvider.notifier)
+        .startSession(
           SubscriptionCheckoutSession(
             input: ReviewOrderSummaryInput(
               planType: planType,
@@ -139,7 +141,11 @@ class _PlansPricingBody extends ConsumerWidget {
     );
   }
 
-  String _ctaLabel(PricingPlan plan, PlanPlatform platform, PlanDuration duration) {
+  String _ctaLabel(
+    PricingPlan plan,
+    PlanPlatform platform,
+    PlanDuration duration,
+  ) {
     final pricing = plan.pricingFor(platform, duration);
     final tierLabel = _planTypeFor(plan).comparisonTierLabel;
     if (pricing.ctaLabel.startsWith('Renew ')) {
@@ -213,7 +219,8 @@ class _PlansPricingBody extends ConsumerWidget {
                     onTap: () => ref
                         .read(mobilePlansSelectionProvider.notifier)
                         .selectPlan(_planTypeFor(plan)),
-                    onViewAllFeatures: _planTypeFor(plan) == selection.selectedPlan
+                    onViewAllFeatures:
+                        _planTypeFor(plan) == selection.selectedPlan
                         ? () => _showAllFeaturesSheet(context, ref)
                         : null,
                   ),
@@ -305,7 +312,9 @@ class _DurationChip extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: isSelected ? const Color(0xFFE91E63) : AppColors.textPrimary,
+                color: isSelected
+                    ? const Color(0xFFE91E63)
+                    : AppColors.textPrimary,
               ),
             ),
           ),

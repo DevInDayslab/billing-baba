@@ -32,6 +32,7 @@ import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addressFieldLines = 3;
@@ -648,8 +649,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
     final notifier = ref.read(
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
-    final canViewHiddenLedger =
-        ref.watch(permissionServiceProvider).canViewHiddenLedger;
+    final canViewHiddenLedger = ref
+        .watch(permissionServiceProvider)
+        .canViewHiddenLedger;
     final partyId = form.partyId;
     final showHiddenLedgerBanner =
         canViewHiddenLedger && partyId != null && partyId.isNotEmpty;
@@ -842,9 +844,7 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
           final isNarrow = constraints.maxWidth < _narrowBreakpoint;
           final printButton = !isCash
               ? OutlinedButton.icon(
-                  onPressed: isBusy
-                      ? null
-                      : () => _handlePrintPreview(context),
+                  onPressed: isBusy ? null : () => _handlePrintPreview(context),
                   icon: const Icon(Icons.print_outlined, size: 16),
                   label: const Text(
                     'Print / Preview',
@@ -967,8 +967,9 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
     }
 
     final paidAmount = form.displayReceivedAmount;
-    final allowHiddenLedger =
-        ref.read(permissionServiceProvider).canViewHiddenLedger;
+    final allowHiddenLedger = ref
+        .read(permissionServiceProvider)
+        .canViewHiddenLedger;
 
     final handling = await showShortPaymentHandlingDialog(
       context,
@@ -1014,8 +1015,11 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
 
     final shortPayment = await _resolveShortPaymentHandling(context);
     if (!context.mounted) return;
-    final latestForm = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
-    if (latestForm.hasShortPayment && shortPayment.shortPaymentHandling == null) {
+    final latestForm = ref.read(
+      addSaleFormProvider(sessionKey: widget.sessionKey),
+    );
+    if (latestForm.hasShortPayment &&
+        shortPayment.shortPaymentHandling == null) {
       return;
     }
 
@@ -1065,8 +1069,11 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
   ) async {
     final shortPayment = await _resolveShortPaymentHandling(context);
     if (!context.mounted) return;
-    final latestForm = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
-    if (latestForm.hasShortPayment && shortPayment.shortPaymentHandling == null) {
+    final latestForm = ref.read(
+      addSaleFormProvider(sessionKey: widget.sessionKey),
+    );
+    if (latestForm.hasShortPayment &&
+        shortPayment.shortPaymentHandling == null) {
       return;
     }
 
@@ -1324,15 +1331,16 @@ class _SaleTextFieldState extends State<_SaleTextField> {
       style: saleFieldTextStyle.copyWith(
         fontSize: widget.compact ? 13 : 14,
       ),
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        filled: widget.filled,
-        compact: widget.compact,
-        hasError: widget.hasError,
-        fixedHeight: false,
-      ).copyWith(
-        errorText: widget.hasError ? widget.errorText : null,
-      ),
+      decoration:
+          buildSaleFieldDecoration(
+            hint: widget.hintText,
+            filled: widget.filled,
+            compact: widget.compact,
+            hasError: widget.hasError,
+            fixedHeight: false,
+          ).copyWith(
+            errorText: widget.hasError ? widget.errorText : null,
+          ),
       keyboardType: widget.keyboardType,
       inputFormatters: widget.inputFormatters,
       minLines: widget.minLines,

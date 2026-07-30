@@ -191,21 +191,25 @@ class _ItemCategoryWiseProfitLossReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportCategoryAmountRow>(
-                              reportScope: itemCategoryWiseProfitLossReportScope,
-                              minWidth: 1180,
-                              columns: itemCategoryWiseProfitLossColumns(),
-                              rows: tableRows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No profit or loss data for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportCategoryAmountRow
+                                >(
+                                  reportScope:
+                                      itemCategoryWiseProfitLossReportScope,
+                                  minWidth: 1180,
+                                  columns: itemCategoryWiseProfitLossColumns(),
+                                  rows: tableRows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No profit or loss data for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

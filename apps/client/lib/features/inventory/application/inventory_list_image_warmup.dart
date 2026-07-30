@@ -28,7 +28,9 @@ class InventoryListImageWarmup {
         seedItemImageFromUrl(item.id, primary),
       ]);
       unawaited(
-        _ref.read(imageServiceProvider).prefetchUrl(
+        _ref
+            .read(imageServiceProvider)
+            .prefetchUrl(
               primary,
               cacheKey: buildImageCacheKey(fallbackUrl: primary),
             ),

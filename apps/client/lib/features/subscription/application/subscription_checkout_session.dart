@@ -30,8 +30,9 @@ class SubscriptionCheckoutSession {
   }) {
     return SubscriptionCheckoutSession(
       input: input ?? this.input,
-      appliedCouponCode:
-          clearCoupon ? null : (appliedCouponCode ?? this.appliedCouponCode),
+      appliedCouponCode: clearCoupon
+          ? null
+          : (appliedCouponCode ?? this.appliedCouponCode),
       couponDiscountOnTaxable:
           couponDiscountOnTaxable ?? this.couponDiscountOnTaxable,
       gstin: clearGstin ? null : (gstin ?? this.gstin),

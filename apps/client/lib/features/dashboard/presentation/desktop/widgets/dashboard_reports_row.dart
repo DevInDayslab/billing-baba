@@ -37,7 +37,6 @@ class DashboardReportsRow extends ConsumerWidget {
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
-                  
                 ),
               ),
               TextButton(
@@ -75,7 +74,6 @@ class _ReportsChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     if (reports.isEmpty) {
       return const Align(
         alignment: Alignment.centerLeft,
@@ -89,8 +87,10 @@ class _ReportsChips extends StatelessWidget {
     return Row(
       children: [
         for (var i = 0; i < reports.length; i++) ...[
-          if (i > 0) SizedBox(width: gap*2),
-           Expanded(child: _ReportChip(report: reports[i], ref: ref)),
+          if (i > 0) SizedBox(width: gap * 2),
+          Expanded(
+            child: _ReportChip(report: reports[i], ref: ref),
+          ),
         ],
       ],
     );
@@ -105,7 +105,6 @@ class _ReportChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -122,7 +121,10 @@ class _ReportChip extends StatelessWidget {
             borderRadius: DashboardDecor.cardRadius,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + 4, vertical: AppSpacing.lg),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm + 4,
+              vertical: AppSpacing.lg,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -131,7 +133,6 @@ class _ReportChip extends StatelessWidget {
                     style: DashboardTypography.supportingLabel.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
-                      
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

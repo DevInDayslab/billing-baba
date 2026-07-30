@@ -26,9 +26,10 @@ import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
-typedef SyncStateEmitter = void Function(
-  SyncState Function(SyncState current) update,
-);
+typedef SyncStateEmitter =
+    void Function(
+      SyncState Function(SyncState current) update,
+    );
 
 /// Owns the synchronization workflow: register → status → bootstrap → push → pull.
 class SyncCoordinator {
@@ -75,7 +76,7 @@ class SyncCoordinator {
     this.dealsEntityType = 'deals',
     this.expensesEntityType = 'expenses',
     this.expenseCategoriesEntityType = 'expense_categories',
-  })  : _uuid = uuid ?? const Uuid();
+  }) : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
   final SyncQueue _queue;
@@ -250,8 +251,9 @@ class SyncCoordinator {
           _readInt(statusPayload['max_push_mutations']) ?? 100;
       final pullCursor = _metadata.pullCursorFor(businessId);
       final bootstrappedAt = _metadata.bootstrappedAtFor(businessId);
-      final lastServerSchemaVersion =
-          _metadata.lastServerSchemaVersionFor(businessId);
+      final lastServerSchemaVersion = _metadata.lastServerSchemaVersionFor(
+        businessId,
+      );
       final needsBootstrap = _needsBootstrap(
         businessId: businessId,
         pullCursor: pullCursor,
@@ -275,9 +277,15 @@ class SyncCoordinator {
             syncGeneration: syncGeneration,
           );
           rowsDownloaded += downloaded;
-          await _metadata.setBootstrappedAtFor(businessId, DateTime.now().toUtc());
+          await _metadata.setBootstrappedAtFor(
+            businessId,
+            DateTime.now().toUtc(),
+          );
           if (serverSchema != null) {
-            await _metadata.setLastServerSchemaVersionFor(businessId, serverSchema);
+            await _metadata.setLastServerSchemaVersionFor(
+              businessId,
+              serverSchema,
+            );
           }
         } on Object catch (error) {
           return _finishFailure(
@@ -301,14 +309,20 @@ class SyncCoordinator {
 
       if (rowJobs.isNotEmpty) {
         try {
-          for (var offset = 0; offset < rowJobs.length; offset += _lastMaxPushMutations) {
+          for (
+            var offset = 0;
+            offset < rowJobs.length;
+            offset += _lastMaxPushMutations
+          ) {
             if (SyncPauseGate.instance.isStale(syncGeneration)) {
               return SyncResult.noop(
                 message: 'Sync aborted during business switch',
               );
             }
-            final chunkEnd =
-                (offset + _lastMaxPushMutations).clamp(0, rowJobs.length);
+            final chunkEnd = (offset + _lastMaxPushMutations).clamp(
+              0,
+              rowJobs.length,
+            );
             final chunk = rowJobs.sublist(offset, chunkEnd);
             final pushStats = await _pushRowJobs(
               deviceId: deviceId,
@@ -460,7 +474,8 @@ class SyncCoordinator {
       final job = mutationId == null ? null : byMutation[mutationId];
       if (job == null) continue;
       final syncVersion = _readInt(item['sync_version']) ?? 1;
-      final updatedAt = DateTime.tryParse(
+      final updatedAt =
+          DateTime.tryParse(
             item['server_updated_at']?.toString() ?? '',
           )?.toUtc() ??
           DateTime.now().toUtc();
@@ -481,7 +496,8 @@ class SyncCoordinator {
       if (job == null) continue;
       final syncVersion = _readInt(item['sync_version']);
       if (syncVersion != null && job.entityId != null) {
-        final updatedAt = DateTime.tryParse(
+        final updatedAt =
+            DateTime.tryParse(
               item['server_updated_at']?.toString() ?? '',
             )?.toUtc() ??
             DateTime.now().toUtc();
@@ -559,7 +575,8 @@ class SyncCoordinator {
         if (entityType == null || entityId == null) continue;
 
         final syncVersion = _readInt(change['sync_version']) ?? 1;
-        final updatedAt = DateTime.tryParse(
+        final updatedAt =
+            DateTime.tryParse(
               change['updated_at']?.toString() ?? '',
             )?.toUtc() ??
             DateTime.now().toUtc();

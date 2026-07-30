@@ -53,8 +53,7 @@ class CreatePartyRequest {
     if (gstin != null && gstin!.isNotEmpty) 'gstin': gstin,
     'party_type': partyType,
     if (partyCategory != null) 'party_category': partyCategory,
-    if (partyGroup != null && partyGroup!.isNotEmpty)
-      'party_group': partyGroup,
+    if (partyGroup != null && partyGroup!.isNotEmpty) 'party_group': partyGroup,
     if (areaCode != null && areaCode!.isNotEmpty) 'area_code': areaCode,
     'pricing_tier': pricingTier,
     if (state != null && state!.isNotEmpty) 'state': state,

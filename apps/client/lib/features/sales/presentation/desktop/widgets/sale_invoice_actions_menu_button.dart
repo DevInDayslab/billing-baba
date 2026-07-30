@@ -301,7 +301,7 @@ class SaleInvoiceTableActions {
       final salesService = await ref.read(salesServiceProvider.future);
 
       final invoiceDto = await salesService.repository.getDocument(invoice.id);
-      
+
       if (invoiceDto.lines.isEmpty) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

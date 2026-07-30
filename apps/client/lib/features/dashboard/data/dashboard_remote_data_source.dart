@@ -25,7 +25,8 @@ class DashboardRemoteDataSource {
     );
 
     final raw =
-        (response.data?['data'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+        (response.data?['data'] as Map<String, dynamic>?) ??
+        <String, dynamic>{};
     return DashboardFetchResult(
       dto: DashboardDto.fromJson(raw),
       rawPayload: raw,

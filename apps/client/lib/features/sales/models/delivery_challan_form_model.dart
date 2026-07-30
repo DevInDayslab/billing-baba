@@ -84,12 +84,11 @@ class DeliveryChallanFormState {
     return roundOff ? grand.roundToDouble() : grand;
   }
 
-  bool get partyHasError =>
-      transactionPartyHasError(
-        showValidationErrors: showValidationErrors,
-        partyId: partyId,
-        partyName: party,
-      );
+  bool get partyHasError => transactionPartyHasError(
+    showValidationErrors: showValidationErrors,
+    partyId: partyId,
+    partyName: party,
+  );
 
   bool get hasValidLineItems => hasValidNamedLineItems<SaleLineItem>(
     items: items,

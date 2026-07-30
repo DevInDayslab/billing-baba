@@ -33,7 +33,11 @@ ReportColumnSpec<T> _textCol<T>({
     alignment: alignment,
     filterValue: value,
     buildCell: (row, _) => width != null
-        ? ReportAlignedCell.fixed(width, alignment: alignment, child: child(row))
+        ? ReportAlignedCell.fixed(
+            width,
+            alignment: alignment,
+            child: child(row),
+          )
         : ReportAlignedCell.flex(alignment: alignment, child: child(row)),
   );
 }
@@ -56,7 +60,11 @@ ReportColumnSpec<T> _numberCol<T>({
     alignment: alignment,
     filterValue: value,
     buildCell: (row, _) => width != null
-        ? ReportAlignedCell.fixed(width, alignment: alignment, child: child(row))
+        ? ReportAlignedCell.fixed(
+            width,
+            alignment: alignment,
+            child: child(row),
+          )
         : ReportAlignedCell.flex(alignment: alignment, child: child(row)),
   );
 }
@@ -228,7 +236,8 @@ List<ReportColumnSpec<PartyModel>> allPartiesColumns() => [
     width: 40,
     showFilter: false,
     filterValue: (_) => '',
-    buildCell: (_, index) => ReportAlignedCell.fixed(40, child: Text('${index + 1}')),
+    buildCell: (_, index) =>
+        ReportAlignedCell.fixed(40, child: Text('${index + 1}')),
   ),
   _textCol(
     id: 'name',
@@ -256,14 +265,16 @@ List<ReportColumnSpec<PartyModel>> allPartiesColumns() => [
     label: 'RECEIVABLE BALANCE',
     width: 140,
     value: (row) => row.balance > 0 ? row.balance : 0,
-    child: (row) => Text(row.balance > 0 ? formatReportCurrency(row.balance) : '—'),
+    child: (row) =>
+        Text(row.balance > 0 ? formatReportCurrency(row.balance) : '—'),
   ),
   _numberCol(
     id: 'payable',
     label: 'PAYABLE BALANCE',
     width: 130,
     value: (row) => row.balance < 0 ? row.balance.abs() : 0,
-    child: (row) => Text(row.balance < 0 ? formatReportCurrency(row.balance.abs()) : '—'),
+    child: (row) =>
+        Text(row.balance < 0 ? formatReportCurrency(row.balance.abs()) : '—'),
   ),
   _textCol(
     id: 'creditLimit',
@@ -532,44 +543,44 @@ List<ReportColumnSpec<ReportLoanStatementRow>> loanStatementColumns() => [
   ),
 ];
 
-List<ReportColumnSpec<ReportPartyWiseProfitLossRow>> partyWiseProfitLossColumns() =>
-    [
-      _textCol(
-        id: 'partyName',
-        label: 'PARTY NAME',
-        flex: 1,
-        value: (row) => row.partyName,
-        child: (row) => Text(row.partyName),
-      ),
-      _textCol(
-        id: 'phone',
-        label: 'PHONE',
-        width: 120,
-        value: (row) => row.phone,
-        child: (row) => Text(row.phone),
-      ),
-      _numberCol(
-        id: 'saleAmount',
-        label: 'SALE',
-        width: 110,
-        value: (row) => row.saleAmount,
-        child: (row) => _currencyText(row.saleAmount),
-      ),
-      _numberCol(
-        id: 'purchaseAmount',
-        label: 'PURCHASE',
-        width: 110,
-        value: (row) => row.purchaseAmount,
-        child: (row) => _currencyText(row.purchaseAmount),
-      ),
-      _numberCol(
-        id: 'profit',
-        label: 'PROFIT',
-        width: 110,
-        value: (row) => row.profit,
-        child: (row) => _currencyText(row.profit),
-      ),
-    ];
+List<ReportColumnSpec<ReportPartyWiseProfitLossRow>>
+partyWiseProfitLossColumns() => [
+  _textCol(
+    id: 'partyName',
+    label: 'PARTY NAME',
+    flex: 1,
+    value: (row) => row.partyName,
+    child: (row) => Text(row.partyName),
+  ),
+  _textCol(
+    id: 'phone',
+    label: 'PHONE',
+    width: 120,
+    value: (row) => row.phone,
+    child: (row) => Text(row.phone),
+  ),
+  _numberCol(
+    id: 'saleAmount',
+    label: 'SALE',
+    width: 110,
+    value: (row) => row.saleAmount,
+    child: (row) => _currencyText(row.saleAmount),
+  ),
+  _numberCol(
+    id: 'purchaseAmount',
+    label: 'PURCHASE',
+    width: 110,
+    value: (row) => row.purchaseAmount,
+    child: (row) => _currencyText(row.purchaseAmount),
+  ),
+  _numberCol(
+    id: 'profit',
+    label: 'PROFIT',
+    width: 110,
+    value: (row) => row.profit,
+    child: (row) => _currencyText(row.profit),
+  ),
+];
 
 List<ReportColumnSpec<ReportSalePurchaseByPartyTableRow>>
 salePurchaseByPartyColumns() => [
@@ -608,7 +619,8 @@ salePurchaseByPartyColumns() => [
     id: 'payable',
     label: 'PAYABLE',
     width: 120,
-    value: (row) => (row.party?.balance ?? 0) < 0 ? row.party!.balance.abs() : 0,
+    value: (row) =>
+        (row.party?.balance ?? 0) < 0 ? row.party!.balance.abs() : 0,
     child: (row) {
       final balance = row.party?.balance ?? 0;
       return Text(balance < 0 ? formatReportCurrency(balance.abs()) : '—');
@@ -705,37 +717,37 @@ List<ReportColumnSpec<ReportItemByPartyRow>> itemReportByPartyColumns() => [
   ),
 ];
 
-List<ReportColumnSpec<ReportItemWiseProfitLossRow>> itemWiseProfitLossColumns() =>
-    [
-      _textCol(
-        id: 'itemName',
-        label: 'ITEM NAME',
-        flex: 1,
-        value: (row) => row.itemName,
-        child: (row) => Text(row.itemName),
-      ),
-      _numberCol(
-        id: 'saleAmount',
-        label: 'SALE',
-        width: 120,
-        value: (row) => row.saleAmount,
-        child: (row) => _currencyText(row.saleAmount),
-      ),
-      _numberCol(
-        id: 'purchaseAmount',
-        label: 'PURCHASE',
-        width: 120,
-        value: (row) => row.purchaseAmount,
-        child: (row) => _currencyText(row.purchaseAmount),
-      ),
-      _numberCol(
-        id: 'profit',
-        label: 'PROFIT',
-        width: 120,
-        value: (row) => row.profit,
-        child: (row) => _currencyText(row.profit),
-      ),
-    ];
+List<ReportColumnSpec<ReportItemWiseProfitLossRow>>
+itemWiseProfitLossColumns() => [
+  _textCol(
+    id: 'itemName',
+    label: 'ITEM NAME',
+    flex: 1,
+    value: (row) => row.itemName,
+    child: (row) => Text(row.itemName),
+  ),
+  _numberCol(
+    id: 'saleAmount',
+    label: 'SALE',
+    width: 120,
+    value: (row) => row.saleAmount,
+    child: (row) => _currencyText(row.saleAmount),
+  ),
+  _numberCol(
+    id: 'purchaseAmount',
+    label: 'PURCHASE',
+    width: 120,
+    value: (row) => row.purchaseAmount,
+    child: (row) => _currencyText(row.purchaseAmount),
+  ),
+  _numberCol(
+    id: 'profit',
+    label: 'PROFIT',
+    width: 120,
+    value: (row) => row.profit,
+    child: (row) => _currencyText(row.profit),
+  ),
+];
 
 List<ReportColumnSpec<ReportCategoryAmountRow>>
 itemCategoryWiseProfitLossColumns() => [
@@ -762,11 +774,11 @@ itemCategoryWiseProfitLossColumns() => [
   ),
 ];
 
-List<ReportColumnSpec<ReportCategoryAmountRow>> stockSummaryByCategoryColumns() =>
-    itemCategoryWiseProfitLossColumns();
+List<ReportColumnSpec<ReportCategoryAmountRow>>
+stockSummaryByCategoryColumns() => itemCategoryWiseProfitLossColumns();
 
-List<ReportColumnSpec<ReportCategoryAmountRow>> salePurchaseByCategoryColumns() =>
-    itemCategoryWiseProfitLossColumns();
+List<ReportColumnSpec<ReportCategoryAmountRow>>
+salePurchaseByCategoryColumns() => itemCategoryWiseProfitLossColumns();
 
 List<ReportColumnSpec<ReportLowStockRow>> lowStockColumns() => [
   _textCol(
@@ -1062,33 +1074,33 @@ List<ReportColumnSpec<ReportStockTransferRow>> stockTransferColumns() => [
   ),
 ];
 
-List<ReportColumnSpec<ReportExpenseCategoryRow>> expenseCategoryReportColumns() =>
-    [
-      _textCol(
-        id: 'category',
-        label: 'EXPENSE CATEGORY',
-        flex: 1,
-        value: (row) => row.category,
-        child: (row) => Text(row.category),
-      ),
-      ReportColumnSpec(
-        id: 'categoryType',
-        label: 'CATEGORY TYPE',
-        filterType: FilterType.text,
-        width: 180,
-        showFilter: false,
-        filterValue: (_) => 'Direct Expense',
-        buildCell: (_, __) =>
-            const ReportAlignedCell.fixed(180, child: Text('Direct Expense')),
-      ),
-      _numberCol(
-        id: 'amount',
-        label: 'AMOUNT',
-        width: 140,
-        value: (row) => row.amount,
-        child: (row) => _currencyText(row.amount),
-      ),
-    ];
+List<ReportColumnSpec<ReportExpenseCategoryRow>>
+expenseCategoryReportColumns() => [
+  _textCol(
+    id: 'category',
+    label: 'EXPENSE CATEGORY',
+    flex: 1,
+    value: (row) => row.category,
+    child: (row) => Text(row.category),
+  ),
+  ReportColumnSpec(
+    id: 'categoryType',
+    label: 'CATEGORY TYPE',
+    filterType: FilterType.text,
+    width: 180,
+    showFilter: false,
+    filterValue: (_) => 'Direct Expense',
+    buildCell: (_, __) =>
+        const ReportAlignedCell.fixed(180, child: Text('Direct Expense')),
+  ),
+  _numberCol(
+    id: 'amount',
+    label: 'AMOUNT',
+    width: 140,
+    value: (row) => row.amount,
+    child: (row) => _currencyText(row.amount),
+  ),
+];
 
 List<ReportColumnSpec<ReportExpenseItemRow>> expenseItemReportColumns() => [
   _textCol(
@@ -1216,30 +1228,30 @@ otherIncomeCategoryReportColumns() => [
   ),
 ];
 
-List<ReportColumnSpec<ReportOtherIncomeItemRow>> otherIncomeItemReportColumns() =>
-    [
-      _textCol(
-        id: 'itemName',
-        label: 'ITEM',
-        flex: 1,
-        value: (row) => row.itemName,
-        child: (row) => Text(row.itemName),
-      ),
-      _textCol(
-        id: 'category',
-        label: 'CATEGORY',
-        width: 160,
-        value: (row) => row.category,
-        child: (row) => Text(row.category),
-      ),
-      _numberCol(
-        id: 'amount',
-        label: 'AMOUNT',
-        width: 120,
-        value: (row) => row.amount,
-        child: (row) => _currencyText(row.amount),
-      ),
-    ];
+List<ReportColumnSpec<ReportOtherIncomeItemRow>>
+otherIncomeItemReportColumns() => [
+  _textCol(
+    id: 'itemName',
+    label: 'ITEM',
+    flex: 1,
+    value: (row) => row.itemName,
+    child: (row) => Text(row.itemName),
+  ),
+  _textCol(
+    id: 'category',
+    label: 'CATEGORY',
+    width: 160,
+    value: (row) => row.category,
+    child: (row) => Text(row.category),
+  ),
+  _numberCol(
+    id: 'amount',
+    label: 'AMOUNT',
+    width: 120,
+    value: (row) => row.amount,
+    child: (row) => _currencyText(row.amount),
+  ),
+];
 
 List<ReportColumnSpec<ReportGstTaxPartyRow>> gstTaxColumns() => [
   _textCol(

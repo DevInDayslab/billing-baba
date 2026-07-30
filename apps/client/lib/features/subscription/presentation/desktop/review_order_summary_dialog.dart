@@ -27,7 +27,10 @@ Future<void> showReviewOrderSummaryDialog(
         input: input,
         onBack: onBack ?? () => Navigator.of(dialogContext).pop(),
         onCompletePurchase: () async {
-          final rootNavigator = Navigator.of(dialogContext, rootNavigator: true);
+          final rootNavigator = Navigator.of(
+            dialogContext,
+            rootNavigator: true,
+          );
 
           // Kick off order creation but open checkout immediately so Razorpay
           // runs inside a dialog that is already on screen after the user tap.

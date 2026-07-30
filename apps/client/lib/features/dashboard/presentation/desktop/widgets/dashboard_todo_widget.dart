@@ -42,9 +42,11 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
-    final previous = await ref.read(tasksProvider.notifier).toggleComplete(
-      task.id,
-    );
+    final previous = await ref
+        .read(tasksProvider.notifier)
+        .toggleComplete(
+          task.id,
+        );
     if (previous == null || !mounted) return;
 
     final wasCompleting = !previous.isCompleted;

@@ -27,7 +27,11 @@ class OfflineStatusBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.cloud_off_outlined, size: 16, color: Colors.orange.shade900),
+          Icon(
+            Icons.cloud_off_outlined,
+            size: 16,
+            color: Colors.orange.shade900,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(

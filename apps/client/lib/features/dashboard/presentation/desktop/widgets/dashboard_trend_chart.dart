@@ -178,11 +178,11 @@ class _DashboardTrendChartState extends State<DashboardTrendChart> {
               FlDotData(
                 getDotPainter: (spot, percent, bar, index) =>
                     FlDotCirclePainter(
-                  radius: 5.5,
-                  color: Colors.white,
-                  strokeColor: widget.lineColor,
-                  strokeWidth: 2.5,
-                ),
+                      radius: 5.5,
+                      color: Colors.white,
+                      strokeColor: widget.lineColor,
+                      strokeWidth: 2.5,
+                    ),
               ),
             );
           }).toList();

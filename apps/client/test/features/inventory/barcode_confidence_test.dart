@@ -20,11 +20,20 @@ void main() {
       expect(BarcodeConfidence.hasValidGtinChecksum('12345'), isFalse);
     });
 
-    test('isEligibleForExternalLookup requires valid GTIN length and checksum', () {
-      expect(BarcodeConfidence.isEligibleForExternalLookup('4006381333931'), isTrue);
-      expect(BarcodeConfidence.isEligibleForExternalLookup('99999999'), isFalse);
-      expect(BarcodeConfidence.isEligibleForExternalLookup('123'), isFalse);
-    });
+    test(
+      'isEligibleForExternalLookup requires valid GTIN length and checksum',
+      () {
+        expect(
+          BarcodeConfidence.isEligibleForExternalLookup('4006381333931'),
+          isTrue,
+        );
+        expect(
+          BarcodeConfidence.isEligibleForExternalLookup('99999999'),
+          isFalse,
+        );
+        expect(BarcodeConfidence.isEligibleForExternalLookup('123'), isFalse);
+      },
+    );
 
     test('isExactBarcodeMatch compares normalized values', () {
       expect(

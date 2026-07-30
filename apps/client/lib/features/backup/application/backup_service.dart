@@ -35,7 +35,7 @@ class BackupService {
     required this.storage,
     required this.metadata,
     BackupDatabasePaths? paths,
-  })  : _paths = paths ?? BackupDatabasePaths();
+  }) : _paths = paths ?? BackupDatabasePaths();
 
   final Ref _ref;
   final AppDatabase database;

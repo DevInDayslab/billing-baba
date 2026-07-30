@@ -108,12 +108,12 @@ abstract final class AppRoutes {
   static const settingsBackup = '/settings/backup';
 
   /// Settings hub deep-link with tab query (`general`, `print`, …).
-  static String settingsTab(String tabId) =>
-      '$settingsPreferences?tab=$tabId';
+  static String settingsTab(String tabId) => '$settingsPreferences?tab=$tabId';
 
   static const plansPricing = '/plans-pricing';
   static const subscriptionReview = '/plans-pricing/review';
-  static const subscriptionPaymentProcessing = '/plans-pricing/payment-processing';
+  static const subscriptionPaymentProcessing =
+      '/plans-pricing/payment-processing';
   static const subscriptionPaymentSuccess = '/plans-pricing/payment-success';
   static const plansPricingLicenseInfo = '/plans-pricing/license-info';
   static const editProfile = '/edit-profile';

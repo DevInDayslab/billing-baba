@@ -30,7 +30,8 @@ class DesktopBusinessListPage extends ConsumerStatefulWidget {
   const DesktopBusinessListPage({super.key});
 
   @override
-  ConsumerState<DesktopBusinessListPage> createState() => _BusinessListPageState();
+  ConsumerState<DesktopBusinessListPage> createState() =>
+      _BusinessListPageState();
 }
 
 /// Preview card id removed — shared companies come from [companyDirectoryProvider].
@@ -273,97 +274,97 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
       'BusinessListPage',
       'build',
       'directory=${directoryAsync.runtimeType} '
-      'transition=${ref.read(businessSelectionTransitionProvider)}',
+          'transition=${ref.read(businessSelectionTransitionProvider)}',
     );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: directoryAsync.when(
-            loading: () => const ColoredBox(
-              color: AppColors.surface,
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => _ErrorState(
-              onRetry: () => ref.invalidate(companyDirectoryProvider),
-            ),
-            data: (allEntries) {
-              final directoryService = directoryServiceAsync.value;
-              if (allEntries.isEmpty) {
-                return Column(
-                  children: [
-                    const _SupportBar(phone: _supportPhone),
-                    Expanded(
-                      child: _EmptyBusinessState(onCreate: _openCreateBusiness),
-                    ),
-                    _BottomBar(
-                      phoneNumber: phoneNumber,
-                      supportEmail: _supportEmail,
-                      onCreate: _openCreateBusiness,
-                      showNewCompany: false,
-                    ),
-                  ],
-                );
-              }
+        loading: () => const ColoredBox(
+          color: AppColors.surface,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        error: (error, _) => _ErrorState(
+          onRetry: () => ref.invalidate(companyDirectoryProvider),
+        ),
+        data: (allEntries) {
+          final directoryService = directoryServiceAsync.value;
+          if (allEntries.isEmpty) {
+            return Column(
+              children: [
+                const _SupportBar(phone: _supportPhone),
+                Expanded(
+                  child: _EmptyBusinessState(onCreate: _openCreateBusiness),
+                ),
+                _BottomBar(
+                  phoneNumber: phoneNumber,
+                  supportEmail: _supportEmail,
+                  onCreate: _openCreateBusiness,
+                  showNewCompany: false,
+                ),
+              ],
+            );
+          }
 
-              final sharedCompanies = _filterEntries(
-                directoryService?.sharedCompanies(allEntries) ??
-                    allEntries.where((e) => e.isSharedTab).toList(),
-              );
-              final myCompanies = _filterEntries(
-                directoryService?.ownedCompanies(allEntries) ??
-                    allEntries.where((e) => e.relationship.isOwner).toList(),
-              );
+          final sharedCompanies = _filterEntries(
+            directoryService?.sharedCompanies(allEntries) ??
+                allEntries.where((e) => e.isSharedTab).toList(),
+          );
+          final myCompanies = _filterEntries(
+            directoryService?.ownedCompanies(allEntries) ??
+                allEntries.where((e) => e.relationship.isOwner).toList(),
+          );
 
-              return Column(
-                children: [
-                  const _SupportBar(phone: _supportPhone),
-                  _Header(
-                    searchController: _searchController,
-                    searchFocusNode: _searchFocusNode,
-                    tabController: _tabController,
-                    onSearchChanged: () => setState(() {}),
-                    onCreate: _openCreateBusiness,
-                  ),
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: () async {
-                        ref.invalidate(companyDirectoryProvider);
-                        await ref.read(companyDirectoryProvider.future);
-                      },
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: _maxContentWidth,
+          return Column(
+            children: [
+              const _SupportBar(phone: _supportPhone),
+              _Header(
+                searchController: _searchController,
+                searchFocusNode: _searchFocusNode,
+                tabController: _tabController,
+                onSearchChanged: () => setState(() {}),
+                onCreate: _openCreateBusiness,
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(companyDirectoryProvider);
+                    await ref.read(companyDirectoryProvider.future);
+                  },
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: _maxContentWidth,
+                      ),
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _SharedCompaniesTab(
+                            entries: sharedCompanies,
+                            onAction: _handleCardAction,
+                            onOpen: _openCompanyEntry,
                           ),
-                          child: TabBarView(
-                            controller: _tabController,
-                            children: [
-                              _SharedCompaniesTab(
-                                entries: sharedCompanies,
-                                onAction: _handleCardAction,
-                                onOpen: _openCompanyEntry,
-                              ),
-                              _MyCompaniesTab(
-                                entries: myCompanies,
-                                onCreate: _openCreateBusiness,
-                                onAction: _handleCardAction,
-                                onOpen: _openCompanyEntry,
-                              ),
-                            ],
+                          _MyCompaniesTab(
+                            entries: myCompanies,
+                            onCreate: _openCreateBusiness,
+                            onAction: _handleCardAction,
+                            onOpen: _openCompanyEntry,
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
-                  _BottomBar(
-                    phoneNumber: phoneNumber,
-                    supportEmail: _supportEmail,
-                    onCreate: _openCreateBusiness,
-                  ),
-                ],
-              );
-            },
-          ),
+                ),
+              ),
+              _BottomBar(
+                phoneNumber: phoneNumber,
+                supportEmail: _supportEmail,
+                onCreate: _openCreateBusiness,
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -724,7 +725,9 @@ class _SharedCompaniesTab extends ConsumerWidget {
           onAccept: isPending && !isExpired
               ? () => onAction(entry, CompanyCardMenuAction.accept)
               : null,
-          onReject: isPending ? () => onAction(entry, CompanyCardMenuAction.reject) : null,
+          onReject: isPending
+              ? () => onAction(entry, CompanyCardMenuAction.reject)
+              : null,
           onMenuAction: (action) => onAction(entry, action),
         );
       },
@@ -788,7 +791,9 @@ class _MyCompaniesTab extends ConsumerWidget {
 void _prefetchBusinessLogos(WidgetRef ref, List<CompanyListEntry> entries) {
   if (entries.isEmpty) return;
 
-  ref.read(appImagePrefetcherProvider).prefetchItemsWindow(
+  ref
+      .read(appImagePrefetcherProvider)
+      .prefetchItemsWindow(
         items: entries,
         firstVisibleIndex: 0,
         lastVisibleIndex: entries.length > 15 ? 14 : entries.length - 1,

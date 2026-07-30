@@ -102,15 +102,15 @@ class GstTaxRateReportContent extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportGstTaxRateRow>(
-                              reportScope: gstTaxRateReportScope,
-                              minWidth: 980,
-                              columns: gstTaxRateColumns(),
-                              rows: rows,
-                            ),
+                            child:
+                                ReportFilterableSyncTable<ReportGstTaxRateRow>(
+                                  reportScope: gstTaxRateReportScope,
+                                  minWidth: 980,
+                                  columns: gstTaxRateColumns(),
+                                  rows: rows,
+                                ),
                           ),
-                        
-                          ),
+                        ),
                       ],
                     ),
                   ),

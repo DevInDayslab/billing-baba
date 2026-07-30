@@ -60,21 +60,22 @@ class _SelectItemsForCategoryDialogState
 
   List<InventoryItem> _filteredItems(List<InventoryItem> allItems) {
     final engine = ref.read(inventorySearchEngineProvider);
-    final items = searchInventoryItems(
-      engine,
-      allItems.where((item) => !_isInTargetCategory(item)),
-      query: _searchQuery,
-    ).toList()
-      ..sort((a, b) {
-        final comparison = switch (_sortField) {
-          _ItemSortField.name => a.name.toLowerCase().compareTo(
-            b.name.toLowerCase(),
-          ),
-          _ItemSortField.quantity =>
-            (a.quantity ?? 0).compareTo(b.quantity ?? 0),
-        };
-        return _sortAscending ? comparison : -comparison;
-      });
+    final items =
+        searchInventoryItems(
+          engine,
+          allItems.where((item) => !_isInTargetCategory(item)),
+          query: _searchQuery,
+        ).toList()..sort((a, b) {
+          final comparison = switch (_sortField) {
+            _ItemSortField.name => a.name.toLowerCase().compareTo(
+              b.name.toLowerCase(),
+            ),
+            _ItemSortField.quantity => (a.quantity ?? 0).compareTo(
+              b.quantity ?? 0,
+            ),
+          };
+          return _sortAscending ? comparison : -comparison;
+        });
 
     return items;
   }

@@ -36,10 +36,10 @@ class TaskEditorResult {
   });
 
   const TaskEditorResult.delete()
-      : title = '',
-        category = TaskCategory.general,
-        reminderAt = null,
-        deleted = true;
+    : title = '',
+      category = TaskCategory.general,
+      reminderAt = null,
+      deleted = true;
 
   final String title;
   final TaskCategory category;

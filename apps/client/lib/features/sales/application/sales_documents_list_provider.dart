@@ -385,7 +385,8 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       await refresh();
       _invalidateRelatedLists(ref);
       await refreshAfterSaleMutation(ref);
-      final isSaleInvoice = scope.documentType == SalesDocumentType.taxInvoice ||
+      final isSaleInvoice =
+          scope.documentType == SalesDocumentType.taxInvoice ||
           scope.documentType == SalesDocumentType.billOfSupply ||
           scope.documentType == SalesDocumentType.normalInvoice ||
           scope.documentType == SalesDocumentType.pos;
@@ -456,8 +457,7 @@ List<SaleInvoiceModel> filteredSalesDocuments(
   Ref ref,
   SalesDocumentListScope scope,
 ) {
-  return ref.watch(salesDocumentsListProvider(scope)).value?.items ??
-      const [];
+  return ref.watch(salesDocumentsListProvider(scope)).value?.items ?? const [];
 }
 
 @riverpod
@@ -465,15 +465,17 @@ PaginatedSaleInvoices paginatedSalesDocuments(
   Ref ref,
   SalesDocumentListScope scope,
 ) {
-  return ref.watch(salesDocumentsListProvider(scope)).maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleInvoices(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  return ref
+      .watch(salesDocumentsListProvider(scope))
+      .maybeWhen(
+        data: (page) => page,
+        orElse: () => const PaginatedSaleInvoices(
+          items: [],
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+        ),
+      );
 }
 
 @Riverpod(keepAlive: true)

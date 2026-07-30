@@ -53,8 +53,9 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
   }
 
   void _showFilterSheet() {
-    final currentFilters =
-        ref.read(mobileHomeControllerProvider).transactionTypeFilters;
+    final currentFilters = ref
+        .read(mobileHomeControllerProvider)
+        .transactionTypeFilters;
     unawaited(
       showMobileTransactionTypeFilterSheet(
         context: context,
@@ -174,8 +175,9 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                   ),
                   MobileHomeViewToggle(
                     activeView: homeState.activeView,
-                    onChanged:
-                        ref.read(mobileHomeControllerProvider.notifier).setView,
+                    onChanged: ref
+                        .read(mobileHomeControllerProvider.notifier)
+                        .setView,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Expanded(
@@ -186,11 +188,11 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                             links: isPartyView
                                 ? MobileHomeMockData.partyQuickLinks(
                                     onNetwork: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
-                                          content:
-                                              Text('Network coming soon'),
+                                          content: Text('Network coming soon'),
                                         ),
                                       );
                                     },
@@ -230,8 +232,9 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                               searchQuery: homeState.searchQuery,
                               onSelectParty: (partyId) {
                                 ref
-                                    .read(selectedPartyIdProvider.notifier)
-                                    .selected = partyId;
+                                        .read(selectedPartyIdProvider.notifier)
+                                        .selected =
+                                    partyId;
                                 unawaited(context.push(AppRoutes.partyDetails));
                               },
                             ),

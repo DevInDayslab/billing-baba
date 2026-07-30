@@ -405,12 +405,12 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   }
 
   MutationRefreshContext _mutationContext() => (
-        partyId: state.partyId,
-        itemIds: state.items
-            .map((line) => line.itemId)
-            .whereType<String>()
-            .where((id) => id.isNotEmpty),
-      );
+    partyId: state.partyId,
+    itemIds: state.items
+        .map((line) => line.itemId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty),
+  );
 
   Future<String?> save() async {
     if (state.isSaving) return null;

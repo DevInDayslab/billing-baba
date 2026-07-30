@@ -16,6 +16,7 @@ class BusinessSettingsLocal extends Table {
       boolean().withDefault(const Constant(true))();
   TextColumn get creditLimitAction =>
       text().withDefault(const Constant('warn'))();
+
   /// JSON object string for pricing tier labels.
   TextColumn get pricingTierLabels => text().nullable()();
   TextColumn get defaultInvoiceTaxRate => text().nullable()();

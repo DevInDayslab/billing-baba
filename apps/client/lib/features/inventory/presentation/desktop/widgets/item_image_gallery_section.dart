@@ -77,7 +77,9 @@ class _ItemImageGallerySectionState
   }
 
   Future<void> _invalidateGalleryImage(ItemImageModel image) async {
-    await ref.read(imageServiceProvider).invalidateImage(
+    await ref
+        .read(imageServiceProvider)
+        .invalidateImage(
           url: image.urlForGrid(),
           mediaAssetId: image.mediaAssetId,
           extraUrls: galleryImageUrls(image),
@@ -122,7 +124,9 @@ class _ItemImageGallerySectionState
     try {
       final normalized = normalizeImageUrl(url);
       if (normalized == null) return;
-      await ref.read(imageServiceProvider).prefetchUrl(
+      await ref
+          .read(imageServiceProvider)
+          .prefetchUrl(
             normalized,
             cacheKey: buildImageCacheKey(fallbackUrl: normalized),
           );

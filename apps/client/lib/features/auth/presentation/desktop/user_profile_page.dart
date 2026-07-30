@@ -20,7 +20,8 @@ class DesktopUserProfilePage extends ConsumerStatefulWidget {
   const DesktopUserProfilePage({super.key});
 
   @override
-  ConsumerState<DesktopUserProfilePage> createState() => _UserProfilePageState();
+  ConsumerState<DesktopUserProfilePage> createState() =>
+      _UserProfilePageState();
 }
 
 class _UserProfilePageState extends ConsumerState<DesktopUserProfilePage> {
@@ -140,7 +141,9 @@ class _UserProfilePageState extends ConsumerState<DesktopUserProfilePage> {
         _uploading = false;
       });
       unawaited(
-        ref.read(imageServiceProvider).replaceImage(
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
               oldUrl: previousUrl,
               newUrl: upload['url'] as String?,
               oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
@@ -181,7 +184,9 @@ class _UserProfilePageState extends ConsumerState<DesktopUserProfilePage> {
       setState(() => _uploading = false);
       // Keep UI snappy — sync cache/profile off the critical path.
       unawaited(
-        ref.read(imageServiceProvider).invalidateImage(
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
               url: previousUrl,
               cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
             ),

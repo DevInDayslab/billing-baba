@@ -136,6 +136,7 @@ class SaleReportColumnFilters extends Notifier<SaleReportColumnFiltersState> {
   }
 }
 
-final saleReportColumnFiltersProvider = NotifierProvider<
-    SaleReportColumnFilters,
-    SaleReportColumnFiltersState>(SaleReportColumnFilters.new);
+final saleReportColumnFiltersProvider =
+    NotifierProvider<SaleReportColumnFilters, SaleReportColumnFiltersState>(
+      SaleReportColumnFilters.new,
+    );

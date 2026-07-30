@@ -14,11 +14,9 @@ String _jwt(Map<String, dynamic> claims) {
 
 void main() {
   // exp = 2000000000 (2033-05-18)
-  const validToken =
-      'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwMDAwMDAwMDB9.signature';
+  const validToken = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwMDAwMDAwMDB9.signature';
   // exp = 1 (1970-01-01)
-  const expiredToken =
-      'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.signature';
+  const expiredToken = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.signature';
 
   test('isExpired returns true for missing token', () {
     expect(JwtUtils.isExpired(null), isTrue);

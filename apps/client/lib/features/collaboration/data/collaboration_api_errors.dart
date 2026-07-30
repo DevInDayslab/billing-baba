@@ -16,11 +16,15 @@ Never throwCollaborationApiError(DioException error) {
 
   if (statusCode == 403 || code == 'FORBIDDEN') {
     throw CollaborationForbiddenException(
-      message.isNotEmpty ? message : 'You do not have permission for this action.',
+      message.isNotEmpty
+          ? message
+          : 'You do not have permission for this action.',
     );
   }
 
-  if (statusCode == 404 || code == 'INVITATION_NOT_FOUND' || code == 'NOT_FOUND') {
+  if (statusCode == 404 ||
+      code == 'INVITATION_NOT_FOUND' ||
+      code == 'NOT_FOUND') {
     throw CollaborationNotFoundException(
       message.isNotEmpty ? message : 'The requested item was not found.',
     );
@@ -31,7 +35,9 @@ Never throwCollaborationApiError(DioException error) {
       code == 'INVITATION_ALREADY_ACCEPTED' ||
       code == 'INVITATION_NOT_ACTIONABLE') {
     throw CollaborationConflictException(
-      message.isNotEmpty ? message : 'This action cannot be completed right now.',
+      message.isNotEmpty
+          ? message
+          : 'This action cannot be completed right now.',
     );
   }
 

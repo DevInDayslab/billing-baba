@@ -59,7 +59,10 @@ class OutOfStockDialog extends ConsumerWidget {
                             padding: EdgeInsets.all(32),
                             child: Text(
                               'Failed to load alternatives',
-                              style: TextStyle(color: AppColors.error, fontSize: 13),
+                              style: TextStyle(
+                                color: AppColors.error,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         );
@@ -195,10 +198,12 @@ class OutOfStockDialog extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        ...alternatives.map((alt) => _buildAlternativeCard(
-              context,
-              alt.alternativeItem,
-            )),
+        ...alternatives.map(
+          (alt) => _buildAlternativeCard(
+            context,
+            alt.alternativeItem,
+          ),
+        ),
       ],
     );
   }
@@ -215,15 +220,17 @@ class OutOfStockDialog extends ConsumerWidget {
       ),
       child: InkWell(
         onTap: () async {
-          await onSelectAlternative(RecommendedItemDto(
-            id: item.id,
-            name: item.name,
-            barcode: item.barcode,
-            brandName: item.brandName,
-            categoryName: item.categoryName,
-            salePrice: item.salePrice,
-            stockQuantity: item.stockQuantity,
-          ));
+          await onSelectAlternative(
+            RecommendedItemDto(
+              id: item.id,
+              name: item.name,
+              barcode: item.barcode,
+              brandName: item.brandName,
+              categoryName: item.categoryName,
+              salePrice: item.salePrice,
+              stockQuantity: item.stockQuantity,
+            ),
+          );
           if (context.mounted) Navigator.of(context).pop();
         },
         borderRadius: BorderRadius.circular(8),
@@ -265,7 +272,10 @@ class OutOfStockDialog extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: hasStock
                           ? const Color(0xFFE8F5E9)

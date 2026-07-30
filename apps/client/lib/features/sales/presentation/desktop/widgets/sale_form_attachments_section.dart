@@ -236,9 +236,7 @@ class _AttachmentChip extends StatelessWidget {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               icon: const Icon(Icons.visibility_outlined, size: 16),
-              onPressed: attachment.canPreview
-                  ? () => _preview(context)
-                  : null,
+              onPressed: attachment.canPreview ? () => _preview(context) : null,
             ),
             InkWell(
               onTap: onRemove,

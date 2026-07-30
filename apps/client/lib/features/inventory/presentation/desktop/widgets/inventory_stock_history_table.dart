@@ -446,11 +446,16 @@ class _StockHistoryPaginationRow extends ConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             'Page ${currentPage + 1} of $totalPages',
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           TextButton(
-            onPressed: canGoNext ? () => notifier.setPage(currentPage + 1) : null,
+            onPressed: canGoNext
+                ? () => notifier.setPage(currentPage + 1)
+                : null,
             child: const Text('Next', style: TextStyle(fontSize: 12)),
           ),
         ],

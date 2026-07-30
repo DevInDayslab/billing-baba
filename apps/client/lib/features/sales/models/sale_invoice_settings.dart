@@ -242,8 +242,8 @@ class SaleInvoiceSettings {
       roundOffTransactionAmount:
           roundOffTransactionAmount ?? this.roundOffTransactionAmount,
       shareTransactionAs: shareTransactionAs ?? this.shareTransactionAs,
-      passcodeForEditDeleteEnabled: passcodeForEditDeleteEnabled ??
-          this.passcodeForEditDeleteEnabled,
+      passcodeForEditDeleteEnabled:
+          passcodeForEditDeleteEnabled ?? this.passcodeForEditDeleteEnabled,
       passcode: passcode ?? this.passcode,
       discountDuringPayment:
           discountDuringPayment ?? this.discountDuringPayment,
@@ -251,16 +251,15 @@ class SaleInvoiceSettings {
           linkPaymentsToInvoices ?? this.linkPaymentsToInvoices,
       dueDatesAndPaymentTerms:
           dueDatesAndPaymentTerms ?? this.dueDatesAndPaymentTerms,
-      enableInvoicePreview:
-          enableInvoicePreview ?? this.enableInvoicePreview,
+      enableInvoicePreview: enableInvoicePreview ?? this.enableInvoicePreview,
       termsAndConditionsEnabled:
           termsAndConditionsEnabled ?? this.termsAndConditionsEnabled,
       termsAndConditionsText:
           termsAndConditionsText ?? this.termsAndConditionsText,
       additionalFieldsEnabled:
           additionalFieldsEnabled ?? this.additionalFieldsEnabled,
-      transportationDetailsEnabled: transportationDetailsEnabled ??
-          this.transportationDetailsEnabled,
+      transportationDetailsEnabled:
+          transportationDetailsEnabled ?? this.transportationDetailsEnabled,
       additionalChargesEnabled:
           additionalChargesEnabled ?? this.additionalChargesEnabled,
       showProfitOnSaleInvoice:

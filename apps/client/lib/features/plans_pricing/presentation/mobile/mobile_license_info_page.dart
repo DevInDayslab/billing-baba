@@ -185,7 +185,8 @@ class _MobileLicenseInfoPageState extends ConsumerState<MobileLicenseInfoPage> {
                       children: [
                         for (final entry
                             in PlansPricingLicenseConstants
-                                .offlinePaymentDetails.entries)
+                                .offlinePaymentDetails
+                                .entries)
                           MobileLicenseDetailRow(
                             label: entry.key,
                             value: entry.value,

@@ -53,7 +53,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
       final trimmed = query.trim();
       ref.read(unitBackendSearchProvider.notifier).query = trimmed;
       unawaited(
-        ref.read(inventoryUnitsProvider.notifier).refresh(
+        ref
+            .read(inventoryUnitsProvider.notifier)
+            .refresh(
               searchQuery: trimmed.isEmpty ? null : trimmed,
             ),
       );
@@ -61,7 +63,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryUnitsProvider.notifier).refresh(
+    return ref
+        .read(inventoryUnitsProvider.notifier)
+        .refresh(
           searchQuery: ref.read(unitBackendSearchProvider),
         );
   }
@@ -95,8 +99,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final error =
-        await ref.read(inventoryUnitsProvider.notifier).deleteUnit(unit.id);
+    final error = await ref
+        .read(inventoryUnitsProvider.notifier)
+        .deleteUnit(unit.id);
     if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -346,7 +351,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                           ),
                           itemBuilder: (context, index) {
                             final unit = units[index];
-                            final isExpanded = _expandedUnitIds.contains(unit.id);
+                            final isExpanded = _expandedUnitIds.contains(
+                              unit.id,
+                            );
                             final hasConversions = _hasConversions(unit);
                             return _UnitListTile(
                               unit: unit,
@@ -356,7 +363,8 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                                   ? () => unawaited(_toggleExpanded(unit))
                                   : null,
                               onEdit: () => unawaited(_editUnit(unit)),
-                              onDelete: () => unawaited(_confirmDeleteUnit(unit)),
+                              onDelete: () =>
+                                  unawaited(_confirmDeleteUnit(unit)),
                               onDeleteConversion: (conversion) => unawaited(
                                 _deleteConversion(unit, conversion),
                               ),
@@ -498,17 +506,19 @@ class _UnitListTile extends StatelessWidget {
                       children: [
                         Text(
                           unit.fullName.toUpperCase(),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           unit.shortName,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                         ),
                       ],
                     ),
@@ -549,9 +559,7 @@ class _UnitListTile extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   conversion.label,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: AppColors.textPrimary,
                                       ),
@@ -559,9 +567,7 @@ class _UnitListTile extends StatelessWidget {
                               ),
                               Text(
                                 '${conversion.factor}x',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),

@@ -33,7 +33,7 @@ class PosSessionService {
     required this._remote,
     required this._storage,
     required ConnectivityMonitor connectivityMonitor,
-  })  : _connectivity = connectivityMonitor;
+  }) : _connectivity = connectivityMonitor;
 
   final SalesRemoteDataSource _remote;
   final StorageService _storage;

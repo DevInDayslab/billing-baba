@@ -96,7 +96,8 @@ abstract final class AddItemFormMapper {
       alias: form.alias.trim(),
       clearAlias: form.alias.trim().isEmpty,
       searchKeywords: _parseSearchKeywords(form.searchKeywords),
-      clearSearchKeywords: _parseSearchKeywords(form.searchKeywords)?.isEmpty ?? true,
+      clearSearchKeywords:
+          _parseSearchKeywords(form.searchKeywords)?.isEmpty ?? true,
       defaultTaxRate: ItemTaxRate.toApiValue(form.taxRate),
       clearDefaultTaxRate: ItemTaxRate.toApiValue(form.taxRate) == null,
       alternativeItemIds: form.alternativeItemIds,
@@ -118,10 +119,12 @@ abstract final class AddItemFormMapper {
       primaryImageUrl: form.primaryImageUrl.trim().isEmpty
           ? null
           : form.primaryImageUrl.trim(),
-      openingQuantity:
-          includeOpeningStock ? _formatMoney(form.openingQty) : null,
-      openingCostPerUnit:
-          includeOpeningStock ? _formatMoney(form.atPrice) : null,
+      openingQuantity: includeOpeningStock
+          ? _formatMoney(form.openingQty)
+          : null,
+      openingCostPerUnit: includeOpeningStock
+          ? _formatMoney(form.atPrice)
+          : null,
       openingGodownId: includeOpeningStock ? godownId : null,
       location: location,
     );

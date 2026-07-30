@@ -61,6 +61,8 @@ class ReportTableColumnFilters
   }
 }
 
-final reportTableColumnFiltersProvider = NotifierProvider<
-    ReportTableColumnFilters,
-    Map<String, Map<String, Object?>>>(ReportTableColumnFilters.new);
+final reportTableColumnFiltersProvider =
+    NotifierProvider<
+      ReportTableColumnFilters,
+      Map<String, Map<String, Object?>>
+    >(ReportTableColumnFilters.new);

@@ -117,7 +117,10 @@ void main() {
       );
 
       expect(merged, hasLength(2));
-      expect(merged.map((item) => item.id), containsAll(['server-1', 'item-local-1']));
+      expect(
+        merged.map((item) => item.id),
+        containsAll(['server-1', 'item-local-1']),
+      );
     });
   });
 }

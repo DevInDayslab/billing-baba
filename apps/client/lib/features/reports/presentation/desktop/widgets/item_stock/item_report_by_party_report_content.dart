@@ -174,20 +174,21 @@ class _ItemReportByPartyReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportItemByPartyRow>(
-                              reportScope: itemByPartyReportScope,
-                              columns: itemReportByPartyColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No data for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<ReportItemByPartyRow>(
+                                  reportScope: itemByPartyReportScope,
+                                  columns: itemReportByPartyColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No data for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

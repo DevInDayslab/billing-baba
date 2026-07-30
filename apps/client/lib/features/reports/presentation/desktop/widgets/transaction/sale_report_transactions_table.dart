@@ -184,6 +184,7 @@ class SaleReportTransactionsTable extends ConsumerWidget {
     );
   }
 }
+
 class _SaleReportTableColumns {
   const _SaleReportTableColumns._();
 
@@ -467,4 +468,3 @@ class _DataCell extends StatelessWidget {
     );
   }
 }
-

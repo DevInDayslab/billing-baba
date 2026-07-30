@@ -68,9 +68,10 @@ abstract final class PartyLedgerTransactionTableActions {
         : (transaction.referenceType ?? '');
 
     return switch (source) {
-      'payments' => transaction.direction == 'paid'
-          ? PartyLedgerTransactionKind.paymentOut
-          : PartyLedgerTransactionKind.paymentIn,
+      'payments' =>
+        transaction.direction == 'paid'
+            ? PartyLedgerTransactionKind.paymentOut
+            : PartyLedgerTransactionKind.paymentIn,
       'expenses' => PartyLedgerTransactionKind.expense,
       'sale_fa_batches' => PartyLedgerTransactionKind.saleFa,
       'purchase_fa_batches' => PartyLedgerTransactionKind.purchaseFa,

@@ -55,10 +55,12 @@ class MobileItemsSearchToolbar extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium,
                       decoration: InputDecoration(
                         hintText: 'Search for an item or code',
-                        hintStyle:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary.withValues(alpha: 0.75),
-                        ),
+                        hintStyle: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.75,
+                              ),
+                            ),
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(

@@ -31,7 +31,8 @@ class NetworkDiagnosticsService {
     final resolvedBase = baseUrl ?? AppConfig.apiBaseUrl;
     final uri = Uri.parse(resolvedBase);
     final host = uri.host;
-    final healthUrl = '${resolvedBase.replaceAll(RegExp(r'/+$'), '')}'
+    final healthUrl =
+        '${resolvedBase.replaceAll(RegExp(r'/+$'), '')}'
         '${ApiEndpoints.health}';
 
     LoggingService.instance.info('Connectivity test starting host=$host');
@@ -43,8 +44,9 @@ class NetworkDiagnosticsService {
     if (!kIsWeb) {
       final dnsStart = Stopwatch()..start();
       try {
-        final addresses = await InternetAddress.lookup(host)
-            .timeout(const Duration(seconds: 10));
+        final addresses = await InternetAddress.lookup(
+          host,
+        ).timeout(const Duration(seconds: 10));
         dnsDuration = dnsStart.elapsed;
         if (addresses.isNotEmpty) {
           resolvedIp = addresses.first.address;
@@ -103,8 +105,7 @@ class NetworkDiagnosticsService {
       final connectionDuration = connectStart.elapsed;
       final status = response.statusCode;
       final data = response.data?['data'] as Map<String, dynamic>?;
-      final healthy =
-          status == 200 && data?['status']?.toString() == 'ok';
+      final healthy = status == 200 && data?['status']?.toString() == 'ok';
 
       LoggingService.instance.info(
         'Health check status=$status healthy=$healthy '

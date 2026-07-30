@@ -179,7 +179,9 @@ class _PreviewImage extends ConsumerWidget {
       error: (_, _) => _PreviewPlaceholder(item: item),
       data: (images) {
         final image = _resolvePrimaryOrFirst(images);
-        final url = image == null ? null : normalizeImageUrl(image.urlForGrid());
+        final url = image == null
+            ? null
+            : normalizeImageUrl(image.urlForGrid());
         if (url == null) return _PreviewPlaceholder(item: item);
         return _WarmPreviewImage(
           item: item,

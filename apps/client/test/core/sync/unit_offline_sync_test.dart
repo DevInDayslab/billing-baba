@@ -43,15 +43,13 @@ class _FakeSyncApi extends SyncApi {
     required String platform,
     required String appVersion,
     required String deviceName,
-  }) async =>
-      {'device_id': deviceId};
+  }) async => {'device_id': deviceId};
 
   @override
   Future<Map<String, dynamic>> status({
     required String deviceId,
     required String appVersion,
-  }) async =>
-      const {'schema_version': 1, 'protocol_version': 1};
+  }) async => const {'schema_version': 1, 'protocol_version': 1};
 
   @override
   Future<Map<String, dynamic>> push({
@@ -84,8 +82,7 @@ class _FakeSyncApi extends SyncApi {
     required String cursor,
     int? limit,
     String? entityTypes,
-  }) async =>
-      pullPayload;
+  }) async => pullPayload;
 }
 
 SyncCoordinator _coord({
@@ -178,31 +175,35 @@ void main() {
     expect(result, isNotNull);
   }
 
-  test('offline create/update/delete writes Drift + pending queue jobs',
-      () async {
-    final created = await repo.create(
-      const CreateUnitRequest(name: 'Kilogram', shortName: 'kg'),
-    );
-    expect(created.name, 'Kilogram');
-    expect((await units.listActive('biz-1')).map((u) => u.name), ['Kilogram']);
-    var pending = await queue.listPending();
-    expect(pending, hasLength(1));
-    expect(pending.first.entityType, 'unit_definitions');
-    expect(pending.first.operation, SyncQueueOperation.create);
-    expect(SyncJob.domainOnly(pending.first.payload)['short_name'], 'kg');
+  test(
+    'offline create/update/delete writes Drift + pending queue jobs',
+    () async {
+      final created = await repo.create(
+        const CreateUnitRequest(name: 'Kilogram', shortName: 'kg'),
+      );
+      expect(created.name, 'Kilogram');
+      expect((await units.listActive('biz-1')).map((u) => u.name), [
+        'Kilogram',
+      ]);
+      var pending = await queue.listPending();
+      expect(pending, hasLength(1));
+      expect(pending.first.entityType, 'unit_definitions');
+      expect(pending.first.operation, SyncQueueOperation.create);
+      expect(SyncJob.domainOnly(pending.first.payload)['short_name'], 'kg');
 
-    await repo.update(created.id, const UpdateUnitRequest(name: 'Kg'));
-    pending = await queue.listPending();
-    expect(pending, hasLength(2));
-    expect(pending.last.operation, SyncQueueOperation.update);
+      await repo.update(created.id, const UpdateUnitRequest(name: 'Kg'));
+      pending = await queue.listPending();
+      expect(pending, hasLength(2));
+      expect(pending.last.operation, SyncQueueOperation.update);
 
-    await repo.softDelete(created.id);
-    pending = await queue.listPending();
-    expect(pending, hasLength(3));
-    expect(pending.last.operation, SyncQueueOperation.delete);
-    expect(await units.listActive('biz-1'), isEmpty);
-    expect((await units.getById(created.id))!.isDeleted, isTrue);
-  });
+      await repo.softDelete(created.id);
+      pending = await queue.listPending();
+      expect(pending, hasLength(3));
+      expect(pending.last.operation, SyncQueueOperation.delete);
+      expect(await units.listActive('biz-1'), isEmpty);
+      expect((await units.getById(created.id))!.isDeleted, isTrue);
+    },
+  );
 
   test('push accepted updates syncVersion and completes job', () async {
     final created = await repo.create(
@@ -260,9 +261,9 @@ void main() {
     };
     await syncNow();
     expect((await units.getById(created.id))!.name, 'LocalUnit');
-    final jobs = await (db.select(db.syncQueue)
-          ..where((t) => t.entityId.equals(created.id)))
-        .get();
+    final jobs = await (db.select(
+      db.syncQueue,
+    )..where((t) => t.entityId.equals(created.id))).get();
     expect(jobs.first.status, SyncQueueStatus.conflict.wire);
   });
 
@@ -340,8 +341,10 @@ void main() {
     final listed = await units2.listActive('biz-1');
     expect(listed.single.id, created.id);
     expect(listed.single.name, 'Persisted');
-    expect((await SyncQueue(db2).listPending()).single.entityType,
-        'unit_definitions');
+    expect(
+      (await SyncQueue(db2).listPending()).single.entityType,
+      'unit_definitions',
+    );
     await db2.close();
     await dir.delete(recursive: true);
   });

@@ -126,7 +126,9 @@ class InventoryItems extends _$InventoryItems {
     return _startWatching(service);
   }
 
-  Future<PaginatedInventoryItems> _startWatching(InventoryService service) async {
+  Future<PaginatedInventoryItems> _startWatching(
+    InventoryService service,
+  ) async {
     _watchSub?.cancel();
     final initial = await service.fetchItemsPage(
       limit: _loadedCount,
@@ -143,20 +145,20 @@ class InventoryItems extends _$InventoryItems {
           categoryId: _query.categoryId,
         )
         .listen(
-      (page) {
-        if (!ref.mounted) return;
-        final previous = state.value;
-        state = AsyncData(
-          page.copyWith(
-            isLoadingMore: previous?.isLoadingMore ?? false,
-          ),
+          (page) {
+            if (!ref.mounted) return;
+            final previous = state.value;
+            state = AsyncData(
+              page.copyWith(
+                isLoadingMore: previous?.isLoadingMore ?? false,
+              ),
+            );
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            if (!ref.mounted) return;
+            state = AsyncError(error, stackTrace);
+          },
         );
-      },
-      onError: (Object error, StackTrace stackTrace) {
-        if (!ref.mounted) return;
-        state = AsyncError(error, stackTrace);
-      },
-    );
 
     return initial;
   }
@@ -192,15 +194,15 @@ class InventoryItems extends _$InventoryItems {
             categoryId: _query.categoryId,
           )
           .listen(
-        (page) {
-          if (!ref.mounted) return;
-          state = AsyncData(page.copyWith(isLoadingMore: false));
-        },
-        onError: (Object error, StackTrace stackTrace) {
-          if (!ref.mounted) return;
-          state = AsyncError(error, stackTrace);
-        },
-      );
+            (page) {
+              if (!ref.mounted) return;
+              state = AsyncData(page.copyWith(isLoadingMore: false));
+            },
+            onError: (Object error, StackTrace stackTrace) {
+              if (!ref.mounted) return;
+              state = AsyncError(error, stackTrace);
+            },
+          );
       state = AsyncData(merged);
     } on Object catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
@@ -212,11 +214,13 @@ class InventoryItems extends _$InventoryItems {
     ItemType? type,
     String? categoryId,
   }) async {
-    final previous = state.value ?? const PaginatedInventoryItems(
-      items: [],
-      totalCount: 0,
-      hasMore: false,
-    );
+    final previous =
+        state.value ??
+        const PaginatedInventoryItems(
+          items: [],
+          totalCount: 0,
+          hasMore: false,
+        );
     _query = InventoryItemsQuery(
       searchQuery: searchQuery ?? _query.searchQuery,
       type: type ?? _query.type,
@@ -246,22 +250,22 @@ class InventoryItems extends _$InventoryItems {
             categoryId: _query.categoryId,
           )
           .listen(
-        (streamPage) {
-          if (!ref.mounted) return;
-          state = AsyncData(
-            streamPage.copyWith(
-              items: mergeFetchedWithPendingLocalInventoryItems(
-                streamPage.items,
-                state.value?.items ?? const [],
-              ),
-            ),
+            (streamPage) {
+              if (!ref.mounted) return;
+              state = AsyncData(
+                streamPage.copyWith(
+                  items: mergeFetchedWithPendingLocalInventoryItems(
+                    streamPage.items,
+                    state.value?.items ?? const [],
+                  ),
+                ),
+              );
+            },
+            onError: (Object error, StackTrace stackTrace) {
+              if (!ref.mounted) return;
+              state = AsyncError(error, stackTrace);
+            },
           );
-        },
-        onError: (Object error, StackTrace stackTrace) {
-          if (!ref.mounted) return;
-          state = AsyncError(error, stackTrace);
-        },
-      );
       return page;
     });
   }
@@ -286,8 +290,7 @@ class InventoryItems extends _$InventoryItems {
     if (!isPendingLocalInventoryItemId(local.id)) return;
     final tiers = ref.read(localItemTierPricesProvider)[local.id];
     if (tiers == null || tiers.isEmpty) return;
-    ref
-        .read(localItemTierPricesProvider.notifier)
+    ref.read(localItemTierPricesProvider.notifier)
       ..setTierPrices(server.id, tiers)
       ..removeItem(local.id);
   }

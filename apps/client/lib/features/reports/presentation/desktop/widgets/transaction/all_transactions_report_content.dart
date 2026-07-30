@@ -122,13 +122,27 @@ class AllTransactionsReportContent extends ConsumerWidget {
                               minWidth: 900,
                               headerChildren: const [
                                 ReportAlignedHeaderCell(label: '#', width: 40),
-                                ReportAlignedHeaderCell(label: 'DATE', width: 90),
-                                ReportAlignedHeaderCell(label: 'REF NO.', width: 90),
-                                Expanded(
-                                  child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
+                                ReportAlignedHeaderCell(
+                                  label: 'DATE',
+                                  width: 90,
                                 ),
-                                ReportAlignedHeaderCell(label: 'CATEGORY', width: 90),
-                                ReportAlignedHeaderCell(label: 'TYPE', width: 80),
+                                ReportAlignedHeaderCell(
+                                  label: 'REF NO.',
+                                  width: 90,
+                                ),
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(
+                                    label: 'PARTY NAME',
+                                  ),
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'CATEGORY',
+                                  width: 90,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'TYPE',
+                                  width: 80,
+                                ),
                                 ReportAlignedHeaderCell(
                                   label: 'TOTAL',
                                   width: 80,
@@ -144,8 +158,14 @@ class AllTransactionsReportContent extends ConsumerWidget {
                                   width: 80,
                                   alignment: Alignment.centerRight,
                                 ),
-                                ReportAlignedHeaderCell(label: 'DUE DATE', width: 90),
-                                ReportAlignedHeaderCell(label: 'STATUS', width: 80),
+                                ReportAlignedHeaderCell(
+                                  label: 'DUE DATE',
+                                  width: 90,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'STATUS',
+                                  width: 80,
+                                ),
                                 ReportAlignedHeaderCell(
                                   label: 'PRINT',
                                   width: 60,
@@ -167,12 +187,16 @@ class AllTransactionsReportContent extends ConsumerWidget {
                           totalPages: report.meta.totalPages,
                           onPrevious: report.meta.page > 1
                               ? () => ref
-                                    .read(allTransactionsReportProvider.notifier)
+                                    .read(
+                                      allTransactionsReportProvider.notifier,
+                                    )
                                     .goToPage(report.meta.page - 1)
                               : null,
                           onNext: report.meta.page < report.meta.totalPages
                               ? () => ref
-                                    .read(allTransactionsReportProvider.notifier)
+                                    .read(
+                                      allTransactionsReportProvider.notifier,
+                                    )
                                     .goToPage(report.meta.page + 1)
                               : null,
                         ),

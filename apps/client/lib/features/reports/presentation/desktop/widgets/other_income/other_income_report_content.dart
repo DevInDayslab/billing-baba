@@ -350,21 +350,23 @@ class OtherIncomeCategoryReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<
-                                ReportOtherIncomeCategoryRow>(
-                              reportScope: otherIncomeCategoryReportScope,
-                              columns: otherIncomeCategoryReportColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No other income records found for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportOtherIncomeCategoryRow
+                                >(
+                                  reportScope: otherIncomeCategoryReportScope,
+                                  columns: otherIncomeCategoryReportColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No other income records found for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         _TotalFooter(
@@ -509,20 +511,23 @@ class OtherIncomeItemReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportOtherIncomeItemRow>(
-                              reportScope: otherIncomeItemReportScope,
-                              columns: otherIncomeItemReportColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No other income records found for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportOtherIncomeItemRow
+                                >(
+                                  reportScope: otherIncomeItemReportScope,
+                                  columns: otherIncomeItemReportColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No other income records found for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         _TotalFooter(

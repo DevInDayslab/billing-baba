@@ -140,7 +140,10 @@ class _PaymentSuccessPageState extends ConsumerState<PaymentSuccessPage>
                             formatSubscriptionPrice(result.amount),
                           ),
                           if (result.transactionId.isNotEmpty)
-                            _InfoRowData('Transaction ID', result.transactionId),
+                            _InfoRowData(
+                              'Transaction ID',
+                              result.transactionId,
+                            ),
                         ],
                       ),
                     ],

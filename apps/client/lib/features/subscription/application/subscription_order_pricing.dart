@@ -38,8 +38,9 @@ class SubscriptionOrderPricing {
     final planListPrice = input.originalPrice;
     final planDiscount = input.discountAmount;
     final baseTaxable = input.discountedPrice / (1 + _gstRate);
-    final couponDiscount =
-        couponDiscountOnTaxable.clamp(0, baseTaxable).toDouble();
+    final couponDiscount = couponDiscountOnTaxable
+        .clamp(0, baseTaxable)
+        .toDouble();
     final subtotal = baseTaxable - couponDiscount;
     final gstAmount = subtotal * _gstRate;
     final total = subtotal + gstAmount;

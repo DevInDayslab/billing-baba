@@ -43,10 +43,11 @@ final partiesInSelectedGroupProvider = Provider<List<PartyModel>>((ref) {
   if (selectedGroup == null) return const [];
 
   final parties = _allPartiesOrEmpty(ref.watch(allPartiesListProvider));
-  final members = parties
-      .where((party) => party.partyGroup.trim() == selectedGroup)
-      .toList()
-    ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  final members =
+      parties
+          .where((party) => party.partyGroup.trim() == selectedGroup)
+          .toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   return members;
 });
 

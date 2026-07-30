@@ -6,8 +6,7 @@ import 'package:billing_baba/features/collaboration/application/company_director
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final companyDirectoryServiceProvider =
-    FutureProvider<CompanyDirectoryService>(
+final companyDirectoryServiceProvider = FutureProvider<CompanyDirectoryService>(
   (ref) async {
     // Directory is user-scoped. Rebuild only when the signed-in user or
     // BusinessService changes — not when companySession / businessProfile

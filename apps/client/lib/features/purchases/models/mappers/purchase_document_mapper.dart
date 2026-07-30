@@ -73,8 +73,7 @@ class PurchaseDocumentMapper {
       amount: amount,
       paidAmount: paid,
       balanceDue: balanceDue,
-      documentDate:
-          DateTimeUtils.parseApiDateTime(dto.documentDate),
+      documentDate: DateTimeUtils.parseApiDateTime(dto.documentDate),
       dueDate: dueDate,
       supplierInvoiceNumber: dto.supplierInvoiceNumber,
       notes: dto.notes,

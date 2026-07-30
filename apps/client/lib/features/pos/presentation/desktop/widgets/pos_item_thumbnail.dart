@@ -34,7 +34,8 @@ class PosItemThumbnail extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final resolvedSize = size;
     final resolvedIconSize =
-        iconSize ?? (resolvedSize != null ? resolvedSize * 0.5 : _defaultIconSize);
+        iconSize ??
+        (resolvedSize != null ? resolvedSize * 0.5 : _defaultIconSize);
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final layoutExtent = resolvedSize ?? ItemCard.imageHeight;
     final cacheWidth = (layoutExtent * dpr).round();

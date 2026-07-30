@@ -10,9 +10,9 @@ class CommandAckApplier {
     SalesLocalDataSource? salesLocal,
     PurchaseLocalDataSource? purchaseLocal,
     InventoryStockLocalDataSource? stockLocal,
-  })  : _salesLocal = salesLocal ?? SalesLocalDataSource(db),
-        _purchaseLocal = purchaseLocal ?? PurchaseLocalDataSource(db),
-        _stockLocal = stockLocal ?? InventoryStockLocalDataSource(db);
+  }) : _salesLocal = salesLocal ?? SalesLocalDataSource(db),
+       _purchaseLocal = purchaseLocal ?? PurchaseLocalDataSource(db),
+       _stockLocal = stockLocal ?? InventoryStockLocalDataSource(db);
 
   final SalesLocalDataSource _salesLocal;
   final PurchaseLocalDataSource _purchaseLocal;

@@ -18,39 +18,35 @@ GeneratedDocumentQuery? generatedDocumentQueryForPrintRequest(
   return switch (request) {
     SaleInvoicePrintRequest(:final id) ||
     CreditNotePrintRequest(:final id) ||
-    SaleOrderPrintRequest(:final id) =>
-      GeneratedDocumentQuery(
-        documentKind: 'invoice_pdf',
-        sourceType: 'sale_document',
-        sourceId: id,
-      ),
+    SaleOrderPrintRequest(:final id) => GeneratedDocumentQuery(
+      documentKind: 'invoice_pdf',
+      sourceType: 'sale_document',
+      sourceId: id,
+    ),
     EstimatePrintRequest(:final id) ||
-    ProformaInvoicePrintRequest(:final id) =>
-      GeneratedDocumentQuery(
-        documentKind: 'estimate_pdf',
-        sourceType: 'sale_document',
-        sourceId: id,
-      ),
+    ProformaInvoicePrintRequest(:final id) => GeneratedDocumentQuery(
+      documentKind: 'estimate_pdf',
+      sourceType: 'sale_document',
+      sourceId: id,
+    ),
     DeliveryChallanPrintRequest(:final id) => GeneratedDocumentQuery(
-        documentKind: 'delivery_challan_pdf',
-        sourceType: 'sale_document',
-        sourceId: id,
-      ),
+      documentKind: 'delivery_challan_pdf',
+      sourceType: 'sale_document',
+      sourceId: id,
+    ),
     PurchaseBillPrintRequest(:final id) ||
     DebitNotePrintRequest(:final id) ||
-    PurchaseOrderPrintRequest(:final id) =>
-      GeneratedDocumentQuery(
-        documentKind: 'purchase_pdf',
-        sourceType: 'purchase_document',
-        sourceId: id,
-      ),
+    PurchaseOrderPrintRequest(:final id) => GeneratedDocumentQuery(
+      documentKind: 'purchase_pdf',
+      sourceType: 'purchase_document',
+      sourceId: id,
+    ),
     PaymentInPrintRequest(:final id) ||
-    PaymentOutPrintRequest(:final id) =>
-      GeneratedDocumentQuery(
-        documentKind: 'receipt_pdf',
-        sourceType: 'payment',
-        sourceId: id,
-      ),
+    PaymentOutPrintRequest(:final id) => GeneratedDocumentQuery(
+      documentKind: 'receipt_pdf',
+      sourceType: 'payment',
+      sourceId: id,
+    ),
     _ => null,
   };
 }

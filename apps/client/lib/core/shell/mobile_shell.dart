@@ -8,7 +8,8 @@ import 'package:go_router/go_router.dart';
 /// Authenticated mobile shell with bottom navigation (Home, Dashboard, POS, Items, Menu).
 class MobileShell extends StatelessWidget {
   const MobileShell({
-    required this.child, super.key,
+    required this.child,
+    super.key,
   });
 
   final Widget child;

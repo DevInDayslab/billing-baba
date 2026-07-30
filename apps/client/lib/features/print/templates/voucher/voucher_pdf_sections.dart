@@ -92,7 +92,8 @@ abstract final class VoucherPdfSections {
     final saleBatch = document.saleFaBatch;
     final expense = document.expense;
 
-    final displayName = party?.dto.name ??
+    final displayName =
+        party?.dto.name ??
         expense?.partyName ??
         purchaseBatch?.partyName ??
         saleBatch?.partyName;
@@ -174,7 +175,8 @@ abstract final class VoucherPdfSections {
         rows.add(('Payment Method', purchaseBatch.paymentMode!));
       }
       rows.add(('Purchase Value', _format(purchaseBatch.totalAmount)));
-      if (purchaseBatch.notes != null && purchaseBatch.notes!.trim().isNotEmpty) {
+      if (purchaseBatch.notes != null &&
+          purchaseBatch.notes!.trim().isNotEmpty) {
         rows.add(('Notes', purchaseBatch.notes!.trim()));
       }
     } else if (saleBatch != null) {
@@ -301,8 +303,8 @@ abstract final class VoucherPdfSections {
         assets: [
           for (final asset in purchaseBatch.assets)
             (
-              name: asset.assetCategory != null &&
-                      asset.assetCategory!.isNotEmpty
+              name:
+                  asset.assetCategory != null && asset.assetCategory!.isNotEmpty
                   ? '${asset.assetName}\n${asset.assetCategory}'
                   : asset.assetName,
               qty: asset.qty,
@@ -317,8 +319,8 @@ abstract final class VoucherPdfSections {
         assets: [
           for (final asset in saleBatch.assets)
             (
-              name: asset.assetCategory != null &&
-                      asset.assetCategory!.isNotEmpty
+              name:
+                  asset.assetCategory != null && asset.assetCategory!.isNotEmpty
                   ? '${asset.assetName}\n${asset.assetCategory}'
                   : asset.assetName,
               qty: asset.qty,
@@ -333,12 +335,14 @@ abstract final class VoucherPdfSections {
 
   static pw.Widget _assetTable({
     required List<
-        ({
-          String name,
-          String qty,
-          String rate,
-          String total,
-        })> assets,
+      ({
+        String name,
+        String qty,
+        String rate,
+        String total,
+      })
+    >
+    assets,
   }) {
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: InvoicePdfTheme.spacingMd),

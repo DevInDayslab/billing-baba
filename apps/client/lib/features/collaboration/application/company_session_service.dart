@@ -55,7 +55,8 @@ class CompanySessionService {
 
     CompanySession session;
 
-    final ownedApiCompany = entry.relationship.isOwner &&
+    final ownedApiCompany =
+        entry.relationship.isOwner &&
         entry.source == CompanyListSource.apiOwned;
 
     if (ownedApiCompany) {

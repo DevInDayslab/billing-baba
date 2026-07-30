@@ -231,7 +231,8 @@ class _PurchaseOrderTransactionsTable extends ConsumerWidget {
   });
 
   final List<PurchaseOrderModel> items;
-  final ResizableDataRow Function(PurchaseOrderModel order, int index) onBuildRow;
+  final ResizableDataRow Function(PurchaseOrderModel order, int index)
+  onBuildRow;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -418,7 +419,10 @@ class _DataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }

@@ -40,7 +40,9 @@ class DashboardSnapshotCache {
 
     final data = entry['data'];
     final savedAtRaw = entry['saved_at']?.toString();
-    if (data is! Map<String, dynamic> || savedAtRaw == null || savedAtRaw.isEmpty) {
+    if (data is! Map<String, dynamic> ||
+        savedAtRaw == null ||
+        savedAtRaw.isEmpty) {
       return null;
     }
 

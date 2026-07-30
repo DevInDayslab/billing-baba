@@ -351,7 +351,9 @@ class _CreateBusinessFormContent extends StatelessWidget {
             textCapitalization: TextCapitalization.words,
             serverError: formState.errorFor('name'),
             inputFormatters: [
-              LengthLimitingTextInputFormatter(Validators.businessNameMaxLength),
+              LengthLimitingTextInputFormatter(
+                Validators.businessNameMaxLength,
+              ),
               FilteringTextInputFormatter.allow(
                 Validators.businessNameInputPattern,
               ),

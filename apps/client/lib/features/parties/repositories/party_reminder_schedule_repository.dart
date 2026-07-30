@@ -36,11 +36,11 @@ class PartyReminderSchedule {
   final bool sendCopyToMyself;
 
   Map<String, dynamic> toJson() => {
-        'partyId': partyId,
-        'frequency': frequency.name,
-        'nextReminderAt': nextReminderAt.toIso8601String(),
-        'sendCopyToMyself': sendCopyToMyself,
-      };
+    'partyId': partyId,
+    'frequency': frequency.name,
+    'nextReminderAt': nextReminderAt.toIso8601String(),
+    'sendCopyToMyself': sendCopyToMyself,
+  };
 }
 
 /// Local-only reminder schedule store.
@@ -54,8 +54,7 @@ class PartyReminderScheduleRepository {
   final StorageService _storage;
   final String _businessId;
 
-  String get _key =>
-      '${StorageKeys.partyReminderSchedule}_$_businessId.json';
+  String get _key => '${StorageKeys.partyReminderSchedule}_$_businessId.json';
 
   Future<Map<String, PartyReminderSchedule>> loadAll() async {
     final raw = _storage.read(_key);

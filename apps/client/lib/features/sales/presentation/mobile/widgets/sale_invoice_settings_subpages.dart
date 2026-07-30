@@ -28,12 +28,14 @@ class _SaleInvoiceTermsSettingsPageState
 
   Future<void> _save() async {
     final text = _controller.text.trim();
-    await ref.read(saleInvoiceSettingsProvider.notifier).updateSettings(
-      (settings) => settings.copyWith(
-        termsAndConditionsText: text,
-        termsAndConditionsEnabled: text.isNotEmpty,
-      ),
-    );
+    await ref
+        .read(saleInvoiceSettingsProvider.notifier)
+        .updateSettings(
+          (settings) => settings.copyWith(
+            termsAndConditionsText: text,
+            termsAndConditionsEnabled: text.isNotEmpty,
+          ),
+        );
     if (!mounted) return;
     Navigator.of(context).pop();
   }
@@ -222,7 +224,9 @@ class SaleInvoiceAdditionalFieldsPage extends ConsumerWidget {
               value: settings.additionalFieldsEnabled,
               onChanged: (value) => ref
                   .read(saleInvoiceSettingsProvider.notifier)
-                  .updateSettings((s) => s.copyWith(additionalFieldsEnabled: value)),
+                  .updateSettings(
+                    (s) => s.copyWith(additionalFieldsEnabled: value),
+                  ),
             ),
           ],
         ),

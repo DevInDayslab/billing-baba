@@ -409,7 +409,12 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           errorText: formState.errorFor('email'),
           inputFormatters: [
             LengthLimitingTextInputFormatter(200),
-            FilteringTextInputFormatter.allow(RegExp(r'[\w\-.@+'']')),
+            FilteringTextInputFormatter.allow(
+              RegExp(
+                r'[\w\-.@+'
+                ']',
+              ),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.lg),

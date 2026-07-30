@@ -3,10 +3,12 @@ import 'package:billing_baba/features/subscription/application/subscription_chec
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final subscriptionCheckoutSessionProvider =
-    NotifierProvider<SubscriptionCheckoutSessionNotifier,
-        SubscriptionCheckoutSession?>(
-  SubscriptionCheckoutSessionNotifier.new,
-);
+    NotifierProvider<
+      SubscriptionCheckoutSessionNotifier,
+      SubscriptionCheckoutSession?
+    >(
+      SubscriptionCheckoutSessionNotifier.new,
+    );
 
 class SubscriptionCheckoutSessionNotifier
     extends Notifier<SubscriptionCheckoutSession?> {

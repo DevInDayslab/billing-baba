@@ -12,10 +12,13 @@ class FakeCollaborationLocalStore {
   String _invitationsKey(String businessId) =>
       '${StorageKeys.collaborationInvitations}_$businessId';
 
-  Future<({
-    List<BusinessMember> members,
-    List<Invitation> invitations,
-  })?> load(String businessId) async {
+  Future<
+    ({
+      List<BusinessMember> members,
+      List<Invitation> invitations,
+    })?
+  >
+  load(String businessId) async {
     final prefs = await SharedPreferences.getInstance();
     final membersRaw = prefs.getString(_membersKey(businessId));
     final invitationsRaw = prefs.getString(_invitationsKey(businessId));

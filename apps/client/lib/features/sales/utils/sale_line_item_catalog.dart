@@ -33,8 +33,7 @@ SaleLineItem applyCatalogItemToLine(
 }
 
 bool isEmptySaleLineDraft(SaleLineItem line) =>
-    line.qty <= 0 &&
-    (line.itemName.trim().isEmpty || line.itemId == null);
+    line.qty <= 0 && (line.itemName.trim().isEmpty || line.itemId == null);
 
 int? resolveSaleLineIndex(
   List<SaleLineItem> items, {

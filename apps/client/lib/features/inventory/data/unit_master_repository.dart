@@ -211,7 +211,10 @@ class UnitMasterRepository {
   static Map<String, dynamic> _domainPayload({
     required String name,
     required String shortName,
-    required int decimalPlaces, required bool isSystem, required bool isActive, String? symbol,
+    required int decimalPlaces,
+    required bool isSystem,
+    required bool isActive,
+    String? symbol,
   }) {
     return {
       'name': name,

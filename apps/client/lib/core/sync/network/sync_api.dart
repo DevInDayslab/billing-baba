@@ -94,7 +94,9 @@ class SyncApi {
     final response = await _dio.get<Map<String, dynamic>>(
       path,
       queryParameters: queryParameters,
-      options: Options(headers: _headers(deviceId: deviceId, appVersion: appVersion)),
+      options: Options(
+        headers: _headers(deviceId: deviceId, appVersion: appVersion),
+      ),
     );
     return _unwrap(response);
   }
@@ -108,7 +110,9 @@ class SyncApi {
     final response = await _dio.post<Map<String, dynamic>>(
       path,
       data: body,
-      options: Options(headers: _headers(deviceId: deviceId, appVersion: appVersion)),
+      options: Options(
+        headers: _headers(deviceId: deviceId, appVersion: appVersion),
+      ),
     );
     return _unwrap(response);
   }

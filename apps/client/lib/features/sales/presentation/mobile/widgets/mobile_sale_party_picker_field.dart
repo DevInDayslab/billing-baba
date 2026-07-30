@@ -351,7 +351,9 @@ class _PartyRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: isSelected ? _saveBlue.withValues(alpha: 0.06) : Colors.transparent,
+      color: isSelected
+          ? _saveBlue.withValues(alpha: 0.06)
+          : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(

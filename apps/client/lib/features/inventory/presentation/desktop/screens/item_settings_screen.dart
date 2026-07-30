@@ -127,7 +127,9 @@ class _DesktopItemSettingsScreenState
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 760),
                 child: FilledButton(
-                  onPressed: _isApplying || _draft == null ? null : _handleApply,
+                  onPressed: _isApplying || _draft == null
+                      ? null
+                      : _handleApply,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,

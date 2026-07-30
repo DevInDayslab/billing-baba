@@ -112,7 +112,8 @@ class _BalanceSheetReportContentState
                               children: [
                                 IntrinsicHeight(
                                   child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
                                       Expanded(
                                         child: _BalanceColumn(
@@ -146,7 +147,10 @@ class _BalanceSheetReportContentState
                                   title: 'Assets',
                                   items: report.assets,
                                 ),
-                                const Divider(height: 1, color: reportCardBorder),
+                                const Divider(
+                                  height: 1,
+                                  color: reportCardBorder,
+                                ),
                                 _BalanceColumn(
                                   title: 'Equities & Liabilities',
                                   items: report.liabilities,

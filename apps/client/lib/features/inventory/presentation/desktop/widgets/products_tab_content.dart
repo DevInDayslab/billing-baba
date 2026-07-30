@@ -52,7 +52,8 @@ class ProductsTabContent extends ConsumerWidget {
             itemsAsync: itemsAsync,
             hasMore: pageAsync.value?.hasMore ?? false,
             isLoadingMore: pageAsync.value?.isLoadingMore ?? false,
-            onLoadMore: () => ref.read(inventoryItemsProvider.notifier).loadMore(),
+            onLoadMore: () =>
+                ref.read(inventoryItemsProvider.notifier).loadMore(),
             selectedId: selectedId,
             searchQuery: searchQuery,
             backendSearchQuery: backendSearchQuery,
@@ -87,9 +88,13 @@ class ProductsTabContent extends ConsumerWidget {
             },
             onSelectionChangedSideEffects: (previousId, nextId) {
               ref.read(productTransactionFiltersProvider.notifier).reset();
-              ref.read(selectedProductTransactionIdProvider.notifier).select(null);
+              ref
+                  .read(selectedProductTransactionIdProvider.notifier)
+                  .select(null);
               final items = ref.read(inventoryItemListProvider);
-              final item = items.where((entry) => entry.id == nextId).firstOrNull;
+              final item = items
+                  .where((entry) => entry.id == nextId)
+                  .firstOrNull;
               if (item != null) {
                 ref.read(inventoryListImageWarmupProvider).warmItem(item);
               }

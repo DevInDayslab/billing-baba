@@ -16,8 +16,7 @@ class PurchaseRepository {
 
   Future<PaginatedPurchaseDocumentsDto> listDocuments(
     PurchaseDocumentListQuery query,
-  ) =>
-      _remote.listDocuments(query);
+  ) => _remote.listDocuments(query);
 
   /// Local Drift first, then API. Printing must work offline for synced documents.
   Future<PurchaseDocumentDto> getDocument(String id) async {

@@ -50,18 +50,21 @@ showHiddenLedgerRecoveryDialog(
       ),
       actions: [
         TextButton(
-          onPressed: () =>
-              Navigator.of(dialogContext).pop(HiddenLedgerRecoveryChoice.ignore),
+          onPressed: () => Navigator.of(
+            dialogContext,
+          ).pop(HiddenLedgerRecoveryChoice.ignore),
           child: const Text('Ignore'),
         ),
         TextButton(
-          onPressed: () => Navigator.of(dialogContext)
-              .pop(HiddenLedgerRecoveryChoice.recoverPartial),
+          onPressed: () => Navigator.of(
+            dialogContext,
+          ).pop(HiddenLedgerRecoveryChoice.recoverPartial),
           child: const Text('Recover Partial'),
         ),
         FilledButton(
-          onPressed: () =>
-              Navigator.of(dialogContext).pop(HiddenLedgerRecoveryChoice.recoverFull),
+          onPressed: () => Navigator.of(
+            dialogContext,
+          ).pop(HiddenLedgerRecoveryChoice.recoverFull),
           child: const Text('Recover Full'),
         ),
       ],
@@ -83,7 +86,10 @@ showHiddenLedgerRecoveryDialog(
   );
   if (partialAmount == null) return null;
 
-  return (choice: HiddenLedgerRecoveryChoice.recoverPartial, amount: partialAmount);
+  return (
+    choice: HiddenLedgerRecoveryChoice.recoverPartial,
+    amount: partialAmount,
+  );
 }
 
 Future<double?> _showPartialRecoveryDialog({

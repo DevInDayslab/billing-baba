@@ -9,12 +9,12 @@ class CategoryLocalSource {
   final AppDatabase _db;
 
   Future<int> countActive(String businessId) async {
-    final rows = await (_db.select(_db.categoriesLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.categoriesLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            ))
+            .get();
     return rows.length;
   }
 
@@ -38,8 +38,7 @@ class CategoryLocalSource {
   Stream<List<CategoryDto>> watchActive(String businessId) {
     return (_db.select(_db.categoriesLocal)
           ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            (t) => t.businessId.equals(businessId) & t.isDeleted.equals(false),
           )
           ..orderBy([(t) => OrderingTerm.asc(t.name)]))
         .watch()
@@ -47,8 +46,9 @@ class CategoryLocalSource {
   }
 
   Future<CategoryTableData?> getById(String id) {
-    return (_db.select(_db.categoriesLocal)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.categoriesLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<CategoryDto?> getActiveDto(String id) async {
@@ -69,7 +69,9 @@ class CategoryLocalSource {
     String? deviceId,
     int itemCount = 0,
   }) {
-    return _db.into(_db.categoriesLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.categoriesLocal)
+        .insertOnConflictUpdate(
           CategoriesLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -88,8 +90,7 @@ class CategoryLocalSource {
   Future<void> upsertFromDto(String businessId, CategoryDto dto) {
     final created =
         DateTime.tryParse(dto.createdAt)?.toUtc() ?? DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
     return upsertRow(
       id: dto.id,
       businessId: businessId,
@@ -107,8 +108,9 @@ class CategoryLocalSource {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.categoriesLocal)..where((t) => t.id.equals(id)))
-        .write(
+    return (_db.update(
+      _db.categoriesLocal,
+    )..where((t) => t.id.equals(id))).write(
       CategoriesLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),
@@ -121,8 +123,9 @@ class CategoryLocalSource {
     required String id,
     required DateTime deletedAt,
   }) {
-    return (_db.update(_db.categoriesLocal)..where((t) => t.id.equals(id)))
-        .write(
+    return (_db.update(
+      _db.categoriesLocal,
+    )..where((t) => t.id.equals(id))).write(
       CategoriesLocalCompanion(
         isDeleted: const Value(true),
         deletedAt: Value(deletedAt.toUtc()),

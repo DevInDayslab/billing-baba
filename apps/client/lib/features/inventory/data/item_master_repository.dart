@@ -329,8 +329,8 @@ class ItemMasterRepository {
       name: request.name.trim(),
       shortName: _emptyToNull(request.shortName),
       alias: _emptyToNull(request.alias),
-      searchKeywords: request.searchKeywords == null ||
-              request.searchKeywords!.isEmpty
+      searchKeywords:
+          request.searchKeywords == null || request.searchKeywords!.isEmpty
           ? null
           : request.searchKeywords!.join(' '),
       description: _emptyToNull(request.description),
@@ -364,16 +364,17 @@ class ItemMasterRepository {
       searchKeywords: request.clearSearchKeywords
           ? null
           : (request.searchKeywords == null
-              ? existing.searchKeywords
-              : request.searchKeywords!.join(' ')),
+                ? existing.searchKeywords
+                : request.searchKeywords!.join(' ')),
       description: request.description ?? existing.description,
       itemType: request.itemType ?? existing.itemType,
       hasStockTracking: request.hasStockTracking ?? existing.hasStockTracking,
       categoryId: request.clearCategory
           ? null
           : (request.categoryId ?? existing.categoryId),
-      brandId:
-          request.clearBrand ? null : (request.brandId ?? existing.brandId),
+      brandId: request.clearBrand
+          ? null
+          : (request.brandId ?? existing.brandId),
       hsnCode: request.hsnCode ?? existing.hsnCode,
       barcode: request.barcode ?? existing.barcode,
       baseUnit: request.baseUnit ?? existing.baseUnit,

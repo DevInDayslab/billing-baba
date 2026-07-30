@@ -76,8 +76,7 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
     _nameController = TextEditingController(
       text: widget.member?.fullName ?? widget.initialName,
     );
-    final contact =
-        widget.member?.phoneOrEmail ?? widget.initialPhoneOrEmail;
+    final contact = widget.member?.phoneOrEmail ?? widget.initialPhoneOrEmail;
     _contactController = TextEditingController(
       text: contact != null && isPhoneContact(contact)
           ? localPhoneDigits(contact)
@@ -366,34 +365,34 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
         TextFormField(
           controller: _contactController,
           readOnly: widget.isEditing,
-          decoration: buildSaleFieldDecoration(
-            hint: isEmail ? 'Enter email address' : 'Enter 10-digit number',
-          ).copyWith(
-            prefixIcon: isEmail
-                ? null
-                : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(color: Colors.grey.shade300),
+          decoration:
+              buildSaleFieldDecoration(
+                hint: isEmail ? 'Enter email address' : 'Enter 10-digit number',
+              ).copyWith(
+                prefixIcon: isEmail
+                    ? null
+                    : Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            right: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: const Text(
+                          '+91',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      '+91',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-            prefixIconConstraints: isEmail
-                ? null
-                : const BoxConstraints(),
-          ),
-          keyboardType:
-              isEmail ? TextInputType.emailAddress : TextInputType.phone,
+                prefixIconConstraints: isEmail ? null : const BoxConstraints(),
+              ),
+          keyboardType: isEmail
+              ? TextInputType.emailAddress
+              : TextInputType.phone,
           inputFormatters: isEmail
               ? null
               : [

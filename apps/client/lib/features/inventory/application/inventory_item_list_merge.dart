@@ -9,7 +9,8 @@ final _inventoryItemUuidPattern = RegExp(
 
 /// True when [id] refers to a persisted server item (not offline/local/seed).
 bool isServerBackedInventoryItemId(String id) =>
-    !isPendingLocalInventoryItemId(id) && _inventoryItemUuidPattern.hasMatch(id);
+    !isPendingLocalInventoryItemId(id) &&
+    _inventoryItemUuidPattern.hasMatch(id);
 
 String _normalizedItemName(String name) => name.trim().toLowerCase();
 

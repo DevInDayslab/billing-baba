@@ -18,9 +18,9 @@ class TaxRateSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.taxRatesLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.taxRatesLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -31,7 +31,9 @@ class TaxRateSync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.taxRatesLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.taxRatesLocal)
+          .insertOnConflictUpdate(
             TaxRatesLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -51,7 +53,9 @@ class TaxRateSync {
 
     final name = _str(payload, 'name');
     final rate = _str(payload, 'rate');
-    await _db.into(_db.taxRatesLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.taxRatesLocal)
+        .insertOnConflictUpdate(
           TaxRatesLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -80,8 +84,9 @@ class TaxRateSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.taxRatesLocal)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.taxRatesLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       TaxRatesLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

@@ -8,7 +8,10 @@ class SubscriptionPlanMetadata {
     required this.durationLabel,
     required this.deviceLimit,
     required this.licenseType,
-    required this.cardFeatures, required this.priceMultipliers, required this.originalPriceMultiplier, this.badge,
+    required this.cardFeatures,
+    required this.priceMultipliers,
+    required this.originalPriceMultiplier,
+    this.badge,
     this.isPopular = false,
   });
 
@@ -415,7 +418,8 @@ const _platinumBaseOneYear = 7742.0;
 final Map<SubscriptionPlanType, SubscriptionPlanMetadata>
 subscriptionPlanMetadataRegistry = {
   SubscriptionPlanType.gold: SubscriptionPlanMetadata(
-    description: 'Essential billing and inventory tools for growing businesses.',
+    description:
+        'Essential billing and inventory tools for growing businesses.',
     durationLabel: '1 Year',
     deviceLimit: 2,
     licenseType: 'Desktop + Mobile',

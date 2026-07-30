@@ -96,15 +96,15 @@ class GstTaxReportContent extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportGstTaxPartyRow>(
-                              reportScope: gstTaxReportScope,
-                              minWidth: 720,
-                              columns: gstTaxColumns(),
-                              rows: rows,
-                            ),
+                            child:
+                                ReportFilterableSyncTable<ReportGstTaxPartyRow>(
+                                  reportScope: gstTaxReportScope,
+                                  minWidth: 720,
+                                  columns: gstTaxColumns(),
+                                  rows: rows,
+                                ),
                           ),
-                        
-                          ),
+                        ),
                         ReportPaginationBar(
                           page: report.meta.page,
                           totalPages: report.meta.totalPages,

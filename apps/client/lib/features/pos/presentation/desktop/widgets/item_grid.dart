@@ -36,7 +36,9 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
   }
 
   void _prefetchPosImages(List<PosItem> filtered, int visibleCount) {
-    ref.read(appImagePrefetcherProvider).prefetchItemsAhead(
+    ref
+        .read(appImagePrefetcherProvider)
+        .prefetchItemsAhead(
           items: filtered,
           lastVisibleIndex: visibleCount - 1,
           urlExtractor: (item) => item.imageUrl,
@@ -137,7 +139,9 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: _inStockOnly ? Colors.white : AppColors.textPrimary,
+                      color: _inStockOnly
+                          ? Colors.white
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -199,8 +203,7 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     OutlinedButton(
-                      onPressed: () =>
-                          ref.invalidate(inventoryItemsProvider),
+                      onPressed: () => ref.invalidate(inventoryItemsProvider),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -239,14 +242,15 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         return GridView.builder(
-                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: _maxCrossAxisExtent(
-                              constraints.maxWidth,
-                            ),
-                            mainAxisExtent: _cardHeight,
-                            mainAxisSpacing: _gridSpacing,
-                            crossAxisSpacing: _gridSpacing,
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: _maxCrossAxisExtent(
+                                  constraints.maxWidth,
+                                ),
+                                mainAxisExtent: _cardHeight,
+                                mainAxisSpacing: _gridSpacing,
+                                crossAxisSpacing: _gridSpacing,
+                              ),
                           itemCount: visibleItems.length,
                           itemBuilder: (context, index) =>
                               ItemCard(item: visibleItems[index]),

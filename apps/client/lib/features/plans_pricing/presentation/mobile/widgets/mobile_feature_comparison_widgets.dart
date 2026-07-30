@@ -18,8 +18,16 @@ class MobileFeatureComparisonCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (value) {
-      MobileFeatureIncluded() => const Icon(Icons.check, color: _checkColor, size: 20),
-      MobileFeatureExcluded() => const Icon(Icons.close, color: _crossColor, size: 20),
+      MobileFeatureIncluded() => const Icon(
+        Icons.check,
+        color: _checkColor,
+        size: 20,
+      ),
+      MobileFeatureExcluded() => const Icon(
+        Icons.close,
+        color: _crossColor,
+        size: 20,
+      ),
       MobileFeatureText(:final value) => Text(
         value,
         textAlign: TextAlign.center,

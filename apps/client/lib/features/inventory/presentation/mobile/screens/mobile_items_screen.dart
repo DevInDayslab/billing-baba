@@ -72,18 +72,16 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     final query = _searchQuery.trim().toLowerCase();
     if (query.isEmpty) return filtered.toList();
 
-    return filtered
-        .where((item) {
-          final name = item.name.toLowerCase();
-          final barcode = item.barcode?.toLowerCase() ?? '';
-          final alias = item.alias?.toLowerCase() ?? '';
-          final shortName = item.shortName?.toLowerCase() ?? '';
-          return name.contains(query) ||
-              barcode.contains(query) ||
-              alias.contains(query) ||
-              shortName.contains(query);
-        })
-        .toList();
+    return filtered.where((item) {
+      final name = item.name.toLowerCase();
+      final barcode = item.barcode?.toLowerCase() ?? '';
+      final alias = item.alias?.toLowerCase() ?? '';
+      final shortName = item.shortName?.toLowerCase() ?? '';
+      return name.contains(query) ||
+          barcode.contains(query) ||
+          alias.contains(query) ||
+          shortName.contains(query);
+    }).toList();
   }
 
   Map<String, String> _categoryNamesById() {
@@ -168,9 +166,11 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
       ],
     );
     if (result == null || !mounted) return;
-    ref.read(inventoryItemFiltersProvider.notifier).apply(
-      InventoryItemFiltersState(selected: {result}),
-    );
+    ref
+        .read(inventoryItemFiltersProvider.notifier)
+        .apply(
+          InventoryItemFiltersState(selected: {result}),
+        );
     setState(() {});
   }
 
@@ -350,8 +350,9 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                               hasScrollBody: false,
                               child: MobileEmptyState(
                                 title: 'No items found',
-                                message: _searchQuery.isNotEmpty ||
-                                    filters.hasActiveFilters
+                                message:
+                                    _searchQuery.isNotEmpty ||
+                                        filters.hasActiveFilters
                                     ? 'Try changing your search or filter.'
                                     : 'Add your first item to get started.',
                                 icon: Icons.inventory_2_outlined,

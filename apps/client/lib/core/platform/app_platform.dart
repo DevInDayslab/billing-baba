@@ -25,12 +25,11 @@ final class AppPlatform {
   final OperatingSystem os;
 
   PlatformFamily get family => switch (os) {
-        OperatingSystem.windows ||
-        OperatingSystem.macOS ||
-        OperatingSystem.linux =>
-          PlatformFamily.desktop,
-        OperatingSystem.android || OperatingSystem.ios => PlatformFamily.mobile,
-      };
+    OperatingSystem.windows ||
+    OperatingSystem.macOS ||
+    OperatingSystem.linux => PlatformFamily.desktop,
+    OperatingSystem.android || OperatingSystem.ios => PlatformFamily.mobile,
+  };
 
   bool get isDesktop => family == PlatformFamily.desktop;
   bool get isMobile => family == PlatformFamily.mobile;

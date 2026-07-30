@@ -91,8 +91,7 @@ class PrintOutputService {
     PdfPageFormat? format,
     int copies = 1,
   }) async {
-    final pageFormat =
-        format ?? document.profile.printFormat;
+    final pageFormat = format ?? document.profile.printFormat;
     final info = await Printing.info();
 
     if (info.canListPrinters && context.mounted) {

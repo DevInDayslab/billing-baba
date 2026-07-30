@@ -11,13 +11,14 @@ const crmOwnerNoneOption = '-None-';
 const crmOwnerAllOption = 'All Owners';
 
 List<String> assignableMemberNames(List<BusinessMember> members) {
-  final names = members
-      .where((member) => member.isOwner || member.status.isJoined)
-      .map((member) => member.fullName.trim())
-      .where((name) => name.isNotEmpty)
-      .toSet()
-      .toList()
-    ..sort();
+  final names =
+      members
+          .where((member) => member.isOwner || member.status.isJoined)
+          .map((member) => member.fullName.trim())
+          .where((name) => name.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
   return names;
 }
 

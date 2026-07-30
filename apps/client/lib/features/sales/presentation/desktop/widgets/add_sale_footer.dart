@@ -62,7 +62,9 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       addSaleGrandTotalProvider(sessionKey: widget.sessionKey),
     );
     final isCredit = form.saleType == SaleType.credit;
-    final attachmentService = ref.watch(documentAttachmentServiceProvider).value;
+    final attachmentService = ref
+        .watch(documentAttachmentServiceProvider)
+        .value;
 
     final termsSection = _TermsSection(
       title: form.termsTitle,
@@ -493,7 +495,10 @@ class _NotesFieldState extends State<_NotesField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(hint: 'Thanks for doing business with us!', fixedHeight: false),
+      decoration: buildSaleFieldDecoration(
+        hint: 'Thanks for doing business with us!',
+        fixedHeight: false,
+      ),
       minLines: 3,
       maxLines: 4,
       onChanged: widget.onChanged,
@@ -581,7 +586,10 @@ class _DescriptionFieldState extends State<_DescriptionField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(hint: 'Write your description here', fixedHeight: false),
+      decoration: buildSaleFieldDecoration(
+        hint: 'Write your description here',
+        fixedHeight: false,
+      ),
       minLines: 3,
       maxLines: 4,
       onChanged: widget.onChanged,

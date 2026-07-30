@@ -98,7 +98,9 @@ class _ExpandableGstinFieldState extends State<ExpandableGstinField> {
                     ),
                   ),
                   onChanged: (value) {
-                    widget.onChanged(value.trim().isEmpty ? null : value.trim());
+                    widget.onChanged(
+                      value.trim().isEmpty ? null : value.trim(),
+                    );
                   },
                 ),
               ),

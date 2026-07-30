@@ -47,8 +47,8 @@ class PaymentState {
 /// Optional debug override for mock payment outcomes (success / pending / failed).
 final mockPaymentDebugOutcomeProvider =
     NotifierProvider<MockPaymentDebugOutcomeNotifier, PaymentOutcome?>(
-  MockPaymentDebugOutcomeNotifier.new,
-);
+      MockPaymentDebugOutcomeNotifier.new,
+    );
 
 class MockPaymentDebugOutcomeNotifier extends Notifier<PaymentOutcome?> {
   @override
@@ -63,8 +63,8 @@ final Provider<MockPaymentService> mockPaymentServiceProvider = Provider(
 
 final paymentStateProvider =
     NotifierProvider<PaymentStateNotifier, PaymentState>(
-  PaymentStateNotifier.new,
-);
+      PaymentStateNotifier.new,
+    );
 
 class PaymentStateNotifier extends Notifier<PaymentState> {
   @override
@@ -154,13 +154,17 @@ class PaymentStateNotifier extends Notifier<PaymentState> {
   ) {
     return switch (result.outcome) {
       PaymentOutcome.success => () {
-          activateLocalSubscription(ref, session: session);
-          return PaymentState(status: PaymentStatus.success, result: result);
-        }(),
-      PaymentOutcome.pending =>
-        PaymentState(status: PaymentStatus.pending, result: result),
-      PaymentOutcome.failed =>
-        PaymentState(status: PaymentStatus.failed, result: result),
+        activateLocalSubscription(ref, session: session);
+        return PaymentState(status: PaymentStatus.success, result: result);
+      }(),
+      PaymentOutcome.pending => PaymentState(
+        status: PaymentStatus.pending,
+        result: result,
+      ),
+      PaymentOutcome.failed => PaymentState(
+        status: PaymentStatus.failed,
+        result: result,
+      ),
     };
   }
 }

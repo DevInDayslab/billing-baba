@@ -27,7 +27,9 @@ List<SaleInvoiceModel> applySaleReportColumnFilters(
       return false;
     }
     if (filters.transactionTypeColumnFilter != null &&
-        !filters.transactionTypeColumnFilter!.matches(invoice.transactionType)) {
+        !filters.transactionTypeColumnFilter!.matches(
+          invoice.transactionType,
+        )) {
       return false;
     }
     if (filters.paymentTypeColumnFilter != null &&

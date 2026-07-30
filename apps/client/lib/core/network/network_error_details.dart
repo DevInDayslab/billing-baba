@@ -3,7 +3,8 @@ class NetworkErrorDetails {
   const NetworkErrorDetails({
     required this.title,
     required this.reason,
-    required this.details, this.host,
+    required this.details,
+    this.host,
     this.httpStatus,
     this.duration,
     this.originalException,

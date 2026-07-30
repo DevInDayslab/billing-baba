@@ -106,9 +106,7 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
           menuChildren: _buildMenuChildren(),
           builder: (context, controller, child) {
             return SizedBox(
-              height: widget.compact
-                  ? saleCompactFieldHeight
-                  : saleFieldHeight,
+              height: widget.compact ? saleCompactFieldHeight : saleFieldHeight,
               width: double.infinity,
               child: SaleFieldTrigger(
                 onTap: () {

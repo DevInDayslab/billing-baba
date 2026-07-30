@@ -12,8 +12,15 @@ abstract final class MobileDashboardMockData {
       final day = now.subtract(Duration(days: 6 - index));
       return DashboardTrendPointModel(
         date: day,
-        amount: [12000, 18500, 14200, 22000, 19800, 26500, 24100][index]
-            .toDouble(),
+        amount: [
+          12000,
+          18500,
+          14200,
+          22000,
+          19800,
+          26500,
+          24100,
+        ][index].toDouble(),
       );
     });
 

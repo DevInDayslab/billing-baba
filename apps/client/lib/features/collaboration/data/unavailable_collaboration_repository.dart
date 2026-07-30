@@ -22,8 +22,7 @@ class UnavailableCollaborationRepository implements CollaborationRepository {
   final CollaborationSessionContext _sessionContext;
   final String _businessName;
 
-  static final _unavailable =
-      StateError('Collaboration API is not ready yet');
+  static final _unavailable = StateError('Collaboration API is not ready yet');
 
   @override
   CollaborationSessionContext get sessionContext => _sessionContext;
@@ -61,7 +60,8 @@ class UnavailableCollaborationRepository implements CollaborationRepository {
   }
 
   @override
-  Future<Invitation> inviteMember(InviteMemberInput input) => throw _unavailable;
+  Future<Invitation> inviteMember(InviteMemberInput input) =>
+      throw _unavailable;
 
   @override
   Future<BusinessMember> updateMember(String id, UpdateMemberInput input) =>
@@ -86,16 +86,20 @@ class UnavailableCollaborationRepository implements CollaborationRepository {
   Future<SyncStatus> refresh() => fetchSyncStatus();
 
   @override
-  Future<Invitation> acceptInvitation(String invitationId) => throw _unavailable;
+  Future<Invitation> acceptInvitation(String invitationId) =>
+      throw _unavailable;
 
   @override
-  Future<Invitation> rejectInvitation(String invitationId) => throw _unavailable;
+  Future<Invitation> rejectInvitation(String invitationId) =>
+      throw _unavailable;
 
   @override
-  Future<Invitation> cancelInvitation(String invitationId) => throw _unavailable;
+  Future<Invitation> cancelInvitation(String invitationId) =>
+      throw _unavailable;
 
   @override
-  Future<Invitation> reinviteInvitation(String invitationId) => throw _unavailable;
+  Future<Invitation> reinviteInvitation(String invitationId) =>
+      throw _unavailable;
 
   @override
   PermissionPreset getPermissionPreset(Role role) =>
@@ -112,16 +116,14 @@ class UnavailableCollaborationRepository implements CollaborationRepository {
   Future<CompanySession?> loadCurrentCompany({
     required String userId,
     required String userName,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
   Future<CompanySession> switchCompany({
     required String companyId,
     required String userId,
     required String userName,
-  }) =>
-      throw _unavailable;
+  }) => throw _unavailable;
 
   @override
   Future<void> leaveCompany(String companyId) => throw _unavailable;
@@ -131,5 +133,6 @@ class UnavailableCollaborationRepository implements CollaborationRepository {
       throw _unavailable;
 
   @override
-  Future<void> rejectCompanyInvitation(String invitationId) => throw _unavailable;
+  Future<void> rejectCompanyInvitation(String invitationId) =>
+      throw _unavailable;
 }

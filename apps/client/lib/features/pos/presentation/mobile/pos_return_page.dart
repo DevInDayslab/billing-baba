@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 class MobilePosReturnPage extends StatelessWidget {
   const MobilePosReturnPage({
-    required this.originalSale, super.key,
+    required this.originalSale,
+    super.key,
   });
 
   final PosSale originalSale;

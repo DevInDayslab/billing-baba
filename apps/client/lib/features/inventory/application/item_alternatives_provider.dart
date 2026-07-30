@@ -20,14 +20,17 @@ Future<ItemAlternativesRepository> itemAlternativesRepository(Ref ref) async {
 class ItemAlternativesNotifier extends _$ItemAlternativesNotifier {
   @override
   Future<List<ItemAlternativeDto>> build(String itemId) async {
-    final repository = await ref.watch(itemAlternativesRepositoryProvider.future);
+    final repository = await ref.watch(
+      itemAlternativesRepositoryProvider.future,
+    );
     return repository.listAlternatives(itemId);
   }
 
   Future<void> addAlternative(String alternativeItemId) async {
     try {
-      final repository =
-          await ref.read(itemAlternativesRepositoryProvider.future);
+      final repository = await ref.read(
+        itemAlternativesRepositoryProvider.future,
+      );
       await repository.addAlternative(itemId, alternativeItemId);
       ref.invalidateSelf();
     } on InventoryOfflineException {
@@ -39,8 +42,9 @@ class ItemAlternativesNotifier extends _$ItemAlternativesNotifier {
 
   Future<void> removeAlternative(String alternativeItemId) async {
     try {
-      final repository =
-          await ref.read(itemAlternativesRepositoryProvider.future);
+      final repository = await ref.read(
+        itemAlternativesRepositoryProvider.future,
+      );
       await repository.removeAlternative(itemId, alternativeItemId);
       ref.invalidateSelf();
     } on InventoryOfflineException {
@@ -52,8 +56,9 @@ class ItemAlternativesNotifier extends _$ItemAlternativesNotifier {
 
   Future<void> reorder(List<String> orderedIds) async {
     try {
-      final repository =
-          await ref.read(itemAlternativesRepositoryProvider.future);
+      final repository = await ref.read(
+        itemAlternativesRepositoryProvider.future,
+      );
       await repository.reorderAlternatives(itemId, orderedIds);
       ref.invalidateSelf();
     } on InventoryOfflineException {

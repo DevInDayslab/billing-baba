@@ -207,68 +207,68 @@ class ExpenseReportContent extends ConsumerWidget {
                         Expanded(
                           child: ReportTableArea(
                             child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: 'DATE',
-                                          width: 100,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'EXP NO',
-                                          width: 100,
-                                        ),
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'PARTY',
+                                ? const Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ReportSyncScrollTable(
+                                        headerChildren: [
+                                          ReportAlignedHeaderCell(
+                                            label: 'DATE',
+                                            width: 100,
                                           ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'CATEGORY',
-                                          width: 110,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'PAYMENT TYPE',
-                                          width: 120,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'AMOUNT',
-                                          width: 100,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'BALANCE DUE',
-                                          width: 110,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'DUE DATE',
-                                          width: 100,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'STATUS',
-                                          width: 90,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No expense records found for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
+                                          ReportAlignedHeaderCell(
+                                            label: 'EXP NO',
+                                            width: 100,
+                                          ),
+                                          Expanded(
+                                            child: ReportAlignedHeaderCell(
+                                              label: 'PARTY',
+                                            ),
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'CATEGORY',
+                                            width: 110,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'PAYMENT TYPE',
+                                            width: 120,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'AMOUNT',
+                                            width: 100,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'BALANCE DUE',
+                                            width: 110,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'DUE DATE',
+                                            width: 100,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'STATUS',
+                                            width: 90,
+                                          ),
+                                        ],
+                                        rows: [],
+                                      ),
+                                      Expanded(
+                                        child: Center(
+                                          child: Text(
+                                            'No expense records found for the selected period.',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
+                                    ],
+                                  )
+                                : ReportSyncScrollTable(
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
                                         label: 'DATE',
@@ -372,9 +372,8 @@ class ExpenseReportContent extends ConsumerWidget {
                                         ),
                                     ],
                                   ),
-                                ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

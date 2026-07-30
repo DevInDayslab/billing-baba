@@ -74,8 +74,7 @@ class PurchaseBillSummaryCard extends ConsumerWidget {
           tooltip: 'Excel Report',
         ),
         IconButton(
-          onPressed: () =>
-              ModulePrintActions.printPurchaseBills(context, ref),
+          onPressed: () => ModulePrintActions.printPurchaseBills(context, ref),
           icon: const Icon(Icons.print_outlined, size: 20),
           color: AppColors.textSecondary,
           tooltip: 'Print',

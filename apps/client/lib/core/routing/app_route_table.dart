@@ -82,11 +82,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-typedef AppShellBuilder = Widget Function(
-  BuildContext context,
-  GoRouterState state,
-  Widget child,
-);
+typedef AppShellBuilder =
+    Widget Function(
+      BuildContext context,
+      GoRouterState state,
+      Widget child,
+    );
 
 /// Shared GoRouter configuration used by desktop and mobile routers.
 GoRouter createAppRouter({
@@ -122,11 +123,10 @@ GoRouter createAppRouter({
           return switch (auth.status) {
             AuthStatus.authenticated => AppRoutes.home,
             AuthStatus.needsBusinessSelection ||
-            AuthStatus.needsBusinessCreation =>
-              AppRoutes.businessList,
+            AuthStatus.needsBusinessCreation => AppRoutes.businessList,
             AuthStatus.otpSent => AppRoutes.verifyOtp,
-            AuthStatus.unauthenticated || AuthStatus.initializing =>
-              AppRoutes.login,
+            AuthStatus.unauthenticated ||
+            AuthStatus.initializing => AppRoutes.login,
           };
         }
         return switch (auth.status) {
@@ -529,9 +529,10 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.reportsStockSummary,
             builder: (context, state) => MobileStockSummaryScreen(
-              initialStockFilter: StockSummaryMobileFilters.stockFilterFromQuery(
-                state.uri.queryParameters['stock'],
-              ),
+              initialStockFilter:
+                  StockSummaryMobileFilters.stockFilterFromQuery(
+                    state.uri.queryParameters['stock'],
+                  ),
             ),
           ),
           GoRoute(
@@ -677,9 +678,10 @@ GoRouter createAppRouter({
 /// Bridges Riverpod auth and company session changes into a [Listenable].
 class RouterRefreshListenable extends ChangeNotifier {
   RouterRefreshListenable(Ref ref) {
-    ref..listen<AuthState>(authProvider, (_, _) => notifyListeners())
-    ..listen<CompanySession?>(companySessionProvider, (_, _) {
-      notifyListeners();
-    });
+    ref
+      ..listen<AuthState>(authProvider, (_, _) => notifyListeners())
+      ..listen<CompanySession?>(companySessionProvider, (_, _) {
+        notifyListeners();
+      });
   }
 }

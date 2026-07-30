@@ -23,7 +23,8 @@ class MobileStockSummaryItemCard extends StatefulWidget {
       _MobileStockSummaryItemCardState();
 }
 
-class _MobileStockSummaryItemCardState extends State<MobileStockSummaryItemCard> {
+class _MobileStockSummaryItemCardState
+    extends State<MobileStockSummaryItemCard> {
   static final _currencyFormat = NumberFormat('#,##0', 'en_IN');
   late var _isExpanded = widget.initiallyExpanded;
 
@@ -40,7 +41,8 @@ class _MobileStockSummaryItemCardState extends State<MobileStockSummaryItemCard>
     final item = widget.row.item;
     final reserved = item.reservedQuantity;
     final available = item.availableForSale ?? item.quantity;
-    final showExpandedMetrics = _isExpanded &&
+    final showExpandedMetrics =
+        _isExpanded &&
         (reserved != null ||
             (available != null && available != widget.row.stockQty));
 
@@ -90,8 +92,9 @@ class _MobileStockSummaryItemCardState extends State<MobileStockSummaryItemCard>
               color: widget.row.isLowStock
                   ? inventoryLowStockColor
                   : AppColors.textSecondary,
-              fontWeight:
-                  widget.row.isLowStock ? FontWeight.w600 : FontWeight.w400,
+              fontWeight: widget.row.isLowStock
+                  ? FontWeight.w600
+                  : FontWeight.w400,
               height: 1.4,
             ),
           ),

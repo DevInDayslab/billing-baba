@@ -15,12 +15,16 @@ final syncShareLiveSyncProvider = Provider<void>((ref) {
   var disposed = false;
 
   // Side effects must not run during provider build (Riverpod assertion).
-  unawaited(Future.microtask(() async {
-    if (disposed) return;
-    await ref.read(syncShareRefreshProvider.notifier).refresh(
-          trigger: SyncShareRefreshTrigger.pageOpen,
-        );
-  }));
+  unawaited(
+    Future.microtask(() async {
+      if (disposed) return;
+      await ref
+          .read(syncShareRefreshProvider.notifier)
+          .refresh(
+            trigger: SyncShareRefreshTrigger.pageOpen,
+          );
+    }),
+  );
 
   ref.onDispose(() {
     disposed = true;

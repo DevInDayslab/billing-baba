@@ -80,7 +80,6 @@ class InventorySearchHighlightRange {
 
 /// Token-based fuzzy search with precomputed indexes.
 class InventorySearchEngine {
-
   factory InventorySearchEngine.build({
     required Iterable<InventorySearchableFields> items,
   }) {
@@ -159,7 +158,9 @@ class InventorySearchEngine {
     if (trimmed.isEmpty) return recordList;
 
     final rankedIds = searchIds(trimmed);
-    final recordsById = {for (final record in recordList) idSelector(record): record};
+    final recordsById = {
+      for (final record in recordList) idSelector(record): record,
+    };
     return [
       for (final id in rankedIds)
         if (recordsById.containsKey(id)) recordsById[id]!,
@@ -218,7 +219,8 @@ class InventorySearchEngine {
       final wordTokens = tokenize(normalizedWord);
       final isMatch = queryTokens.any(
         (queryToken) => wordTokens.any(
-          (wordToken) => _tokenMatchType(queryToken, wordToken) != _TokenMatchType.none,
+          (wordToken) =>
+              _tokenMatchType(queryToken, wordToken) != _TokenMatchType.none,
         ),
       );
 
@@ -232,7 +234,9 @@ class InventorySearchEngine {
     return ranges;
   }
 
-  static InventorySearchIndexEntry _buildEntry(InventorySearchableFields fields) {
+  static InventorySearchIndexEntry _buildEntry(
+    InventorySearchableFields fields,
+  ) {
     final fieldValues = <String>[
       fields.name,
       ?fields.sku,
@@ -379,7 +383,9 @@ class InventorySearchEngine {
     bool isNameToken = false,
   }) {
     if (queryToken == itemToken) {
-      return isNameToken ? _TokenMatchType.exactName : _TokenMatchType.exactOther;
+      return isNameToken
+          ? _TokenMatchType.exactName
+          : _TokenMatchType.exactOther;
     }
 
     if (itemToken.contains(queryToken)) {

@@ -234,20 +234,23 @@ class _ItemWiseDiscountReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportItemDiscountRow>(
-                              reportScope: itemWiseDiscountReportScope,
-                              columns: itemWiseDiscountColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No Items',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportItemDiscountRow
+                                >(
+                                  reportScope: itemWiseDiscountReportScope,
+                                  columns: itemWiseDiscountColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No Items',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

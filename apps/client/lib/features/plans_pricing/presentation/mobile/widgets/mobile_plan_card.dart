@@ -141,7 +141,7 @@ class MobilePlanCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                ),
+              ),
               if (plan.isMostPopular)
                 Positioned(
                   top: -8,
@@ -279,7 +279,9 @@ class _SelectionIndicator extends StatelessWidget {
       height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isSelected ? MobilePlanCard._checkBadgeColor : Colors.transparent,
+        color: isSelected
+            ? MobilePlanCard._checkBadgeColor
+            : Colors.transparent,
         border: Border.all(
           color: isSelected
               ? MobilePlanCard._checkBadgeColor

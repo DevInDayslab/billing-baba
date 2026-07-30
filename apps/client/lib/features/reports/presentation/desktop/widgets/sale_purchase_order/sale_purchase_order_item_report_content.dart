@@ -81,44 +81,44 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
                         Expanded(
                           child: ReportTableArea(
                             child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'ITEM NAME',
+                                ? const Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ReportSyncScrollTable(
+                                        headerChildren: [
+                                          Expanded(
+                                            child: ReportAlignedHeaderCell(
+                                              label: 'ITEM NAME',
+                                            ),
                                           ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'QUANTITY',
-                                          width: 140,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'AMOUNT',
-                                          width: 140,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No order items for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
+                                          ReportAlignedHeaderCell(
+                                            label: 'QUANTITY',
+                                            width: 140,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'AMOUNT',
+                                            width: 140,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                        ],
+                                        rows: [],
+                                      ),
+                                      Expanded(
+                                        child: Center(
+                                          child: Text(
+                                            'No order items for the selected period.',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
+                                    ],
+                                  )
+                                : ReportSyncScrollTable(
                                     headerChildren: const [
                                       Expanded(
                                         child: ReportAlignedHeaderCell(
@@ -183,9 +183,8 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
                                         ),
                                     ],
                                   ),
-                                ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

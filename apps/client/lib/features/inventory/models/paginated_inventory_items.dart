@@ -32,11 +32,11 @@ class PaginatedInventoryItems {
 
 extension InventoryItemsPageAsync on AsyncValue<PaginatedInventoryItems> {
   AsyncValue<List<InventoryItem>> get itemsOnly => switch (this) {
-        AsyncData(:final value) => AsyncData(value.items),
-        AsyncLoading() => const AsyncLoading<List<InventoryItem>>(),
-        AsyncError(:final error, :final stackTrace) =>
-          AsyncError<List<InventoryItem>>(error, stackTrace),
-      };
+    AsyncData(:final value) => AsyncData(value.items),
+    AsyncLoading() => const AsyncLoading<List<InventoryItem>>(),
+    AsyncError(:final error, :final stackTrace) =>
+      AsyncError<List<InventoryItem>>(error, stackTrace),
+  };
 }
 
 class InventoryItemsQuery {

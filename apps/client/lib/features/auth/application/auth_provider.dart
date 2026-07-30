@@ -166,8 +166,9 @@ class AuthState {
           ? null
           : msg91AccessToken ?? this.msg91AccessToken,
       error: clearError ? null : error ?? this.error,
-      networkError:
-          clearNetworkError ? null : networkError ?? this.networkError,
+      networkError: clearNetworkError
+          ? null
+          : networkError ?? this.networkError,
       session: clearSession ? null : session ?? this.session,
       resendAvailableAt: clearResendTimer
           ? null
@@ -885,7 +886,8 @@ class Auth extends _$Auth {
   }
 
   Future<void> _bootstrapOfflineDevSession(AuthSession session) async {
-    if (!AuthService.isOfflineDevSession(session) || session.businesses.isEmpty) {
+    if (!AuthService.isOfflineDevSession(session) ||
+        session.businesses.isEmpty) {
       return;
     }
 
@@ -898,22 +900,24 @@ class Auth extends _$Auth {
     final profile = AuthService.offlineDevBusinessProfile(session);
     ref.read(businessProfileProvider.notifier).replaceWith(profile);
 
-    ref.read(companySessionProvider.notifier).setSession(
-      CompanySession.owner(
-        entry: CompanyListEntry(
-          id: businessSummary.id,
-          name: businessSummary.name,
-          relationship: CompanyRelationship.owner,
-          syncStatus: business.SyncStatus.on,
-          source: CompanyListSource.apiOwned,
-          ownerName: user.name,
-          phone: user.phone,
-        ),
-        userId: user.id,
-        userName: user.name ?? 'Developer',
-        userPhone: user.phone,
-      ),
-    );
+    ref
+        .read(companySessionProvider.notifier)
+        .setSession(
+          CompanySession.owner(
+            entry: CompanyListEntry(
+              id: businessSummary.id,
+              name: businessSummary.name,
+              relationship: CompanyRelationship.owner,
+              syncStatus: business.SyncStatus.on,
+              source: CompanyListSource.apiOwned,
+              ownerName: user.name,
+              phone: user.phone,
+            ),
+            userId: user.id,
+            userName: user.name ?? 'Developer',
+            userPhone: user.phone,
+          ),
+        );
   }
 
   Future<void> selectBusiness(String businessId) {
@@ -937,13 +941,18 @@ class Auth extends _$Auth {
     BusinessOpenDebugLog.step('selectBusiness', 'begin id=$businessId');
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) {
-      throw const BusinessSelectionFailed('Session expired. Please sign in again.');
+      throw const BusinessSelectionFailed(
+        'Session expired. Please sign in again.',
+      );
     }
 
     final storage = await ref.read(storageServiceProvider.future);
     final accessToken = await storage.readSecure(StorageKeys.accessToken);
     if (accessToken != null && AuthService.isOfflineDevToken(accessToken)) {
-      BusinessOpenDebugLog.step('selectBusiness', 'offline dev — local scope only');
+      BusinessOpenDebugLog.step(
+        'selectBusiness',
+        'offline dev — local scope only',
+      );
       final service = await _service();
       await service.persistSession(state.session!, businessId: businessId);
       _setAuthStatus(AuthStatus.authenticated);
@@ -951,7 +960,10 @@ class Auth extends _$Auth {
     }
 
     if (await _isJwtScopedToBusiness(businessId)) {
-      BusinessOpenDebugLog.step('selectBusiness', 'JWT already scoped — skip refresh');
+      BusinessOpenDebugLog.step(
+        'selectBusiness',
+        'JWT already scoped — skip refresh',
+      );
       await _syncSessionRoleFromJwt();
       BusinessSelectionRetryGuard.recordSuccess(businessId);
       if (state.status != AuthStatus.authenticated) {
@@ -986,7 +998,10 @@ class Auth extends _$Auth {
       BusinessSelectionRetryGuard.recordSuccess(businessId);
       BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh done');
     } on BusinessSelectionFailed {
-      BusinessOpenDebugLog.step('selectBusiness', 'failed (BusinessSelectionFailed)');
+      BusinessOpenDebugLog.step(
+        'selectBusiness',
+        'failed (BusinessSelectionFailed)',
+      );
       rethrow;
     } on Object catch (e) {
       if (NetworkExceptionClassifier.isConnectivityError(e)) {

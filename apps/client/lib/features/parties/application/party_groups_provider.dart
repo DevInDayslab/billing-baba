@@ -12,8 +12,8 @@ final partyGroupsProvider = NotifierProvider<PartyGroups, List<String>>(
 /// Set to `true` after party group names finish their first sync.
 final partyGroupsStorageReadyProvider =
     NotifierProvider<PartyGroupsStorageReady, bool>(
-  PartyGroupsStorageReady.new,
-);
+      PartyGroupsStorageReady.new,
+    );
 
 class PartyGroupsStorageReady extends Notifier<bool> {
   @override

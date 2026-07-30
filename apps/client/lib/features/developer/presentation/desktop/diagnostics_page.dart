@@ -44,8 +44,7 @@ class _DiagnosticsPageState extends State<DesktopDiagnosticsPage> {
   Future<void> _runConnectivityTest() async {
     setState(() => _runningTest = true);
     try {
-      final result =
-          await NetworkDiagnosticsService().runConnectivityTest();
+      final result = await NetworkDiagnosticsService().runConnectivityTest();
       if (!mounted) return;
       setState(() {
         _runningTest = false;

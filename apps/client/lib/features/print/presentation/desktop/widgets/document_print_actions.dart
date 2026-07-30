@@ -161,7 +161,8 @@ abstract final class DocumentPrintActions {
     Future<void> Function(
       GeneratedDocumentService generatedDocumentService,
       PrintService printService,
-    ) action,
+    )
+    action,
   ) async {
     if (!context.mounted) return;
 
@@ -175,8 +176,9 @@ abstract final class DocumentPrintActions {
     );
 
     try {
-      final generatedDocumentService =
-          await ref.read(generatedDocumentServiceProvider.future);
+      final generatedDocumentService = await ref.read(
+        generatedDocumentServiceProvider.future,
+      );
       final printService = await ref.read(printServiceProvider.future);
       if (!context.mounted) return;
       await action(generatedDocumentService, printService);

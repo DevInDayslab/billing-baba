@@ -19,7 +19,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final collaborationScopeProvider = Provider<void>((ref) {
   ref.listen(companySessionProvider, (previous, next) {
     if (previous?.companyId == next?.companyId) return;
-    ref.read(syncShareRefreshProvider.notifier).refresh(
+    ref
+        .read(syncShareRefreshProvider.notifier)
+        .refresh(
           trigger: SyncShareRefreshTrigger.companyChange,
         );
   });
@@ -33,22 +35,28 @@ final collaborationScopeProvider = Provider<void>((ref) {
       final session = ref.read(companySessionProvider);
       if (session == null || session.isOwner) return;
 
-      final currentMember =
-          members.where((member) => member.isCurrentUser).firstOrNull;
+      final currentMember = members
+          .where((member) => member.isCurrentUser)
+          .firstOrNull;
       if (currentMember == null) {
-        _guardSharedCompanySession(ref, ref.read(companyDirectoryProvider).asData?.value ?? []);
+        _guardSharedCompanySession(
+          ref,
+          ref.read(companyDirectoryProvider).asData?.value ?? [],
+        );
         return;
       }
 
       if (currentMember.role != session.role) {
-        ref.read(companySessionProvider.notifier).setSession(
-          session.copyWith(
-            role: currentMember.role,
-            permissionPreset: RolePermissionRegistry.presetFor(
-              currentMember.role,
-            ),
-          ),
-        );
+        ref
+            .read(companySessionProvider.notifier)
+            .setSession(
+              session.copyWith(
+                role: currentMember.role,
+                permissionPreset: RolePermissionRegistry.presetFor(
+                  currentMember.role,
+                ),
+              ),
+            );
         ref.invalidate(permissionServiceProvider);
       }
     });
@@ -88,23 +96,25 @@ void _seedOwnerSession(Ref ref) {
   if (profile == null) return;
 
   final user = auth.session!.user;
-  ref.read(companySessionProvider.notifier).setSession(
-    CompanySession.owner(
-      entry: CompanyListEntry(
-        id: profile.id,
-        name: profile.name,
-        relationship: CompanyRelationship.owner,
-        syncStatus: business.SyncStatus.on,
-        source: CompanyListSource.apiOwned,
-        gstin: profile.gstin,
-        phone: profile.phone,
-        email: profile.email,
-        address: profile.address,
-        logoUrl: profile.logoUrl,
-      ),
-      userId: user.id,
-      userName: user.name ?? 'User',
-      userPhone: user.phone,
-    ),
-  );
+  ref
+      .read(companySessionProvider.notifier)
+      .setSession(
+        CompanySession.owner(
+          entry: CompanyListEntry(
+            id: profile.id,
+            name: profile.name,
+            relationship: CompanyRelationship.owner,
+            syncStatus: business.SyncStatus.on,
+            source: CompanyListSource.apiOwned,
+            gstin: profile.gstin,
+            phone: profile.phone,
+            email: profile.email,
+            address: profile.address,
+            logoUrl: profile.logoUrl,
+          ),
+          userId: user.id,
+          userName: user.name ?? 'User',
+          userPhone: user.phone,
+        ),
+      );
 }

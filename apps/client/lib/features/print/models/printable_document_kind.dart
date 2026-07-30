@@ -63,8 +63,7 @@ enum PrintableDocumentKind {
     expense ||
     fixedAssetPurchase ||
     saleFa ||
-    jobWorkOrder =>
-      true,
+    jobWorkOrder => true,
     saleInvoice ||
     purchaseBill ||
     estimate ||

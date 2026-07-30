@@ -189,7 +189,6 @@ class _UpgradePlanDialogState extends ConsumerState<UpgradePlanDialog> {
       ),
     );
   }
-
 }
 
 class _DialogHeader extends StatelessWidget {

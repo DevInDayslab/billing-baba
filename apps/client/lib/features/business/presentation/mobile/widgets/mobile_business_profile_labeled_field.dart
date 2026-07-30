@@ -84,7 +84,10 @@ class MobileBusinessProfileLabeledField extends StatelessWidget {
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: AppRadius.mdBorder,
-                  borderSide: const BorderSide(color: AppColors.error, width: 1.4),
+                  borderSide: const BorderSide(
+                    color: AppColors.error,
+                    width: 1.4,
+                  ),
                 ),
               ),
             ),
@@ -104,9 +107,7 @@ class MobileBusinessProfileLabeledField extends StatelessWidget {
                 child: Text(
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: hasError
-                        ? AppColors.error
-                        : AppColors.textSecondary,
+                    color: hasError ? AppColors.error : AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

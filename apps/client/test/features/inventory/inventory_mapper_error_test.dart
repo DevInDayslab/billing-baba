@@ -124,8 +124,18 @@ void main() {
           InventoryCategory(id: generalId, name: 'General'),
         ],
         items: const [
-          InventoryItem(id: '1', name: 'A', type: ItemType.product, categoryId: generalId),
-          InventoryItem(id: '2', name: 'B', type: ItemType.product, categoryId: generalId),
+          InventoryItem(
+            id: '1',
+            name: 'A',
+            type: ItemType.product,
+            categoryId: generalId,
+          ),
+          InventoryItem(
+            id: '2',
+            name: 'B',
+            type: ItemType.product,
+            categoryId: generalId,
+          ),
           InventoryItem(id: '3', name: 'C', type: ItemType.product),
         ],
       );

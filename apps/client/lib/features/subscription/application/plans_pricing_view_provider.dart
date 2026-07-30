@@ -31,7 +31,8 @@ class PlansPricingView extends _$PlansPricingView {
 
   /// Frontend-only: refresh plans UI after a mock purchase.
   void applyLocalPurchase(CurrentSubscription current) {
-    final plans = ref.read(subscriptionPlansProvider).value ??
+    final plans =
+        ref.read(subscriptionPlansProvider).value ??
         SubscriptionLocalCatalog.plans();
     _syncChildProviders(plans: plans, current: current);
     state = AsyncData(PlansPricingMapper.build(plans: plans, current: current));

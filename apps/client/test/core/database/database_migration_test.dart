@@ -44,8 +44,7 @@ void main() {
     final dbFile = File('${tempDir.path}/billing_baba.sqlite');
 
     final db = AppDatabase(NativeDatabase(dbFile));
-    final version =
-        await db.customSelect('PRAGMA user_version').getSingle();
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
     expect(version.data['user_version'], AppDatabase.currentSchemaVersion);
 
     await db.close();

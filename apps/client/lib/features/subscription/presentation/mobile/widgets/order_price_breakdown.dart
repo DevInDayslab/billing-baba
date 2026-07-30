@@ -84,7 +84,9 @@ class _SummaryRow extends StatelessWidget {
           style: TextStyle(
             fontSize: isEmphasized ? 15 : 13,
             fontWeight: isEmphasized ? FontWeight.w600 : FontWeight.normal,
-            color: isEmphasized ? AppColors.textPrimary : AppColors.textSecondary,
+            color: isEmphasized
+                ? AppColors.textPrimary
+                : AppColors.textSecondary,
           ),
         ),
         Text(

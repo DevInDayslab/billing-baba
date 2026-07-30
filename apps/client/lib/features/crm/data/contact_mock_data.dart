@@ -146,7 +146,9 @@ class _MockContactEntry {
   const _MockContactEntry({
     required this.id,
     required this.name,
-    required this.phone, required this.createdAt, this.firstName,
+    required this.phone,
+    required this.createdAt,
+    this.firstName,
     this.lastName,
     this.accountName,
     this.email,

@@ -38,6 +38,7 @@ abstract final class StorageKeys {
 
   /// Stable install-lifetime sync device id (UUID).
   static const syncDeviceId = 'sync_device_id';
+
   /// Legacy global keys — migrated to per-business keys on first read.
   static const syncPullCursor = 'sync_pull_cursor';
   static const syncBootstrappedAt = 'sync_bootstrapped_at';

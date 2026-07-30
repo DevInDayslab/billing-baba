@@ -54,7 +54,11 @@ abstract class ItemImageDto with _$ItemImageDto {
   const factory ItemImageDto({
     required String id,
     @JsonKey(name: 'image_url') required String imageUrl,
-    @JsonKey(name: 'sort_order') required int sortOrder, @JsonKey(name: 'is_primary') required bool isPrimary, @JsonKey(name: 'created_at') required String createdAt, @JsonKey(name: 'updated_at') required String updatedAt, @JsonKey(name: 'thumbnail_url') String? thumbnailUrl,
+    @JsonKey(name: 'sort_order') required int sortOrder,
+    @JsonKey(name: 'is_primary') required bool isPrimary,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'updated_at') required String updatedAt,
+    @JsonKey(name: 'thumbnail_url') String? thumbnailUrl,
     @JsonKey(name: 'medium_url') String? mediumUrl,
     @JsonKey(name: 'media_asset_id') String? mediaAssetId,
   }) = _ItemImageDto;

@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// and freeze the macOS UI.
 final subscriptionCheckoutBusyProvider =
     NotifierProvider<SubscriptionCheckoutBusy, bool>(
-  SubscriptionCheckoutBusy.new,
-);
+      SubscriptionCheckoutBusy.new,
+    );
 
 class SubscriptionCheckoutBusy extends Notifier<bool> {
   @override

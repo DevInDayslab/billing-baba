@@ -115,7 +115,10 @@ List<PaymentEntry> applySplitPaymentCascade({
 
 double heldBillTotal(List<CartItem> items) {
   final subtotal = items.fold<double>(0, (sum, item) => sum + item.grossTotal);
-  final discount = items.fold<double>(0, (sum, item) => sum + item.discountAmount);
+  final discount = items.fold<double>(
+    0,
+    (sum, item) => sum + item.discountAmount,
+  );
   final taxable = subtotal - discount;
   final tax = taxable * 0.18;
   final beforeRound = taxable + tax;

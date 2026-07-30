@@ -27,7 +27,8 @@ abstract final class PosCategoryStyle {
     if (categoryKey == null || categoryKey.trim().isEmpty) {
       return AppColors.background;
     }
-    return _backgroundPalette[_paletteIndex(categoryKey) % _backgroundPalette.length];
+    return _backgroundPalette[_paletteIndex(categoryKey) %
+        _backgroundPalette.length];
   }
 
   static IconData icon(String? categoryKey) {

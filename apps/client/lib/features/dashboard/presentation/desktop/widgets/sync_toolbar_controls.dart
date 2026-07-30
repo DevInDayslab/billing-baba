@@ -17,7 +17,10 @@ class SyncNowToolbarButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final snapshot = ref.watch(syncUiStateProvider);
-    final tooltip = _tooltipFor(snapshot.manualSyncState, snapshot.lastSyncTime);
+    final tooltip = _tooltipFor(
+      snapshot.manualSyncState,
+      snapshot.lastSyncTime,
+    );
 
     return _TopBarIconButton(
       tooltip: tooltip,
@@ -298,14 +301,17 @@ class SyncStatusDropdownPanel extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: snapshot.manualSyncState ==
+                      onPressed:
+                          snapshot.manualSyncState ==
                               ManualSyncVisualState.syncing
                           ? null
                           : () {
                               onClose();
                               unawaited(
                                 ref
-                                    .read(manualSyncVisualStateProvider.notifier)
+                                    .read(
+                                      manualSyncVisualStateProvider.notifier,
+                                    )
                                     .syncNow(),
                               );
                             },
@@ -434,25 +440,25 @@ class _ManualSyncIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (state) {
       ManualSyncVisualState.syncing => const SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
       ManualSyncVisualState.completed => Icon(
-          Icons.check,
-          size: 20,
-          color: Colors.green.shade600,
-        ),
+        Icons.check,
+        size: 20,
+        color: Colors.green.shade600,
+      ),
       ManualSyncVisualState.failed => Icon(
-          Icons.warning_amber_rounded,
-          size: 20,
-          color: Colors.orange.shade700,
-        ),
+        Icons.warning_amber_rounded,
+        size: 20,
+        color: Colors.orange.shade700,
+      ),
       ManualSyncVisualState.idle => const Icon(
-          Icons.refresh,
-          size: 20,
-          color: AppColors.textSecondary,
-        ),
+        Icons.refresh,
+        size: 20,
+        color: AppColors.textSecondary,
+      ),
     };
   }
 }
@@ -471,10 +477,22 @@ class _CloudSyncIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, color) = switch (state) {
-      SyncCloudVisualState.synced => (Icons.cloud_done_outlined, Colors.green.shade600),
-      SyncCloudVisualState.syncing => (Icons.cloud_sync_outlined, AppColors.primary),
-      SyncCloudVisualState.offline => (Icons.cloud_off_outlined, AppColors.textSecondary),
-      SyncCloudVisualState.pending => (Icons.cloud_upload_outlined, Colors.orange.shade700),
+      SyncCloudVisualState.synced => (
+        Icons.cloud_done_outlined,
+        Colors.green.shade600,
+      ),
+      SyncCloudVisualState.syncing => (
+        Icons.cloud_sync_outlined,
+        AppColors.primary,
+      ),
+      SyncCloudVisualState.offline => (
+        Icons.cloud_off_outlined,
+        AppColors.textSecondary,
+      ),
+      SyncCloudVisualState.pending => (
+        Icons.cloud_upload_outlined,
+        Colors.orange.shade700,
+      ),
       SyncCloudVisualState.error => (Icons.cloud_off_outlined, AppColors.error),
     };
 

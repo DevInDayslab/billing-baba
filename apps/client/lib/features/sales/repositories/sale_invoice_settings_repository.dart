@@ -115,7 +115,8 @@ class SaleInvoiceSettingsRepository {
       freeItemQuantity:
           json['freeItemQuantity'] as bool? ?? defaults.freeItemQuantity,
       itemsTableCount:
-          (json['itemsTableCount'] as num?)?.toInt() ?? defaults.itemsTableCount,
+          (json['itemsTableCount'] as num?)?.toInt() ??
+          defaults.itemsTableCount,
       barcodeScanningForItems:
           json['barcodeScanningForItems'] as bool? ??
           defaults.barcodeScanningForItems,
@@ -164,17 +165,17 @@ class SaleInvoiceSettingsRepository {
       showProfitOnSaleInvoice:
           json['showProfitOnSaleInvoice'] as bool? ??
           defaults.showProfitOnSaleInvoice,
-      reverseCharge:
-          json['reverseCharge'] as bool? ?? defaults.reverseCharge,
-      stateOfSupply:
-          json['stateOfSupply'] as String? ?? defaults.stateOfSupply,
+      reverseCharge: json['reverseCharge'] as bool? ?? defaults.reverseCharge,
+      stateOfSupply: json['stateOfSupply'] as String? ?? defaults.stateOfSupply,
       eWayBillNumberEnabled:
           json['eWayBillNumberEnabled'] as bool? ??
           defaults.eWayBillNumberEnabled,
       salePrefixEnabled:
           json['salePrefixEnabled'] as bool? ?? defaults.salePrefixEnabled,
       selectedFirmId:
-          json['selectedFirmId'] as String? ?? firmId ?? defaults.selectedFirmId,
+          json['selectedFirmId'] as String? ??
+          firmId ??
+          defaults.selectedFirmId,
       transactionPrefixes: prefixes,
     );
   }

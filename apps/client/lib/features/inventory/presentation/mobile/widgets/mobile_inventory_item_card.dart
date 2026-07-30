@@ -47,11 +47,14 @@ class _MobileInventoryItemCardState extends State<MobileInventoryItemCard> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
-    final stockColor = listQuantityColor(item.quantity, reorderLevel: item.reorderLevel);
+    final stockColor = listQuantityColor(
+      item.quantity,
+      reorderLevel: item.reorderLevel,
+    );
     final reserved = item.reservedQuantity;
     final available = item.availableForSale ?? item.quantity;
-    final showExpanded = _isExpanded &&
-        (reserved != null || available != item.quantity);
+    final showExpanded =
+        _isExpanded && (reserved != null || available != item.quantity);
 
     return MobileCard(
       margin: const EdgeInsets.fromLTRB(
@@ -90,8 +93,7 @@ class _MobileInventoryItemCardState extends State<MobileInventoryItemCard> {
                         spacing: AppSpacing.xs,
                         runSpacing: AppSpacing.xs,
                         children: [
-                          for (final tag in _tags)
-                            _TagChip(label: tag),
+                          for (final tag in _tags) _TagChip(label: tag),
                         ],
                       ),
                     ],

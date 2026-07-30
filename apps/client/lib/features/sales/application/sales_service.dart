@@ -49,9 +49,12 @@ class CreateAndFinalizeSaleResult {
 Future<SalesService> salesService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
-  final commandRepo = await ref.watch(salesInvoiceCommandRepositoryProvider.future);
-  final returnCommandRepo =
-      await ref.watch(salesReturnCommandRepositoryProvider.future);
+  final commandRepo = await ref.watch(
+    salesInvoiceCommandRepositoryProvider.future,
+  );
+  final returnCommandRepo = await ref.watch(
+    salesReturnCommandRepositoryProvider.future,
+  );
   return SalesService(
     repository: SalesRepository(
       remote: SalesRemoteDataSource(api.dio),
@@ -123,17 +126,18 @@ class SalesService {
           ? _mergeLocalSalesDocuments(remoteDocs, localDocs)
           : remoteDocs;
 
-      final items = mergedDocs
-          .map(
-            (dto) => SalesDocumentMapper.toInvoiceModel(
-              dto,
-              partyName: dto.partyId != null
-                  ? (resolvedPartyNames[dto.partyId] ?? '')
-                  : '',
-            ),
-          )
-          .toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
+      final items =
+          mergedDocs
+              .map(
+                (dto) => SalesDocumentMapper.toInvoiceModel(
+                  dto,
+                  partyName: dto.partyId != null
+                      ? (resolvedPartyNames[dto.partyId] ?? '')
+                      : '',
+                ),
+              )
+              .toList()
+            ..sort((a, b) => b.date.compareTo(a.date));
 
       final total =
           (isTaxInvoiceQuery || isSalesReturnQuery) && localDocs.isNotEmpty

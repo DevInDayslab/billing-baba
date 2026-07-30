@@ -9,7 +9,12 @@ Map<String, dynamic> buildPurchaseDocumentRowPayload({
   required String documentSeries,
   required String partyId,
   required bool isGstFormal,
-  required String documentDate, required String subtotal, required String discountTotal, required String taxAmount, required String totalAmount, String? documentNumber,
+  required String documentDate,
+  required String subtotal,
+  required String discountTotal,
+  required String taxAmount,
+  required String totalAmount,
+  String? documentNumber,
   String? convertedFromId,
   String? supplierInvoiceNumber,
   String? dueDate,
@@ -62,9 +67,11 @@ Map<String, dynamic> buildPurchaseLineRowPayload({
 }
 
 ({String subtotal, String discountTotal, String taxAmount, String totalAmount})
-    computePurchaseTotals(List<PurchaseLineItem> items) {
-  final subtotalValue =
-      items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
+computePurchaseTotals(List<PurchaseLineItem> items) {
+  final subtotalValue = items.fold<double>(
+    0,
+    (sum, item) => sum + item.lineSubtotal,
+  );
   final taxValue = items.fold<double>(0, (sum, item) => sum + item.lineTax);
   final totalValue = subtotalValue + taxValue;
   return (

@@ -15,7 +15,8 @@ class DesktopPurchaseOrderPage extends ConsumerStatefulWidget {
   const DesktopPurchaseOrderPage({super.key});
 
   @override
-  ConsumerState<DesktopPurchaseOrderPage> createState() => _PurchaseOrderPageState();
+  ConsumerState<DesktopPurchaseOrderPage> createState() =>
+      _PurchaseOrderPageState();
 }
 
 class _PurchaseOrderPageState extends ConsumerState<DesktopPurchaseOrderPage> {

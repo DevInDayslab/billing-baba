@@ -41,8 +41,9 @@ final partiesListProvider = Provider<List<PartyModel>>((ref) {
 });
 
 /// Projected outstanding balances keyed by party id (local Drift ledger).
-final partyOutstandingIndexProvider =
-    FutureProvider<Map<String, double>>((ref) async {
+final partyOutstandingIndexProvider = FutureProvider<Map<String, double>>((
+  ref,
+) async {
   ref.watch(partyListProvider);
   final service = await ref.watch(partyLedgerServiceProvider.future);
   final businessId = await ref.watch(partyLedgerBusinessIdProvider.future);

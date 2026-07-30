@@ -465,10 +465,12 @@ abstract final class SearchRegistry {
   }
 
   static List<SearchItem> visiblePages(PermissionService permissions) {
-    return pages.where((item) {
-      final route = item.route;
-      if (route == null) return true;
-      return NavigationPermissionRegistry.isVisible(route, permissions);
-    }).toList(growable: false);
+    return pages
+        .where((item) {
+          final route = item.route;
+          if (route == null) return true;
+          return NavigationPermissionRegistry.isVisible(route, permissions);
+        })
+        .toList(growable: false);
   }
 }

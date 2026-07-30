@@ -709,9 +709,7 @@ class PaymentOutForm extends _$PaymentOutForm {
       clearPartyId: clearLink,
       balanceDue: clearLink ? 0 : state.balanceDue,
       clearSaveError: true,
-      isLoadingBalance: !clearLink &&
-          partyId != null &&
-          partyId.isNotEmpty,
+      isLoadingBalance: !clearLink && partyId != null && partyId.isNotEmpty,
     );
 
     final linkedId = state.partyId;
@@ -772,7 +770,9 @@ class PaymentOutForm extends _$PaymentOutForm {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages: state.attachedImages.where((item) => item.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((item) => item.id != id)
+          .toList(),
     );
   }
 
@@ -793,8 +793,9 @@ class PaymentOutForm extends _$PaymentOutForm {
 
   void removeDocument(String id) {
     state = state.copyWith(
-      attachedDocuments:
-          state.attachedDocuments.where((item) => item.id != id).toList(),
+      attachedDocuments: state.attachedDocuments
+          .where((item) => item.id != id)
+          .toList(),
     );
   }
 

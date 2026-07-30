@@ -78,8 +78,9 @@ class _MoreOptionsSheetBody extends StatelessWidget {
   final VoidCallback onDuplicate;
   final VoidCallback onShareAsPdf;
 
-  static final Color _dividerColor =
-      AppColors.textSecondary.withValues(alpha: 0.15);
+  static final Color _dividerColor = AppColors.textSecondary.withValues(
+    alpha: 0.15,
+  );
 
   @override
   Widget build(BuildContext context) {

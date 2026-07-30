@@ -68,9 +68,10 @@ class PartyGroupSearchQuery extends Notifier<String> {
   set query(String value) => state = value;
 }
 
-final selectedPartyGroupProvider = NotifierProvider<SelectedPartyGroup, String?>(
-  SelectedPartyGroup.new,
-);
+final selectedPartyGroupProvider =
+    NotifierProvider<SelectedPartyGroup, String?>(
+      SelectedPartyGroup.new,
+    );
 
 final partyGroupSearchQueryProvider =
     NotifierProvider<PartyGroupSearchQuery, String>(

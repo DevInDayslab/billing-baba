@@ -16,7 +16,9 @@ class ItemDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = fallbackItem is InventoryItem ? fallbackItem as InventoryItem : null;
+    final item = fallbackItem is InventoryItem
+        ? fallbackItem as InventoryItem
+        : null;
 
     return AdaptivePage(
       desktop: const ComingSoonPage(title: 'Item Details'),

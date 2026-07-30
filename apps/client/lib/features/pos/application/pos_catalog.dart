@@ -53,7 +53,8 @@ String? resolvePosItemImageUrl(InventoryItem item) {
   if (images.isEmpty) return null;
   final primary = images.where((image) => image.isPrimary).firstOrNull;
   final image =
-      primary ?? images.sorted((a, b) => a.sortOrder.compareTo(b.sortOrder)).first;
+      primary ??
+      images.sorted((a, b) => a.sortOrder.compareTo(b.sortOrder)).first;
   final url = image.urlForGrid().trim();
   if (url.isEmpty) return null;
   return (url: url, mediaAssetId: image.mediaAssetId);
@@ -92,7 +93,9 @@ List<PosCategoryOption> posCategoriesForCatalog(
 
   return categories
       .where((category) => usedIds.contains(category.id))
-      .map((category) => PosCategoryOption(id: category.id, name: category.name))
+      .map(
+        (category) => PosCategoryOption(id: category.id, name: category.name),
+      )
       .toList()
     ..sort((a, b) => a.name.compareTo(b.name));
 }
@@ -106,7 +109,9 @@ List<PosItem> filterPosCatalog({
   String? categoryId,
   bool inStockOnly = false,
 }) {
-  final products = inventoryItems.where((item) => item.type == ItemType.product);
+  final products = inventoryItems.where(
+    (item) => item.type == ItemType.product,
+  );
   Iterable<PosItem> result = catalog;
 
   if (categoryId != null && categoryId.isNotEmpty) {

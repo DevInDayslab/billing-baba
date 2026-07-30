@@ -60,7 +60,8 @@ class PurchaseReturnCommandRepository {
         ? <String>{}
         : existing.lines.map((line) => line.id).toSet();
 
-    final documentNumber = existing?.documentNumber ??
+    final documentNumber =
+        existing?.documentNumber ??
         await _numbering.allocate(
           businessId: businessId,
           documentSeries: input.documentSeries,
@@ -93,8 +94,9 @@ class PurchaseReturnCommandRepository {
       godownId: input.godownId,
       paidAmount: existing?.paidAmount ?? '0',
       paymentMode: existing?.paymentMode,
-      syncVersion:
-          isCreate ? 0 : (await _local.getHeaderSyncVersion(documentId) ?? 0),
+      syncVersion: isCreate
+          ? 0
+          : (await _local.getHeaderSyncVersion(documentId) ?? 0),
       createdAt: existing == null
           ? now
           : DateTime.parse(existing.createdAt).toUtc(),

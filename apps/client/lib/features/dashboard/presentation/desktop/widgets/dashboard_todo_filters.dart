@@ -23,18 +23,20 @@ abstract final class DashboardTodoFilterLogic {
     required DashboardTodoScopeFilter scope,
     DateTime? now,
   }) {
-    final sorted = TaskSort.filterAndSort(tasks, filter: TaskFilter.all, now: now);
+    final sorted = TaskSort.filterAndSort(
+      tasks,
+      filter: TaskFilter.all,
+      now: now,
+    );
     if (scope == DashboardTodoScopeFilter.all) return sorted;
 
     final clock = now ?? DateTime.now();
-    return sorted
-        .where((task) {
-          final reminder = task.reminderAt;
-          if (reminder == null) return !task.isCompleted;
-          return _isSameDay(reminder, clock) ||
-              task.status(now: clock) == TaskStatus.overdue;
-        })
-        .toList();
+    return sorted.where((task) {
+      final reminder = task.reminderAt;
+      if (reminder == null) return !task.isCompleted;
+      return _isSameDay(reminder, clock) ||
+          task.status(now: clock) == TaskStatus.overdue;
+    }).toList();
   }
 
   static List<TaskModel> applyStatusChip(
@@ -276,15 +278,18 @@ class _StatusChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color:
-                      isSelected ? AppColors.primary : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
                 ),
               ),
               if (badgeCount != null) ...[
                 const SizedBox(width: 4),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.error,
                     borderRadius: BorderRadius.circular(10),

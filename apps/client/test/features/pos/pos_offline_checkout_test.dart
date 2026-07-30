@@ -48,45 +48,47 @@ void main() {
     await db.close();
   });
 
-  test('POS draft save uses pos document type and omits local session id',
-      () async {
-    const cart = PosCartState(
-      items: [
-        CartItem(
-          item: PosItem(
-            id: 'item-1',
-            name: 'Tea',
-            sku: 'TEA-1',
-            price: 50,
-            stock: 10,
+  test(
+    'POS draft save uses pos document type and omits local session id',
+    () async {
+      const cart = PosCartState(
+        items: [
+          CartItem(
+            item: PosItem(
+              id: 'item-1',
+              name: 'Tea',
+              sku: 'TEA-1',
+              price: 50,
+              stock: 10,
+            ),
+            quantity: 2,
           ),
-          quantity: 2,
-        ),
-      ],
-      payments: [
-        PaymentEntry(mode: PaymentMode.cash, amount: 118),
-      ],
-    );
+        ],
+        payments: [
+          PaymentEntry(mode: PaymentMode.cash, amount: 118),
+        ],
+      );
 
-    final draftInput = mapPosCartToDraftInput(
-      cart: cart,
-      posSessionId: 'local-pos-test-session',
-    );
+      final draftInput = mapPosCartToDraftInput(
+        cart: cart,
+        posSessionId: 'local-pos-test-session',
+      );
 
-    final draft = await repo.saveDraft(
-      draftInput,
-      itemNameToId: {'Tea': 'item-1'},
-    );
+      final draft = await repo.saveDraft(
+        draftInput,
+        itemNameToId: {'Tea': 'item-1'},
+      );
 
-    expect(draft.documentType, SalesDocumentType.pos.apiValue);
+      expect(draft.documentType, SalesDocumentType.pos.apiValue);
 
-    final pending = await queue.listPending();
-    final headerJob = pending.firstWhere(
-      (job) => job.entityType == 'sales_documents',
-    );
-    expect(headerJob.payload['document_type'], 'pos');
-    expect(headerJob.payload.containsKey('pos_session_id'), isFalse);
-  });
+      final pending = await queue.listPending();
+      final headerJob = pending.firstWhere(
+        (job) => job.entityType == 'sales_documents',
+      );
+      expect(headerJob.payload['document_type'], 'pos');
+      expect(headerJob.payload.containsKey('pos_session_id'), isFalse);
+    },
+  );
 
   test('POS finalize enqueues finalize_sale command with payment', () async {
     const cart = PosCartState(

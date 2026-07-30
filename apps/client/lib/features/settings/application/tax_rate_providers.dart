@@ -10,25 +10,27 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'tax_rate_providers.g.dart';
 
-final taxRateMasterRepositoryProvider =
-    FutureProvider<TaxRateMasterRepository>((ref) async {
-  final storage = await ref.watch(storageServiceProvider.future);
-  final db = ref.watch(appDatabaseProvider);
-  final queue = ref.watch(syncQueueProvider);
-  String? deviceId;
-  try {
-    final identity = await ref.watch(syncDeviceIdentityProvider.future);
-    deviceId = await identity.deviceId();
-  } on Object {
-    deviceId = null;
-  }
-  return TaxRateMasterRepository(
-    local: TaxRateLocalSource(db),
-    syncQueue: queue,
-    businessIdReader: () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
-    deviceIdReader: () => deviceId,
-  );
-});
+final taxRateMasterRepositoryProvider = FutureProvider<TaxRateMasterRepository>(
+  (ref) async {
+    final storage = await ref.watch(storageServiceProvider.future);
+    final db = ref.watch(appDatabaseProvider);
+    final queue = ref.watch(syncQueueProvider);
+    String? deviceId;
+    try {
+      final identity = await ref.watch(syncDeviceIdentityProvider.future);
+      deviceId = await identity.deviceId();
+    } on Object {
+      deviceId = null;
+    }
+    return TaxRateMasterRepository(
+      local: TaxRateLocalSource(db),
+      syncQueue: queue,
+      businessIdReader: () =>
+          storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+      deviceIdReader: () => deviceId,
+    );
+  },
+);
 
 @Riverpod(keepAlive: true)
 class TaxRates extends _$TaxRates {
@@ -41,8 +43,7 @@ class TaxRates extends _$TaxRates {
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final repository =
-          await ref.read(taxRateMasterRepositoryProvider.future);
+      final repository = await ref.read(taxRateMasterRepositoryProvider.future);
       return repository.listActive();
     });
   }

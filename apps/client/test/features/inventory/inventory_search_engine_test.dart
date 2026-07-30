@@ -127,8 +127,14 @@ void main() {
       );
 
       expect(ranges.length, 2);
-      expect('Amul Taaza Milk 500ml'.substring(ranges[0].start, ranges[0].end), 'Taaza');
-      expect('Amul Taaza Milk 500ml'.substring(ranges[1].start, ranges[1].end), 'Milk');
+      expect(
+        'Amul Taaza Milk 500ml'.substring(ranges[0].start, ranges[0].end),
+        'Taaza',
+      );
+      expect(
+        'Amul Taaza Milk 500ml'.substring(ranges[1].start, ranges[1].end),
+        'Milk',
+      );
     });
 
     test('highlights numeric token inside mixed word', () {
@@ -138,7 +144,10 @@ void main() {
       );
 
       expect(ranges.length, 1);
-      expect('Amul Taaza Milk 500ml'.substring(ranges[0].start, ranges[0].end), '500ml');
+      expect(
+        'Amul Taaza Milk 500ml'.substring(ranges[0].start, ranges[0].end),
+        '500ml',
+      );
     });
   });
 }

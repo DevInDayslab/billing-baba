@@ -18,9 +18,9 @@ class PartySync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.partiesLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.partiesLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -31,7 +31,9 @@ class PartySync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.partiesLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.partiesLocal)
+          .insertOnConflictUpdate(
             PartiesLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -68,19 +70,24 @@ class PartySync {
     }
 
     final name = _str(payload, 'name');
-    await _db.into(_db.partiesLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.partiesLocal)
+        .insertOnConflictUpdate(
           PartiesLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
             name: (name != null && name.isNotEmpty)
                 ? name
                 : (existing?.name ?? ''),
-            legalName: Value(_str(payload, 'legal_name') ?? existing?.legalName),
+            legalName: Value(
+              _str(payload, 'legal_name') ?? existing?.legalName,
+            ),
             alias: Value(_str(payload, 'alias') ?? existing?.alias),
             mobile: Value(_str(payload, 'mobile') ?? existing?.mobile),
             email: Value(_str(payload, 'email') ?? existing?.email),
-            partyGroup:
-                Value(_str(payload, 'party_group') ?? existing?.partyGroup),
+            partyGroup: Value(
+              _str(payload, 'party_group') ?? existing?.partyGroup,
+            ),
             areaCode: Value(_str(payload, 'area_code') ?? existing?.areaCode),
             partyType: Value(
               _str(payload, 'party_type') ?? existing?.partyType ?? 'customer',
@@ -89,10 +96,14 @@ class PartySync {
               _str(payload, 'party_category') ?? existing?.partyCategory,
             ),
             pricingTier: Value(
-              _str(payload, 'pricing_tier') ?? existing?.pricingTier ?? 'tier_1',
+              _str(payload, 'pricing_tier') ??
+                  existing?.pricingTier ??
+                  'tier_1',
             ),
             gstin: Value(_str(payload, 'gstin') ?? existing?.gstin),
-            stateCode: Value(_str(payload, 'state_code') ?? existing?.stateCode),
+            stateCode: Value(
+              _str(payload, 'state_code') ?? existing?.stateCode,
+            ),
             areaId: Value(_str(payload, 'area_id') ?? existing?.areaId),
             creditLimit: Value(
               _str(payload, 'credit_limit') ?? existing?.creditLimit ?? '0',
@@ -137,8 +148,9 @@ class PartySync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.partiesLocal)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.partiesLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       PartiesLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

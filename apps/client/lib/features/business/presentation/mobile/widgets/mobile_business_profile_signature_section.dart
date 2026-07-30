@@ -92,8 +92,9 @@ class _ActionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: MobileBusinessProfileSignatureSection._actionBlue
-          .withValues(alpha: 0.12),
+      color: MobileBusinessProfileSignatureSection._actionBlue.withValues(
+        alpha: 0.12,
+      ),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,

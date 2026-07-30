@@ -169,8 +169,7 @@ class PrintService {
   Future<String?> saveBytes(
     Uint8List bytes, {
     required String filename,
-  }) =>
-      _outputService.save(bytes: bytes, filename: filename);
+  }) => _outputService.save(bytes: bytes, filename: filename);
 
   String _defaultFilename(PrintRequest request) {
     return switch (request) {

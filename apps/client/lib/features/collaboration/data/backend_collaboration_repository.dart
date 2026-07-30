@@ -111,8 +111,9 @@ class BackendCollaborationRepository implements CollaborationRepository {
           break;
         }
       }
-      final joinedCount =
-          members.where((member) => member.status == MemberStatus.joined).length;
+      final joinedCount = members
+          .where((member) => member.status == MemberStatus.joined)
+          .length;
       final access = CompanyAccess(
         businessName: _companyName,
         ownerName: owner?.fullName ?? 'Business Owner',
@@ -452,7 +453,9 @@ class BackendCollaborationRepository implements CollaborationRepository {
     final entry = _companyEntryById(companies, companyId);
     final memberId = entry?.memberId;
     if (memberId == null || memberId.isEmpty) {
-      throw const CollaborationNotFoundException('Company membership not found');
+      throw const CollaborationNotFoundException(
+        'Company membership not found',
+      );
     }
     await _api.leaveCompany(memberId);
     _cache.clearDirectory();

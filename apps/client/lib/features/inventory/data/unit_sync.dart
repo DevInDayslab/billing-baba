@@ -18,9 +18,9 @@ class UnitSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.unitDefinitionsLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.unitDefinitionsLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -31,7 +31,9 @@ class UnitSync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.unitDefinitionsLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.unitDefinitionsLocal)
+          .insertOnConflictUpdate(
             UnitDefinitionsLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -55,7 +57,9 @@ class UnitSync {
 
     final name = _str(payload, 'name');
     final shortName = _str(payload, 'short_name');
-    await _db.into(_db.unitDefinitionsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.unitDefinitionsLocal)
+        .insertOnConflictUpdate(
           UnitDefinitionsLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -91,9 +95,9 @@ class UnitSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.unitDefinitionsLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.unitDefinitionsLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       UnitDefinitionsLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

@@ -174,7 +174,9 @@ class CollaborationApi {
     return data;
   }
 
-  List<Map<String, dynamic>> _readList(Response<Map<String, dynamic>> response) {
+  List<Map<String, dynamic>> _readList(
+    Response<Map<String, dynamic>> response,
+  ) {
     final data = response.data?['data'];
     if (data is! List) {
       throw DioException(

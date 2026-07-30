@@ -320,7 +320,11 @@ class AddSaleForm extends _$AddSaleForm {
 
   void updatePhone(String value) {
     final sanitized = Validators.sanitizePhoneInput(value);
-    state = state.copyWith(phone: sanitized, isDirty: true, clearSaveError: true);
+    state = state.copyWith(
+      phone: sanitized,
+      isDirty: true,
+      clearSaveError: true,
+    );
     _tryMatchPartyByPhone(sanitized);
   }
 
@@ -432,8 +436,9 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void applyPartyDetails(PartyModel party) {
-    final canViewHiddenLedger =
-        ref.read(permissionServiceProvider).canViewHiddenLedger;
+    final canViewHiddenLedger = ref
+        .read(permissionServiceProvider)
+        .canViewHiddenLedger;
     final loyaltyAvailable = LoyaltyRules.isEligibleParty(party)
         ? _cachedLoyaltyAvailable(party.id)
         : 0.0;
@@ -463,8 +468,7 @@ class AddSaleForm extends _$AddSaleForm {
       loyaltyPointsAvailable: loyaltyAvailable,
       loyaltyPointsUsed: 0,
       loyaltyPointsEnabled: false,
-      hiddenLedgerBalance:
-          canViewHiddenLedger ? party.unrecoveredAmount : 0,
+      hiddenLedgerBalance: canViewHiddenLedger ? party.unrecoveredAmount : 0,
       clearHiddenLedgerBalance: !canViewHiddenLedger,
       isDirty: true,
       clearSaveError: true,
@@ -959,8 +963,9 @@ class AddSaleForm extends _$AddSaleForm {
         if (partyId != null &&
             partyId.isNotEmpty &&
             hiddenLedgerRecoveryAmount > 0) {
-          final hiddenLedgerService =
-              await ref.read(hiddenLedgerServiceProvider.future);
+          final hiddenLedgerService = await ref.read(
+            hiddenLedgerServiceProvider.future,
+          );
           await hiddenLedgerService.recoverFromSale(
             partyId: partyId,
             saleId: result.document.id,

@@ -18,9 +18,9 @@ class CategorySync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.categoriesLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.categoriesLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -31,7 +31,9 @@ class CategorySync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.categoriesLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.categoriesLocal)
+          .insertOnConflictUpdate(
             CategoriesLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -49,7 +51,9 @@ class CategorySync {
     }
 
     final name = payload?['name']?.toString() ?? '';
-    await _db.into(_db.categoriesLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.categoriesLocal)
+        .insertOnConflictUpdate(
           CategoriesLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -71,9 +75,9 @@ class CategorySync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.categoriesLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.categoriesLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       CategoriesLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

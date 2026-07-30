@@ -28,7 +28,8 @@ class DesktopAddItemsBarcodeScreen extends ConsumerStatefulWidget {
       _AddItemsBarcodeScreenState();
 }
 
-class _AddItemsBarcodeScreenState extends ConsumerState<DesktopAddItemsBarcodeScreen> {
+class _AddItemsBarcodeScreenState
+    extends ConsumerState<DesktopAddItemsBarcodeScreen> {
   final StringBuffer _barcodeBuffer = StringBuffer();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSaving = false;
@@ -89,8 +90,9 @@ class _AddItemsBarcodeScreenState extends ConsumerState<DesktopAddItemsBarcodeSc
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final pasted = _sanitizeItemCode(data?.text?.trim() ?? '');
     if (pasted.isEmpty || pasted.length < 3) return;
-    final nextIndex =
-        ref.read(barcodeImportProvider.notifier).nextEmptyRowIndex;
+    final nextIndex = ref
+        .read(barcodeImportProvider.notifier)
+        .nextEmptyRowIndex;
     ref.read(barcodeImportProvider.notifier).updateLiveInput(nextIndex, '');
     ref.read(barcodeImportProvider.notifier).startLookup(nextIndex, pasted);
   }
@@ -110,7 +112,8 @@ class _AddItemsBarcodeScreenState extends ConsumerState<DesktopAddItemsBarcodeSc
   bool _continueKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
 
-    final isModifierHeld = HardwareKeyboard.instance.isControlPressed ||
+    final isModifierHeld =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isAltPressed ||
         HardwareKeyboard.instance.isMetaPressed;
 
@@ -337,7 +340,9 @@ class _AddItemsBarcodeScreenState extends ConsumerState<DesktopAddItemsBarcodeSc
         ? '● ONLINE: FETCHING FROM LIBRARY'
         : '● ONLINE';
     final textColor = hasError ? _statusRed : _statusGreen;
-    final backgroundColor = hasError ? _statusRedBackground : _statusGreenBackground;
+    final backgroundColor = hasError
+        ? _statusRedBackground
+        : _statusGreenBackground;
     final borderColor = hasError ? _statusRedBorder : _statusGreenBorder;
 
     return Container(

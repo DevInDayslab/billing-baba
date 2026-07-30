@@ -35,7 +35,7 @@ class BackupExporter {
     required this._storage,
     required this._metadata,
     BackupDatabasePaths? paths,
-  })  : _paths = paths ?? BackupDatabasePaths();
+  }) : _paths = paths ?? BackupDatabasePaths();
 
   final AppDatabase _database;
   final StorageService _storage;
@@ -62,11 +62,12 @@ class BackupExporter {
     final dbBytes = await dbFile.readAsBytes();
     final syncMetadata = BackupSyncMetadata(
       pullCursor: _metadata.pullCursorFor(businessId),
-      bootstrappedAt:
-          _metadata.bootstrappedAtFor(businessId)?.toUtc().toIso8601String(),
+      bootstrappedAt: _metadata
+          .bootstrappedAtFor(businessId)
+          ?.toUtc()
+          .toIso8601String(),
       localSchemaVersion: _metadata.localSchemaVersion,
-      lastServerSchemaVersion:
-          _metadata.lastServerSchemaVersionFor(businessId),
+      lastServerSchemaVersion: _metadata.lastServerSchemaVersionFor(businessId),
     );
     final deviceJson = jsonEncode({
       'device_id': _storage.read(StorageKeys.syncDeviceId),
@@ -82,11 +83,14 @@ class BackupExporter {
 
     final checksums = <String, String>{
       kBibaDatabaseEntry: _sha256(dbBytes),
-      kBibaSyncMetadataEntry: _sha256(utf8.encode(jsonEncode(syncMetadata.toJson()))),
+      kBibaSyncMetadataEntry: _sha256(
+        utf8.encode(jsonEncode(syncMetadata.toJson())),
+      ),
       kBibaDeviceEntry: _sha256(utf8.encode(deviceJson)),
       kBibaBusinessPrefsEntry: _sha256(utf8.encode(jsonEncode(businessPrefs))),
-      kBibaDocumentCountersEntry:
-          _sha256(utf8.encode(jsonEncode(documentCounters))),
+      kBibaDocumentCountersEntry: _sha256(
+        utf8.encode(jsonEncode(documentCounters)),
+      ),
       kBibaPendingQueueEntry: _sha256(utf8.encode(jsonEncode(pendingQueue))),
     };
 
@@ -168,9 +172,9 @@ class BackupExporter {
   Future<List<Map<String, dynamic>>> _exportDocumentCounters(
     String businessId,
   ) async {
-    final rows = await (_database.select(_database.localDocumentCounters)
-          ..where((t) => t.businessId.equals(businessId)))
-        .get();
+    final rows = await (_database.select(
+      _database.localDocumentCounters,
+    )..where((t) => t.businessId.equals(businessId))).get();
     return rows
         .map(
           (row) => {
@@ -183,9 +187,9 @@ class BackupExporter {
   }
 
   Future<List<Map<String, dynamic>>> _exportSyncQueue(String businessId) async {
-    final rows = await (_database.select(_database.syncQueue)
-          ..where((t) => t.businessId.equals(businessId)))
-        .get();
+    final rows = await (_database.select(
+      _database.syncQueue,
+    )..where((t) => t.businessId.equals(businessId))).get();
     return rows
         .map(
           (row) => {

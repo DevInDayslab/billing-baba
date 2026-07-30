@@ -76,7 +76,8 @@ class BrandingImageUploader extends StatelessWidget {
                             ? BorderRadius.circular(height / 2)
                             : AppRadius.smBorder,
                       ),
-                      errorWidget: placeholder ??
+                      errorWidget:
+                          placeholder ??
                           const Icon(
                             Icons.broken_image_outlined,
                             color: AppColors.textSecondary,

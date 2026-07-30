@@ -28,8 +28,8 @@ class MobilePlansSelectionState {
 
 final mobilePlansSelectionProvider =
     NotifierProvider<MobilePlansSelectionNotifier, MobilePlansSelectionState>(
-  MobilePlansSelectionNotifier.new,
-);
+      MobilePlansSelectionNotifier.new,
+    );
 
 class MobilePlansSelectionNotifier extends Notifier<MobilePlansSelectionState> {
   @override

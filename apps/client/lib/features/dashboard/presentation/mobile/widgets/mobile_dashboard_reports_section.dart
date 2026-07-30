@@ -172,8 +172,14 @@ class _ReportTile extends StatelessWidget {
 
   (IconData, Color) _iconFor(String key) => switch (key) {
     'sale_report' => (Icons.bar_chart_rounded, const Color(0xFF5D5FEF)),
-    'purchase_report' => (Icons.shopping_cart_outlined, const Color(0xFFEF6C00)),
-    'balance_sheet' => (Icons.account_balance_outlined, const Color(0xFF00897B)),
+    'purchase_report' => (
+      Icons.shopping_cart_outlined,
+      const Color(0xFFEF6C00),
+    ),
+    'balance_sheet' => (
+      Icons.account_balance_outlined,
+      const Color(0xFF00897B),
+    ),
     'profit_loss' => (Icons.pie_chart_outline_rounded, const Color(0xFF7B1FA2)),
     _ => (Icons.description_outlined, AppColors.primary),
   };

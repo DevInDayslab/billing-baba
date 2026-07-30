@@ -27,9 +27,9 @@ class SaleLineItemTableLayout {
       availableWidth - horizontalPadding * 2,
       320,
     );
-    return _columnWidthsFor(contentWidth)
-        .applyVisibility(visibility)
-        .rescaleToFit(contentWidth, visibility);
+    return _columnWidthsFor(
+      contentWidth,
+    ).applyVisibility(visibility).rescaleToFit(contentWidth, visibility);
   }
 
   /// Smallest width needed to render all visible columns at their floor sizes.
@@ -524,8 +524,8 @@ class _SaleLineItemIndexCellState extends State<SaleLineItemIndexCell> {
               tooltip: 'Delete row',
             )
           : widget.isActive
-              ? const Icon(Icons.bolt, size: 16, color: AppColors.primary)
-              : Text('${widget.rowNumber}', style: _indexStyle),
+          ? const Icon(Icons.bolt, size: 16, color: AppColors.primary)
+          : Text('${widget.rowNumber}', style: _indexStyle),
     );
   }
 }

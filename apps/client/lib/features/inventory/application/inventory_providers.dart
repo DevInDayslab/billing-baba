@@ -381,19 +381,23 @@ class ProductStockSummary {
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
-final itemStockMetricsProvider =
-    Provider.family<ItemStockMetrics, String>((ref, itemId) {
-      final item = ref.watch(inventoryItemListProvider)
-          .where((entry) => entry.id == itemId)
-          .firstOrNull;
-      return InventoryStockCalculator.metricsFromItem(item);
-    });
+final itemStockMetricsProvider = Provider.family<ItemStockMetrics, String>((
+  ref,
+  itemId,
+) {
+  final item = ref
+      .watch(inventoryItemListProvider)
+      .where((entry) => entry.id == itemId)
+      .firstOrNull;
+  return InventoryStockCalculator.metricsFromItem(item);
+});
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
 final productStockSummaryProvider =
     Provider.family<ProductStockSummary, String>((ref, itemId) {
-      final item = ref.watch(inventoryItemListProvider)
+      final item = ref
+          .watch(inventoryItemListProvider)
           .where((entry) => entry.id == itemId)
           .firstOrNull;
       final metrics = ref.watch(itemStockMetricsProvider(itemId));
@@ -511,7 +515,8 @@ final productDetailContextProvider =
       ref,
       itemId,
     ) {
-      final item = ref.watch(inventoryItemListProvider)
+      final item = ref
+          .watch(inventoryItemListProvider)
           .where((entry) => entry.id == itemId)
           .firstOrNull;
       final categories = ref.watch(categoriesProvider);

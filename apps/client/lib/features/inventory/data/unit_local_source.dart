@@ -9,12 +9,12 @@ class UnitLocalSource {
   final AppDatabase _db;
 
   Future<int> countActive(String businessId) async {
-    final rows = await (_db.select(_db.unitDefinitionsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.unitDefinitionsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            ))
+            .get();
     return rows.length;
   }
 
@@ -44,8 +44,9 @@ class UnitLocalSource {
   }
 
   Future<UnitDefinitionTableData?> getById(String id) {
-    return (_db.select(_db.unitDefinitionsLocal)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.unitDefinitionsLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<UnitDetailDto?> getActiveDetail(String id) async {
@@ -70,7 +71,9 @@ class UnitLocalSource {
     bool isDeleted = false,
     String? deviceId,
   }) {
-    return _db.into(_db.unitDefinitionsLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.unitDefinitionsLocal)
+        .insertOnConflictUpdate(
           UnitDefinitionsLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -93,8 +96,7 @@ class UnitLocalSource {
   Future<void> upsertFromDetailDto(String businessId, UnitDetailDto dto) {
     final created =
         DateTime.tryParse(dto.createdAt)?.toUtc() ?? DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
     return upsertRow(
       id: dto.id,
       businessId: businessId,
@@ -114,8 +116,9 @@ class UnitLocalSource {
     required String id,
     required DateTime deletedAt,
   }) async {
-    await (_db.update(_db.unitDefinitionsLocal)..where((t) => t.id.equals(id)))
-        .write(
+    await (_db.update(
+      _db.unitDefinitionsLocal,
+    )..where((t) => t.id.equals(id))).write(
       UnitDefinitionsLocalCompanion(
         isDeleted: const Value(true),
         deletedAt: Value(deletedAt.toUtc()),

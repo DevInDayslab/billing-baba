@@ -144,19 +144,27 @@ class PurchaseReportContent extends ConsumerWidget {
                             child: ReportSyncScrollTable(
                               minWidth: 840,
                               headerChildren: const [
-                                ReportAlignedHeaderCell(label: 'DATE', width: 100),
+                                ReportAlignedHeaderCell(
+                                  label: 'DATE',
+                                  width: 100,
+                                ),
                                 ReportAlignedHeaderCell(
                                   label: 'INVOICE NO',
                                   width: 120,
                                 ),
                                 Expanded(
-                                  child: ReportAlignedHeaderCell(label: 'PARTY'),
+                                  child: ReportAlignedHeaderCell(
+                                    label: 'PARTY',
+                                  ),
                                 ),
                                 ReportAlignedHeaderCell(
                                   label: 'PAYMENT TYPE',
                                   width: 120,
                                 ),
-                                ReportAlignedHeaderCell(label: 'STATUS', width: 100),
+                                ReportAlignedHeaderCell(
+                                  label: 'STATUS',
+                                  width: 100,
+                                ),
                                 ReportAlignedHeaderCell(
                                   label: 'AMOUNT',
                                   width: 100,

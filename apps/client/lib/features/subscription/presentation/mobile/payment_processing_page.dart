@@ -50,8 +50,9 @@ class _PaymentProcessingPageState extends ConsumerState<PaymentProcessingPage>
     if (_hasStarted) return;
     _hasStarted = true;
 
-    final result =
-        await ref.read(paymentStateProvider.notifier).processPayment();
+    final result = await ref
+        .read(paymentStateProvider.notifier)
+        .processPayment();
     if (!mounted) return;
 
     if (result == null) {
@@ -101,8 +102,9 @@ class _PaymentProcessingPageState extends ConsumerState<PaymentProcessingPage>
 
   Future<void> _retryStatus() async {
     _dialogShown = false;
-    final result =
-        await ref.read(paymentStateProvider.notifier).retryStatusCheck();
+    final result = await ref
+        .read(paymentStateProvider.notifier)
+        .retryStatusCheck();
     if (!mounted || result == null) return;
     await _handleOutcome(result.outcome);
   }

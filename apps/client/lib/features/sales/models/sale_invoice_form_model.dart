@@ -315,8 +315,7 @@ class AddSaleFormState {
   double get markupAmount =>
       items.fold<double>(0, (sum, item) => sum + item.markupAmount);
 
-  bool get hasRecoverableMarkup =>
-      hiddenLedgerBalance > 0 && markupAmount > 0;
+  bool get hasRecoverableMarkup => hiddenLedgerBalance > 0 && markupAmount > 0;
 
   double get maxRecoverableAmount {
     if (!hasRecoverableMarkup) return 0;

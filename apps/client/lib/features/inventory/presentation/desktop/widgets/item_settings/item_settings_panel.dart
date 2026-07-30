@@ -122,7 +122,9 @@ class _ItemSettingsPanelState extends ConsumerState<ItemSettingsPanel> {
               infoTooltip:
                   'Choose whether to track products, services, or both.',
               value: settings.itemTypeScope.label,
-              options: ItemTypeScope.values.map((scope) => scope.label).toList(),
+              options: ItemTypeScope.values
+                  .map((scope) => scope.label)
+                  .toList(),
               onSelected: (label) {
                 final scope = ItemTypeScope.values.firstWhere(
                   (entry) => entry.label == label,
@@ -133,7 +135,8 @@ class _ItemSettingsPanelState extends ConsumerState<ItemSettingsPanel> {
             const ItemSettingsDivider(),
             ItemSettingsToggleRow(
               label: 'Barcode scanning for items',
-              infoTooltip: 'Allow barcode scanning when adding or selling items.',
+              infoTooltip:
+                  'Allow barcode scanning when adding or selling items.',
               value: settings.barcodeScanningEnabled,
               onChanged: (value) =>
                   _update((s) => s.copyWith(barcodeScanningEnabled: value)),
@@ -204,7 +207,9 @@ class _ItemSettingsPanelState extends ConsumerState<ItemSettingsPanel> {
                     ? () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Add units before selecting a default'),
+                            content: Text(
+                              'Add units before selecting a default',
+                            ),
                           ),
                         );
                       }
@@ -245,7 +250,8 @@ class _ItemSettingsPanelState extends ConsumerState<ItemSettingsPanel> {
             const ItemSettingsDivider(),
             ItemSettingsCounterRow(
               label: 'Quantity (Upto Decimal places)',
-              infoTooltip: 'Number of decimal places shown for item quantities.',
+              infoTooltip:
+                  'Number of decimal places shown for item quantities.',
               value: settings.quantityDecimalPlaces,
               min: 0,
               max: 4,

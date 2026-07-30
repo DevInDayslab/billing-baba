@@ -333,9 +333,21 @@ class _SparkleAccent extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned(left: 0, top: 4, child: Icon(Icons.star, size: 7, color: _color)),
-          Positioned(left: 6, top: 0, child: Icon(Icons.star, size: 9, color: _color)),
-          Positioned(left: 11, top: 5, child: Icon(Icons.star, size: 6, color: _color)),
+          Positioned(
+            left: 0,
+            top: 4,
+            child: Icon(Icons.star, size: 7, color: _color),
+          ),
+          Positioned(
+            left: 6,
+            top: 0,
+            child: Icon(Icons.star, size: 9, color: _color),
+          ),
+          Positioned(
+            left: 11,
+            top: 5,
+            child: Icon(Icons.star, size: 6, color: _color),
+          ),
         ],
       ),
     );

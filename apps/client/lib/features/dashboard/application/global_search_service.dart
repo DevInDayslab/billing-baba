@@ -156,7 +156,8 @@ class GlobalSearchService {
             title: expense.transactionNo,
             subtitle: [
               expense.party,
-              if (expense.paymentType != null && expense.paymentType!.isNotEmpty)
+              if (expense.paymentType != null &&
+                  expense.paymentType!.isNotEmpty)
                 expense.paymentType!,
             ].join(' · '),
           ),

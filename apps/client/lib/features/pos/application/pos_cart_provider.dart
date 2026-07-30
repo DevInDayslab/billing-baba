@@ -293,7 +293,9 @@ class PosCart extends _$PosCart {
     } on PosRepositoryException {
       rethrow;
     } catch (error) {
-      throw PosRepositoryException(message: OfflineUiMessages.messageFor(error));
+      throw PosRepositoryException(
+        message: OfflineUiMessages.messageFor(error),
+      );
     }
   }
 

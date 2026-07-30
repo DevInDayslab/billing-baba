@@ -101,7 +101,9 @@ class _FeatureComparisonTableBody extends ConsumerWidget {
         context: context,
         backgroundColor: AppColors.surface,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.lg),
+          ),
         ),
         builder: (sheetContext) {
           return SafeArea(
@@ -113,16 +115,18 @@ class _FeatureComparisonTableBody extends ConsumerWidget {
                 children: [
                   Text(
                     'Change Plan Options',
-                    style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: Theme.of(sheetContext).textTheme.titleSmall
+                        ?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     'Duration',
-                    style: Theme.of(sheetContext).textTheme.labelMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                    style: Theme.of(sheetContext).textTheme.labelMedium
+                        ?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Wrap(
@@ -144,9 +148,10 @@ class _FeatureComparisonTableBody extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     'Platform',
-                    style: Theme.of(sheetContext).textTheme.labelMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                    style: Theme.of(sheetContext).textTheme.labelMedium
+                        ?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Wrap(

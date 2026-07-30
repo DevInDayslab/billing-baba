@@ -6,9 +6,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_invoice_settings_provider.g.dart';
 
-typedef SaleInvoiceSettingsUpdater = SaleInvoiceSettings Function(
-  SaleInvoiceSettings settings,
-);
+typedef SaleInvoiceSettingsUpdater =
+    SaleInvoiceSettings Function(
+      SaleInvoiceSettings settings,
+    );
 
 @Riverpod(keepAlive: true)
 Future<SaleInvoiceSettingsRepository> saleInvoiceSettingsRepository(
