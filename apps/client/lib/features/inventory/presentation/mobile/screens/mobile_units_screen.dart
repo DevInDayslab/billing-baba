@@ -4,6 +4,7 @@ import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_error.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/core/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_search_field.dart';
@@ -331,7 +332,12 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                         onRefresh: _onRefresh,
                         child: ListView.separated(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 96),
+                          padding: EdgeInsets.only(
+                            bottom: MobileBottomNavigation.scrollBottomPadding(
+                              context,
+                              floatingActionHeight: 44,
+                            ),
+                          ),
                           itemCount: units.length,
                           separatorBuilder: (_, __) => const Divider(
                             height: 1,
@@ -380,7 +386,7 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: AppSpacing.lg,
+            bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
             child: Center(
               child: _AddUnitFab(onPressed: () => unawaited(_addUnit())),
             ),

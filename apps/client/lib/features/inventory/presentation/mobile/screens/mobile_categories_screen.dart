@@ -4,6 +4,7 @@ import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_error.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/core/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_search_field.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_sheet_models.dart';
@@ -13,7 +14,7 @@ import 'package:billing_baba/features/inventory/application/inventory_categories
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_category_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/categories/mobile_add_category_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -65,11 +66,11 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
   }
 
   Future<void> _addCategory() {
-    return showAddCategoryDialog(context);
+    return showMobileAddCategorySheet(context);
   }
 
   Future<void> _editCategory(InventoryCategory category) {
-    return showAddCategoryDialog(context, editCategory: category);
+    return showMobileAddCategorySheet(context, editCategory: category);
   }
 
   Future<void> _confirmDeleteCategory(InventoryCategory category) async {
@@ -193,7 +194,12 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
                         onRefresh: _onRefresh,
                         child: ListView.separated(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 96),
+                          padding: EdgeInsets.only(
+                            bottom: MobileBottomNavigation.scrollBottomPadding(
+                              context,
+                              floatingActionHeight: 44,
+                            ),
+                          ),
                           itemCount: categories.length,
                           separatorBuilder: (_, __) => const Divider(
                             height: 1,
@@ -227,7 +233,7 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
           Positioned(
             left: 0,
             right: 0,
-            bottom: AppSpacing.lg,
+            bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
             child: Center(
               child: _AddCategoryFab(onPressed: () => unawaited(_addCategory())),
             ),

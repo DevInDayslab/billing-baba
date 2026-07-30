@@ -30,8 +30,10 @@ Future<void> showItemMoreOptionsSheet({
   return showMobileBottomSheet<void>(
     context: context,
     maxHeightFraction: 0.45,
-    titleWidget: _MoreOptionsHeader(
-      onClose: () => Navigator.of(context).pop(),
+    titleWidget: Builder(
+      builder: (sheetContext) => _MoreOptionsHeader(
+        onClose: () => Navigator.of(sheetContext).pop(),
+      ),
     ),
     builder: (sheetContext) {
       return _MoreOptionsGrid(

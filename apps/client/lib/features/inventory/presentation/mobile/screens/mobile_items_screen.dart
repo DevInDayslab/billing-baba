@@ -213,13 +213,7 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
           ItemMoreOption(
             label: 'Item Details',
             icon: Icons.inventory_2_outlined,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Item Detail report — mobile UI coming soon'),
-                ),
-              );
-            },
+            onTap: () => context.push(AppRoutes.reportsItemDetail),
           ),
           ItemMoreOption(
             label: 'Low Stock Summary',

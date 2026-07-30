@@ -46,6 +46,7 @@ import 'package:billing_baba/features/purchases/presentation/purchase_fa_page.da
 import 'package:billing_baba/features/purchases/presentation/purchase_order_page.dart';
 import 'package:billing_baba/features/purchases/presentation/purchase_return_page.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_item_detail_report_screen.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_stock_summary_screen.dart';
 import 'package:billing_baba/features/reports/presentation/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_credit_note_page.dart';
@@ -511,6 +512,10 @@ GoRouter createAppRouter({
                 state.uri.queryParameters['stock'],
               ),
             ),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsItemDetail,
+            builder: (context, state) => const MobileItemDetailReportScreen(),
           ),
           GoRoute(
             path: AppRoutes.reportsParty,

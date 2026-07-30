@@ -4,9 +4,16 @@ import 'dart:typed_data';
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_preview_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_footer.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_general_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_header.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_photo_button.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_online_store_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_settings_sheet.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_stock_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_image_strip.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_item_image_picker.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
@@ -17,13 +24,17 @@ import 'package:billing_baba/features/inventory/application/add_item_form_provid
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_images_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternatives_section.dart';
@@ -61,6 +72,18 @@ Future<InventoryItem?> showAddItemDialog(
   ItemType initialType = ItemType.product,
   InventoryItem? editItem,
 }) {
+  if (AppPlatform.current.isMobile) {
+    return Navigator.of(context).push<InventoryItem>(
+      MaterialPageRoute(
+        builder: (context) => AddItemDialog(
+          initialType: initialType,
+          editItem: editItem,
+          fullPage: true,
+        ),
+      ),
+    );
+  }
+
   return showFormDialog<InventoryItem>(
     context: context,
     child: AddItemDialog(initialType: initialType, editItem: editItem),
@@ -71,11 +94,13 @@ class AddItemDialog extends ConsumerStatefulWidget {
   const AddItemDialog({
     this.initialType = ItemType.product,
     this.editItem,
+    this.fullPage = false,
     super.key,
   });
 
   final ItemType initialType;
   final InventoryItem? editItem;
+  final bool fullPage;
 
   @override
   ConsumerState<AddItemDialog> createState() => _AddItemDialogState();
@@ -106,17 +131,39 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final Map<String, TextEditingController> _additionalCostControllers = {};
   final Map<String, TextEditingController> _tierPriceControllers = {};
   final _primaryImageUrlController = TextEditingController();
-  Uint8List? _pendingItemPhotoBytes;
+  final List<Uint8List> _pendingItemPhotos = [];
   bool _isSaving = false;
   String? _rackLocationId;
   String? _rackPhotoUrl;
   double _initialOpeningQty = 0;
 
-  double get _headerHeight => AppPlatform.current.isMobile
-      ? _mobileAddItemHeaderHeight
-      : FormSpacing.headerHeight;
+  bool get _isMobileFullPage => widget.fullPage && AppPlatform.current.isMobile;
 
-  int _tabCountFor(ItemType type) => type == ItemType.product ? 5 : 2;
+  double get _headerHeight {
+    if (_isMobileFullPage) return 0;
+    if (AppPlatform.current.isMobile) return _mobileAddItemHeaderHeight;
+    return FormSpacing.headerHeight;
+  }
+
+  int _tabCountFor(ItemType type) {
+    if (_isMobileFullPage) {
+      return type == ItemType.product ? 3 : 2;
+    }
+    return type == ItemType.product ? 5 : 2;
+  }
+
+  List<String> _mobileTabsFor(ItemType type) => type == ItemType.product
+      ? const ['Pricing', 'Stock', 'Online Store']
+      : const ['Pricing', 'Online Store'];
+
+  InventoryUnit? _selectedBaseUnit() {
+    final form = ref.read(addItemFormProvider);
+    final units = ref.read(unitsProvider);
+    if (form.baseUnitId == null) return null;
+    return units
+        .where((unit) => unit.id == form.baseUnitId)
+        .firstOrNull;
+  }
 
   @override
   void initState() {
@@ -135,8 +182,27 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             .setInitialType(widget.initialType);
         _ensureDefaultServiceUnit();
         unawaited(_applyDefaultItemTaxRate());
+        unawaited(_applyItemSettingsDefaults());
       }
     });
+  }
+
+  Future<void> _applyItemSettingsDefaults() async {
+    if (widget.editItem != null) return;
+    try {
+      final settings = await ref.read(itemSettingsProvider.future);
+      if (!mounted) return;
+      if (settings.descriptionEnabled &&
+          settings.descriptionText.trim().isNotEmpty &&
+          _descriptionController.text.trim().isEmpty) {
+        _descriptionController.text = settings.descriptionText;
+        ref
+            .read(addItemFormProvider.notifier)
+            .updateDescription(settings.descriptionText);
+      }
+    } on Object {
+      // Non-blocking default; user can enter description manually.
+    }
   }
 
   Future<void> _applyDefaultItemTaxRate() async {
@@ -450,7 +516,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (!mounted) return;
 
       if (savedItem != null) {
-        await _uploadPendingPhotoIfNeeded(savedItem.id);
+        await _uploadPendingPhotosIfNeeded(savedItem.id);
       }
 
       if (!mounted) return;
@@ -484,24 +550,29 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     showTransactionErrorToast(context, message: message);
   }
 
-  Future<void> _uploadPendingPhotoIfNeeded(String itemId) async {
-    final bytes = _pendingItemPhotoBytes;
-    if (bytes == null) return;
+  Future<void> _uploadPendingPhotosIfNeeded(String itemId) async {
+    if (_pendingItemPhotos.isEmpty) return;
+
+    final remote = ref.read(itemImagesProvider(itemId)).value ?? [];
+    final hasPrimary = remote.any((image) => image.isPrimary);
 
     try {
-      final prepared = await prepareMediaUploadBytes(
-        bytes: bytes,
-        mimeType: 'image/jpeg',
-      );
       final service = await ref.read(inventoryServiceProvider.future);
-      await service.uploadItemImage(
-        itemId,
-        bytes: prepared.bytes,
-        mimeType: prepared.mimeType,
-        isPrimary: true,
-      );
+      for (var i = 0; i < _pendingItemPhotos.length; i++) {
+        final prepared = await prepareMediaUploadBytes(
+          bytes: _pendingItemPhotos[i],
+          mimeType: 'image/jpeg',
+        );
+        final isPrimary = !hasPrimary && i == 0;
+        await service.uploadItemImage(
+          itemId,
+          bytes: prepared.bytes,
+          mimeType: prepared.mimeType,
+          isPrimary: isPrimary,
+        );
+      }
       if (mounted) {
-        setState(() => _pendingItemPhotoBytes = null);
+        setState(() => _pendingItemPhotos.clear());
       }
     } on Object catch (error) {
       if (!mounted) return;
@@ -511,26 +582,82 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
   }
 
-  Future<void> _pickItemPhoto() async {
-    final existingBytes = _pendingItemPhotoBytes;
-    if (existingBytes != null) {
-      final outcome = await openMobileItemImagePreview(
-        context,
-        imageBytes: existingBytes,
+  int _totalItemPhotoCount() {
+    final editId = widget.editItem?.id;
+    final remoteCount = editId != null
+        ? (ref.read(itemImagesProvider(editId)).value?.length ?? 0)
+        : 0;
+    return remoteCount + _pendingItemPhotos.length;
+  }
+
+  Future<void> _addItemPhoto() async {
+    if (_totalItemPhotoCount() >= 20) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maximum 20 images allowed')),
       );
-      if (!mounted || outcome == null) return;
-      switch (outcome) {
-        case MobileItemImagePreviewDeleted():
-          setState(() => _pendingItemPhotoBytes = null);
-        case MobileItemImagePreviewUpdated(:final bytes):
-          setState(() => _pendingItemPhotoBytes = bytes);
-      }
       return;
     }
 
     final bytes = await pickMobileItemImage(context);
     if (bytes == null || !mounted) return;
-    setState(() => _pendingItemPhotoBytes = bytes);
+    setState(() => _pendingItemPhotos.add(bytes));
+  }
+
+  Future<void> _openPendingPhoto(int index) async {
+    final bytes = _pendingItemPhotos[index];
+    final outcome = await openMobileItemImagePreview(
+      context,
+      imageBytes: bytes,
+    );
+    if (!mounted || outcome == null) return;
+    switch (outcome) {
+      case MobileItemImagePreviewDeleted():
+        setState(() => _pendingItemPhotos.removeAt(index));
+      case MobileItemImagePreviewUpdated(:final bytes):
+        setState(() => _pendingItemPhotos[index] = bytes);
+    }
+  }
+
+  Future<void> _openRemotePhoto(ItemImageModel image) async {
+    final itemId = widget.editItem?.id;
+    if (itemId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Photo'),
+        content: const Text('Remove this image from the item?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final previous = ref.read(itemImagesProvider(itemId)).value ?? [];
+    ref.read(itemImagesProvider(itemId).notifier).removeLocal(image.id);
+
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.deleteItemImage(itemId, image.id);
+      unawaited(
+        ref.read(itemImagesProvider(itemId).notifier).refreshInBackground(),
+      );
+    } on Object catch (error) {
+      ref.read(itemImagesProvider(itemId).notifier).applyOptimistic(previous);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete image: $error')),
+      );
+    }
   }
 
   void _clearControllers() {
@@ -549,7 +676,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _onlineStorePriceController.clear();
     _onlineStoreDescriptionController.clear();
     _primaryImageUrlController.clear();
-    _pendingItemPhotoBytes = null;
+    _pendingItemPhotos.clear();
     for (final controller in _rawMaterialControllers.values) {
       controller.dispose();
     }
@@ -623,6 +750,42 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         .where((brand) => brand.id == form.brandId)
         .map((brand) => brand.name)
         .firstOrNull;
+    final itemSettings =
+        ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+
+    final formBody = buildFormBody(
+      form,
+      notifier,
+      categories,
+      categoryOptions,
+      selectedCategory,
+      brands,
+      brandOptions,
+      selectedBrand,
+      itemSettings,
+    );
+
+    if (_isMobileFullPage) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(form),
+              Expanded(
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: formBody,
+                ),
+              ),
+              _buildFooter(),
+            ],
+          ),
+        ),
+      );
+    }
 
     final media = MediaQuery.sizeOf(context);
     final availableWidth = media.width - 48;
@@ -659,18 +822,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                 const Divider(height: dividerHeight, color: _cardBorder),
                 ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: bodyMaxHeight),
-                  child: SingleChildScrollView(
-                    child: buildFormBody(
-                      form,
-                      notifier,
-                      categories,
-                      categoryOptions,
-                      selectedCategory,
-                      brands,
-                      brandOptions,
-                      selectedBrand,
-                    ),
-                  ),
+                  child: SingleChildScrollView(child: formBody),
                 ),
                 const Divider(height: dividerHeight, color: _cardBorder),
                 _buildFooter(),
@@ -691,7 +843,19 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     List<BrandModel> brands,
     List<String> brandOptions,
     String? selectedBrand,
+    ItemSettings itemSettings,
   ) {
+    if (_isMobileFullPage) {
+      return buildMobileFormBody(
+        form,
+        notifier,
+        categories,
+        categoryOptions,
+        selectedCategory,
+        itemSettings,
+      );
+    }
+
     final isService = form.itemType == ItemType.service;
     final bodyPadding = EdgeInsets.fromLTRB(
       FormSpacing.page,
@@ -762,6 +926,203 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     return content;
   }
 
+  Widget buildMobileFormBody(
+    AddItemFormState form,
+    AddItemForm notifier,
+    List<InventoryCategory> categories,
+    List<String> categoryOptions,
+    String? selectedCategory,
+    ItemSettings itemSettings,
+  ) {
+    final showBarcodeScan = form.itemType == ItemType.product &&
+        itemSettings.barcodeScanningEnabled;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MobileAddItemImageStrip(
+          pendingPhotos: _pendingItemPhotos,
+          onAddPhoto: () => unawaited(_addItemPhoto()),
+          onTapPendingPhoto: (index) => unawaited(_openPendingPhoto(index)),
+          itemId: widget.editItem?.id,
+          seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
+          onTapRemotePhoto: widget.editItem != null
+              ? (image) => unawaited(_openRemotePhoto(image))
+              : null,
+        ),
+        MobileAddItemGeneralSection(
+          itemType: form.itemType,
+          itemNameController: _itemNameController,
+          itemCodeController: _itemCodeController,
+          descriptionController: _descriptionController,
+          hsnController: _hsnController,
+          itemNameError: form.itemNameError,
+          onItemNameChanged: notifier.updateItemName,
+          onItemCodeChanged: notifier.updateItemCode,
+          onDescriptionChanged: notifier.updateDescription,
+          onHsnChanged: notifier.updateHsn,
+          onAssignCode: () {
+            notifier.assignCode();
+            _itemCodeController.text = ref.read(addItemFormProvider).itemCode;
+          },
+          onSelectUnit: _openUnitPicker,
+          baseUnit: _selectedBaseUnit(),
+          categoryOptions: categoryOptions,
+          selectedCategory: selectedCategory,
+          categories: categories,
+          onCategorySelected: notifier.setCategory,
+          trackingMode: form.trackingMode,
+          onTrackingModeChanged: notifier.setTrackingMode,
+          onAddManufacturingDetails: _openManufacturingSheet,
+          onScanBarcode: showBarcodeScan ? _scanBarcode : null,
+          showCategory: itemSettings.itemCategory,
+          showDescription: itemSettings.descriptionEnabled,
+        ),
+        MobileAddItemTabBar(
+          tabs: _mobileTabsFor(form.itemType),
+          activeIndex: form.activeTab,
+          onTabSelected: (index) {
+            _tabController.index = index;
+            notifier.setActiveTab(index);
+          },
+        ),
+        KeyedSubtree(
+          key: ValueKey(
+            'mobile-add-item-tab-${form.itemType.name}-${form.activeTab}',
+          ),
+          child: _buildMobileTabContent(form, notifier, itemSettings),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileTabContent(
+    AddItemFormState form,
+    AddItemForm notifier,
+    ItemSettings itemSettings,
+  ) {
+    final tabIndex = form.activeTab;
+    if (form.itemType == ItemType.service) {
+      return switch (tabIndex) {
+        0 => MobileAddItemPricingSection(
+          isService: true,
+          mrpController: _mrpController,
+          onMrpChanged: notifier.updateMrp,
+          salePriceController: _salePriceController,
+          salePriceTaxMode: form.salePriceTaxMode,
+          onSalePriceChanged: notifier.updateSalePrice,
+          onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
+          wholesalePriceController: _wholesalePriceController,
+          wholesalePriceTaxMode: form.wholesalePriceTaxMode,
+          onWholesalePriceChanged: notifier.updateWholesalePrice,
+          onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
+          purchasePriceController: _atPriceController,
+          purchasePriceTaxMode: form.purchasePriceTaxMode,
+          onPurchasePriceChanged: notifier.updateAtPrice,
+          onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
+          taxRate: form.taxRate,
+          onTaxRateChanged: notifier.setTaxRate,
+          showWholesalePrice: itemSettings.wholesalePrice,
+        ),
+        _ => MobileAddItemOnlineStoreSection(
+          itemType: form.itemType,
+          priceController: _onlineStorePriceController,
+          descriptionController: _onlineStoreDescriptionController,
+          onPriceChanged: notifier.updateOnlineStorePrice,
+          onDescriptionChanged: notifier.updateOnlineStoreDescription,
+        ),
+      };
+    }
+
+    return switch (tabIndex) {
+      0 => MobileAddItemPricingSection(
+        isService: false,
+        mrpController: _mrpController,
+        onMrpChanged: notifier.updateMrp,
+        salePriceController: _salePriceController,
+        salePriceTaxMode: form.salePriceTaxMode,
+        onSalePriceChanged: notifier.updateSalePrice,
+        onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
+        wholesalePriceController: _wholesalePriceController,
+        wholesalePriceTaxMode: form.wholesalePriceTaxMode,
+        onWholesalePriceChanged: notifier.updateWholesalePrice,
+        onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
+        purchasePriceController: _atPriceController,
+        purchasePriceTaxMode: form.purchasePriceTaxMode,
+        onPurchasePriceChanged: notifier.updateAtPrice,
+        onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
+        taxRate: form.taxRate,
+        onTaxRateChanged: notifier.setTaxRate,
+        showWholesalePrice: itemSettings.wholesalePrice,
+      ),
+      1 => MobileAddItemStockSection(
+        openingQtyController: _openingQtyController,
+        openingPriceController: _atPriceController,
+        minStockController: _minStockController,
+        locationController: _locationController,
+        asOfDate: form.asOfDate,
+        onOpeningQtyChanged: notifier.updateOpeningQty,
+        onOpeningPriceChanged: notifier.updateAtPrice,
+        onMinStockChanged: notifier.updateMinStock,
+        onLocationChanged: notifier.updateLocation,
+        onAsOfDateSelected: notifier.setAsOfDate,
+        asOfDatePickerKey: _asOfDatePickerKey,
+      ),
+      _ => MobileAddItemOnlineStoreSection(
+        itemType: form.itemType,
+        priceController: _onlineStorePriceController,
+        descriptionController: _onlineStoreDescriptionController,
+        onPriceChanged: notifier.updateOnlineStorePrice,
+        onDescriptionChanged: notifier.updateOnlineStoreDescription,
+      ),
+    };
+  }
+
+  Future<void> _scanBarcode() async {
+    final barcode = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const MobileBarcodeScannerScreen(),
+      ),
+    );
+    if (barcode == null || !mounted) return;
+    _itemCodeController.text = barcode;
+    ref.read(addItemFormProvider.notifier).updateItemCode(barcode);
+  }
+
+  Future<void> _openManufacturingSheet() async {
+    final form = ref.read(addItemFormProvider);
+    final notifier = ref.read(addItemFormProvider.notifier);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          left: FormSpacing.page,
+          right: FormSpacing.page,
+          top: FormSpacing.page,
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom + FormSpacing.page,
+        ),
+        child: SingleChildScrollView(
+          child: ManufacturingSection(
+            form: form,
+            rawControllerFor: _rawController,
+            onUpdateRawMaterial: notifier.updateRawMaterial,
+            onRemoveRawMaterial: notifier.removeRawMaterialRow,
+            onAddRawMaterial: notifier.addRawMaterialRow,
+            onAddAdditionalCost: notifier.addAdditionalCost,
+            onUpdateAdditionalCost: notifier.updateAdditionalCost,
+            onRemoveAdditionalCost: notifier.removeAdditionalCost,
+            additionalCostControllers: _additionalCostControllers,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader(AddItemFormState form) {
     final title = widget.editItem != null ? 'Edit Item' : 'Add Item';
     final titleStyle = const TextStyle(
@@ -778,19 +1139,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     if (AppPlatform.current.isMobile) {
       return MobileAddItemHeader(
-        height: _headerHeight,
         title: title,
-        photoButton: MobileAddItemPhotoButton(
-          imageBytes: _pendingItemPhotoBytes,
-          onTap: () => unawaited(_pickItemPhoto()),
+        isProduct: form.itemType == ItemType.product,
+        onBack: () => Navigator.of(context).maybePop(),
+        onSettingsTap: () {
+          unawaited(showMobileAddItemSettingsSheet(context));
+        },
+        onProductServiceChanged: (isProduct) => _handleItemTypeChange(
+          isProduct ? ItemType.product : ItemType.service,
         ),
-        actions: MobileAddItemHeaderActions(
-          onSettingsTap: () {
-            unawaited(showMobileAddItemSettingsSheet(context));
-          },
-          onCloseTap: () => Navigator.of(context).pop(),
-        ),
-        bottom: toggle,
       );
     }
 
@@ -859,6 +1216,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     AddItemFormState form,
     AddItemForm notifier,
   ) {
+    if (_isMobileFullPage) {
+      final itemSettings =
+          ref.read(itemSettingsProvider).value ?? ItemSettings.defaults();
+      return _buildMobileTabContent(form, notifier, itemSettings);
+    }
+
     final tabIndex = form.activeTab;
     if (form.itemType == ItemType.service) {
       return switch (tabIndex) {
@@ -1017,7 +1380,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   }
 
   Widget _buildFooter() {
-    return SizedBox(
+    if (_isMobileFullPage) {
+      return MobileAddItemFooter(
+        isSaving: _isSaving,
+        onCancel: () => Navigator.of(context).maybePop(),
+        onSave: () => _save(saveAndNew: false),
+      );
+    }
+
+    final footer = SizedBox(
       height: FormSpacing.footerHeight,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
@@ -1078,6 +1449,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         ),
       ),
     );
+
+    return footer;
   }
 }
 
@@ -1123,7 +1496,6 @@ class _ProductServiceToggle extends StatelessWidget {
             width: _trackWidth,
             height: _trackHeight,
             decoration: BoxDecoration(
-              // Always primary — never grey while either side is active.
               color: AppColors.primary,
               borderRadius: BorderRadius.circular(_trackHeight / 2),
             ),

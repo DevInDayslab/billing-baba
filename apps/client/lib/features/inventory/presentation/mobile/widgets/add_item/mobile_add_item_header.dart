@@ -1,144 +1,161 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_photo_button.dart';
-import 'package:billing_baba/shared/widgets/forms/form_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// Mobile Add Item dialog header with balanced photo, title, and actions.
+/// Vyapar-style app bar for mobile Add Item.
 class MobileAddItemHeader extends StatelessWidget {
   const MobileAddItemHeader({
     required this.title,
-    required this.photoButton,
-    required this.actions,
-    required this.bottom,
+    required this.isProduct,
+    required this.onBack,
+    required this.onSettingsTap,
+    required this.onProductServiceChanged,
     super.key,
-    this.height = 84,
   });
 
   final String title;
-  final MobileAddItemPhotoButton photoButton;
-  final Widget actions;
-  final Widget bottom;
-  final double height;
-
-  static const double _titleSideInset = 76;
+  final bool isProduct;
+  final VoidCallback onBack;
+  final VoidCallback onSettingsTap;
+  final ValueChanged<bool> onProductServiceChanged;
 
   @override
   Widget build(BuildContext context) {
-    const titleStyle = TextStyle(
-      fontSize: 17,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
-    );
-
-    return SizedBox(
-      height: height,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: MobileAddItemPhotoButton.defaultSize,
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: photoButton,
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: actions,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: _titleSideInset,
+    return ColoredBox(
+      color: AppColors.surface,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 8, 0),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: onBack,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip: 'Back',
+                ),
+                Expanded(
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
-                    child: Text(
-                      title,
-                      style: titleStyle,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
+                ),
+                IconButton(
+                  onPressed: onSettingsTap,
+                  icon: const Icon(
+                    Icons.settings_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                  tooltip: 'Settings',
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            bottom,
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          _ProductServiceToggle(
+            isProduct: isProduct,
+            onChanged: onProductServiceChanged,
+          ),
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }
 }
 
-/// Compact icon actions for [MobileAddItemHeader] (settings + close).
-class MobileAddItemHeaderActions extends StatelessWidget {
-  const MobileAddItemHeaderActions({
-    required this.onSettingsTap,
-    required this.onCloseTap,
-    super.key,
+class _ProductServiceToggle extends StatelessWidget {
+  const _ProductServiceToggle({
+    required this.isProduct,
+    required this.onChanged,
   });
 
-  final VoidCallback onSettingsTap;
-  final VoidCallback onCloseTap;
+  final bool isProduct;
+  final ValueChanged<bool> onChanged;
 
-  static const double _buttonSize = 32;
+  static const _trackWidth = 44.0;
+  static const _trackHeight = 24.0;
+  static const _thumbSize = 20.0;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _CompactHeaderIconButton(
-          icon: Icons.settings_outlined,
-          tooltip: 'Settings',
-          onTap: onSettingsTap,
-        ),
-        _CompactHeaderIconButton(
-          icon: Icons.close_rounded,
-          tooltip: 'Close',
-          onTap: onCloseTap,
-        ),
-      ],
-    );
-  }
-}
-
-class _CompactHeaderIconButton extends StatelessWidget {
-  const _CompactHeaderIconButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: AppRadius.smBorder,
-          child: SizedBox(
-            width: MobileAddItemHeaderActions._buttonSize,
-            height: MobileAddItemHeaderActions._buttonSize,
-            child: Icon(
-              icon,
-              size: 20,
-              color: AppColors.textSecondary,
+        GestureDetector(
+          onTap: () => onChanged(true),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Text(
+              'Product',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isProduct ? AppColors.textPrimary : AppColors.textSecondary,
+              ),
             ),
           ),
         ),
-      ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () => onChanged(!isProduct),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            width: _trackWidth,
+            height: _trackHeight,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(_trackHeight / 2),
+            ),
+            child: AnimatedAlign(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment:
+                  isProduct ? Alignment.centerLeft : Alignment.centerRight,
+              child: Container(
+                width: _thumbSize,
+                height: _thumbSize,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 2,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () => onChanged(false),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Text(
+              'Services',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: !isProduct ? AppColors.textPrimary : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -69,6 +69,7 @@ abstract final class AppRoutes {
   static const reportsPurchase = '/reports/purchase';
   static const reportsStock = '/reports/stock';
   static const reportsStockSummary = '/reports/stock-summary';
+  static const reportsItemDetail = '/reports/item-detail';
   static const reportsParty = '/reports/party';
   static const reportsGst = '/reports/gst';
   static const collaboration = '/collaboration';
