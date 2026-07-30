@@ -114,6 +114,7 @@ flutter:
     - assets/images/
     - assets/illustrations/
     - assets/animations/
+    - assets/certs/isrgrootx1.pem
     - .env
 
 # Flutter Launcher Icons
