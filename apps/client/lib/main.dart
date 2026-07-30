@@ -1,17 +1,16 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:billing_baba/app.dart';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/logging/device_info_collector.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
+import 'package:billing_baba/core/network/windows_cert_injector.dart';
 import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,7 +19,7 @@ Future<void> main() async {
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await _trustLetsEncryptRoot();
+      WindowsCertInjector.injectSystemCertificates();
       await configureDesktopWindow();
       GoogleFonts.config.allowRuntimeFetching = false;
 
@@ -93,20 +92,6 @@ Future<void> _logStartupDiagnostics() async {
     );
   } on Object catch (e, st) {
     LoggingService.instance.error('Startup diagnostics failed', e, st);
-  }
-}
-
-/// Trusts Let's Encrypt ISRG Root X1 so HTTPS works on hosts with an outdated
-/// system CA store (notably older Windows 10 VMs).
-Future<void> _trustLetsEncryptRoot() async {
-  try {
-    final certData = await rootBundle.load('assets/certs/isrgrootx1.pem');
-    SecurityContext.defaultContext.setTrustedCertificatesBytes(
-      certData.buffer.asUint8List(),
-    );
-  } on Object catch (e, st) {
-    // Logging may not be initialized yet; fall back to debugPrint.
-    debugPrint('Failed to load ISRG Root X1 certificate: $e\n$st');
   }
 }
 

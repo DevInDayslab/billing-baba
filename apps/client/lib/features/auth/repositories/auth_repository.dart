@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
@@ -5,6 +7,7 @@ import 'package:billing_baba/core/network/interceptors.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthRepository {
@@ -22,6 +25,10 @@ class AuthRepository {
           receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         ),
+      )
+      ..httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () =>
+            HttpClient(context: SecurityContext.defaultContext),
       )
       ..interceptors.addAll([
         ...buildInterceptors(),

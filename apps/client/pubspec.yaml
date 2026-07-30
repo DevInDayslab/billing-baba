@@ -76,6 +76,8 @@ dependencies:
 
   # Desktop Razorpay checkout (InAppWebView host + netbanking popups).
   flutter_inappwebview: ^6.1.5
+  win32: ^6.3.0
+  ffi: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -114,7 +116,6 @@ flutter:
     - assets/images/
     - assets/illustrations/
     - assets/animations/
-    - assets/certs/isrgrootx1.pem
     - .env
 
 # Flutter Launcher Icons
