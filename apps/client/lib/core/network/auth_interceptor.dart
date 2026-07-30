@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/http_logging_interceptor.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
@@ -66,8 +65,7 @@ class AuthInterceptor extends Interceptor {
           receiveTimeout: options.receiveTimeout,
         ),
       )..httpClientAdapter = IOHttpClientAdapter(
-          createHttpClient: () =>
-              HttpClient(context: SecurityContext.defaultContext),
+          createHttpClient: createPinnedApiHttpClient,
         );
       final response = await dio.fetch<dynamic>(options);
       return handler.resolve(response);

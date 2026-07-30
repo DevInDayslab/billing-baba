@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/app_constants.dart';
 import 'package:billing_baba/core/network/auth_interceptor.dart';
 import 'package:billing_baba/core/network/business_profile_debug_interceptor.dart';
 import 'package:billing_baba/core/network/interceptors.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
@@ -25,8 +24,7 @@ class ApiClient {
         headers: {'Content-Type': 'application/json'},
       )
       ..httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () =>
-            HttpClient(context: SecurityContext.defaultContext),
+        createHttpClient: createPinnedApiHttpClient,
       )
       ..interceptors.addAll([
         if (storage != null)
