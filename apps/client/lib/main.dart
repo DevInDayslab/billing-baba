@@ -17,11 +17,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 Future<void> main() async {
+  // Temporary BoringSSL cert bypass — must run before any network I/O.
+  installSslBypass();
+
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      // TODO: remove before production — temporary BoringSSL cert bypass.
-      installSslBypass();
       WindowsCertInjector.injectSystemCertificates();
       await configureDesktopWindow();
       GoogleFonts.config.allowRuntimeFetching = false;
