@@ -3,14 +3,8 @@ import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../db/client';
 import { salesDocuments } from '../../../db/schema/sales/tables';
 import { purchaseDocuments } from '../../../db/schema/purchases/tables';
-import type {
-  ApplyOutcome,
-  RowMutationInput,
-} from './sync-apply.types';
-import type {
-  RowEntityDef,
-  SyncedRowBase,
-} from './row-entities';
+import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
+import type { RowEntityDef, SyncedRowBase } from './row-entities';
 import { getRowEntity, listRowEntities } from './row-entities';
 
 export type {
@@ -52,13 +46,20 @@ export class RowApplier {
       };
     }
 
-    const existing = await this.findRow(definition, input.businessId, input.entityId);
+    const existing = await this.findRow(
+      definition,
+      input.businessId,
+      input.entityId,
+    );
     if (input.entityType === 'sales_document_lines') {
       const lineGuard = await this.guardSalesLineParentDraft(input, existing);
       if (lineGuard) return lineGuard;
     }
     if (input.entityType === 'purchase_document_lines') {
-      const lineGuard = await this.guardPurchaseLineParentDraft(input, existing);
+      const lineGuard = await this.guardPurchaseLineParentDraft(
+        input,
+        existing,
+      );
       if (lineGuard) return lineGuard;
     }
     if (definition.beforeApply) {
@@ -305,9 +306,7 @@ export class RowApplier {
         entity_id: input.entityId,
         incoming_sync_version: input.baseSyncVersion,
         server_sync_version: existing.syncVersion,
-        server_payload: existing.isDeleted
-          ? null
-          : definition.toPayload(row),
+        server_payload: existing.isDeleted ? null : definition.toPayload(row),
         server_updated_at: existing.updatedAt.toISOString(),
         suggested_resolution: 'retry_with_server_version',
         conflict_id: randomUUID(),
@@ -324,10 +323,7 @@ export class RowApplier {
       .select()
       .from(definition.table)
       .where(
-        and(
-          eq(definition.businessId, businessId),
-          eq(definition.id, entityId),
-        ),
+        and(eq(definition.businessId, businessId), eq(definition.id, entityId)),
       )
       .limit(1);
 
@@ -373,9 +369,7 @@ export class RowApplier {
         ? (existing as { salesDocumentId?: string }).salesDocumentId
         : undefined;
     const parentId =
-      typeof payloadParentId === 'string'
-        ? payloadParentId
-        : existingParentId;
+      typeof payloadParentId === 'string' ? payloadParentId : existingParentId;
 
     if (!parentId) {
       return {
@@ -459,9 +453,7 @@ export class RowApplier {
         ? (existing as { purchaseDocumentId?: string }).purchaseDocumentId
         : undefined;
     const parentId =
-      typeof payloadParentId === 'string'
-        ? payloadParentId
-        : existingParentId;
+      typeof payloadParentId === 'string' ? payloadParentId : existingParentId;
 
     if (!parentId) {
       return {

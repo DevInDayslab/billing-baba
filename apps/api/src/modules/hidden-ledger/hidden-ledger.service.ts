@@ -4,7 +4,10 @@ import { AppError } from '../../shared/errors/app-error';
 import { canViewHiddenLedger } from '../../shared/hidden-ledger/hidden-ledger-access';
 import type { UserRole } from '../auth/auth.types';
 import { HiddenLedgerRepository } from './hidden-ledger.repository';
-import type { ListHiddenLedgerEntriesQuery, ListHiddenLedgerRecoveriesQuery } from './hidden-ledger.schema';
+import type {
+  ListHiddenLedgerEntriesQuery,
+  ListHiddenLedgerRecoveriesQuery,
+} from './hidden-ledger.schema';
 import type {
   HiddenLedgerEntryDetailRecord,
   HiddenLedgerEntryRecord,

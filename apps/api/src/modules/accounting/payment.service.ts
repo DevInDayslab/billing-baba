@@ -119,7 +119,8 @@ export class PaymentService {
 
     return this.db.transaction(async (tx) => {
       const repo = new PaymentRepository(tx as unknown as typeof this.db);
-      const isHiddenLedgerRoute = input.short_payment_handling === 'unrecovered';
+      const isHiddenLedgerRoute =
+        input.short_payment_handling === 'unrecovered';
       const shortfallAmount = isHiddenLedgerRoute
         ? parseMoney(input.shortfall_amount ?? '0')
         : 0;
@@ -445,7 +446,9 @@ export class PaymentService {
       );
     }
 
-    if (Math.abs(allocatedAmount - (paymentAmount + shortfallAmount)) > 0.0001) {
+    if (
+      Math.abs(allocatedAmount - (paymentAmount + shortfallAmount)) > 0.0001
+    ) {
       throw new AppError(
         'VALIDATION_ERROR',
         'Allocated amount must equal payment amount plus shortfall for hidden ledger routing',

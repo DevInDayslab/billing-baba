@@ -14,7 +14,11 @@ export const createItemRoutes = (config: AppConfig): FastifyPluginAsync => {
 
     app.get('/', { preHandler }, controller.list);
     app.post('/', { preHandler }, controller.create);
-    app.get('/alternatives-index', { preHandler }, controller.getAlternativesIndex);
+    app.get(
+      '/alternatives-index',
+      { preHandler },
+      controller.getAlternativesIndex,
+    );
 
     app.get('/:id/images', { preHandler }, controller.listImages);
     app.post('/:id/images', { preHandler }, controller.addImage);

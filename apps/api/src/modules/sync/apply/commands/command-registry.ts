@@ -30,9 +30,7 @@ export function isSupportedSyncCommand(
   return command in COMMAND_HANDLERS;
 }
 
-export function getCommandHandler(
-  command: string,
-): CommandHandler | undefined {
+export function getCommandHandler(command: string): CommandHandler | undefined {
   if (!isSupportedSyncCommand(command)) return undefined;
   return COMMAND_HANDLERS[command];
 }

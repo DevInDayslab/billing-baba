@@ -1,4 +1,15 @@
-import { and, asc, count, desc, eq, ilike, inArray, ne, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  ne,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { payments } from '../../db/schema/accounting/tables';
 import { parties, partyPhones } from '../../db/schema/crm/tables';
@@ -303,7 +314,10 @@ export class PartyRepository {
       businessId,
       partyId,
     );
-    const additionalPhones = await this.listAdditionalPhones(businessId, partyId);
+    const additionalPhones = await this.listAdditionalPhones(
+      businessId,
+      partyId,
+    );
 
     return this.toRecord(row, balance ?? undefined, {
       includeHiddenLedgerBalance: true,
@@ -413,7 +427,10 @@ export class PartyRepository {
       businessId,
       partyId,
     );
-    const additionalPhones = await this.listAdditionalPhones(businessId, partyId);
+    const additionalPhones = await this.listAdditionalPhones(
+      businessId,
+      partyId,
+    );
 
     return this.toRecord(row, balance ?? undefined, {
       includeHiddenLedgerBalance: true,
@@ -597,7 +614,6 @@ export class PartyRepository {
       await this.outstandingRepository.listPartyBalances(businessId);
     return new Map(balances.map((row) => [row.party_id, row.balance]));
   }
-
 
   async getProfileMediaAssetId(
     businessId: string,

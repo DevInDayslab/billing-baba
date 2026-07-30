@@ -71,8 +71,8 @@ describe.skipIf(!canRunDbTests)('Sales return sync integration', () => {
         short_name: `SR${suffix.slice(0, 4)}`,
       },
     });
-    unitShortName = (unitRes.json() as { data: { short_name: string } })
-      .data.short_name;
+    unitShortName = (unitRes.json() as { data: { short_name: string } }).data
+      .short_name;
 
     const itemRes = await app.inject({
       method: 'POST',

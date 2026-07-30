@@ -1,5 +1,11 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, pgTable, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  pgTable,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
 import { syncedBusinessColumns } from '../columns';
 import { items } from './tables';

@@ -21,10 +21,7 @@ import {
   salesDocumentLines,
   salesDocuments,
 } from '../../../db/schema/sales/tables';
-import {
-  businessSettings,
-  taxRates,
-} from '../../../db/schema/settings/tables';
+import { businessSettings, taxRates } from '../../../db/schema/settings/tables';
 import { guardDraftDocumentRow } from './document-row-guards';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
@@ -359,9 +356,10 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
   }),
 };
 
-export const REGISTERED_ROW_ENTITY_TYPES = Object.keys(
-  ROW_ENTITIES,
-) as [string, ...string[]];
+export const REGISTERED_ROW_ENTITY_TYPES = Object.keys(ROW_ENTITIES) as [
+  string,
+  ...string[],
+];
 
 export function getRowEntity(entityType: string): RowEntityDef | undefined {
   return ROW_ENTITIES[entityType];

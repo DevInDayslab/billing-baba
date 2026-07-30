@@ -40,7 +40,9 @@ export const businessSettings = pgTable(
     creditLimitAction: creditLimitActionEnum('credit_limit_action')
       .notNull()
       .default('warn'),
-    pricingTierLabels: jsonb('pricing_tier_labels').$type<Record<string, string>>(),
+    pricingTierLabels: jsonb('pricing_tier_labels').$type<
+      Record<string, string>
+    >(),
     defaultInvoiceTaxRate: money('default_invoice_tax_rate'),
   },
   (table) => [
@@ -63,7 +65,12 @@ export const taxRates = pgTable(
     isDefault: boolean('is_default').notNull().default(false),
   },
   (table) => [
-    syncPullIndex('tax_rates', table.businessId, table.updatedAt, table.isDeleted),
+    syncPullIndex(
+      'tax_rates',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 

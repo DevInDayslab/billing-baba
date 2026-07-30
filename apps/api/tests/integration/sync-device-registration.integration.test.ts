@@ -5,11 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import { loadAppConfig } from '../../src/config/app_config';
 import { getDb } from '../../src/db/client';
 import { AuthRepository } from '../../src/modules/auth/auth.repository';
-import {
-  createTestApp,
-  jsonAuthHeaders,
-  uniqueSuffix,
-} from '../helpers/app';
+import { createTestApp, jsonAuthHeaders, uniqueSuffix } from '../helpers/app';
 import { canRunDbTests, INTEGRATION_TIMEOUT_MS } from '../helpers/env';
 
 function syncHeaders(token: string, deviceId: string): Record<string, string> {
@@ -134,9 +130,8 @@ describe.skipIf(!canRunDbTests)('Sync device registration integration', () => {
         },
       });
       expect(createBusiness.statusCode).toBe(201);
-      const businessBId = (
-        createBusiness.json() as { data: { id: string } }
-      ).data.id;
+      const businessBId = (createBusiness.json() as { data: { id: string } })
+        .data.id;
 
       const tokenB = await refreshForBusiness(
         app,
@@ -145,13 +140,9 @@ describe.skipIf(!canRunDbTests)('Sync device registration integration', () => {
       );
       expect(businessIdFromToken(tokenB)).toBe(businessBId);
 
-      const regB = await registerDevice(
-        app,
-        syncPrefix,
-        tokenB,
-        deviceId,
-        { device_name: `device-b-${suffix}` },
-      );
+      const regB = await registerDevice(app, syncPrefix, tokenB, deviceId, {
+        device_name: `device-b-${suffix}`,
+      });
       expect(regB.statusCode).toBe(200);
       const regBBody = regB.json() as {
         data: { device_id: string; business_id: string };
@@ -285,9 +276,8 @@ describe.skipIf(!canRunDbTests)('Sync device registration integration', () => {
         },
       });
       expect(createBusiness.statusCode).toBe(201);
-      const businessBId = (
-        createBusiness.json() as { data: { id: string } }
-      ).data.id;
+      const businessBId = (createBusiness.json() as { data: { id: string } })
+        .data.id;
 
       const tokenB = await refreshForBusiness(
         app,

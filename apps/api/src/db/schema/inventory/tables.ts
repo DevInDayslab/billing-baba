@@ -36,7 +36,12 @@ export const categories = pgTable(
     name: text('name').notNull(),
   },
   (table) => [
-    syncPullIndex('categories', table.businessId, table.updatedAt, table.isDeleted),
+    syncPullIndex(
+      'categories',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 
@@ -206,7 +211,12 @@ export const godowns = pgTable(
     isDefault: boolean('is_default').notNull().default(false),
   },
   (table) => [
-    syncPullIndex('godowns', table.businessId, table.updatedAt, table.isDeleted),
+    syncPullIndex(
+      'godowns',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 
