@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
@@ -12,6 +13,7 @@ import 'package:billing_baba/features/business/presentation/mobile/widgets/mobil
 import 'package:billing_baba/features/business/presentation/mobile/widgets/mobile_business_profile_signature_section.dart';
 import 'package:billing_baba/features/business/presentation/mobile/widgets/mobile_business_profile_tab_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -345,6 +347,12 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           controller: _businessNameController,
           onChanged: () => setState(() {}),
           errorText: formState.errorFor('name'),
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(Validators.businessNameMaxLength),
+            FilteringTextInputFormatter.allow(
+              Validators.businessNameInputPattern,
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.lg),
         MobileBusinessProfileLabeledField(
@@ -352,6 +360,11 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           controller: _gstinController,
           onChanged: () => setState(() {}),
           errorText: formState.errorFor('gstin'),
+          inputFormatters: [
+            const UpperCaseTextFormatter(),
+            LengthLimitingTextInputFormatter(15),
+            FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
+          ],
           suffix: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -376,6 +389,10 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           onChanged: () => setState(() {}),
           keyboardType: TextInputType.phone,
           errorText: formState.errorFor('phone'),
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10),
+          ],
         ),
         const SizedBox(height: AppSpacing.lg),
         MobileBusinessProfileLabeledField(
@@ -390,6 +407,10 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           onChanged: () => setState(() {}),
           keyboardType: TextInputType.emailAddress,
           errorText: formState.errorFor('email'),
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(200),
+            FilteringTextInputFormatter.allow(RegExp(r'[\w\-.@+'']')),
+          ],
         ),
         const SizedBox(height: AppSpacing.lg),
         MobileBusinessProfileLabeledField(
@@ -407,6 +428,10 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           onChanged: () => setState(() {}),
           keyboardType: TextInputType.number,
           errorText: formState.errorFor('pincode'),
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(6),
+          ],
         ),
         const SizedBox(height: AppSpacing.lg),
         MobileBusinessProfileLabeledField(
@@ -463,6 +488,10 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           controller: _upiIdController,
           onChanged: () => setState(() {}),
           errorText: formState.errorFor('upi_id'),
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(100),
+            FilteringTextInputFormatter.allow(RegExp(r'[\w.\-@]')),
+          ],
         ),
       ],
     );

@@ -397,8 +397,15 @@ class _EditBusinessFormContent extends StatelessWidget {
               controller: businessNameController,
               textCapitalization: TextCapitalization.words,
               serverError: formState.errorFor('name'),
-              validator: (value) =>
-                  Validators.required(value, fieldName: 'Business name'),
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(
+                  Validators.businessNameMaxLength,
+                ),
+                FilteringTextInputFormatter.allow(
+                  Validators.businessNameInputPattern,
+                ),
+              ],
+              validator: Validators.businessName,
             ),
             right: BusinessFormField(
               icon: Icons.receipt_long_outlined,

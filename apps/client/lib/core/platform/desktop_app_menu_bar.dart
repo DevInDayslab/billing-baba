@@ -60,17 +60,32 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
       children: [
         Material(
           color: Theme.of(context).colorScheme.surface,
-          child: MenuBar(
-            style: const MenuStyle(
-              backgroundColor: WidgetStatePropertyAll(Colors.transparent),
-              elevation: WidgetStatePropertyAll(0),
-              padding: WidgetStatePropertyAll(
-                EdgeInsets.symmetric(horizontal: 4),
-              ),
-            ),
-            children: _materialMenus(
-              canBusiness: canBusiness,
-              canLogout: canLogout,
+          // MenuBar requires an Overlay ancestor. MaterialApp.builder wraps the
+          // Navigator, so the menu sits above the navigator overlay — provide one
+          // locally and allow submenu popups to paint outside the bar height.
+          child: SizedBox(
+            height: kMinInteractiveDimension,
+            child: Overlay(
+              clipBehavior: Clip.none,
+              initialEntries: [
+                OverlayEntry(
+                  builder: (context) => MenuBar(
+                    style: const MenuStyle(
+                      backgroundColor: WidgetStatePropertyAll(
+                        Colors.transparent,
+                      ),
+                      elevation: WidgetStatePropertyAll(0),
+                      padding: WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                    ),
+                    children: _materialMenus(
+                      canBusiness: canBusiness,
+                      canLogout: canLogout,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

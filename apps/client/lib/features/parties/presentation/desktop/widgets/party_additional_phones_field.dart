@@ -12,6 +12,8 @@ typedef AdditionalPhoneFieldBuilder =
       required VoidCallback onChanged,
     });
 
+const kMaxPartyAdditionalPhones = 4;
+
 class PartyAdditionalPhonesField extends StatelessWidget {
   const PartyAdditionalPhonesField({
     required this.controllers,
@@ -20,6 +22,7 @@ class PartyAdditionalPhonesField extends StatelessWidget {
     required this.onRemove,
     required this.onChanged,
     required this.fieldBuilder,
+    this.maxCount = kMaxPartyAdditionalPhones,
     super.key,
   });
 
@@ -29,6 +32,7 @@ class PartyAdditionalPhonesField extends StatelessWidget {
   final void Function(int index) onRemove;
   final void Function(int index) onChanged;
   final AdditionalPhoneFieldBuilder fieldBuilder;
+  final int maxCount;
 
   @override
   Widget build(BuildContext context) {
@@ -44,19 +48,20 @@ class PartyAdditionalPhonesField extends StatelessWidget {
             onChanged: () => onChanged(index),
           ),
         ],
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Add another number'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
+        if (controllers.length < maxCount)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add another number'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
           ),
-        ),
       ],
     );
   }

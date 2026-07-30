@@ -582,15 +582,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final preferredWidth = availableWidth >= FormSpacing.dialogWidth
         ? FormSpacing.dialogWidth
         : availableWidth.clamp(0, FormSpacing.dialogMaxWidth);
-    final isService = form.itemType == ItemType.service;
 
     return ConstrainedBox(
-      constraints: isService
-          ? BoxConstraints(maxWidth: preferredWidth.toDouble())
-          : BoxConstraints(
-              maxWidth: preferredWidth.toDouble(),
-              maxHeight: media.height * FormSpacing.dialogMaxHeightFactor,
-            ),
+      constraints: BoxConstraints(
+        maxWidth: preferredWidth.toDouble(),
+        maxHeight: media.height * FormSpacing.dialogMaxHeightFactor,
+      ),
       child: Material(
         color: AppColors.surface,
         borderRadius: AppRadius.lgBorder,
@@ -601,32 +598,20 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           children: [
             _buildHeader(form),
             const Divider(height: 1, color: _cardBorder),
-            if (isService)
-              buildFormBody(
-                form,
-                notifier,
-                categories,
-                categoryOptions,
-                selectedCategory,
-                brands,
-                brandOptions,
-                selectedBrand,
-              )
-            else
-              Flexible(
-                child: SingleChildScrollView(
-                  child: buildFormBody(
-                    form,
-                    notifier,
-                    categories,
-                    categoryOptions,
-                    selectedCategory,
-                    brands,
-                    brandOptions,
-                    selectedBrand,
-                  ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: buildFormBody(
+                  form,
+                  notifier,
+                  categories,
+                  categoryOptions,
+                  selectedCategory,
+                  brands,
+                  brandOptions,
+                  selectedBrand,
                 ),
               ),
+            ),
             const Divider(height: 1, color: _cardBorder),
             _buildFooter(),
           ],
@@ -645,15 +630,14 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     List<String> brandOptions,
     String? selectedBrand,
   ) {
-    final isService = form.itemType == ItemType.service;
-    final bodyPadding = EdgeInsets.fromLTRB(
+    const bodyPadding = EdgeInsets.fromLTRB(
       FormSpacing.page,
       FormSpacing.section,
       FormSpacing.page,
-      isService ? FormSpacing.section : FormSpacing.page,
+      FormSpacing.page,
     );
 
-    final content = Padding(
+    return Padding(
       padding: bodyPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -710,20 +694,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           ),
         ],
       ),
-    );
-
-    if (!isService) return content;
-
-    // Service forms are short — size to content, scroll only if viewport is tight.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: content,
-          ),
-        );
-      },
     );
   }
 

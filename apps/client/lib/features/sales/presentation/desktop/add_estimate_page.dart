@@ -536,7 +536,7 @@ class _RequiredLabeledField extends StatelessWidget {
       children: [
         RichText(
           text: TextSpan(
-            style: saleFieldLabelStyle.copyWith(color: AppColors.primary),
+            style: saleFieldLabelStyle,
             children: [
               TextSpan(text: label),
               const TextSpan(

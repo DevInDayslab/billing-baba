@@ -40,6 +40,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-025: Sync Contract (Hybrid + LOCAL Remap + Command Idempotency)](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
 - [ADR-026: MVP Sync Simplicity (No Client Registry)](#adr-026-mvp-sync-simplicity-no-client-registry)
 - [ADR-027: Phase 2 Command Sync Foundation](#adr-027-phase-2-command-sync-foundation)
+- [ADR-041: Allow Negative Stock on Sales](#adr-041-allow-negative-stock-on-sales)
 
 ---
 
@@ -74,6 +75,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-025 | Sync Contract (Hybrid + LOCAL Remap + Command Idempotency) | July 2026 | Accepted |
 | ADR-026 | MVP Sync Simplicity (No Client Registry) | July 2026 | Accepted |
 | ADR-027 | Phase 2 Command Sync Foundation | July 2026 | Accepted |
+| ADR-041 | Allow Negative Stock on Sales | July 2026 | Accepted |
 
 ---
 
@@ -1611,6 +1613,35 @@ Offline-first clients need out-of-band full-device backup and restore (per [10-o
 - Backup module lives under `features/backup/` with exporter/importer services and a settings UI at `/settings/backup`.
 
 **References:** [11-sync-api-contract.md](11-sync-api-contract.md) (out-of-band backup scope)
+
+---
+
+## ADR-041: Allow Negative Stock on Sales
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-30 |
+| **Status** | Accepted |
+| **Author** | Billing Baba team |
+
+### Context
+
+Sale invoices showed an out-of-stock warning for zero-stock items, but clicking **Continue Anyway** could clear the line due to a form-state race (tax fallback provider reset) and clubbing logic treating name-only rows as confirmed lines. Even when the UI allowed override, the API rejected finalize with `INSUFFICIENT_STOCK` when stock would go below zero.
+
+### Decision
+
+1. **Sales may oversell** — finalize deducts stock even when quantity goes negative; negative balances are shown in inventory reports and UI.
+2. **Remove server hard block** — `recordMovementAndUpdateStock` no longer throws `INSUFFICIENT_STOCK` for `newQty < 0`.
+3. **Keep out-of-stock dialog** as a warning with alternatives and **Continue Anyway**; fix client flow so the selected item is applied reliably (no `ref.watch` tax provider in form `build()`, await `selectCatalogItem`, resolve line by id after async).
+4. **Client local stock** already allowed negative quantities; no schema change.
+
+### Consequences
+
+- Businesses can bill items before purchase/receipt; stock reflects backorders as negative quantity.
+- Sync no longer fails on oversold finalize; users must reconcile stock via purchases or adjustments.
+- POS cart still blocks adding beyond available stock (unchanged in this ADR).
+
+**References:** [05-api.md](05-api.md), [ADR-016: Event-based Inventory Ledger](#adr-016-event-based-inventory-ledger)
 
 ---
 

@@ -40,7 +40,6 @@ DeliveryChallanFormState _initialChallanFormState() {
 class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   @override
   DeliveryChallanFormState build() {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _initialChallanFormState();
   }
 
@@ -325,7 +324,11 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -333,9 +336,15 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
+    );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
+      targetIndex: targetIndex,
       appliedLine: applied,
       nextLineId: _nextChallanLineItemId,
     );
