@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_button.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/app_button.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
@@ -60,7 +60,7 @@ class _MobileItemDetailsScreenState
   }
 
   InventoryItem? _resolveDisplayItem() {
-    final listItem = (ref.watch(inventoryItemsProvider).value ?? [])
+    final listItem = ref.watch(inventoryItemListProvider)
         .where((entry) => entry.id == widget.itemId)
         .firstOrNull;
     final detailAsync = ref.watch(productDetailProvider(widget.itemId));

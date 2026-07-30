@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/layout/dashboard_navigation.dart';
+import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -43,8 +43,8 @@ class MobileDashboardPage extends ConsumerWidget {
               period: period,
               onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
             ),
-            data: (dashboard) => _DashboardBody(
-              dashboard: dashboard,
+            data: (viewState) => _DashboardBody(
+              dashboard: viewState.dashboard,
               period: period,
             ),
           ),

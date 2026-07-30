@@ -50,7 +50,7 @@ void main() {
         InventoryErrorMapper.messageForSaveItem(
           const InventoryOfflineException(),
         ),
-        contains('Unable to reach the server'),
+        contains("You're offline"),
       );
     });
   });

@@ -56,7 +56,7 @@ class MobileStockSummaryFiltersNotifier extends Notifier<MobileStockSummaryFilte
 }
 
 final mobileStockSummaryProductsProvider = Provider<List<InventoryItem>>((ref) {
-  return (ref.watch(inventoryItemsProvider).value ?? [])
+  return ref.watch(inventoryItemListProvider)
       .where((item) => item.type == ItemType.product)
       .toList();
 });

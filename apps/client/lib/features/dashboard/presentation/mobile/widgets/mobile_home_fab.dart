@@ -14,6 +14,9 @@ class MobileHomeAddSaleFab extends StatelessWidget {
   final String label;
   final IconData icon;
 
+  /// Shared accent used by inventory/utility mobile FABs and primary actions.
+  static const accentRed = AppColors.error;
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
@@ -57,7 +57,7 @@ class _MobileItemDetailReportScreenState
   void _syncItemSearchFromFilters() {
     final itemId = ref.read(reportFiltersProvider).itemId;
     if (itemId == null) return;
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     final item = items.where((entry) => entry.id == itemId).firstOrNull;
     if (item != null) {
       _itemSearchController.text = item.name;
@@ -105,7 +105,7 @@ class _MobileItemDetailReportScreenState
   }
 
   Future<void> _openItemPicker() async {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items = ref.read(inventoryItemListProvider);
     if (items.isEmpty) return;
 
     final selected = await showModalBottomSheet<InventoryItem>(

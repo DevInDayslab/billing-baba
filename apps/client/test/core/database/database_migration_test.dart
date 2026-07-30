@@ -33,7 +33,7 @@ void main() {
     final version = await upgraded
         .customSelect('PRAGMA user_version')
         .getSingle();
-    expect(version.data['user_version'], 16);
+    expect(version.data['user_version'], AppDatabase.currentSchemaVersion);
 
     await upgraded.close();
     await tempDir.delete(recursive: true);
@@ -46,7 +46,7 @@ void main() {
     final db = AppDatabase(NativeDatabase(dbFile));
     final version =
         await db.customSelect('PRAGMA user_version').getSingle();
-    expect(version.data['user_version'], 16);
+    expect(version.data['user_version'], AppDatabase.currentSchemaVersion);
 
     await db.close();
     await tempDir.delete(recursive: true);

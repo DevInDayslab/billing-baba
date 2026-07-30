@@ -240,6 +240,10 @@ void main() {
       itemNameToId: {'Widget': 'item-1', 'Bolt': 'item-2'},
     );
 
+    expect(draft.lines, hasLength(2));
+    final keptLineId = draft.lines.firstWhere((l) => l.itemId == 'item-1').id;
+    final removedLineId = draft.lines.firstWhere((l) => l.itemId == 'item-2').id;
+
     await repo.saveDraft(
       SalesDocumentDraftInput(
         documentId: draft.id,
@@ -248,9 +252,9 @@ void main() {
         partyId: 'party-1',
         documentDate: DateTime(2026, 7, 27),
         items: [
-          const SaleLineItem(
-            id: 'line-a',
-            serverLineId: 'line-a',
+          SaleLineItem(
+            id: keptLineId,
+            serverLineId: keptLineId,
             itemId: 'item-1',
             itemName: 'Widget',
             qty: 1,
@@ -267,7 +271,7 @@ void main() {
       pending.any(
         (job) =>
             job.entityType == 'sales_document_lines' &&
-            job.entityId == 'line-b' &&
+            job.entityId == removedLineId &&
             job.operation == SyncQueueOperation.delete,
       ),
       isTrue,

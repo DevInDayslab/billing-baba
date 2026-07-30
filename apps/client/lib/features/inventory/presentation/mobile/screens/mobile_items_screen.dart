@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
@@ -129,7 +129,7 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     final barcode = await showMobileBarcodeScanner(context);
     if (!mounted || barcode == null) return;
 
-    final items = ref.read(inventoryItemsProvider).value ?? const <InventoryItem>[];
+    final items = ref.read(inventoryItemListProvider);
     final displayItems = items.isNotEmpty
         ? items
         : (kDebugMode ? MobileItemMockData.items : const <InventoryItem>[]);
@@ -263,7 +263,7 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     final itemsAsync = ref.watch(inventoryItemsProvider);
     final filters = ref.watch(inventoryItemFiltersProvider);
     final categoryNamesById = _categoryNamesById();
-    final apiItems = itemsAsync.value ?? const <InventoryItem>[];
+    final apiItems = itemsAsync.value?.items ?? const <InventoryItem>[];
     final displayItems = _displayItems(apiItems);
     final usingMock = _isUsingMockData(apiItems);
 

@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/coming_soon_page.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_details_screen.dart';

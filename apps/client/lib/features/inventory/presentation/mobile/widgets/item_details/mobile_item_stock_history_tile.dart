@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/date_time_utils.dart';
+import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_movement_indicator.dart';

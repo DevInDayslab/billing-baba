@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';

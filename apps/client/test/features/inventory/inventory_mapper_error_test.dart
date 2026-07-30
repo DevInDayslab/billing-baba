@@ -153,7 +153,7 @@ void main() {
       );
       expect(
         InventoryErrorMapper.messageFor(const InventoryOfflineException()),
-        contains('Network unavailable'),
+        contains("You're offline"),
       );
     });
   });

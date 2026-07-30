@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
-import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_preview_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_footer.dart';
