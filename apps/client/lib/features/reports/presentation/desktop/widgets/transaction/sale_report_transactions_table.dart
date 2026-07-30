@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_load_helper.dart';
@@ -11,6 +10,7 @@ import 'package:billing_baba/features/reports/utils/sale_report_row_filter.dart'
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_status_badge.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

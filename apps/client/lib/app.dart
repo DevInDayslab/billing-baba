@@ -18,6 +18,14 @@ class BillingBabaApp extends ConsumerStatefulWidget {
 class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
   final _imageMemoryHandler = ImageMemoryPressureHandler();
 
+  /// Keeps [DesktopAppMenuBar] / [PlatformMenuBar] on a stable Element across
+  /// overlay toggles. Relocating the menu under a Stack (previous approach)
+  /// created a second PlatformMenuBar before the first disposed, tripping
+  /// DefaultPlatformMenuDelegate.debugLockDelegate.
+  static final GlobalKey _desktopMenuKey = GlobalKey(
+    debugLabel: 'desktopAppMenuBar',
+  );
+
   @override
   void initState() {
     super.initState();
@@ -44,27 +52,29 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        final content = AppThemeScope(child: child ?? const SizedBox.shrink());
-        final menuWrapped = DesktopAppMenuBar(child: content);
-        if (!isBlocking) return menuWrapped;
-
-        return Stack(
-          children: [
-            // Keep the router mounted for data loading, but hide it visually.
-            Opacity(opacity: 0, child: IgnorePointer(child: menuWrapped)),
-            Positioned.fill(
-              child: BusinessOpeningOverlay(
-                opaque: true,
-                whiteBackground: true,
-                message: isOpeningCompany
-                    ? 'Opening company…'
-                    : 'Loading companies…',
-                subtitle: isOpeningCompany
-                    ? 'Loading dashboard and company data'
-                    : null,
-              ),
-            ),
-          ],
+        // PlatformMenuBar must stay at a fixed slot above the router forever.
+        // Overlay is a sibling *inside* the menu child — never wrap/move the menu.
+        return DesktopAppMenuBar(
+          key: _desktopMenuKey,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              AppThemeScope(child: child ?? const SizedBox.shrink()),
+              if (isBlocking)
+                Positioned.fill(
+                  child: BusinessOpeningOverlay(
+                    opaque: true,
+                    whiteBackground: true,
+                    message: isOpeningCompany
+                        ? 'Opening company…'
+                        : 'Loading companies…',
+                    subtitle: isOpeningCompany
+                        ? 'Loading dashboard and company data'
+                        : null,
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );

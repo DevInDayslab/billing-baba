@@ -128,11 +128,13 @@ void invalidateAllBusinessScopedProviders(
   Ref ref, {
   bool includeBusinessList = false,
   bool includeBusinessService = true,
+  bool includeBusinessProfile = true,
 }) {
   invalidateAllBusinessScopedProvidersOn(
     ref.container,
     includeBusinessList: includeBusinessList,
     includeBusinessService: includeBusinessService,
+    includeBusinessProfile: includeBusinessProfile,
   );
 }
 
@@ -141,15 +143,20 @@ void invalidateAllBusinessScopedProvidersOn(
   ProviderContainer container, {
   bool includeBusinessList = false,
   bool includeBusinessService = true,
+  bool includeBusinessProfile = true,
 }) {
   if (includeBusinessList) {
     container.invalidate(businessListProvider);
   }
 
+  if (includeBusinessProfile) {
+    container
+      ..invalidate(businessProfileProvider)
+      ..invalidate(currentBusinessProvider)
+      ..invalidate(sidebarBusinessProvider);
+  }
+
   container
-    ..invalidate(businessProfileProvider)
-    ..invalidate(currentBusinessProvider)
-    ..invalidate(sidebarBusinessProvider)
     ..invalidate(commerceSettingsProvider)
     ..invalidate(partyListProvider)
     ..invalidate(partyServiceProvider)
@@ -277,6 +284,8 @@ Future<void> _warmBusinessProfile(
     return;
   }
 
+  // One network refresh owned by warm. Callers must not also invalidate
+  // [businessProfileProvider] right before this (see includeBusinessProfile).
   BusinessOpenDebugLog.step('warm', 'profile fetch');
   final profile = await service.fetchBusinessProfile(forceRefresh: true);
   _ensureRefMounted(ref, 'warm after profile fetch');
@@ -292,8 +301,11 @@ Future<void> _warmBusinessProfile(
 }
 
 Future<void> _warmDashboard(Ref ref) async {
+  // Share the single in-flight [dashboardProvider] build after invalidation.
+  // Calling [Dashboard.refresh] here raced with Home's watch and issued
+  // duplicate GETs.
   BusinessOpenDebugLog.step('warm', 'dashboard');
-  await ref.read(dashboardProvider.notifier).refresh();
+  await ref.read(dashboardProvider.future);
   _ensureRefMounted(ref, 'warm after dashboard');
   BusinessOpenDebugLog.step('warm', 'dashboard ok');
 }
