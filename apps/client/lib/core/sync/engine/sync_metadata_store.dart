@@ -48,6 +48,13 @@ class SyncMetadataStore {
     return DateTime.tryParse(migrated);
   }
 
+  DateTime? stockLevelsReconciledAtFor(String businessId) {
+    final raw =
+        _storage.read(StorageKeys.syncStockLevelsReconciledAtFor(businessId));
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
   int get localSchemaVersion {
     final raw = _storage.read(StorageKeys.syncLocalSchemaVersion);
     if (raw == null || raw.isEmpty) return kSyncLocalSchemaVersion;
@@ -73,6 +80,12 @@ class SyncMetadataStore {
   Future<void> setBootstrappedAtFor(String businessId, DateTime at) =>
       _storage.write(
         StorageKeys.syncBootstrappedAtFor(businessId),
+        at.toUtc().toIso8601String(),
+      );
+
+  Future<void> setStockLevelsReconciledAtFor(String businessId, DateTime at) =>
+      _storage.write(
+        StorageKeys.syncStockLevelsReconciledAtFor(businessId),
         at.toUtc().toIso8601String(),
       );
 

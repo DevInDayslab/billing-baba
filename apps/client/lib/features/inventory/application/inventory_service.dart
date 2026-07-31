@@ -106,6 +106,7 @@ Future<InventoryService> inventoryService(Ref ref) async {
       stockLocal: InventoryStockLocalDataSource(db),
       salesLocal: SalesLocalDataSource(db),
       purchaseLocal: PurchaseLocalDataSource(db),
+      godowns: GodownLocalSource(db),
     ),
     items: ItemMasterRepository(
       local: ItemLocalSource(db),

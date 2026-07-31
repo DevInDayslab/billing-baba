@@ -22,6 +22,7 @@ export const SUPPORTED_ROW_ENTITY_TYPES = [
   'sales_document_lines',
   'purchase_documents',
   'purchase_document_lines',
+  'stock_levels',
 ] as const;
 
 export type SupportedRowEntityType =

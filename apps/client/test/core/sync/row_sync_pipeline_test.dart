@@ -452,7 +452,7 @@ void main() {
     expect(state.lifecycle, SyncLifecycleState.idle);
     expect(android.metadata.bootstrappedAt, isNotNull);
     expect(android.metadata.pullCursor, isNotNull);
-    expect(android.api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines');
+    expect(android.api.lastPullEntityTypes, 'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels');
 
     final cats = await android.categories.listActive('biz-1');
     final parties = await android.parties.listActive('biz-1');

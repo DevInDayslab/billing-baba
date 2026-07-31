@@ -22,7 +22,7 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
-import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
@@ -655,9 +655,7 @@ class BusinessList extends _$BusinessList {
       SyncPauseGate.instance.resume();
     }
 
-    final syncEngine = await ref.read(commandAwareSyncEngineProvider.future);
-    await syncEngine.start();
-    unawaited(syncEngine.syncNow());
+    await ensureSyncEngineStarted(ref);
   }
 
   void _ensureOpenRefMounted(String step) {

@@ -6,6 +6,7 @@ import 'package:billing_baba/features/command_sync/application/command_ack_appli
 import 'package:billing_baba/features/command_sync/application/command_aware_sync_engine.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_runner.dart';
 import 'package:billing_baba/features/documents/data/local_document_number_service.dart';
+import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
@@ -29,6 +30,7 @@ InventoryDocumentStockApplier _stockApplier(Ref ref) {
     stockLocal: InventoryStockLocalDataSource(db),
     salesLocal: SalesLocalDataSource(db),
     purchaseLocal: PurchaseLocalDataSource(db),
+    godowns: GodownLocalSource(db),
   );
 }
 

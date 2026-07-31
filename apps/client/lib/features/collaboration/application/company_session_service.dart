@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
@@ -87,6 +88,7 @@ class CompanySessionService {
       _applySession(session);
     }
 
+    await ensureSyncEngineStarted(_ref);
     return session;
   }
 

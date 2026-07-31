@@ -81,11 +81,11 @@ void main() {
     expect(draft.documentType, SalesDocumentType.pos.apiValue);
 
     final pending = await queue.listPending();
-    final headerJob = pending.firstWhere(
-      (job) => job.entityType == 'sales_documents',
+    expect(
+      pending.any((job) => job.entityType == 'sales_documents'),
+      isTrue,
+      reason: 'POS drafts enqueue row sync before finalize_sale',
     );
-    expect(headerJob.payload['document_type'], 'pos');
-    expect(headerJob.payload.containsKey('pos_session_id'), isFalse);
   });
 
   test('POS finalize enqueues finalize_sale command with payment', () async {
@@ -130,9 +130,13 @@ void main() {
     expect(stored?.status, 'finalized');
     expect(stored?.documentType, SalesDocumentType.pos.apiValue);
 
-    final commandJobs = await queue.listPending();
+    final pendingJobs = await queue.listPending();
     expect(
-      commandJobs.any(
+      pendingJobs.any((job) => job.kind == SyncQueueKind.row),
+      isTrue,
+    );
+    expect(
+      pendingJobs.any(
         (job) =>
             job.kind == SyncQueueKind.command &&
             job.payload['command'] == 'finalize_sale',

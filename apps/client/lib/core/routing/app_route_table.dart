@@ -8,6 +8,7 @@ import 'package:billing_baba/features/backup/presentation/desktop/backup_restore
 import 'package:billing_baba/features/business/presentation/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/edit_profile_page.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_bootstrap_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
@@ -83,6 +84,7 @@ GoRouter createAppRouter({
   bool showSplash = true,
 }) {
   ref.watch(companySessionBootstrapProvider);
+  ref.watch(syncEngineLifecycleProvider);
   return GoRouter(
     initialLocation: initialLocation,
     refreshListenable: RouterRefreshListenable(ref),

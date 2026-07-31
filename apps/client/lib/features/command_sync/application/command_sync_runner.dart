@@ -12,7 +12,22 @@ import 'package:billing_baba/features/command_sync/application/command_ack_appli
 import 'package:uuid/uuid.dart';
 
 /// Pushes pending command SyncJobs after row sync completes.
+///
+/// Finalize commands are pushed by [SyncCoordinator]; local effects run before enqueue.
 class CommandSyncRunner {
+  /// Handled by [SyncCoordinator], not this runner.
+  static const Set<String> _coordinatorCommandKinds = {
+    'finalize_sale',
+    'finalize_purchase',
+    'finalize_credit_note',
+    'finalize_debit_note',
+  };
+
+  static bool _isRunnerCommand(String? command) {
+    if (command == null || command.isEmpty) return false;
+    return !_coordinatorCommandKinds.contains(command);
+  }
+
   CommandSyncRunner({
     required this._api,
     required this._queue,
@@ -54,7 +69,8 @@ class CommandSyncRunner {
           (job) =>
               job.kind == SyncQueueKind.command &&
               job.businessId == businessId &&
-              job.status == SyncQueueStatus.pending,
+              job.status == SyncQueueStatus.pending &&
+              _isRunnerCommand(job.payload['command']?.toString()),
         )
         .toList();
 

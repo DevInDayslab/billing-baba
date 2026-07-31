@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/platform/desktop_app_menu_bar.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -395,8 +396,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     ref.watch(companySessionBootstrapProvider);
     final permissions = ref.watch(permissionServiceProvider);
 
-    return _ShellSidebarStateScope(
-      builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
+    return DesktopAppMenuBar(
+      child: _ShellSidebarStateScope(
+        builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
         return LayoutBuilder(
           builder: (context, constraints) {
             final useOverlaySidebar = constraints.maxWidth < _overlayBreakpoint;
@@ -502,7 +504,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             );
           },
         );
-      },
+        },
+      ),
     );
   }
 

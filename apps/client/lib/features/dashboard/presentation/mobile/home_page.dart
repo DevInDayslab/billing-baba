@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
+import 'package:billing_baba/core/sync/application/sync_ui_state_provider.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
@@ -179,8 +180,10 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                 onSettingsTap: () => context.push(AppRoutes.settings),
                 onNotificationTap: () => context.push(AppRoutes.notifications),
                 onSyncTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Syncing…')),
+                  unawaited(
+                    ref
+                        .read(manualSyncVisualStateProvider.notifier)
+                        .syncNow(),
                   );
                 },
               ),

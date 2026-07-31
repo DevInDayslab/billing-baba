@@ -25,7 +25,7 @@ Future<T?> showMobileBottomSheet<T>({
     enableDrag: enableDrag,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) {
-      return MobileBottomSheet(
+      final sheet = MobileBottomSheet(
         title: title,
         titleWidget: titleWidget,
         footer: footer,
@@ -33,6 +33,22 @@ Future<T?> showMobileBottomSheet<T>({
         heightFraction: heightFraction,
         scrollBody: scrollBody,
         child: builder(sheetContext),
+      );
+
+      if (!isDismissible) return sheet;
+
+      // Scroll-controlled sheets fill the screen; transparent areas above the
+      // panel do not hit the modal barrier, so we catch outside taps here.
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.of(sheetContext).pop(),
+              behavior: HitTestBehavior.opaque,
+            ),
+          ),
+          sheet,
+        ],
       );
     },
   );

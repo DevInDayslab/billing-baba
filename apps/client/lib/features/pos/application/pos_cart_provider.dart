@@ -23,20 +23,35 @@ part 'pos_cart_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class PosCart extends _$PosCart {
-  late final PosLocalDataSource _localDataSource;
+  PosLocalDataSource get _localDataSource =>
+      PosLocalDataSource(ref.read(appDatabaseProvider));
+
+  void _scheduleLoadHeldBills() {
+    unawaited(Future(() {
+      if (!ref.mounted) return;
+      unawaited(_loadHeldBills());
+    }));
+  }
+
+  void _scheduleResetForBusinessChange() {
+    unawaited(Future(() {
+      if (!ref.mounted) return;
+      state = const PosCartState();
+      unawaited(_loadHeldBills());
+    }));
+  }
 
   @override
   PosCartState build() {
-    _localDataSource = PosLocalDataSource(ref.watch(appDatabaseProvider));
     ref.listen(currentBusinessProvider, (previous, next) {
       final previousId = previous?.id;
       final nextId = next?.id;
       if (previousId != nextId) {
-        state = const PosCartState();
-        unawaited(_loadHeldBills());
+        _scheduleResetForBusinessChange();
       }
     });
-    unawaited(_loadHeldBills());
+    // Defer so we never mutate state while the widget tree is building.
+    _scheduleLoadHeldBills();
     return const PosCartState();
   }
 

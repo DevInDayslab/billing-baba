@@ -225,6 +225,7 @@ class SalesInvoiceCommandRepository {
           taxOption: input.taxOption,
         ),
         deviceId: _deviceIdReader?.call(),
+        priority: SyncQueuePriority.high,
         clientUpdatedAt: now,
       );
     }

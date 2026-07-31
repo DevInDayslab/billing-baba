@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
@@ -8,11 +9,13 @@ class InventoryDocumentStockApplier {
     required this._stockLocal,
     required this._salesLocal,
     required this._purchaseLocal,
+    required this._godowns,
   });
 
   final InventoryStockLocalDataSource _stockLocal;
   final SalesLocalDataSource _salesLocal;
   final PurchaseLocalDataSource _purchaseLocal;
+  final GodownLocalSource _godowns;
 
   static const _outboundSaleTypes = {
     'tax_invoice',
@@ -33,9 +36,11 @@ class InventoryDocumentStockApplier {
     final movementType = _saleMovementType(document.documentType);
     if (movementType == null) return;
 
-    final resolvedGodown = godownId ??
-        await _salesLocal.getDocumentGodownId(documentId) ??
-        'default';
+    final resolvedGodown = await _resolveGodownId(
+      businessId: businessId,
+      godownId: godownId,
+      documentGodownId: () => _salesLocal.getDocumentGodownId(documentId),
+    );
     final now = DateTime.now().toUtc();
 
     for (final line in document.lines) {
@@ -77,9 +82,11 @@ class InventoryDocumentStockApplier {
     final movementType = _purchaseMovementType(document.documentType);
     if (movementType == null) return;
 
-    final resolvedGodown = godownId ??
-        await _purchaseLocal.getDocumentGodownId(documentId) ??
-        'default';
+    final resolvedGodown = await _resolveGodownId(
+      businessId: businessId,
+      godownId: godownId,
+      documentGodownId: () => _purchaseLocal.getDocumentGodownId(documentId),
+    );
     final now = DateTime.now().toUtc();
 
     for (final line in document.lines) {
@@ -132,6 +139,32 @@ class InventoryDocumentStockApplier {
         deviceId: deviceId,
       );
     }
+  }
+
+  Future<String> _resolveGodownId({
+    required String businessId,
+    required Future<String?> Function() documentGodownId,
+    String? godownId,
+  }) async {
+    if (godownId != null && godownId.isNotEmpty && godownId != 'default') {
+      return godownId;
+    }
+
+    final fromDocument = await documentGodownId();
+    if (fromDocument != null &&
+        fromDocument.isNotEmpty &&
+        fromDocument != 'default') {
+      return fromDocument;
+    }
+
+    final defaultGodownId = await _godowns.getDefaultGodownId(businessId);
+    if (defaultGodownId == null) {
+      throw StateError(
+        'No default godown found locally for business $businessId. '
+        'Sync godowns or set a default before finalizing stock movements.',
+      );
+    }
+    return defaultGodownId;
   }
 
   static String? _saleMovementType(String documentType) {

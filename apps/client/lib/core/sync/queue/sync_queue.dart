@@ -190,6 +190,32 @@ class SyncQueue {
     return rows.map(_fromRow).toList();
   }
 
+  /// Pending, running, or failed row jobs for document headers/lines.
+  ///
+  /// Used to block finalize commands until dependent rows have landed on the server.
+  Future<List<SyncJob>> listDocumentRowBacklog({required String businessId}) async {
+    final rows = await (_db.select(_db.syncQueue)
+          ..where((t) {
+            final documentEntity = t.entityType.equals('sales_documents') |
+                t.entityType.equals('sales_document_lines') |
+                t.entityType.equals('purchase_documents') |
+                t.entityType.equals('purchase_document_lines');
+            final open = t.status.equals(SyncQueueStatus.pending.wire) |
+                t.status.equals(SyncQueueStatus.running.wire) |
+                t.status.equals(SyncQueueStatus.failed.wire);
+            return t.businessId.equals(businessId) &
+                t.kind.equals(SyncQueueKind.row.wire) &
+                documentEntity &
+                open;
+          })
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.priority),
+            (t) => OrderingTerm.asc(t.createdAt),
+          ]))
+        .get();
+    return rows.map(_fromRow).toList();
+  }
+
   Stream<List<SyncJob>> watchPending({String? businessId}) {
     return (_db.select(_db.syncQueue)
           ..where((t) {

@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/config/app_config.dart';
-import 'package:billing_baba/core/platform/desktop_app_menu_bar.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -45,13 +44,12 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         final content = AppThemeScope(child: child ?? const SizedBox.shrink());
-        final menuWrapped = DesktopAppMenuBar(child: content);
-        if (!isBlocking) return menuWrapped;
+        if (!isBlocking) return content;
 
         return Stack(
           children: [
             // Keep the router mounted for data loading, but hide it visually.
-            Opacity(opacity: 0, child: IgnorePointer(child: menuWrapped)),
+            Opacity(opacity: 0, child: IgnorePointer(child: content)),
             Positioned.fill(
               child: BusinessOpeningOverlay(
                 opaque: true,

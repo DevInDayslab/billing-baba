@@ -73,6 +73,7 @@ dependencies:
   font_awesome_flutter: ^11.0.0
   window_manager: ^0.5.2
   open_filex: ^4.7.0
+  mobile_scanner: ^6.0.0
 
   # Desktop Razorpay checkout (InAppWebView host + netbanking popups).
   flutter_inappwebview: ^6.1.5

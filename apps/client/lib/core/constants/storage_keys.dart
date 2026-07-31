@@ -52,6 +52,10 @@ abstract final class StorageKeys {
   static String syncLastServerSchemaVersionFor(String businessId) =>
       'sync_last_server_schema_version_$businessId';
 
+  /// ISO-8601 timestamp when stock_levels pull was first reconciled for a business.
+  static String syncStockLevelsReconciledAtFor(String businessId) =>
+      'sync_stock_levels_reconciled_at_$businessId';
+
   /// Per-business local POS session id used while offline.
   static String localPosSessionId(String businessId) =>
       'local_pos_session_$businessId';

@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/database/database.dart';
+import 'package:billing_baba/core/sync/engine/sync_apply_guard.dart';
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:drift/drift.dart';
@@ -30,7 +31,7 @@ class InventoryStockLocalDataSource {
     required String itemId,
     required String godownId,
   }) async {
-    final row = await (_db.select(_db.stockLevelsLocal)
+    final rows = await (_db.select(_db.stockLevelsLocal)
           ..where(
             (t) =>
                 t.businessId.equals(businessId) &
@@ -38,8 +39,11 @@ class InventoryStockLocalDataSource {
                 t.godownId.equals(godownId) &
                 t.isDeleted.equals(false),
           ))
-        .getSingleOrNull();
-    return _parseQty(row?.currentQuantity);
+        .get();
+    return rows.fold<double>(
+      0,
+      (sum, row) => sum + _parseQty(row.currentQuantity),
+    );
   }
 
   Future<double> totalQuantityForItem({
@@ -58,6 +62,123 @@ class InventoryStockLocalDataSource {
       0,
       (sum, row) => sum + _parseQty(row.currentQuantity),
     );
+  }
+
+  /// Removes all cached stock levels for a business (one-time reconcile only).
+  Future<void> clearAllForBusiness(String businessId) {
+    return (_db.delete(_db.stockLevelsLocal)
+          ..where((t) => t.businessId.equals(businessId)))
+        .go();
+  }
+
+  /// Emits whenever stock levels change for a business (pull or local writes).
+  Stream<void> watchStockLevels({required String businessId}) {
+    return (_db.select(_db.stockLevelsLocal)
+          ..where((t) => t.businessId.equals(businessId)))
+        .watch()
+        .map((_) {});
+  }
+
+  /// Applies a pulled `stock_levels` row. Upserts on (business, item, godown).
+  Future<void> applyPullChange({
+    required String businessId,
+    required String entityId,
+    required int syncVersion,
+    required DateTime updatedAt,
+    required bool isDeleted,
+    DateTime? deletedAt,
+    String? itemId,
+    String? godownId,
+    String? quantity,
+    String? averageCost,
+    String? deviceId,
+  }) async {
+    final existingByTriple = itemId != null && godownId != null
+        ? await _findByTriple(
+            businessId: businessId,
+            itemId: itemId,
+            godownId: godownId,
+          )
+        : null;
+    final existingById = await (_db.select(_db.stockLevelsLocal)
+          ..where((t) => t.id.equals(entityId)))
+        .getSingleOrNull();
+    final existing = existingByTriple ?? existingById;
+
+    if (!shouldApplyPullChange(
+      incomingSyncVersion: syncVersion,
+      existingSyncVersion: existing?.syncVersion,
+      isDeleted: isDeleted,
+    )) {
+      return;
+    }
+
+    if (isDeleted) {
+      final rowId = existing?.id ?? entityId;
+      if (existing == null) {
+        return;
+      }
+      await (_db.update(_db.stockLevelsLocal)..where((t) => t.id.equals(rowId)))
+          .write(
+        StockLevelsLocalCompanion(
+          isDeleted: const Value(true),
+          syncVersion: Value(syncVersion),
+          updatedAt: Value(updatedAt.toUtc()),
+          deviceId: deviceId == null ? const Value.absent() : Value(deviceId),
+        ),
+      );
+      return;
+    }
+
+    if (itemId == null || godownId == null) {
+      return;
+    }
+
+    final currentQty = quantity ?? existing?.currentQuantity ?? '0';
+    final avgCost = averageCost ?? existing?.averageCost ?? '0';
+    final reservedQty = existing?.reservedQuantity ?? '0';
+    final availableQty = _formatQty(
+      _parseQty(currentQty) - _parseQty(reservedQty),
+    );
+
+    if (existing != null && existing.id != entityId) {
+      await (_db.delete(_db.stockLevelsLocal)
+            ..where((t) => t.id.equals(existing.id)))
+          .go();
+    }
+
+    await _db.into(_db.stockLevelsLocal).insertOnConflictUpdate(
+          StockLevelsLocalCompanion.insert(
+            id: entityId,
+            businessId: businessId,
+            itemId: itemId,
+            godownId: godownId,
+            currentQuantity: Value(currentQty),
+            reservedQuantity: Value(reservedQty),
+            availableQuantity: Value(availableQty),
+            averageCost: Value(avgCost),
+            updatedAt: updatedAt.toUtc(),
+            syncVersion: Value(syncVersion),
+            isDeleted: const Value(false),
+            deviceId: Value(deviceId),
+          ),
+        );
+  }
+
+  Future<StockLevelLocalData?> _findByTriple({
+    required String businessId,
+    required String itemId,
+    required String godownId,
+  }) {
+    return (_db.select(_db.stockLevelsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.itemId.equals(itemId) &
+                t.godownId.equals(godownId),
+          )
+          ..limit(1))
+        .getSingleOrNull();
   }
 
   /// Bulk item quantities for list views (sums all godowns per item).

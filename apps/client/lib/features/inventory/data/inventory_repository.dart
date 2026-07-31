@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
@@ -323,14 +325,92 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) =>
-      _items.watchPage(
-        limit: limit,
-        offset: offset,
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
+  }) {
+    final businessId = _requireBusinessId();
+    final itemsStream = _items.watchPage(
+      limit: limit,
+      offset: offset,
+      searchQuery: searchQuery,
+      type: type,
+      categoryId: categoryId,
+    );
+    final stockStream = _debounceStream(
+      _stockLocal.watchStockLevels(businessId: businessId),
+      const Duration(milliseconds: 75),
+    );
+    return _watchItemsPageReactingToStock(itemsStream, stockStream);
+  }
+
+  Stream<List<ItemListDto>> _watchItemsPageReactingToStock(
+    Stream<List<ItemListDto>> itemsStream,
+    Stream<void> stockStream,
+  ) {
+    final controller = StreamController<List<ItemListDto>>();
+    List<ItemListDto>? latestItems;
+    StreamSubscription<List<ItemListDto>>? itemsSub;
+    StreamSubscription<void>? stockSub;
+
+    void emitLatest() {
+      final items = latestItems;
+      if (items != null && !controller.isClosed) {
+        controller.add(items);
+      }
+    }
+
+    controller.onListen = () {
+      itemsSub = itemsStream.listen(
+        (items) {
+          latestItems = items;
+          controller.add(items);
+        },
+        onError: controller.addError,
       );
+      stockSub = stockStream.listen(
+        (_) => emitLatest(),
+        onError: controller.addError,
+      );
+    };
+
+    controller.onCancel = () async {
+      await itemsSub?.cancel();
+      await stockSub?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  /// Coalesces rapid stock-level watch events (e.g. sync batches) into one emit.
+  Stream<void> _debounceStream(Stream<void> source, Duration duration) {
+    late final StreamController<void> controller;
+    StreamSubscription<void>? sourceSub;
+    Timer? timer;
+
+    controller = StreamController<void>(
+      onListen: () {
+        sourceSub = source.listen(
+          (_) {
+            timer?.cancel();
+            timer = Timer(duration, () {
+              if (!controller.isClosed) {
+                controller.add(null);
+              }
+            });
+          },
+          onError: controller.addError,
+          onDone: () {
+            timer?.cancel();
+            controller.close();
+          },
+        );
+      },
+      onCancel: () async {
+        timer?.cancel();
+        await sourceSub?.cancel();
+      },
+    );
+
+    return controller.stream;
+  }
 
   Future<Map<String, double>> localStockQuantitiesForItems(
     Iterable<String> itemIds,
