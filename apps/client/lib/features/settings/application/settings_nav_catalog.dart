@@ -24,6 +24,14 @@ abstract final class SettingsNavCatalog {
       route: AppRoutes.itemsSettings,
     ),
     SettingsNavItem(
+      id: 'reports',
+      icon: Icons.assessment_outlined,
+      title: 'Reports',
+      subtitle: 'Transaction, party, GST, stock, and more',
+      route: AppRoutes.settingsReports,
+      group: SettingsNavGroup.reports,
+    ),
+    SettingsNavItem(
       id: SettingsTab.print.id,
       icon: Icons.print_outlined,
       title: 'Print',

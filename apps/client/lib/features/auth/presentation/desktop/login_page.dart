@@ -30,6 +30,7 @@ class _LoginPageState extends ConsumerState<DesktopLoginPage> {
   }
 
   Future<void> _devLogin() async {
+    debugPrint('[LOGIN] Developer Login button tapped');
     await ref.read(authProvider.notifier).devLogin();
   }
 

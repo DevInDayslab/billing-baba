@@ -54,6 +54,9 @@ import 'package:billing_baba/features/purchases/presentation/purchase_order_page
 import 'package:billing_baba/features/purchases/presentation/purchase_return_page.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_item_detail_report_screen.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_report_group_screen.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_report_subsection_screen.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_reports_hub_screen.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_stock_summary_screen.dart';
 import 'package:billing_baba/features/reports/presentation/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_credit_note_page.dart';
@@ -631,6 +634,27 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.settingsBackup,
             builder: (context, state) => const BackupRestorePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsReports,
+            builder: (context, state) => const MobileReportsHubScreen(),
+            routes: [
+              GoRoute(
+                path: ':groupId',
+                builder: (context, state) => MobileReportGroupScreen(
+                  groupId: state.pathParameters['groupId']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':subsectionId',
+                    builder: (context, state) => MobileReportSubsectionScreen(
+                      groupId: state.pathParameters['groupId']!,
+                      subsectionId: state.pathParameters['subsectionId']!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           GoRoute(
             path: AppRoutes.plansPricing,

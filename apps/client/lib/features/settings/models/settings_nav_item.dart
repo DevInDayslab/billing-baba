@@ -21,6 +21,7 @@ class SettingsNavItem {
 
 enum SettingsNavGroup {
   general('General'),
+  reports('Reports'),
   messaging('Messaging'),
   account('Account & Data');
 

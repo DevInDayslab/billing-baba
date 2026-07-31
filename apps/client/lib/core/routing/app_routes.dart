@@ -106,6 +106,13 @@ abstract final class AppRoutes {
   static const settingsPrint = '/settings/print';
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
+  static const settingsReports = '/settings/reports';
+
+  static String settingsReportGroup(String groupId) =>
+      '$settingsReports/$groupId';
+
+  static String settingsReportSubsection(String groupId, String subsectionId) =>
+      '${settingsReportGroup(groupId)}/$subsectionId';
 
   /// Settings hub deep-link with tab query (`general`, `print`, …).
   static String settingsTab(String tabId) => '$settingsPreferences?tab=$tabId';

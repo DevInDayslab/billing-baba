@@ -520,7 +520,7 @@ class Auth extends _$Auth {
 
   Future<void> tryAutoLogin() async {
     _setAuthStatus(AuthStatus.initializing);
-    state = state.copyWith(clearError: true);
+    state = state.copyWith(clearError: true, backendLoginCompleted: false);
 
     // Keep branded splash visible for the full animation on all platforms.
     final splashWait = Future<void>.delayed(_splashMinDuration);
@@ -537,7 +537,11 @@ class Auth extends _$Auth {
       final session = results[1] as AuthSession?;
       if (session == null) {
         _setAuthStatus(AuthStatus.unauthenticated);
-        state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
+        state = state.copyWith(
+          clearSession: true,
+          otpPhase: OtpPhase.idle,
+          backendLoginCompleted: false,
+        );
         return;
       }
 
@@ -550,18 +554,33 @@ class Auth extends _$Auth {
         backendLoginCompleted: true,
       );
       if (AuthService.isOfflineDevSession(session)) {
-        await _bootstrapOfflineDevSession(session);
+        // Bootstrap must not wipe a restored session — failures are best-effort.
+        try {
+          await _bootstrapOfflineDevSession(session);
+        } on Object catch (e, st) {
+          LoggingService.instance.error(
+            'Offline dev session bootstrap failed during auto-login',
+            e,
+            st,
+          );
+        }
       }
     } on TimeoutException {
-      await splashWait;
-      _setAuthStatus(AuthStatus.unauthenticated);
-      state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
-    } on Object catch (e) {
       await splashWait;
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
         clearSession: true,
         otpPhase: OtpPhase.idle,
+        backendLoginCompleted: false,
+      );
+    } on Object catch (e, st) {
+      await splashWait;
+      LoggingService.instance.error('tryAutoLogin failed', e, st);
+      _setAuthStatus(AuthStatus.unauthenticated);
+      state = state.copyWith(
+        clearSession: true,
+        otpPhase: OtpPhase.idle,
+        backendLoginCompleted: false,
         error: _messageFromError(e),
       );
     }
@@ -683,6 +702,7 @@ class Auth extends _$Auth {
       clearReqId: true,
       error: details.title,
       networkError: details,
+      backendLoginCompleted: false,
     );
   }
 
@@ -793,25 +813,63 @@ class Auth extends _$Auth {
   }
 
   Future<void> devLogin() async {
-    if (_devLoginInFlight || state.backendLoginCompleted) return;
+    LoggingService.instance.info(
+      'Developer Login pressed '
+      '(inFlight=$_devLoginInFlight completed=${state.backendLoginCompleted} '
+      'status=${state.status.name})',
+    );
+
+    // Login screen: recover from a stuck in-flight flag (hung prior attempt /
+    // hot reload) or a leftover backendLoginCompleted after a failed auto-login.
+    if (state.status == AuthStatus.unauthenticated) {
+      _devLoginInFlight = false;
+      state = state.copyWith(backendLoginCompleted: false);
+    }
+
+    if (_devLoginInFlight) {
+      LoggingService.instance.warn('Developer Login ignored: already in flight');
+      return;
+    }
+    if (state.status == AuthStatus.authenticated ||
+        state.status == AuthStatus.needsBusinessSelection ||
+        state.status == AuthStatus.needsBusinessCreation) {
+      LoggingService.instance.info(
+        'Developer Login ignored: already signed in (${state.status.name})',
+      );
+      return;
+    }
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: POST /auth/dev-login');
-    state = state.copyWith(clearError: true);
+    AuthDebugLogger.log('devLogin: offline local session (no API)');
+    state = state.copyWith(clearError: true, backendLoginCompleted: false);
     _setOtpPhase(OtpPhase.backendLogin);
 
     try {
       final service = await _service();
       final session = await service.devLogin();
       AuthDebugLogger.log('devLogin: login successful');
+      LoggingService.instance.info('Developer Login succeeded');
       _completeOtpLogin(session);
+      try {
+        await _bootstrapOfflineDevSession(session);
+      } on Object catch (e, st) {
+        LoggingService.instance.error(
+          'Offline dev session bootstrap failed after Developer Login',
+          e,
+          st,
+        );
+      }
     } on Object catch (e, st) {
       AuthDebugLogger.log('devLogin failed: $e');
+      LoggingService.instance.error('Developer Login failed', e, st);
       if (AppConfig.authDebugLogging) {
         debugPrint('[AUTH] devLogin stackTrace:\n$st');
       }
       _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(error: _devLoginErrorMessage(e));
+      state = state.copyWith(
+        error: _devLoginErrorMessage(e),
+        backendLoginCompleted: false,
+      );
     } finally {
       _devLoginInFlight = false;
     }
@@ -880,9 +938,10 @@ class Auth extends _$Auth {
   }
 
   void resetToLogin() {
+    _devLoginInFlight = false;
     _resetOtpFlow();
     _setAuthStatus(AuthStatus.unauthenticated);
-    state = state.copyWith(phone: '');
+    state = state.copyWith(phone: '', backendLoginCompleted: false);
   }
 
   Future<void> _bootstrapOfflineDevSession(AuthSession session) async {

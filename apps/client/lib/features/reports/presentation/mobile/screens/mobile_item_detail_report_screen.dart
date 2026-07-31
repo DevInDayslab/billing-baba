@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
@@ -11,6 +12,8 @@ import 'package:billing_baba/features/reports/application/report_providers.dart'
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/item_detail_report_helpers.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_export_chips.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_scaffold.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/item_detail_display_row.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
@@ -199,35 +202,15 @@ class _MobileItemDetailReportScreenState
     );
     final hasItem = filters.itemId != null && filters.itemId!.isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: _headerTeal,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).maybePop(),
+    return MobileReportScaffold(
+      title: 'Item Detail Report',
+      actions: [
+        MobileReportExportChips(
+          showCa: false,
+          onPdf: () => _exportPdf(displayRows),
+          onExcel: () => _exportExcel(displayRows),
         ),
-        title: const Text(
-          'Item Detail Report',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
-        ),
-        actions: [
-          _ExportChip(
-            label: 'Pdf',
-            backgroundColor: const Color(0xFFE53935),
-            onTap: () => _exportPdf(displayRows),
-          ),
-          const Gap(AppSpacing.sm),
-          _ExportChip(
-            label: 'xls',
-            backgroundColor: const Color(0xFF2E7D32),
-            onTap: () => _exportExcel(displayRows),
-          ),
-          const Gap(AppSpacing.sm),
-        ],
-      ),
+      ],
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -403,7 +386,9 @@ class _MobileItemDetailReportScreenState
                   );
                 }
                 return ListView.separated(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  padding: EdgeInsets.only(
+                    bottom: MobileBottomNavigation.contentBottomPadding(context),
+                  ),
                   itemCount: displayRows.length,
                   separatorBuilder: (_, __) => const Divider(
                     height: 1,
@@ -418,41 +403,6 @@ class _MobileItemDetailReportScreenState
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ExportChip extends StatelessWidget {
-  const _ExportChip({
-    required this.label,
-    required this.backgroundColor,
-    required this.onTap,
-  });
-
-  final String label;
-  final Color backgroundColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(4),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
       ),
     );
   }

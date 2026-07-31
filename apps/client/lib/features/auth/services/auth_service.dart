@@ -238,11 +238,15 @@ class AuthService {
   }
 
   Future<AuthSession> devLogin() async {
-    AuthDebugLogger.log('AuthService.devLogin: POST /auth/dev-login');
-    final session = await _repository.devLogin();
+    // Local-only session so Developer Login works on physical devices
+    // even when API_BASE_URL points at host loopback (unreachable from phone).
+    AuthDebugLogger.log(
+      'AuthService.devLogin: offline local session (no API)',
+    );
+    final session = AuthService.offlineDevSession();
+    await persistSession(session);
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
-    await persistSession(session);
     return session;
   }
 
