@@ -11,8 +11,9 @@ const _desktopWindowSize = Size(
 
 /// Configures the desktop window on macOS, Windows, and Linux.
 ///
-/// Applies the minimum size constraint, then enters true fullscreen and shows
-/// the window once it is ready.
+/// Applies the minimum size constraint, then maximizes (not fullscreen) and
+/// shows the window once it is ready. Maximize keeps the native title bar and
+/// window controls visible, which avoids cropping on Windows.
 Future<void> configureDesktopWindow() async {
   if (kIsWeb) return;
   if (!AppPlatform.current.isDesktop) return;
@@ -23,12 +24,10 @@ Future<void> configureDesktopWindow() async {
     size: _desktopWindowSize,
     minimumSize: _desktopWindowSize,
     center: true,
-    fullScreen: true,
   );
 
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
-    // True fullscreen (not maximize) — native fullscreen on macOS/Windows/Linux.
-    await windowManager.setFullScreen(true);
+    await windowManager.maximize();
     await windowManager.show();
     await windowManager.focus();
   });
