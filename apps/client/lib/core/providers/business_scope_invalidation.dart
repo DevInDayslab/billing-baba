@@ -15,6 +15,7 @@ import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
@@ -255,17 +256,31 @@ Future<void> warmBusinessScopedProviders(
 
   BusinessOpenDebugLog.step(
     'warm',
-    'parallel fetch (profile, dashboard, tasks)',
+    'parallel fetch (profile, dashboard, tasks, inventory)',
   );
   await Future.wait<void>([
     _warmBusinessProfile(ref, service, businessId),
     _warmDashboard(ref),
     _warmTasks(ref, businessId),
+    _warmInventoryCatalog(ref),
   ]);
   _ensureRefMounted(ref, 'warm after parallel fetch');
 
   ref.read(dashboardWidgetPreferencesProvider);
   BusinessOpenDebugLog.step('warm', 'complete');
+}
+
+/// Pulls the item catalog into local SQLite when empty (e.g. first API login).
+Future<void> _warmInventoryCatalog(Ref ref) async {
+  BusinessOpenDebugLog.step('warm', 'inventory');
+  try {
+    final inventory = await ref.read(inventoryServiceProvider.future);
+    _ensureRefMounted(ref, 'warm after inventory service');
+    await inventory.fetchItemsPage();
+    BusinessOpenDebugLog.step('warm', 'inventory ok');
+  } on Object catch (error) {
+    BusinessOpenDebugLog.step('warm', 'inventory skipped ($error)');
+  }
 }
 
 Future<void> _warmBusinessProfile(

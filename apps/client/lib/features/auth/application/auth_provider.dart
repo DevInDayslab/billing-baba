@@ -840,7 +840,7 @@ class Auth extends _$Auth {
     }
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: offline local session (no API)');
+    AuthDebugLogger.log('devLogin: API /auth/dev-login (offline fallback if unreachable)');
     state = state.copyWith(clearError: true, backendLoginCompleted: false);
     _setOtpPhase(OtpPhase.backendLogin);
 
@@ -851,10 +851,19 @@ class Auth extends _$Auth {
       LoggingService.instance.info('Developer Login succeeded');
       _completeOtpLogin(session);
       try {
-        await _bootstrapOfflineDevSession(session);
+        if (AuthService.isOfflineDevSession(session)) {
+          await _bootstrapOfflineDevSession(session);
+        } else if (session.businesses.length == 1 &&
+            _statusForSession(session) == AuthStatus.authenticated) {
+          // Same path as opening a company after OTP — hydrate profile, masters,
+          // and start sync so mobile/desktop share API data.
+          await ref
+              .read(businessListProvider.notifier)
+              .openBusiness(session.businesses.first.id);
+        }
       } on Object catch (e, st) {
         LoggingService.instance.error(
-          'Offline dev session bootstrap failed after Developer Login',
+          'Post-login bootstrap failed after Developer Login',
           e,
           st,
         );
@@ -957,26 +966,27 @@ class Auth extends _$Auth {
     await businessService.seedOfflineDevSession(session);
 
     final profile = AuthService.offlineDevBusinessProfile(session);
-    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+    final companySession = CompanySession.owner(
+      entry: CompanyListEntry(
+        id: businessSummary.id,
+        name: businessSummary.name,
+        relationship: CompanyRelationship.owner,
+        syncStatus: business.SyncStatus.on,
+        source: CompanyListSource.apiOwned,
+        ownerName: user.name,
+        phone: user.phone,
+      ),
+      userId: user.id,
+      userName: user.name ?? 'Developer',
+      userPhone: user.phone,
+    );
 
-    ref
-        .read(companySessionProvider.notifier)
-        .setSession(
-          CompanySession.owner(
-            entry: CompanyListEntry(
-              id: businessSummary.id,
-              name: businessSummary.name,
-              relationship: CompanyRelationship.owner,
-              syncStatus: business.SyncStatus.on,
-              source: CompanyListSource.apiOwned,
-              ownerName: user.name,
-              phone: user.phone,
-            ),
-            userId: user.id,
-            userName: user.name ?? 'Developer',
-            userPhone: user.phone,
-          ),
-        );
+    // Defer writes — businessProfileProvider watches authProvider, so updating
+    // it synchronously inside Auth.devLogin trips a circular dependency.
+    await Future<void>.delayed(Duration.zero);
+    if (!ref.mounted) return;
+    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+    ref.read(companySessionProvider.notifier).setSession(companySession);
   }
 
   Future<void> selectBusiness(String businessId) {
@@ -1300,16 +1310,15 @@ class Auth extends _$Auth {
       final responseBody = error.response?.data;
       switch (statusCode) {
         case 404:
-          return 'Developer Login is disabled.';
+          return 'Developer Login is disabled. Set ENABLE_DEV_LOGIN=true on the API.';
         case 401:
           return 'Developer Login is not available.';
         case 500:
           return 'Unable to sign in using Developer Login.';
       }
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout ||
-          error.type == DioExceptionType.connectionError) {
-        return 'Please check your internet connection.';
+      if (NetworkExceptionClassifier.isConnectivityError(error)) {
+        return 'Cannot reach the API. Start the API and set API_BASE_URL '
+            '(use your PC LAN IP on a physical phone, not localhost).';
       }
       if (responseBody != null) {
         return 'Developer Login failed ($statusCode): $responseBody';

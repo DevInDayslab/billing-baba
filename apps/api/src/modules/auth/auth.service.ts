@@ -28,6 +28,7 @@ import {
   DEV_BUSINESS_PHONE,
   DEV_LOGIN_PHONE,
 } from '../../shared/dev-demo.constants';
+import { ensureDemoCatalogIfEmpty } from '../../db/seed/demo-seeder';
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -276,6 +277,14 @@ export class AuthService {
 
     for (const membership of memberships) {
       await this.repository.ensureInventorySeeds(membership.businessId);
+      const db = getDb();
+      if (db) {
+        await ensureDemoCatalogIfEmpty(db, {
+          businessId: membership.businessId,
+          accountId: account.id,
+          userId: membership.userId,
+        });
+      }
     }
 
     if (this.config.environment === 'development') {

@@ -4,9 +4,10 @@ import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transactio
 import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:flutter/material.dart';
 
-/// Sample transaction rows for mobile list previews and demos.
+/// Sample transaction rows — **deprecated**.
 ///
-// TODO(mobile): Replace when feature pages supply live transaction data.
+/// Live lists use [mobileTransactionItemsProvider] + desktop feature providers.
+/// Kept only for reference / temporary demos; do not wire new screens to this.
 abstract final class MobileTransactionMockData {
   static List<MobileTransactionListItem> itemsFor(
     MobileTransactionScopeDefinition definition,

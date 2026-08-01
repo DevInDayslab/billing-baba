@@ -21,18 +21,35 @@ final invoiceFallbackTaxPercentProvider = FutureProvider<double?>((ref) async {
 });
 
 Future<double?> readInvoiceFallbackTaxPercent(Ref ref) async {
-  final cached = ref.read(invoiceFallbackTaxPercentProvider).value;
-  if (cached != null) return cached;
-  return ref.read(invoiceFallbackTaxPercentProvider.future);
+  try {
+    final async = ref.read(invoiceFallbackTaxPercentProvider);
+    if (async.hasValue) return async.value;
+    if (async.hasError) return null;
+    // Warm in background — never block adding a line on API / offline latency.
+    unawaited(() async {
+      try {
+        await ref.read(invoiceFallbackTaxPercentProvider.future);
+      } on Object {
+        // Ignore — line selection must not depend on remote settings.
+      }
+    }());
+    return null;
+  } on Object {
+    return null;
+  }
 }
 
 Future<void> rememberInvoiceLineTax(Ref ref, double taxPercent) async {
   final businessId = ref.read(currentBusinessProvider)?.id;
   if (businessId == null) return;
 
-  await InvoiceTaxPreference.writeRecentRate(businessId, taxPercent);
-  if (taxPercent > 0) {
-    ref.invalidate(invoiceFallbackTaxPercentProvider);
+  try {
+    await InvoiceTaxPreference.writeRecentRate(businessId, taxPercent);
+    if (taxPercent > 0) {
+      ref.invalidate(invoiceFallbackTaxPercentProvider);
+    }
+  } on Object {
+    // Preference write is best-effort.
   }
 }
 
@@ -53,7 +70,12 @@ Future<SaleLineItem> applyCatalogItemWithInvoiceTaxFallback(
   String? partyPriceTier,
   bool resetQtyWhenEmpty = true,
 }) async {
-  final fallback = await readInvoiceFallbackTaxPercent(ref);
+  double? fallback;
+  try {
+    fallback = await readInvoiceFallbackTaxPercent(ref);
+  } on Object {
+    fallback = null;
+  }
   final applied = applyCatalogItemToLine(
     line,
     catalogItem,

@@ -107,10 +107,12 @@ abstract final class MobileTransactionCatalog {
   ) {
     final status = (item.statusLabel ?? '').toLowerCase();
     return switch (filterKey) {
-      'paid' => status.contains('paid'),
-      'unpaid' => status.contains('unpaid'),
+      // Exact match for "paid" so it does not also match "unpaid".
+      'paid' => status == 'paid',
+      'unpaid' =>
+        status == 'unpaid' || status == 'pending' || status == 'unused',
       'partial' => status.contains('partial'),
-      'open' => status.contains('open'),
+      'open' => status == 'open' || status == 'draft',
       _ => true,
     };
   }

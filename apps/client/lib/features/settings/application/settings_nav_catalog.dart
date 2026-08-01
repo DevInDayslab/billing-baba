@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 /// Canonical list of global settings destinations for mobile hubs / search.
 abstract final class SettingsNavCatalog {
+  /// Special settings row handled in-place (does not navigate by route).
+  static const logoutId = 'logout';
+
   static String preferencesTab(SettingsTab tab) =>
       AppRoutes.settingsTab(tab.id);
 
@@ -68,6 +71,14 @@ abstract final class SettingsNavCatalog {
       title: 'About',
       subtitle: 'Version and app information',
       route: preferencesTab(SettingsTab.about),
+      group: SettingsNavGroup.account,
+    ),
+    SettingsNavItem(
+      id: logoutId,
+      icon: Icons.logout_rounded,
+      title: 'Logout',
+      subtitle: 'Sign out of this device',
+      route: AppRoutes.login,
       group: SettingsNavGroup.account,
     ),
   ];

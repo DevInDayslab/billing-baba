@@ -153,6 +153,12 @@ class GodownMasterRepository {
   }
 
   Future<void> _hydrateIfEmpty(String businessId) async {
+    // Offline developer session — ensure a local default warehouse, no API.
+    if (businessId == 'dev-business' || businessId == 'local-business') {
+      await _ensureDefaultLocalGodown(businessId);
+      return;
+    }
+
     final count = await _local.countActive(businessId);
     if (count > 0) return;
     try {
@@ -171,5 +177,26 @@ class GodownMasterRepository {
     } on Object {
       // Offline / empty.
     }
+
+    // Still empty after hydrate (API unreachable) — keep Adjust Stock usable.
+    if (await _local.countActive(businessId) == 0) {
+      await _ensureDefaultLocalGodown(businessId);
+    }
+  }
+
+  Future<void> _ensureDefaultLocalGodown(String businessId) async {
+    if (await _local.countActive(businessId) > 0) return;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _local.upsertFromDto(
+      businessId,
+      GodownDto(
+        id: 'local-default-godown',
+        name: 'Main Warehouse',
+        isDefault: true,
+        stockItemCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
   }
 }

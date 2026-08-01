@@ -8,7 +8,6 @@ import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_list_controller.dart';
-import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_mock_data.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/party_detail_screen.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_card.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_filter_sheets.dart';
@@ -17,7 +16,6 @@ import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -114,13 +112,6 @@ class _MobilePartyDetailsPageState
     );
   }
 
-  List<PartyModel> _resolveParties(List<PartyModel> parties) {
-    if (parties.isNotEmpty) return parties;
-    // TODO(mobile): Remove mock fallback once party data is available on all devices.
-    if (kDebugMode) return MobilePartyMockData.parties;
-    return parties;
-  }
-
   @override
   Widget build(BuildContext context) {
     final selectedId = ref.watch(selectedPartyIdProvider);
@@ -154,7 +145,6 @@ class _MobilePartyDetailsPageState
         onSearchChanged: _onSearchChanged,
         onRefresh: _onRefresh,
         onSelectParty: _selectParty,
-        resolveParties: _resolveParties,
         onFilterSelected: _onFilterSelected,
         onAddParty: () => showAddPartyDialog(context),
       ),
@@ -168,7 +158,6 @@ class _PartyListBody extends ConsumerWidget {
     required this.onSearchChanged,
     required this.onRefresh,
     required this.onSelectParty,
-    required this.resolveParties,
     required this.onFilterSelected,
     required this.onAddParty,
   });
@@ -177,14 +166,13 @@ class _PartyListBody extends ConsumerWidget {
   final ValueChanged<String> onSearchChanged;
   final Future<void> Function() onRefresh;
   final ValueChanged<String> onSelectParty;
-  final List<PartyModel> Function(List<PartyModel>) resolveParties;
   final Future<void> Function(PartyListFilter) onFilterSelected;
   final VoidCallback onAddParty;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partiesAsync = ref.watch(partyListProvider);
-    final parties = resolveParties(ref.watch(partiesListProvider));
+    final parties = ref.watch(partiesListProvider);
     final sortedParties = sortMobileParties(
       parties,
       ref.watch(mobilePartyListSortProvider),
@@ -192,13 +180,6 @@ class _PartyListBody extends ConsumerWidget {
     final activeFilter = ref.watch(partyListFilterProvider);
     final sortState = ref.watch(mobilePartyListSortProvider);
     final searchQuery = ref.watch(partySearchQueryProvider);
-    final usingMock =
-        partiesAsync.maybeWhen(
-          data: (items) => items.isEmpty,
-          orElse: () => false,
-        ) &&
-        kDebugMode &&
-        sortedParties.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -214,7 +195,9 @@ class _PartyListBody extends ConsumerWidget {
               context: context,
               selected: activeFilter,
             );
-            if (result != null) await onFilterSelected(result);
+            if (result != null) {
+              await onFilterSelected(result);
+            }
           },
           onSortTap: () async {
             final result = await showPartySortSheet(
@@ -231,16 +214,6 @@ class _PartyListBody extends ConsumerWidget {
             }
           },
         ),
-        if (usingMock)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Text(
-              'Showing demo parties — connect to load live data.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
         Expanded(
           child: partiesAsync.when(
             loading: () => parties.isEmpty
