@@ -23,6 +23,12 @@ import 'package:billing_baba/features/business/models/create_business_request.da
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/models/dto/godown_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:dio/dio.dart';
@@ -232,6 +238,77 @@ class BusinessService {
         },
       ],
       accountId: session.user.id,
+    );
+    await _seedOfflineInventoryCatalog(businessSummary.id);
+    await _ensureOfflineDefaultGodown(businessSummary.id);
+  }
+
+  /// Ensures a default warehouse exists for offline stock adjustments.
+  Future<void> _ensureOfflineDefaultGodown(String businessId) async {
+    final db = _ref.read(appDatabaseProvider);
+    final local = GodownLocalSource(db);
+    final existing = await local.countActive(businessId);
+    if (existing > 0) return;
+
+    final now = DateTime.now().toUtc();
+    final nowIso = now.toIso8601String();
+    await local.upsertFromDto(
+      businessId,
+      GodownDto(
+        id: 'dev-godown-main',
+        name: 'Main Warehouse',
+        isDefault: true,
+        stockItemCount: 0,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        address: null,
+      ),
+    );
+    BusinessOpenDebugLog.step('offline-dev', 'seeded default godown');
+  }
+
+  /// Populates local SQLite from [InventoryCatalog] when the API is unreachable.
+  Future<void> _seedOfflineInventoryCatalog(String businessId) async {
+    final db = _ref.read(appDatabaseProvider);
+    final local = ItemLocalSource(db);
+    final existing = await local.countActive(businessId);
+    if (existing > 0) return;
+
+    final now = DateTime.now().toUtc().toIso8601String();
+    for (final item in InventoryCatalog.items) {
+      await local.upsertFromDetailDto(
+        businessId,
+        ItemDetailDto(
+          id: item.id,
+          name: item.name,
+          itemType: item.type == ItemType.service ? 'service' : 'product',
+          hasStockTracking: item.type != ItemType.service,
+          baseUnit: item.baseUnitShortName ?? 'Pcs',
+          salePrice: (item.salePrice ?? 0).toString(),
+          purchasePrice: (item.purchasePrice ?? 0).toString(),
+          createdAt: now,
+          updatedAt: now,
+          shortName: item.shortName,
+          alias: item.alias,
+          searchKeywords: item.searchKeywords,
+          defaultTaxRate: item.defaultTaxRate?.toString(),
+          description: item.description,
+          categoryId: item.categoryId,
+          brandId: item.brandId,
+          hsnCode: item.hsnCode,
+          barcode: item.barcode,
+          mrp: item.mrp?.toString(),
+          reorderLevel: item.reorderLevel?.toString(),
+          primaryImageUrl: item.primaryImageUrl,
+          quantity: item.quantity?.toString(),
+          availableForSale: item.availableForSale?.toString(),
+          reservedQuantity: item.reservedQuantity?.toString(),
+        ),
+      );
+    }
+    BusinessOpenDebugLog.step(
+      'offline-dev',
+      'seeded ${InventoryCatalog.items.length} catalog items',
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
@@ -7,6 +9,7 @@ import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/pagination_meta_dto.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -27,6 +30,9 @@ class ItemMasterRepository {
   final InventoryRemoteDataSource _remote;
   final String Function() _businessIdReader;
   final String? Function()? _deviceIdReader;
+
+  /// One in-flight hydrate per business so list/watch/warm do not stampede.
+  static final Map<String, Future<void>> _hydrateInFlight = {};
 
   ItemLocalSource get local => _local;
 
@@ -277,50 +283,121 @@ class ItemMasterRepository {
     );
   }
 
+  /// Pulls the remote catalog into SQLite when local is empty.
+  ///
+  /// Awaits only the first page so Items/POS can render quickly; remaining
+  /// pages continue in the background (API catalogs can be hundreds of rows).
   Future<void> _hydrateIfEmpty(String businessId) async {
+    // Offline developer session has no API catalog — don't spam connection errors.
+    if (businessId == 'dev-business' || businessId == 'local-business') {
+      return;
+    }
+
     final count = await _local.countActive(businessId);
     if (count > 0) return;
+
+    final existing = _hydrateInFlight[businessId];
+    if (existing != null) {
+      await existing;
+      return;
+    }
+
+    final future = _runHydrate(businessId);
+    _hydrateInFlight[businessId] = future;
     try {
-      var page = 1;
+      await future;
+    } finally {
+      if (identical(_hydrateInFlight[businessId], future)) {
+        _hydrateInFlight.remove(businessId);
+      }
+    }
+  }
+
+  Future<void> _runHydrate(String businessId) async {
+    try {
+      final first = await _remote.listItems(
+        const ItemListQuery(page: 1, limit: 100),
+      );
+      await _upsertHydratePage(businessId, first.items);
+      debugPrint(
+        '[inventory] hydrated page 1 '
+        '(${first.items.length}/${first.meta.total}) for business=$businessId',
+      );
+
+      if (first.items.length < 100 || first.items.length >= first.meta.total) {
+        return;
+      }
+
+      unawaited(_hydrateRemainingPages(businessId, total: first.meta.total));
+    } on Object catch (error, stackTrace) {
+      debugPrint(
+        '[inventory] hydrate failed for business=$businessId: $error\n$stackTrace',
+      );
+    }
+  }
+
+  Future<void> _hydrateRemainingPages(
+    String businessId, {
+    required int total,
+  }) async {
+    try {
+      var page = 2;
+      var upserted = 100;
       while (true) {
         final response = await _remote.listItems(
           ItemListQuery(page: page, limit: 100),
         );
-        for (final listDto in response.items) {
-          await _local.upsertFromDetailDto(
-            businessId,
-            ItemDetailDto(
-              id: listDto.id,
-              name: listDto.name,
-              itemType: listDto.itemType,
-              hasStockTracking: listDto.hasStockTracking,
-              baseUnit: listDto.baseUnit,
-              salePrice: listDto.salePrice,
-              purchasePrice: listDto.purchasePrice,
-              createdAt: listDto.createdAt,
-              updatedAt: listDto.updatedAt,
-              shortName: listDto.shortName,
-              alias: listDto.alias,
-              searchKeywords: listDto.searchKeywords,
-              defaultTaxRate: listDto.defaultTaxRate,
-              description: listDto.description,
-              categoryId: listDto.categoryId,
-              brandId: listDto.brandId,
-              hsnCode: listDto.hsnCode,
-              barcode: listDto.barcode,
-              mrp: listDto.mrp,
-              marketPrice: listDto.marketPrice,
-              reorderLevel: listDto.reorderLevel,
-              primaryImageUrl: listDto.primaryImageUrl,
-            ),
-          );
-        }
+        if (response.items.isEmpty) break;
+        await _upsertHydratePage(businessId, response.items);
+        upserted += response.items.length;
         if (response.items.length < 100) break;
-        if (page * 100 >= response.meta.total) break;
+        if (page * 100 >= total) break;
         page += 1;
       }
-    } on Object {
-      // Offline / first launch with empty local — leave empty.
+      debugPrint(
+        '[inventory] background hydrate complete '
+        '($upserted items) for business=$businessId',
+      );
+    } on Object catch (error, stackTrace) {
+      debugPrint(
+        '[inventory] background hydrate failed for business=$businessId: '
+        '$error\n$stackTrace',
+      );
+    }
+  }
+
+  Future<void> _upsertHydratePage(
+    String businessId,
+    List<ItemListDto> listDtos,
+  ) async {
+    for (final listDto in listDtos) {
+      await _local.upsertFromDetailDto(
+        businessId,
+        ItemDetailDto(
+          id: listDto.id,
+          name: listDto.name,
+          itemType: listDto.itemType,
+          hasStockTracking: listDto.hasStockTracking,
+          baseUnit: listDto.baseUnit,
+          salePrice: listDto.salePrice,
+          purchasePrice: listDto.purchasePrice,
+          createdAt: listDto.createdAt,
+          updatedAt: listDto.updatedAt,
+          shortName: listDto.shortName,
+          alias: listDto.alias,
+          searchKeywords: listDto.searchKeywords,
+          defaultTaxRate: listDto.defaultTaxRate,
+          description: listDto.description,
+          categoryId: listDto.categoryId,
+          brandId: listDto.brandId,
+          hsnCode: listDto.hsnCode,
+          barcode: listDto.barcode,
+          mrp: listDto.mrp,
+          marketPrice: listDto.marketPrice,
+          reorderLevel: listDto.reorderLevel,
+          primaryImageUrl: listDto.primaryImageUrl,
+        ),
+      );
     }
   }
 

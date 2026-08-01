@@ -38,6 +38,12 @@ class MobileBottomNavigation extends StatelessWidget {
     return barHeight + MediaQuery.paddingOf(context).bottom + AppSpacing.sm;
   }
 
+  /// Bottom scroll padding so the last list item clears the floating nav bar
+  /// (shell uses [Scaffold.extendBody]).
+  static double contentBottomPadding(BuildContext context) {
+    return barHeight + MediaQuery.paddingOf(context).bottom + AppSpacing.xl;
+  }
+
   /// Extra scroll padding so list content clears a bottom floating action.
   static double scrollBottomPadding(
     BuildContext context, {

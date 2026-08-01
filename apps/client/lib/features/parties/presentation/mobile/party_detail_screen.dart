@@ -4,7 +4,6 @@ import 'package:billing_baba/features/parties/application/party_ledger_service.d
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
-import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_mock_data.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_detail_header.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_more_actions_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_quick_actions.dart';
@@ -27,15 +26,6 @@ class MobilePartyDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (partyId.startsWith('mock-party-')) {
-      final party = MobilePartyMockData.parties
-          .where((item) => item.id == partyId)
-          .firstOrNull;
-      if (party != null) {
-        return _PartyDetailBody(party: party, onBack: onBack);
-      }
-    }
-
     final detailAsync = ref.watch(partyDetailProvider(partyId));
 
     return detailAsync.when(

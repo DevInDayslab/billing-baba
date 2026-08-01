@@ -1,22 +1,28 @@
 import 'dart:async';
 
-import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
+import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_line_items_list.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_party_picker_field.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_settings_panel.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_item_picker_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,6 +82,11 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _billingNameController = TextEditingController();
     _phoneController = TextEditingController();
     _poNumberController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Warm the inventory catalog so the item picker opens instantly.
+      unawaited(ref.read(inventoryItemsProvider.notifier).refresh());
+    });
 
     if (widget.invoiceId != null) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -152,10 +163,11 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   }
 
   void _resetSaleFormState() {
-    ref.invalidate(addSaleFormProvider(sessionKey: _sessionKey));
-    ref.invalidate(addSaleSubtotalProvider(sessionKey: _sessionKey));
-    ref.invalidate(addSaleTotalTaxProvider(sessionKey: _sessionKey));
-    ref.invalidate(addSaleGrandTotalProvider(sessionKey: _sessionKey));
+    ref
+      ..invalidate(addSaleFormProvider(sessionKey: _sessionKey))
+      ..invalidate(addSaleSubtotalProvider(sessionKey: _sessionKey))
+      ..invalidate(addSaleTotalTaxProvider(sessionKey: _sessionKey))
+      ..invalidate(addSaleGrandTotalProvider(sessionKey: _sessionKey));
   }
 
   Future<void> _handleClose() async {
@@ -248,7 +260,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       _phoneController.clear();
       _poNumberController.clear();
       ref
-          .read(addSaleFormProvider(sessionKey: 'default').notifier)
+          .read(addSaleFormProvider().notifier)
           .toggleSaleType(SaleType.credit);
       _syncControllersFromForm();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -259,6 +271,51 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
 
     _resetSaleFormState();
     returnToTransactionList(context, AppRoutes.saleInvoices);
+  }
+
+  Future<void> _pickCatalogItem() async {
+    final selected = await showMobileItemPickerSheet(
+      context: context,
+      ref: ref,
+    );
+    if (selected == null || !mounted) return;
+
+    try {
+      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+    } on Object {
+      // Tier prices are optional — selection should still succeed offline.
+    }
+    if (!mounted) return;
+
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: _sessionKey).notifier,
+    );
+    var form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
+
+    // Ensure there is an empty draft row to fill.
+    if (form.items.isEmpty ||
+        form.items.indexWhere(isEmptySaleLineDraft) < 0) {
+      notifier.addLineItem();
+      form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
+    }
+
+    final emptyIndex = form.items.indexWhere(isEmptySaleLineDraft);
+    final targetIndex = emptyIndex >= 0 ? emptyIndex : form.items.length - 1;
+    if (targetIndex < 0) return;
+
+    final catalogItem = saleItemOptionFromInventory(
+      selected,
+      tierPrices:
+          ref.read(localItemTierPricesProvider)[selected.id] ?? const {},
+    );
+    try {
+      await notifier.selectCatalogItem(targetIndex, catalogItem);
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not add item: $error')),
+      );
+    }
   }
 
   void _showMoreOptions() {
@@ -503,13 +560,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         MobileSaleAddItemsRow(
-                          onAddItems: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Item picker coming soon'),
-                              ),
-                            );
-                          },
+                          onAddItems: () => unawaited(_pickCatalogItem()),
                           onScan: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -518,6 +569,26 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
                             );
                           },
                         ),
+                        if (form.items.any(
+                          (line) => !isEmptySaleLineDraft(line),
+                        )) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          for (var i = 0; i < form.items.length; i++)
+                            if (!isEmptySaleLineDraft(form.items[i])) ...[
+                              MobileTransactionLineTile(
+                                name: form.items[i].itemName,
+                                qtyLabel: MobileTransactionLineFormat.qty(
+                                  qty: form.items[i].qty,
+                                  unit: form.items[i].unit,
+                                ),
+                                amountLabel: MobileTransactionLineFormat.amount(
+                                  form.items[i].amount,
+                                ),
+                                onRemove: () => notifier.removeLineItem(i),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                            ],
+                        ],
                         const SizedBox(height: AppSpacing.xl),
                         MobileSaleTotalRow(
                           amountLabel: _totalLabel(grandTotal),

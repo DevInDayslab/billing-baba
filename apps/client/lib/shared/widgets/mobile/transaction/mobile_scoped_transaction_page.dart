@@ -43,9 +43,7 @@ class MobileScopedTransactionPage extends ConsumerWidget {
       config: config,
       itemsAsync: itemsAsync,
       filterMatcher: MobileTransactionCatalog.statusFilterMatcher,
-      onRefresh: () async {
-        ref.invalidate(mobileTransactionItemsProvider(definition.scopeId));
-      },
+      onRefresh: () => refreshMobileTransactionItems(ref, definition.route),
       onItemTap: (item) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${item.title} — details coming soon')),

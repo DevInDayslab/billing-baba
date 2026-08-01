@@ -2,13 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_error.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
@@ -19,13 +12,18 @@ import 'package:billing_baba/features/inventory/application/inventory_search_pro
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/application/mobile_item_mock_data.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_list_view.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_more_options_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_quick_links.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_search_bar.dart';
-import 'package:flutter/foundation.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -86,24 +84,13 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
 
   Map<String, String> _categoryNamesById() {
     final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
-    if (categories.isNotEmpty) {
-      return {
-        for (final category in categories) category.id: category.name,
-      };
-    }
-    return MobileItemMockData.categoryNamesById;
+    return {
+      for (final category in categories) category.id: category.name,
+    };
   }
 
   List<InventoryItem> _displayItems(List<InventoryItem> apiItems) {
-    final fromApi = _filterItems(apiItems);
-    if (fromApi.isNotEmpty || !kDebugMode) return fromApi;
-    return _filterItems(MobileItemMockData.items);
-  }
-
-  bool _isUsingMockData(List<InventoryItem> apiItems) {
-    return kDebugMode &&
-        _filterItems(apiItems).isEmpty &&
-        _displayItems(apiItems).isNotEmpty;
+    return _filterItems(apiItems);
   }
 
   Widget _itemsSliver({
@@ -128,13 +115,10 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     if (!mounted || barcode == null) return;
 
     final items = ref.read(inventoryItemListProvider);
-    final displayItems = items.isNotEmpty
-        ? items
-        : (kDebugMode ? MobileItemMockData.items : const <InventoryItem>[]);
     final engine = ref.read(inventorySearchEngineProvider);
     final match = findInventoryItemByBarcodeOrQuery(
       engine,
-      displayItems,
+      items,
       query: barcode,
     );
 
@@ -265,7 +249,6 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     final categoryNamesById = _categoryNamesById();
     final apiItems = itemsAsync.value?.items ?? const <InventoryItem>[];
     final displayItems = _displayItems(apiItems);
-    final usingMock = _isUsingMockData(apiItems);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -302,21 +285,6 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                           onMoreTap: _showMoreSheet,
                         ),
                       ),
-                      if (usingMock)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.lg,
-                            ),
-                            child: Text(
-                              'Showing demo items — connect to load live data.',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                            ),
-                          ),
-                        ),
                       itemsAsync.when(
                         loading: () => displayItems.isEmpty
                             ? const SliverFillRemaining(

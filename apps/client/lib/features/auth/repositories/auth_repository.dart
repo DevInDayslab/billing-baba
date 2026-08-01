@@ -121,9 +121,14 @@ class AuthRepository {
 
     try {
       AuthDebugLogger.log('devLogin dio.post starting');
+      // First empty-catalog login may seed ~50 demo products server-side.
       final response = await _dio.post<Map<String, dynamic>>(
         path,
         data: const <String, dynamic>{},
+        options: Options(
+          sendTimeout: const Duration(seconds: 120),
+          receiveTimeout: const Duration(seconds: 120),
+        ),
       );
       AuthDebugLogger.log(
         'devLogin dio.post response status=${response.statusCode}',

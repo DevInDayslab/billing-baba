@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
@@ -17,6 +18,7 @@ import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_stock_summary_mock_data.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_display_row.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_scaffold.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_cards.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_filter_sheet.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
@@ -368,14 +370,9 @@ class _MobileStockSummaryScreenState
               ),
             ),
           if (viewData.usingMock)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text(
-                'Showing demo stock data — connect to load live report.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
+            const MobileReportInfoBanner(
+              message:
+                  'Showing demo stock data — connect to load live report.',
             ),
           StockSummaryStatCards(
             itemCount: viewData.itemCount,
@@ -435,11 +432,11 @@ class _StockSummaryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
         AppSpacing.sm,
         AppSpacing.lg,
-        AppSpacing.xxxl,
+        MobileBottomNavigation.contentBottomPadding(context),
       ),
       itemCount: rows.length,
       separatorBuilder: (_, _) => const Gap(AppSpacing.md),

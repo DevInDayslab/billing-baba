@@ -694,12 +694,20 @@ class AddSaleForm extends _$AddSaleForm {
   }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
-    final applied = (await applyCatalogItemWithInvoiceTaxFallback(
-      ref,
+    // Use cached tax only — never await remote commerce settings here.
+    // Offline / unreachable API must not prevent adding a selected item.
+    final fallback = ref.read(invoiceFallbackTaxPercentProvider).value;
+    final applied = applyCatalogItemToLine(
       line,
       catalogItem,
       partyPriceTier: state.partyPriceTier,
-    )).copyWith(mrp: catalogItem.salePrice);
+      fallbackTaxPercent: fallback,
+    ).copyWith(mrp: catalogItem.salePrice);
+    if (applied.taxPercent > 0) {
+      unawaited(rememberInvoiceLineTax(ref, applied.taxPercent));
+    }
+    // Warm tax prefs in background for later lines.
+    unawaited(readInvoiceFallbackTaxPercent(ref));
     final targetIndex = resolveSaleLineIndex(
       state.items,
       fallbackIndex: index,
