@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/database/database.dart';
+import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/brand_master_repository.dart';
@@ -51,6 +52,7 @@ class InventoryRepository {
     this._brands,
     this._deviceIdReader,
     this._stockApplier,
+    this._metadata,
   });
 
   final InventoryRemoteDataSource _remote;
@@ -65,6 +67,7 @@ class InventoryRepository {
   final BrandMasterRepository? _brands;
   final String? Function()? _deviceIdReader;
   final InventoryDocumentStockApplier? _stockApplier;
+  final SyncMetadataStore? _metadata;
 
   InventoryRemoteDataSource get remoteDataSource => _remote;
 
@@ -532,6 +535,10 @@ class InventoryRepository {
 
   Future<Map<String, double>> localStockQuantitiesByItem() async {
     final businessId = _requireBusinessId();
+    if (_metadata?.stockLevelsReconciledAtFor(businessId) != null) {
+      await _stockLocal.removeLiteralDefaultGodownRows(businessId: businessId);
+      await _stockLocal.collapseDuplicateStockTriples(businessId: businessId);
+    }
     var quantities = await _stockLocal.quantitiesByItem(businessId: businessId);
     if (quantities.isEmpty) {
       await _maybeBackfillBusinessStock(businessId);
@@ -541,6 +548,9 @@ class InventoryRepository {
   }
 
   Future<void> _maybeBackfillBusinessStock(String businessId) async {
+    if (_metadata?.stockLevelsReconciledAtFor(businessId) != null) {
+      return;
+    }
     final applier = _stockApplier;
     if (applier == null) return;
     final hasMovements = await _stockLocal.hasAnyMovements(businessId: businessId);

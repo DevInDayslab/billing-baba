@@ -5,6 +5,7 @@ import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
@@ -100,6 +101,7 @@ Future<InventoryService> inventoryService(Ref ref) async {
     syncQueue: queue,
     businessIdReader: businessIdReader,
     deviceIdReader: deviceIdReader,
+    metadata: SyncMetadataStore(storage),
     stockLocal: InventoryStockLocalDataSource(db),
     movementProjector: InventoryMovementProjector(db),
     stockApplier: InventoryDocumentStockApplier(

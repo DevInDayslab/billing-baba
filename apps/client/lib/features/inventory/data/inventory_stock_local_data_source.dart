@@ -11,6 +11,9 @@ String stockLevelLocalId({
 }) =>
     '$businessId:$itemId:$godownId';
 
+/// Composite keys from local document movements; server pull uses UUID ids.
+bool isCompositeStockLevelId(String id) => id.contains(':');
+
 double _parseQty(String? value) => double.tryParse(value ?? '') ?? 0;
 
 String _formatQty(double value) {
@@ -163,6 +166,8 @@ class InventoryStockLocalDataSource {
             deviceId: Value(deviceId),
           ),
         );
+
+    await collapseDuplicateStockTriples(businessId: businessId);
   }
 
   Future<StockLevelLocalData?> _findByTriple({
@@ -179,6 +184,59 @@ class InventoryStockLocalDataSource {
           )
           ..limit(1))
         .getSingleOrNull();
+  }
+
+  /// Removes stale rows keyed by the literal godown id `default` (not a UUID).
+  Future<void> removeLiteralDefaultGodownRows({
+    required String businessId,
+  }) async {
+    await (_db.delete(_db.stockLevelsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.godownId.equals('default'),
+          ))
+        .go();
+  }
+
+  /// When server pull and local document stock both wrote the same triple,
+  /// keep the authoritative server row (UUID id / higher sync_version).
+  Future<void> collapseDuplicateStockTriples({
+    required String businessId,
+  }) async {
+    final rows = await (_db.select(_db.stockLevelsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) & t.isDeleted.equals(false),
+          ))
+        .get();
+
+    final groups = <String, List<StockLevelLocalData>>{};
+    for (final row in rows) {
+      final key = '${row.itemId}:${row.godownId}';
+      groups.putIfAbsent(key, () => []).add(row);
+    }
+
+    for (final group in groups.values) {
+      if (group.length <= 1) continue;
+
+      final sorted = [...group]..sort((a, b) {
+        final timeCompare = b.updatedAt.compareTo(a.updatedAt);
+        if (timeCompare != 0) return timeCompare;
+        final aComposite = isCompositeStockLevelId(a.id);
+        final bComposite = isCompositeStockLevelId(b.id);
+        if (aComposite != bComposite) {
+          return aComposite ? 1 : -1;
+        }
+        return b.syncVersion.compareTo(a.syncVersion);
+      });
+
+      for (final loser in sorted.skip(1)) {
+        await (_db.delete(_db.stockLevelsLocal)
+              ..where((t) => t.id.equals(loser.id)))
+            .go();
+      }
+    }
   }
 
   /// Bulk item quantities for list views (sums all godowns per item).
@@ -523,11 +581,22 @@ class InventoryStockLocalDataSource {
     required DateTime updatedAt,
     String? deviceId,
   }) async {
-    final id = stockLevelLocalId(
+    final existing = await _findByTriple(
       businessId: businessId,
       itemId: itemId,
       godownId: godownId,
     );
+    final id = existing?.id ??
+        stockLevelLocalId(
+          businessId: businessId,
+          itemId: itemId,
+          godownId: godownId,
+        );
+    final reservedQty = existing?.reservedQuantity ?? '0';
+    final resolvedCost = averageCost != 0
+        ? averageCost
+        : _parseQty(existing?.averageCost);
+    final availableQty = _formatQty(quantity - _parseQty(reservedQty));
 
     await _db.into(_db.stockLevelsLocal).insertOnConflictUpdate(
           StockLevelsLocalCompanion.insert(
@@ -536,10 +605,12 @@ class InventoryStockLocalDataSource {
             itemId: itemId,
             godownId: godownId,
             currentQuantity: Value(_formatQty(quantity)),
-            reservedQuantity: const Value('0'),
-            availableQuantity: Value(_formatQty(quantity)),
-            averageCost: Value(_formatQty(averageCost)),
+            reservedQuantity: Value(reservedQty),
+            availableQuantity: Value(availableQty),
+            averageCost: Value(_formatQty(resolvedCost)),
             updatedAt: updatedAt,
+            syncVersion: Value(existing?.syncVersion ?? 0),
+            isDeleted: const Value(false),
             deviceId: Value(deviceId),
           ),
         );

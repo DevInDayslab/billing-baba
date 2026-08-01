@@ -1,6 +1,7 @@
+import { REGISTERED_ROW_ENTITY_TYPES } from './apply/row-entities';
+
 /** MVP: finalize commands for Phase 2 transactional documents. */
-export const SUPPORTED_SYNC_COMMANDS = [
-  'finalize_sale',
+export const SUPPORTED_SYNC_COMMANDS = [  'finalize_sale',
   'finalize_purchase',
   'finalize_credit_note',
   'finalize_debit_note',
@@ -9,21 +10,11 @@ export const SUPPORTED_SYNC_COMMANDS = [
 
 export type SupportedSyncCommand = string;
 
-/** MVP registered row entities — keep in sync with apply/row-entities.ts */
-export const SUPPORTED_ROW_ENTITY_TYPES = [
-  'categories',
-  'parties',
-  'items',
-  'unit_definitions',
-  'tax_rates',
-  'godowns',
-  'business_settings',
-  'sales_documents',
-  'sales_document_lines',
-  'purchase_documents',
-  'purchase_document_lines',
-  'stock_levels',
-] as const;
+/** * Row entity types accepted in push mutation schema.
+ * Derived from [ROW_ENTITIES] so status, push validation, and appliers stay aligned.
+ * Pull-only entities (e.g. stock_levels) validate here but are rejected in push apply.
+ */
+export const SUPPORTED_ROW_ENTITY_TYPES = REGISTERED_ROW_ENTITY_TYPES;
 
 export type SupportedRowEntityType =
   (typeof SUPPORTED_ROW_ENTITY_TYPES)[number];

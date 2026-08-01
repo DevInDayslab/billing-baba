@@ -1,12 +1,15 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_mock_data.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_card.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Party list embedded in the mobile home screen when Party Details is active.
-class MobileHomePartySection extends StatelessWidget {
+class MobileHomePartySection extends ConsumerWidget {
   const MobileHomePartySection({
     required this.searchQuery,
     required this.onSelectParty,
@@ -17,35 +20,45 @@ class MobileHomePartySection extends StatelessWidget {
   final ValueChanged<String> onSelectParty;
 
   @override
-  Widget build(BuildContext context) {
-    final parties = _filterParties(
-      MobilePartyMockData.parties,
-      searchQuery,
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final partiesAsync = ref.watch(partyListProvider);
+    final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
 
-    if (parties.isEmpty) {
-      return const MobileEmptyState(
-        title: 'No parties found',
-        message: 'Try a different search term.',
-        icon: Icons.people_outline_rounded,
-      );
-    }
-
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.sm,
-        AppSpacing.lg,
-        AppSpacing.md,
+    return partiesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => AppError(
+        message: error.toString(),
+        onRetry: () => ref.read(partyListProvider.notifier).refresh(),
       ),
-      itemCount: parties.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (context, index) {
-        final party = parties[index];
-        return MobilePartyCard(
-          party: party,
-          onTap: () => onSelectParty(party.id),
+      data: (parties) {
+        final filtered = _filterParties(parties, searchQuery);
+
+        if (filtered.isEmpty) {
+          return const MobileEmptyState(
+            title: 'No parties found',
+            message: 'Try a different search term.',
+            icon: Icons.people_outline_rounded,
+          );
+        }
+
+        return ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.md,
+          ),
+          itemCount: filtered.length,
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+          itemBuilder: (context, index) {
+            final party = filtered[index];
+            return MobilePartyCard(
+              party: party,
+              displayBalance: projectedPartyBalance(party, outstandingIndex),
+              onTap: () => onSelectParty(party.id),
+            );
+          },
         );
       },
     );

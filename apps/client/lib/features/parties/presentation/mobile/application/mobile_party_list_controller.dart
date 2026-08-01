@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -71,8 +72,9 @@ class MobilePartyListSortNotifier extends Notifier<MobilePartyListSortState> {
 /// Client-side sort for the mobile party list (mirrors desktop list panel).
 List<PartyModel> sortMobileParties(
   List<PartyModel> parties,
-  MobilePartyListSortState sort,
-) {
+  MobilePartyListSortState sort, {
+  Map<String, double>? outstandingIndex,
+}) {
   if (sort.direction == MobilePartySortDirection.none) {
     return parties;
   }
@@ -84,9 +86,10 @@ List<PartyModel> sortMobileParties(
         MobilePartySortColumn.name => a.name.toLowerCase().compareTo(
           b.name.toLowerCase(),
         ),
-        MobilePartySortColumn.amount => a.balance.abs().compareTo(
-          b.balance.abs(),
-        ),
+        MobilePartySortColumn.amount =>
+          projectedPartyBalance(a, outstandingIndex).abs().compareTo(
+            projectedPartyBalance(b, outstandingIndex).abs(),
+          ),
       };
       return ascending ? comparison : -comparison;
     });

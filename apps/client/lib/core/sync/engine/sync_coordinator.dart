@@ -310,17 +310,17 @@ class SyncCoordinator {
         ..sort(_compareRowPushOrder);
 
       if (rowJobs.isNotEmpty) {
-        try {
-          for (var offset = 0; offset < rowJobs.length; offset += _lastMaxPushMutations) {
-            if (SyncPauseGate.instance.isStale(syncGeneration)) {
-              return SyncResult.noop(
-                message: 'Sync aborted during business switch',
-              );
-            }
-            final chunkEnd =
-                (offset + _lastMaxPushMutations).clamp(0, rowJobs.length);
-            final chunk = rowJobs.sublist(offset, chunkEnd);
-            final pushStats = await _pushRowJobs(
+        for (var offset = 0; offset < rowJobs.length; offset += _lastMaxPushMutations) {
+          if (SyncPauseGate.instance.isStale(syncGeneration)) {
+            return SyncResult.noop(
+              message: 'Sync aborted during business switch',
+            );
+          }
+          final chunkEnd =
+              (offset + _lastMaxPushMutations).clamp(0, rowJobs.length);
+          final chunk = rowJobs.sublist(offset, chunkEnd);
+          try {
+            final pushStats = await _pushRowJobsResilient(
               deviceId: deviceId,
               appVersion: appVersion,
               jobs: chunk,
@@ -328,24 +328,24 @@ class SyncCoordinator {
             rowsUploaded += pushStats.uploaded;
             conflicts += pushStats.conflicts;
             failures += pushStats.failures;
-          }
-          await _queue.clearCompleted(businessId: businessId);
-        } on Object catch (error) {
-          for (final job in rowJobs) {
-            if (job.status == SyncQueueStatus.running) {
-              await _queue.markFailed(
-                job.id,
-                reason: 'push failed: $error',
-                nextRetryAt: _nextRetryAt(job.attemptCount),
-              );
+          } on Object catch (error) {
+            for (final job in chunk) {
+              if (job.status == SyncQueueStatus.running) {
+                await _queue.markFailed(
+                  job.id,
+                  reason: 'push failed: $error',
+                  nextRetryAt: _nextRetryAt(job.attemptCount),
+                );
+              }
             }
+            return _finishFailure(
+              emit: emit,
+              error: error,
+              context: 'push',
+            );
           }
-          return _finishFailure(
-            emit: emit,
-            error: error,
-            context: 'push',
-          );
         }
+        await _queue.clearCompleted(businessId: businessId);
       }
 
       final documentRowBacklog =
@@ -479,6 +479,60 @@ class SyncCoordinator {
       return true;
     }
     return false;
+  }
+
+  Future<({int uploaded, int conflicts, int failures})> _pushRowJobsResilient({
+    required String deviceId,
+    required String appVersion,
+    required List<SyncJob> jobs,
+  }) async {
+    try {
+      return await _pushRowJobs(
+        deviceId: deviceId,
+        appVersion: appVersion,
+        jobs: jobs,
+      );
+    } on DioException catch (error) {
+      if (!_isPushValidationFailure(error)) rethrow;
+      if (jobs.length == 1) {
+        await _deferValidationBlockedJob(jobs.first, error);
+        return (uploaded: 0, conflicts: 0, failures: 1);
+      }
+
+      var uploaded = 0;
+      var conflicts = 0;
+      var failures = 0;
+      for (final job in jobs) {
+        final stats = await _pushRowJobsResilient(
+          deviceId: deviceId,
+          appVersion: appVersion,
+          jobs: [job],
+        );
+        uploaded += stats.uploaded;
+        conflicts += stats.conflicts;
+        failures += stats.failures;
+      }
+      return (uploaded: uploaded, conflicts: conflicts, failures: failures);
+    }
+  }
+
+  Future<void> _deferValidationBlockedJob(SyncJob job, DioException error) async {
+    await _queue.markFailed(
+      job.id,
+      reason: 'push rejected by server validation: $error',
+      nextRetryAt: DateTime.now().toUtc().add(const Duration(minutes: 15)),
+    );
+  }
+
+  static bool _isPushValidationFailure(DioException error) {
+    if (error.response?.statusCode != 400) return false;
+    final data = error.response?.data;
+    if (data is! Map) return false;
+    final nested = data['error'];
+    if (nested is Map) {
+      return nested['code']?.toString() == 'VALIDATION_FAILED';
+    }
+    return data['code']?.toString() == 'VALIDATION_FAILED';
   }
 
   Future<({int uploaded, int conflicts, int failures})> _pushRowJobs({
@@ -1307,18 +1361,23 @@ class SyncCoordinator {
   }
 
   /// Entity types the server accepts on `/sync/push` (from `/sync/status`).
+  ///
+  /// Intersects with [_clientPushableEntityTypes] so a server that advertises
+  /// entities before push validation supports them does not poison the batch.
   static Set<String> _readSupportedPushEntities(
     Map<String, dynamic> statusPayload,
   ) {
     final raw = statusPayload['supported_entities'];
     if (raw is List) {
-      final entities = raw
+      final fromServer = raw
           .map((e) => e.toString())
           .where((s) => s.isNotEmpty)
           .toSet();
-      if (entities.isNotEmpty) return entities;
+      if (fromServer.isNotEmpty) {
+        return fromServer.intersection(_clientPushableEntityTypes);
+      }
     }
-    return _fallbackPushEntityTypes;
+    return _clientPushableEntityTypes;
   }
 
   /// Commands accepted by `/sync/push` (see api command-registry.ts).
@@ -1329,14 +1388,22 @@ class SyncCoordinator {
     'finalize_debit_note',
   };
 
-  /// Used when the server omits `supported_entities` (tests, older builds).
-  static const Set<String> _fallbackPushEntityTypes = {
+  /// Row entity types this client build can push (must match server push schema).
+  static const Set<String> _clientPushableEntityTypes = {
     'categories',
+    'brands',
     'parties',
     'items',
     'unit_definitions',
     'tax_rates',
     'godowns',
+    'leads',
+    'lead_activities',
+    'contacts',
+    'contact_activities',
+    'deals',
+    'expense_categories',
+    'expenses',
     'business_settings',
     'sales_documents',
     'sales_document_lines',

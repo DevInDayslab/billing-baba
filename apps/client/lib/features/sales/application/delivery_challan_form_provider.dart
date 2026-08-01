@@ -313,16 +313,17 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
     final previous = state.items[index];
+    final merged = preserveCatalogFieldsOnStaleLineUpdate(previous, item);
     final items = [...state.items];
-    items[index] = item;
+    items[index] = merged;
     final clearBillTax =
-        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+        merged.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
     state = state.copyWith(
       items: items,
       taxOption: clearBillTax ? 'NONE' : state.taxOption,
       clearSaveError: true,
     );
-    rememberInvoiceLineTaxIfChanged(ref, previous, item);
+    rememberInvoiceLineTaxIfChanged(ref, previous, merged);
   }
 
   Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
@@ -333,10 +334,15 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
+    if (index < 0 || index >= state.items.length) return;
+    final withUserEdits = mergeUserEditsIntoCatalogLine(
+      applied,
+      state.items[index],
+    );
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
       targetIndex: index,
-      appliedLine: applied,
+      appliedLine: withUserEdits,
       nextLineId: _nextChallanLineItemId,
     );
     state = state.copyWith(items: items, clearSaveError: true);

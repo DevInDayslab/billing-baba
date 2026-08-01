@@ -233,4 +233,123 @@ void main() {
     );
     expect(qty, 3);
   });
+
+  test('applySalesDocument updates server-synced stock row in place', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    const businessId = 'biz-stock-3';
+    const godownId = 'godown-main';
+    const serverStockId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+    const documentId = 'sale-doc-3';
+    const itemId = 'item-almond';
+    final now = DateTime.utc(2026, 1, 15);
+    final saleTime = now.add(const Duration(hours: 1));
+
+    final godowns = GodownLocalSource(db);
+    await godowns.upsertRow(
+      id: godownId,
+      businessId: businessId,
+      name: 'Main',
+      isDefault: true,
+      syncVersion: 1,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    final stockLocal = InventoryStockLocalDataSource(db);
+    await stockLocal.applyPullChange(
+      businessId: businessId,
+      entityId: serverStockId,
+      syncVersion: 5,
+      updatedAt: now,
+      isDeleted: false,
+      itemId: itemId,
+      godownId: godownId,
+      quantity: '47',
+      averageCost: '0',
+    );
+
+    final salesLocal = SalesLocalDataSource(db);
+    final applier = InventoryDocumentStockApplier(
+      stockLocal: stockLocal,
+      salesLocal: salesLocal,
+      purchaseLocal: PurchaseLocalDataSource(db),
+      godowns: godowns,
+    );
+
+    await salesLocal.upsertDocument(
+      id: documentId,
+      businessId: businessId,
+      documentType: 'pos',
+      status: 'finalized',
+      documentNumber: 'POS-001',
+      documentSeries: 'POS',
+      partyId: 'party-1',
+      isGstFormal: false,
+      subtotal: '100',
+      discountTotal: '0',
+      taxAmount: '0',
+      totalAmount: '100',
+      documentDate: '2026-01-15',
+      syncVersion: 0,
+      createdAt: saleTime,
+      updatedAt: saleTime,
+    );
+
+    await salesLocal.replaceLines(
+      businessId: businessId,
+      salesDocumentId: documentId,
+      lines: [
+        SalesDocumentLineLocalData(
+          id: 'line-3',
+          businessId: businessId,
+          salesDocumentId: documentId,
+          itemId: itemId,
+          quantity: '2',
+          unit: 'PCS',
+          unitPrice: '50',
+          discountAmount: '0',
+          taxType: 'none',
+          taxRate: '0',
+          cgstAmount: '0',
+          sgstAmount: '0',
+          igstAmount: '0',
+          lineTotal: '100',
+          sortOrder: 0,
+          syncVersion: 0,
+          createdAt: saleTime,
+          updatedAt: saleTime,
+          isDeleted: false,
+        ),
+      ],
+    );
+
+    await applier.applySalesDocument(
+      businessId: businessId,
+      documentId: documentId,
+    );
+
+    final rows = await (db.select(db.stockLevelsLocal)
+          ..where((t) => t.businessId.equals(businessId)))
+        .get();
+    expect(rows, hasLength(1));
+    expect(rows.single.id, serverStockId);
+    expect(rows.single.currentQuantity, '45');
+
+    final total = await stockLocal.totalQuantityForItem(
+      businessId: businessId,
+      itemId: itemId,
+    );
+    expect(total, 45);
+
+    await stockLocal.collapseDuplicateStockTriples(businessId: businessId);
+    expect(
+      await stockLocal.totalQuantityForItem(
+        businessId: businessId,
+        itemId: itemId,
+      ),
+      45,
+    );
+  });
 }

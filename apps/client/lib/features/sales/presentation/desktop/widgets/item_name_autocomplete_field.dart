@@ -78,6 +78,7 @@ class ItemNameAutocompleteFieldState
   OverlayEntry? _overlayEntry;
   late final TextEditingController _controller;
   var _waitingForItems = false;
+  var _skipNextBlurResolve = false;
 
   static final _priceFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -151,7 +152,61 @@ class ItemNameAutocompleteFieldState
           }),
         );
       }
+      return;
     }
+
+    _removeOverlay();
+    if (_skipNextBlurResolve) {
+      _skipNextBlurResolve = false;
+      return;
+    }
+    unawaited(_tryResolveTypedItemOnBlur());
+  }
+
+  Future<SaleItemOption?> _resolveCatalogItem(
+    InventoryItem inventoryItem, {
+    bool isAlternativeSuggestion = false,
+  }) async {
+    await ref
+        .read(itemApiTierPricesProvider.notifier)
+        .preloadForItemIds([inventoryItem.id]);
+    await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+    if (!mounted) return null;
+
+    final localStore = ref.read(localItemTierPricesProvider);
+    final apiStore = ref.read(itemApiTierPricesProvider);
+    return saleItemOptionFromInventory(
+      inventoryItem,
+      tierPrices: mergedTierPricesForItem(
+        apiStore: apiStore,
+        localStore: localStore,
+        itemId: inventoryItem.id,
+      ),
+      isAlternativeSuggestion: isAlternativeSuggestion,
+    );
+  }
+
+  Future<void> _selectResolvedItem(SaleItemOption resolved) async {
+    _controller.text = resolved.name;
+    widget.onChanged(resolved.name);
+    widget.onItemSelected(resolved);
+    widget.onAfterItemSelected?.call();
+    _removeOverlay();
+  }
+
+  Future<void> _tryResolveTypedItemOnBlur() async {
+    final query = _controller.text.trim();
+    if (query.isEmpty) return;
+
+    final inventory = ref.read(inventoryItemListProvider);
+    final match = inventory.firstWhereOrNull(
+      (item) => item.name.trim().toLowerCase() == query.toLowerCase(),
+    );
+    if (match == null) return;
+
+    final resolved = await _resolveCatalogItem(match);
+    if (!mounted || resolved == null) return;
+    await _selectResolvedItem(resolved);
   }
 
   bool _shouldShowItemsLoading(AsyncValue<List<InventoryItem>> itemsAsync) {
@@ -379,55 +434,30 @@ class ItemNameAutocompleteFieldState
                                           item.name == widget.value;
                                       return InkWell(
                                         onTap: () async {
-                                          await ref
-                                              .read(
-                                                itemApiTierPricesProvider
-                                                    .notifier,
-                                              )
-                                              .preloadForItemIds([item.id]);
-                                          await ref
-                                              .read(
-                                                localItemTierPricesProvider
-                                                    .notifier,
-                                              )
-                                              .ensureInitialized();
-                                          if (!mounted) return;
-
-                                          final localStore = ref.read(
-                                            localItemTierPricesProvider,
-                                          );
-                                          final apiStore = ref.read(
-                                            itemApiTierPricesProvider,
+                                          final inventoryItem =
+                                              inventory.firstWhere(
+                                            (entry) => entry.id == item.id,
+                                            orElse: () => InventoryItem(
+                                              id: item.id,
+                                              name: item.name,
+                                              type: ItemType.product,
+                                              salePrice: item.salePrice,
+                                              purchasePrice: item.purchasePrice,
+                                              defaultTaxRate:
+                                                  item.defaultTaxPercent,
+                                            ),
                                           );
                                           final resolved =
-                                              saleItemOptionFromInventory(
-                                                inventory.firstWhere(
-                                                  (entry) =>
-                                                      entry.id == item.id,
-                                                  orElse: () => InventoryItem(
-                                                    id: item.id,
-                                                    name: item.name,
-                                                    type: ItemType.product,
-                                                    salePrice: item.salePrice,
-                                                    purchasePrice:
-                                                        item.purchasePrice,
-                                                    defaultTaxRate:
-                                                        item.defaultTaxPercent,
-                                                  ),
-                                                ),
-                                                tierPrices:
-                                                    mergedTierPricesForItem(
-                                                      apiStore: apiStore,
-                                                      localStore: localStore,
-                                                      itemId: item.id,
-                                                    ),
-                                                isAlternativeSuggestion:
-                                                    item.isAlternativeSuggestion,
-                                              );
-                                          _controller.text = resolved.name;
-                                          widget.onChanged(resolved.name);
-                                          widget.onItemSelected(resolved);
-                                          _removeOverlay();
+                                              await _resolveCatalogItem(
+                                            inventoryItem,
+                                            isAlternativeSuggestion: item
+                                                .isAlternativeSuggestion,
+                                          );
+                                          if (!mounted || resolved == null) {
+                                            return;
+                                          }
+                                          _skipNextBlurResolve = true;
+                                          await _selectResolvedItem(resolved);
                                           _focusNode.unfocus();
                                         },
                                         hoverColor: const Color(0xFFF5F5F5),

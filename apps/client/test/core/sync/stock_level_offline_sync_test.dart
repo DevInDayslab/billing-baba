@@ -269,4 +269,35 @@ void main() {
     expect(row.currentQuantity, '9.0000');
     expect(row.syncVersion, 3);
   });
+
+  test('collapse removes composite duplicate when server row exists for triple',
+      () async {
+    await markReconciled();
+    await seedLocalCompositeRow(godownId: godownA, quantity: '5222000');
+
+    await stockLocal.applyPullChange(
+      businessId: businessId,
+      entityId: serverIdA,
+      syncVersion: 2,
+      updatedAt: DateTime.utc(2026, 7, 31),
+      isDeleted: false,
+      itemId: itemId,
+      godownId: godownA,
+      quantity: '5222000.0000',
+      averageCost: '0',
+    );
+
+    final rows = await (db.select(db.stockLevelsLocal)
+          ..where((t) => t.businessId.equals(businessId)))
+        .get();
+    expect(rows, hasLength(1));
+    expect(rows.single.id, serverIdA);
+    expect(rows.single.currentQuantity, '5222000.0000');
+
+    final total = await stockLocal.totalQuantityForItem(
+      businessId: businessId,
+      itemId: itemId,
+    );
+    expect(total, 5222000);
+  });
 }

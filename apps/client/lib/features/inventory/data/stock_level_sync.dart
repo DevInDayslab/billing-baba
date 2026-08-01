@@ -65,6 +65,7 @@ class StockLevelSync {
       return;
     }
     await _stockLocal.clearAllForBusiness(businessId);
+    await _stockLocal.removeLiteralDefaultGodownRows(businessId: businessId);
     await _metadata.setStockLevelsReconciledAtFor(businessId, DateTime.now());
   }
 

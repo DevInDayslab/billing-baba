@@ -681,6 +681,11 @@ class _CustomerSectionState extends State<_CustomerSection> {
                           TextField(
                             controller: widget.phoneController,
                             keyboardType: TextInputType.phone,
+                            maxLength: 10,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                            ],
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: AppColors.textPrimary,
                             ),

@@ -8,7 +8,6 @@ import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_list_controller.dart';
-import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_mock_data.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/party_detail_screen.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_card.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_filter_sheets.dart';
@@ -17,7 +16,6 @@ import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -114,12 +112,7 @@ class _MobilePartyDetailsPageState
     );
   }
 
-  List<PartyModel> _resolveParties(List<PartyModel> parties) {
-    if (parties.isNotEmpty) return parties;
-    // TODO(mobile): Remove mock fallback once party data is available on all devices.
-    if (kDebugMode) return MobilePartyMockData.parties;
-    return parties;
-  }
+  List<PartyModel> _resolveParties(List<PartyModel> parties) => parties;
 
   @override
   Widget build(BuildContext context) {
@@ -184,21 +177,16 @@ class _PartyListBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partiesAsync = ref.watch(partyListProvider);
+    final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
     final parties = resolveParties(ref.watch(partiesListProvider));
     final sortedParties = sortMobileParties(
       parties,
       ref.watch(mobilePartyListSortProvider),
+      outstandingIndex: outstandingIndex,
     );
     final activeFilter = ref.watch(partyListFilterProvider);
     final sortState = ref.watch(mobilePartyListSortProvider);
     final searchQuery = ref.watch(partySearchQueryProvider);
-    final usingMock =
-        partiesAsync.maybeWhen(
-          data: (items) => items.isEmpty,
-          orElse: () => false,
-        ) &&
-        kDebugMode &&
-        sortedParties.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -231,22 +219,13 @@ class _PartyListBody extends ConsumerWidget {
             }
           },
         ),
-        if (usingMock)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Text(
-              'Showing demo parties — connect to load live data.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
         Expanded(
           child: partiesAsync.when(
             loading: () => parties.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : _PartyListView(
                     parties: sortedParties,
+                    outstandingIndex: outstandingIndex,
                     onRefresh: onRefresh,
                     onSelectParty: onSelectParty,
                     isFiltered:
@@ -274,6 +253,7 @@ class _PartyListBody extends ConsumerWidget {
 
               return _PartyListView(
                 parties: sortedParties,
+                outstandingIndex: outstandingIndex,
                 onRefresh: onRefresh,
                 onSelectParty: onSelectParty,
                 isFiltered:
@@ -291,12 +271,14 @@ class _PartyListBody extends ConsumerWidget {
 class _PartyListView extends StatelessWidget {
   const _PartyListView({
     required this.parties,
+    required this.outstandingIndex,
     required this.onRefresh,
     required this.onSelectParty,
     required this.isFiltered,
   });
 
   final List<PartyModel> parties;
+  final Map<String, double>? outstandingIndex;
   final Future<void> Function() onRefresh;
   final ValueChanged<String> onSelectParty;
   final bool isFiltered;
@@ -319,6 +301,7 @@ class _PartyListView extends StatelessWidget {
           final party = parties[index];
           return MobilePartyCard(
             party: party,
+            displayBalance: projectedPartyBalance(party, outstandingIndex),
             onTap: () => onSelectParty(party.id),
           );
         },
