@@ -1,8 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/mobile_report_detail_page.dart';
 import 'package:billing_baba/shared/chart/chart_axis_formatters.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/forms/mobile_offline_banner.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +24,13 @@ class MobileReportsPage extends ConsumerWidget {
         showBusinessHeader: false,
         showNotification: false,
       ),
-      body: dashboardAsync.when(
+      body: Column(
+        children: [
+          const MobileOfflineBanner(
+            message: 'Detailed reports refresh when you pull to sync data.',
+          ),
+          Expanded(
+            child: dashboardAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppError(
           message: error.toString(),
@@ -115,10 +123,87 @@ class MobileReportsPage extends ConsumerWidget {
                   icon: Icons.inventory_2_outlined,
                   color: const Color(0xFF43A047),
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Detailed reports',
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _DetailedReportTile(
+                  title: 'Party outstanding',
+                  onTap: () => _openReport(
+                    context,
+                    MobileReportDetailType.partyOutstanding,
+                  ),
+                ),
+                _DetailedReportTile(
+                  title: 'Stock summary',
+                  onTap: () => _openReport(
+                    context,
+                    MobileReportDetailType.stockSummary,
+                  ),
+                ),
+                _DetailedReportTile(
+                  title: 'Day book',
+                  onTap: () => _openReport(
+                    context,
+                    MobileReportDetailType.dayBook,
+                  ),
+                ),
+                _DetailedReportTile(
+                  title: 'Profit & loss',
+                  onTap: () => _openReport(
+                    context,
+                    MobileReportDetailType.profitLoss,
+                  ),
+                ),
+                _DetailedReportTile(
+                  title: 'GSTR-1',
+                  onTap: () => _openReport(
+                    context,
+                    MobileReportDetailType.gstr1,
+                  ),
+                ),
               ],
             ),
           );
         },
+      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openReport(BuildContext context, MobileReportDetailType type) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MobileReportDetailPage(type: type),
+      ),
+    );
+  }
+}
+
+class _DetailedReportTile extends StatelessWidget {
+  const _DetailedReportTile({
+    required this.title,
+    required this.onTap,
+  });
+
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: ListTile(
+        title: Text(title),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
       ),
     );
   }

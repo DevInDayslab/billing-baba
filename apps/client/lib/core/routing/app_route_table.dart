@@ -19,7 +19,6 @@ import 'package:billing_baba/features/collaboration/presentation/sync_share_page
 import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/leads_screen.dart';
-import 'package:billing_baba/features/dashboard/presentation/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/home_page.dart';
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
 import 'package:billing_baba/features/developer/presentation/developer_components_page.dart';
@@ -27,6 +26,8 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/mobile_inventory_masters_page.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/mobile_stock_transfer_placeholder_page.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
@@ -35,6 +36,7 @@ import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_p
 import 'package:billing_baba/features/pos/presentation/pos_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_expense_page.dart';
+import 'package:billing_baba/features/purchases/presentation/add_payment_out_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_purchase_fa_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_purchase_order_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_purchase_page.dart';
@@ -48,7 +50,9 @@ import 'package:billing_baba/features/reports/presentation/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_delivery_challan_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_estimate_page.dart';
+import 'package:billing_baba/features/sales/presentation/add_payment_in_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_fa_page.dart';
+import 'package:billing_baba/features/sales/presentation/add_job_work_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_page.dart';
 import 'package:billing_baba/features/sales/presentation/delivery_challan_page.dart';
@@ -231,21 +235,26 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.itemsCategories,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Categories'),
+            builder: (context, state) => const MobileInventoryMastersPage(
+              type: InventoryMasterType.categories,
+            ),
           ),
           GoRoute(
             path: AppRoutes.itemsUnits,
-            builder: (context, state) => const ComingSoonPage(title: 'Units'),
+            builder: (context, state) => const MobileInventoryMastersPage(
+              type: InventoryMasterType.units,
+            ),
           ),
           GoRoute(
             path: AppRoutes.itemsGodowns,
-            builder: (context, state) => const ComingSoonPage(title: 'Godowns'),
+            builder: (context, state) => const MobileInventoryMastersPage(
+              type: InventoryMasterType.godowns,
+            ),
           ),
           GoRoute(
             path: AppRoutes.itemsStockTransfer,
             builder: (context, state) =>
-                const ComingSoonPage(title: 'Stock Transfer'),
+                const MobileStockTransferPlaceholderPage(),
           ),
           GoRoute(
             path: AppRoutes.sale,
@@ -315,6 +324,13 @@ GoRouter createAppRouter({
             builder: (context, state) => const PaymentInPage(),
           ),
           GoRoute(
+            path: AppRoutes.addPaymentIn,
+            name: 'addPaymentIn',
+            builder: (context, state) => AddPaymentInPage(
+              paymentId: state.uri.queryParameters['paymentId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.saleOrder,
             builder: (context, state) => const SaleOrderPage(),
           ),
@@ -349,6 +365,18 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.saleJobWorkOut,
             builder: (context, state) => const JobWorkOutPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addJobWork,
+            name: 'addJobWork',
+            builder: (context, state) => const AddJobWorkPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editJobWork}/:orderId',
+            name: 'editJobWork',
+            builder: (context, state) => AddJobWorkPage(
+              orderId: state.pathParameters['orderId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.saleReturnCreditNote,
@@ -402,6 +430,13 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.purchasePaymentOut,
             builder: (context, state) => const PaymentOutPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPaymentOut,
+            name: 'addPaymentOut',
+            builder: (context, state) => AddPaymentOutPage(
+              paymentId: state.uri.queryParameters['paymentId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.purchaseExpenses,

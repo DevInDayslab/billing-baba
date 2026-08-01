@@ -56,6 +56,7 @@ Future<void> showPartyMoreActionsSheet({
           label: 'Receive Payment',
           onTap: () => showMobileReceivePaymentSheet(
             context: context,
+            ref: ref,
             party: party,
           ),
         ),
@@ -65,6 +66,7 @@ Future<void> showPartyMoreActionsSheet({
           label: 'Record Payment',
           onTap: () => showMobileRecordPaymentSheet(
             context: context,
+            ref: ref,
             party: party,
           ),
         ),

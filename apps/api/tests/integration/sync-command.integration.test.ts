@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { loadAppConfig } from '../../src/config/app_config';
+import { LEGACY_WALK_IN_PARTY_ID } from '../../src/shared/parties/walk-in-party';
 import {
   createTestApp,
   jsonAuthHeaders,
@@ -240,6 +241,121 @@ describe.skipIf(!canRunDbTests)('Sync command push integration', () => {
       expect(replayBody.data.errors).toEqual([]);
       expect(replayBody.data.replayed).toHaveLength(1);
       expect(replayBody.data.replayed[0]?.idempotent_replay).toBe(true);
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
+
+  test(
+    'pos finalize_sale with legacy walk-in party deducts stock on server',
+    async () => {
+      const documentId = randomUUID();
+      const lineId = randomUUID();
+      const commandId = randomUUID();
+      const now = new Date().toISOString();
+      const config = loadAppConfig();
+
+      const stockBefore = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/stock-levels?item_id=${itemId}`,
+        headers: jsonAuthHeaders(token),
+      });
+      const qtyBefore = (
+        stockBefore.json() as { data: { quantity: string }[] }
+      ).data[0]?.quantity;
+
+      const push = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: randomUUID(),
+          mutations: [
+            {
+              mutation_id: randomUUID(),
+              kind: 'row',
+              entity_type: 'sales_documents',
+              entity_id: documentId,
+              operation: 'create',
+              base_sync_version: 0,
+              payload: {
+                document_type: 'pos',
+                status: 'draft',
+                document_series: 'POS',
+                document_number: 'LOCAL-000777',
+                party_id: LEGACY_WALK_IN_PARTY_ID,
+                is_gst_formal: false,
+                subtotal: '200',
+                discount_total: '0',
+                tax_amount: '0',
+                total_amount: '200',
+                document_date: now,
+              },
+              client_updated_at: now,
+            },
+            {
+              mutation_id: randomUUID(),
+              kind: 'row',
+              entity_type: 'sales_document_lines',
+              entity_id: lineId,
+              operation: 'create',
+              base_sync_version: 0,
+              payload: {
+                sales_document_id: documentId,
+                item_id: itemId,
+                quantity: '2',
+                unit: unitShortName,
+                unit_price: '100',
+                discount_amount: '0',
+                tax_type: 'none',
+                tax_rate: '0',
+                cgst_amount: '0',
+                sgst_amount: '0',
+                igst_amount: '0',
+                line_total: '200',
+                sort_order: 0,
+              },
+              client_updated_at: now,
+            },
+            {
+              mutation_id: randomUUID(),
+              kind: 'command',
+              command: 'finalize_sale',
+              command_id: commandId,
+              payload: {
+                document_id: documentId,
+                local_document_number: 'LOCAL-000777',
+                godown_id: godownId,
+                payment: {
+                  amount: '200',
+                  payment_mode: 'cash',
+                },
+              },
+              client_updated_at: now,
+            },
+          ],
+        },
+      });
+
+      expect(push.statusCode).toBe(200);
+      const body = push.json() as {
+        data: {
+          accepted: unknown[];
+          errors: Array<{ code?: string; message?: string }>;
+        };
+      };
+      expect(body.data.errors).toEqual([]);
+
+      const stockAfter = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/stock-levels?item_id=${itemId}`,
+        headers: jsonAuthHeaders(token),
+      });
+      const qtyAfter = (
+        stockAfter.json() as { data: { quantity: string }[] }
+      ).data[0]?.quantity;
+
+      expect(parseFloat(qtyAfter ?? '0')).toBe(parseFloat(qtyBefore ?? '0') - 2);
     },
     INTEGRATION_TIMEOUT_MS,
   );

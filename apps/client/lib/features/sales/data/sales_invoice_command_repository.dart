@@ -278,7 +278,7 @@ class SalesInvoiceCommandRepository {
     final commandPayload = <String, dynamic>{
       'document_id': documentId,
       'local_document_number': localNumber,
-      'godown_id': ?godownId,
+      if (godownId != null && godownId.isNotEmpty) 'godown_id': godownId,
     };
 
     if (payment != null && double.tryParse(payment.amount) != null &&

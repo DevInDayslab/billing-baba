@@ -276,6 +276,35 @@ class SyncQueue {
     return count;
   }
 
+  /// Re-queues failed document row jobs so a fixed server can accept them.
+  ///
+  /// Rows that failed permanently (no [nextRetryAt]) block finalize commands;
+  /// this gives them another attempt after API fixes (e.g. walk-in party seed).
+  Future<int> requeueFailedDocumentRows({String? businessId}) async {
+    final rows = await (_db.select(_db.syncQueue)
+          ..where((t) {
+            final documentEntity = t.entityType.equals('sales_documents') |
+                t.entityType.equals('sales_document_lines') |
+                t.entityType.equals('purchase_documents') |
+                t.entityType.equals('purchase_document_lines');
+            final failed = t.status.equals(SyncQueueStatus.failed.wire);
+            if (businessId == null || businessId.isEmpty) {
+              return failed & documentEntity & t.kind.equals(SyncQueueKind.row.wire);
+            }
+            return failed &
+                documentEntity &
+                t.kind.equals(SyncQueueKind.row.wire) &
+                t.businessId.equals(businessId);
+          }))
+        .get();
+    var count = 0;
+    for (final row in rows) {
+      await retry(row.id);
+      count += 1;
+    }
+    return count;
+  }
+
   /// Rewrites non-UUID line `entity_id`s so push passes API validation.
   ///
   /// Older clients used counters like `line_4` / `purchase_line_1` as line PKs.

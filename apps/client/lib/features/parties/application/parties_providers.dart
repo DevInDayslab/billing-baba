@@ -2,8 +2,10 @@ import 'package:billing_baba/features/parties/application/parties_selection_prov
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+export 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
 export 'parties_selection_providers.dart';
 
 /// Full party list for searchable pickers — ignores Parties page filters/search.
@@ -49,20 +51,12 @@ final partyOutstandingIndexProvider =
   return service.fetchOutstandingIndex(businessId: businessId);
 });
 
-double projectedPartyBalance(
-  PartyModel party,
-  Map<String, double>? outstandingIndex,
-) {
-  final projected = outstandingIndex?[party.id];
-  if (projected != null) return projected;
-  return party.openingBalance;
-}
-
 /// Unfiltered parties for group membership and group-name discovery.
 /// Rebuilds when [partyListProvider] changes so CRUD stays in sync.
 final allPartiesListProvider = FutureProvider<List<PartyModel>>((ref) async {
-  ref.keepAlive();
-  ref.watch(partyListProvider);
+  ref
+    ..keepAlive()
+    ..watch(partyListProvider);
   final service = await ref.watch(partyServiceProvider.future);
   return service.loadPartiesForGroupDiscovery();
 });

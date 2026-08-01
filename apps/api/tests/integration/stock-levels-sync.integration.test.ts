@@ -348,6 +348,7 @@ describe.skipIf(!canRunDbTests)('Stock levels sync integration', () => {
       expect(stockChanges).toHaveLength(1);
       expect(stockChanges[0]?.entity_id).toBe(stockLevelId);
       expect(stockChanges[0]?.payload?.quantity).toBe('35.0000');
+      expect(stockChanges[0]?.sync_version).toBeGreaterThan(1);
     },
     INTEGRATION_TIMEOUT_MS,
   );

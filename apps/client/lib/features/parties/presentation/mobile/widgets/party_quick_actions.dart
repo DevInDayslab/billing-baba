@@ -29,9 +29,17 @@ class MobilePartyQuickActions extends ConsumerWidget {
         ? 'Record Payment'
         : 'Payment';
     final primaryAction = canReceive
-        ? () => showMobileReceivePaymentSheet(context: context, party: party)
+        ? () => showMobileReceivePaymentSheet(
+            context: context,
+            ref: ref,
+            party: party,
+          )
         : canRecord
-        ? () => showMobileRecordPaymentSheet(context: context, party: party)
+        ? () => showMobileRecordPaymentSheet(
+            context: context,
+            ref: ref,
+            party: party,
+          )
         : null;
 
     return Padding(

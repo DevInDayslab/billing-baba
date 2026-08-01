@@ -1,5 +1,5 @@
-import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum MobilePartySortColumn { name, amount }

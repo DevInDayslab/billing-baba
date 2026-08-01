@@ -409,20 +409,25 @@ abstract final class MobileTransactionMapper {
     };
   }
 
-  /// Maps a mobile transaction route to the corresponding list route for navigation.
+  /// Maps a mobile transaction route to the corresponding edit route.
   static String? detailRouteFor(String listRoute, String itemId) {
     return switch (listRoute) {
-      AppRoutes.saleInvoices => AppRoutes.addSale,
-      AppRoutes.saleEstimateQuotation => AppRoutes.addEstimate,
-      AppRoutes.saleOrder => AppRoutes.addSaleOrder,
-      AppRoutes.saleDeliveryChallan => AppRoutes.addDeliveryChallan,
-      AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
-      AppRoutes.saleFa => AppRoutes.addSaleFa,
-      AppRoutes.purchaseBills => AppRoutes.addPurchase,
-      AppRoutes.purchaseExpenses => AppRoutes.addExpense,
-      AppRoutes.purchaseOrder => AppRoutes.addPurchaseOrder,
-      AppRoutes.purchaseReturnDebitNote => AppRoutes.addDebitNote,
-      AppRoutes.purchaseFa => AppRoutes.addPurchaseFa,
+      AppRoutes.saleInvoices => '${AppRoutes.editSale}/$itemId',
+      AppRoutes.saleEstimateQuotation => '${AppRoutes.editEstimate}/$itemId',
+      AppRoutes.saleOrder => '${AppRoutes.editSaleOrder}/$itemId',
+      AppRoutes.saleDeliveryChallan =>
+        '${AppRoutes.editDeliveryChallan}/$itemId',
+      AppRoutes.saleReturnCreditNote => '${AppRoutes.editCreditNote}/$itemId',
+      AppRoutes.saleFa => '${AppRoutes.editSaleFa}/$itemId',
+      AppRoutes.salePaymentIn => '${AppRoutes.addPaymentIn}?paymentId=$itemId',
+      AppRoutes.saleJobWorkOut => '${AppRoutes.editJobWork}/$itemId',
+      AppRoutes.purchaseBills => '${AppRoutes.editPurchase}/$itemId',
+      AppRoutes.purchaseExpenses => '${AppRoutes.editExpense}/$itemId',
+      AppRoutes.purchaseOrder => '${AppRoutes.editPurchaseOrder}/$itemId',
+      AppRoutes.purchaseReturnDebitNote => '${AppRoutes.editDebitNote}/$itemId',
+      AppRoutes.purchaseFa => '${AppRoutes.editPurchaseFa}/$itemId',
+      AppRoutes.purchasePaymentOut =>
+        '${AppRoutes.addPaymentOut}?paymentId=$itemId',
       _ => null,
     };
   }

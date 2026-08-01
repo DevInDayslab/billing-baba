@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import {
   godowns,
@@ -203,9 +203,10 @@ export async function recordMovementAndUpdateStock(
       quantity: normalizeMoney(newQty),
       averageCost: newAverageCost,
       updatedAt: new Date(),
+      syncVersion: sql`${stockLevels.syncVersion} + 1`,
     })
     .where(eq(stockLevels.id, existingStock.id))
-    .returning({ id: stockLevels.id });
+    .returning({ id: stockLevels.id, syncVersion: stockLevels.syncVersion });
 
   if (!updated) {
     throw new Error('Failed to update stock level');

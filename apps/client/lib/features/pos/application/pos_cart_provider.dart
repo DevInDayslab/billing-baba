@@ -274,7 +274,7 @@ class PosCart extends _$PosCart {
     );
   }
 
-  Future<PosSale> completeSale() async {
+  Future<PosSale> completeSale({bool clearCartOnSuccess = true}) async {
     if (state.items.isEmpty) {
       throw const PosRepositoryException(message: 'Cart is empty');
     }
@@ -293,12 +293,16 @@ class PosCart extends _$PosCart {
         cart: state,
         businessId: businessId,
       );
-      clearCart();
-      await refreshAfterSaleMutation(
-        ref,
-        context: (
-          partyId: sale.partyId,
-          itemIds: itemIds,
+      if (clearCartOnSuccess) {
+        clearCart();
+      }
+      unawaited(
+        refreshAfterSaleMutation(
+          ref,
+          context: (
+            partyId: sale.partyId,
+            itemIds: itemIds,
+          ),
         ),
       );
       return sale;

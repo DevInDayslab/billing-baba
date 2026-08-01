@@ -271,6 +271,7 @@ class SyncCoordinator {
 
       await _queue.resetRunningToPending(businessId: businessId);
       await _queue.requeueRetryableFailures(businessId: businessId);
+      await _queue.requeueFailedDocumentRows(businessId: businessId);
 
       // Empty DB / no cursor → pull from epoch until done.
       if (needsBootstrap) {
@@ -350,7 +351,8 @@ class SyncCoordinator {
 
       final documentRowBacklog =
           await _queue.listDocumentRowBacklog(businessId: businessId);
-      final commandJobs = pending
+      final freshPending = await _safePendingJobs(businessId: businessId);
+      final commandJobs = freshPending
           .where(
             (j) =>
                 j.kind == SyncQueueKind.command &&

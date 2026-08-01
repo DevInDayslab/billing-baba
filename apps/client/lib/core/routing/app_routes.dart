@@ -25,6 +25,7 @@ abstract final class AppRoutes {
   static const saleEstimateQuotation = '/sale/estimate-quotation';
   static const saleProformaInvoice = '/sale/proforma-invoice';
   static const salePaymentIn = '/sale/payment-in';
+  static const addPaymentIn = '/sale/add-payment-in';
   static const saleOrder = '/sale/order';
   static const addSaleOrder = '/sale/add-order';
   static const editSaleOrder = '/sale/edit-order';
@@ -32,6 +33,8 @@ abstract final class AppRoutes {
   static const addDeliveryChallan = '/sale/add-delivery-challan';
   static const editDeliveryChallan = '/sale/edit-delivery-challan';
   static const saleJobWorkOut = '/sale/job-work-out';
+  static const addJobWork = '/sale/add-job-work';
+  static const editJobWork = '/sale/edit-job-work';
   static const saleReturnCreditNote = '/sale/return-credit-note';
   static const saleFa = '/sale/fa';
   static const addSaleFa = '/sale/add-fa';
@@ -48,6 +51,7 @@ abstract final class AppRoutes {
   static const purchase = '/purchase';
   static const purchaseBills = '/purchase/bills';
   static const purchasePaymentOut = '/purchase/payment-out';
+  static const addPaymentOut = '/purchase/add-payment-out';
   static const purchaseExpenses = '/purchase/expenses';
   static const purchaseOrder = '/purchase/order';
   static const purchaseReturnDebitNote = '/purchase/return-debit-note';

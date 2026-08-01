@@ -11,6 +11,7 @@ import type {
   RowEntityDef,
   SyncedRowBase,
 } from './row-entities';
+import { ensureWalkInParty } from '../../../shared/parties/walk-in-party';
 import { getRowEntity, listRowEntities } from './row-entities';
 
 export type {
@@ -75,6 +76,13 @@ export class RowApplier {
     if (definition.beforeApply) {
       const guardOutcome = await definition.beforeApply(input, existing);
       if (guardOutcome) return guardOutcome;
+    }
+
+    if (input.entityType === 'sales_documents') {
+      const partyId = input.payload.party_id;
+      if (typeof partyId === 'string' && partyId.length > 0) {
+        await ensureWalkInParty(this.db, input.businessId, partyId);
+      }
     }
 
     switch (input.operation) {

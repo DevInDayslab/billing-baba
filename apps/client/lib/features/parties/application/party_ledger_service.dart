@@ -1,6 +1,5 @@
-import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
-import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/party_projection_service.dart';
 import 'package:billing_baba/features/parties/data/party_ledger_local_data_source.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
@@ -59,12 +58,18 @@ Future<PartyLedgerService> partyLedgerService(Ref ref) async {
 
 @Riverpod(keepAlive: true)
 Future<String> partyLedgerBusinessId(Ref ref) async {
-  final storage = await ref.watch(storageServiceProvider.future);
-  final businessId = storage.read(StorageKeys.lastOpenedBusinessId)?.trim();
-  if (businessId == null || businessId.isEmpty) {
-    throw StateError('Business must be selected');
+  final fromProfile = ref.watch(currentBusinessProvider)?.id.trim();
+  if (fromProfile != null && fromProfile.isNotEmpty) {
+    return fromProfile;
   }
-  return businessId;
+
+  final businessService = await ref.watch(businessServiceProvider.future);
+  final resolved = await businessService.resolveActiveBusinessId();
+  if (resolved != null && resolved.trim().isNotEmpty) {
+    return resolved.trim();
+  }
+
+  throw StateError('Business must be selected');
 }
 
 @Riverpod(keepAlive: true)

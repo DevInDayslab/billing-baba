@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_card.dart';
@@ -27,7 +28,7 @@ class MobileHomePartySection extends ConsumerWidget {
     return partiesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => AppError(
-        message: error.toString(),
+        message: PartyErrorMapper.messageFor(error),
         onRetry: () => ref.read(partyListProvider.notifier).refresh(),
       ),
       data: (parties) {

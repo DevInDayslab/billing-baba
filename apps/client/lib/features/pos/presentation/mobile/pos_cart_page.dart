@@ -202,7 +202,8 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
   Future<void> _completeSaleFlow() async {
     // TODO(pos): Wire selectedTaxRate through to PosSaleService when tax
     // override is supported. Sale currently uses hardcoded 18% GST.
-    await ref.read(posCartProvider.notifier).completeSale();
+    final cart = ref.read(posCartProvider.notifier);
+    await cart.completeSale(clearCartOnSuccess: false);
     // Push finalize_sale to server immediately.
     unawaited(
       ref.read(commandAwareSyncEngineProvider.future).then((engine) {
@@ -211,13 +212,17 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
     );
     if (!mounted) return;
     _nextInvoiceNumber++;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sale completed successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
-    context.pop();
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    cart.clearCart();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(navigator.context).showSnackBar(
+        const SnackBar(
+          content: Text('Sale completed successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    });
   }
 
   Future<void> _saveBill() async {
