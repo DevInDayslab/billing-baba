@@ -13,8 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final manualSyncVisualStateProvider =
     NotifierProvider<ManualSyncVisualStateNotifier, ManualSyncVisualState>(
-  ManualSyncVisualStateNotifier.new,
-);
+      ManualSyncVisualStateNotifier.new,
+    );
 
 class ManualSyncVisualStateNotifier extends Notifier<ManualSyncVisualState> {
   Timer? _resetTimer;
@@ -87,8 +87,8 @@ class ManualSyncVisualStateNotifier extends Notifier<ManualSyncVisualState> {
 
 final _lastSyncDurationNotifierProvider =
     NotifierProvider<_LastSyncDurationNotifier, Duration?>(
-  _LastSyncDurationNotifier.new,
-);
+      _LastSyncDurationNotifier.new,
+    );
 
 class _LastSyncDurationNotifier extends Notifier<Duration?> {
   @override
@@ -226,7 +226,8 @@ final syncUiStateProvider = Provider<SyncUiSnapshot>((ref) {
     pendingCommands: pending.pendingCommands,
     queueSize: pending.queueSize,
     currentOperation: currentOperation,
-    progress: syncState.connectivity == SyncConnectivityStatus.offline &&
+    progress:
+        syncState.connectivity == SyncConnectivityStatus.offline &&
             pending.queueSize > 0
         ? OfflineUiMessages.syncWhenOnline
         : syncState.lastResultMessage,

@@ -66,6 +66,7 @@ class _FakeSyncApi extends SyncApi {
       'errors': <Map<String, dynamic>>[],
     };
   }
+
   @override
   Future<Map<String, dynamic>> pull({
     required String deviceId,
@@ -87,7 +88,9 @@ void main() {
   late SyncCoordinator coordinator;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({StorageKeys.lastOpenedBusinessId: 'biz-1'});
+    SharedPreferences.setMockInitialValues({
+      StorageKeys.lastOpenedBusinessId: 'biz-1',
+    });
     final prefs = await SharedPreferences.getInstance();
     storage = StorageService(preferences: prefs);
     db = AppDatabase(NativeDatabase.memory());
@@ -98,33 +101,53 @@ void main() {
     repo = TaxRateMasterRepository(
       local: rates,
       syncQueue: queue,
-      businessIdReader: () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+      businessIdReader: () =>
+          storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
       deviceIdReader: () => '22222222-2222-2222-2222-222222222222',
     );
     final identity = SyncDeviceIdentity(
       storage,
       packageInfoLoader: () async => PackageInfo(
-        appName: 'Billing Baba', packageName: 'billing_baba', version: '1.0.0', buildNumber: '1',
+        appName: 'Billing Baba',
+        packageName: 'billing_baba',
+        version: '1.0.0',
+        buildNumber: '1',
       ),
       platformName: () => 'test',
     );
     coordinator = SyncCoordinator(
-      api: api, queue: queue, identity: identity, metadata: metadata, storage: storage,
-      categorySync: CategorySync(db), partySync: PartySync(db), itemSync: ItemSync(db),
-      unitSync: UnitSync(db), taxRateSync: TaxRateSync(db), godownSync: GodownSync(db),
+      api: api,
+      queue: queue,
+      identity: identity,
+      metadata: metadata,
+      storage: storage,
+      categorySync: CategorySync(db),
+      partySync: PartySync(db),
+      itemSync: ItemSync(db),
+      unitSync: UnitSync(db),
+      taxRateSync: TaxRateSync(db),
+      godownSync: GodownSync(db),
       businessSettingsSync: BusinessSettingsSync(db),
     );
   });
 
-  tearDown(() async { coordinator.dispose(); await db.close(); });
+  tearDown(() async {
+    coordinator.dispose();
+    await db.close();
+  });
 
   Future<void> syncNow() async {
     var state = const SyncState(connectivity: SyncConnectivityStatus.online);
-    await coordinator.orchestrate(currentState: state, emit: (u) => state = u(state));
+    await coordinator.orchestrate(
+      currentState: state,
+      emit: (u) => state = u(state),
+    );
   }
 
   test('offline CRUD + push ACK + conflict + pull soft-delete', () async {
-    final created = await repo.create(const CreateTaxRateRequest(name: 'GST 18', rate: '18'));
+    final created = await repo.create(
+      const CreateTaxRateRequest(name: 'GST 18', rate: '18'),
+    );
     expect(created.name, 'GST 18');
     expect((await queue.listPending()).single.entityType, 'tax_rates');
     await repo.update(created.id, const UpdateTaxRateRequest(name: 'GST 18%'));
@@ -133,17 +156,28 @@ void main() {
     expect(await queue.pendingCount(), 3);
 
     // fresh create for push/conflict/pull
-    final alive = await repo.create(const CreateTaxRateRequest(name: 'GST 5', rate: '5'));
+    final alive = await repo.create(
+      const CreateTaxRateRequest(name: 'GST 5', rate: '5'),
+    );
     await syncNow();
     expect((await rates.getById(alive.id))!.syncVersion, 3);
 
-    final conflicted = await repo.create(const CreateTaxRateRequest(name: 'Local', rate: '12'));
+    final conflicted = await repo.create(
+      const CreateTaxRateRequest(name: 'Local', rate: '12'),
+    );
     api.pushHandler = (body) {
       final mid = (body['mutations'] as List).first['mutation_id'];
       return {
         'accepted': <Map<String, dynamic>>[],
         'replayed': <Map<String, dynamic>>[],
-        'conflicts': [{'mutation_id': mid, 'code': 'VERSION_CONFLICT', 'server_payload': {'name': 'Srv'}, 'server_sync_version': 9}],
+        'conflicts': [
+          {
+            'mutation_id': mid,
+            'code': 'VERSION_CONFLICT',
+            'server_payload': {'name': 'Srv'},
+            'server_sync_version': 9,
+          },
+        ],
         'errors': <Map<String, dynamic>>[],
       };
     };
@@ -156,14 +190,16 @@ void main() {
     const id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
     api.pushHandler = null;
     api.pullPayload = {
-      'changes': [{
-        'entity_type': 'tax_rates',
-        'entity_id': id,
-        'sync_version': 2,
-        'updated_at': DateTime.utc(2026, 8).toIso8601String(),
-        'is_deleted': false,
-        'payload': {'name': 'Pulled', 'rate': '28', 'is_default': true},
-      }],
+      'changes': [
+        {
+          'entity_type': 'tax_rates',
+          'entity_id': id,
+          'sync_version': 2,
+          'updated_at': DateTime.utc(2026, 8).toIso8601String(),
+          'is_deleted': false,
+          'payload': {'name': 'Pulled', 'rate': '28', 'is_default': true},
+        },
+      ],
       'next_cursor': 'cursor-after-pull',
       'has_more': false,
     };

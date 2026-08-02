@@ -13,12 +13,11 @@ class GeneratedDocumentsRepository {
     required String documentKind,
     required String sourceType,
     required String sourceId,
-  }) =>
-      _remote.lookup(
-        documentKind: documentKind,
-        sourceType: sourceType,
-        sourceId: sourceId,
-      );
+  }) => _remote.lookup(
+    documentKind: documentKind,
+    sourceType: sourceType,
+    sourceId: sourceId,
+  );
 
   Future<GeneratedDocumentDto> ensure({
     required String documentKind,
@@ -27,15 +26,14 @@ class GeneratedDocumentsRepository {
     Uint8List? bytes,
     String? fileName,
     bool forceRegenerate = false,
-  }) =>
-      _remote.ensure(
-        documentKind: documentKind,
-        sourceType: sourceType,
-        sourceId: sourceId,
-        contentBase64: bytes == null ? null : base64Encode(bytes),
-        fileName: fileName,
-        forceRegenerate: forceRegenerate,
-      );
+  }) => _remote.ensure(
+    documentKind: documentKind,
+    sourceType: sourceType,
+    sourceId: sourceId,
+    contentBase64: bytes == null ? null : base64Encode(bytes),
+    fileName: fileName,
+    forceRegenerate: forceRegenerate,
+  );
 
   Future<String> resolveDownloadUrl(GeneratedDocumentDto document) async {
     if (document.downloadUrl != null && document.downloadUrl!.isNotEmpty) {

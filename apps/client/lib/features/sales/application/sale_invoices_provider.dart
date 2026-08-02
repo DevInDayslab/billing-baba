@@ -311,7 +311,8 @@ List<SaleInvoiceModel> applySaleInvoiceClientFilters(
   final search = searchQuery.trim().toLowerCase();
 
   return invoices.where((invoice) {
-    if (search.isNotEmpty && !_saleInvoiceSearchHaystack(invoice).contains(search)) {
+    if (search.isNotEmpty &&
+        !_saleInvoiceSearchHaystack(invoice).contains(search)) {
       return false;
     }
     if (filters.dateColumnFilter != null &&

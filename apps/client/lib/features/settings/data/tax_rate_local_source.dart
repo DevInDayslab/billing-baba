@@ -9,29 +9,31 @@ class TaxRateLocalSource {
   final AppDatabase _db;
 
   Future<int> countActive(String businessId) async {
-    final rows = await (_db.select(_db.taxRatesLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.taxRatesLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            ))
+            .get();
     return rows.length;
   }
 
   Future<List<TaxRateDto>> listActive(String businessId) async {
-    final rows = await (_db.select(_db.taxRatesLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          )
-          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .get();
+    final rows =
+        await (_db.select(_db.taxRatesLocal)
+              ..where(
+                (t) =>
+                    t.businessId.equals(businessId) & t.isDeleted.equals(false),
+              )
+              ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+            .get();
     return rows.map(_toDto).toList();
   }
 
   Future<TaxRateTableData?> getById(String id) {
-    return (_db.select(_db.taxRatesLocal)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.taxRatesLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<TaxRateDto?> getActiveDto(String id) async {
@@ -53,7 +55,9 @@ class TaxRateLocalSource {
     bool isDeleted = false,
     String? deviceId,
   }) {
-    return _db.into(_db.taxRatesLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.taxRatesLocal)
+        .insertOnConflictUpdate(
           TaxRatesLocalCompanion.insert(
             id: id,
             businessId: businessId,

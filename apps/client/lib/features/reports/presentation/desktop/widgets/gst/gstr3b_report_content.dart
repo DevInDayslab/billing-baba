@@ -3,6 +3,8 @@ import 'package:billing_baba/features/reports/application/phase1_report_provider
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/gstr_month_filter_bar.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
@@ -232,97 +234,20 @@ class _Gstr3bHeaderStyle {
   );
 }
 
-class _TaxSupplyTable extends StatelessWidget {
+class _TaxSupplyTable extends ConsumerWidget {
   const _TaxSupplyTable({required this.rows});
 
   final List<ReportGstr3bRow> rows;
 
-  static const _natureWidth = 280.0;
-  static const _valueWidth = 120.0;
-  static const _cessWidth = 80.0;
-  static const double minWidth =
-      _natureWidth + (_valueWidth * 4) + _cessWidth + 32;
+  static const double minWidth = 280 + (120 * 4) + 80 + 32;
 
   @override
-  Widget build(BuildContext context) {
-    return ReportSyncScrollTable(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ReportFilterableSyncTable<ReportGstr3bRow>(
+      reportScope: gstr3bReportScope,
       minWidth: minWidth,
-      headerChildren: const [
-        ReportAlignedHeaderCell(
-          label: 'NATURE OF SUPPLIES',
-          width: _natureWidth,
-          showFilter: false,
-        ),
-        ReportAlignedHeaderCell(
-          label: 'TOTAL TAXABLE VALUE',
-          width: _valueWidth,
-          alignment: Alignment.centerRight,
-          showFilter: false,
-        ),
-        ReportAlignedHeaderCell(
-          label: 'INTEGRATED TAX',
-          width: _valueWidth,
-          alignment: Alignment.centerRight,
-          showFilter: false,
-        ),
-        ReportAlignedHeaderCell(
-          label: 'CENTRAL TAX',
-          width: _valueWidth,
-          alignment: Alignment.centerRight,
-          showFilter: false,
-        ),
-        ReportAlignedHeaderCell(
-          label: 'STATE/UT TAX',
-          width: _valueWidth,
-          alignment: Alignment.centerRight,
-          showFilter: false,
-        ),
-        ReportAlignedHeaderCell(
-          label: 'CESS',
-          width: _cessWidth,
-          alignment: Alignment.centerRight,
-          showFilter: false,
-        ),
-      ],
-      rows: [
-        for (var i = 0; i < rows.length; i++)
-          ReportAlignedRowStrip(
-            index: i,
-            child: ReportAlignedDataRow(
-              cells: [
-                ReportAlignedCell.fixed(
-                  _natureWidth,
-                  child: Text(rows[i].nature),
-                ),
-                ReportAlignedCell.fixed(
-                  _valueWidth,
-                  alignment: Alignment.centerRight,
-                  child: Text(formatReportCurrency(rows[i].taxableValue)),
-                ),
-                ReportAlignedCell.fixed(
-                  _valueWidth,
-                  alignment: Alignment.centerRight,
-                  child: Text(formatReportCurrency(rows[i].integratedTax)),
-                ),
-                ReportAlignedCell.fixed(
-                  _valueWidth,
-                  alignment: Alignment.centerRight,
-                  child: Text(formatReportCurrency(rows[i].centralTax)),
-                ),
-                ReportAlignedCell.fixed(
-                  _valueWidth,
-                  alignment: Alignment.centerRight,
-                  child: Text(formatReportCurrency(rows[i].stateTax)),
-                ),
-                ReportAlignedCell.fixed(
-                  _cessWidth,
-                  alignment: Alignment.centerRight,
-                  child: Text(formatReportCurrency(rows[i].cess)),
-                ),
-              ],
-            ),
-          ),
-      ],
+      columns: gstr3bColumns(),
+      rows: rows,
     );
   }
 }

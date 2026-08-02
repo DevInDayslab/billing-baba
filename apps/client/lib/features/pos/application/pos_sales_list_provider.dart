@@ -27,22 +27,21 @@ class PosSalesList extends _$PosSalesList {
     );
     final sales = <PosSale>[];
     for (final row in rows) {
-      final lineItems =
-          (linesBySaleId[row.id] ?? const <SaleLineLocal>[])
-              .map(
-                (line) => PosSaleLineItem(
-                  name: line.itemName,
-                  quantity: line.quantity,
-                  lineTotal: line.lineTotal,
-                  itemId: line.itemId,
-                  unit: 'pcs',
-                  unitPrice: line.rate,
-                  cgstAmount: line.cgstAmount,
-                  sgstAmount: line.sgstAmount,
-                  igstAmount: line.igstAmount,
-                ),
-              )
-              .toList();
+      final lineItems = (linesBySaleId[row.id] ?? const <SaleLineLocal>[])
+          .map(
+            (line) => PosSaleLineItem(
+              name: line.itemName,
+              quantity: line.quantity,
+              lineTotal: line.lineTotal,
+              itemId: line.itemId,
+              unit: 'pcs',
+              unitPrice: line.rate,
+              cgstAmount: line.cgstAmount,
+              sgstAmount: line.sgstAmount,
+              igstAmount: line.igstAmount,
+            ),
+          )
+          .toList();
       sales.add(
         PosSale(
           id: row.id,

@@ -103,8 +103,7 @@ class PosLocalDataSource {
     final lines =
         await (_db.select(_db.salesLineLocal)..where(
               (row) =>
-                  row.saleId.equals(saleId) &
-                  row.businessId.equals(businessId),
+                  row.saleId.equals(saleId) & row.businessId.equals(businessId),
             ))
             .get();
     return (sale, lines);
@@ -126,12 +125,11 @@ class PosLocalDataSource {
     final ids = saleIds.toList();
     if (ids.isEmpty) return const {};
 
-    final rows = await (_db.select(_db.salesLineLocal)
-          ..where(
-            (row) =>
-                row.businessId.equals(businessId) & row.saleId.isIn(ids),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.salesLineLocal)..where(
+              (row) => row.businessId.equals(businessId) & row.saleId.isIn(ids),
+            ))
+            .get();
 
     final grouped = <String, List<SaleLineLocal>>{};
     for (final row in rows) {
@@ -220,9 +218,11 @@ class PosLocalDataSource {
         id: itemJson['id'] as String,
         name: itemJson['name'] as String,
         sku: itemJson['sku'] as String,
-        categoryId: itemJson['categoryId'] as String? ??
+        categoryId:
+            itemJson['categoryId'] as String? ??
             itemJson['category'] as String?,
-        categoryName: itemJson['categoryName'] as String? ??
+        categoryName:
+            itemJson['categoryName'] as String? ??
             itemJson['category'] as String? ??
             'Uncategorized',
         price: (itemJson['price'] as num).toDouble(),

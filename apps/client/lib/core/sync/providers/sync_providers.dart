@@ -75,14 +75,16 @@ final syncApiProvider = FutureProvider<SyncApi>((ref) async {
   return SyncApi(apiClient.dio);
 });
 
-final syncDeviceIdentityProvider =
-    FutureProvider<SyncDeviceIdentity>((ref) async {
+final syncDeviceIdentityProvider = FutureProvider<SyncDeviceIdentity>((
+  ref,
+) async {
   final storage = await ref.watch(storageServiceProvider.future);
   return SyncDeviceIdentity(storage);
 });
 
-final syncMetadataStoreProvider =
-    FutureProvider<SyncMetadataStore>((ref) async {
+final syncMetadataStoreProvider = FutureProvider<SyncMetadataStore>((
+  ref,
+) async {
   final storage = await ref.watch(storageServiceProvider.future);
   return SyncMetadataStore(storage);
 });
@@ -142,8 +144,9 @@ final syncStateProvider = StreamProvider<SyncState>((ref) async* {
   yield* engine.stateChanges;
 });
 
-final connectivityStatusProvider =
-    StreamProvider<SyncConnectivityStatus>((ref) async* {
+final connectivityStatusProvider = StreamProvider<SyncConnectivityStatus>((
+  ref,
+) async* {
   final monitor = ref.watch(connectivityMonitorProvider);
   yield monitor.status;
   yield* monitor.onStatusChanged;

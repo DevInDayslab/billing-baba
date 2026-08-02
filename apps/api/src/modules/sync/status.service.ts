@@ -2,8 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../../db/client';
 import { schemaVersion } from '../../db/schema/meta/tables';
 import type { DeviceService } from './device.service';
-import { isPullOnlyRowEntity } from './apply/row-entities';
-import { SUPPORTED_ROW_ENTITY_TYPES } from './sync.types';
+import { REGISTERED_ROW_ENTITY_TYPES } from './apply/row-entities';
 import { SUPPORTED_SYNC_COMMAND_NAMES } from './apply/commands/command-registry';
 import {
   SYNC_BOOTSTRAP_CHUNK_MAX_BYTES,
@@ -39,9 +38,7 @@ export class StatusService {
       pull_limit_max: SYNC_PULL_LIMIT_MAX,
       bootstrap_chunk_max_bytes: SYNC_BOOTSTRAP_CHUNK_MAX_BYTES,
       supported_commands: [...SUPPORTED_SYNC_COMMAND_NAMES],
-      supported_entities: SUPPORTED_ROW_ENTITY_TYPES.filter(
-        (entityType) => !isPullOnlyRowEntity(entityType),
-      ),
+      supported_entities: [...REGISTERED_ROW_ENTITY_TYPES],
       capabilities: {
         channels: ['http'],
         selective_sync: true,

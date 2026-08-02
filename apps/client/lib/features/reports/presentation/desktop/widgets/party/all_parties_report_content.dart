@@ -157,7 +157,10 @@ class AllPartiesReportContent extends ConsumerWidget {
                                     label: 'PARTY NAME',
                                   ),
                                 ),
-                                ReportAlignedHeaderCell(label: 'EMAIL', width: 140),
+                                ReportAlignedHeaderCell(
+                                  label: 'EMAIL',
+                                  width: 140,
+                                ),
                                 ReportAlignedHeaderCell(
                                   label: 'PHONE NO.',
                                   width: 110,
@@ -182,7 +185,10 @@ class AllPartiesReportContent extends ConsumerWidget {
                                 for (var i = 0; i < parties.length; i++)
                                   ReportAlignedRowStrip(
                                     index: i,
-                                    child: _PartyRow(index: i, party: parties[i]),
+                                    child: _PartyRow(
+                                      index: i,
+                                      party: parties[i],
+                                    ),
                                   ),
                               ],
                             ),

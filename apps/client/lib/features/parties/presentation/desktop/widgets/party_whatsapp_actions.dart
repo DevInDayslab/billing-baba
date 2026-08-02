@@ -65,8 +65,8 @@ abstract final class PartyWhatsAppActions {
   }) async {
     final existing = ref.read(partyNextReminderProvider(party.id));
     var frequency = existing?.frequency ?? PartyReminderFrequency.once;
-    var date = existing?.nextReminderAt ??
-        DateTime.now().add(const Duration(days: 1));
+    var date =
+        existing?.nextReminderAt ?? DateTime.now().add(const Duration(days: 1));
     var sendCopy = existing?.sendCopyToMyself ?? false;
     var saving = false;
 
@@ -329,7 +329,9 @@ abstract final class PartyWhatsAppActions {
     if (confirmed != true || !context.mounted) return;
 
     final next = DateTime(date.year, date.month, date.day);
-    await ref.read(partyReminderScheduleMapProvider.notifier).save(
+    await ref
+        .read(partyReminderScheduleMapProvider.notifier)
+        .save(
           PartyReminderSchedule(
             partyId: party.id,
             frequency: frequency,

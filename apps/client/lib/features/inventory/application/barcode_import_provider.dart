@@ -96,7 +96,10 @@ class BarcodeImportRow {
     required this.hsnCode,
     required this.defaultMrp,
     required this.salePrice,
-    required this.taxPercent, required this.baseUnit, required this.status, this.incTax = true,
+    required this.taxPercent,
+    required this.baseUnit,
+    required this.status,
+    this.incTax = true,
   });
 
   factory BarcodeImportRow.empty(int index) {
@@ -234,8 +237,7 @@ class BarcodeImport extends _$BarcodeImport {
     if (inProgress != -1) return inProgress;
 
     final idx = rows.indexWhere(
-      (r) =>
-          r.status != BarcodeRowStatus.loading && r.hasLeadingColumnsEmpty,
+      (r) => r.status != BarcodeRowStatus.loading && r.hasLeadingColumnsEmpty,
     );
     return idx == -1 ? rows.length - 1 : idx;
   }
@@ -516,7 +518,9 @@ class BarcodeImport extends _$BarcodeImport {
 
   /// Returns `null` on success, or an error message on failure.
   Future<String?> saveItems({
-    required List<InventoryCategory> categories, required List<InventoryUnit> units, bool ignoreErrors = false,
+    required List<InventoryCategory> categories,
+    required List<InventoryUnit> units,
+    bool ignoreErrors = false,
   }) async {
     final rowsToSave = state.where((row) => !row.isEmpty).toList();
     if (rowsToSave.isEmpty) return 'No items to save';
@@ -661,7 +665,8 @@ class BarcodeImport extends _$BarcodeImport {
     List<InventoryUnit> units,
   ) {
     final defaultUnit = _defaultUnit(units);
-    final fallback = defaultUnit?.shortName ??
+    final fallback =
+        defaultUnit?.shortName ??
         (units.isNotEmpty ? units.first.shortName : 'Pcs');
 
     final trimmed = row.baseUnit.trim();
@@ -742,11 +747,7 @@ class BarcodeImport extends _$BarcodeImport {
       'pieces' => const ['pcs', 'piece', 'pieces'],
       'bag' || 'bags' => const ['bag', 'pcs'],
       'kg' || 'kgs' || 'kilogram' || 'kilograms' => const ['kg', 'kgs'],
-      'g' ||
-      'gm' ||
-      'gms' ||
-      'gram' ||
-      'grams' => const ['gm', 'gms', 'gram'],
+      'g' || 'gm' || 'gms' || 'gram' || 'grams' => const ['gm', 'gms', 'gram'],
       'ml' ||
       'millilitre' ||
       'milliliter' ||

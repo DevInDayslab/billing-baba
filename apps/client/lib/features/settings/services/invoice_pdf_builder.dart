@@ -4,7 +4,8 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
-import 'package:billing_baba/features/settings/presentation/desktop/widgets/invoice_preview_widget.dart' show InvoicePreviewWidget;
+import 'package:billing_baba/features/settings/presentation/desktop/widgets/invoice_preview_widget.dart'
+    show InvoicePreviewWidget;
 import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';

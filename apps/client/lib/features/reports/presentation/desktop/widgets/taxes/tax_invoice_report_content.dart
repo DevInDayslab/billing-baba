@@ -143,180 +143,186 @@ class TaxInvoiceReportContent extends ConsumerWidget {
                         Expanded(
                           child: ReportTableArea(
                             child: rows.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.description_outlined,
-                                        size: 48,
-                                        color: AppColors.textSecondary
-                                            .withValues(alpha: 0.4),
-                                      ),
-                                      const SizedBox(height: AppSpacing.sm),
-                                      Text(
-                                        subSection.emptyMessage,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.textSecondary,
+                                ? Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.description_outlined,
+                                          size: 48,
+                                          color: AppColors.textSecondary
+                                              .withValues(alpha: 0.4),
                                         ),
+                                        const SizedBox(height: AppSpacing.sm),
+                                        Text(
+                                          subSection.emptyMessage,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: ReportSyncScrollTable(
+                                          minWidth: _minTableWidth,
+                                          headerChildren: const [
+                                            ReportAlignedHeaderCell(
+                                              label: '#',
+                                              width: 40,
+                                              showFilter: false,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'PARTY NAME',
+                                              width: 140,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'INVOICE NO',
+                                              width: 110,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'TOTAL VALUE',
+                                              width: 120,
+                                              alignment: Alignment.centerRight,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'AMOUNT RECEIVED',
+                                              width: 140,
+                                              alignment: Alignment.centerRight,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'TOTAL TAX COLLECTED',
+                                              width: 160,
+                                              alignment: Alignment.centerRight,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'DATE OF COLLECTION',
+                                              width: 150,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'TAX NAME',
+                                              width: 120,
+                                            ),
+                                            ReportAlignedHeaderCell(
+                                              label: 'TCS RATE',
+                                              width: 100,
+                                              alignment: Alignment.centerRight,
+                                            ),
+                                          ],
+                                          rows: [
+                                            for (
+                                              var i = 0;
+                                              i < rows.length;
+                                              i++
+                                            )
+                                              ReportAlignedRowStrip(
+                                                index: i,
+                                                child: ReportAlignedDataRow(
+                                                  cells: [
+                                                    ReportAlignedCell.fixed(
+                                                      40,
+                                                      child: Text('${i + 1}'),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      140,
+                                                      child: Text(
+                                                        rows[i].partyName,
+                                                      ),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      110,
+                                                      child: Text(
+                                                        rows[i].invoiceNo,
+                                                      ),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      120,
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Text(
+                                                        formatReportCurrency(
+                                                          rows[i].totalValue,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      140,
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Text(
+                                                        formatReportCurrency(
+                                                          rows[i]
+                                                              .amountReceived,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      160,
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Text(
+                                                        formatReportCurrency(
+                                                          rows[i]
+                                                              .totalTaxCollected,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      150,
+                                                      child: Text(
+                                                        formatReportDate(
+                                                          rows[i]
+                                                              .collectionDate,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      120,
+                                                      child: Text(
+                                                        rows[i].taxName,
+                                                      ),
+                                                    ),
+                                                    ReportAlignedCell.fixed(
+                                                      100,
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Text(
+                                                        rows[i].taxRate
+                                                            .toStringAsFixed(2),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      ReportPaginationBar(
+                                        page: report.meta.page,
+                                        totalPages: report.meta.totalPages,
+                                        onPrevious: report.meta.page > 1
+                                            ? () => _goToPage(
+                                                ref,
+                                                report.meta.page - 1,
+                                              )
+                                            : null,
+                                        onNext:
+                                            report.meta.page <
+                                                report.meta.totalPages
+                                            ? () => _goToPage(
+                                                ref,
+                                                report.meta.page + 1,
+                                              )
+                                            : null,
                                       ),
                                     ],
                                   ),
-                                )
-                              : Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Expanded(
-                                      child: ReportSyncScrollTable(
-                                        minWidth: _minTableWidth,
-                                        headerChildren: const [
-                                          ReportAlignedHeaderCell(
-                                            label: '#',
-                                            width: 40,
-                                            showFilter: false,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'PARTY NAME',
-                                            width: 140,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'INVOICE NO',
-                                            width: 110,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'TOTAL VALUE',
-                                            width: 120,
-                                            alignment: Alignment.centerRight,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'AMOUNT RECEIVED',
-                                            width: 140,
-                                            alignment: Alignment.centerRight,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'TOTAL TAX COLLECTED',
-                                            width: 160,
-                                            alignment: Alignment.centerRight,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'DATE OF COLLECTION',
-                                            width: 150,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'TAX NAME',
-                                            width: 120,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'TCS RATE',
-                                            width: 100,
-                                            alignment: Alignment.centerRight,
-                                          ),
-                                        ],
-                                        rows: [
-                                          for (var i = 0; i < rows.length; i++)
-                                            ReportAlignedRowStrip(
-                                              index: i,
-                                              child: ReportAlignedDataRow(
-                                                cells: [
-                                                  ReportAlignedCell.fixed(
-                                                    40,
-                                                    child: Text('${i + 1}'),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    140,
-                                                    child: Text(
-                                                      rows[i].partyName,
-                                                    ),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    110,
-                                                    child: Text(
-                                                      rows[i].invoiceNo,
-                                                    ),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    120,
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Text(
-                                                      formatReportCurrency(
-                                                        rows[i].totalValue,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    140,
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Text(
-                                                      formatReportCurrency(
-                                                        rows[i].amountReceived,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    160,
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Text(
-                                                      formatReportCurrency(
-                                                        rows[i]
-                                                            .totalTaxCollected,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    150,
-                                                    child: Text(
-                                                      formatReportDate(
-                                                        rows[i].collectionDate,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    120,
-                                                    child: Text(
-                                                      rows[i].taxName,
-                                                    ),
-                                                  ),
-                                                  ReportAlignedCell.fixed(
-                                                    100,
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Text(
-                                                      rows[i].taxRate
-                                                          .toStringAsFixed(2),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    ReportPaginationBar(
-                                      page: report.meta.page,
-                                      totalPages: report.meta.totalPages,
-                                      onPrevious: report.meta.page > 1
-                                          ? () => _goToPage(
-                                              ref,
-                                              report.meta.page - 1,
-                                            )
-                                          : null,
-                                      onNext:
-                                          report.meta.page <
-                                              report.meta.totalPages
-                                          ? () => _goToPage(
-                                              ref,
-                                              report.meta.page + 1,
-                                            )
-                                          : null,
-                                    ),
-                                  ],
-                                ),
                           ),
                         ),
                       ],

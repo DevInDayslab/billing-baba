@@ -8,8 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'phase1_report_providers.g.dart';
 
 ReportQuery _currentQuery(Ref ref) {
-  ref.watch(reportDataEpochProvider);
-  return ref.watch(reportFiltersProvider).toQuery();
+  return ref.read(reportFiltersProvider).toQuery();
 }
 
 @riverpod

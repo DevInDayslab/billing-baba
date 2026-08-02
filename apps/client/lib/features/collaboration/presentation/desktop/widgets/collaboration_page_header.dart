@@ -54,7 +54,9 @@ class CollaborationPageHeader extends StatelessWidget {
         Tooltip(
           message: 'Refresh',
           child: IconButton(
-            onPressed: isRefreshing ? null : () => _handleManualRefresh(context),
+            onPressed: isRefreshing
+                ? null
+                : () => _handleManualRefresh(context),
             icon: isRefreshing
                 ? const SizedBox(
                     width: 18,

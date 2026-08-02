@@ -219,7 +219,9 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: aliasController,
                   style: saleFieldTextStyle,
-                  decoration: buildFormControlDecoration(hint: 'Alternate name'),
+                  decoration: buildFormControlDecoration(
+                    hint: 'Alternate name',
+                  ),
                   onChanged: onAliasChanged,
                 ),
               ),

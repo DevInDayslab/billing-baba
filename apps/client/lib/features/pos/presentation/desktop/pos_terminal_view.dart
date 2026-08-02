@@ -28,7 +28,8 @@ class DesktopPosTerminalView extends ConsumerStatefulWidget {
   const DesktopPosTerminalView({super.key});
 
   @override
-  ConsumerState<DesktopPosTerminalView> createState() => _PosTerminalViewState();
+  ConsumerState<DesktopPosTerminalView> createState() =>
+      _PosTerminalViewState();
 }
 
 class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
@@ -761,7 +762,9 @@ class _ShortcutHintsBar extends StatelessWidget {
                       showHints ? Icons.keyboard_hide : Icons.keyboard,
                       size: 16,
                     ),
-                    label: Text(showHints ? 'Hide shortcuts' : 'Show shortcuts'),
+                    label: Text(
+                      showHints ? 'Hide shortcuts' : 'Show shortcuts',
+                    ),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.textSecondary,
                       textStyle: PosStyles.shortcutHintStyle,

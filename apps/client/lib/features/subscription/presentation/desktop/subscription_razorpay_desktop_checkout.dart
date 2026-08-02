@@ -538,9 +538,7 @@ class _RazorpayDesktopCheckoutDialogState
         if (!context.mounted) return true;
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final popupWidth = _snapToPhysical(
-          _screenSizeAtOpen.width > 900
-              ? 900.0
-              : _screenSizeAtOpen.width - 32,
+          _screenSizeAtOpen.width > 900 ? 900.0 : _screenSizeAtOpen.width - 32,
           dpr,
         );
         final popupHeight = _snapToPhysical(

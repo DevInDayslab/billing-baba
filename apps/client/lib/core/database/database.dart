@@ -152,8 +152,16 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(localDocumentCounters);
       }
       if (from < 15) {
-        await _addColumnIfMissing(m, salesDocumentsLocal, salesDocumentsLocal.paidAmount);
-        await _addColumnIfMissing(m, salesDocumentsLocal, salesDocumentsLocal.paymentMode);
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.paidAmount,
+        );
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.paymentMode,
+        );
       }
       if (from < 16) {
         await _addColumnIfMissing(

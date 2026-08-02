@@ -87,12 +87,14 @@ Future<InventoryService> inventoryService(Ref ref) async {
 
   final remote = InventoryRemoteDataSource(api.dio);
   String businessIdReader() {
-    final fromProfile = currentBusiness?.id.trim() ??
+    final fromProfile =
+        currentBusiness?.id.trim() ??
         ref.read(currentBusinessProvider)?.id.trim() ??
         '';
     if (fromProfile.isNotEmpty) return fromProfile;
     return storage.read(StorageKeys.lastOpenedBusinessId)?.trim() ?? '';
   }
+
   String? deviceIdReader() => deviceId;
 
   final repository = InventoryRepository(
@@ -149,7 +151,7 @@ class InventoryService {
   InventoryService({
     required this._repository,
     ItemMediaRepository? mediaRepository,
-  })  : _media = mediaRepository;
+  }) : _media = mediaRepository;
 
   static const inventoryPageSize = 80;
 
@@ -897,7 +899,9 @@ class InventoryService {
           },
         );
         final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
-        final quantity = localQty != 0 ? localQty : (stock?.quantity ?? localQty);
+        final quantity = localQty != 0
+            ? localQty
+            : (stock?.quantity ?? localQty);
         return ItemMapper.fromDetailDto(
           dto,
           quantity: quantity,
@@ -984,7 +988,9 @@ class InventoryService {
       throw const InventoryException('Please select a base unit.');
     }
 
-    final defaultGodown = form.godownId == null ? await getDefaultGodown() : null;
+    final defaultGodown = form.godownId == null
+        ? await getDefaultGodown()
+        : null;
     final request = AddItemFormMapper.toUpdateRequest(
       form,
       baseUnitShortName: baseUnit.shortName,
@@ -1056,18 +1062,10 @@ class InventoryService {
     required List<InventoryCategory> categories,
     required List<InventoryItem> items,
   }) {
-    final uncategorizedCount = items
-        .where(
-          (item) =>
-              item.categoryId == null ||
-              item.categoryId == uncategorizedCategoryId,
-        )
-        .length;
-
-    return [
-      CategoryMapper.uncategorized(itemCount: uncategorizedCount),
-      ...categories.where((category) => !category.isUncategorized),
-    ];
+    return CategoryMapper.withSyncedItemCounts(
+      categories: categories,
+      items: items,
+    );
   }
 
   InventoryUnit? _resolveUnit(String? unitId, List<InventoryUnit> units) {

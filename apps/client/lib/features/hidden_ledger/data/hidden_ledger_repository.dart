@@ -29,9 +29,11 @@ class HiddenLedgerRepository {
         'limit': filters.limit,
         if (filters.partyId != null) 'party_id': filters.partyId,
         if (filters.status != null) 'status': filters.status,
-        if (filters.from != null) 'from': filters.from!.toUtc().toIso8601String(),
+        if (filters.from != null)
+          'from': filters.from!.toUtc().toIso8601String(),
         if (filters.to != null) 'to': filters.to!.toUtc().toIso8601String(),
-        if (filters.searchQuery.trim().isNotEmpty) 'q': filters.searchQuery.trim(),
+        if (filters.searchQuery.trim().isNotEmpty)
+          'q': filters.searchQuery.trim(),
         if (filters.invoiceNumber.trim().isNotEmpty)
           'invoice_number': filters.invoiceNumber.trim(),
       },

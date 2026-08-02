@@ -138,8 +138,8 @@ class SyncEngine {
     final lifecycle = status == SyncConnectivityStatus.offline
         ? SyncLifecycleState.offline
         : (_state.lifecycle == SyncLifecycleState.offline
-            ? SyncLifecycleState.idle
-            : _state.lifecycle);
+              ? SyncLifecycleState.idle
+              : _state.lifecycle);
 
     _emit(
       _state.copyWith(

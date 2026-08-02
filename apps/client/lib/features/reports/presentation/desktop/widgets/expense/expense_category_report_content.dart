@@ -175,43 +175,43 @@ class ExpenseCategoryReportContent extends ConsumerWidget {
                         Expanded(
                           child: ReportTableArea(
                             child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'EXPENSE CATEGORY',
+                                ? const Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ReportSyncScrollTable(
+                                        headerChildren: [
+                                          Expanded(
+                                            child: ReportAlignedHeaderCell(
+                                              label: 'EXPENSE CATEGORY',
+                                            ),
                                           ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'CATEGORY TYPE',
-                                          width: 180,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'AMOUNT',
-                                          width: 140,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No expense records found for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
+                                          ReportAlignedHeaderCell(
+                                            label: 'CATEGORY TYPE',
+                                            width: 180,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'AMOUNT',
+                                            width: 140,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                        ],
+                                        rows: [],
+                                      ),
+                                      Expanded(
+                                        child: Center(
+                                          child: Text(
+                                            'No expense records found for the selected period.',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
+                                    ],
+                                  )
+                                : ReportSyncScrollTable(
                                     headerChildren: const [
                                       Expanded(
                                         child: ReportAlignedHeaderCell(
@@ -256,9 +256,8 @@ class ExpenseCategoryReportContent extends ConsumerWidget {
                                         ),
                                     ],
                                   ),
-                                ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

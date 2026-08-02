@@ -69,8 +69,8 @@ describe.skipIf(!canRunDbTests)('Sync command push integration', () => {
         short_name: `CU${suffix.slice(0, 4)}`,
       },
     });
-    unitShortName = (unitRes.json() as { data: { short_name: string } })
-      .data.short_name;
+    unitShortName = (unitRes.json() as { data: { short_name: string } }).data
+      .short_name;
 
     const itemRes = await app.inject({
       method: 'POST',
@@ -210,7 +210,9 @@ describe.skipIf(!canRunDbTests)('Sync command push integration', () => {
       expect(result?.document_number_remap?.local_document_number).toBe(
         'LOCAL-000001',
       );
-      expect(result?.document_number_remap?.server_document_number).toBeTruthy();
+      expect(
+        result?.document_number_remap?.server_document_number,
+      ).toBeTruthy();
 
       const replayPush = await app.inject({
         method: 'POST',
@@ -236,7 +238,10 @@ describe.skipIf(!canRunDbTests)('Sync command push integration', () => {
         },
       });
       const replayBody = replayPush.json() as {
-        data: { replayed: Array<{ idempotent_replay?: boolean }>; errors: unknown[] };
+        data: {
+          replayed: Array<{ idempotent_replay?: boolean }>;
+          errors: unknown[];
+        };
       };
       expect(replayBody.data.errors).toEqual([]);
       expect(replayBody.data.replayed).toHaveLength(1);

@@ -13,10 +13,9 @@ class SyncDeviceIdentity {
     Uuid? uuid,
     Future<PackageInfo> Function()? packageInfoLoader,
     String? Function()? platformName,
-  })  : _uuid = uuid ?? const Uuid(),
-        _packageInfoLoader =
-            packageInfoLoader ?? PackageInfo.fromPlatform,
-        _platformName = platformName ?? _defaultPlatformName;
+  }) : _uuid = uuid ?? const Uuid(),
+       _packageInfoLoader = packageInfoLoader ?? PackageInfo.fromPlatform,
+       _platformName = platformName ?? _defaultPlatformName;
 
   final StorageService _storage;
   final Uuid _uuid;

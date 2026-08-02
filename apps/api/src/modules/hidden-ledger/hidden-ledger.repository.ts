@@ -1,4 +1,16 @@
-import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import {
   hiddenLedgerEntries,
@@ -321,15 +333,18 @@ export class HiddenLedgerRepository {
     const entry = await this.findEntryById(params.businessId, params.entryId);
     if (!entry) return null;
 
-    const nextRecovered = parseMoney(entry.recovered_amount) +
-      parseMoney(params.recoveryAmount);
+    const nextRecovered =
+      parseMoney(entry.recovered_amount) + parseMoney(params.recoveryAmount);
     const total = parseMoney(entry.amount);
     if (nextRecovered > total) {
       throw new Error('Recovery amount exceeds entry outstanding balance');
     }
 
     const remaining = Math.max(0, total - nextRecovered);
-    const status = resolveEntryStatus(entry.amount, normalizeMoney(nextRecovered));
+    const status = resolveEntryStatus(
+      entry.amount,
+      normalizeMoney(nextRecovered),
+    );
 
     const [row] = await this.db
       .update(hiddenLedgerEntries)

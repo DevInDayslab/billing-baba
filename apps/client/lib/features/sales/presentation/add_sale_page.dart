@@ -20,8 +20,18 @@ class AddSalePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptivePage(
-      desktop: DesktopAddSalePage(invoiceId: invoiceId, duplicateFromId: duplicateFromId, attachOrderIds: attachOrderIds, readOnly: readOnly),
-      mobile: MobileAddSalePage(invoiceId: invoiceId, duplicateFromId: duplicateFromId, attachOrderIds: attachOrderIds, readOnly: readOnly),
+      desktop: DesktopAddSalePage(
+        invoiceId: invoiceId,
+        duplicateFromId: duplicateFromId,
+        attachOrderIds: attachOrderIds,
+        readOnly: readOnly,
+      ),
+      mobile: MobileAddSalePage(
+        invoiceId: invoiceId,
+        duplicateFromId: duplicateFromId,
+        attachOrderIds: attachOrderIds,
+        readOnly: readOnly,
+      ),
     );
   }
 }

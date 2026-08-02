@@ -15,6 +15,7 @@ import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
@@ -129,11 +130,13 @@ void invalidateAllBusinessScopedProviders(
   Ref ref, {
   bool includeBusinessList = false,
   bool includeBusinessService = true,
+  bool includeBusinessProfile = true,
 }) {
   invalidateAllBusinessScopedProvidersOn(
     ref.container,
     includeBusinessList: includeBusinessList,
     includeBusinessService: includeBusinessService,
+    includeBusinessProfile: includeBusinessProfile,
   );
 }
 
@@ -142,15 +145,20 @@ void invalidateAllBusinessScopedProvidersOn(
   ProviderContainer container, {
   bool includeBusinessList = false,
   bool includeBusinessService = true,
+  bool includeBusinessProfile = true,
 }) {
   if (includeBusinessList) {
     container.invalidate(businessListProvider);
   }
 
+  if (includeBusinessProfile) {
+    container
+      ..invalidate(businessProfileProvider)
+      ..invalidate(currentBusinessProvider)
+      ..invalidate(sidebarBusinessProvider);
+  }
+
   container
-    ..invalidate(businessProfileProvider)
-    ..invalidate(currentBusinessProvider)
-    ..invalidate(sidebarBusinessProvider)
     ..invalidate(commerceSettingsProvider)
     ..invalidate(partyListProvider)
     ..invalidate(partyLedgerBusinessIdProvider)
@@ -250,17 +258,31 @@ Future<void> warmBusinessScopedProviders(
 
   BusinessOpenDebugLog.step(
     'warm',
-    'parallel fetch (profile, dashboard, tasks)',
+    'parallel fetch (profile, dashboard, tasks, inventory)',
   );
   await Future.wait<void>([
     _warmBusinessProfile(ref, service, businessId),
     _warmDashboard(ref),
     _warmTasks(ref, businessId),
+    _warmInventoryCatalog(ref),
   ]);
   _ensureRefMounted(ref, 'warm after parallel fetch');
 
   ref.read(dashboardWidgetPreferencesProvider);
   BusinessOpenDebugLog.step('warm', 'complete');
+}
+
+/// Pulls the item catalog into local SQLite when empty (e.g. first API login).
+Future<void> _warmInventoryCatalog(Ref ref) async {
+  BusinessOpenDebugLog.step('warm', 'inventory');
+  try {
+    final inventory = await ref.read(inventoryServiceProvider.future);
+    _ensureRefMounted(ref, 'warm after inventory service');
+    await inventory.fetchItemsPage();
+    BusinessOpenDebugLog.step('warm', 'inventory ok');
+  } on Object catch (error) {
+    BusinessOpenDebugLog.step('warm', 'inventory skipped ($error)');
+  }
 }
 
 Future<void> _warmBusinessProfile(
@@ -272,13 +294,21 @@ Future<void> _warmBusinessProfile(
     final cached = await service.readCachedBusinessProfile();
     if (cached != null && ref.mounted) {
       ref.read(businessProfileProvider.notifier).replaceWith(cached);
-      BusinessOpenDebugLog.step('warm', 'profile ok from cache (${cached.name})');
+      BusinessOpenDebugLog.step(
+        'warm',
+        'profile ok from cache (${cached.name})',
+      );
     } else {
-      BusinessOpenDebugLog.step('warm', 'profile skipped — backend unreachable');
+      BusinessOpenDebugLog.step(
+        'warm',
+        'profile skipped — backend unreachable',
+      );
     }
     return;
   }
 
+  // One network refresh owned by warm. Callers must not also invalidate
+  // [businessProfileProvider] right before this (see includeBusinessProfile).
   BusinessOpenDebugLog.step('warm', 'profile fetch');
   final profile = await service.fetchBusinessProfile(forceRefresh: true);
   _ensureRefMounted(ref, 'warm after profile fetch');
@@ -294,8 +324,11 @@ Future<void> _warmBusinessProfile(
 }
 
 Future<void> _warmDashboard(Ref ref) async {
+  // Share the single in-flight [dashboardProvider] build after invalidation.
+  // Calling [Dashboard.refresh] here raced with Home's watch and issued
+  // duplicate GETs.
   BusinessOpenDebugLog.step('warm', 'dashboard');
-  await ref.read(dashboardProvider.notifier).refresh();
+  await ref.read(dashboardProvider.future);
   _ensureRefMounted(ref, 'warm after dashboard');
   BusinessOpenDebugLog.step('warm', 'dashboard ok');
 }

@@ -278,12 +278,13 @@ class _PartyLedgerTransactionsSectionState
           PartyTransactionSortColumn.type => a.type.compareTo(b.type),
           PartyTransactionSortColumn.reference =>
             (a.referenceNumber ?? '').compareTo(b.referenceNumber ?? ''),
-          PartyTransactionSortColumn.date =>
-            a.createdAt.compareTo(b.createdAt),
-          PartyTransactionSortColumn.total =>
-            _transactionTotal(a).compareTo(_transactionTotal(b)),
-          PartyTransactionSortColumn.balance =>
-            _transactionBalance(a).compareTo(_transactionBalance(b)),
+          PartyTransactionSortColumn.date => a.createdAt.compareTo(b.createdAt),
+          PartyTransactionSortColumn.total => _transactionTotal(
+            a,
+          ).compareTo(_transactionTotal(b)),
+          PartyTransactionSortColumn.balance => _transactionBalance(
+            a,
+          ).compareTo(_transactionBalance(b)),
           PartyTransactionSortColumn.dueDate =>
             (a.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
               b.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0),
@@ -589,8 +590,8 @@ class _PartyLedgerTransactionsSectionState
               color: transaction.credit > 0
                   ? const Color(0xFFC62828)
                   : transaction.debit > 0
-                      ? const Color(0xFF2E7D32)
-                      : null,
+                  ? const Color(0xFF2E7D32)
+                  : null,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
@@ -854,7 +855,10 @@ class _DataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }

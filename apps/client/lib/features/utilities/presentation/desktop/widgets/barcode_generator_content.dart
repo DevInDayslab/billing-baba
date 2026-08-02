@@ -276,7 +276,13 @@ class _HeaderControls extends StatelessWidget {
 
 class _EntryFormCard extends StatefulWidget {
   const _EntryFormCard({
-    required this.draft, required this.items, required this.onDraftChanged, required this.onItemSelected, required this.onItemNameChanged, required this.onAdd, super.key,
+    required this.draft,
+    required this.items,
+    required this.onDraftChanged,
+    required this.onItemSelected,
+    required this.onItemNameChanged,
+    required this.onAdd,
+    super.key,
   });
 
   final BarcodeGeneratorDraft draft;
@@ -303,7 +309,9 @@ class _EntryFormCardState extends State<_EntryFormCard> {
   void initState() {
     super.initState();
     _itemCodeController = TextEditingController(text: widget.draft.itemCode);
-    _noOfLabelsController = TextEditingController(text: widget.draft.noOfLabels);
+    _noOfLabelsController = TextEditingController(
+      text: widget.draft.noOfLabels,
+    );
     _headerController = TextEditingController(text: widget.draft.header);
     _line1Controller = TextEditingController(text: widget.draft.line1);
     _line2Controller = TextEditingController(text: widget.draft.line2);
@@ -442,7 +450,9 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                     child: TextFormField(
                       controller: _headerController,
                       style: saleFieldTextStyle,
-                      decoration: buildSaleFieldDecoration(hint: 'Enter Header'),
+                      decoration: buildSaleFieldDecoration(
+                        hint: 'Enter Header',
+                      ),
                       onChanged: (value) =>
                           onDraftChanged(draft.copyWith(header: value)),
                     ),
@@ -455,7 +465,9 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                     child: TextFormField(
                       controller: _line1Controller,
                       style: saleFieldTextStyle,
-                      decoration: buildSaleFieldDecoration(hint: 'Enter Line 1'),
+                      decoration: buildSaleFieldDecoration(
+                        hint: 'Enter Line 1',
+                      ),
                       onChanged: (value) =>
                           onDraftChanged(draft.copyWith(line1: value)),
                     ),
@@ -472,7 +484,9 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                     child: TextFormField(
                       controller: _line2Controller,
                       style: saleFieldTextStyle,
-                      decoration: buildSaleFieldDecoration(hint: 'Enter Line 2'),
+                      decoration: buildSaleFieldDecoration(
+                        hint: 'Enter Line 2',
+                      ),
                       onChanged: (value) =>
                           onDraftChanged(draft.copyWith(line2: value)),
                     ),
@@ -485,7 +499,9 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                     child: TextFormField(
                       controller: _line3Controller,
                       style: saleFieldTextStyle,
-                      decoration: buildSaleFieldDecoration(hint: 'Enter Line 3'),
+                      decoration: buildSaleFieldDecoration(
+                        hint: 'Enter Line 3',
+                      ),
                       onChanged: (value) =>
                           onDraftChanged(draft.copyWith(line3: value)),
                     ),
@@ -498,7 +514,9 @@ class _EntryFormCardState extends State<_EntryFormCard> {
                     child: TextFormField(
                       controller: _line4Controller,
                       style: saleFieldTextStyle,
-                      decoration: buildSaleFieldDecoration(hint: 'Enter Line 4'),
+                      decoration: buildSaleFieldDecoration(
+                        hint: 'Enter Line 4',
+                      ),
                       onChanged: (value) =>
                           onDraftChanged(draft.copyWith(line4: value)),
                     ),
@@ -606,8 +624,9 @@ class _PreviewCard extends StatelessWidget {
                 onPressed: canAdd ? onAdd : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: canAdd ? _actionRed : _actionRedDisabled,
-                  foregroundColor:
-                      canAdd ? _actionRedText : _actionRedTextDisabled,
+                  foregroundColor: canAdd
+                      ? _actionRedText
+                      : _actionRedTextDisabled,
                   disabledBackgroundColor: _actionRedDisabled,
                   disabledForegroundColor: _actionRedTextDisabled,
                   elevation: 0,
@@ -960,7 +979,10 @@ class _FooterButton extends StatelessWidget {
               )
             : Text(
                 label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
       ),
     );

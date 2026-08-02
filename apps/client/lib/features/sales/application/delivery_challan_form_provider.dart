@@ -40,7 +40,6 @@ DeliveryChallanFormState _initialChallanFormState() {
 class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   @override
   DeliveryChallanFormState build() {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _initialChallanFormState();
   }
 
@@ -313,20 +312,23 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
     final previous = state.items[index];
-    final merged = preserveCatalogFieldsOnStaleLineUpdate(previous, item);
     final items = [...state.items];
-    items[index] = merged;
+    items[index] = item;
     final clearBillTax =
-        merged.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
     state = state.copyWith(
       items: items,
       taxOption: clearBillTax ? 'NONE' : state.taxOption,
       clearSaveError: true,
     );
-    rememberInvoiceLineTaxIfChanged(ref, previous, merged);
+    rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -334,15 +336,16 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
-    if (index < 0 || index >= state.items.length) return;
-    final withUserEdits = mergeUserEditsIntoCatalogLine(
-      applied,
-      state.items[index],
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
     );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
-      appliedLine: withUserEdits,
+      targetIndex: targetIndex,
+      appliedLine: applied,
       nextLineId: _nextChallanLineItemId,
     );
     state = state.copyWith(items: items, clearSaveError: true);
@@ -402,12 +405,12 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   }
 
   MutationRefreshContext _mutationContext() => (
-        partyId: state.partyId,
-        itemIds: state.items
-            .map((line) => line.itemId)
-            .whereType<String>()
-            .where((id) => id.isNotEmpty),
-      );
+    partyId: state.partyId,
+    itemIds: state.items
+        .map((line) => line.itemId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty),
+  );
 
   Future<String?> save() async {
     if (state.isSaving) return null;

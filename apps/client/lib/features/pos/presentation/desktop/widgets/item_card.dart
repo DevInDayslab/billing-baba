@@ -30,7 +30,7 @@ class ItemCard extends ConsumerWidget {
         builder: (dialogContext) => OutOfStockDialog(
           itemId: item.id,
           itemName: item.name,
-          onSelectAlternative: (alternativeItem) {
+          onSelectAlternative: (alternativeItem) async {
             final alternativePosItem = PosItem(
               id: alternativeItem.id,
               name: alternativeItem.name,
@@ -42,7 +42,7 @@ class ItemCard extends ConsumerWidget {
             );
             ref.read(posCartProvider.notifier).addItem(alternativePosItem);
           },
-          onContinueAnyway: () {
+          onContinueAnyway: () async {
             ref.read(posCartProvider.notifier).addItem(item);
           },
         ),

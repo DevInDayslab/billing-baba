@@ -118,8 +118,7 @@ abstract final class AppConfig {
     return _defaultWebsiteUrl;
   }
 
-  static String get _websiteBase =>
-      websiteUrl.replaceAll(RegExp(r'/+$'), '');
+  static String get _websiteBase => websiteUrl.replaceAll(RegExp(r'/+$'), '');
 
   /// Product documentation / features overview on the public site.
   static String get documentationUrl => '$_websiteBase/features';
@@ -164,7 +163,6 @@ abstract final class AppConfig {
     LoggingService.instance.info(
       '[CONFIG] FILE_LOGGING=$fileLoggingEnabled LOG_LEVEL=${minLogLevel.name}',
     );
-  
   }
 
   static void _logApiBaseUrl() {

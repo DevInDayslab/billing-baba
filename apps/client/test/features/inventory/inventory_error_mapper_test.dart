@@ -30,7 +30,7 @@ void main() {
       expect(
         InventoryErrorMapper.validationMessage(error),
         'Item name is required\n'
-            'Opening quantity must be zero or more',
+        'Opening quantity must be zero or more',
       );
     });
   });
@@ -50,7 +50,7 @@ void main() {
         InventoryErrorMapper.messageForSaveItem(
           const InventoryOfflineException(),
         ),
-        contains('Unable to reach the server'),
+        contains("You're offline"),
       );
     });
   });

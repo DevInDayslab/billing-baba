@@ -49,7 +49,10 @@ class TaskEmptyState extends StatelessWidget {
             ),
             child: Text(
               '+ Add Reminder',
-              style: TextStyle(fontSize: 13 * (size / 52), fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 13 * (size / 52),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

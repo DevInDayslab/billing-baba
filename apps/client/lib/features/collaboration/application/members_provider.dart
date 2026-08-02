@@ -66,16 +66,21 @@ class Members extends _$Members {
     final session = ref.read(companySessionProvider);
     if (session == null || session.isOwner) return;
 
-    final currentMember =
-        members.where((member) => member.isCurrentUser).firstOrNull;
+    final currentMember = members
+        .where((member) => member.isCurrentUser)
+        .firstOrNull;
     if (currentMember == null || currentMember.role == session.role) return;
 
-    ref.read(companySessionProvider.notifier).setSession(
-      session.copyWith(
-        role: currentMember.role,
-        permissionPreset: RolePermissionRegistry.presetFor(currentMember.role),
-      ),
-    );
+    ref
+        .read(companySessionProvider.notifier)
+        .setSession(
+          session.copyWith(
+            role: currentMember.role,
+            permissionPreset: RolePermissionRegistry.presetFor(
+              currentMember.role,
+            ),
+          ),
+        );
     ref.invalidate(permissionServiceProvider);
   }
 

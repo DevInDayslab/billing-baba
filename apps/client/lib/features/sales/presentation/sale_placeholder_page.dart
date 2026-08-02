@@ -5,7 +5,9 @@ import 'package:flutter/widgets.dart';
 
 class SalePlaceholderPage extends StatelessWidget {
   const SalePlaceholderPage({
-    required this.title, required this.route, super.key,
+    required this.title,
+    required this.route,
+    super.key,
   });
 
   final String title;

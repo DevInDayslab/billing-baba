@@ -7,8 +7,8 @@ class ExpenseRepository {
   ExpenseRepository({
     required ExpenseRemoteDataSource remote,
     ExpenseMasterRepository? master,
-  })  : _remote = remote,
-        _master = master;
+  }) : _remote = remote,
+       _master = master;
 
   final ExpenseRemoteDataSource _remote;
   final ExpenseMasterRepository? _master;
@@ -23,8 +23,7 @@ class ExpenseRepository {
       _master?.createExpense(request) ?? _remote.createExpense(request);
 
   Future<ExpenseDto> updateExpense(String id, UpdateExpenseRequest request) =>
-      _master?.updateExpense(id, request) ??
-      _remote.updateExpense(id, request);
+      _master?.updateExpense(id, request) ?? _remote.updateExpense(id, request);
 
   Future<void> deleteExpense(String id) =>
       _master?.deleteExpense(id) ?? _remote.deleteExpense(id);
@@ -41,8 +40,7 @@ class ExpenseRepository {
 
   Future<ExpenseCategoryDto> createCategory(
     CreateExpenseCategoryRequest request,
-  ) =>
-      _master?.createCategory(request) ?? _remote.createCategory(request);
+  ) => _master?.createCategory(request) ?? _remote.createCategory(request);
 
   Future<ExpenseCategoryDto> updateCategory(
     String id,

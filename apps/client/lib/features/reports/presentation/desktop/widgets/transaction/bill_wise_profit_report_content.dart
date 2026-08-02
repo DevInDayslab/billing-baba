@@ -170,13 +170,18 @@ class BillWiseProfitReportContent extends ConsumerWidget {
                             child: ReportSyncScrollTable(
                               minWidth: 800,
                               headerChildren: const [
-                                ReportAlignedHeaderCell(label: 'DATE', width: 90),
+                                ReportAlignedHeaderCell(
+                                  label: 'DATE',
+                                  width: 90,
+                                ),
                                 ReportAlignedHeaderCell(
                                   label: 'INVOICE NO',
                                   width: 110,
                                 ),
                                 Expanded(
-                                  child: ReportAlignedHeaderCell(label: 'PARTY'),
+                                  child: ReportAlignedHeaderCell(
+                                    label: 'PARTY',
+                                  ),
                                 ),
                                 ReportAlignedHeaderCell(
                                   label: 'TOTAL SALE AMOUNT',

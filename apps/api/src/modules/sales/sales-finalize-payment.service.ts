@@ -82,9 +82,7 @@ export async function recordSaleFinalizePayment(
     );
   }
 
-  const allocatedAmount = isHiddenLedgerRoute
-    ? documentTotal
-    : paymentAmount;
+  const allocatedAmount = isHiddenLedgerRoute ? documentTotal : paymentAmount;
 
   const paymentDate = params.payment.paymentDate
     ? new Date(params.payment.paymentDate)

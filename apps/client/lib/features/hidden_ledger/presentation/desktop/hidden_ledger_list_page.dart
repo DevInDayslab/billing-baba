@@ -19,7 +19,8 @@ class DesktopHiddenLedgerListPage extends ConsumerStatefulWidget {
       _HiddenLedgerListPageState();
 }
 
-class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPage> {
+class _HiddenLedgerListPageState
+    extends ConsumerState<DesktopHiddenLedgerListPage> {
   final _searchController = TextEditingController();
   final _invoiceController = TextEditingController();
   static final _currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
@@ -34,7 +35,9 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
 
   void _applyFilters({int page = 1}) {
     final current = ref.read(hiddenLedgerFiltersStateProvider);
-    ref.read(hiddenLedgerFiltersStateProvider.notifier).update(
+    ref
+        .read(hiddenLedgerFiltersStateProvider.notifier)
+        .update(
           current.copyWith(
             searchQuery: _searchController.text,
             invoiceNumber: _invoiceController.text,
@@ -57,7 +60,9 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
     if (range == null) return;
 
     final filters = ref.read(hiddenLedgerFiltersStateProvider);
-    ref.read(hiddenLedgerFiltersStateProvider.notifier).update(
+    ref
+        .read(hiddenLedgerFiltersStateProvider.notifier)
+        .update(
           filters.copyWith(
             from: range.start,
             to: range.end,
@@ -69,7 +74,9 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
 
   void _clearDateRange() {
     final filters = ref.read(hiddenLedgerFiltersStateProvider);
-    ref.read(hiddenLedgerFiltersStateProvider.notifier).update(
+    ref
+        .read(hiddenLedgerFiltersStateProvider.notifier)
+        .update(
           filters.copyWith(clearFrom: true, clearTo: true, page: 1),
         );
     ref.invalidate(hiddenLedgerListProvider);
@@ -94,13 +101,16 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const PartyPageTitleBar(currentRoute: AppRoutes.partyHiddenLedger),
+              const PartyPageTitleBar(
+                currentRoute: AppRoutes.partyHiddenLedger,
+              ),
               const SizedBox(height: AppSpacing.md),
               _buildFilterBar(filters),
               const SizedBox(height: AppSpacing.md),
               Expanded(
                 child: listAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, _) => _ErrorState(
                     message: OfflineUiMessages.messageFor(error),
                     onRetry: () => ref.invalidate(hiddenLedgerListProvider),
@@ -169,7 +179,9 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
               ],
               onSelected: (value) {
                 final current = ref.read(hiddenLedgerFiltersStateProvider);
-                ref.read(hiddenLedgerFiltersStateProvider.notifier).update(
+                ref
+                    .read(hiddenLedgerFiltersStateProvider.notifier)
+                    .update(
                       current.copyWith(
                         status: value,
                         clearStatus: value == null,
@@ -189,7 +201,10 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
               ),
             ),
             if (filters.from != null || filters.to != null)
-              TextButton(onPressed: _clearDateRange, child: const Text('Clear dates')),
+              TextButton(
+                onPressed: _clearDateRange,
+                child: const Text('Clear dates'),
+              ),
             FilledButton(
               onPressed: _applyFilters,
               child: const Text('Apply'),
@@ -258,14 +273,18 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
           children: [
             IconButton(
               onPressed: page.hasPreviousPage
-                  ? () => ref.read(hiddenLedgerListProvider.notifier).goToPage(page.page - 1)
+                  ? () => ref
+                        .read(hiddenLedgerListProvider.notifier)
+                        .goToPage(page.page - 1)
                   : null,
               icon: const Icon(Icons.chevron_left),
             ),
             Text('Page ${page.page} of ${page.totalPages}'),
             IconButton(
               onPressed: page.hasNextPage
-                  ? () => ref.read(hiddenLedgerListProvider.notifier).goToPage(page.page + 1)
+                  ? () => ref
+                        .read(hiddenLedgerListProvider.notifier)
+                        .goToPage(page.page + 1)
                   : null,
               icon: const Icon(Icons.chevron_right),
             ),
@@ -307,7 +326,11 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.visibility_off_outlined, size: 48, color: AppColors.textSecondary),
+          Icon(
+            Icons.visibility_off_outlined,
+            size: 48,
+            color: AppColors.textSecondary,
+          ),
           SizedBox(height: AppSpacing.sm),
           Text('No hidden ledger entries found'),
         ],

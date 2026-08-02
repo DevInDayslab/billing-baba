@@ -44,15 +44,13 @@ class _FakeSyncApi extends SyncApi {
     required String platform,
     required String appVersion,
     required String deviceName,
-  }) async =>
-      {'device_id': deviceId};
+  }) async => {'device_id': deviceId};
 
   @override
   Future<Map<String, dynamic>> status({
     required String deviceId,
     required String appVersion,
-  }) async =>
-      const {'schema_version': 1, 'protocol_version': 1};
+  }) async => const {'schema_version': 1, 'protocol_version': 1};
 
   @override
   Future<Map<String, dynamic>> push({
@@ -85,8 +83,7 @@ class _FakeSyncApi extends SyncApi {
     required String cursor,
     int? limit,
     String? entityTypes,
-  }) async =>
-      pullPayload;
+  }) async => pullPayload;
 }
 
 void main() {
@@ -164,42 +161,44 @@ void main() {
     expect(result, isNotNull);
   }
 
-  test('offline create/update/delete writes Drift + pending queue jobs',
-      () async {
-    final created = await repo.create(
-      const CreateItemRequest(name: 'Widget A', baseUnit: 'piece'),
-    );
-    expect(created.name, 'Widget A');
+  test(
+    'offline create/update/delete writes Drift + pending queue jobs',
+    () async {
+      final created = await repo.create(
+        const CreateItemRequest(name: 'Widget A', baseUnit: 'piece'),
+      );
+      expect(created.name, 'Widget A');
 
-    final listed = await items.listActive('biz-1');
-    expect(listed.map((i) => i.name), ['Widget A']);
+      final listed = await items.listActive('biz-1');
+      expect(listed.map((i) => i.name), ['Widget A']);
 
-    var pending = await queue.listPending();
-    expect(pending, hasLength(1));
-    expect(pending.first.entityType, 'items');
-    expect(pending.first.operation, SyncQueueOperation.create);
-    expect(SyncJob.domainOnly(pending.first.payload)['name'], 'Widget A');
-    expect(SyncJob.readBaseSyncVersion(pending.first.payload), 0);
+      var pending = await queue.listPending();
+      expect(pending, hasLength(1));
+      expect(pending.first.entityType, 'items');
+      expect(pending.first.operation, SyncQueueOperation.create);
+      expect(SyncJob.domainOnly(pending.first.payload)['name'], 'Widget A');
+      expect(SyncJob.readBaseSyncVersion(pending.first.payload), 0);
 
-    await repo.update(
-      created.id,
-      const UpdateItemRequest(name: 'Widget A+'),
-    );
-    pending = await queue.listPending();
-    expect(pending, hasLength(2));
-    expect(pending.last.operation, SyncQueueOperation.update);
-    expect(SyncJob.readBaseSyncVersion(pending.last.payload), 0);
+      await repo.update(
+        created.id,
+        const UpdateItemRequest(name: 'Widget A+'),
+      );
+      pending = await queue.listPending();
+      expect(pending, hasLength(2));
+      expect(pending.last.operation, SyncQueueOperation.update);
+      expect(SyncJob.readBaseSyncVersion(pending.last.payload), 0);
 
-    await repo.softDelete(created.id);
-    pending = await queue.listPending();
-    expect(pending, hasLength(3));
-    expect(pending.last.operation, SyncQueueOperation.delete);
+      await repo.softDelete(created.id);
+      pending = await queue.listPending();
+      expect(pending, hasLength(3));
+      expect(pending.last.operation, SyncQueueOperation.delete);
 
-    final active = await items.listActive('biz-1');
-    expect(active, isEmpty);
-    final row = await items.getById(created.id);
-    expect(row!.isDeleted, isTrue);
-  });
+      final active = await items.listActive('biz-1');
+      expect(active, isEmpty);
+      final row = await items.getById(created.id);
+      expect(row!.isDeleted, isTrue);
+    },
+  );
 
   test('push accepted updates syncVersion and completes job', () async {
     final created = await repo.create(
@@ -274,9 +273,9 @@ void main() {
     expect(row!.name, 'LocalWins');
     expect(row.syncVersion, 0);
 
-    final jobs = await (db.select(db.syncQueue)
-          ..where((t) => t.entityId.equals(created.id)))
-        .get();
+    final jobs = await (db.select(
+      db.syncQueue,
+    )..where((t) => t.entityId.equals(created.id))).get();
     expect(jobs, hasLength(1));
     expect(jobs.first.status, SyncQueueStatus.conflict.wire);
     expect(lastState.lastResultMessage, contains('conflicts=1'));

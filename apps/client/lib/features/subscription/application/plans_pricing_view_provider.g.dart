@@ -33,7 +33,7 @@ final class PlansPricingViewProvider
   PlansPricingView create() => PlansPricingView();
 }
 
-String _$plansPricingViewHash() => r'e836ccda6c468f763b5ef6dd14ee2b4fb25338fa';
+String _$plansPricingViewHash() => r'e9f199605db892073e63c5b9b191cddd6e269ffc';
 
 abstract class _$PlansPricingView extends $AsyncNotifier<PlansPricingViewData> {
   FutureOr<PlansPricingViewData> build();

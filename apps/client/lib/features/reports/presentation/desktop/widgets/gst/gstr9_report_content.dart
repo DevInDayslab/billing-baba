@@ -163,7 +163,8 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
                                 Checkbox(
                                   value: _considerNonTaxExempted,
                                   onChanged: (value) => setState(
-                                    () => _considerNonTaxExempted = value ?? false,
+                                    () => _considerNonTaxExempted =
+                                        value ?? false,
                                   ),
                                   visualDensity: VisualDensity.compact,
                                 ),

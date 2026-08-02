@@ -80,7 +80,10 @@ FinalizeSalePaymentCommand? mapPosPaymentsToFinalizeCommand({
       ? payments
       : [PaymentEntry(mode: PaymentMode.cash, amount: totalPayable)];
 
-  final totalPaid = resolved.fold<double>(0, (sum, entry) => sum + entry.amount);
+  final totalPaid = resolved.fold<double>(
+    0,
+    (sum, entry) => sum + entry.amount,
+  );
   final amount = totalPaid > 0 ? totalPaid : totalPayable;
   final primaryMode = resolved.first.mode;
 

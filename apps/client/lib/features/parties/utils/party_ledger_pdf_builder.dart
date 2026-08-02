@@ -34,7 +34,8 @@ abstract final class PartyLedgerPdfBuilder {
     await InvoicePdfFonts.ensureLoaded();
 
     final resolvedOutstanding = outstanding ?? party.balance;
-    final resolvedCreditLimit = creditLimit ??
+    final resolvedCreditLimit =
+        creditLimit ??
         (party.hasCustomCreditLimit
             ? double.tryParse(party.creditLimit.replaceAll(',', ''))
             : null);

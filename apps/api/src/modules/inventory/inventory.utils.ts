@@ -1,8 +1,6 @@
 /** Shared inventory module utilities. */
 
-export function parseSearchKeywords(
-  raw: string | null | undefined,
-): string[] {
+export function parseSearchKeywords(raw: string | null | undefined): string[] {
   if (!raw) return [];
   return raw
     .split(',')

@@ -1,9 +1,11 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_data_row.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filter_widgets.dart';
@@ -149,112 +151,40 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? const Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'No data available.',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                      SizedBox(height: AppSpacing.xs),
-                                      Text(
-                                        'Try adjusting the date range or filters.',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : ReportSyncScrollTable(
-                                    minWidth: 600,
-                                    headerChildren: const [
-                                      ReportAlignedHeaderCell(
-                                        label: '#',
-                                        width: 40,
-                                      ),
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'PARTY NAME',
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PHONE NO.',
-                                        width: 120,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'TOTAL SALE AMOUNT',
-                                        width: 150,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PROFIT (+) / LOSS (-)',
-                                        width: 150,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                40,
-                                                child: Text('${i + 1}'),
-                                              ),
-                                              ReportAlignedCell.flex(
-                                                child: Text(
-                                                  rows[i].partyName,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                child: Text(rows[i].phone),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                150,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].saleAmount,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                150,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].profit,
-                                                  ),
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    color: rows[i].profit >= 0
-                                                        ? reportTeal
-                                                        : Colors.red.shade700,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportPartyWiseProfitLossRow
+                                >(
+                                  reportScope: partyWiseProfitLossReportScope,
+                                  minWidth: 600,
+                                  columns: partyWiseProfitLossColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'No data available.',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textSecondary,
                                           ),
                                         ),
-                                    ],
+                                        SizedBox(height: AppSpacing.xs),
+                                        Text(
+                                          'Try adjusting the date range or filters.',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

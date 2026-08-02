@@ -69,7 +69,8 @@ class SubscriptionHistoryItemDto {
     required this.oldPlan,
     required this.newPlan,
     required this.event,
-    required this.createdAt, this.metadata,
+    required this.createdAt,
+    this.metadata,
   });
 
   factory SubscriptionHistoryItemDto.fromJson(Map<String, dynamic> json) {
@@ -122,9 +123,9 @@ class SubscriptionApi {
       final response = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.subscriptionHistory,
       );
-      return _readList(response)
-          .map(SubscriptionHistoryItemDto.fromJson)
-          .toList();
+      return _readList(
+        response,
+      ).map(SubscriptionHistoryItemDto.fromJson).toList();
     });
   }
 
@@ -157,7 +158,9 @@ class SubscriptionApi {
       final data = _readData(response);
       return VerifyPaymentResult(
         activated: data['activated'] as bool? ?? false,
-        plan: SubscriptionPlanType.fromApi(data['plan'] as String? ?? 'no_plan'),
+        plan: SubscriptionPlanType.fromApi(
+          data['plan'] as String? ?? 'no_plan',
+        ),
         expiresAt: DateTime.parse(data['expiresAt'] as String).toLocal(),
       );
     });

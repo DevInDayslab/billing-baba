@@ -2,35 +2,48 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_load_helper.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/application/sale_report_column_filters_provider.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
+import 'package:billing_baba/features/reports/utils/sale_report_row_filter.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_status_badge.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
+const _zebraRowBg = Color(0xFFFAFAFA);
+const double _cellHorizontalPadding = AppSpacing.sm;
 
-const _dateColWidth = 100.0;
-const _invoiceColWidth = 130.0;
-const _transactionColWidth = 110.0;
-const _paymentColWidth = 110.0;
+const _dateColWidth = 120.0;
+const _invoiceColWidth = 120.0;
+const _partyColWidth = 180.0;
+const _transactionColWidth = 120.0;
+const _paymentColWidth = 120.0;
 const _statusColWidth = 100.0;
-const _amountColWidth = 100.0;
-const _balanceColWidth = 90.0;
-const _actionsColWidth = 120.0;
-const double _minTableWidth =
-    _dateColWidth +
-    _invoiceColWidth +
-    _transactionColWidth +
-    _paymentColWidth +
-    _statusColWidth +
-    _amountColWidth +
-    _balanceColWidth +
-    _actionsColWidth +
-    140;
+const _amountColWidth = 110.0;
+const _balanceColWidth = 100.0;
+const _actionsColWidth = 100.0;
+
+const _saleReportStatusFilterOptions = [
+  'Paid',
+  'Unpaid',
+  'Partial',
+  'Overdue',
+  'Cancelled',
+];
+
+const _defaultTransactionTypeOptions = [
+  'Tax Invoice',
+  'Bill of Supply',
+  'Normal Invoice',
+  'POS',
+];
 
 class SaleReportTransactionsTable extends ConsumerWidget {
   const SaleReportTransactionsTable({super.key});
@@ -38,6 +51,7 @@ class SaleReportTransactionsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(saleReportProvider);
+    final columnFilters = ref.watch(saleReportColumnFiltersProvider);
     final isTableLoading = ref.watch(
       reportFiltersProvider.select((filters) => filters.isTableLoading),
     );
@@ -49,8 +63,22 @@ class SaleReportTransactionsTable extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const SizedBox.shrink(),
         data: (report) {
-          final invoices = report.rows;
+          final filteredRows = applySaleReportColumnFilters(
+            report.rows,
+            columnFilters,
+          );
           final meta = report.meta;
+          final columns = _SaleReportTableColumns.build(
+            ref: ref,
+            rows: report.rows,
+          );
+          final tableRows = [
+            for (var i = 0; i < filteredRows.length; i++)
+              _SaleReportTableRows.buildDataRow(
+                invoice: filteredRows[i],
+                isOdd: i.isOdd,
+              ),
+          ];
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,7 +109,15 @@ class SaleReportTransactionsTable extends ConsumerWidget {
                               ),
                             ),
                             const Spacer(),
-                            Text('${meta.total} total'),
+                            Text(
+                              columnFilters.hasActiveFilters
+                                  ? '${filteredRows.length} shown · ${meta.total} total'
+                                  : '${meta.total} total',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -99,70 +135,27 @@ class SaleReportTransactionsTable extends ConsumerWidget {
                       const Divider(height: 1, color: _cardBorder),
                       Expanded(
                         child: ReportTableArea(
-                          child: ReportSyncScrollTable(
-                            minWidth: _minTableWidth,
-                            emptyState: const Padding(
-                              padding: EdgeInsets.all(AppSpacing.lg),
-                              child: Center(
-                                child: Text(
-                                  'No transactions to show',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                          child: filteredRows.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    columnFilters.hasActiveFilters
+                                        ? 'No transactions match your filters'
+                                        : 'No transactions to show',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                )
+                              : Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                  ),
+                                  child: ResizableDataTable(
+                                    columns: columns,
+                                    rows: tableRows,
                                   ),
                                 ),
-                              ),
-                            ),
-                            headerChildren: const [
-                              ReportAlignedHeaderCell(
-                                label: 'Date',
-                                width: _dateColWidth,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'Invoice no',
-                                width: _invoiceColWidth,
-                              ),
-                              Expanded(
-                                child: ReportAlignedHeaderCell(
-                                  label: 'Party Name',
-                                ),
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'Transaction',
-                                width: _transactionColWidth,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'Payment Type',
-                                width: _paymentColWidth,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'Status',
-                                width: _statusColWidth,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'Amount',
-                                width: _amountColWidth,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'Balance',
-                                width: _balanceColWidth,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'Actions',
-                                width: _actionsColWidth,
-                                showFilter: false,
-                              ),
-                            ],
-                            rows: [
-                              for (var i = 0; i < invoices.length; i++)
-                                ReportAlignedRowStrip(
-                                  index: i,
-                                  child: _InvoiceDataRow(invoice: invoices[i]),
-                                ),
-                            ],
-                          ),
                         ),
                       ),
                     ],
@@ -192,60 +185,286 @@ class SaleReportTransactionsTable extends ConsumerWidget {
   }
 }
 
-class _InvoiceDataRow extends StatelessWidget {
-  const _InvoiceDataRow({required this.invoice});
+class _SaleReportTableColumns {
+  const _SaleReportTableColumns._();
 
-  final SaleInvoiceModel invoice;
+  static List<ResizableDataColumn> build({
+    required WidgetRef ref,
+    required List<SaleInvoiceModel> rows,
+  }) {
+    final filters = ref.watch(saleReportColumnFiltersProvider);
+    final filtersNotifier = ref.read(saleReportColumnFiltersProvider.notifier);
+    final transactionOptions = _uniqueSortedValues([
+      ..._defaultTransactionTypeOptions,
+      ...rows.map((row) => row.transactionType),
+    ]);
+    final paymentOptions = _uniqueSortedValues([
+      ...SaleDropdownOptions.paymentTypes,
+      ...rows.map((row) => row.paymentType),
+    ]);
 
-  @override
-  Widget build(BuildContext context) {
-    return ReportAlignedDataRow(
+    return [
+      ResizableDataColumn(
+        initialWidth: _dateColWidth,
+        minWidth: 96,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'date',
+            title: 'Date',
+            type: FilterType.date,
+          ),
+          initialValue: filters.dateColumnFilter,
+          onApply: (result) => filtersNotifier.setDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _invoiceColWidth,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'invoiceNo',
+            title: 'Invoice no',
+            type: FilterType.text,
+            hintText: 'Invoice number',
+          ),
+          initialValue: filters.invoiceNoColumnFilter,
+          onApply: (result) => filtersNotifier.setInvoiceNoColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _partyColWidth,
+        minWidth: 120,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'partyName',
+            title: 'Party Name',
+            type: FilterType.text,
+            hintText: 'Party name',
+          ),
+          initialValue: filters.partyNameColumnFilter,
+          onApply: (result) => filtersNotifier.setPartyNameColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _transactionColWidth,
+        header: TableColumnFilterTrigger(
+          config: ColumnFilter(
+            id: 'transaction',
+            title: 'Transaction',
+            type: FilterType.singleSelect,
+            values: transactionOptions,
+          ),
+          initialValue: filters.transactionTypeColumnFilter != null
+              ? SelectColumnFilter(
+                  value: filters.transactionTypeColumnFilter!.value,
+                )
+              : null,
+          onApply: (result) => filtersNotifier.setTransactionTypeColumnFilter(
+            FilterUtils.fromResult(result) as SelectColumnFilter?,
+          ),
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _paymentColWidth,
+        header: TableColumnFilterTrigger(
+          config: ColumnFilter(
+            id: 'paymentType',
+            title: 'Payment Type',
+            type: FilterType.singleSelect,
+            values: paymentOptions,
+          ),
+          initialValue: filters.paymentTypeColumnFilter != null
+              ? SelectColumnFilter(
+                  value: filters.paymentTypeColumnFilter!.value,
+                )
+              : null,
+          onApply: (result) => filtersNotifier.setPaymentTypeColumnFilter(
+            FilterUtils.fromResult(result) as SelectColumnFilter?,
+          ),
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _statusColWidth,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'status',
+            title: 'Status',
+            type: FilterType.singleSelect,
+            values: _saleReportStatusFilterOptions,
+          ),
+          initialValue: filters.statusColumnFilter != null
+              ? SelectColumnFilter(value: filters.statusColumnFilter!.value)
+              : null,
+          onApply: (result) => filtersNotifier.setStatusColumnFilter(
+            FilterUtils.fromResult(result) as SelectColumnFilter?,
+          ),
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _amountColWidth,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'amount',
+            title: 'Amount',
+            type: FilterType.number,
+          ),
+          alignment: Alignment.centerRight,
+          initialValue: filters.amountColumnFilter,
+          onApply: (result) => filtersNotifier.setAmountColumnFilter(
+            FilterUtils.fromResult(result) as AmountColumnFilter?,
+          ),
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _balanceColWidth,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'balance',
+            title: 'Balance',
+            type: FilterType.number,
+          ),
+          alignment: Alignment.centerRight,
+          initialValue: filters.balanceColumnFilter,
+          onApply: (result) => filtersNotifier.setBalanceColumnFilter(
+            FilterUtils.fromResult(result) as AmountColumnFilter?,
+          ),
+        ),
+      ),
+      const ResizableDataColumn(
+        initialWidth: _actionsColWidth,
+        resizable: false,
+        header: _HeaderCell(label: 'Actions'),
+      ),
+    ];
+  }
+
+  static List<String> _uniqueSortedValues(Iterable<String> values) {
+    return values
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+}
+
+class _SaleReportTableRows {
+  const _SaleReportTableRows._();
+
+  static final _dateFormat = DateFormat('dd/MM/yyyy');
+
+  static ResizableDataRow buildDataRow({
+    required SaleInvoiceModel invoice,
+    required bool isOdd,
+  }) {
+    return ResizableDataRow(
+      backgroundColor: isOdd ? _zebraRowBg : Colors.transparent,
       cells: [
-        ReportAlignedCell.fixed(
-          _dateColWidth,
-          child: Text(formatReportDate(invoice.date)),
+        _DataCell(child: Text(_dateFormat.format(invoice.date))),
+        _DataCell(child: Text(invoice.invoiceNo)),
+        _DataCell(
+          child: Text(
+            invoice.partyName,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
-        ReportAlignedCell.fixed(
-          _invoiceColWidth,
-          child: Text(invoice.invoiceNo),
-        ),
-        ReportAlignedCell.flex(child: Text(invoice.partyName)),
-        ReportAlignedCell.fixed(
-          _transactionColWidth,
-          child: Text(invoice.transactionType),
-        ),
-        ReportAlignedCell.fixed(
-          _paymentColWidth,
-          child: Text(invoice.paymentType),
-        ),
-        ReportAlignedCell.fixed(
-          _statusColWidth,
+        _DataCell(child: Text(invoice.transactionType)),
+        _DataCell(child: Text(invoice.paymentType)),
+        _DataCell(
           child: SaleInvoiceStatusBadge(status: invoice.status),
         ),
-        ReportAlignedCell.fixed(
-          _amountColWidth,
+        _DataCell(
           alignment: Alignment.centerRight,
           child: Text(
             formatReportCurrencyCompact(invoice.amount),
             style: const TextStyle(
               color: Color(0xFF2E7D32),
               fontWeight: FontWeight.w500,
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
         ),
-        ReportAlignedCell.fixed(
-          _balanceColWidth,
+        _DataCell(
           alignment: Alignment.centerRight,
           child: Text(
             formatReportCurrencyCompact(invoice.balance),
             style: TextStyle(
               color: invoice.balance > 0 ? const Color(0xFFC62828) : null,
               fontWeight: FontWeight.w500,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ),
-        const ReportAlignedCell.fixed(_actionsColWidth, child: SizedBox()),
+        const _DataCell(child: SizedBox.shrink()),
       ],
+    );
+  }
+}
+
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.label});
+
+  static const _headerStyle = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+  );
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _cellHorizontalPadding,
+        vertical: AppSpacing.sm,
+      ),
+      child: Text(
+        label,
+        style: _headerStyle,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+    );
+  }
+}
+
+class _DataCell extends StatelessWidget {
+  const _DataCell({
+    required this.child,
+    this.alignment = Alignment.centerLeft,
+  });
+
+  final Widget child;
+  final Alignment alignment;
+
+  static const _dataStyle = TextStyle(
+    fontSize: 13,
+    color: AppColors.textPrimary,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTextStyle(
+      style: _dataStyle,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: _cellHorizontalPadding,
+          vertical: AppSpacing.sm,
+        ),
+        child: Align(
+          alignment: alignment,
+          child: child,
+        ),
+      ),
     );
   }
 }

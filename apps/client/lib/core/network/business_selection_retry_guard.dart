@@ -18,15 +18,12 @@ abstract final class BusinessSelectionRetryGuard {
   static bool isBlocked([String? businessId]) {
     final failedId = _lastFailedBusinessId;
     if (failedId == null || failedId.isEmpty) return false;
-    if (businessId != null &&
-        businessId.isNotEmpty &&
-        failedId != businessId) {
+    if (businessId != null && businessId.isNotEmpty && failedId != businessId) {
       return false;
     }
     if (_retryCount >= _maxRetriesPerBusiness) return true;
     final failedAt = _lastFailureAt;
-    return failedAt != null &&
-        DateTime.now().difference(failedAt) < _cooldown;
+    return failedAt != null && DateTime.now().difference(failedAt) < _cooldown;
   }
 
   /// @deprecated Prefer [isBlocked]; kept for call sites being migrated.

@@ -125,138 +125,138 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
       borderRadius: AppRadius.lgBorder,
       clipBehavior: Clip.antiAlias,
       child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _isEditing ? 'Edit Unit' : 'New Unit',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _isEditing ? 'Edit Unit' : 'New Unit',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.textSecondary,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Unit Name',
+                        style: saleFieldLabelStyle,
                       ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.close,
-                      color: AppColors.textSecondary,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Unit Name',
-                          style: saleFieldLabelStyle,
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _fullNameController,
+                        focusNode: _fullNameFocusNode,
+                        style: saleFieldTextStyle,
+                        textInputAction: TextInputAction.next,
+                        textCapitalization: TextCapitalization.words,
+                        onChanged: (_) => _clearError(),
+                        decoration: buildSaleFieldDecoration(
+                          hint: 'e.g., Pieces',
+                          hasError: hasError,
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                        TextField(
-                          controller: _fullNameController,
-                          focusNode: _fullNameFocusNode,
-                          style: saleFieldTextStyle,
-                          textInputAction: TextInputAction.next,
-                          textCapitalization: TextCapitalization.words,
-                          onChanged: (_) => _clearError(),
-                          decoration: buildSaleFieldDecoration(
-                            hint: 'e.g., Pieces',
-                            hasError: hasError,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Short Name',
-                          style: saleFieldLabelStyle,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Short Name',
+                        style: saleFieldLabelStyle,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _shortNameController,
+                        style: saleFieldTextStyle,
+                        textInputAction: TextInputAction.done,
+                        textCapitalization: TextCapitalization.characters,
+                        onChanged: (_) => _clearError(),
+                        onSubmitted: (_) => _saveUnit(saveAndNew: false),
+                        decoration: buildSaleFieldDecoration(
+                          hint: 'e.g., Pcs',
+                          hasError: hasError,
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                        TextField(
-                          controller: _shortNameController,
-                          style: saleFieldTextStyle,
-                          textInputAction: TextInputAction.done,
-                          textCapitalization: TextCapitalization.characters,
-                          onChanged: (_) => _clearError(),
-                          onSubmitted: (_) => _saveUnit(saveAndNew: false),
-                          decoration: buildSaleFieldDecoration(
-                            hint: 'e.g., Pcs',
-                            hasError: hasError,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (hasError) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  _errorMessage!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: saleFieldErrorColor,
+                      ),
+                    ],
                   ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
+            ),
+            if (hasError) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: saleFieldErrorColor,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FilledButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () => _saveUnit(saveAndNew: false),
+                  style: buttonStyle,
+                  child: Text(
+                    _isEditing ? 'Save' : 'Save',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (!_isEditing) ...[
+                  const SizedBox(width: AppSpacing.sm),
                   FilledButton(
                     onPressed: _isLoading
                         ? null
-                        : () => _saveUnit(saveAndNew: false),
+                        : () => _saveUnit(saveAndNew: true),
                     style: buttonStyle,
-                    child: Text(
-                      _isEditing ? 'Save' : 'Save',
-                      style: const TextStyle(
+                    child: const Text(
+                      'Save New',
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  if (!_isEditing) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    FilledButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => _saveUnit(saveAndNew: true),
-                      style: buttonStyle,
-                      child: const Text(
-                        'Save New',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
+      ),
     );
   }
 }

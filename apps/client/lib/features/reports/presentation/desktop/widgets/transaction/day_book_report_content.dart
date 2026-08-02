@@ -153,52 +153,55 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
                         Expanded(
                           child: ReportTableArea(
                             child: ReportSyncScrollTable(
-                            minWidth: 800,
-                            headerChildren: const [
-                              Expanded(
-                                child: ReportAlignedHeaderCell(label: 'NAME'),
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'REF NO.',
-                                width: 100,
-                              ),
-                              ReportAlignedHeaderCell(label: 'TYPE', width: 90),
-                              ReportAlignedHeaderCell(
-                                label: 'TOTAL',
-                                width: 90,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'MONEY IN',
-                                width: 100,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'MONEY OUT',
-                                width: 100,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'PRINT/ SHARE',
-                                width: 110,
-                                showFilter: false,
-                              ),
-                            ],
-                            rows: [
-                              for (var i = 0; i < rows.length; i++)
-                                _DayBookRow(row: rows[i], index: i),
-                            ],
-                            emptyState: const Center(
-                              child: Text(
-                                'No transactions to show',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textSecondary,
+                              minWidth: 800,
+                              headerChildren: const [
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(label: 'NAME'),
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'REF NO.',
+                                  width: 100,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'TYPE',
+                                  width: 90,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'TOTAL',
+                                  width: 90,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'MONEY IN',
+                                  width: 100,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'MONEY OUT',
+                                  width: 100,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'PRINT/ SHARE',
+                                  width: 110,
+                                  showFilter: false,
+                                ),
+                              ],
+                              rows: [
+                                for (var i = 0; i < rows.length; i++)
+                                  _DayBookRow(row: rows[i], index: i),
+                              ],
+                              emptyState: const Center(
+                                child: Text(
+                                  'No transactions to show',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
                         ),
                         ReportMoneySummaryFooter(
                           items: [

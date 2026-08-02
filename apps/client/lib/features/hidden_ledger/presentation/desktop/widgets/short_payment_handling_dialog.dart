@@ -45,8 +45,9 @@ Future<ShortPaymentHandling?> showShortPaymentHandlingDialog(
         ),
         if (allowHiddenLedger)
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext)
-                .pop(ShortPaymentHandling.hiddenLedger),
+            onPressed: () => Navigator.of(
+              dialogContext,
+            ).pop(ShortPaymentHandling.hiddenLedger),
             child: const Text('Add to Hidden Ledger'),
           ),
       ],

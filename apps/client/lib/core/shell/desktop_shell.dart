@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/platform/desktop_app_menu_bar.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -8,7 +7,6 @@ import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
-import 'package:billing_baba/features/collaboration/application/company_session_bootstrap_provider.dart';
 import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
@@ -393,12 +391,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         }
       });
     }
-    ref.watch(companySessionBootstrapProvider);
+    // Bootstrap is owned by [createAppRouter] (ref.watch there). Watching it
+    // again here is redundant and pulled session/auth listen churn into shell
+    // rebuilds during company open.
     final permissions = ref.watch(permissionServiceProvider);
 
-    return DesktopAppMenuBar(
-      child: _ShellSidebarStateScope(
-        builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
+    return _ShellSidebarStateScope(
+      builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
         return LayoutBuilder(
           builder: (context, constraints) {
             final useOverlaySidebar = constraints.maxWidth < _overlayBreakpoint;
@@ -504,8 +503,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             );
           },
         );
-        },
-      ),
+      },
     );
   }
 

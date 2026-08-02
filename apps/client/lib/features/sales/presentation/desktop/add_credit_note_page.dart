@@ -22,6 +22,7 @@ import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
@@ -36,7 +37,8 @@ class DesktopAddCreditNotePage extends ConsumerStatefulWidget {
   final String? fromInvoiceId;
 
   @override
-  ConsumerState<DesktopAddCreditNotePage> createState() => _AddCreditNotePageState();
+  ConsumerState<DesktopAddCreditNotePage> createState() =>
+      _AddCreditNotePageState();
 }
 
 class _AddCreditNotePageState extends ConsumerState<DesktopAddCreditNotePage> {

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:dio/dio.dart';
 
 /// Uploads bytes via presigned intent → PUT → complete flow.
@@ -12,7 +13,7 @@ class MediaUploadClient {
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
     ),
-  );
+  )..httpClientAdapter = createBypassSslHttpClientAdapter();
 
   Future<Map<String, dynamic>> upload({
     required String endpoint,

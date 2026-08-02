@@ -217,7 +217,9 @@ class TrialBalanceReportContent extends ConsumerWidget {
                               SizedBox(
                                 width: 90,
                                 child: Text(
-                                  formatReportCurrencyCompact(report.totalDebit),
+                                  formatReportCurrencyCompact(
+                                    report.totalDebit,
+                                  ),
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
@@ -229,7 +231,9 @@ class TrialBalanceReportContent extends ConsumerWidget {
                               SizedBox(
                                 width: 90,
                                 child: Text(
-                                  formatReportCurrencyCompact(report.totalCredit),
+                                  formatReportCurrencyCompact(
+                                    report.totalCredit,
+                                  ),
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,

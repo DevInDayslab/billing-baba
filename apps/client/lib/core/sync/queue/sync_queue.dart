@@ -115,7 +115,11 @@ class SyncQueue {
     );
   }
 
-  Future<void> markFailed(String jobId, {String? reason, DateTime? nextRetryAt}) {
+  Future<void> markFailed(
+    String jobId, {
+    String? reason,
+    DateTime? nextRetryAt,
+  }) {
     return _update(
       jobId,
       SyncQueueCompanion(
@@ -157,16 +161,15 @@ class SyncQueue {
   }
 
   Future<void> clearCompleted({String? businessId}) async {
-    await (_db.delete(_db.syncQueue)
-          ..where((t) {
-            final statusMatch =
-                t.status.equals(SyncQueueStatus.completed.wire) |
-                t.status.equals(SyncQueueStatus.cancelled.wire);
-            if (businessId == null || businessId.isEmpty) {
-              return statusMatch;
-            }
-            return statusMatch & t.businessId.equals(businessId);
-          }))
+    await (_db.delete(_db.syncQueue)..where((t) {
+          final statusMatch =
+              t.status.equals(SyncQueueStatus.completed.wire) |
+              t.status.equals(SyncQueueStatus.cancelled.wire);
+          if (businessId == null || businessId.isEmpty) {
+            return statusMatch;
+          }
+          return statusMatch & t.businessId.equals(businessId);
+        }))
         .go();
   }
 
@@ -190,37 +193,10 @@ class SyncQueue {
     return rows.map(_fromRow).toList();
   }
 
-  /// Pending, running, or failed row jobs for document headers/lines.
-  ///
-  /// Used to block finalize commands until dependent rows have landed on the server.
-  Future<List<SyncJob>> listDocumentRowBacklog({required String businessId}) async {
-    final rows = await (_db.select(_db.syncQueue)
-          ..where((t) {
-            final documentEntity = t.entityType.equals('sales_documents') |
-                t.entityType.equals('sales_document_lines') |
-                t.entityType.equals('purchase_documents') |
-                t.entityType.equals('purchase_document_lines');
-            final open = t.status.equals(SyncQueueStatus.pending.wire) |
-                t.status.equals(SyncQueueStatus.running.wire) |
-                t.status.equals(SyncQueueStatus.failed.wire);
-            return t.businessId.equals(businessId) &
-                t.kind.equals(SyncQueueKind.row.wire) &
-                documentEntity &
-                open;
-          })
-          ..orderBy([
-            (t) => OrderingTerm.asc(t.priority),
-            (t) => OrderingTerm.asc(t.createdAt),
-          ]))
-        .get();
-    return rows.map(_fromRow).toList();
-  }
-
   Stream<List<SyncJob>> watchPending({String? businessId}) {
     return (_db.select(_db.syncQueue)
           ..where((t) {
-            final statusMatch =
-                t.status.equals(SyncQueueStatus.pending.wire);
+            final statusMatch = t.status.equals(SyncQueueStatus.pending.wire);
             if (businessId == null || businessId.isEmpty) {
               return statusMatch;
             }
@@ -232,15 +208,15 @@ class SyncQueue {
           ]))
         .watch()
         .map((rows) {
-      final at = DateTime.now().toUtc();
-      return rows
-          .where((r) {
-            final next = r.nextRetryAt;
-            return next == null || !next.isAfter(at);
-          })
-          .map(_fromRow)
-          .toList();
-    });
+          final at = DateTime.now().toUtc();
+          return rows
+              .where((r) {
+                final next = r.nextRetryAt;
+                return next == null || !next.isAfter(at);
+              })
+              .map(_fromRow)
+              .toList();
+        });
   }
 
   /// Resets jobs stuck in `running` after a crash back to `pending`.
@@ -257,46 +233,21 @@ class SyncQueue {
   }
 
   /// Re-queues failed jobs whose [nextRetryAt] has elapsed.
-  Future<int> requeueRetryableFailures({DateTime? now, String? businessId}) async {
+  Future<int> requeueRetryableFailures({
+    DateTime? now,
+    String? businessId,
+  }) async {
     final at = now ?? DateTime.now().toUtc();
-    final rows = await (_db.select(_db.syncQueue)
-          ..where((t) {
-            final failed = t.status.equals(SyncQueueStatus.failed.wire) &
-                t.nextRetryAt.isNotNull() &
-                t.nextRetryAt.isSmallerOrEqualValue(at);
-            if (businessId == null || businessId.isEmpty) return failed;
-            return failed & t.businessId.equals(businessId);
-          }))
-        .get();
-    var count = 0;
-    for (final row in rows) {
-      await retry(row.id);
-      count += 1;
-    }
-    return count;
-  }
-
-  /// Re-queues failed document row jobs so a fixed server can accept them.
-  ///
-  /// Rows that failed permanently (no [nextRetryAt]) block finalize commands;
-  /// this gives them another attempt after API fixes (e.g. walk-in party seed).
-  Future<int> requeueFailedDocumentRows({String? businessId}) async {
-    final rows = await (_db.select(_db.syncQueue)
-          ..where((t) {
-            final documentEntity = t.entityType.equals('sales_documents') |
-                t.entityType.equals('sales_document_lines') |
-                t.entityType.equals('purchase_documents') |
-                t.entityType.equals('purchase_document_lines');
-            final failed = t.status.equals(SyncQueueStatus.failed.wire);
-            if (businessId == null || businessId.isEmpty) {
-              return failed & documentEntity & t.kind.equals(SyncQueueKind.row.wire);
-            }
-            return failed &
-                documentEntity &
-                t.kind.equals(SyncQueueKind.row.wire) &
-                t.businessId.equals(businessId);
-          }))
-        .get();
+    final rows =
+        await (_db.select(_db.syncQueue)..where((t) {
+              final failed =
+                  t.status.equals(SyncQueueStatus.failed.wire) &
+                  t.nextRetryAt.isNotNull() &
+                  t.nextRetryAt.isSmallerOrEqualValue(at);
+              if (businessId == null || businessId.isEmpty) return failed;
+              return failed & t.businessId.equals(businessId);
+            }))
+            .get();
     var count = 0;
     for (final row in rows) {
       await retry(row.id);
@@ -308,11 +259,14 @@ class SyncQueue {
   /// Rewrites non-UUID line `entity_id`s so push passes API validation.
   ///
   /// Older clients used counters like `line_4` / `purchase_line_1` as line PKs.
-  Future<List<SyncJob>> remediateInvalidLineEntityIds(List<SyncJob> jobs) async {
+  Future<List<SyncJob>> remediateInvalidLineEntityIds(
+    List<SyncJob> jobs,
+  ) async {
     final fixed = <SyncJob>[];
     for (final job in jobs) {
       final entityId = job.entityId?.trim();
-      final isLineEntity = job.entityType == 'sales_document_lines' ||
+      final isLineEntity =
+          job.entityType == 'sales_document_lines' ||
           job.entityType == 'purchase_document_lines';
       if (!isLineEntity ||
           entityId == null ||
@@ -351,20 +305,19 @@ class SyncQueue {
       final documentId = payload['sales_document_id']?.toString();
       final sortOrder = _readInt(payload['sort_order']);
       if (documentId != null && documentId.isNotEmpty && sortOrder != null) {
-        final updated = await (_db.update(_db.salesDocumentLinesLocal)
-              ..where(
-                (t) =>
-                    t.businessId.equals(businessId) &
-                    t.salesDocumentId.equals(documentId) &
-                    t.sortOrder.equals(sortOrder),
-              ))
-            .write(SalesDocumentLinesLocalCompanion(id: Value(newId)));
+        final updated =
+            await (_db.update(_db.salesDocumentLinesLocal)..where(
+                  (t) =>
+                      t.businessId.equals(businessId) &
+                      t.salesDocumentId.equals(documentId) &
+                      t.sortOrder.equals(sortOrder),
+                ))
+                .write(SalesDocumentLinesLocalCompanion(id: Value(newId)));
         if (updated > 0) return;
       }
-      await (_db.update(_db.salesDocumentLinesLocal)
-            ..where(
-              (t) => t.businessId.equals(businessId) & t.id.equals(oldId),
-            ))
+      await (_db.update(_db.salesDocumentLinesLocal)..where(
+            (t) => t.businessId.equals(businessId) & t.id.equals(oldId),
+          ))
           .write(SalesDocumentLinesLocalCompanion(id: Value(newId)));
       return;
     }
@@ -373,20 +326,19 @@ class SyncQueue {
       final documentId = payload['purchase_document_id']?.toString();
       final sortOrder = _readInt(payload['sort_order']);
       if (documentId != null && documentId.isNotEmpty && sortOrder != null) {
-        final updated = await (_db.update(_db.purchaseDocumentLinesLocal)
-              ..where(
-                (t) =>
-                    t.businessId.equals(businessId) &
-                    t.purchaseDocumentId.equals(documentId) &
-                    t.sortOrder.equals(sortOrder),
-              ))
-            .write(PurchaseDocumentLinesLocalCompanion(id: Value(newId)));
+        final updated =
+            await (_db.update(_db.purchaseDocumentLinesLocal)..where(
+                  (t) =>
+                      t.businessId.equals(businessId) &
+                      t.purchaseDocumentId.equals(documentId) &
+                      t.sortOrder.equals(sortOrder),
+                ))
+                .write(PurchaseDocumentLinesLocalCompanion(id: Value(newId)));
         if (updated > 0) return;
       }
-      await (_db.update(_db.purchaseDocumentLinesLocal)
-            ..where(
-              (t) => t.businessId.equals(businessId) & t.id.equals(oldId),
-            ))
+      await (_db.update(_db.purchaseDocumentLinesLocal)..where(
+            (t) => t.businessId.equals(businessId) & t.id.equals(oldId),
+          ))
           .write(PurchaseDocumentLinesLocalCompanion(id: Value(newId)));
     }
   }
@@ -431,20 +383,23 @@ class SyncQueue {
   }
 
   Future<SyncQueueData?> _getById(String id) {
-    return (_db.select(_db.syncQueue)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.syncQueue,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<void> _update(String id, SyncQueueCompanion companion) async {
-    await (_db.update(_db.syncQueue)..where((t) => t.id.equals(id)))
-        .write(companion);
+    await (_db.update(
+      _db.syncQueue,
+    )..where((t) => t.id.equals(id))).write(companion);
   }
 
   Future<SyncQueueData?> _nextPendingRow({DateTime? now, String? businessId}) {
     final at = now ?? DateTime.now().toUtc();
     return (_db.select(_db.syncQueue)
           ..where((t) {
-            final pending = t.status.equals(SyncQueueStatus.pending.wire) &
+            final pending =
+                t.status.equals(SyncQueueStatus.pending.wire) &
                 (t.nextRetryAt.isNull() |
                     t.nextRetryAt.isSmallerOrEqualValue(at));
             if (businessId == null || businessId.isEmpty) return pending;
@@ -465,7 +420,8 @@ class SyncQueue {
     final at = now ?? DateTime.now().toUtc();
     return (_db.select(_db.syncQueue)
           ..where((t) {
-            final pending = t.status.equals(SyncQueueStatus.pending.wire) &
+            final pending =
+                t.status.equals(SyncQueueStatus.pending.wire) &
                 (t.nextRetryAt.isNull() |
                     t.nextRetryAt.isSmallerOrEqualValue(at));
             if (businessId == null || businessId.isEmpty) return pending;
@@ -502,9 +458,9 @@ class SyncQueue {
   }
 
   Future<List<SyncJob>> listJobsForEntity(String entityId) async {
-    final rows = await (_db.select(_db.syncQueue)
-          ..where((t) => t.entityId.equals(entityId)))
-        .get();
+    final rows = await (_db.select(
+      _db.syncQueue,
+    )..where((t) => t.entityId.equals(entityId))).get();
     return rows.map(_fromRow).toList();
   }
 

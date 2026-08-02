@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Vyapar-style outlined field with a floating label on the border.
 class MobileBusinessProfileLabeledField extends StatelessWidget {
@@ -15,6 +16,7 @@ class MobileBusinessProfileLabeledField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.suffix,
     this.onChanged,
+    this.inputFormatters,
   });
 
   final String label;
@@ -27,6 +29,7 @@ class MobileBusinessProfileLabeledField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final Widget? suffix;
   final VoidCallback? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
 
   static const _borderColor = Color(0xFFD7DCE3);
 
@@ -48,6 +51,7 @@ class MobileBusinessProfileLabeledField extends StatelessWidget {
               minLines: minLines,
               maxLines: maxLines,
               textCapitalization: textCapitalization,
+              inputFormatters: inputFormatters,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textPrimary,
               ),
@@ -80,7 +84,10 @@ class MobileBusinessProfileLabeledField extends StatelessWidget {
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: AppRadius.mdBorder,
-                  borderSide: const BorderSide(color: AppColors.error, width: 1.4),
+                  borderSide: const BorderSide(
+                    color: AppColors.error,
+                    width: 1.4,
+                  ),
                 ),
               ),
             ),
@@ -100,9 +107,7 @@ class MobileBusinessProfileLabeledField extends StatelessWidget {
                 child: Text(
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: hasError
-                        ? AppColors.error
-                        : AppColors.textSecondary,
+                    color: hasError ? AppColors.error : AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

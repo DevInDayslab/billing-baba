@@ -87,18 +87,16 @@ class SaleOrderFormState {
 
   double get balanceAmount => (total - advanceAmount).clamp(0, double.infinity);
 
-  bool get partyHasError =>
-      transactionPartyHasError(
-        showValidationErrors: showValidationErrors,
-        partyId: partyId,
-        partyName: party,
-      );
+  bool get partyHasError => transactionPartyHasError(
+    showValidationErrors: showValidationErrors,
+    partyId: partyId,
+    partyName: party,
+  );
 
-  bool get phoneHasError =>
-      transactionPhoneHasError(
-        showValidationErrors: showValidationErrors,
-        phone: phoneNo,
-      );
+  bool get phoneHasError => transactionPhoneHasError(
+    showValidationErrors: showValidationErrors,
+    phone: phoneNo,
+  );
 
   String? get phoneErrorMessage => phoneValidationMessage(phoneNo);
 

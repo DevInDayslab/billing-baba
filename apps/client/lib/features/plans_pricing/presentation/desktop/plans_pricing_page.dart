@@ -26,7 +26,8 @@ class DesktopPlansPricingPage extends ConsumerStatefulWidget {
   const DesktopPlansPricingPage({super.key});
 
   @override
-  ConsumerState<DesktopPlansPricingPage> createState() => _PlansPricingPageState();
+  ConsumerState<DesktopPlansPricingPage> createState() =>
+      _PlansPricingPageState();
 }
 
 class _PlansPricingPageState extends ConsumerState<DesktopPlansPricingPage> {
@@ -177,11 +178,13 @@ class _PlansPricingPageState extends ConsumerState<DesktopPlansPricingPage> {
                       selectedCompactPlan: _selectedCompactPlan,
                       onCompactPlanChanged: (plan) =>
                           setState(() => _selectedCompactPlan = plan),
-                      onToggleFeatures: () =>
-                          setState(() => _featuresExpanded = !_featuresExpanded),
+                      onToggleFeatures: () => setState(
+                        () => _featuresExpanded = !_featuresExpanded,
+                      ),
                       onViewAllFeatures: () =>
                           setState(() => _showFullComparison = true),
-                      onBuyGold: () => _openReviewOrder(SubscriptionPlanType.gold),
+                      onBuyGold: () =>
+                          _openReviewOrder(SubscriptionPlanType.gold),
                       onBuyPlatinum: () =>
                           _openReviewOrder(SubscriptionPlanType.platinum),
                       onUpgradePressed: () =>
@@ -203,7 +206,9 @@ class _PlansPricingPageState extends ConsumerState<DesktopPlansPricingPage> {
                                     setState(() => _showFullComparison = true),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.error,
-                                  side: const BorderSide(color: AppColors.error),
+                                  side: const BorderSide(
+                                    color: AppColors.error,
+                                  ),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: AppSpacing.lg,
                                     vertical: AppSpacing.sm + 4,
@@ -224,7 +229,8 @@ class _PlansPricingPageState extends ConsumerState<DesktopPlansPricingPage> {
                       platinumPricing: platinumPricing,
                       features: cardFeatures,
                       overviewFeatureLimit: _overviewFeatureLimit,
-                      onBuyGold: () => _openReviewOrder(SubscriptionPlanType.gold),
+                      onBuyGold: () =>
+                          _openReviewOrder(SubscriptionPlanType.gold),
                       onBuyPlatinum: () =>
                           _openReviewOrder(SubscriptionPlanType.platinum),
                       onUpgradePressed: () =>
@@ -911,7 +917,9 @@ class _OverviewPlanCards extends StatelessWidget {
                   overviewFeatureLimit: overviewFeatureLimit,
                   featuresExpanded: featuresExpanded,
                   onToggleFeatures: onToggleFeatures,
-                  onCtaPressed: showUpgradeCta ? onUpgradePressed : onBuyPlatinum,
+                  onCtaPressed: showUpgradeCta
+                      ? onUpgradePressed
+                      : onBuyPlatinum,
                 ),
               ),
             ],

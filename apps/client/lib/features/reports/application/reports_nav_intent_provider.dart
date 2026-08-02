@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final reportsNavIntentProvider =
     NotifierProvider<ReportsNavIntentNotifier, ReportsNavIntent?>(
-  ReportsNavIntentNotifier.new,
-);
+      ReportsNavIntentNotifier.new,
+    );
 
 class ReportsNavIntentNotifier extends Notifier<ReportsNavIntent?> {
   @override

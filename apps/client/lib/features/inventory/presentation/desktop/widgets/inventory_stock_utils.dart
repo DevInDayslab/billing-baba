@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +56,13 @@ Color stockStatusColor(InventoryItem item) {
   final reorder = item.reorderLevel;
   if (reorder != null && quantity <= reorder) return inventoryLowStockColor;
   return inventoryPositiveColor;
+}
+
+bool isInventoryLowStock(InventoryItem item) {
+  if (item.type != ItemType.product) return false;
+  final quantity = item.quantity;
+  if (quantity == null) return false;
+  return quantity < inventoryLowStockThreshold;
 }
 
 double? parseDecimal(String? value) {

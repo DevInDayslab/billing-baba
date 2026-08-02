@@ -18,9 +18,9 @@ class GodownSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.godownsLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.godownsLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -31,7 +31,9 @@ class GodownSync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.godownsLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.godownsLocal)
+          .insertOnConflictUpdate(
             GodownsLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -50,7 +52,9 @@ class GodownSync {
     }
 
     final name = _str(payload, 'name');
-    await _db.into(_db.godownsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.godownsLocal)
+        .insertOnConflictUpdate(
           GodownsLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -77,8 +81,9 @@ class GodownSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.godownsLocal)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.godownsLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       GodownsLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

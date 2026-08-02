@@ -691,16 +691,12 @@ export class SalesDocumentService extends SalesServiceBase {
             }
           }
 
-          const tax = await this.computeLineTax(
-            businessId,
-            newDocumentRecord,
-            {
-              quantity: line.quantity,
-              unit_price: effectiveUnitPrice,
-              discount_amount: line.discount_amount,
-              tax_rate: line.tax_rate,
-            },
-          );
+          const tax = await this.computeLineTax(businessId, newDocumentRecord, {
+            quantity: line.quantity,
+            unit_price: effectiveUnitPrice,
+            discount_amount: line.discount_amount,
+            tax_rate: line.tax_rate,
+          });
 
           await repo.createLine({
             businessId,

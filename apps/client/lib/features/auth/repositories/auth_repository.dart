@@ -2,6 +2,7 @@ import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/core/network/interceptors.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:dio/dio.dart';
@@ -23,6 +24,7 @@ class AuthRepository {
           headers: {'Content-Type': 'application/json'},
         ),
       )
+      ..httpClientAdapter = createBypassSslHttpClientAdapter()
       ..interceptors.addAll([
         ...buildInterceptors(),
       ]);
@@ -119,9 +121,14 @@ class AuthRepository {
 
     try {
       AuthDebugLogger.log('devLogin dio.post starting');
+      // First empty-catalog login may seed ~50 demo products server-side.
       final response = await _dio.post<Map<String, dynamic>>(
         path,
         data: const <String, dynamic>{},
+        options: Options(
+          sendTimeout: const Duration(seconds: 120),
+          receiveTimeout: const Duration(seconds: 120),
+        ),
       );
       AuthDebugLogger.log(
         'devLogin dio.post response status=${response.statusCode}',

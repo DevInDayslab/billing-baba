@@ -337,6 +337,79 @@ describe.skipIf(!canRun)('Sales API integration', () => {
   );
 
   test(
+    'finalize allows overselling and records negative stock',
+    async () => {
+      const config = loadAppConfig();
+      const prefix = `${config.apiPrefix}/sales/sales-documents`;
+      const { partyId, unitShortName, defaultGodownId } =
+        await createSalesFixtures(app, token, `${suffix}-oversell`);
+
+      const itemRes = await app.inject({
+        method: 'POST',
+        url: `${config.apiPrefix}/inventory/items`,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          name: `ZeroStockItem-${suffix}`,
+          item_type: 'product',
+          base_unit: unitShortName,
+          opening_quantity: '0',
+          opening_cost_per_unit: '50',
+          opening_godown_id: defaultGodownId,
+          sale_price: '120',
+        },
+      });
+      expect(itemRes.statusCode).toBe(201);
+      const zeroStockItemId = (itemRes.json() as { data: { id: string } }).data
+        .id;
+
+      const created = await app.inject({
+        method: 'POST',
+        url: prefix,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          document_type: 'tax_invoice',
+          document_series: 'INV',
+          party_id: partyId,
+          is_gst_formal: true,
+          party_state_code: '27',
+        },
+      });
+      const docId = (created.json() as { data: { id: string } }).data.id;
+
+      await app.inject({
+        method: 'POST',
+        url: `${prefix}/${docId}/lines`,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          item_id: zeroStockItemId,
+          quantity: '1',
+          unit: unitShortName,
+          unit_price: '120',
+          tax_rate: '0',
+        },
+      });
+
+      const finalized = await app.inject({
+        method: 'POST',
+        url: `${prefix}/${docId}/finalize`,
+        headers: jsonAuthHeaders(token),
+        payload: {},
+      });
+      expect(finalized.statusCode).toBe(200);
+
+      const stock = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/stock-levels?item_id=${zeroStockItemId}`,
+        headers: getAuthHeaders(token),
+      });
+      const stockQty = (stock.json() as { data: { quantity: string }[] })
+        .data[0]?.quantity;
+      expect(stockQty).toBe('-1.0000');
+    },
+    testTimeout,
+  );
+
+  test(
     'auto-bootstraps document sequence for new series on finalize',
     async () => {
       const config = loadAppConfig();

@@ -17,9 +17,7 @@ String? buildImageCacheKey({
   String? fallbackUrl,
 }) {
   final assetId = mediaAssetId?.trim();
-  if (assetId != null &&
-      assetId.isNotEmpty &&
-      displayContext != null) {
+  if (assetId != null && assetId.isNotEmpty && displayContext != null) {
     return 'media:$assetId:${displayContext.preferredVariant.name}';
   }
   return normalizeImageUrl(fallbackUrl);
@@ -49,7 +47,8 @@ Future<String> resolveImageUrl({
 }
 
 /// Grid/list thumbnail URL for an inventory gallery image.
-String? gridImageUrl(ItemImageModel image) => normalizeImageUrl(image.urlForGrid());
+String? gridImageUrl(ItemImageModel image) =>
+    normalizeImageUrl(image.urlForGrid());
 
 /// Detail/medium URL for an inventory gallery image.
 String? detailImageUrl(ItemImageModel image) =>

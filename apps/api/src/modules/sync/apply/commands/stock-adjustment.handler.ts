@@ -21,8 +21,11 @@ export const stockAdjustmentHandler: CommandHandler = async (db, input) => {
     );
   }
 
-  const { adjustment_id: adjustmentId, godown_id: godownId, lines } =
-    parsed.data;
+  const {
+    adjustment_id: adjustmentId,
+    godown_id: godownId,
+    lines,
+  } = parsed.data;
 
   const existing = await db
     .select({
@@ -183,7 +186,8 @@ function mapAdjustmentError(
     result: {
       mutation_id: input.mutationId,
       code: 'INTERNAL_ERROR',
-      message: error instanceof Error ? error.message : 'Stock adjustment failed',
+      message:
+        error instanceof Error ? error.message : 'Stock adjustment failed',
     },
   };
 }

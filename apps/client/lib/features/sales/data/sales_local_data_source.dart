@@ -13,18 +13,19 @@ class SalesLocalDataSource {
   }
 
   Future<SalesDocumentDto?> getDocument(String id) async {
-    final header = await (_db.select(_db.salesDocumentsLocal)
-          ..where((t) => t.id.equals(id) & t.isDeleted.equals(false)))
-        .getSingleOrNull();
+    final header =
+        await (_db.select(_db.salesDocumentsLocal)
+              ..where((t) => t.id.equals(id) & t.isDeleted.equals(false)))
+            .getSingleOrNull();
     if (header == null) return null;
 
-    final lines = await (_db.select(_db.salesDocumentLinesLocal)
-          ..where(
-            (t) =>
-                t.salesDocumentId.equals(id) & t.isDeleted.equals(false),
-          )
-          ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-        .get();
+    final lines =
+        await (_db.select(_db.salesDocumentLinesLocal)
+              ..where(
+                (t) => t.salesDocumentId.equals(id) & t.isDeleted.equals(false),
+              )
+              ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+            .get();
 
     return _toDto(header, lines);
   }
@@ -33,47 +34,49 @@ class SalesLocalDataSource {
     required String businessId,
     required String documentType,
   }) async {
-    final headers = await (_db.select(_db.salesDocumentsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.documentType.equals(documentType) &
-                t.isDeleted.equals(false),
-          )
-          ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
-        .get();
+    final headers =
+        await (_db.select(_db.salesDocumentsLocal)
+              ..where(
+                (t) =>
+                    t.businessId.equals(businessId) &
+                    t.documentType.equals(documentType) &
+                    t.isDeleted.equals(false),
+              )
+              ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
+            .get();
 
     final results = <SalesDocumentDto>[];
     for (final header in headers) {
-      final lines = await (_db.select(_db.salesDocumentLinesLocal)
-            ..where(
-              (t) =>
-                  t.salesDocumentId.equals(header.id) &
-                  t.isDeleted.equals(false),
-            )
-            ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-          .get();
+      final lines =
+          await (_db.select(_db.salesDocumentLinesLocal)
+                ..where(
+                  (t) =>
+                      t.salesDocumentId.equals(header.id) &
+                      t.isDeleted.equals(false),
+                )
+                ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+              .get();
       results.add(_toDto(header, lines));
     }
     return results;
   }
 
   Future<List<String>> listFinalizedDocumentIds(String businessId) async {
-    final headers = await (_db.select(_db.salesDocumentsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.status.equals('finalized') &
-                t.isDeleted.equals(false),
-          ))
-        .get();
+    final headers =
+        await (_db.select(_db.salesDocumentsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.status.equals('finalized') &
+                  t.isDeleted.equals(false),
+            ))
+            .get();
     return headers.map((header) => header.id).toList();
   }
 
   Future<String?> getDocumentGodownId(String documentId) async {
-    final header = await (_db.select(_db.salesDocumentsLocal)
-          ..where((t) => t.id.equals(documentId)))
-        .getSingleOrNull();
+    final header = await (_db.select(
+      _db.salesDocumentsLocal,
+    )..where((t) => t.id.equals(documentId))).getSingleOrNull();
     return header?.godownId;
   }
 
@@ -82,7 +85,17 @@ class SalesLocalDataSource {
     required String businessId,
     required String documentType,
     required String status,
-    required String documentSeries, required bool isGstFormal, required String subtotal, required String discountTotal, required String taxAmount, required String totalAmount, required String documentDate, required int syncVersion, required DateTime createdAt, required DateTime updatedAt, String? documentNumber,
+    required String documentSeries,
+    required bool isGstFormal,
+    required String subtotal,
+    required String discountTotal,
+    required String taxAmount,
+    required String totalAmount,
+    required String documentDate,
+    required int syncVersion,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    String? documentNumber,
     String? partyId,
     String? partyStateCode,
     String? convertedFromId,
@@ -92,7 +105,9 @@ class SalesLocalDataSource {
     String? paymentMode,
     String? deviceId,
   }) async {
-    await _db.into(_db.salesDocumentsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.salesDocumentsLocal)
+        .insertOnConflictUpdate(
           SalesDocumentsLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -126,12 +141,14 @@ class SalesLocalDataSource {
     required String salesDocumentId,
     required List<SalesDocumentLineLocalData> lines,
   }) async {
-    await (_db.delete(_db.salesDocumentLinesLocal)
-          ..where((t) => t.salesDocumentId.equals(salesDocumentId)))
-        .go();
+    await (_db.delete(
+      _db.salesDocumentLinesLocal,
+    )..where((t) => t.salesDocumentId.equals(salesDocumentId))).go();
 
     for (final line in lines) {
-      await _db.into(_db.salesDocumentLinesLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.salesDocumentLinesLocal)
+          .insertOnConflictUpdate(
             SalesDocumentLinesLocalCompanion.insert(
               id: line.id,
               businessId: businessId,
@@ -163,8 +180,9 @@ class SalesLocalDataSource {
   }
 
   Future<void> softDeleteDocument(String id, DateTime deletedAt) {
-    return (_db.update(_db.salesDocumentsLocal)..where((t) => t.id.equals(id)))
-        .write(
+    return (_db.update(
+      _db.salesDocumentsLocal,
+    )..where((t) => t.id.equals(id))).write(
       SalesDocumentsLocalCompanion(
         isDeleted: const Value(true),
         deletedAt: Value(deletedAt.toUtc()),
@@ -174,9 +192,9 @@ class SalesLocalDataSource {
   }
 
   Future<int?> getHeaderSyncVersion(String id) async {
-    final row = await (_db.select(_db.salesDocumentsLocal)
-          ..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.salesDocumentsLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
     return row?.syncVersion;
   }
 
@@ -189,17 +207,20 @@ class SalesLocalDataSource {
     String? paidAmount,
     String? paymentMode,
   }) {
-    return (_db.update(_db.salesDocumentsLocal)
-          ..where((t) => t.id.equals(documentId)))
-        .write(
+    return (_db.update(
+      _db.salesDocumentsLocal,
+    )..where((t) => t.id.equals(documentId))).write(
       SalesDocumentsLocalCompanion(
         status: Value(status),
         documentNumber: Value(documentNumber),
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),
-        paidAmount: paidAmount != null ? Value(paidAmount) : const Value.absent(),
-        paymentMode:
-            paymentMode != null ? Value(paymentMode) : const Value.absent(),
+        paidAmount: paidAmount != null
+            ? Value(paidAmount)
+            : const Value.absent(),
+        paymentMode: paymentMode != null
+            ? Value(paymentMode)
+            : const Value.absent(),
       ),
     );
   }

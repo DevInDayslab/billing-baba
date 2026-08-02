@@ -20,6 +20,7 @@ import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const SaleDocumentType _documentType = SaleDocumentType.estimate;
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
@@ -35,7 +36,8 @@ class DesktopAddEstimatePage extends ConsumerStatefulWidget {
   final String? duplicateFromId;
 
   @override
-  ConsumerState<DesktopAddEstimatePage> createState() => _AddEstimatePageState();
+  ConsumerState<DesktopAddEstimatePage> createState() =>
+      _AddEstimatePageState();
 }
 
 class _AddEstimatePageState extends ConsumerState<DesktopAddEstimatePage> {
@@ -536,7 +538,7 @@ class _RequiredLabeledField extends StatelessWidget {
       children: [
         RichText(
           text: TextSpan(
-            style: saleFieldLabelStyle.copyWith(color: AppColors.primary),
+            style: saleFieldLabelStyle,
             children: [
               TextSpan(text: label),
               const TextSpan(

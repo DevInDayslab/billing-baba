@@ -155,7 +155,8 @@ class CreatePaymentRequest {
     if (notes != null) 'notes': notes,
     if (discountAmount != null && discountAmount != '0.0000')
       'discount_amount': discountAmount,
-    if (balanceAfterPayment != null) 'balance_after_payment': balanceAfterPayment,
+    if (balanceAfterPayment != null)
+      'balance_after_payment': balanceAfterPayment,
     if (shortPaymentHandling != null)
       'short_payment_handling': shortPaymentHandling,
     if (shortfallAmount != null) 'shortfall_amount': shortfallAmount,

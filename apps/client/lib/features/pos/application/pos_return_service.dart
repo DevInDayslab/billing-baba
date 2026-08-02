@@ -20,14 +20,15 @@ const _posReturnTaxOption = '18%';
 
 @Riverpod(keepAlive: true)
 Future<PosReturnService> posReturnService(Ref ref) async {
-  final commandRepository =
-      await ref.watch(salesReturnCommandRepositoryProvider.future);
+  final commandRepository = await ref.watch(
+    salesReturnCommandRepositoryProvider.future,
+  );
   return PosReturnService(commandRepository: commandRepository);
 }
 
 class PosReturnService {
   PosReturnService({required SalesReturnCommandRepository commandRepository})
-      : _commandRepository = commandRepository;
+    : _commandRepository = commandRepository;
 
   final SalesReturnCommandRepository _commandRepository;
 

@@ -21,8 +21,7 @@ class MobileNotificationsState {
       activeTab: activeTab ?? this.activeTab,
       showStayUpdatedBanner:
           showStayUpdatedBanner ?? this.showStayUpdatedBanner,
-      notificationsEnabled:
-          notificationsEnabled ?? this.notificationsEnabled,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     );
   }
 }

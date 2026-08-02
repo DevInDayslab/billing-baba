@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
@@ -29,22 +30,49 @@ class AddCategoryResult {
   bool get isSuccess => category != null;
 }
 
+Future<List<InventoryCategory>> fetchInventoryCategoriesWithFallback(
+  Ref ref, {
+  String? searchQuery,
+}) async {
+  try {
+    final service = await ref.read(inventoryServiceProvider.future);
+    final categories = await service.fetchCategories(searchQuery: searchQuery);
+    if (categories.isNotEmpty) return categories;
+  } on Object {
+    // Fall through to local catalog when API is empty or unavailable.
+  }
+  return _catalogCategories(searchQuery: searchQuery);
+}
+
+List<InventoryCategory> _catalogCategories({String? searchQuery}) {
+  final query = searchQuery?.trim().toLowerCase() ?? '';
+  return InventoryCatalog.categories
+      .where((category) => !category.isUncategorized)
+      .where(
+        (category) =>
+            query.isEmpty || category.name.toLowerCase().contains(query),
+      )
+      .toList();
+}
+
 @Riverpod(keepAlive: true)
 class InventoryCategories extends _$InventoryCategories {
   @override
   Future<List<InventoryCategory>> build() async {
-    final service = await ref.watch(inventoryServiceProvider.future);
-    return service.fetchCategories();
+    return fetchInventoryCategoriesWithFallback(ref);
   }
 
   Future<void> refresh({String? searchQuery}) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final service = await ref.read(inventoryServiceProvider.future);
-      return service.fetchCategories(
+    final previous = state.value ?? const <InventoryCategory>[];
+    state = await AsyncValue.guard(
+      () => fetchInventoryCategoriesWithFallback(
+        ref,
         searchQuery: searchQuery ?? ref.read(categoryBackendSearchProvider),
-      );
-    });
+      ),
+    );
+    if (state.hasError && previous.isNotEmpty) {
+      state = AsyncData(previous);
+    }
   }
 
   Future<AddCategoryResult> addCategory(String name) async {

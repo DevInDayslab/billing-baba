@@ -16,7 +16,7 @@ import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';                                          
+import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _zebraRowBg = Color(0xFFFAFAFA);
@@ -171,9 +171,7 @@ class _SaleInvoiceTransactionsTableState
           isSelected: widget.items[i].id == selectedId,
           onTap: () {
             final invoice = widget.items[i];
-            ref
-                .read(selectedSaleInvoiceIdProvider.notifier)
-                .select(invoice.id);
+            ref.read(selectedSaleInvoiceIdProvider.notifier).select(invoice.id);
             context.push('${AppRoutes.viewSale}/${invoice.id}');
           },
         ),
@@ -940,43 +938,59 @@ class _PaginationRow extends ConsumerWidget {
 
     // Always show first page
     if (rangeStart > 1) {
-      pages.add(_PageNumber(
-        page: 1,
-        isActive: currentPage == 1,
-        onTap: () => filtersNotifier.setPage(1),
-      ));
+      pages.add(
+        _PageNumber(
+          page: 1,
+          isActive: currentPage == 1,
+          onTap: () => filtersNotifier.setPage(1),
+        ),
+      );
       if (rangeStart > 2) {
-        pages.add(const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Text('...', style: TextStyle(color: AppColors.textSecondary)),
-        ));
+        pages.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              '...',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        );
       }
     }
 
     // Middle window
     for (var page = rangeStart; page <= rangeEnd; page++) {
       if (pages.isNotEmpty) pages.add(const SizedBox(width: AppSpacing.xs));
-      pages.add(_PageNumber(
-        page: page,
-        isActive: page == currentPage,
-        onTap: () => filtersNotifier.setPage(page),
-      ));
+      pages.add(
+        _PageNumber(
+          page: page,
+          isActive: page == currentPage,
+          onTap: () => filtersNotifier.setPage(page),
+        ),
+      );
     }
 
     // Always show last page
     if (rangeEnd < totalPages) {
       if (rangeEnd < totalPages - 1) {
-        pages.add(const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Text('...', style: TextStyle(color: AppColors.textSecondary)),
-        ));
+        pages.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              '...',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        );
       }
       pages.add(const SizedBox(width: AppSpacing.xs));
-      pages.add(_PageNumber(
-        page: totalPages,
-        isActive: currentPage == totalPages,
-        onTap: () => filtersNotifier.setPage(totalPages),
-      ));
+      pages.add(
+        _PageNumber(
+          page: totalPages,
+          isActive: currentPage == totalPages,
+          onTap: () => filtersNotifier.setPage(totalPages),
+        ),
+      );
     }
 
     return pages;

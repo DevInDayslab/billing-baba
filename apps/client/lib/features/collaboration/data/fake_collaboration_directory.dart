@@ -1,7 +1,8 @@
 import 'package:billing_baba/features/business/models/business_model.dart'
     as business;
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
-import 'package:billing_baba/features/collaboration/data/fake_collaboration_repository.dart' show FakeCollaborationRepository;
+import 'package:billing_baba/features/collaboration/data/fake_collaboration_repository.dart'
+    show FakeCollaborationRepository;
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';

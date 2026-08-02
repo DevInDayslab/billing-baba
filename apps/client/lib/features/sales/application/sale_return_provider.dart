@@ -328,7 +328,9 @@ class SaleReturns extends _$SaleReturns {
   Future<PaginatedSaleInvoices> _fetchPage() async {
     final filters = ref.read(saleReturnFiltersProvider);
     final service = await ref.read(salesServiceProvider.future);
-    final page = await service.fetchInvoicesPage(buildSaleReturnListQuery(filters));
+    final page = await service.fetchInvoicesPage(
+      buildSaleReturnListQuery(filters),
+    );
 
     return PaginatedSaleInvoices(
       items: applySaleReturnClientFilters(page.items, filters),

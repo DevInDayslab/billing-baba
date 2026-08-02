@@ -22,6 +22,5 @@ class SyncPauseGate {
 
   void resume() => _paused = false;
 
-  bool isStale(int capturedGeneration) =>
-      capturedGeneration != _generation;
+  bool isStale(int capturedGeneration) => capturedGeneration != _generation;
 }

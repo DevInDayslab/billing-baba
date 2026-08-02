@@ -155,14 +155,6 @@ export async function recordMovementAndUpdateStock(
   const currentAvg = existingStock.averageCost;
   const newQty = parseMoney(currentQty) + delta;
 
-  if (newQty < 0) {
-    throw new AppError(
-      'INSUFFICIENT_STOCK',
-      'Insufficient stock for this movement',
-      422,
-    );
-  }
-
   const costPerUnit =
     params.costPerUnit !== undefined && params.costPerUnit !== null
       ? normalizeMoney(params.costPerUnit)

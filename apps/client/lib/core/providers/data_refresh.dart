@@ -126,16 +126,17 @@ void invalidateJobWorkLists(Ref ref) {
 }
 
 void invalidateSaleLists(Ref ref) {
-  ref..invalidate(saleInvoicesProvider)
-  ..invalidate(saleOrdersProvider)
-  ..invalidate(saleReturnsProvider)
-  ..invalidate(estimateQuotationsProvider)
-  ..invalidate(deliveryChallansProvider)
-  ..invalidate(salesDocumentsListProvider(saleOrderListScope()))
-  ..invalidate(salesDocumentsListProvider(deliveryChallanListScope()))
-  ..invalidate(salesDocumentsListProvider(salesReturnListScope()))
-  ..invalidate(salesDocumentsListProvider(estimateListScope()))
-  ..invalidate(salesDocumentsListProvider(proformaListScope()));
+  ref
+    ..invalidate(saleInvoicesProvider)
+    ..invalidate(saleOrdersProvider)
+    ..invalidate(saleReturnsProvider)
+    ..invalidate(estimateQuotationsProvider)
+    ..invalidate(deliveryChallansProvider)
+    ..invalidate(salesDocumentsListProvider(saleOrderListScope()))
+    ..invalidate(salesDocumentsListProvider(deliveryChallanListScope()))
+    ..invalidate(salesDocumentsListProvider(salesReturnListScope()))
+    ..invalidate(salesDocumentsListProvider(estimateListScope()))
+    ..invalidate(salesDocumentsListProvider(proformaListScope()));
 }
 
 void invalidateSaleFaLists(Ref ref) {
@@ -155,8 +156,9 @@ void invalidatePaymentOutLists(Ref ref) {
 }
 
 void invalidateExpenseLists(Ref ref) {
-  ref..invalidate(expenseCategoriesProvider)
-  ..invalidate(expenseTransactionsProvider);
+  ref
+    ..invalidate(expenseCategoriesProvider)
+    ..invalidate(expenseTransactionsProvider);
 }
 
 void invalidateInventoryLists(Ref ref) {

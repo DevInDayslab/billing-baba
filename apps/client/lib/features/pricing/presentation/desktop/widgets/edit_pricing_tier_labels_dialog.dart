@@ -70,7 +70,9 @@ class _EditPricingTierLabelsDialogState
     });
 
     try {
-      await ref.read(commerceSettingsProvider.notifier).save(
+      await ref
+          .read(commerceSettingsProvider.notifier)
+          .save(
             pricingTierLabels: tierLabels,
           );
       if (!mounted) return;
@@ -108,8 +110,9 @@ class _EditPricingTierLabelsDialogState
                   ),
                 ),
                 IconButton(
-                  onPressed:
-                      _saving ? null : () => Navigator.of(context).pop(false),
+                  onPressed: _saving
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.close),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -147,7 +150,10 @@ class _EditPricingTierLabelsDialogState
               const SizedBox(height: AppSpacing.sm),
               Text(
                 _errorMessage!,
-                style: const TextStyle(fontSize: 12, color: saleFieldErrorColor),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: saleFieldErrorColor,
+                ),
               ),
             ],
             const SizedBox(height: AppSpacing.lg),

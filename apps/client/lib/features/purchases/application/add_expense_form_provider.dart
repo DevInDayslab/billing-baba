@@ -435,8 +435,9 @@ class AddExpenseForm extends _$AddExpenseForm {
     }
 
     final categories = await ref.read(expenseCategoriesProvider.future);
-    final selectedCategory =
-        categories.where((category) => category.id == categoryId).firstOrNull;
+    final selectedCategory = categories
+        .where((category) => category.id == categoryId)
+        .firstOrNull;
     if (selectedCategory?.variant.isSyncOnly == true) {
       return 'Loyalty redeemed and payment-in discount expenses are '
           'created automatically';

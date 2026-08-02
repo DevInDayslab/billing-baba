@@ -105,8 +105,9 @@ class _PartyDetailContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ledgerAsync = ref.watch(partyTimelineProvider(party.id));
     final businessName = ref.watch(sidebarBusinessProvider).name;
-    final canViewHiddenLedger =
-        ref.watch(permissionServiceProvider).canViewHiddenLedger;
+    final canViewHiddenLedger = ref
+        .watch(permissionServiceProvider)
+        .canViewHiddenLedger;
     final transactionsAsync = ledgerAsync.whenData(
       (ledger) => ledger.transactions,
     );

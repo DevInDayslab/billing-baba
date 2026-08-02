@@ -16,8 +16,14 @@ class AddEstimatePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptivePage(
-      desktop: DesktopAddEstimatePage(estimateId: estimateId, duplicateFromId: duplicateFromId),
-      mobile: MobileAddEstimatePage(estimateId: estimateId, duplicateFromId: duplicateFromId),
+      desktop: DesktopAddEstimatePage(
+        estimateId: estimateId,
+        duplicateFromId: duplicateFromId,
+      ),
+      mobile: MobileAddEstimatePage(
+        estimateId: estimateId,
+        duplicateFromId: duplicateFromId,
+      ),
     );
   }
 }

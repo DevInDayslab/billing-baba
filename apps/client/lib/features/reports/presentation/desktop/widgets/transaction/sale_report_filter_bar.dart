@@ -36,9 +36,7 @@ class _SaleReportFilterBarState extends ConsumerState<SaleReportFilterBar> {
   Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
     final notifier = ref.read(reportFiltersProvider.notifier);
-    final dateRange =
-        filters.customDateRange ??
-        DateTimeRange(start: DateTime.now(), end: DateTime.now());
+    final dateRange = filters.effectiveDateRange;
 
     return DecoratedBox(
       decoration: BoxDecoration(

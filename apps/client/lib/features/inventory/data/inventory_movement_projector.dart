@@ -21,25 +21,26 @@ class InventoryMovementProjector {
   }) async {
     final movements = <MovementDto>[];
 
-    final saleHeaders = await (_db.select(_db.salesDocumentsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.status.equals('finalized') &
-                t.isDeleted.equals(false),
-          ))
-        .get();
+    final saleHeaders =
+        await (_db.select(_db.salesDocumentsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.status.equals('finalized') &
+                  t.isDeleted.equals(false),
+            ))
+            .get();
 
     for (final header in saleHeaders) {
-      final lines = await (_db.select(_db.salesDocumentLinesLocal)
-            ..where(
-              (t) =>
-                  t.salesDocumentId.equals(header.id) &
-                  t.itemId.equals(itemId) &
-                  t.isDeleted.equals(false),
-            )
-            ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-          .get();
+      final lines =
+          await (_db.select(_db.salesDocumentLinesLocal)
+                ..where(
+                  (t) =>
+                      t.salesDocumentId.equals(header.id) &
+                      t.itemId.equals(itemId) &
+                      t.isDeleted.equals(false),
+                )
+                ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+              .get();
       if (lines.isEmpty) continue;
 
       final movementType = _saleMovementType(header.documentType);
@@ -74,25 +75,26 @@ class InventoryMovementProjector {
       }
     }
 
-    final purchaseHeaders = await (_db.select(_db.purchaseDocumentsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.status.equals('finalized') &
-                t.isDeleted.equals(false),
-          ))
-        .get();
+    final purchaseHeaders =
+        await (_db.select(_db.purchaseDocumentsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.status.equals('finalized') &
+                  t.isDeleted.equals(false),
+            ))
+            .get();
 
     for (final header in purchaseHeaders) {
-      final lines = await (_db.select(_db.purchaseDocumentLinesLocal)
-            ..where(
-              (t) =>
-                  t.purchaseDocumentId.equals(header.id) &
-                  t.itemId.equals(itemId) &
-                  t.isDeleted.equals(false),
-            )
-            ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-          .get();
+      final lines =
+          await (_db.select(_db.purchaseDocumentLinesLocal)
+                ..where(
+                  (t) =>
+                      t.purchaseDocumentId.equals(header.id) &
+                      t.itemId.equals(itemId) &
+                      t.isDeleted.equals(false),
+                )
+                ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+              .get();
       if (lines.isEmpty) continue;
 
       final movementType = _purchaseMovementType(header.documentType);

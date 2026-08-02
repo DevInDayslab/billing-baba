@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/taxes/taxes_report_filter_bar.dart';
@@ -94,60 +96,15 @@ class GstTaxReportContent extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportSyncScrollTable(
-                              minWidth: 720,
-                              headerChildren: const [
-                                Expanded(
-                                  child: ReportAlignedHeaderCell(
-                                    label: 'Party Name',
-                                  ),
+                            child:
+                                ReportFilterableSyncTable<ReportGstTaxPartyRow>(
+                                  reportScope: gstTaxReportScope,
+                                  minWidth: 720,
+                                  columns: gstTaxColumns(),
+                                  rows: rows,
                                 ),
-                                ReportAlignedHeaderCell(
-                                  label: 'Sale Tax',
-                                  width: 160,
-                                  alignment: Alignment.centerRight,
-                                ),
-                                ReportAlignedHeaderCell(
-                                  label: 'Purchase / Expense Tax',
-                                  width: 200,
-                                  alignment: Alignment.centerRight,
-                                ),
-                              ],
-                              rows: [
-                                for (var i = 0; i < rows.length; i++)
-                                  ReportAlignedRowStrip(
-                                    index: i,
-                                    child: ReportAlignedDataRow(
-                                      cells: [
-                                        ReportAlignedCell.flex(
-                                          child: Text(rows[i].partyName),
-                                        ),
-                                        ReportAlignedCell.fixed(
-                                          160,
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            formatReportCurrency(
-                                              rows[i].saleTax,
-                                            ),
-                                          ),
-                                        ),
-                                        ReportAlignedCell.fixed(
-                                          200,
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            formatReportCurrency(
-                                              rows[i].purchaseExpenseTax,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ),
                           ),
-                        
-                          ),
+                        ),
                         ReportPaginationBar(
                           page: report.meta.page,
                           totalPages: report.meta.totalPages,

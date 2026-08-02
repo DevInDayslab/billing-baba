@@ -25,10 +25,7 @@ export class PullService {
     return new RowApplier(db);
   }
 
-  async pull(
-    businessId: string,
-    query: PullQuery,
-  ): Promise<PullProcessResult> {
+  async pull(businessId: string, query: PullQuery): Promise<PullProcessResult> {
     const cursor = decodeCursor(query.cursor);
     const cursorUpdatedAt = new Date(cursor.t);
     const entityTypes = query.entity_types

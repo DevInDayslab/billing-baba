@@ -318,8 +318,7 @@ class _BillSummaryState extends ConsumerState<_BillSummary> {
                   children: [
                     _SummaryRow(
                       label: 'Discount',
-                      value:
-                          '-${_currencyFormat.format(cart.totalDiscount)}',
+                      value: '-${_currencyFormat.format(cart.totalDiscount)}',
                       valueColor: posNegativeColor,
                     ),
                     InkWell(
@@ -336,8 +335,9 @@ class _BillSummaryState extends ConsumerState<_BillSummary> {
                     ),
                     _SummaryRow(
                       label: 'Taxable Amount',
-                      value: _currencyFormat
-                          .format(cart.taxableAfterBillDiscount),
+                      value: _currencyFormat.format(
+                        cart.taxableAfterBillDiscount,
+                      ),
                     ),
                     _SummaryRow(
                       label: 'CGST (9%)',

@@ -75,7 +75,12 @@ export const parties = pgTable(
       .where(sql`${table.isDeleted} = false AND ${table.mobile} IS NOT NULL`),
     sql`CHECK (${table.creditLimit} >= 0)`,
     sql`CHECK (${table.hiddenLedgerBalance} >= 0)`,
-    syncPullIndex('parties', table.businessId, table.updatedAt, table.isDeleted),
+    syncPullIndex(
+      'parties',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 
@@ -278,7 +283,12 @@ export const contacts = pgTable(
     description: text('description'),
   },
   (table) => [
-    syncPullIndex('contacts', table.businessId, table.updatedAt, table.isDeleted),
+    syncPullIndex(
+      'contacts',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 

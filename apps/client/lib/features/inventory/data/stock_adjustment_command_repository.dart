@@ -48,7 +48,8 @@ class StockAdjustmentCommandRepository {
           {
             'item_id': request.itemId,
             'quantity_delta': request.quantityDelta,
-            if (request.costPerUnit != null) 'cost_per_unit': request.costPerUnit,
+            if (request.costPerUnit != null)
+              'cost_per_unit': request.costPerUnit,
             if (request.notes != null && request.notes!.trim().isNotEmpty)
               'reason': request.notes!.trim(),
           },

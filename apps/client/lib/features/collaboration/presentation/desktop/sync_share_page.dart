@@ -36,7 +36,9 @@ class DesktopSyncSharePage extends ConsumerStatefulWidget {
 class _SyncSharePageState extends ConsumerState<DesktopSyncSharePage> {
   void _silentRefresh(SyncShareRefreshTrigger trigger) {
     unawaited(
-      ref.read(syncShareRefreshProvider.notifier).refresh(
+      ref
+          .read(syncShareRefreshProvider.notifier)
+          .refresh(
             trigger: trigger,
             manual: trigger == SyncShareRefreshTrigger.manual,
           ),

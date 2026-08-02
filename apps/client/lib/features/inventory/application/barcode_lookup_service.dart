@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/constants/app_constants.dart';
+import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/features/inventory/application/barcode_confidence.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
@@ -13,7 +14,9 @@ class BarcodeLookupService {
     required this._repository,
     required this._remoteDataSource,
     Dio? openFoodFactsDio,
-  })  : _openFoodFactsDio = openFoodFactsDio ?? Dio();
+  }) : _openFoodFactsDio =
+           openFoodFactsDio ??
+           (Dio()..httpClientAdapter = createBypassSslHttpClientAdapter());
 
   final InventoryRepository _repository;
   final InventoryRemoteDataSource _remoteDataSource;
@@ -184,7 +187,9 @@ class BarcodeLookupService {
     final rawCategory = categoryTags is List && categoryTags.isNotEmpty
         ? categoryTags.first
         : null;
-    final category = rawCategory is String ? _cleanCategoryTag(rawCategory) : '';
+    final category = rawCategory is String
+        ? _cleanCategoryTag(rawCategory)
+        : '';
 
     final quantity = (product['quantity'] as String?)?.trim();
     final defaultMrp = _extractMrpFromOpenFoodFacts(product);
@@ -246,7 +251,8 @@ class BarcodeLookupService {
 
   static String? _firstNonEmpty(String? primary, String? secondary) {
     if (primary != null && primary.trim().isNotEmpty) return primary.trim();
-    if (secondary != null && secondary.trim().isNotEmpty) return secondary.trim();
+    if (secondary != null && secondary.trim().isNotEmpty)
+      return secondary.trim();
     return null;
   }
 
@@ -272,7 +278,8 @@ class BarcodeLookupService {
 class BarcodeLookupResult {
   const BarcodeLookupResult({
     required this.found,
-    required this.source, this.itemName,
+    required this.source,
+    this.itemName,
     this.category,
     this.hsnCode,
     this.defaultMrp,

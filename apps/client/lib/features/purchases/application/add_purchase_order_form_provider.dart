@@ -53,16 +53,17 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
         entityType: DocumentAttachmentEntityType.purchaseOrder.apiValue,
         entityId: documentId,
       );
-      state = _mapBillFormToOrderForm(
-        loaded.copyWith(
-          items: items,
-          attachedImages: attachments.images,
-          attachedDocuments: attachments.documents,
-        ),
-      ).copyWith(
-        isLoading: false,
-        showValidationErrors: kResetValidationOnLoad,
-      );
+      state =
+          _mapBillFormToOrderForm(
+            loaded.copyWith(
+              items: items,
+              attachedImages: attachments.images,
+              attachedDocuments: attachments.documents,
+            ),
+          ).copyWith(
+            isLoading: false,
+            showValidationErrors: kResetValidationOnLoad,
+          );
     } catch (error) {
       state = state.copyWith(
         isLoading: false,

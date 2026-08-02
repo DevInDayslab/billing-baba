@@ -80,7 +80,10 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
     return notFoundError(input, 'Sales document not found');
   }
 
-  if (document.documentType !== 'tax_invoice' && document.documentType !== 'pos') {
+  if (
+    document.documentType !== 'tax_invoice' &&
+    document.documentType !== 'pos'
+  ) {
     return validationError(
       input,
       'finalize_sale only supports tax_invoice and pos documents',
@@ -211,10 +214,7 @@ function mapFinalizeError(
   error: unknown,
 ): CommandApplyOutcome {
   if (error instanceof AppError) {
-    if (
-      error.code === 'DOCUMENT_NOT_EDITABLE' ||
-      error.statusCode === 409
-    ) {
+    if (error.code === 'DOCUMENT_NOT_EDITABLE' || error.statusCode === 409) {
       return documentAlreadyFinalized(input);
     }
     return {

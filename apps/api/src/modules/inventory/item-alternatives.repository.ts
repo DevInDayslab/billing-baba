@@ -92,7 +92,9 @@ export class ItemAlternativesRepository {
             ? this.db
                 .select({ name: brands.name })
                 .from(brands)
-                .where(and(eq(brands.id, row.brandId), eq(brands.isDeleted, false)))
+                .where(
+                  and(eq(brands.id, row.brandId), eq(brands.isDeleted, false)),
+                )
                 .limit(1)
                 .then((result) => result[0])
             : Promise.resolve(undefined),
@@ -101,7 +103,10 @@ export class ItemAlternativesRepository {
                 .select({ name: categories.name })
                 .from(categories)
                 .where(
-                  and(eq(categories.id, row.categoryId), eq(categories.isDeleted, false)),
+                  and(
+                    eq(categories.id, row.categoryId),
+                    eq(categories.isDeleted, false),
+                  ),
                 )
                 .limit(1)
                 .then((result) => result[0])

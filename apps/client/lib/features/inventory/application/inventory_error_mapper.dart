@@ -106,7 +106,8 @@ abstract final class InventoryErrorMapper {
         case 'NOT_FOUND':
           return 'A related inventory record was not found. Refresh the page and try again.';
         case 'CONFLICT':
-          return apiMessage ?? 'This item conflicts with existing inventory data.';
+          return apiMessage ??
+              'This item conflicts with existing inventory data.';
         case 'BUSINESS_NOT_SELECTED':
           return 'No company is selected. Open a company and try again.';
       }
@@ -190,8 +191,7 @@ abstract final class InventoryErrorMapper {
     }
     if (error is ApiValidationException) return validationMessage(error);
     if (error is DioException) return messageForSaveItem(error);
-    if (error is StateError &&
-        error.message.contains('No business selected')) {
+    if (error is StateError && error.message.contains('No business selected')) {
       return 'Select a business to load items.';
     }
     return OfflineUiMessages.messageFor(error);

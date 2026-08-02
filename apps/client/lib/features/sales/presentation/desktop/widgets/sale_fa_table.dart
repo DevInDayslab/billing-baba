@@ -70,8 +70,9 @@ class SaleFaTable extends ConsumerWidget {
                 ExpandableTableSearchField(
                   hint: 'Search Data',
                   initialQuery: ref.read(saleFaSearchQueryProvider),
-                  onQueryChanged:
-                      ref.read(saleFaSearchQueryProvider.notifier).setQuery,
+                  onQueryChanged: ref
+                      .read(saleFaSearchQueryProvider.notifier)
+                      .setQuery,
                 ),
                 IconButton(
                   onPressed: () =>
@@ -81,12 +82,10 @@ class SaleFaTable extends ConsumerWidget {
                   tooltip: 'Report',
                 ),
                 _XlsChip(
-                  onTap: () =>
-                      ModuleExportActions.exportSaleFa(context, ref),
+                  onTap: () => ModuleExportActions.exportSaleFa(context, ref),
                 ),
                 IconButton(
-                  onPressed: () =>
-                      ModulePrintActions.printSaleFa(context, ref),
+                  onPressed: () => ModulePrintActions.printSaleFa(context, ref),
                   icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Print',
@@ -181,8 +180,7 @@ class _SaleFaTransactionsTableState
             rows: rows,
           ),
         ),
-        if (widget.items.isEmpty)
-          const _EmptyState(),
+        if (widget.items.isEmpty) const _EmptyState(),
       ],
     );
   }
@@ -247,8 +245,7 @@ class _SaleFaTableRows {
                 icon: const Icon(Icons.print_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints:
-                    const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Print',
               ),
               IconButton(
@@ -260,8 +257,7 @@ class _SaleFaTableRows {
                 icon: const Icon(Icons.share_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints:
-                    const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Share',
               ),
               _SaleFaActionMenu(record: record),
@@ -520,9 +516,7 @@ class _StatusColumnHeaderState extends State<_StatusColumnHeader> {
                 child: Icon(
                   Icons.filter_list,
                   size: 14,
-                  color: isActive
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
+                  color: isActive ? AppColors.primary : AppColors.textSecondary,
                 ),
               ),
             ),
@@ -635,7 +629,10 @@ class _DataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }
@@ -812,8 +809,7 @@ class _PageNumber extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color:
-                isActive ? AppColors.textPrimary : AppColors.textSecondary,
+            color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
           ),
         ),
       ),

@@ -43,10 +43,13 @@ async function findListeningPids(targetPort: number): Promise<number[]> {
 
 async function isBunProcess(pid: number): Promise<boolean> {
   if (process.platform === 'win32') {
-    const proc = Bun.spawn(['tasklist', '/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], {
-      stdout: 'pipe',
-      stderr: 'ignore',
-    });
+    const proc = Bun.spawn(
+      ['tasklist', '/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'],
+      {
+        stdout: 'pipe',
+        stderr: 'ignore',
+      },
+    );
     const text = (await new Response(proc.stdout).text()).toLowerCase();
     return text.includes('bun.exe');
   }

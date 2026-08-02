@@ -49,7 +49,9 @@ class ImageStartupWarmup {
   Future<void> _warmInventoryItems() async {
     try {
       final items = _ref.read(inventoryItemListProvider);
-      _ref.read(inventoryListImageWarmupProvider).warmItems(
+      _ref
+          .read(inventoryListImageWarmupProvider)
+          .warmItems(
             items.take(30),
             limit: 30,
           );

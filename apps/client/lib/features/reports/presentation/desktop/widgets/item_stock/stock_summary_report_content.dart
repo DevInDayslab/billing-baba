@@ -1,7 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
@@ -190,136 +192,25 @@ class StockSummaryReportContent extends ConsumerWidget {
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'ITEM NAME',
-                                          ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'SALE PRICE',
-                                          width: 110,
-                                          alignment: Alignment.center,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'PURCHASE PRICE',
-                                          width: 130,
-                                          alignment: Alignment.center,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'STOCK QTY',
-                                          width: 100,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'STOCK VALUE',
-                                          width: 110,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No stock items to display.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportStockSummaryRow
+                                >(
+                                  reportScope: stockSummaryReportScope,
+                                  columns: stockSummaryColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No stock items to display.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
                                       ),
                                     ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: const [
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'ITEM NAME',
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'SALE PRICE',
-                                        width: 110,
-                                        alignment: Alignment.center,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PURCHASE PRICE',
-                                        width: 130,
-                                        alignment: Alignment.center,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'STOCK QTY',
-                                        width: 100,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'STOCK VALUE',
-                                        width: 110,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.flex(
-                                                child: Text(rows[i].itemName),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                110,
-                                                alignment: Alignment.center,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].salePrice,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                alignment: Alignment.center,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].purchasePrice,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                100,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].stockQty
-                                                      .toStringAsFixed(0),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                110,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].stockValue,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
                                   ),
                                 ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

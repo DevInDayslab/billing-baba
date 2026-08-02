@@ -41,7 +41,8 @@ class PartyProfileImageEditor extends ConsumerStatefulWidget {
   final void Function({
     required String? imageUrl,
     required String? mediaAssetId,
-  })? onChanged;
+  })?
+  onChanged;
 
   @override
   ConsumerState<PartyProfileImageEditor> createState() =>
@@ -126,7 +127,9 @@ class PartyProfileImageEditorState
     bool clear = false,
   }) {
     try {
-      ref.read(partyListProvider.notifier).patchProfileImage(
+      ref
+          .read(partyListProvider.notifier)
+          .patchProfileImage(
             partyId,
             profileImageUrl: imageUrl,
             profileMediaAssetId: mediaAssetId,
@@ -230,7 +233,9 @@ class PartyProfileImageEditorState
       if (mounted) setState(() {});
 
       unawaited(
-        ref.read(imageServiceProvider).replaceImage(
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
               oldUrl: previousUrl,
               newUrl: newUrl,
               oldCacheKey: buildImageCacheKey(
@@ -305,7 +310,9 @@ class PartyProfileImageEditorState
     if (mounted) setState(() {});
 
     unawaited(
-      ref.read(imageServiceProvider).replaceImage(
+      ref
+          .read(imageServiceProvider)
+          .replaceImage(
             oldUrl: previousUrl,
             newUrl: newUrl,
             oldCacheKey: buildImageCacheKey(
@@ -363,7 +370,9 @@ class PartyProfileImageEditorState
       _uploading = false;
       if (mounted) setState(() {});
       unawaited(
-        ref.read(imageServiceProvider).invalidateImage(
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
               url: previousUrl,
               cacheKey: buildImageCacheKey(
                 mediaAssetId: previousMediaId,
@@ -417,7 +426,8 @@ class PartyProfileImageEditorState
         partyId: widget.partyId,
       ),
       onReplace: _onReplace,
-      onRemove: (_imageUrl != null && _imageUrl!.trim().isNotEmpty) ||
+      onRemove:
+          (_imageUrl != null && _imageUrl!.trim().isNotEmpty) ||
               (_optimisticBytes != null && _optimisticBytes!.isNotEmpty)
           ? _onRemove
           : null,

@@ -16,34 +16,58 @@ class SplitPaymentSheet extends ConsumerStatefulWidget {
 
 class _SplitPaymentSheetState extends ConsumerState<SplitPaymentSheet> {
   final _controllers = <PaymentMode, TextEditingController>{};
+  final _focusNodes = <PaymentMode, FocusNode>{};
 
   @override
   void dispose() {
     for (final controller in _controllers.values) {
       controller.dispose();
     }
+    for (final focusNode in _focusNodes.values) {
+      focusNode.dispose();
+    }
     super.dispose();
   }
 
-  TextEditingController _controllerFor(PaymentMode mode, double amount) {
-    return _controllers.putIfAbsent(
-      mode,
-      () => TextEditingController(
-        text: amount > 0 ? amount.toStringAsFixed(2) : '',
-      ),
-    );
+  TextEditingController _controllerFor(PaymentMode mode) {
+    return _controllers.putIfAbsent(mode, TextEditingController.new);
+  }
+
+  FocusNode _focusNodeFor(PaymentMode mode) {
+    return _focusNodes.putIfAbsent(mode, FocusNode.new);
+  }
+
+  String _formatAmount(double amount) {
+    if (amount <= 0) return '';
+    return amount.toStringAsFixed(2);
+  }
+
+  void _syncController(PaymentEntry entry) {
+    final focusNode = _focusNodeFor(entry.mode);
+    if (focusNode.hasFocus) return;
+
+    final controller = _controllerFor(entry.mode);
+    final nextText = _formatAmount(entry.amount);
+    if (controller.text != nextText) {
+      controller.text = nextText;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final notifier = ref.read(posCartProvider.notifier);
 
-    final activeModes = widget.payments.map((p) => p.mode).toSet();
+    final activeModes = widget.payments.map((payment) => payment.mode).toSet();
     final staleModes = _controllers.keys
-        .where((m) => !activeModes.contains(m))
+        .where((mode) => !activeModes.contains(mode))
         .toList();
     for (final mode in staleModes) {
       _controllers.remove(mode)?.dispose();
+      _focusNodes.remove(mode)?.dispose();
+    }
+
+    for (final entry in widget.payments) {
+      _syncController(entry);
     }
 
     return Column(
@@ -74,7 +98,8 @@ class _SplitPaymentSheetState extends ConsumerState<SplitPaymentSheet> {
                 ),
                 Expanded(
                   child: TextField(
-                    controller: _controllerFor(entry.mode, entry.amount),
+                    controller: _controllerFor(entry.mode),
+                    focusNode: _focusNodeFor(entry.mode),
                     style: saleFieldTextStyle,
                     decoration: buildPosFieldDecoration().copyWith(
                       prefixText: '₹ ',

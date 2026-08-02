@@ -23,7 +23,8 @@ class PartiesLocal extends Table {
   TextColumn get areaId => text().nullable()();
   TextColumn get creditLimit => text().withDefault(const Constant('0'))();
   TextColumn get openingBalance => text().withDefault(const Constant('0'))();
-  TextColumn get hiddenLedgerBalance => text().withDefault(const Constant('0'))();
+  TextColumn get hiddenLedgerBalance =>
+      text().withDefault(const Constant('0'))();
   TextColumn get profileImageUrl => text().nullable()();
   TextColumn get profileMediaAssetId => text().nullable()();
   TextColumn get connectedSince => text().nullable()();

@@ -59,7 +59,8 @@ class SyncUiSnapshot {
   bool get isSyncing => lifecycle == SyncLifecycleState.syncing;
   bool get hasPendingWork => queueSize > 0;
   bool get hasError =>
-      lifecycle == SyncLifecycleState.failed || (lastError?.isNotEmpty ?? false);
+      lifecycle == SyncLifecycleState.failed ||
+      (lastError?.isNotEmpty ?? false);
 
   static const initial = SyncUiSnapshot(
     lifecycle: SyncLifecycleState.idle,

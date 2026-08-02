@@ -2,7 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -101,6 +102,14 @@ class _ItemDetailReportContentState
             rows: exportRows(),
           );
         }
+
+        final tableRows = [
+          for (var i = 0; i < rows.length; i++)
+            ReportItemDetailTableRow(
+              row: rows[i],
+              closingQty: runningClosing(i),
+            ),
+        ];
 
         return ColoredBox(
           color: AppColors.background,
@@ -243,189 +252,31 @@ class _ItemDetailReportContentState
                         Expanded(
                           child: ReportTableArea(
                             child:
-                              selectedItemId == null || selectedItemId.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: 'DATE',
-                                          width: 120,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'SALE QUANTITY',
-                                          width: 130,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'PURCHASE QUANTITY',
-                                          width: 150,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'ADJUSTMENT QUANTITY',
-                                          width: 170,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'CLOSING QUANTITY',
-                                            alignment: Alignment.centerRight,
-                                          ),
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'Select an item to view the report.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
+                                ReportFilterableSyncTable<
+                                  ReportItemDetailTableRow
+                                >(
+                                  reportScope: itemDetailReportScope,
+                                  columns: itemDetailColumns(),
+                                  rows:
+                                      selectedItemId == null ||
+                                          selectedItemId.isEmpty
+                                      ? const []
+                                      : tableRows,
+                                  emptyState: Center(
+                                    child: Text(
+                                      selectedItemId == null ||
+                                              selectedItemId.isEmpty
+                                          ? 'Select an item to view the report.'
+                                          : 'No data for the selected period.',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
                                       ),
                                     ),
-                                  ],
-                                )
-                              : rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: 'DATE',
-                                          width: 120,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'SALE QUANTITY',
-                                          width: 130,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'PURCHASE QUANTITY',
-                                          width: 150,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'ADJUSTMENT QUANTITY',
-                                          width: 170,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'CLOSING QUANTITY',
-                                            alignment: Alignment.centerRight,
-                                          ),
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No data for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
-                                    headerChildren: const [
-                                      ReportAlignedHeaderCell(
-                                        label: 'DATE',
-                                        width: 120,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'SALE QUANTITY',
-                                        width: 130,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PURCHASE QUANTITY',
-                                        width: 150,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'ADJUSTMENT QUANTITY',
-                                        width: 170,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'CLOSING QUANTITY',
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                child: Text(
-                                                  formatReportDate(
-                                                    rows[i].date,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].type == 'Sale'
-                                                      ? rows[i].quantity
-                                                            .toStringAsFixed(0)
-                                                      : '-',
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                150,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  rows[i].type != 'Sale'
-                                                      ? rows[i].quantity
-                                                            .toStringAsFixed(0)
-                                                      : '-',
-                                                ),
-                                              ),
-                                              const ReportAlignedCell.fixed(
-                                                170,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text('-'),
-                                              ),
-                                              ReportAlignedCell.flex(
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  runningClosing(
-                                                    i,
-                                                  ).toStringAsFixed(0),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
                                   ),
                                 ),
-                        
                           ),
+                        ),
                         if (report != null)
                           ReportPaginationBar(
                             page: report.meta.page,

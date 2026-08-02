@@ -54,7 +54,6 @@ AddSaleFormState _defaultFormState({String? documentId}) {
 class AddSaleForm extends _$AddSaleForm {
   @override
   AddSaleFormState build({String sessionKey = 'default'}) {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _defaultFormState();
   }
 
@@ -321,7 +320,11 @@ class AddSaleForm extends _$AddSaleForm {
 
   void updatePhone(String value) {
     final sanitized = Validators.sanitizePhoneInput(value);
-    state = state.copyWith(phone: sanitized, isDirty: true, clearSaveError: true);
+    state = state.copyWith(
+      phone: sanitized,
+      isDirty: true,
+      clearSaveError: true,
+    );
     _tryMatchPartyByPhone(sanitized);
   }
 
@@ -433,8 +436,9 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void applyPartyDetails(PartyModel party) {
-    final canViewHiddenLedger =
-        ref.read(permissionServiceProvider).canViewHiddenLedger;
+    final canViewHiddenLedger = ref
+        .read(permissionServiceProvider)
+        .canViewHiddenLedger;
     final loyaltyAvailable = LoyaltyRules.isEligibleParty(party)
         ? _cachedLoyaltyAvailable(party.id)
         : 0.0;
@@ -464,8 +468,7 @@ class AddSaleForm extends _$AddSaleForm {
       loyaltyPointsAvailable: loyaltyAvailable,
       loyaltyPointsUsed: 0,
       loyaltyPointsEnabled: false,
-      hiddenLedgerBalance:
-          canViewHiddenLedger ? party.unrecoveredAmount : 0,
+      hiddenLedgerBalance: canViewHiddenLedger ? party.unrecoveredAmount : 0,
       clearHiddenLedgerBalance: !canViewHiddenLedger,
       isDirty: true,
       clearSaveError: true,
@@ -625,6 +628,10 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(eWayBillNo: value, isDirty: true);
   }
 
+  void updatePaymentTerms(String value) {
+    state = state.copyWith(paymentTerms: value, isDirty: true);
+  }
+
   void updateTermsTitle(String value) {
     state = state.copyWith(termsTitle: value, isDirty: true);
   }
@@ -667,38 +674,50 @@ class AddSaleForm extends _$AddSaleForm {
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
     final previous = state.items[index];
-    final merged = preserveCatalogFieldsOnStaleLineUpdate(previous, item);
     final items = [...state.items];
-    items[index] = merged;
+    items[index] = item;
     final clearBillTax =
-        merged.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
     state = state.copyWith(
       items: items,
       taxOption: clearBillTax ? 'NONE' : state.taxOption,
       isDirty: true,
       clearSaveError: true,
     );
-    rememberInvoiceLineTaxIfChanged(ref, previous, merged);
+    rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
-    final applied = (await applyCatalogItemWithInvoiceTaxFallback(
-      ref,
+    // Use cached tax only — never await remote commerce settings here.
+    // Offline / unreachable API must not prevent adding a selected item.
+    final fallback = ref.read(invoiceFallbackTaxPercentProvider).value;
+    final applied = applyCatalogItemToLine(
       line,
       catalogItem,
       partyPriceTier: state.partyPriceTier,
-    )).copyWith(mrp: catalogItem.salePrice);
-    if (index < 0 || index >= state.items.length) return;
-    final withUserEdits = mergeUserEditsIntoCatalogLine(
-      applied,
-      state.items[index],
+      fallbackTaxPercent: fallback,
+    ).copyWith(mrp: catalogItem.salePrice);
+    if (applied.taxPercent > 0) {
+      unawaited(rememberInvoiceLineTax(ref, applied.taxPercent));
+    }
+    // Warm tax prefs in background for later lines.
+    unawaited(readInvoiceFallbackTaxPercent(ref));
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
     );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
-      appliedLine: withUserEdits,
+      targetIndex: targetIndex,
+      appliedLine: applied,
       nextLineId: _nextLineItemId,
     );
     state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
@@ -952,8 +971,9 @@ class AddSaleForm extends _$AddSaleForm {
         if (partyId != null &&
             partyId.isNotEmpty &&
             hiddenLedgerRecoveryAmount > 0) {
-          final hiddenLedgerService =
-              await ref.read(hiddenLedgerServiceProvider.future);
+          final hiddenLedgerService = await ref.read(
+            hiddenLedgerServiceProvider.future,
+          );
           await hiddenLedgerService.recoverFromSale(
             partyId: partyId,
             saleId: result.document.id,

@@ -22,6 +22,8 @@ abstract final class StorageKeys {
   static const localItemSuppliers = 'local_item_suppliers';
   static const saleLineItemColumnVisibility =
       'sale_line_item_column_visibility';
+  static const itemSettings = 'item_settings';
+  static const saleInvoiceSettings = 'sale_invoice_settings';
   static const dashboardTasks = 'dashboard_tasks';
   static const dashboardSideWidgets = 'dashboard_side_widgets';
   static const dashboardSnapshots = 'dashboard_snapshots';
@@ -36,6 +38,7 @@ abstract final class StorageKeys {
 
   /// Stable install-lifetime sync device id (UUID).
   static const syncDeviceId = 'sync_device_id';
+
   /// Legacy global keys — migrated to per-business keys on first read.
   static const syncPullCursor = 'sync_pull_cursor';
   static const syncBootstrappedAt = 'sync_bootstrapped_at';

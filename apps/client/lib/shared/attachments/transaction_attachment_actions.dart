@@ -164,15 +164,18 @@ restoreOfflineTransactionAttachments({
 ({
   List<SaleFormAttachment> images,
   List<SaleFormAttachment> documents,
-}) _mergeTransactionAttachments({
+})
+_mergeTransactionAttachments({
   required ({
     List<SaleFormAttachment> images,
     List<SaleFormAttachment> documents,
-  }) remote,
+  })
+  remote,
   required ({
     List<SaleFormAttachment> images,
     List<SaleFormAttachment> documents,
-  }) offline,
+  })
+  offline,
 }) {
   final remoteIds = {
     for (final attachment in [...remote.images, ...remote.documents])

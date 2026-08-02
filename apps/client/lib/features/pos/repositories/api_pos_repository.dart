@@ -24,7 +24,9 @@ class ApiPosRepository implements PosRepository {
     } on PosRepositoryException {
       rethrow;
     } catch (error) {
-      throw PosRepositoryException(message: OfflineUiMessages.messageFor(error));
+      throw PosRepositoryException(
+        message: OfflineUiMessages.messageFor(error),
+      );
     }
   }
 

@@ -135,10 +135,7 @@ export class PartyService {
       input.additional_phones,
       mobile,
     );
-    await this.assertAdditionalPhonesAvailable(
-      businessId,
-      additionalPhones,
-    );
+    await this.assertAdditionalPhonesAvailable(businessId, additionalPhones);
 
     if (gstin) {
       await this.assertGstinAvailable(businessId, gstin);

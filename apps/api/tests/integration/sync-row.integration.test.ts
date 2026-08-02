@@ -420,7 +420,10 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       });
       expect(conflictPush.statusCode).toBe(200);
       const conflictBody = conflictPush.json() as {
-        data: { conflicts: Array<{ mutation_id: string }>; accepted: unknown[] };
+        data: {
+          conflicts: Array<{ mutation_id: string }>;
+          accepted: unknown[];
+        };
       };
       expect(conflictBody.data.accepted).toEqual([]);
       expect(conflictBody.data.conflicts).toHaveLength(1);
@@ -570,7 +573,10 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       });
       expect(conflictPush.statusCode).toBe(200);
       const conflictBody = conflictPush.json() as {
-        data: { conflicts: Array<{ mutation_id: string }>; accepted: unknown[] };
+        data: {
+          conflicts: Array<{ mutation_id: string }>;
+          accepted: unknown[];
+        };
       };
       expect(conflictBody.data.accepted).toEqual([]);
       expect(conflictBody.data.conflicts).toHaveLength(1);

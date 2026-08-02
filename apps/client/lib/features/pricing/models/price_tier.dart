@@ -43,7 +43,8 @@ abstract final class PriceTier {
 
   static List<String> dropdownOptionsFor({
     Map<String, String>? apiTierLabels,
-  }) => all.map((tier) => labelFor(tier, apiTierLabels: apiTierLabels)).toList();
+  }) =>
+      all.map((tier) => labelFor(tier, apiTierLabels: apiTierLabels)).toList();
 
   static String keyFromLabel(
     String label, {

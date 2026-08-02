@@ -44,7 +44,6 @@ SaleOrderFormState _initialSaleOrderFormState() {
 class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   @override
   SaleOrderFormState build({String sessionKey = 'default'}) {
-    ref.watch(invoiceFallbackTaxPercentProvider);
     return _initialSaleOrderFormState();
   }
 
@@ -287,20 +286,23 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
     final previous = state.items[index];
-    final merged = preserveCatalogFieldsOnStaleLineUpdate(previous, item);
     final items = [...state.items];
-    items[index] = merged;
+    items[index] = item;
     final clearBillTax =
-        merged.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
     state = state.copyWith(
       items: items,
       taxOption: clearBillTax ? 'NONE' : state.taxOption,
       clearSaveError: true,
     );
-    rememberInvoiceLineTaxIfChanged(ref, previous, merged);
+    rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
+  Future<void> selectCatalogItem(
+    int index,
+    SaleItemOption catalogItem, {
+    String? lineId,
+  }) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
     final applied = (await applyCatalogItemWithInvoiceTaxFallback(
@@ -308,15 +310,16 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
       line,
       catalogItem,
     )).copyWith(mrp: catalogItem.salePrice);
-    if (index < 0 || index >= state.items.length) return;
-    final withUserEdits = mergeUserEditsIntoCatalogLine(
-      applied,
-      state.items[index],
+    final targetIndex = resolveSaleLineIndex(
+      state.items,
+      fallbackIndex: index,
+      lineId: lineId ?? line.id,
     );
+    if (targetIndex == null) return;
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
-      targetIndex: index,
-      appliedLine: withUserEdits,
+      targetIndex: targetIndex,
+      appliedLine: applied,
       nextLineId: _nextSaleOrderLineItemId,
     );
     state = state.copyWith(items: items, clearSaveError: true);

@@ -48,8 +48,7 @@ abstract class SubscriptionState with _$SubscriptionState {
     error: (s) => s.history,
   );
 
-  bool get isNoSubscription =>
-      currentOrNull?.hasNoSubscription ?? true;
+  bool get isNoSubscription => currentOrNull?.hasNoSubscription ?? true;
 
   bool get isActiveGold => currentOrNull?.isActiveGold ?? false;
 

@@ -60,7 +60,7 @@ final class SaleDocumentFormNotifierProvider
 }
 
 String _$saleDocumentFormNotifierHash() =>
-    r'6da56d95fd3aa03d76383f6cd36963fcb3dfe9d0';
+    r'b2ea719d54faf925082d1e2e7c6f8469f84fed3a';
 
 final class SaleDocumentFormNotifierFamily extends $Family
     with

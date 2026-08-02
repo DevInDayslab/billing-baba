@@ -258,7 +258,9 @@ class InventoryTransactionTableRows {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        _DataCell(child: Text(DateTimeUtils.formatDisplayDateTime(transaction.date))),
+        _DataCell(
+          child: Text(DateTimeUtils.formatDisplayDateTime(transaction.date)),
+        ),
         _DataCell(
           alignment: Alignment.centerRight,
           child: Text(
@@ -503,7 +505,10 @@ class _DataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: 4,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }

@@ -24,9 +24,9 @@ class InventoryItemDetailPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final listItem = (ref.watch(inventoryItemListProvider))
-        .where((entry) => entry.id == itemId)
-        .firstOrNull;
+    final listItem = (ref.watch(
+      inventoryItemListProvider,
+    )).where((entry) => entry.id == itemId).firstOrNull;
     final detailAsync = ref.watch(productDetailProvider(itemId));
     final displayItem = InventoryStockCalculator.resolveDisplayItem(
       listItem: listItem,

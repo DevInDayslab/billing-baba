@@ -109,10 +109,12 @@ class PaginatedPurchaseDocuments {
 Future<PurchaseService> purchaseService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
-  final commandRepo =
-      await ref.watch(purchaseBillCommandRepositoryProvider.future);
-  final returnCommandRepo =
-      await ref.watch(purchaseReturnCommandRepositoryProvider.future);
+  final commandRepo = await ref.watch(
+    purchaseBillCommandRepositoryProvider.future,
+  );
+  final returnCommandRepo = await ref.watch(
+    purchaseReturnCommandRepositoryProvider.future,
+  );
   return PurchaseService(
     repository: PurchaseRepository(
       remote: PurchaseRemoteDataSource(api.dio),
@@ -191,15 +193,16 @@ class PurchaseService {
           ? _mergePurchaseBillDocuments(remoteDocs, localDocs)
           : remoteDocs;
 
-      final items = mergedDocs
-          .map(
-            (dto) => PurchaseDocumentMapper.toBillModel(
-              dto,
-              partyName: partyNames[dto.partyId] ?? '',
-            ),
-          )
-          .toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
+      final items =
+          mergedDocs
+              .map(
+                (dto) => PurchaseDocumentMapper.toBillModel(
+                  dto,
+                  partyName: partyNames[dto.partyId] ?? '',
+                ),
+              )
+              .toList()
+            ..sort((a, b) => b.date.compareTo(a.date));
 
       final total = localDocs.isNotEmpty ? items.length : response.meta.total;
       final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
@@ -395,15 +398,16 @@ class PurchaseService {
           ? _mergePurchaseReturnDocuments(remoteDocs, localDocs)
           : remoteDocs;
 
-      final items = mergedDocs
-          .map(
-            (dto) => PurchaseDocumentMapper.toReturnModel(
-              dto,
-              partyName: partyNames[dto.partyId] ?? '',
-            ),
-          )
-          .toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
+      final items =
+          mergedDocs
+              .map(
+                (dto) => PurchaseDocumentMapper.toReturnModel(
+                  dto,
+                  partyName: partyNames[dto.partyId] ?? '',
+                ),
+              )
+              .toList()
+            ..sort((a, b) => b.date.compareTo(a.date));
 
       final total = localDocs.isNotEmpty ? items.length : response.meta.total;
       final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
@@ -498,7 +502,8 @@ class PurchaseService {
     PurchaseDocumentType type,
   ) async {
     PurchaseDocumentDto? document;
-    if (type == PurchaseDocumentType.purchaseBill && _commandRepository != null) {
+    if (type == PurchaseDocumentType.purchaseBill &&
+        _commandRepository != null) {
       document = await _commandRepository.getDocument(documentId);
     } else if (type == PurchaseDocumentType.purchaseReturn &&
         _returnCommandRepository != null) {

@@ -166,61 +166,67 @@ class _CashFlowReportContentState extends ConsumerState<CashFlowReportContent> {
                         Expanded(
                           child: ReportTableArea(
                             child: ReportSyncScrollTable(
-                            minWidth: 900,
-                            headerChildren: const [
-                              ReportAlignedHeaderCell(label: 'DATE', width: 90),
-                              ReportAlignedHeaderCell(
-                                label: 'REF NO.',
-                                width: 90,
-                              ),
-                              Expanded(
-                                child: ReportAlignedHeaderCell(label: 'NAME'),
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'CATEGORY',
-                                width: 90,
-                              ),
-                              ReportAlignedHeaderCell(label: 'TYPE', width: 80),
-                              ReportAlignedHeaderCell(
-                                label: 'CASH IN',
-                                width: 90,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'CASH OUT',
-                                width: 90,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'RUNNING BAL.',
-                                width: 100,
-                                alignment: Alignment.centerRight,
-                              ),
-                              ReportAlignedHeaderCell(
-                                label: 'PRINT/SHARE',
-                                width: 100,
-                                showFilter: false,
-                              ),
-                            ],
-                            rows: [
-                              for (var i = 0; i < rowsWithBalance.length; i++)
-                                _CashFlowRow(
-                                  row: rowsWithBalance[i].row,
-                                  runningBalance: rowsWithBalance[i].balance,
-                                  index: i,
+                              minWidth: 900,
+                              headerChildren: const [
+                                ReportAlignedHeaderCell(
+                                  label: 'DATE',
+                                  width: 90,
                                 ),
-                            ],
-                            emptyState: const Center(
-                              child: Text(
-                                'No transactions to show',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textSecondary,
+                                ReportAlignedHeaderCell(
+                                  label: 'REF NO.',
+                                  width: 90,
+                                ),
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(label: 'NAME'),
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'CATEGORY',
+                                  width: 90,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'TYPE',
+                                  width: 80,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'CASH IN',
+                                  width: 90,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'CASH OUT',
+                                  width: 90,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'RUNNING BAL.',
+                                  width: 100,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'PRINT/SHARE',
+                                  width: 100,
+                                  showFilter: false,
+                                ),
+                              ],
+                              rows: [
+                                for (var i = 0; i < rowsWithBalance.length; i++)
+                                  _CashFlowRow(
+                                    row: rowsWithBalance[i].row,
+                                    runningBalance: rowsWithBalance[i].balance,
+                                    index: i,
+                                  ),
+                              ],
+                              emptyState: const Center(
+                                child: Text(
+                                  'No transactions to show',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
                         ),
                         ReportMoneySummaryFooter(
                           items: [

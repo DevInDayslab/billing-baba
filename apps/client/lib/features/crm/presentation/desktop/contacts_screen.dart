@@ -4,6 +4,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/crm/application/contact_error_mapper.dart';
 import 'package:billing_baba/features/crm/application/contacts_provider.dart';
 import 'package:billing_baba/features/crm/application/contacts_selection_providers.dart';
+import 'package:billing_baba/features/crm/application/crm_assignee_options_provider.dart';
 import 'package:billing_baba/features/crm/domain/services/contact_service_types.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/add_contact_dialog.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/contacts_table.dart';
@@ -200,7 +201,7 @@ class _ContactsScreenState extends ConsumerState<DesktopContactsScreen> {
                       accountLabel: filters.accountLabel,
                       onOwnerSelected: (value) {
                         filtersNotifier.setAssignedTo(
-                          value == 'All Owners' ? null : value,
+                          value == crmOwnerAllOption ? null : value,
                         );
                       },
                       onAccountSelected: (value) {
@@ -617,7 +618,7 @@ class _ContactsTitleBar extends StatelessWidget {
   );
 }
 
-class _ContactsFilterBar extends StatelessWidget {
+class _ContactsFilterBar extends ConsumerWidget {
   const _ContactsFilterBar({
     required this.ownerLabel,
     required this.accountLabel,
@@ -631,7 +632,14 @@ class _ContactsFilterBar extends StatelessWidget {
   final ValueChanged<String> onAccountSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownerOptions = ref
+        .watch(crmAssigneeFilterOptionsProvider)
+        .maybeWhen(
+          data: (options) => options,
+          orElse: () => const [crmOwnerAllOption],
+        );
+
     return DecoratedBox(
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: _filterBarBorder)),
@@ -655,12 +663,7 @@ class _ContactsFilterBar extends StatelessWidget {
               label: ownerLabel,
               chipBackgroundColor: _filterChipBg,
               chipBorderColor: _filterChipBorder,
-              options: const [
-                'All Owners',
-                'Saksham Koch',
-                'Priya Mehta',
-                'Amit Verma',
-              ],
+              options: ownerOptions,
               selected: ownerLabel,
               onSelected: onOwnerSelected,
             ),

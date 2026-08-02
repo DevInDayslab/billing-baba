@@ -30,7 +30,8 @@ class SuppliersSection extends ConsumerWidget {
     final partiesAsync = ref.read(partyPickerListProvider);
     List<PartyModel> parties;
     try {
-      parties = partiesAsync.value ?? await ref.read(partyPickerListProvider.future);
+      parties =
+          partiesAsync.value ?? await ref.read(partyPickerListProvider.future);
     } on Object {
       parties = ref.read(partiesListProvider);
     }

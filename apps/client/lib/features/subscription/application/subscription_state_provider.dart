@@ -58,7 +58,9 @@ class SubscriptionStateController extends _$SubscriptionStateController {
         ref
             .read(currentSubscriptionStateProvider.notifier)
             .reload(showLoading: false),
-        ref.read(purchaseHistoryStateProvider.notifier).reload(showLoading: false),
+        ref
+            .read(purchaseHistoryStateProvider.notifier)
+            .reload(showLoading: false),
       ]);
       return _loadAll();
     });

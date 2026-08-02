@@ -52,10 +52,10 @@ class _QuickCreateMenuButtonState extends ConsumerState<QuickCreateMenuButton> {
   void _registerController() {
     _menuController = ref.read(quickCreateMenuProvider);
     _menuController!.register(
-          toggle: _toggleMenu,
-          close: _closeMenu,
-          isOpen: () => _isOpen,
-        );
+      toggle: _toggleMenu,
+      close: _closeMenu,
+      isOpen: () => _isOpen,
+    );
   }
 
   void _toggleMenu() {

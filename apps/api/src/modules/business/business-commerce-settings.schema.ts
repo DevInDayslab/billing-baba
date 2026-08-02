@@ -6,7 +6,12 @@ const pricingTierLabelsField = z
 
 export const updateCommerceSettingsBodySchema = z.object({
   pricing_tier_labels: pricingTierLabelsField,
-  default_invoice_tax_rate: z.coerce.number().min(0).max(100).nullable().optional(),
+  default_invoice_tax_rate: z.coerce
+    .number()
+    .min(0)
+    .max(100)
+    .nullable()
+    .optional(),
 });
 
 export type UpdateCommerceSettingsBody = z.infer<

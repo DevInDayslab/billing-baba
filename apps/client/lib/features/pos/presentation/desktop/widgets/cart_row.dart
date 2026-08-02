@@ -224,7 +224,9 @@ class CartRow extends ConsumerWidget {
 
     controller.dispose();
     if (result != null) {
-      ref.read(posCartProvider.notifier).updateQuantity(cartItem.item.id, result);
+      ref
+          .read(posCartProvider.notifier)
+          .updateQuantity(cartItem.item.id, result);
     }
   }
 

@@ -15,10 +15,12 @@ abstract final class AppRoutes {
   static const crmContacts = '/crm/contacts';
   static const crmDeals = '/crm/deals';
   static const items = '/items';
+  static const itemsDetail = '/items/details';
   static const itemsCategories = '/items/categories';
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
   static const itemsStockTransfer = '/items/stock-transfer';
+  static const itemsSettings = '/items/settings';
   static const pos = '/pos';
   static const sale = '/sale';
   static const saleInvoices = '/sale/invoices';
@@ -43,6 +45,7 @@ abstract final class AppRoutes {
   static const editCreditNote = '/sale/edit-credit-note';
   static const duplicateSale = '/sale/add/duplicate';
   static const addSale = '/sale/add';
+  static const saleInvoiceMoreSettings = '/sale/more-settings';
   static const editSale = '/sale/edit';
   static const viewSale = '/sale/view';
   static const addEstimate = '/sale/add-estimate';
@@ -71,6 +74,8 @@ abstract final class AppRoutes {
   static const reportsSales = '/reports/sales';
   static const reportsPurchase = '/reports/purchase';
   static const reportsStock = '/reports/stock';
+  static const reportsStockSummary = '/reports/stock-summary';
+  static const reportsItemDetail = '/reports/item-detail';
   static const reportsParty = '/reports/party';
   static const reportsGst = '/reports/gst';
   static const collaboration = '/collaboration';
@@ -105,12 +110,23 @@ abstract final class AppRoutes {
   static const settingsPrint = '/settings/print';
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
+  static const settingsReports = '/settings/reports';
+
+  static String settingsReportGroup(String groupId) =>
+      '$settingsReports/$groupId';
+
+  static String settingsReportSubsection(String groupId, String subsectionId) =>
+      '${settingsReportGroup(groupId)}/$subsectionId';
 
   /// Settings hub deep-link with tab query (`general`, `print`, …).
-  static String settingsTab(String tabId) =>
-      '$settingsPreferences?tab=$tabId';
+  static String settingsTab(String tabId) => '$settingsPreferences?tab=$tabId';
 
   static const plansPricing = '/plans-pricing';
+  static const subscriptionReview = '/plans-pricing/review';
+  static const subscriptionPaymentProcessing =
+      '/plans-pricing/payment-processing';
+  static const subscriptionPaymentSuccess = '/plans-pricing/payment-success';
+  static const plansPricingLicenseInfo = '/plans-pricing/license-info';
   static const editProfile = '/edit-profile';
   static const userProfile = '/my-profile';
   static const accessDenied = '/access-denied';

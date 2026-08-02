@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/network_exception_classifier.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
@@ -238,12 +240,54 @@ class AuthService {
   }
 
   Future<AuthSession> devLogin() async {
-    AuthDebugLogger.log('AuthService.devLogin: POST /auth/dev-login');
-    final session = await _repository.devLogin();
-    AuthDebugLogger.backendLoginSuccess();
-    AuthDebugLogger.jwtIssued(session.accessToken);
-    await persistSession(session);
-    return session;
+    // Prefer the real API so desktop and mobile share the same cloud account,
+    // business, parties, items, and documents. Fall back to a local-only
+    // session only on mobile when the API host is unreachable (e.g. loopback).
+    AuthDebugLogger.log(
+      'AuthService.devLogin: POST /auth/dev-login',
+    );
+    try {
+      final session = await _repository.devLogin();
+      await persistSession(session);
+      AuthDebugLogger.backendLoginSuccess();
+      AuthDebugLogger.jwtIssued(session.accessToken);
+      return session;
+    } on DioException catch (error) {
+      if (!NetworkExceptionClassifier.isConnectivityError(error)) {
+        rethrow;
+      }
+      // Desktop expects a running local API — offline fallback hides empty catalog.
+      if (AppPlatform.current.isDesktop) {
+        AuthDebugLogger.log(
+          'AuthService.devLogin: API unreachable on desktop — not using offline fallback',
+        );
+        rethrow;
+      }
+      final rawHost = Uri.tryParse(AppConfig.apiBaseUrl)?.host ?? '';
+      final isLoopback =
+          rawHost == '127.0.0.1' ||
+          rawHost == 'localhost' ||
+          rawHost == '0.0.0.0';
+      if (AppPlatform.current.isAndroid &&
+          AppPlatform.current.isMobile &&
+          isLoopback) {
+        AuthDebugLogger.log(
+          'AuthService.devLogin: cannot reach $rawHost from Android. '
+          'For USB devices run: adb reverse tcp:3000 tcp:3000 '
+          '(or set API_BASE_URL to your PC LAN IP on the same Wi‑Fi). '
+          'Using offline local fallback.',
+        );
+      }
+      AuthDebugLogger.log(
+        'AuthService.devLogin: API unreachable — offline local fallback '
+        '(${error.type})',
+      );
+      final session = AuthService.offlineDevSession();
+      await persistSession(session);
+      AuthDebugLogger.backendLoginSuccess();
+      AuthDebugLogger.jwtIssued(session.accessToken);
+      return session;
+    }
   }
 
   Future<AuthSession> selectBusiness({

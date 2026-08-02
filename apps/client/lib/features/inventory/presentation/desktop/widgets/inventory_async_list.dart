@@ -77,7 +77,8 @@ class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
     if (widget.hasMore &&
         !widget.isLoadingMore &&
         widget.onLoadMore != null &&
-        _scrollController.position.extentAfter < widget.estimatedItemExtent * 4) {
+        _scrollController.position.extentAfter <
+            widget.estimatedItemExtent * 4) {
       widget.onLoadMore!();
     }
 
@@ -92,7 +93,9 @@ class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
 
     final extractor = widget.imageUrlExtractor;
     if (extractor != null) {
-      ref.read(appImagePrefetcherProvider).prefetchItemsWindow(
+      ref
+          .read(appImagePrefetcherProvider)
+          .prefetchItemsWindow(
             items: widget.items,
             firstVisibleIndex: firstVisible,
             lastVisibleIndex: lastVisible,
@@ -104,7 +107,10 @@ class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
     widget.onPrefetchItems?.call(
       widget.items.sublist(
         firstVisible.clamp(0, widget.items.length - 1),
-        (lastVisible + widget.prefetchLookahead + 1).clamp(0, widget.items.length),
+        (lastVisible + widget.prefetchLookahead + 1).clamp(
+          0,
+          widget.items.length,
+        ),
       ),
     );
   }
@@ -142,7 +148,10 @@ class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
         if (widget.items.isNotEmpty) {
           return Column(
             children: [
-              _InventoryErrorBanner(message: message, onRetry: widget.onRefresh),
+              _InventoryErrorBanner(
+                message: message,
+                onRetry: widget.onRefresh,
+              ),
               Expanded(child: _buildList()),
             ],
           );

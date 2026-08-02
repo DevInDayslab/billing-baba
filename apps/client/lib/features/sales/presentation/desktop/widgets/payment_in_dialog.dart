@@ -115,8 +115,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
 
     final shortfall = form.hasShortPayment
         ? (form.balanceDue - form.receivedAmount - form.discount)
-            .clamp(0, double.infinity)
-            .toDouble()
+              .clamp(0, double.infinity)
+              .toDouble()
         : 0.0;
 
     final result = await notifier.savePayment(
@@ -172,8 +172,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
       if (!mounted || handling == null) return;
       final shortfall = form.hasShortPayment
           ? (form.balanceDue - form.receivedAmount - form.discount)
-              .clamp(0, double.infinity)
-              .toDouble()
+                .clamp(0, double.infinity)
+                .toDouble()
           : 0.0;
       final result = await notifier.savePayment(
         shortPaymentHandling: handling.apiValue,
@@ -331,7 +331,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                     context: context,
                                     ref: ref,
                                     entityType: DocumentAttachmentEntityType
-                                        .paymentIn.apiValue,
+                                        .paymentIn
+                                        .apiValue,
                                     entityId: _savedPaymentId,
                                     onAdded: notifier.addImage,
                                   ),
@@ -357,7 +358,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                     context: context,
                                     ref: ref,
                                     entityType: DocumentAttachmentEntityType
-                                        .paymentIn.apiValue,
+                                        .paymentIn
+                                        .apiValue,
                                     entityId: _savedPaymentId,
                                     onAdded: notifier.addDocument,
                                   ),
@@ -395,12 +397,12 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 ),
                                 onRename: (id, name) =>
                                     transactionRenameAttachment(
-                                  ref: ref,
-                                  attachments: form.attachedImages,
-                                  id: id,
-                                  name: name,
-                                  onRenamed: notifier.updateImage,
-                                ),
+                                      ref: ref,
+                                      attachments: form.attachedImages,
+                                      id: id,
+                                      name: name,
+                                      onRenamed: notifier.updateImage,
+                                    ),
                               ),
                             if (form.attachedDocuments.isNotEmpty)
                               SaleFormAttachmentChipList(
@@ -416,12 +418,12 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 ),
                                 onRename: (id, name) =>
                                     transactionRenameAttachment(
-                                  ref: ref,
-                                  attachments: form.attachedDocuments,
-                                  id: id,
-                                  name: name,
-                                  onRenamed: notifier.updateDocument,
-                                ),
+                                      ref: ref,
+                                      attachments: form.attachedDocuments,
+                                      id: id,
+                                      name: name,
+                                      onRenamed: notifier.updateDocument,
+                                    ),
                               ),
                           ],
                         ],

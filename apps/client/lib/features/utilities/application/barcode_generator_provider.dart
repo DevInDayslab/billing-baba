@@ -40,13 +40,14 @@ class BarcodeGeneratorDraft {
       (noBarcode || itemCode.trim().isNotEmpty) &&
       (int.tryParse(noOfLabels.trim()) ?? 0) > 0;
 
-  String? get itemNameError =>
-      showValidation && itemName.trim().isEmpty ? 'Item name is required' : null;
+  String? get itemNameError => showValidation && itemName.trim().isEmpty
+      ? 'Item name is required'
+      : null;
 
   String? get itemCodeError =>
       showValidation && !noBarcode && itemCode.trim().isEmpty
-          ? 'Item code is required'
-          : null;
+      ? 'Item code is required'
+      : null;
 
   String? get noOfLabelsError {
     if (!showValidation) return null;

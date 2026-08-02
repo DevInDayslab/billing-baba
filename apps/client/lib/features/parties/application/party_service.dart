@@ -33,7 +33,6 @@ export 'party_error_mapper.dart'
 
 part 'party_service.g.dart';
 
-
 @Riverpod(keepAlive: true)
 Future<PartyService> partyService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
@@ -243,7 +242,6 @@ class PartyService {
     }
   }
 
-
   /// Writes profile image fields into the local party cache so detail reloads
   /// do not flash back to a missing avatar after upload.
   Future<void> persistPartyProfileImage(
@@ -360,7 +358,6 @@ class PartyService {
     );
   }
 
-
   Future<void> _syncPendingOperations() async {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) return;
@@ -375,7 +372,6 @@ class PartyService {
     }
     return businessId;
   }
-
 }
 
 @Riverpod(keepAlive: true)

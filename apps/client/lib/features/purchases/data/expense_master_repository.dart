@@ -116,7 +116,10 @@ class ExpenseMasterRepository {
     return (await _local.getExpense(id))!;
   }
 
-  Future<ExpenseDto> updateExpense(String id, UpdateExpenseRequest request) async {
+  Future<ExpenseDto> updateExpense(
+    String id,
+    UpdateExpenseRequest request,
+  ) async {
     final businessId = _requireBusinessId();
     final existing = await _local.getExpense(id);
     if (existing == null) {

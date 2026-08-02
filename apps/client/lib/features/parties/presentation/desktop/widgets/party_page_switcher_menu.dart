@@ -23,8 +23,9 @@ class PartyPageSwitcherMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final canViewHiddenLedger =
-        ref.watch(permissionServiceProvider).canViewHiddenLedger;
+    final canViewHiddenLedger = ref
+        .watch(permissionServiceProvider)
+        .canViewHiddenLedger;
     final items = PartySubRoutes.items
         .where(
           (item) =>

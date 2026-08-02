@@ -66,6 +66,7 @@ class _FakeSyncApi extends SyncApi {
       'errors': <Map<String, dynamic>>[],
     };
   }
+
   @override
   Future<Map<String, dynamic>> pull({
     required String deviceId,
@@ -87,7 +88,9 @@ void main() {
   late SyncCoordinator coordinator;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({StorageKeys.lastOpenedBusinessId: 'biz-1'});
+    SharedPreferences.setMockInitialValues({
+      StorageKeys.lastOpenedBusinessId: 'biz-1',
+    });
     final prefs = await SharedPreferences.getInstance();
     storage = StorageService(preferences: prefs);
     db = AppDatabase(NativeDatabase.memory());
@@ -98,51 +101,85 @@ void main() {
     repo = BusinessSettingsMasterRepository(
       local: local,
       syncQueue: queue,
-      businessIdReader: () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+      businessIdReader: () =>
+          storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
       deviceIdReader: () => '22222222-2222-2222-2222-222222222222',
     );
     final identity = SyncDeviceIdentity(
       storage,
       packageInfoLoader: () async => PackageInfo(
-        appName: 'Billing Baba', packageName: 'billing_baba', version: '1.0.0', buildNumber: '1',
+        appName: 'Billing Baba',
+        packageName: 'billing_baba',
+        version: '1.0.0',
+        buildNumber: '1',
       ),
       platformName: () => 'test',
     );
     coordinator = SyncCoordinator(
-      api: api, queue: queue, identity: identity, metadata: metadata, storage: storage,
-      categorySync: CategorySync(db), partySync: PartySync(db), itemSync: ItemSync(db),
-      unitSync: UnitSync(db), taxRateSync: TaxRateSync(db), godownSync: GodownSync(db),
+      api: api,
+      queue: queue,
+      identity: identity,
+      metadata: metadata,
+      storage: storage,
+      categorySync: CategorySync(db),
+      partySync: PartySync(db),
+      itemSync: ItemSync(db),
+      unitSync: UnitSync(db),
+      taxRateSync: TaxRateSync(db),
+      godownSync: GodownSync(db),
       businessSettingsSync: BusinessSettingsSync(db),
     );
   });
 
-  tearDown(() async { coordinator.dispose(); await db.close(); });
+  tearDown(() async {
+    coordinator.dispose();
+    await db.close();
+  });
 
   Future<void> syncNow() async {
     var state = const SyncState(connectivity: SyncConnectivityStatus.online);
-    await coordinator.orchestrate(currentState: state, emit: (u) => state = u(state));
+    await coordinator.orchestrate(
+      currentState: state,
+      emit: (u) => state = u(state),
+    );
   }
 
   test('offline upsert + push ACK + conflict + pull', () async {
-    final created = await repo.upsert(const UpdateBusinessSettingsRequest(
-      valuationMethod: 'fifo',
-      defaultInvoiceTaxRate: '18',
-      pricingTierLabels: {'tier_1': 'Retail'},
-    ));
+    final created = await repo.upsert(
+      const UpdateBusinessSettingsRequest(
+        valuationMethod: 'fifo',
+        defaultInvoiceTaxRate: '18',
+        pricingTierLabels: {'tier_1': 'Retail'},
+      ),
+    );
     expect(created.valuationMethod, 'fifo');
     expect((await queue.listPending()).single.entityType, 'business_settings');
-    expect(SyncJob.domainOnly((await queue.listPending()).single.payload)['valuation_method'], 'fifo');
+    expect(
+      SyncJob.domainOnly(
+        (await queue.listPending()).single.payload,
+      )['valuation_method'],
+      'fifo',
+    );
 
     await syncNow();
     expect((await local.getById(created.id))!.syncVersion, 3);
 
-    await repo.upsert(const UpdateBusinessSettingsRequest(valuationMethod: 'average'));
+    await repo.upsert(
+      const UpdateBusinessSettingsRequest(valuationMethod: 'average'),
+    );
     api.pushHandler = (body) {
       final mid = (body['mutations'] as List).first['mutation_id'];
       return {
         'accepted': <Map<String, dynamic>>[],
         'replayed': <Map<String, dynamic>>[],
-        'conflicts': [{'mutation_id': mid, 'code': 'VERSION_CONFLICT', 'server_payload': {'valuation_method': 'fifo'}, 'server_sync_version': 9}],
+        'conflicts': [
+          {
+            'mutation_id': mid,
+            'code': 'VERSION_CONFLICT',
+            'server_payload': {'valuation_method': 'fifo'},
+            'server_sync_version': 9,
+          },
+        ],
         'errors': <Map<String, dynamic>>[],
       };
     };
@@ -155,21 +192,23 @@ void main() {
     const id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
     api.pushHandler = null;
     api.pullPayload = {
-      'changes': [{
-        'entity_type': 'business_settings',
-        'entity_id': id,
-        'sync_version': 2,
-        'updated_at': DateTime.utc(2026, 8).toIso8601String(),
-        'is_deleted': false,
-        'payload': {
-          'valuation_method': 'fifo',
-          'default_tax_type': 'cgst_sgst',
-          'enable_price_conflict_alerts': false,
-          'credit_limit_action': 'block',
-          'pricing_tier_labels': {'tier_1': 'A'},
-          'default_invoice_tax_rate': '5',
+      'changes': [
+        {
+          'entity_type': 'business_settings',
+          'entity_id': id,
+          'sync_version': 2,
+          'updated_at': DateTime.utc(2026, 8).toIso8601String(),
+          'is_deleted': false,
+          'payload': {
+            'valuation_method': 'fifo',
+            'default_tax_type': 'cgst_sgst',
+            'enable_price_conflict_alerts': false,
+            'credit_limit_action': 'block',
+            'pricing_tier_labels': {'tier_1': 'A'},
+            'default_invoice_tax_rate': '5',
+          },
         },
-      }],
+      ],
       'next_cursor': 'cursor-after-pull',
       'has_more': false,
     };

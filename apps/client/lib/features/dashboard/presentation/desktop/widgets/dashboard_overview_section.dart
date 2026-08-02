@@ -115,7 +115,10 @@ class _OverviewMetricCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.xs,right: iconSize + 4),
+                      padding: const EdgeInsets.only(
+                        top: AppSpacing.xs,
+                        right: iconSize + 4,
+                      ),
                       child: Text(
                         title,
                         style: DashboardTypography.supportingLabel,

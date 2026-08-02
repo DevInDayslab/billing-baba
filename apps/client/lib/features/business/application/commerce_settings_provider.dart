@@ -19,15 +19,18 @@ Future<CommerceSettingsRemoteDataSource> commerceSettingsRemoteDataSource(
 class CommerceSettings extends _$CommerceSettings {
   @override
   Future<CommerceSettingsModel> build() async {
-    final remote = await ref.watch(commerceSettingsRemoteDataSourceProvider.future);
+    final remote = await ref.watch(
+      commerceSettingsRemoteDataSourceProvider.future,
+    );
     return remote.fetch();
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final remote =
-          await ref.read(commerceSettingsRemoteDataSourceProvider.future);
+      final remote = await ref.read(
+        commerceSettingsRemoteDataSourceProvider.future,
+      );
       return remote.fetch();
     });
   }
@@ -37,9 +40,11 @@ class CommerceSettings extends _$CommerceSettings {
     double? defaultInvoiceTaxRate,
     bool clearDefaultInvoiceTaxRate = false,
   }) async {
-    final remote =
-        await ref.read(commerceSettingsRemoteDataSourceProvider.future);
-    final current = state.value ?? const CommerceSettingsModel(pricingTierLabels: {});
+    final remote = await ref.read(
+      commerceSettingsRemoteDataSourceProvider.future,
+    );
+    final current =
+        state.value ?? const CommerceSettingsModel(pricingTierLabels: {});
     final updated = await remote.update(
       current.toUpdateJson(
         pricingTierLabels: pricingTierLabels,

@@ -31,8 +31,8 @@ Future<ExpenseService> expenseService(Ref ref) async {
     deviceId = null;
   }
   final remote = ExpenseRemoteDataSource(api.dio);
-  final businessIdReader =
-      () => storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
+  final businessIdReader = () =>
+      storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
   return ExpenseService(
     repository: ExpenseRepository(
       remote: remote,

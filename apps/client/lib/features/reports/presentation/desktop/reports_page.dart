@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
+import 'package:billing_baba/features/reports/application/sale_report_column_filters_provider.dart';
 import 'package:billing_baba/features/reports/models/business_status_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/expense_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/gst_report_subsection.dart';
@@ -105,6 +106,10 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
     LoanAccountsReportSubSection? loanAccountsSub,
   }) {
     ref.read(reportFiltersProvider.notifier).resetForReportSwitch();
+    if (transactionSub != null &&
+        transactionSub != TransactionReportSubSection.sale) {
+      ref.read(saleReportColumnFiltersProvider.notifier).reset();
+    }
     setState(() {
       _navGroup = group;
       if (transactionSub != null) _selectedTransactionSub = transactionSub;
@@ -196,10 +201,11 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
                             group: ReportNavGroup.expenseReport,
                             expenseSub: sub,
                           ),
-                          onSalePurchaseOrderSubSelected: (sub) => _selectReport(
-                            group: ReportNavGroup.salePurchaseOrderReport,
-                            salePurchaseOrderSub: sub,
-                          ),
+                          onSalePurchaseOrderSubSelected: (sub) =>
+                              _selectReport(
+                                group: ReportNavGroup.salePurchaseOrderReport,
+                                salePurchaseOrderSub: sub,
+                              ),
                           onOtherIncomeSubSelected: (sub) => _selectReport(
                             group: ReportNavGroup.otherIncomeReport,
                             otherIncomeSub: sub,

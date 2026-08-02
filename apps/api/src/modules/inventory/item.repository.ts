@@ -215,12 +215,12 @@ export class ItemRepository {
 
     const [tierPrices, images, locations, openingStock, alternativeIds] =
       await Promise.all([
-      this.loadTierPrices(businessId, itemId),
-      this.loadImages(businessId, itemId),
-      this.loadLocations(businessId, itemId),
-      this.loadOpeningStock(businessId, itemId),
-      this.listAlternativeIds(businessId, itemId),
-    ]);
+        this.loadTierPrices(businessId, itemId),
+        this.loadImages(businessId, itemId),
+        this.loadLocations(businessId, itemId),
+        this.loadOpeningStock(businessId, itemId),
+        this.listAlternativeIds(businessId, itemId),
+      ]);
 
     return toItemDetailRecord(
       row as ItemRow,
@@ -1292,7 +1292,10 @@ export class ItemRepository {
           eq(itemAlternatives.isDeleted, false),
         ),
       )
-      .orderBy(asc(itemAlternatives.sortOrder), asc(itemAlternatives.createdAt));
+      .orderBy(
+        asc(itemAlternatives.sortOrder),
+        asc(itemAlternatives.createdAt),
+      );
 
     return rows.map((row) => row.alternativeItemId);
   }
@@ -1318,7 +1321,10 @@ export class ItemRepository {
           eq(itemAlternatives.isDeleted, false),
         ),
       )
-      .orderBy(asc(itemAlternatives.sortOrder), asc(itemAlternatives.createdAt));
+      .orderBy(
+        asc(itemAlternatives.sortOrder),
+        asc(itemAlternatives.createdAt),
+      );
 
     for (const row of rows) {
       const existing = map.get(row.itemId) ?? [];
@@ -1345,7 +1351,10 @@ export class ItemRepository {
           eq(itemAlternatives.isDeleted, false),
         ),
       )
-      .orderBy(asc(itemAlternatives.sortOrder), asc(itemAlternatives.createdAt));
+      .orderBy(
+        asc(itemAlternatives.sortOrder),
+        asc(itemAlternatives.createdAt),
+      );
 
     const index: Record<string, string[]> = {};
     for (const row of rows) {

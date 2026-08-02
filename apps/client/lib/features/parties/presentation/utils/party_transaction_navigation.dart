@@ -27,9 +27,10 @@ void navigateToPartyLedgerTransaction(
       'purchase_return' => '${AppRoutes.editDebitNote}/$referenceId',
       _ => '${AppRoutes.editPurchase}/$referenceId',
     },
-    'payments' => transaction.direction == 'paid'
-        ? AppRoutes.purchasePaymentOut
-        : AppRoutes.salePaymentIn,
+    'payments' =>
+      transaction.direction == 'paid'
+          ? AppRoutes.purchasePaymentOut
+          : AppRoutes.salePaymentIn,
     'expenses' => '${AppRoutes.editExpense}/$referenceId',
     'sale_fa_batches' => '${AppRoutes.editSaleFa}/$referenceId',
     'purchase_fa_batches' => '${AppRoutes.editPurchaseFa}/$referenceId',

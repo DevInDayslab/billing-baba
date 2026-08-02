@@ -7,8 +7,14 @@ import 'package:flutter/material.dart';
 /// Typography, spacing, icons, and radii use fixed design tokens.
 /// Widget tap targets use DashboardNavigation for route mapping.
 abstract final class DashboardLayout {
-  static const minimumWindowWidth = 1024.0;
-  static const minimumWindowHeight = 800.0;
+  /// Smallest window the dashboard layout supports (fits 1366×768 laptops).
+  static const minimumWindowWidth = 960.0;
+  static const minimumWindowHeight = 640.0;
+
+  /// Default opening size as a fraction of the monitor work area (not maximized).
+  /// Clamped to [minimumWindowWidth]/[minimumWindowHeight] so layout stays usable.
+  static const defaultWindowWidthRatio = 0.85;
+  static const defaultWindowHeightRatio = 0.88;
 
   // Column width ratios (main + side ≈ 1.0; gap is separate).
   static const mainAreaRatio = 0.74;

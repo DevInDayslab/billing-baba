@@ -16,8 +16,14 @@ class AddCreditNotePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptivePage(
-      desktop: DesktopAddCreditNotePage(creditNoteId: creditNoteId, fromInvoiceId: fromInvoiceId),
-      mobile: MobileAddCreditNotePage(creditNoteId: creditNoteId, fromInvoiceId: fromInvoiceId),
+      desktop: DesktopAddCreditNotePage(
+        creditNoteId: creditNoteId,
+        fromInvoiceId: fromInvoiceId,
+      ),
+      mobile: MobileAddCreditNotePage(
+        creditNoteId: creditNoteId,
+        fromInvoiceId: fromInvoiceId,
+      ),
     );
   }
 }

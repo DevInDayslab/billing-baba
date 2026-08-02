@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/platform/desktop_app_menu_bar.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -16,6 +17,14 @@ class BillingBabaApp extends ConsumerStatefulWidget {
 
 class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
   final _imageMemoryHandler = ImageMemoryPressureHandler();
+
+  /// Keeps [DesktopAppMenuBar] / [PlatformMenuBar] on a stable Element across
+  /// overlay toggles. Relocating the menu under a Stack (previous approach)
+  /// created a second PlatformMenuBar before the first disposed, tripping
+  /// DefaultPlatformMenuDelegate.debugLockDelegate.
+  static final GlobalKey _desktopMenuKey = GlobalKey(
+    debugLabel: 'desktopAppMenuBar',
+  );
 
   @override
   void initState() {
@@ -43,26 +52,29 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        final content = AppThemeScope(child: child ?? const SizedBox.shrink());
-        if (!isBlocking) return content;
-
-        return Stack(
-          children: [
-            // Keep the router mounted for data loading, but hide it visually.
-            Opacity(opacity: 0, child: IgnorePointer(child: content)),
-            Positioned.fill(
-              child: BusinessOpeningOverlay(
-                opaque: true,
-                whiteBackground: true,
-                message: isOpeningCompany
-                    ? 'Opening company…'
-                    : 'Loading companies…',
-                subtitle: isOpeningCompany
-                    ? 'Loading dashboard and company data'
-                    : null,
-              ),
-            ),
-          ],
+        // PlatformMenuBar must stay at a fixed slot above the router forever.
+        // Overlay is a sibling *inside* the menu child — never wrap/move the menu.
+        return DesktopAppMenuBar(
+          key: _desktopMenuKey,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              AppThemeScope(child: child ?? const SizedBox.shrink()),
+              if (isBlocking)
+                Positioned.fill(
+                  child: BusinessOpeningOverlay(
+                    opaque: true,
+                    whiteBackground: true,
+                    message: isOpeningCompany
+                        ? 'Opening company…'
+                        : 'Loading companies…',
+                    subtitle: isOpeningCompany
+                        ? 'Loading dashboard and company data'
+                        : null,
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );

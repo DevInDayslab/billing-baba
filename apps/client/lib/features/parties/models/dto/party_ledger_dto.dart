@@ -74,8 +74,10 @@ class PartyLedgerTransactionDto {
       createdAt: json['created_at'] as String,
       type: json['type'] as String? ?? '',
       entryType: json['entry_type'] as String? ?? '',
-      source: json['source'] as String? ?? json['reference_type'] as String? ?? '',
-      sourceType: json['source_type'] as String? ?? json['entry_type'] as String? ?? '',
+      source:
+          json['source'] as String? ?? json['reference_type'] as String? ?? '',
+      sourceType:
+          json['source_type'] as String? ?? json['entry_type'] as String? ?? '',
       referenceId: json['reference_id'] as String?,
       referenceType: json['reference_type'] as String?,
       referenceNumber: json['reference_number'] as String?,
@@ -83,11 +85,13 @@ class PartyLedgerTransactionDto {
       documentDate: json['document_date'] as String?,
       dueDate: json['due_date'] as String?,
       total: json['total'] as String? ?? '0',
-      balance: json['balance'] as String? ?? json['balance_after'] as String? ?? '0',
+      balance:
+          json['balance'] as String? ?? json['balance_after'] as String? ?? '0',
       status: json['status'] as String?,
       debit: json['debit'] as String? ?? '0',
       credit: json['credit'] as String? ?? '0',
-      balanceAfter: json['balance_after'] as String? ?? json['balance'] as String? ?? '0',
+      balanceAfter:
+          json['balance_after'] as String? ?? json['balance'] as String? ?? '0',
       direction: json['direction'] as String?,
       paymentStatus: json['payment_status'] as String?,
     );

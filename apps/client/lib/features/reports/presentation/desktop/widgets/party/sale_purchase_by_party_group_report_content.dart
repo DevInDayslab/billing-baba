@@ -1,9 +1,11 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_data_row.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filter_widgets.dart';
@@ -155,118 +157,27 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                         ),
                         Expanded(
                           child: ReportTableArea(
-                            child: rows.isEmpty
-                              ? const Center(
-                                  child: Text(
-                                    'No data available for the selected period.',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportSalePurchaseByPartyGroupRow
+                                >(
+                                  reportScope:
+                                      salePurchaseByPartyGroupReportScope,
+                                  minWidth: 700,
+                                  columns: salePurchaseByPartyGroupColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No data available for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                   ),
-                                )
-                              : ReportSyncScrollTable(
-                                    minWidth: 700,
-                                    headerChildren: const [
-                                      ReportAlignedHeaderCell(
-                                        label: '#',
-                                        width: 40,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PARTY GROUP',
-                                        width: 130,
-                                      ),
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'PARTY NAME',
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'SALE AMOUNT',
-                                        width: 120,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'PURCHASE AMOUNT',
-                                        width: 130,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'NET BALANCE',
-                                        width: 110,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.fixed(
-                                                40,
-                                                child: Text('${i + 1}'),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                child: Text(rows[i].partyGroup),
-                                              ),
-                                              ReportAlignedCell.flex(
-                                                child: Text(
-                                                  rows[i].partyName,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                120,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].saleAmount,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                130,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].purchaseAmount,
-                                                  ),
-                                                ),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                110,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].saleAmount -
-                                                        rows[i].purchaseAmount,
-                                                  ),
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    color:
-                                                        rows[i].saleAmount -
-                                                                rows[i]
-                                                                    .purchaseAmount >=
-                                                            0
-                                                        ? reportTeal
-                                                        : Colors.red.shade700,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
                                 ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

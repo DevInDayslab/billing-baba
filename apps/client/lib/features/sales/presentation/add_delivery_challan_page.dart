@@ -16,8 +16,14 @@ class AddDeliveryChallanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptivePage(
-      desktop: DesktopAddDeliveryChallanPage(challanId: challanId, duplicateFromId: duplicateFromId),
-      mobile: MobileAddDeliveryChallanPage(challanId: challanId, duplicateFromId: duplicateFromId),
+      desktop: DesktopAddDeliveryChallanPage(
+        challanId: challanId,
+        duplicateFromId: duplicateFromId,
+      ),
+      mobile: MobileAddDeliveryChallanPage(
+        challanId: challanId,
+        duplicateFromId: duplicateFromId,
+      ),
     );
   }
 }

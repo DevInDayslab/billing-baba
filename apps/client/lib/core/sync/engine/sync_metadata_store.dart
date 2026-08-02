@@ -62,8 +62,9 @@ class SyncMetadataStore {
   }
 
   int? lastServerSchemaVersionFor(String businessId) {
-    final raw =
-        _storage.read(StorageKeys.syncLastServerSchemaVersionFor(businessId));
+    final raw = _storage.read(
+      StorageKeys.syncLastServerSchemaVersionFor(businessId),
+    );
     if (raw != null && raw.isNotEmpty) return int.tryParse(raw);
     final migrated = _migrateLegacyString(
       businessId: businessId,
@@ -101,7 +102,9 @@ class SyncMetadataStore {
   Future<void> clearBootstrapStateFor(String businessId) async {
     await _storage.remove(StorageKeys.syncPullCursorFor(businessId));
     await _storage.remove(StorageKeys.syncBootstrappedAtFor(businessId));
-    await _storage.remove(StorageKeys.syncLastServerSchemaVersionFor(businessId));
+    await _storage.remove(
+      StorageKeys.syncLastServerSchemaVersionFor(businessId),
+    );
   }
 
   /// One-time migration: copy legacy global cursor/bootstrap to the active business.

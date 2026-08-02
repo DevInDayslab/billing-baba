@@ -11,9 +11,11 @@ import 'package:billing_baba/features/business/presentation/desktop/widgets/busi
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/media/pick_media_image.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,7 +27,8 @@ class DesktopEditProfilePage extends ConsumerStatefulWidget {
   final bool embedded;
 
   @override
-  ConsumerState<DesktopEditProfilePage> createState() => _EditProfilePageState();
+  ConsumerState<DesktopEditProfilePage> createState() =>
+      _EditProfilePageState();
 }
 
 class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
@@ -231,7 +234,9 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
       });
       patchProfileMedia(newUrl);
       unawaited(
-        ref.read(imageServiceProvider).replaceImage(
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
               oldUrl: previousUrl,
               newUrl: newUrl,
               oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
@@ -280,7 +285,9 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
       if (!mounted || currentGeneration() != generation) return;
       setState(() => setUploading(false));
       unawaited(
-        ref.read(imageServiceProvider).invalidateImage(
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
               url: previousUrl,
               cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
             ),
@@ -462,6 +469,14 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
           child: _OutlinedField(
             controller: _businessNameController,
             hintText: 'Business Name',
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(
+                Validators.businessNameMaxLength,
+              ),
+              FilteringTextInputFormatter.allow(
+                Validators.businessNameInputPattern,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -472,6 +487,10 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             controller: _phoneController,
             hintText: 'Phone Number',
             keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -481,6 +500,11 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
           child: _OutlinedField(
             controller: _gstinController,
             hintText: 'GSTIN',
+            inputFormatters: [
+              const UpperCaseTextFormatter(),
+              LengthLimitingTextInputFormatter(15),
+              FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -491,6 +515,15 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             controller: _emailController,
             hintText: 'Email ID',
             keyboardType: TextInputType.emailAddress,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(200),
+              FilteringTextInputFormatter.allow(
+                RegExp(
+                  r'[\w\-.@+'
+                  ']',
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -554,6 +587,10 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             controller: _pincodeController,
             hintText: 'Pincode',
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -563,6 +600,10 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
           child: _OutlinedField(
             controller: _upiIdController,
             hintText: 'merchant@upi',
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(100),
+              FilteringTextInputFormatter.allow(RegExp(r'[\w.\-@]')),
+            ],
           ),
         ),
       ],
@@ -911,6 +952,7 @@ class _OutlinedField extends StatelessWidget {
     this.keyboardType,
     this.minLines = 1,
     this.maxLines = 1,
+    this.inputFormatters,
   });
 
   static const _fieldBorder = OutlineInputBorder(
@@ -923,6 +965,7 @@ class _OutlinedField extends StatelessWidget {
   final TextInputType? keyboardType;
   final int minLines;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -931,6 +974,7 @@ class _OutlinedField extends StatelessWidget {
       keyboardType: keyboardType,
       minLines: minLines,
       maxLines: maxLines,
+      inputFormatters: inputFormatters,
       style: const TextStyle(color: Colors.black87),
       decoration: InputDecoration(
         hintText: hintText,

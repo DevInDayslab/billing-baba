@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 const mobileTransactionTypeFilterSheetHeightFraction = 0.58;
 
 /// Vyapar-style multi-select transaction type filter for the home feed.
-Future<Set<MobileHomeTransactionFilterType>?> showMobileTransactionTypeFilterSheet({
+Future<Set<MobileHomeTransactionFilterType>?>
+showMobileTransactionTypeFilterSheet({
   required BuildContext context,
   required Set<MobileHomeTransactionFilterType> selected,
 }) {
@@ -81,7 +82,8 @@ class _TransactionTypeFilterBody extends StatefulWidget {
       _TransactionTypeFilterBodyState();
 }
 
-class _TransactionTypeFilterBodyState extends State<_TransactionTypeFilterBody> {
+class _TransactionTypeFilterBodyState
+    extends State<_TransactionTypeFilterBody> {
   static const _applyRed = Color(0xFFE53935);
   static const _clearBackground = Color(0xFFF5F5F5);
 

@@ -142,8 +142,9 @@ class _BarcodeItemsGridState extends ConsumerState<BarcodeItemsGrid> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final availableWidth = constraints.maxWidth;
-          final columnWidths =
-              BarcodeGridLayout.columnWidthsFor(availableWidth);
+          final columnWidths = BarcodeGridLayout.columnWidthsFor(
+            availableWidth,
+          );
           final needsHorizontalScroll =
               availableWidth < BarcodeGridLayout.minTotalWidth;
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
@@ -18,7 +20,10 @@ Future<void> showAdjustStockDialog(
     context: context,
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.lg,
+      ),
       child: AdjustStockDialog(item: item),
     ),
   );
@@ -40,6 +45,19 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
   String? _godownId;
   String? _errorMessage;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cached empty godown list (pre-seed) needs a refresh so Main Warehouse appears.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final current = ref.read(inventoryGodownsProvider).value;
+      if (current == null || current.isEmpty) {
+        unawaited(ref.read(inventoryGodownsProvider.notifier).refresh());
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -134,14 +152,17 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
     final godownsAsync = ref.watch(inventoryGodownsProvider);
     final godowns = godownsAsync.value ?? [];
     _godownId ??= godowns.isNotEmpty ? godowns.first.id : null;
+    final media = MediaQuery.of(context);
+    final maxDialogHeight =
+        (media.size.height - media.viewInsets.bottom) * 0.9;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 420),
+      constraints: BoxConstraints(maxWidth: 420, maxHeight: maxDialogHeight),
       child: Material(
         color: AppColors.surface,
         borderRadius: AppRadius.lgBorder,
         clipBehavior: Clip.antiAlias,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -178,18 +199,44 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
               const SizedBox(height: AppSpacing.md),
               const Text('Godown', style: saleFieldLabelStyle),
               const SizedBox(height: AppSpacing.sm),
-              DropdownButtonFormField<String>(
-                initialValue: _godownId,
-                items: godowns
-                    .map(
-                      (godown) => DropdownMenuItem(
-                        value: godown.id,
-                        child: Text(godown.name),
+              godownsAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: LinearProgressIndicator(minHeight: 2),
+                ),
+                error: (error, _) => Text(
+                  InventoryErrorMapper.messageFor(error),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: saleFieldErrorColor,
+                  ),
+                ),
+                data: (loadedGodowns) {
+                  if (loadedGodowns.isEmpty) {
+                    return const Text(
+                      'No godown found. Open Godowns and add one, then try again.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: saleFieldErrorColor,
                       ),
-                    )
-                    .toList(),
-                onChanged: (value) => setState(() => _godownId = value),
-                decoration: buildSaleFieldDecoration(hint: 'Select godown'),
+                    );
+                  }
+                  return DropdownButtonFormField<String>(
+                    initialValue: _godownId,
+                    items: loadedGodowns
+                        .map(
+                          (godown) => DropdownMenuItem(
+                            value: godown.id,
+                            child: Text(godown.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(() => _godownId = value),
+                    decoration: buildSaleFieldDecoration(
+                      hint: 'Select godown',
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.md),
               const Text(

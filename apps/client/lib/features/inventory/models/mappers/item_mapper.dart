@@ -15,7 +15,8 @@ abstract final class ItemMapper {
     double? availableForSale,
   }) {
     final parsedQuantity = _parseMoney(dto.quantity) ?? quantity;
-    final parsedReserved = _parseMoney(dto.reservedQuantity) ?? reservedQuantity;
+    final parsedReserved =
+        _parseMoney(dto.reservedQuantity) ?? reservedQuantity;
     final parsedAvailable =
         _parseMoney(dto.availableForSale) ?? availableForSale;
 
@@ -27,7 +28,8 @@ abstract final class ItemMapper {
       salePrice: _parseMoney(dto.salePrice),
       stockValue: stockValue,
       categoryId: CategoryMapper.fromApiCategoryId(dto.categoryId),
-      availableForSale: parsedAvailable ??
+      availableForSale:
+          parsedAvailable ??
           (parsedQuantity != null && parsedReserved != null
               ? parsedQuantity - parsedReserved
               : parsedQuantity),

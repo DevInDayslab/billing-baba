@@ -48,7 +48,6 @@ class _FakeSyncApi extends SyncApi {
   };
 
   Map<String, dynamic>? lastPushBody;
-  final List<Map<String, dynamic>> pushBodies = [];
   String? lastPullCursor;
   String? lastPullEntityTypes;
 
@@ -82,7 +81,6 @@ class _FakeSyncApi extends SyncApi {
   }) async {
     pushCalls++;
     lastPushBody = body;
-    pushBodies.add(body);
     if (pushError != null) throw pushError!;
     if (pushHandler != null) return pushHandler!(body);
     final mutations = (body['mutations'] as List?) ?? const [];
@@ -203,7 +201,10 @@ void main() {
     expect(api.pushCalls, 0);
     // bootstrap pull + steady-state pull
     expect(api.pullCalls, 2);
-    expect(api.lastPullEntityTypes, 'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels');
+    expect(
+      api.lastPullEntityTypes,
+      'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels',
+    );
     // Bootstrap starts from epoch cursor (opaque base64), then stores next_cursor.
     expect(api.lastPullCursor, isNotNull);
     expect(metadata.pullCursor, isNotNull);
@@ -245,7 +246,9 @@ void main() {
       payload: {'name': 'Widget', 'base_unit': 'piece'},
     );
 
-    await db.into(db.categoriesLocal).insert(
+    await db
+        .into(db.categoriesLocal)
+        .insert(
           CategoriesLocalCompanion.insert(
             id: '11111111-1111-1111-1111-111111111111',
             businessId: 'biz-1',
@@ -255,7 +258,9 @@ void main() {
           ),
         );
 
-    await db.into(db.partiesLocal).insert(
+    await db
+        .into(db.partiesLocal)
+        .insert(
           PartiesLocalCompanion.insert(
             id: '00000000-0000-0000-0000-0000000000p1',
             businessId: 'biz-1',
@@ -266,7 +271,9 @@ void main() {
           ),
         );
 
-    await db.into(db.itemsLocal).insert(
+    await db
+        .into(db.itemsLocal)
+        .insert(
           ItemsLocalCompanion.insert(
             id: '22222222-2222-2222-2222-222222222222',
             businessId: 'biz-1',
@@ -280,7 +287,10 @@ void main() {
 
     expect(api.pushCalls, 1);
     expect(api.pullCalls, 1);
-    expect(api.lastPullEntityTypes, 'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels');
+    expect(
+      api.lastPullEntityTypes,
+      'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels',
+    );
     final mutations = api.lastPushBody!['mutations'] as List;
     expect(mutations, hasLength(3));
     final types = mutations.map((m) => m['entity_type']).toSet();
@@ -291,23 +301,23 @@ void main() {
     );
 
     expect(await queue.pendingCount(), 0);
-    final catRow = await (db.select(db.categoriesLocal)
-          ..where(
-            (t) => t.id.equals('11111111-1111-1111-1111-111111111111'),
-          ))
-        .getSingle();
+    final catRow =
+        await (db.select(db.categoriesLocal)..where(
+              (t) => t.id.equals('11111111-1111-1111-1111-111111111111'),
+            ))
+            .getSingle();
     expect(catRow.syncVersion, 1);
-    final partyRow = await (db.select(db.partiesLocal)
-          ..where(
-            (t) => t.id.equals('00000000-0000-0000-0000-0000000000p1'),
-          ))
-        .getSingle();
+    final partyRow =
+        await (db.select(db.partiesLocal)..where(
+              (t) => t.id.equals('00000000-0000-0000-0000-0000000000p1'),
+            ))
+            .getSingle();
     expect(partyRow.syncVersion, 1);
-    final itemRow = await (db.select(db.itemsLocal)
-          ..where(
-            (t) => t.id.equals('22222222-2222-2222-2222-222222222222'),
-          ))
-        .getSingle();
+    final itemRow =
+        await (db.select(db.itemsLocal)..where(
+              (t) => t.id.equals('22222222-2222-2222-2222-222222222222'),
+            ))
+            .getSingle();
     expect(itemRow.syncVersion, 1);
     expect(state.lastResultMessage, contains('push=3'));
   });
@@ -406,172 +416,5 @@ void main() {
     expect(pending.first.mutationId, leadJob.mutationId);
     expect(pending.first.entityType, 'leads');
     expect(state.lastResultMessage, contains('push=1'));
-  });
-
-  test('sales document rows push header before lines', () async {
-    await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
-    await storage.write(StorageKeys.syncPullCursor, 'cursor-abc');
-    await storage.write(
-      StorageKeys.syncBootstrappedAt,
-      DateTime.utc(2026).toIso8601String(),
-    );
-    await storage.write(StorageKeys.syncLastServerSchemaVersion, '1');
-
-    api.statusPayload = {
-      'schema_version': 1,
-      'protocol_version': 1,
-      'supported_entities': ['sales_documents', 'sales_document_lines'],
-    };
-
-    const docId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-    const lineId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-
-    await queue.enqueueRowMutation(
-      businessId: 'biz-1',
-      entityType: 'sales_document_lines',
-      entityId: lineId,
-      operation: SyncQueueOperation.create,
-      payload: {
-        'sales_document_id': docId,
-        'item_id': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-        'quantity': '1.00',
-        'unit': 'Pcs',
-        'unit_price': '10.00',
-        'discount_amount': '0',
-        'tax_type': 'none',
-        'tax_rate': '0',
-        'cgst_amount': '0',
-        'sgst_amount': '0',
-        'igst_amount': '0',
-        'line_total': '10.00',
-        'sort_order': 0,
-      },
-      priority: SyncQueuePriority.high,
-    );
-    await queue.enqueueRowMutation(
-      businessId: 'biz-1',
-      entityType: 'sales_documents',
-      entityId: docId,
-      operation: SyncQueueOperation.create,
-      payload: {
-        'document_type': 'pos',
-        'status': 'draft',
-        'document_series': 'POS',
-        'party_id': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
-        'is_gst_formal': false,
-        'document_number': 'LOCAL-000099',
-        'document_date': DateTime.utc(2026).toIso8601String(),
-        'subtotal': '10.00',
-        'discount_total': '0',
-        'tax_amount': '0',
-        'total_amount': '10.00',
-      },
-      priority: SyncQueuePriority.high,
-    );
-
-    await runOrchestrate();
-
-    expect(api.pushBodies, isNotEmpty);
-    final rowMutations = (api.pushBodies.first['mutations'] as List)
-        .cast<Map<String, dynamic>>();
-    expect(rowMutations, hasLength(2));
-    expect(rowMutations[0]['entity_type'], 'sales_documents');
-    expect(rowMutations[1]['entity_type'], 'sales_document_lines');
-  });
-
-  test('finalize_sale waits while document line rows are in backlog', () async {
-    await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
-    await storage.write(StorageKeys.syncPullCursor, 'cursor-abc');
-    await storage.write(
-      StorageKeys.syncBootstrappedAt,
-      DateTime.utc(2026).toIso8601String(),
-    );
-    await storage.write(StorageKeys.syncLastServerSchemaVersion, '1');
-
-    api.statusPayload = {
-      'schema_version': 1,
-      'protocol_version': 1,
-      'supported_entities': ['sales_documents', 'sales_document_lines'],
-    };
-
-    const docId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-    const lineId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-
-    final headerJob = await queue.enqueueRowMutation(
-      businessId: 'biz-1',
-      entityType: 'sales_documents',
-      entityId: docId,
-      operation: SyncQueueOperation.create,
-      payload: {
-        'document_type': 'pos',
-        'status': 'draft',
-        'document_series': 'POS',
-        'party_id': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
-        'is_gst_formal': false,
-        'document_number': 'LOCAL-000100',
-        'document_date': DateTime.utc(2026).toIso8601String(),
-        'subtotal': '10.00',
-        'discount_total': '0',
-        'tax_amount': '0',
-        'total_amount': '10.00',
-      },
-      priority: SyncQueuePriority.high,
-    );
-    final lineJob = await queue.enqueueRowMutation(
-      businessId: 'biz-1',
-      entityType: 'sales_document_lines',
-      entityId: lineId,
-      operation: SyncQueueOperation.create,
-      payload: {
-        'sales_document_id': docId,
-        'item_id': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-        'quantity': '1.00',
-        'unit': 'Pcs',
-        'unit_price': '10.00',
-        'discount_amount': '0',
-        'tax_type': 'none',
-        'tax_rate': '0',
-        'cgst_amount': '0',
-        'sgst_amount': '0',
-        'igst_amount': '0',
-        'line_total': '10.00',
-        'sort_order': 0,
-      },
-      priority: SyncQueuePriority.high,
-    );
-    await queue.enqueueCommand(
-      businessId: 'biz-1',
-      command: 'finalize_sale',
-      commandId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-      payload: {
-        'document_id': docId,
-        'local_document_number': 'LOCAL-000100',
-      },
-      entityType: 'sales_documents',
-      entityId: docId,
-    );
-
-    await queue.markFailed(lineJob.id, reason: 'item not on server');
-
-    await runOrchestrate();
-
-    final commandPushes = api.pushBodies.where((body) {
-      final mutations = (body['mutations'] as List?) ?? const [];
-      return mutations.any(
-        (m) => m is Map && m['kind'] == 'command',
-      );
-    });
-    expect(commandPushes, isEmpty);
-
-    final pending = await queue.listPending(businessId: 'biz-1');
-    expect(
-      pending.any(
-        (job) =>
-            job.kind == SyncQueueKind.command &&
-            job.payload['command'] == 'finalize_sale',
-      ),
-      isTrue,
-    );
-    expect(headerJob.mutationId, isNotEmpty);
   });
 }

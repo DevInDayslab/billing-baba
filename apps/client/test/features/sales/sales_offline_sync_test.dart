@@ -83,52 +83,54 @@ void main() {
     );
   });
 
-  test('finalize stores payment locally and enqueues finalize_sale command',
-      () async {
-    final draft = await repo.saveDraft(
-      SalesDocumentDraftInput(
-        documentType: SalesDocumentType.taxInvoice,
-        documentSeries: SalesConstants.defaultDocumentSeries,
-        partyId: 'party-1',
-        documentDate: DateTime(2026, 7, 27),
-        items: [
-          const SaleLineItem(
-            id: 'line-1',
-            itemId: 'item-1',
-            itemName: 'Widget',
-            qty: 1,
-            unit: 'Pcs',
-            pricePerUnit: 100,
-          ),
-        ],
-      ),
-      itemNameToId: {'Widget': 'item-1'},
-    );
+  test(
+    'finalize stores payment locally and enqueues finalize_sale command',
+    () async {
+      final draft = await repo.saveDraft(
+        SalesDocumentDraftInput(
+          documentType: SalesDocumentType.taxInvoice,
+          documentSeries: SalesConstants.defaultDocumentSeries,
+          partyId: 'party-1',
+          documentDate: DateTime(2026, 7, 27),
+          items: [
+            const SaleLineItem(
+              id: 'line-1',
+              itemId: 'item-1',
+              itemName: 'Widget',
+              qty: 1,
+              unit: 'Pcs',
+              pricePerUnit: 100,
+            ),
+          ],
+        ),
+        itemNameToId: {'Widget': 'item-1'},
+      );
 
-    await repo.finalize(
-      documentId: draft.id,
-      localDocumentNumber: draft.documentNumber,
-      payment: const FinalizeSalePaymentCommand(
-        amount: '100.0000',
-        paymentMode: 'cash',
-      ),
-    );
+      await repo.finalize(
+        documentId: draft.id,
+        localDocumentNumber: draft.documentNumber,
+        payment: const FinalizeSalePaymentCommand(
+          amount: '100.0000',
+          paymentMode: 'cash',
+        ),
+      );
 
-    final stored = await local.getDocument(draft.id);
-    expect(stored?.status, 'finalized');
-    expect(stored?.paidAmount, '100.0000');
-    expect(stored?.paymentMode, 'cash');
+      final stored = await local.getDocument(draft.id);
+      expect(stored?.status, 'finalized');
+      expect(stored?.paidAmount, '100.0000');
+      expect(stored?.paymentMode, 'cash');
 
-    final commandJobs = await queue.listPending();
-    expect(
-      commandJobs.any(
-        (job) =>
-            job.kind == SyncQueueKind.command &&
-            job.payload['command'] == 'finalize_sale',
-      ),
-      isTrue,
-    );
-  });
+      final commandJobs = await queue.listPending();
+      expect(
+        commandJobs.any(
+          (job) =>
+              job.kind == SyncQueueKind.command &&
+              job.payload['command'] == 'finalize_sale',
+        ),
+        isTrue,
+      );
+    },
+  );
 
   test('command ack applies document number remap and paid_amount', () async {
     final draft = await repo.saveDraft(
@@ -240,6 +242,12 @@ void main() {
       itemNameToId: {'Widget': 'item-1', 'Bolt': 'item-2'},
     );
 
+    expect(draft.lines, hasLength(2));
+    final keptLineId = draft.lines.firstWhere((l) => l.itemId == 'item-1').id;
+    final removedLineId = draft.lines
+        .firstWhere((l) => l.itemId == 'item-2')
+        .id;
+
     await repo.saveDraft(
       SalesDocumentDraftInput(
         documentId: draft.id,
@@ -248,9 +256,9 @@ void main() {
         partyId: 'party-1',
         documentDate: DateTime(2026, 7, 27),
         items: [
-          const SaleLineItem(
-            id: 'line-a',
-            serverLineId: 'line-a',
+          SaleLineItem(
+            id: keptLineId,
+            serverLineId: keptLineId,
             itemId: 'item-1',
             itemName: 'Widget',
             qty: 1,
@@ -267,7 +275,7 @@ void main() {
       pending.any(
         (job) =>
             job.entityType == 'sales_document_lines' &&
-            job.entityId == 'line-b' &&
+            job.entityId == removedLineId &&
             job.operation == SyncQueueOperation.delete,
       ),
       isTrue,

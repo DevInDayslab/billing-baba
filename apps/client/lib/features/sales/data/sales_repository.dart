@@ -16,8 +16,7 @@ class SalesRepository {
 
   Future<PaginatedSalesDocumentsDto> listDocuments(
     SalesDocumentListQuery query,
-  ) =>
-      _remote.listDocuments(query);
+  ) => _remote.listDocuments(query);
 
   /// Local Drift first, then API. Printing and detail views must not block on network.
   Future<SalesDocumentDto> getDocument(String id) async {

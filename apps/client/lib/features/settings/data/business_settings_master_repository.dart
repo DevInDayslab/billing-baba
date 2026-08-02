@@ -37,7 +37,9 @@ class BusinessSettingsMasterRepository {
   }
 
   /// Creates settings row if missing, otherwise updates.
-  Future<BusinessSettingsDto> upsert(UpdateBusinessSettingsRequest request) async {
+  Future<BusinessSettingsDto> upsert(
+    UpdateBusinessSettingsRequest request,
+  ) async {
     final businessId = _requireBusinessId();
     final existing = await _local.getByBusinessId(businessId);
     final now = DateTime.now().toUtc();
@@ -46,12 +48,14 @@ class BusinessSettingsMasterRepository {
       final id = _uuid.v4();
       final valuationMethod = request.valuationMethod ?? 'average';
       final defaultTaxType = request.defaultTaxType ?? 'none';
-      final invoiceTerms =
-          request.clearInvoiceTerms ? null : request.invoiceTerms;
+      final invoiceTerms = request.clearInvoiceTerms
+          ? null
+          : request.invoiceTerms;
       final enableAlerts = request.enablePriceConflictAlerts ?? true;
       final creditLimitAction = request.creditLimitAction ?? 'warn';
-      final labelsJson =
-          BusinessSettingsLocalSource.encodeLabels(request.pricingTierLabels);
+      final labelsJson = BusinessSettingsLocalSource.encodeLabels(
+        request.pricingTierLabels,
+      );
       final taxRate = request.clearDefaultInvoiceTaxRate
           ? null
           : request.defaultInvoiceTaxRate;
@@ -90,8 +94,7 @@ class BusinessSettingsMasterRepository {
       return (await _local.getActiveDto(id))!;
     }
 
-    final valuationMethod =
-        request.valuationMethod ?? existing.valuationMethod;
+    final valuationMethod = request.valuationMethod ?? existing.valuationMethod;
     final defaultTaxType = request.defaultTaxType ?? existing.defaultTaxType;
     final invoiceTerms = request.clearInvoiceTerms
         ? null
@@ -134,7 +137,8 @@ class BusinessSettingsMasterRepository {
         invoiceTerms: invoiceTerms,
         enablePriceConflictAlerts: enableAlerts,
         creditLimitAction: creditLimitAction,
-        pricingTierLabels: request.pricingTierLabels ??
+        pricingTierLabels:
+            request.pricingTierLabels ??
             (await _local.getActiveDto(existing.id))?.pricingTierLabels,
         defaultInvoiceTaxRate: taxRate,
       ),
@@ -165,7 +169,9 @@ class BusinessSettingsMasterRepository {
   static Map<String, dynamic> _payload({
     required String valuationMethod,
     required String defaultTaxType,
-    required bool enablePriceConflictAlerts, required String creditLimitAction, String? invoiceTerms,
+    required bool enablePriceConflictAlerts,
+    required String creditLimitAction,
+    String? invoiceTerms,
     Map<String, String>? pricingTierLabels,
     String? defaultInvoiceTaxRate,
   }) {

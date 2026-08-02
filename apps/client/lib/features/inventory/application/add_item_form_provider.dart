@@ -78,8 +78,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void assignCode() {
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    final randomDigits =
-        _uuid.v4().replaceAll(RegExp(r'\D'), '').padRight(4, '0');
+    final randomDigits = _uuid
+        .v4()
+        .replaceAll(RegExp(r'\D'), '')
+        .padRight(4, '0');
     final code = '$timestamp${randomDigits.substring(0, 4)}';
     state = state.copyWith(itemCode: code, isDirty: true);
   }

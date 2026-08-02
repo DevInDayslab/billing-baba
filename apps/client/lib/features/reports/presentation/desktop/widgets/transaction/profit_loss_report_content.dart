@@ -94,7 +94,8 @@ class _ProfitLossReportContentState
                               Radio<String>(
                                 value: 'Vyapar',
                                 groupValue: _viewMode,
-                                onChanged: (v) => setState(() => _viewMode = v!),
+                                onChanged: (v) =>
+                                    setState(() => _viewMode = v!),
                                 visualDensity: VisualDensity.compact,
                               ),
                               const Text(
@@ -105,7 +106,8 @@ class _ProfitLossReportContentState
                               Radio<String>(
                                 value: 'Accounting',
                                 groupValue: _viewMode,
-                                onChanged: (v) => setState(() => _viewMode = v!),
+                                onChanged: (v) =>
+                                    setState(() => _viewMode = v!),
                                 visualDensity: VisualDensity.compact,
                               ),
                               const Text(
@@ -138,7 +140,10 @@ class _ProfitLossReportContentState
                               for (var i = 0; i < items.length; i++)
                                 ReportAlignedRowStrip(
                                   index: i,
-                                  child: _ProfitLossRow(item: items[i], index: i),
+                                  child: _ProfitLossRow(
+                                    item: items[i],
+                                    index: i,
+                                  ),
                                 ),
                             ],
                           ),

@@ -5,7 +5,8 @@ import 'package:billing_baba/features/reports/application/phase1_report_provider
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
@@ -54,7 +55,9 @@ class _PartyStatementReportContentState
     final partyId = ref.watch(reportFiltersProvider.select((s) => s.partyId));
     final parties = ref.watch(partiesListProvider);
     final partyListAsync = ref.watch(partyListProvider);
-    final selectedParty = parties.where((party) => party.id == partyId).firstOrNull;
+    final selectedParty = parties
+        .where((party) => party.id == partyId)
+        .firstOrNull;
     final partyNames = parties.map((party) => party.name).toList();
     final statementAsync = ref.watch(partyStatementReportProvider);
 
@@ -127,8 +130,9 @@ class _PartyStatementReportContentState
                       selected: selectedParty?.name ?? partyNames.first,
                       showSearchField: true,
                       onSelected: (name) {
-                        final party =
-                            parties.where((p) => p.name == name).firstOrNull;
+                        final party = parties
+                            .where((p) => p.name == name)
+                            .firstOrNull;
                         if (party != null) {
                           ref
                               .read(reportFiltersProvider.notifier)
@@ -283,7 +287,7 @@ class _PartyStatementReportContentState
   }
 }
 
-class _PartyStatementTable extends StatelessWidget {
+class _PartyStatementTable extends ConsumerWidget {
   const _PartyStatementTable({
     required this.entries,
     required this.viewMode,
@@ -295,9 +299,12 @@ class _PartyStatementTable extends StatelessWidget {
   bool get _isAccounting => viewMode == 'Accounting';
 
   @override
-  Widget build(BuildContext context) {
-    return ReportSyncScrollTable(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ReportFilterableSyncTable<ReportPartyStatementEntry>(
+      reportScope: partyStatementReportScope,
       minWidth: _isAccounting ? 640 : 520,
+      columns: partyStatementColumns(accountingView: _isAccounting),
+      rows: entries,
       emptyState: const Center(
         child: Text(
           'No statement entries for this party.',
@@ -307,106 +314,6 @@ class _PartyStatementTable extends StatelessWidget {
           ),
         ),
       ),
-      headerChildren: _isAccounting
-          ? const [
-              ReportAlignedHeaderCell(label: 'DATE', width: 100),
-              ReportAlignedHeaderCell(label: 'TYPE', width: 100),
-              ReportAlignedHeaderCell(label: 'REF NO.', width: 110),
-              ReportAlignedHeaderCell(
-                label: 'DEBIT',
-                width: 100,
-                alignment: Alignment.centerRight,
-              ),
-              ReportAlignedHeaderCell(
-                label: 'CREDIT',
-                width: 100,
-                alignment: Alignment.centerRight,
-              ),
-              Expanded(
-                child: ReportAlignedHeaderCell(
-                  label: 'BALANCE',
-                  alignment: Alignment.centerRight,
-                ),
-              ),
-            ]
-          : const [
-              ReportAlignedHeaderCell(label: 'DATE', width: 100),
-              ReportAlignedHeaderCell(label: 'TYPE', width: 100),
-              ReportAlignedHeaderCell(label: 'REF NO.', width: 110),
-              Expanded(child: ReportAlignedHeaderCell(label: 'TOTAL')),
-              ReportAlignedHeaderCell(
-                label: 'BALANCE',
-                width: 100,
-                alignment: Alignment.centerRight,
-              ),
-            ],
-      rows: [
-        for (var i = 0; i < entries.length; i++)
-          ReportAlignedRowStrip(
-            index: i,
-            child: ReportAlignedDataRow(
-              cells: _isAccounting
-                  ? [
-                      ReportAlignedCell.fixed(
-                        100,
-                        child: Text(formatReportDate(entries[i].date)),
-                      ),
-                      ReportAlignedCell.fixed(
-                        100,
-                        child: Text(entries[i].type),
-                      ),
-                      ReportAlignedCell.fixed(
-                        110,
-                        child: Text(entries[i].refNo),
-                      ),
-                      ReportAlignedCell.fixed(
-                        100,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          entries[i].debit > 0
-                              ? formatReportCurrency(entries[i].debit)
-                              : '',
-                        ),
-                      ),
-                      ReportAlignedCell.fixed(
-                        100,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          entries[i].credit > 0
-                              ? formatReportCurrency(entries[i].credit)
-                              : '',
-                        ),
-                      ),
-                      ReportAlignedCell.flex(
-                        alignment: Alignment.centerRight,
-                        child: Text(formatReportCurrency(entries[i].balance)),
-                      ),
-                    ]
-                  : [
-                      ReportAlignedCell.fixed(
-                        100,
-                        child: Text(formatReportDate(entries[i].date)),
-                      ),
-                      ReportAlignedCell.fixed(
-                        100,
-                        child: Text(entries[i].type),
-                      ),
-                      ReportAlignedCell.fixed(
-                        110,
-                        child: Text(entries[i].refNo),
-                      ),
-                      ReportAlignedCell.flex(
-                        child: Text(formatReportCurrency(entries[i].total)),
-                      ),
-                      ReportAlignedCell.fixed(
-                        100,
-                        alignment: Alignment.centerRight,
-                        child: Text(formatReportCurrency(entries[i].balance)),
-                      ),
-                    ],
-            ),
-          ),
-      ],
     );
   }
 }
