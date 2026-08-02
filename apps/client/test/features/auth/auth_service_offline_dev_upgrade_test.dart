@@ -112,63 +112,72 @@ void main() {
     service = AuthService(repository: repository, storage: storage);
   });
 
-  test('upgradeOfflineDevSessionIfApiAvailable replaces fake credentials', () async {
-    await storage.writeSecure(
-      StorageKeys.accessToken,
-      AuthService.devAccessToken,
-    );
-    await storage.writeSecure(
-      StorageKeys.refreshToken,
-      AuthService.devRefreshToken,
-    );
+  test(
+    'upgradeOfflineDevSessionIfApiAvailable replaces fake credentials',
+    () async {
+      await storage.writeSecure(
+        StorageKeys.accessToken,
+        AuthService.devAccessToken,
+      );
+      await storage.writeSecure(
+        StorageKeys.refreshToken,
+        AuthService.devRefreshToken,
+      );
 
-    final upgraded = await service.upgradeOfflineDevSessionIfApiAvailable();
+      final upgraded = await service.upgradeOfflineDevSessionIfApiAvailable();
 
-    expect(upgraded, isNotNull);
-    expect(upgraded!.accessToken, 'real-api-access-token');
-    expect(repository.devLoginCalls, 1);
-    expect(
-      await storage.readSecure(StorageKeys.accessToken),
-      'real-api-access-token',
-    );
-  });
+      expect(upgraded, isNotNull);
+      expect(upgraded!.accessToken, 'real-api-access-token');
+      expect(repository.devLoginCalls, 1);
+      expect(
+        await storage.readSecure(StorageKeys.accessToken),
+        'real-api-access-token',
+      );
+    },
+  );
 
-  test('loadStoredSession upgrades offline dev session when API is healthy', () async {
-    await storage.writeSecure(
-      StorageKeys.accessToken,
-      AuthService.devAccessToken,
-    );
-    await storage.writeSecure(
-      StorageKeys.refreshToken,
-      AuthService.devRefreshToken,
-    );
+  test(
+    'loadStoredSession upgrades offline dev session when API is healthy',
+    () async {
+      await storage.writeSecure(
+        StorageKeys.accessToken,
+        AuthService.devAccessToken,
+      );
+      await storage.writeSecure(
+        StorageKeys.refreshToken,
+        AuthService.devRefreshToken,
+      );
 
-    final session = await service.loadStoredSession();
+      final session = await service.loadStoredSession();
 
-    expect(session, isNotNull);
-    expect(session!.accessToken, 'real-api-access-token');
-    expect(session.user.name, 'Rahul Sharma');
-    expect(repository.devLoginCalls, 1);
-  });
+      expect(session, isNotNull);
+      expect(session!.accessToken, 'real-api-access-token');
+      expect(session.user.name, 'Rahul Sharma');
+      expect(repository.devLoginCalls, 1);
+    },
+  );
 
-  test('loadStoredSession keeps offline dev session when API is unreachable', () async {
-    repository = _FakeAuthRepository(healthResult: false);
-    service = AuthService(repository: repository, storage: storage);
+  test(
+    'loadStoredSession keeps offline dev session when API is unreachable',
+    () async {
+      repository = _FakeAuthRepository(healthResult: false);
+      service = AuthService(repository: repository, storage: storage);
 
-    await storage.writeSecure(
-      StorageKeys.accessToken,
-      AuthService.devAccessToken,
-    );
-    await storage.writeSecure(
-      StorageKeys.refreshToken,
-      AuthService.devRefreshToken,
-    );
+      await storage.writeSecure(
+        StorageKeys.accessToken,
+        AuthService.devAccessToken,
+      );
+      await storage.writeSecure(
+        StorageKeys.refreshToken,
+        AuthService.devRefreshToken,
+      );
 
-    final session = await service.loadStoredSession();
+      final session = await service.loadStoredSession();
 
-    expect(session, isNotNull);
-    expect(session!.accessToken, AuthService.devAccessToken);
-    expect(session.user.name, 'Developer');
-    expect(repository.devLoginCalls, 0);
-  });
+      expect(session, isNotNull);
+      expect(session!.accessToken, AuthService.devAccessToken);
+      expect(session.user.name, 'Developer');
+      expect(repository.devLoginCalls, 0);
+    },
+  );
 }

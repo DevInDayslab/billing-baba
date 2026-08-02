@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
@@ -6,7 +7,11 @@ import 'package:billing_baba/features/business/application/commerce_settings_pro
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
+import 'package:billing_baba/features/collaboration/application/company_access_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
+import 'package:billing_baba/features/collaboration/application/devices_provider.dart';
+import 'package:billing_baba/features/collaboration/application/invitations_provider.dart';
+import 'package:billing_baba/features/collaboration/application/members_provider.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/crm/application/contacts_provider.dart';
@@ -14,8 +19,13 @@ import 'package:billing_baba/features/crm/application/deals_provider.dart';
 import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
+import 'package:billing_baba/features/inventory/application/barcode_import_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
+import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
@@ -28,19 +38,23 @@ import 'package:billing_baba/features/pricing/application/local_item_tier_prices
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_documents_list_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_fa_provider.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_refresh_provider.dart';
 import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
 import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/application/job_work_orders_provider.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/settings/application/print_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/tax_rate_providers.dart';
 import 'package:billing_baba/features/settings/application/transaction_message_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/whatsapp_settings_provider.dart';
 import 'package:billing_baba/features/subscription/application/current_subscription_provider.dart';
@@ -50,7 +64,9 @@ import 'package:billing_baba/features/subscription/application/subscription_plan
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Non-null while a business open/switch initialization is in progress.
 final businessSessionLoadingProvider =
@@ -121,6 +137,21 @@ Future<void> switchToBusinessSelection(
   }
 }
 
+/// Mobile entry point for company switching — unscopes JWT before showing picker.
+Future<void> switchCompanyFromMobile(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  await switchToBusinessSelection(
+    ref,
+    navigateToBusinessList: () async {
+      if (context.mounted) {
+        context.go(AppRoutes.businessList);
+      }
+    },
+  );
+}
+
 /// Invalidates providers that cache or display business-scoped data.
 ///
 /// Uses [ProviderContainer.invalidate] (not [Ref.invalidate]) so callers like
@@ -185,6 +216,19 @@ void invalidateAllBusinessScopedProvidersOn(
     ..invalidate(posSalesListProvider)
     ..invalidate(dashboardProvider)
     ..invalidate(inventoryItemsProvider)
+    ..invalidate(inventoryCategoriesProvider)
+    ..invalidate(inventoryGodownsProvider)
+    ..invalidate(inventoryUnitsProvider)
+    ..invalidate(itemSettingsProvider)
+    ..invalidate(barcodeImportProvider)
+    ..invalidate(taxRatesProvider)
+    ..invalidate(taxRateMasterRepositoryProvider)
+    ..invalidate(saleInvoiceSettingsProvider)
+    ..invalidate(membersProvider)
+    ..invalidate(devicesProvider)
+    ..invalidate(invitationsProvider)
+    ..invalidate(companyAccessProvider)
+    ..invalidate(reportFiltersProvider)
     ..invalidate(currentSubscriptionStateProvider)
     ..invalidate(subscriptionPlansProvider)
     ..invalidate(purchaseHistoryStateProvider)
@@ -219,8 +263,12 @@ void invalidateAllBusinessScopedProvidersOn(
     ..invalidate(expenseCategoriesProvider)
     ..invalidate(expenseTransactionsProvider)
     ..invalidate(purchaseFaProvider)
-    ..invalidate(jobWorkOrdersListProvider);
+    ..invalidate(jobWorkOrdersListProvider)
+    ..invalidate(purchaseDocumentsListProvider(purchaseBillListScope()))
+    ..invalidate(purchaseDocumentsListProvider(purchaseOrderListScope()))
+    ..invalidate(purchaseDocumentsListProvider(purchaseReturnListScope()));
 
+  container.read(reportFiltersProvider.notifier).resetForReportSwitch();
   container.read(reportDataEpochProvider.notifier).bump();
 }
 

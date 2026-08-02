@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
@@ -90,6 +91,49 @@ class _MobileBusinessListPageState
     context.go(AppRoutes.home);
   }
 
+  Future<void> _acceptInvite(CompanyListEntry entry) async {
+    final invitationId = entry.invitationId;
+    if (invitationId == null) return;
+    try {
+      final sessionService = await ref.read(
+        companySessionServiceProvider.future,
+      );
+      final accepted = await sessionService.acceptInvite(invitationId);
+      if (!mounted) return;
+      ref.read(mobileBusinessSelectionProvider.notifier).select(accepted.id);
+      ref.invalidate(companyDirectoryProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Joined ${accepted.name}')),
+      );
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
+      );
+    }
+  }
+
+  Future<void> _rejectInvite(CompanyListEntry entry) async {
+    final invitationId = entry.invitationId;
+    if (invitationId == null) return;
+    try {
+      final sessionService = await ref.read(
+        companySessionServiceProvider.future,
+      );
+      await sessionService.rejectInvite(invitationId);
+      if (!mounted) return;
+      ref.invalidate(companyDirectoryProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invitation rejected')),
+      );
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final directoryAsync = ref.watch(companyDirectoryProvider);
@@ -168,6 +212,12 @@ class _MobileBusinessListPageState
                                     mobileBusinessSelectionProvider.notifier,
                                   )
                                   .select(entry.id),
+                              onAccept: entry.relationship.isPending
+                                  ? () => _acceptInvite(entry)
+                                  : null,
+                              onReject: entry.relationship.isPending
+                                  ? () => _rejectInvite(entry)
+                                  : null,
                             ),
                           ),
                         ),
@@ -191,6 +241,12 @@ class _MobileBusinessListPageState
                                     mobileBusinessSelectionProvider.notifier,
                                   )
                                   .select(entry.id),
+                              onAccept: entry.relationship.isPending
+                                  ? () => _acceptInvite(entry)
+                                  : null,
+                              onReject: entry.relationship.isPending
+                                  ? () => _rejectInvite(entry)
+                                  : null,
                             ),
                           ),
                         ),

@@ -1,6 +1,5 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/http_logging_interceptor.dart';
-import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 
@@ -10,11 +9,13 @@ typedef AccessTokenFallback = Future<String?> Function();
 class AuthInterceptor extends Interceptor {
   AuthInterceptor({
     required this._storage,
+    required this._client,
     this._onRefreshToken,
     this._accessTokenFallback,
   });
 
   final StorageService _storage;
+  final Dio _client;
   final TokenRefreshCallback? _onRefreshToken;
   final AccessTokenFallback? _accessTokenFallback;
 
@@ -57,14 +58,7 @@ class AuthInterceptor extends Interceptor {
       options.extra['retried'] = true;
       HttpLoggingInterceptor.logRetry(options, reason: '401 token refresh');
 
-      final dio = Dio(
-        BaseOptions(
-          baseUrl: options.baseUrl,
-          connectTimeout: options.connectTimeout,
-          receiveTimeout: options.receiveTimeout,
-        ),
-      )..httpClientAdapter = createBypassSslHttpClientAdapter();
-      final response = await dio.fetch<dynamic>(options);
+      final response = await _client.fetch<dynamic>(options);
       return handler.resolve(response);
     } on Object catch (_) {
       return handler.next(err);

@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
-import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
+import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
@@ -48,6 +49,15 @@ class CompanySessionService {
       throw const CompanySessionOpenBlocked('This invitation has expired.');
     }
 
+    SyncPauseGate.instance.pause();
+    try {
+      return await _openCompanyInternal(entry);
+    } finally {
+      SyncPauseGate.instance.resume();
+    }
+  }
+
+  Future<CompanySession> _openCompanyInternal(CompanyListEntry entry) async {
     final auth = _ref.read(authProvider);
     final user = auth.session?.user;
     final userId = user?.id ?? 'local-user';
@@ -77,14 +87,12 @@ class CompanySessionService {
         rethrow;
       }
     } else {
+      await _businessService.rememberLastOpened(entry.id);
+      seedBusinessProfilePreview(_ref, entry: entry);
       session = await _collaborationRepository.switchCompany(
         companyId: entry.id,
         userId: userId,
         userName: userName,
-      );
-      invalidateAllBusinessScopedProviders(
-        _ref,
-        includeBusinessList: true,
       );
       _applySession(session);
     }
@@ -149,10 +157,15 @@ class CompanySessionService {
         'scopeOwnedApiCompany',
         businessId,
       );
+      invalidateAllBusinessScopedProviders(
+        _ref,
+        includeBusinessService: false,
+        includeBusinessProfile: false,
+      );
       seedBusinessProfilePreview(_ref, entry: entry);
       BusinessOpenDebugLog.step(
         'scopeOwnedApiCompany',
-        'offline — seeded preview, skip JWT refresh',
+        'offline — invalidated providers, seeded preview',
       );
       return;
     }

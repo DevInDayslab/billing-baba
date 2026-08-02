@@ -27,6 +27,7 @@ class ApiClient {
         if (storage != null)
           AuthInterceptor(
             storage: storage,
+            client: _dio,
             onRefreshToken: onRefreshToken,
             accessTokenFallback: accessTokenFallback,
           ),

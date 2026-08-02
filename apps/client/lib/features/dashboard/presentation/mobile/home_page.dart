@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/sync/application/sync_ui_state_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -244,7 +245,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
             children: [
               MobileHomeHeader(
                 onAvatarTap: () => context.push(AppRoutes.editProfile),
-                onBusinessTap: () => context.push(AppRoutes.businessList),
+                onBusinessTap: () => switchCompanyFromMobile(context, ref),
                 onSettingsTap: () => context.push(AppRoutes.settings),
                 onNotificationTap: () => context.push(AppRoutes.notifications),
                 onSyncTap: () {

@@ -7,7 +7,7 @@ import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/auth_service.dart';
-import 'package:billing_baba/features/business/data/business_cache.dart';
+import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -136,27 +136,88 @@ void main() {
     },
   );
 
-  test('seedBusinessListCache writes session businesses', () async {
-    final token = _jwt({
-      'exp': 2000000000,
-      'account_id': 'acct-uuid',
-    });
-    final session = AuthSession(
-      accessToken: token,
-      refreshToken: 'refresh',
-      expiresIn: 0,
-      user: const AuthUser(id: 'acct-uuid', phone: '91'),
-      businesses: const [
-        BusinessSummary(id: 'biz-1', name: 'Acme', role: 'owner'),
-      ],
-    );
+  test(
+    'loadStoredSession offline hydrates businesses from cache',
+    () async {
+      final token = _jwt({
+        'exp': 2000000000,
+        'account_id': 'acct-uuid',
+        'user_id': 'user-uuid',
+        'phone': '919876543210',
+        'role': 'owner',
+        'business_id': 'biz-1',
+      });
+      await storage.writeSecure(StorageKeys.accessToken, token);
+      await storage.writeSecure(StorageKeys.refreshToken, 'refresh');
+      await storage.write(StorageKeys.accountPhone, '919876543210');
 
-    await service.seedBusinessListCache(session);
+      final session = AuthSession(
+        accessToken: token,
+        refreshToken: 'refresh',
+        expiresIn: 0,
+        user: const AuthUser(
+          id: 'acct-uuid',
+          phone: '919876543210',
+          role: 'owner',
+        ),
+        businesses: const [
+          BusinessSummary(id: 'biz-1', name: 'Acme', role: 'owner'),
+        ],
+      );
+      await service.seedBusinessListCache(session);
 
-    final cache = BusinessCache(storage);
-    final cached = await cache.readBusinesses();
-    expect(cached, hasLength(1));
-    expect(cached.first['id'], 'biz-1');
-    expect(cache.readCachedBusinessesAccountId(), 'acct-uuid');
+      repository.meError = DioException(
+        requestOptions: RequestOptions(path: '/auth/me'),
+        type: DioExceptionType.connectionError,
+      );
+
+      final restored = await service.loadStoredSession();
+
+      expect(restored, isNotNull);
+      expect(restored!.businesses, hasLength(1));
+      expect(restored.businesses.first.id, 'biz-1');
+    },
+  );
+
+  test(
+    'reconstructSessionFromStoredTokens hydrates cached businesses',
+    () async {
+      final token = _jwt({
+        'exp': 2000000000,
+        'account_id': 'acct-uuid',
+        'user_id': 'user-uuid',
+        'phone': '919876543210',
+        'role': 'owner',
+      });
+      await storage.writeSecure(StorageKeys.accessToken, token);
+      await storage.writeSecure(StorageKeys.refreshToken, 'refresh');
+
+      final session = AuthSession(
+        accessToken: token,
+        refreshToken: 'refresh',
+        expiresIn: 0,
+        user: const AuthUser(
+          id: 'acct-uuid',
+          phone: '919876543210',
+          role: 'owner',
+        ),
+        businesses: const [
+          BusinessSummary(id: 'biz-1', name: 'Acme', role: 'owner'),
+        ],
+      );
+      await service.seedBusinessListCache(session);
+
+      final restored = await service.reconstructSessionFromStoredTokens();
+
+      expect(restored, isNotNull);
+      expect(restored!.businesses, hasLength(1));
+      expect(restored.businesses.first.name, 'Acme');
+    },
+  );
+
+  test('isMockOtpToken is separate from offline dev token', () {
+    expect(AuthService.isOfflineDevToken(OtpService.mockAccessToken), isFalse);
+    expect(AuthService.isMockOtpToken(OtpService.mockAccessToken), isTrue);
+    expect(AuthService.isOfflineDevToken(AuthService.devAccessToken), isTrue);
   });
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
@@ -253,7 +254,7 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: MobileAppBar(
-        onBusinessTap: () => context.push(AppRoutes.businessList),
+        onBusinessTap: () => switchCompanyFromMobile(context, ref),
         onNotificationTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Notifications coming soon')),

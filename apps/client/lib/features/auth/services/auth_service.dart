@@ -42,6 +42,9 @@ class AuthService {
   static bool isOfflineDevSession(AuthSession session) =>
       isOfflineDevToken(session.accessToken);
 
+  static bool isMockOtpToken(String accessToken) =>
+      accessToken == OtpService.mockAccessToken;
+
   static BusinessProfileModel offlineDevBusinessProfile(AuthSession session) {
     final business = session.businesses.first;
     return BusinessProfileModel(
@@ -53,8 +56,7 @@ class AuthService {
   }
 
   static bool isOfflineDevToken(String accessToken) =>
-      accessToken == devAccessToken ||
-      accessToken == OtpService.mockAccessToken;
+      accessToken == devAccessToken;
 
   static AuthSession offlineDevSession({String phone = '919999999999'}) {
     return AuthSession(
@@ -81,7 +83,7 @@ class AuthService {
   /// backend is reachable (e.g. API was down at Developer Login, now running).
   Future<AuthSession?> upgradeOfflineDevSessionIfApiAvailable() async {
     final accessToken = await _storage.readSecure(StorageKeys.accessToken);
-    if (!isOfflineDevToken(accessToken ?? '')) {
+    if (accessToken == null || !isOfflineDevToken(accessToken)) {
       return null;
     }
 
@@ -117,7 +119,12 @@ class AuthService {
       return null;
     }
 
-    // Offline developer / mock sessions — upgrade when API is back, else local only.
+    if (isMockOtpToken(accessToken)) {
+      await clearSession();
+      return null;
+    }
+
+    // Offline developer session — upgrade when API is back, else local only.
     if (isOfflineDevToken(accessToken)) {
       final upgraded = await upgradeOfflineDevSessionIfApiAvailable();
       if (upgraded != null) {
@@ -177,20 +184,10 @@ class AuthService {
         );
       }
       if (NetworkExceptionClassifier.isConnectivityError(e)) {
-        final storedPhone = _storage.read(StorageKeys.accountPhone) ?? '';
-        final phone = JwtUtils.phone(accessToken) ?? storedPhone;
-        // API JWTs use account_id / user_id — never `sub`.
-        final userId = JwtUtils.sessionUserId(accessToken) ?? 'offline';
-        return AuthSession(
+        return reconstructSessionFromStoredTokens(
           accessToken: accessToken,
           refreshToken: refreshToken,
-          expiresIn: 0,
-          user: AuthUser(
-            id: userId,
-            phone: phone,
-            role: JwtUtils.role(accessToken),
-          ),
-          businesses: const [],
+          selectedBusinessId: selectedId,
         );
       }
       await clearSession();
@@ -210,7 +207,11 @@ class AuthService {
     }
 
     final accessToken = await _storage.readSecure(StorageKeys.accessToken);
-    if (isOfflineDevToken(accessToken ?? '')) {
+    if (accessToken != null && isMockOtpToken(accessToken)) {
+      await clearSession();
+      return null;
+    }
+    if (accessToken != null && isOfflineDevToken(accessToken)) {
       final upgraded = await upgradeOfflineDevSessionIfApiAvailable();
       if (upgraded != null) {
         return upgraded;
@@ -218,7 +219,7 @@ class AuthService {
 
       final phone = _storage.read(StorageKeys.accountPhone) ?? '919999999999';
       return offlineDevSession(phone: phone).copyWith(
-        accessToken: accessToken!,
+        accessToken: accessToken,
         refreshToken: token,
       );
     }
@@ -246,8 +247,11 @@ class AuthService {
         return session;
       } on DioException catch (e) {
         if (NetworkExceptionClassifier.isConnectivityError(e)) {
-          // Keep stored tokens when the backend is unreachable.
-          return null;
+          return reconstructSessionFromStoredTokens(
+            accessToken: accessToken,
+            refreshToken: token,
+            selectedBusinessId: effectiveBusinessId,
+          );
         }
         // Only wipe local credentials on definitive auth failures. Clearing on
         // every Dio error (timeouts, 5xx) left Switch Company with Headers:{}
@@ -451,4 +455,64 @@ class AuthService {
 
   Future<String?> getAccessToken() =>
       _storage.readSecure(StorageKeys.accessToken);
+
+  /// Rebuilds a session from secure storage when the API is unreachable.
+  Future<AuthSession?> reconstructSessionFromStoredTokens({
+    String? accessToken,
+    String? refreshToken,
+    String? selectedBusinessId,
+  }) async {
+    final token =
+        accessToken ?? await _storage.readSecure(StorageKeys.accessToken);
+    final refresh =
+        refreshToken ?? await _storage.readSecure(StorageKeys.refreshToken);
+    if (token == null || refresh == null || token.isEmpty || refresh.isEmpty) {
+      return null;
+    }
+
+    if (isMockOtpToken(token)) {
+      return null;
+    }
+
+    if (isOfflineDevToken(token)) {
+      final phone = _storage.read(StorageKeys.accountPhone) ?? '919999999999';
+      return offlineDevSession(phone: phone).copyWith(
+        accessToken: token,
+        refreshToken: refresh,
+      );
+    }
+
+    final storedPhone = _storage.read(StorageKeys.accountPhone) ?? '';
+    final phone = JwtUtils.phone(token) ?? storedPhone;
+    final userId = JwtUtils.sessionUserId(token) ?? 'offline';
+    final businesses = await _loadCachedBusinessSummaries();
+
+    return AuthSession(
+      accessToken: token,
+      refreshToken: refresh,
+      expiresIn: 0,
+      user: AuthUser(
+        id: userId,
+        phone: phone,
+        role: JwtUtils.role(token),
+      ),
+      businesses: businesses,
+    );
+  }
+
+  Future<List<BusinessSummary>> _loadCachedBusinessSummaries() async {
+    final cache = BusinessCache(_storage);
+    final cached = await cache.readBusinesses();
+    return cached
+        .map(
+          (business) => BusinessSummary(
+            id: business['id']?.toString() ?? '',
+            name: business['name']?.toString() ?? '',
+            role: business['role']?.toString() ?? 'owner',
+            gstin: business['gstin']?.toString(),
+          ),
+        )
+        .where((business) => business.id.isNotEmpty)
+        .toList();
+  }
 }

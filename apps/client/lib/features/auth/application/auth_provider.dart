@@ -52,18 +52,30 @@ typedef BusinessProfileAuthScope = (
   AuthStatus status,
   String? userId,
   String? userRole,
+  String? businessId,
 );
 
 BusinessProfileAuthScope businessProfileAuthScope(AuthState auth) {
   final session = auth.session;
-  return (auth.status, session?.user.id, session?.user.role);
+  var businessId = session == null
+      ? null
+      : JwtUtils.businessId(session.accessToken);
+  if ((businessId == null || businessId.isEmpty) &&
+      session != null &&
+      session.user.role != null &&
+      session.businesses.length == 1) {
+    businessId = session.businesses.first.id;
+  }
+  return (auth.status, session?.user.id, session?.user.role, businessId);
 }
 
 bool businessProfileHasScope(BusinessProfileAuthScope scope) {
-  final (status, _, userRole) = scope;
+  final (status, _, userRole, businessId) = scope;
   return status == AuthStatus.authenticated &&
       userRole != null &&
-      userRole.isNotEmpty;
+      userRole.isNotEmpty &&
+      businessId != null &&
+      businessId.isNotEmpty;
 }
 
 @immutable
@@ -321,20 +333,21 @@ class Auth extends _$Auth {
     );
   }
 
-  void _completeOtpLogin(AuthSession session) {
+  Future<void> _completeOtpLoginAsync(AuthSession session) async {
     _verifyGeneration++;
     _verifyInFlight = false;
     _backendLoginInFlight = false;
     _resendInFlight = false;
     AuthFlowLogger.reset();
-    // Drop any leftover company session from a prior login so GoRouter can
-    // navigate off /login when status is needsBusinessSelection.
     ref.read(companySessionProvider.notifier).clear();
     final nextStatus = _statusForSession(session);
     if (nextStatus == AuthStatus.needsBusinessSelection ||
         nextStatus == AuthStatus.needsBusinessCreation) {
       ref.read(companySessionProvider.notifier).clear();
     }
+
+    await _bootstrapAuthenticatedSession(session);
+
     _setAuthStatus(nextStatus);
     state = state.copyWith(
       otpPhase: OtpPhase.idle,
@@ -346,6 +359,43 @@ class Auth extends _$Auth {
       clearMsg91Token: true,
       backendLoginCompleted: true,
     );
+  }
+
+  Future<void> _bootstrapAuthenticatedSession(AuthSession session) async {
+    if (AuthService.isOfflineDevSession(session)) {
+      try {
+        await _bootstrapOfflineDevSession(session);
+      } on Object catch (e, st) {
+        LoggingService.instance.error(
+          'Offline dev session bootstrap failed',
+          e,
+          st,
+        );
+      }
+      return;
+    }
+
+    final nextStatus = _statusForSession(session);
+    if (nextStatus != AuthStatus.authenticated ||
+        session.businesses.length != 1) {
+      return;
+    }
+
+    final businessId = session.businesses.first.id;
+    ref.read(businessSessionLoadingProvider.notifier).start(businessId);
+    try {
+      await ref.read(businessListProvider.notifier).openBusiness(businessId);
+    } on Object catch (e, st) {
+      LoggingService.instance.error(
+        'Business bootstrap failed after authentication',
+        e,
+        st,
+      );
+    } finally {
+      if (ref.mounted) {
+        ref.read(businessSessionLoadingProvider.notifier).clear();
+      }
+    }
   }
 
   Future<void> _completeMockOtpLogin() async {
@@ -374,11 +424,15 @@ class Auth extends _$Auth {
     try {
       final service = await _service();
       await service.persistSession(session);
-    } on Object catch (_) {
-      // Best-effort until backend login is wired.
+    } on Object catch (error, stackTrace) {
+      LoggingService.instance.error(
+        'Mock OTP session persist failed',
+        error,
+        stackTrace,
+      );
     }
 
-    _completeOtpLogin(session);
+    await _completeOtpLoginAsync(session);
   }
 
   void _resetOtpFlow() {
@@ -476,7 +530,7 @@ class Auth extends _$Auth {
       if (generation != _verifyGeneration) return;
 
       AuthDebugLogger.log('_attemptBackendLogin: login succeeded');
-      _completeOtpLogin(session);
+      await _completeOtpLoginAsync(session);
     } on DioException catch (e, st) {
       if (generation != _verifyGeneration || state.backendLoginCompleted) {
         return;
@@ -522,28 +576,55 @@ class Auth extends _$Auth {
     _setAuthStatus(AuthStatus.initializing);
     state = state.copyWith(clearError: true, backendLoginCompleted: false);
 
-    // Keep branded splash visible for the full animation on all platforms.
     final splashWait = Future<void>.delayed(_splashMinDuration);
 
     try {
-      final service = await _service().timeout(const Duration(seconds: 8));
-      final sessionFuture = service.loadStoredSession().timeout(
-        const Duration(seconds: 8),
-      );
-      final results = await Future.wait<Object?>([
-        splashWait,
-        sessionFuture,
-      ]);
-      final session = results[1] as AuthSession?;
+      AuthSession? session;
+      try {
+        final service = await _service().timeout(const Duration(seconds: 8));
+        session = await service.loadStoredSession().timeout(
+          const Duration(seconds: 8),
+        );
+      } on TimeoutException {
+        try {
+          final service = await _service();
+          session = await service.loadStoredSession();
+        } on Object catch (e, st) {
+          LoggingService.instance.error(
+            'tryAutoLogin retry after timeout failed',
+            e,
+            st,
+          );
+        }
+      }
+
+      await splashWait;
+
       if (session == null) {
+        final service = await _service();
+        final hasToken = await service.getAccessToken();
+        if (hasToken != null && hasToken.isNotEmpty) {
+          session = await service.reconstructSessionFromStoredTokens();
+        }
+      }
+
+      if (session == null) {
+        final service = await _service();
+        final hasToken = await service.getAccessToken();
         _setAuthStatus(AuthStatus.unauthenticated);
         state = state.copyWith(
-          clearSession: true,
+          clearSession: hasToken == null || hasToken.isEmpty,
           otpPhase: OtpPhase.idle,
           backendLoginCompleted: false,
+          error: hasToken != null && hasToken.isNotEmpty
+              ? 'Could not restore your session. Check your connection and try again.'
+              : null,
+          clearError: hasToken == null || hasToken.isEmpty,
         );
         return;
       }
+
+      await _bootstrapAuthenticatedSession(session);
 
       final nextStatus = _statusForSession(session);
       _setAuthStatus(nextStatus);
@@ -553,45 +634,28 @@ class Auth extends _$Auth {
         otpPhase: OtpPhase.idle,
         backendLoginCompleted: true,
       );
-      if (AuthService.isOfflineDevSession(session)) {
-        // Bootstrap must not wipe a restored session — failures are best-effort.
-        try {
-          await _bootstrapOfflineDevSession(session);
-        } on Object catch (e, st) {
-          LoggingService.instance.error(
-            'Offline dev session bootstrap failed during auto-login',
-            e,
-            st,
-          );
-        }
-      } else if (nextStatus == AuthStatus.authenticated &&
-          session.businesses.length == 1) {
-        try {
-          await ref
-              .read(businessListProvider.notifier)
-              .openBusiness(session.businesses.first.id);
-        } on Object catch (e, st) {
-          LoggingService.instance.error(
-            'Business bootstrap failed during auto-login',
-            e,
-            st,
-          );
-        }
-      }
     } on TimeoutException {
       await splashWait;
+      final service = await _service();
+      final hasToken = await service.getAccessToken();
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
-        clearSession: true,
+        clearSession: hasToken == null || hasToken.isEmpty,
         otpPhase: OtpPhase.idle,
         backendLoginCompleted: false,
+        error: hasToken != null && hasToken.isNotEmpty
+            ? 'Could not restore your session. Check your connection and try again.'
+            : null,
+        clearError: hasToken == null || hasToken.isEmpty,
       );
     } on Object catch (e, st) {
       await splashWait;
       LoggingService.instance.error('tryAutoLogin failed', e, st);
+      final service = await _service();
+      final hasToken = await service.getAccessToken();
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
-        clearSession: true,
+        clearSession: hasToken == null || hasToken.isEmpty,
         otpPhase: OtpPhase.idle,
         backendLoginCompleted: false,
         error: _messageFromError(e),
@@ -757,6 +821,17 @@ class Auth extends _$Auth {
       }
 
       if (_otp.isMockMode && msg91Token == OtpService.mockAccessToken) {
+        if (!kDebugMode || !AppConfig.enableDevLogin) {
+          AuthDebugLogger.log(
+            'verifyOtp: mock mode blocked — MSG91 not configured',
+          );
+          _setOtpPhase(OtpPhase.otpSent);
+          state = state.copyWith(
+            error:
+                'OTP verification is not available. Configure MSG91 credentials.',
+          );
+          return;
+        }
         AuthDebugLogger.log(
           'verifyOtp: mock mode — completing local login without backend POST',
         );
@@ -840,7 +915,9 @@ class Auth extends _$Auth {
     }
 
     if (_devLoginInFlight) {
-      LoggingService.instance.warn('Developer Login ignored: already in flight');
+      LoggingService.instance.warn(
+        'Developer Login ignored: already in flight',
+      );
       return;
     }
     if (state.status == AuthStatus.authenticated ||
@@ -853,7 +930,9 @@ class Auth extends _$Auth {
     }
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: API /auth/dev-login (offline fallback if unreachable)');
+    AuthDebugLogger.log(
+      'devLogin: API /auth/dev-login (offline fallback if unreachable)',
+    );
     state = state.copyWith(clearError: true, backendLoginCompleted: false);
     _setOtpPhase(OtpPhase.backendLogin);
 
@@ -862,25 +941,7 @@ class Auth extends _$Auth {
       final session = await service.devLogin();
       AuthDebugLogger.log('devLogin: login successful');
       LoggingService.instance.info('Developer Login succeeded');
-      _completeOtpLogin(session);
-      try {
-        if (AuthService.isOfflineDevSession(session)) {
-          await _bootstrapOfflineDevSession(session);
-        } else if (session.businesses.length == 1 &&
-            _statusForSession(session) == AuthStatus.authenticated) {
-          // Same path as opening a company after OTP — hydrate profile, masters,
-          // and start sync so mobile/desktop share API data.
-          await ref
-              .read(businessListProvider.notifier)
-              .openBusiness(session.businesses.first.id);
-        }
-      } on Object catch (e, st) {
-        LoggingService.instance.error(
-          'Post-login bootstrap failed after Developer Login',
-          e,
-          st,
-        );
-      }
+      await _completeOtpLoginAsync(session);
     } on Object catch (e, st) {
       AuthDebugLogger.log('devLogin failed: $e');
       LoggingService.instance.error('Developer Login failed', e, st);

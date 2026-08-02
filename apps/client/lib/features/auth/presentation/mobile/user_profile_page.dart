@@ -30,7 +30,11 @@ class MobileUserProfilePage extends ConsumerWidget {
               radius: 40,
               backgroundColor: AppColors.primary.withValues(alpha: 0.12),
               child: Text(
-                (name?.isNotEmpty == true ? name![0] : phone.isNotEmpty ? phone[0] : 'U')
+                (name?.isNotEmpty == true
+                        ? name![0]
+                        : phone.isNotEmpty
+                        ? phone[0]
+                        : 'U')
                     .toUpperCase(),
                 style: AppTypography.inter(
                   fontSize: 28,
@@ -50,7 +54,10 @@ class MobileUserProfilePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               phone,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
             Card(
@@ -59,21 +66,33 @@ class MobileUserProfilePage extends ConsumerWidget {
                   ListTile(
                     title: Text(
                       'Role',
-                      style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+                      style: AppTypography.inter(
+                        fontSize: AppTypography.bodySize,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     trailing: Text(
                       role,
-                      style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+                      style: AppTypography.inter(
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   ListTile(
                     title: Text(
                       'User ID',
-                      style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+                      style: AppTypography.inter(
+                        fontSize: AppTypography.bodySize,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     trailing: Text(
                       user?.id ?? '—',
-                      style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w500),
+                      style: AppTypography.inter(
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],

@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/shared/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 
 /// Selectable business row for the mobile company picker (Vyapar-style).
@@ -11,12 +13,19 @@ class BusinessSelectionTile extends StatelessWidget {
     required this.onTap,
     super.key,
     this.enabled = true,
+    this.onAccept,
+    this.onReject,
   });
 
   final CompanyListEntry entry;
   final bool isSelected;
   final VoidCallback onTap;
   final bool enabled;
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
+
+  bool get _isPendingInvite =>
+      entry.relationship.isPending && !entry.relationship.isExpired;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +35,7 @@ class BusinessSelectionTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: enabled ? onTap : null,
+        onTap: enabled && !_isPendingInvite ? onTap : null,
         borderRadius: AppRadius.lgBorder,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -52,53 +61,84 @@ class BusinessSelectionTile extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              BusinessAvatar(
-                name: entry.name,
-                seed: entry.id,
-                diameter: 48,
-                logoUrl: entry.logoUrl,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: enabled
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+              Row(
+                children: [
+                  BusinessAvatar(
+                    name: entry.name,
+                    seed: entry.id,
+                    diameter: 48,
+                    logoUrl: entry.logoUrl,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: enabled
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        if (subtitle != null) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            subtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        if (entry.isCurrent) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          const _ActiveBadge(label: 'Active'),
+                        ],
+                        if (_isPendingInvite) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          const _ActiveBadge(label: 'Invitation pending'),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (!_isPendingInvite) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    _SelectionIndicator(
+                      isSelected: isSelected,
+                      enabled: enabled,
+                    ),
+                  ],
+                ],
+              ),
+              if (_isPendingInvite) ...[
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onReject,
+                        child: const Text('Reject'),
                       ),
-                    ],
-                    if (entry.isCurrent) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      const _ActiveBadge(label: 'Active'),
-                    ],
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: AppButton(
+                        label: 'Accept',
+                        onPressed: onAccept,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _SelectionIndicator(
-                isSelected: isSelected,
-                enabled: enabled,
-              ),
+              ],
             ],
           ),
         ),
