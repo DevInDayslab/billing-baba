@@ -1,7 +1,9 @@
+import 'package:billing_baba/core/auth/offline_dev_session_policy.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/data/expense_local_data_source.dart';
@@ -31,7 +33,7 @@ Future<ExpenseService> expenseService(Ref ref) async {
     deviceId = null;
   }
   final remote = ExpenseRemoteDataSource(api.dio);
-  final businessIdReader = () =>
+  String businessIdReader() =>
       storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
   return ExpenseService(
     repository: ExpenseRepository(
@@ -44,13 +46,21 @@ Future<ExpenseService> expenseService(Ref ref) async {
         deviceIdReader: () => deviceId,
       ),
     ),
+    storage: storage,
   );
 }
 
 class ExpenseService {
-  ExpenseService({required this._repository});
+  ExpenseService({required this._repository, this._storage});
 
   final ExpenseRepository _repository;
+  final StorageService? _storage;
+
+  Future<bool> _isOfflineDevSession() async {
+    final storage = _storage;
+    if (storage == null) return false;
+    return OfflineDevSessionPolicy.isActive(storage);
+  }
 
   Future<List<ExpenseCategoryModel>> fetchCategories() async {
     try {
@@ -74,6 +84,10 @@ class ExpenseService {
     ExpenseListQuery? query,
   }) async {
     try {
+      if (await _isOfflineDevSession()) {
+        return const [];
+      }
+
       final response = await _repository.listExpenses(
         query ?? const ExpenseListQuery(limit: 100),
       );

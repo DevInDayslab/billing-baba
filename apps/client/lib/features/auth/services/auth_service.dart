@@ -77,6 +77,36 @@ class AuthService {
     );
   }
 
+  /// Replaces mobile-only fake credentials with a real API session when the
+  /// backend is reachable (e.g. API was down at Developer Login, now running).
+  Future<AuthSession?> upgradeOfflineDevSessionIfApiAvailable() async {
+    final accessToken = await _storage.readSecure(StorageKeys.accessToken);
+    if (!isOfflineDevToken(accessToken ?? '')) {
+      return null;
+    }
+
+    try {
+      final healthy = await _repository.checkHealth();
+      if (!healthy) {
+        return null;
+      }
+
+      AuthDebugLogger.log(
+        'upgradeOfflineDevSession: API reachable — replacing local dev credentials',
+      );
+      final session = await _repository.devLogin();
+      await persistSession(session);
+      AuthDebugLogger.backendLoginSuccess();
+      AuthDebugLogger.jwtIssued(session.accessToken);
+      return session;
+    } on DioException catch (error) {
+      if (NetworkExceptionClassifier.isConnectivityError(error)) {
+        return null;
+      }
+      rethrow;
+    }
+  }
+
   Future<AuthSession?> loadStoredSession() async {
     final accessToken = await _storage.readSecure(StorageKeys.accessToken);
     final refreshToken = await _storage.readSecure(StorageKeys.refreshToken);
@@ -87,8 +117,13 @@ class AuthService {
       return null;
     }
 
-    // Offline developer / mock sessions — restore locally, never hit the API.
+    // Offline developer / mock sessions — upgrade when API is back, else local only.
     if (isOfflineDevToken(accessToken)) {
+      final upgraded = await upgradeOfflineDevSessionIfApiAvailable();
+      if (upgraded != null) {
+        return upgraded;
+      }
+
       final phone = _storage.read(StorageKeys.accountPhone) ?? '919999999999';
       return offlineDevSession(phone: phone).copyWith(
         accessToken: accessToken,
@@ -176,6 +211,11 @@ class AuthService {
 
     final accessToken = await _storage.readSecure(StorageKeys.accessToken);
     if (isOfflineDevToken(accessToken ?? '')) {
+      final upgraded = await upgradeOfflineDevSessionIfApiAvailable();
+      if (upgraded != null) {
+        return upgraded;
+      }
+
       final phone = _storage.read(StorageKeys.accountPhone) ?? '919999999999';
       return offlineDevSession(phone: phone).copyWith(
         accessToken: accessToken!,

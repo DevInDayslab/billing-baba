@@ -564,6 +564,19 @@ class Auth extends _$Auth {
             st,
           );
         }
+      } else if (nextStatus == AuthStatus.authenticated &&
+          session.businesses.length == 1) {
+        try {
+          await ref
+              .read(businessListProvider.notifier)
+              .openBusiness(session.businesses.first.id);
+        } on Object catch (e, st) {
+          LoggingService.instance.error(
+            'Business bootstrap failed during auto-login',
+            e,
+            st,
+          );
+        }
       }
     } on TimeoutException {
       await splashWait;

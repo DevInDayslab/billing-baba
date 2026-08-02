@@ -1,5 +1,8 @@
+import 'package:billing_baba/core/auth/offline_dev_session_policy.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
@@ -48,6 +51,7 @@ class CreateAndFinalizeSaleResult {
 @Riverpod(keepAlive: true)
 Future<SalesService> salesService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
+  final storage = await ref.watch(storageServiceProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
   final commandRepo = await ref.watch(
     salesInvoiceCommandRepositoryProvider.future,
@@ -64,6 +68,7 @@ Future<SalesService> salesService(Ref ref) async {
     commandRepository: commandRepo,
     returnCommandRepository: returnCommandRepo,
     syncQueue: ref.watch(syncQueueProvider),
+    storage: storage,
   );
 }
 
@@ -74,6 +79,7 @@ class SalesService {
     this._commandRepository,
     this._returnCommandRepository,
     this._syncQueue,
+    this._storage,
   });
 
   final SalesRepository _repository;
@@ -81,6 +87,13 @@ class SalesService {
   final SalesInvoiceCommandRepository? _commandRepository;
   final SalesReturnCommandRepository? _returnCommandRepository;
   final SyncQueue? _syncQueue;
+  final StorageService? _storage;
+
+  Future<bool> _isOfflineDevSession() async {
+    final storage = _storage;
+    if (storage == null) return false;
+    return OfflineDevSessionPolicy.isActive(storage);
+  }
 
   SalesRepository get repository => _repository;
 
@@ -117,6 +130,22 @@ class SalesService {
     }
 
     try {
+      if (await _isOfflineDevSession()) {
+        if ((isTaxInvoiceQuery || isSalesReturnQuery) && localDocs.isNotEmpty) {
+          return _paginateInvoicesFromLocalDocs(
+            localDocs,
+            query,
+            partyNames: partyNames,
+          );
+        }
+        return PaginatedSaleInvoices(
+          items: const [],
+          currentPage: query.page,
+          totalPages: 1,
+          totalItems: 0,
+        );
+      }
+
       final resolvedPartyNames = partyNames ?? await _partyNameMap();
       final response = await _repository.listDocuments(query);
       final remoteDocs = response.documents;
@@ -167,40 +196,52 @@ class SalesService {
       );
     } on DioException catch (error) {
       if ((isTaxInvoiceQuery || isSalesReturnQuery) && localDocs.isNotEmpty) {
-        final resolvedPartyNames = partyNames ?? await _partyNameMap();
-        final sortedDocs = [...localDocs]
-          ..sort((a, b) {
-            final aDate = DateTimeUtils.parseApiDateTime(a.documentDate);
-            final bDate = DateTimeUtils.parseApiDateTime(b.documentDate);
-            return bDate.compareTo(aDate);
-          });
-        final items = sortedDocs
-            .map(
-              (dto) => SalesDocumentMapper.toInvoiceModel(
-                dto,
-                partyName: dto.partyId != null
-                    ? (resolvedPartyNames[dto.partyId] ?? '')
-                    : '',
-              ),
-            )
-            .toList();
-
-        final total = items.length;
-        final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
-        final start = (query.page - 1) * query.limit;
-        final pageItems = await _enrichInvoiceSyncState(
-          items.skip(start).take(query.limit).toList(),
-        );
-
-        return PaginatedSaleInvoices(
-          items: pageItems,
-          currentPage: query.page,
-          totalPages: totalPages,
-          totalItems: total,
+        return _paginateInvoicesFromLocalDocs(
+          localDocs,
+          query,
+          partyNames: partyNames,
         );
       }
       throw mapSalesError(error);
     }
+  }
+
+  Future<PaginatedSaleInvoices> _paginateInvoicesFromLocalDocs(
+    List<SalesDocumentDto> localDocs,
+    SalesDocumentListQuery query, {
+    Map<String, String>? partyNames,
+  }) async {
+    final resolvedPartyNames = partyNames ?? await _partyNameMap();
+    final sortedDocs = [...localDocs]
+      ..sort((a, b) {
+        final aDate = DateTimeUtils.parseApiDateTime(a.documentDate);
+        final bDate = DateTimeUtils.parseApiDateTime(b.documentDate);
+        return bDate.compareTo(aDate);
+      });
+    final items = sortedDocs
+        .map(
+          (dto) => SalesDocumentMapper.toInvoiceModel(
+            dto,
+            partyName: dto.partyId != null
+                ? (resolvedPartyNames[dto.partyId] ?? '')
+                : '',
+          ),
+        )
+        .toList();
+
+    final total = items.length;
+    final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+    final start = (query.page - 1) * query.limit;
+    final pageItems = await _enrichInvoiceSyncState(
+      items.skip(start).take(query.limit).toList(),
+    );
+
+    return PaginatedSaleInvoices(
+      items: pageItems,
+      currentPage: query.page,
+      totalPages: totalPages,
+      totalItems: total,
+    );
   }
 
   List<SalesDocumentDto> _mergeLocalSalesDocuments(
@@ -291,6 +332,15 @@ class SalesService {
     Map<String, String>? partyNames,
   }) async {
     try {
+      if (await _isOfflineDevSession()) {
+        return PaginatedPaymentIn(
+          items: const [],
+          currentPage: query.page,
+          totalPages: 1,
+          totalItems: 0,
+        );
+      }
+
       final resolvedPartyNames = partyNames ?? await _partyNameMap();
       final response = await _repository.listPayments(query);
       final items = response.payments

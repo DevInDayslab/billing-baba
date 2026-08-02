@@ -1,5 +1,8 @@
+import 'package:billing_baba/core/auth/offline_dev_session_policy.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
@@ -108,6 +111,7 @@ class PaginatedPurchaseDocuments {
 @Riverpod(keepAlive: true)
 Future<PurchaseService> purchaseService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
+  final storage = await ref.watch(storageServiceProvider.future);
   final partyService = await ref.watch(partyServiceProvider.future);
   final commandRepo = await ref.watch(
     purchaseBillCommandRepositoryProvider.future,
@@ -124,6 +128,7 @@ Future<PurchaseService> purchaseService(Ref ref) async {
     commandRepository: commandRepo,
     returnCommandRepository: returnCommandRepo,
     syncQueue: ref.watch(syncQueueProvider),
+    storage: storage,
   );
 }
 
@@ -134,6 +139,7 @@ class PurchaseService {
     this._commandRepository,
     this._returnCommandRepository,
     this._syncQueue,
+    this._storage,
   });
 
   final PurchaseRepository _repository;
@@ -141,6 +147,13 @@ class PurchaseService {
   final PurchaseBillCommandRepository? _commandRepository;
   final PurchaseReturnCommandRepository? _returnCommandRepository;
   final SyncQueue? _syncQueue;
+  final StorageService? _storage;
+
+  Future<bool> _isOfflineDevSession() async {
+    final storage = _storage;
+    if (storage == null) return false;
+    return OfflineDevSessionPolicy.isActive(storage);
+  }
 
   Future<Map<String, String>> _partyNameMap() async {
     final parties = await _partyService.fetchParties();
@@ -181,6 +194,18 @@ class PurchaseService {
     }
 
     try {
+      if (await _isOfflineDevSession()) {
+        if (localDocs.isNotEmpty) {
+          return _paginateBillsFromLocalDocs(localDocs, query);
+        }
+        return PaginatedPurchaseBills(
+          items: const [],
+          currentPage: query.page,
+          totalPages: 1,
+          totalItems: 0,
+        );
+      }
+
       final partyNames = await _partyNameMap();
       final response = await _repository.listDocuments(
         query.copyWith(
@@ -219,38 +244,45 @@ class PurchaseService {
       );
     } on DioException catch (error) {
       if (localDocs.isNotEmpty) {
-        final partyNames = await _partyNameMap();
-        final sortedDocs = [...localDocs]
-          ..sort((a, b) {
-            final aDate = DateTimeUtils.parseApiDateTime(a.documentDate);
-            final bDate = DateTimeUtils.parseApiDateTime(b.documentDate);
-            return bDate.compareTo(aDate);
-          });
-        final items = sortedDocs
-            .map(
-              (dto) => PurchaseDocumentMapper.toBillModel(
-                dto,
-                partyName: partyNames[dto.partyId] ?? '',
-              ),
-            )
-            .toList();
-
-        final total = items.length;
-        final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
-        final start = (query.page - 1) * query.limit;
-        final pageItems = await _enrichBillSyncState(
-          items.skip(start).take(query.limit).toList(),
-        );
-
-        return PaginatedPurchaseBills(
-          items: pageItems,
-          currentPage: query.page,
-          totalPages: totalPages,
-          totalItems: total,
-        );
+        return _paginateBillsFromLocalDocs(localDocs, query);
       }
       throw mapPurchaseError(error);
     }
+  }
+
+  Future<PaginatedPurchaseBills> _paginateBillsFromLocalDocs(
+    List<PurchaseDocumentDto> localDocs,
+    PurchaseDocumentListQuery query,
+  ) async {
+    final partyNames = await _partyNameMap();
+    final sortedDocs = [...localDocs]
+      ..sort((a, b) {
+        final aDate = DateTimeUtils.parseApiDateTime(a.documentDate);
+        final bDate = DateTimeUtils.parseApiDateTime(b.documentDate);
+        return bDate.compareTo(aDate);
+      });
+    final items = sortedDocs
+        .map(
+          (dto) => PurchaseDocumentMapper.toBillModel(
+            dto,
+            partyName: partyNames[dto.partyId] ?? '',
+          ),
+        )
+        .toList();
+
+    final total = items.length;
+    final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+    final start = (query.page - 1) * query.limit;
+    final pageItems = await _enrichBillSyncState(
+      items.skip(start).take(query.limit).toList(),
+    );
+
+    return PaginatedPurchaseBills(
+      items: pageItems,
+      currentPage: query.page,
+      totalPages: totalPages,
+      totalItems: total,
+    );
   }
 
   List<PurchaseDocumentDto> _mergePurchaseBillDocuments(
