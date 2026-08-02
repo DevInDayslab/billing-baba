@@ -28,6 +28,7 @@ import { settingsModule } from './settings';
 import { createStorageModule } from './storage';
 import { createSubscriptionModule } from './subscription';
 import { syncModule } from './sync';
+import { gstinModule } from './gstin';
 
 export async function registerModules(
   app: FastifyInstance,
@@ -80,6 +81,7 @@ export async function registerModules(
       await api.register(createSubscriptionModule(config), {
         prefix: '/subscription',
       });
+      await api.register(gstinModule(config), { prefix: '/gstin' });
     },
     { prefix: config.apiPrefix },
   );

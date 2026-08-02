@@ -1,3 +1,5 @@
+import 'package:billing_baba/shared/utils/gstin_validator.dart';
+
 /// Common form field validators.
 abstract final class Validators {
   static const int businessNameMaxLength = 200;
@@ -143,24 +145,24 @@ abstract final class Validators {
     return null;
   }
 
-  static final _gstinPattern = RegExp(
-    r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$',
-  );
-
   static final _upiIdPattern = RegExp(r'^[\w.-]{2,60}@[\w.-]{2,40}$');
 
   static final _decimalAmountPattern = RegExp(r'^-?\d+(\.\d{1,4})?$');
 
   static String? gstin(String? value) {
     if (value == null || value.trim().isEmpty) return null;
-    final normalized = value.trim().toUpperCase();
-    if (normalized.length != 15) {
+    final error = GstinValidator.validationError(value);
+    if (error == null) return null;
+    if (error == 'GSTIN must contain exactly 15 characters') {
       return 'GSTIN must be exactly 15 characters';
     }
-    if (!_gstinPattern.hasMatch(normalized)) {
+    if (error == 'Invalid GSTIN format') {
       return 'Invalid GSTIN format';
     }
-    return null;
+    if (error == 'Invalid GSTIN checksum') {
+      return 'Invalid GSTIN format';
+    }
+    return error;
   }
 
   static String? gstinMaxLength(String? value) {

@@ -20,7 +20,7 @@ describe('party.utils', () => {
   });
 
   test('validates and normalizes GSTIN', () => {
-    const gstin = '27AABCU9603R1ZM';
+    const gstin = '27AABCU9603R1ZN';
     expect(validateGstin(gstin)).toBe(true);
     expect(normalizeGstin(gstin.toLowerCase())).toBe(gstin);
     expect(validateGstin('INVALID')).toBe(false);

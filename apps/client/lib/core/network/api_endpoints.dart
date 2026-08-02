@@ -10,6 +10,7 @@ abstract final class ApiEndpoints {
   static const businessStamp = '/api/v1/business/stamp';
   static const businessUpiQr = '/api/v1/business/upi-qr';
   static const authAvatar = '/api/v1/auth/me/avatar';
+  static const gstinVerify = '/api/v1/gstin/verify';
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
   static String partyDeleteStatus(String id) =>

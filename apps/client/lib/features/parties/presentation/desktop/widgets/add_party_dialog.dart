@@ -1,25 +1,32 @@
+import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
+import 'package:billing_baba/features/parties/application/gstin_verification_service.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
+import 'package:billing_baba/features/parties/models/gstin_verification_response.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_additional_phones_field.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_editor.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/gstin_verification_dialogs.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/shared/utils/gstin_validator.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
 import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,6 +105,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   final _aliasController = TextEditingController();
   final _areaCodeController = TextEditingController();
   final _gstinController = TextEditingController();
+  final _gstinFocusNode = FocusNode();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _billingAddressController = TextEditingController();
@@ -148,6 +156,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   String _partyType = 'customer';
   String _defaultPriceTier = PriceTier.retail;
   bool _isSaving = false;
+  bool _isVerifyingGstin = false;
+  String? _verifiedGstin;
+  GstinVerificationResponse? _lastVerificationResponse;
 
   String _savedBillingAddressLine = '';
   String _savedBillingCity = '';
@@ -371,6 +382,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _aliasController.dispose();
     _areaCodeController.dispose();
     _gstinController.dispose();
+    _gstinFocusNode.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _billingAddressController.dispose();
@@ -548,6 +560,171 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       return 'GSTIN is required for registered businesses';
     }
     return Validators.gstin(value);
+  }
+
+  Future<void> _verifyGstin() async {
+    if (_isVerifyingGstin) return;
+
+    final gstin = GstinValidator.normalize(_gstinController.text);
+    if (!GstinValidator.isValid(gstin)) {
+      setState(() => _gstinError = 'Please enter a valid GSTIN.');
+      _gstinFocusNode.requestFocus();
+      return;
+    }
+
+    setState(() {
+      _isVerifyingGstin = true;
+      _gstinError = null;
+    });
+    showGstinVerificationLoadingDialog(context);
+    try {
+      final service = await ref.read(gstinVerificationServiceProvider.future);
+      final response = await service.verify(gstin);
+      await hideGstinVerificationLoadingDialog();
+      if (!mounted) return;
+
+      setState(() {
+        _verifiedGstin = gstin;
+        _lastVerificationResponse = response;
+      });
+
+      final useDetails = await showGstinVerificationConfirmationDialog(
+        context,
+        response.data,
+      );
+      if (useDetails == true) {
+        _applyGstinVerification(response.data);
+      }
+    } on DioException catch (error) {
+      await hideGstinVerificationLoadingDialog();
+      if (!mounted) return;
+      final message = ApiErrorParser.isOffline(error)
+          ? OfflineUiMessages.workingOffline
+          : ApiErrorParser.userFacingMessage(error);
+      await showGstinVerificationErrorDialog(context, message: message);
+    } catch (_) {
+      await hideGstinVerificationLoadingDialog();
+      if (!mounted) return;
+      await showGstinVerificationErrorDialog(
+        context,
+        message: 'Unable to verify GSTIN. Please try again later.',
+      );
+    } finally {
+      await hideGstinVerificationLoadingDialog();
+      if (mounted) {
+        setState(() => _isVerifyingGstin = false);
+      }
+    }
+  }
+
+  Future<void> _showStoredGstinVerificationDetails() async {
+    final response = _lastVerificationResponse;
+    if (response == null) return;
+
+    final useDetails = await showGstinVerificationConfirmationDialog(
+      context,
+      response.data,
+    );
+    if (useDetails == true) {
+      _applyGstinVerification(response.data);
+    }
+  }
+
+  void _handleGstinChanged(String value) {
+    final normalized = GstinValidator.normalize(value);
+    final shouldClearVerified =
+        _verifiedGstin != null && normalized != _verifiedGstin;
+    if (_gstinError != null || shouldClearVerified) {
+      setState(() {
+        if (_gstinError != null) _gstinError = null;
+        if (shouldClearVerified) {
+          _verifiedGstin = null;
+          _lastVerificationResponse = null;
+        }
+      });
+    }
+  }
+
+  Widget _buildGstinSuffixIcon() {
+    const verifiedColor = Color(0xFF2E7D32);
+    final normalized = GstinValidator.normalize(_gstinController.text);
+    final isVerified =
+        _verifiedGstin != null &&
+        normalized.isNotEmpty &&
+        normalized == _verifiedGstin;
+
+    if (isVerified) {
+      return IconButton(
+        onPressed: _isVerifyingGstin ? null : _showStoredGstinVerificationDetails,
+        icon: const Icon(Icons.check_circle, size: 18, color: verifiedColor),
+        color: verifiedColor,
+        tooltip: 'View GST details',
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(
+          width: saleFieldHeight - 8,
+          height: saleFieldHeight - 2,
+        ),
+        visualDensity: VisualDensity.compact,
+      );
+    }
+
+    return IconButton(
+      onPressed: _isVerifyingGstin ? null : _verifyGstin,
+      icon: const Icon(Icons.search, size: 18),
+      color: AppColors.textSecondary,
+      tooltip: 'Verify GSTIN',
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(
+        width: saleFieldHeight - 8,
+        height: saleFieldHeight - 2,
+      ),
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  void _applyGstinVerification(GstinDetails data) {
+    final gstinWasEmpty = _gstinController.text.trim().isEmpty;
+    final billingWasEmpty = _billingAddressController.text.trim().isEmpty;
+    final partyName = data.tradeName.trim().isNotEmpty
+        ? data.tradeName.trim()
+        : data.legalName.trim();
+    _setControllerIfEmpty(_partyNameController, partyName);
+    _setControllerIfEmpty(_legalNameController, data.legalName);
+    _setControllerIfEmpty(_gstinController, data.gstin);
+    _setControllerIfEmpty(_billingAddressController, data.address);
+
+    if (billingWasEmpty &&
+        data.state.trim().isNotEmpty &&
+        SaleDropdownOptions.indianStates.contains(data.state)) {
+      setState(() {
+        _state = data.state;
+        _billingDetailState = data.state;
+        _savedBillingState = data.state;
+      });
+    }
+
+    if (gstinWasEmpty) {
+      setState(() {
+        _gstType = _mapTaxpayerTypeToGstType(data.taxpayerType);
+      });
+    }
+  }
+
+  void _setControllerIfEmpty(TextEditingController controller, String value) {
+    if (controller.text.trim().isEmpty && value.trim().isNotEmpty) {
+      controller.text = value.trim();
+    }
+  }
+
+  String _mapTaxpayerTypeToGstType(String taxpayerType) {
+    final normalized = taxpayerType.trim().toLowerCase();
+    if (normalized == 'composition') {
+      return 'Registered Business - Composition';
+    }
+    if (normalized == 'regular') {
+      return 'Registered Business - Regular';
+    }
+    return 'Registered Business - Regular';
   }
 
   bool _validate() {
@@ -986,6 +1163,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _loyaltyBalanceError = null;
       _partyType = 'customer';
       _defaultPriceTier = PriceTier.retail;
+      _verifiedGstin = null;
+      _lastVerificationResponse = null;
+      _isVerifyingGstin = false;
     });
     // Must not change TabController.index inside setState — AnimatedBuilder
     // listens to the controller and would rebuild during this frame.
@@ -1130,24 +1310,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
     final gstinField = _buildInlineTextField(
       controller: _gstinController,
+      focusNode: _gstinFocusNode,
       hint: _requiresGstin ? 'GSTIN *' : 'GSTIN',
       hasError: _gstinError != null,
       errorText: _gstinError,
-      onChanged: (_) {
-        if (_gstinError != null) setState(() => _gstinError = null);
-      },
-      suffixIcon: IconButton(
-        onPressed: () {},
-        icon: const Icon(Icons.info_outline, size: 18),
-        color: AppColors.textSecondary,
-        tooltip: '15-character GST identification number',
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(
-          width: saleFieldHeight - 8,
-          height: saleFieldHeight - 2,
-        ),
-        visualDensity: VisualDensity.compact,
-      ),
+      onChanged: _handleGstinChanged,
+      suffixIcon: _buildGstinSuffixIcon(),
     );
 
     final phoneField = _buildInlineTextField(
@@ -1348,6 +1516,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     bool hasError = false,
     String? errorText,
     bool autofocus = false,
+    FocusNode? focusNode,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     int? maxLength,
@@ -1362,6 +1531,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           hint: hint,
           hasError: hasError,
           autofocus: autofocus,
+          focusNode: focusNode,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           maxLength: maxLength,
