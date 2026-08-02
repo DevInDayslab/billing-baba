@@ -1238,11 +1238,42 @@ class Auth extends _$Auth {
       if (session != null) {
         _setAuthStatus(_statusForSession(session));
         state = state.copyWith(session: session);
+        return session;
       }
-      return session;
+
+      // refreshStoredSession clears secure storage on 401/403 but previously
+      // left in-memory auth state authenticated. Detect credential loss and
+      // force a full logout so routing returns to /login.
+      final storage = await ref.read(storageServiceProvider.future);
+      final storedRefreshToken =
+          await storage.readSecure(StorageKeys.refreshToken);
+      final credentialsCleared =
+          storedRefreshToken == null || storedRefreshToken.isEmpty;
+      if (credentialsCleared &&
+          state.status != AuthStatus.unauthenticated &&
+          state.status != AuthStatus.initializing) {
+        await _transitionToUnauthenticatedAfterCredentialLoss();
+      }
+      return null;
     } on Object catch (_) {
       return null;
     }
+  }
+
+  /// Clears app session state when secure credentials were wiped (e.g. expired
+  /// refresh token). Skips the logout API call because tokens are already gone.
+  Future<void> _transitionToUnauthenticatedAfterCredentialLoss() async {
+    ref.read(companySessionProvider.notifier).clear();
+    Future.microtask(() {
+      if (ref.mounted) {
+        invalidateAllBusinessScopedProviders(
+          ref,
+          includeBusinessList: true,
+        );
+      }
+    });
+    AuthFlowLogger.reset();
+    state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
   Future<void> logout() async {
