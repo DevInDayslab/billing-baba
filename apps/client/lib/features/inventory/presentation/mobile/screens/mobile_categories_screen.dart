@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
@@ -148,7 +148,6 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
         title: 'Categories',
         showBusinessHeader: false,
         showNotification: false,
-        showSettings: true,
         onSettingsTap: () => context.push(AppRoutes.itemsSettings),
       ),
       body: Stack(
@@ -201,7 +200,7 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
                             ),
                           ),
                           itemCount: categories.length,
-                          separatorBuilder: (_, __) => const Divider(
+                          separatorBuilder: (_, _) => const Divider(
                             height: 1,
                             thickness: 1,
                             color: Color(0xFFEEEEEE),

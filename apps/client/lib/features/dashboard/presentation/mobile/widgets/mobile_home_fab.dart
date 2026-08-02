@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 
 /// Compact red pill FAB used on the Vyapar-style mobile home screen.
 class MobileHomeAddSaleFab extends StatelessWidget {
+
   const MobileHomeAddSaleFab({
     required this.onPressed,
     super.key,
     this.label = 'Add New Sale',
     this.icon = Icons.currency_rupee_rounded,
   });
+  static Color get accentRed => AppColors.error;
 
   final VoidCallback onPressed;
   final String label;

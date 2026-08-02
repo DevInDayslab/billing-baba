@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
-import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_preview_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_footer.dart';
@@ -597,7 +597,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         );
       }
       if (mounted) {
-        setState(() => _pendingItemPhotos.clear());
+        setState(_pendingItemPhotos.clear);
       }
     } on Object catch (error) {
       if (!mounted) return;
@@ -1150,7 +1150,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   Widget _buildHeader(AddItemFormState form) {
     final title = widget.editItem != null ? 'Edit Item' : 'Add Item';
-    final titleStyle = const TextStyle(
+    const titleStyle = TextStyle(
       fontSize: 18,
       fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,

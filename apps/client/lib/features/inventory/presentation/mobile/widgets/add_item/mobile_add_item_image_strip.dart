@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/item_images_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
@@ -97,7 +97,7 @@ class _MobileAddItemImageStripState extends ConsumerState<MobileAddItemImageStri
           itemCount: sortedRemote.length +
               widget.pendingPhotos.length +
               (canAdd ? 1 : 0),
-          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          separatorBuilder: (_, _) => const SizedBox(width: 10),
           itemBuilder: (context, index) {
             if (index < sortedRemote.length) {
               final image = sortedRemote[index];
@@ -155,7 +155,6 @@ class _RemoteThumb extends StatelessWidget {
               imageUrl: image.urlForGrid(),
               sourceMediaAssetId: image.mediaAssetId,
               displayContext: ImageDisplayContext.galleryThumb,
-              fit: BoxFit.cover,
               memCacheWidth:
                   (MobileAddItemImageStrip.thumbSize * 2).round(),
               placeholder: ColoredBox(
@@ -241,7 +240,7 @@ class _AddPhotoChip extends StatelessWidget {
             ),
             color: AppColors.surface,
           ),
-          child: Icon(
+          child: const Icon(
             Icons.add_rounded,
             size: 24,
             color: AppColors.primary,

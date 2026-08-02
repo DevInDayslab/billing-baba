@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';

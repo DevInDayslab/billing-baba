@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
+import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/close_form_dialog.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
@@ -241,7 +241,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       _phoneController.clear();
       _poNumberController.clear();
       ref
-          .read(addSaleFormProvider(sessionKey: 'default').notifier)
+          .read(addSaleFormProvider().notifier)
           .toggleSaleType(SaleType.credit);
       _syncControllersFromForm();
       ScaffoldMessenger.of(context).showSnackBar(

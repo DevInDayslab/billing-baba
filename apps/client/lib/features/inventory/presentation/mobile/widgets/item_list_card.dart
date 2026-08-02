@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
@@ -75,7 +75,7 @@ class ItemListCard extends StatelessWidget {
                     ),
                     if (item.alternativeItemIds.isNotEmpty) ...[
                       const Gap(AppSpacing.sm),
-                      Icon(
+                      const Icon(
                         Icons.inventory_2_outlined,
                         size: AppIconSize.md,
                         color: AppColors.textSecondary,
@@ -89,7 +89,7 @@ class ItemListCard extends StatelessWidget {
                 _CategoryBadge(label: categoryName!),
               ],
               const Gap(AppSpacing.xs),
-              ShareMenuButton(
+              const ShareMenuButton(
                 child: Icon(
                   Icons.open_in_new_rounded,
                   size: AppIconSize.md,
