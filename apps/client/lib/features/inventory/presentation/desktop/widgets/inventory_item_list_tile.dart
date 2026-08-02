@@ -3,7 +3,7 @@ import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_hover_tooltip.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_row_menu.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
@@ -108,16 +108,16 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: _buildHoverZone(
-                      child: Row(
-                        children: [
-                          Icon(
-                            widget.leadingIcon,
-                            size: 16,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          widget.leadingIcon,
+                          size: 16,
+                          color: Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildHoverZone(
                             child: InventoryHighlightedText(
                               text: widget.title,
                               query: widget.searchQuery,
@@ -128,12 +128,12 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(
-                    width: 56,
+                    width: inventoryListTrailingColumnWidth,
                     child: AppEllipsisText(
                       widget.trailingValue,
                       textAlign: TextAlign.right,

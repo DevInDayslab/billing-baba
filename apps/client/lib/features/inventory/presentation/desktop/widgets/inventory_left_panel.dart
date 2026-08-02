@@ -118,6 +118,7 @@ class InventoryLeftPanel extends ConsumerWidget {
           ),
         ),
         InventoryListHeader(
+          height: inventoryListHeaderCompactHeight,
           showColumnSeparators: false,
           columns: [
             InventoryListColumn(
@@ -135,6 +136,7 @@ class InventoryLeftPanel extends ConsumerWidget {
             ),
             InventoryListColumn(
               label: secondaryColumnLabel,
+              fixedWidth: inventoryListTrailingColumnWidth,
               alignEnd: true,
             ),
           ],

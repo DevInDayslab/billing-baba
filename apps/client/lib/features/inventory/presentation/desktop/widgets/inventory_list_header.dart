@@ -5,10 +5,13 @@ import 'package:flutter/material.dart';
 export 'inventory_list_row_menu.dart';
 
 /// Header row height when column separators span the full header area.
-const inventoryListHeaderHeight = 40.0;
+const inventoryListHeaderHeight = 44.0;
 
 /// Shorter header variant for compact list panels (e.g. parties).
 const inventoryListHeaderCompactHeight = 30.0;
+
+/// Fixed width for the trailing numeric column in left-panel lists (quantity, price).
+const inventoryListTrailingColumnWidth = 100.0;
 
 class InventoryListHeader extends StatelessWidget {
   const InventoryListHeader({
@@ -55,7 +58,7 @@ class InventoryListHeader extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: showColumnSeparators ? 0 : (isCompact ? 6 : 12),
+        vertical: showColumnSeparators ? 0 : (isCompact ? 6 : 10),
       ),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
@@ -207,7 +210,12 @@ class _HeaderCell extends StatelessWidget {
     if (column.trailing != null) {
       return Row(
         children: [
-          Expanded(child: _SortableHeaderContent(column: column)),
+          Expanded(
+            child: _SortableHeaderContent(
+              column: column,
+              alignEnd: column.alignEnd,
+            ),
+          ),
           column.trailing!,
         ],
       );
@@ -219,7 +227,12 @@ class _HeaderCell extends StatelessWidget {
           column.leading!,
           const SizedBox(width: 4),
         ],
-        Expanded(child: _SortableHeaderContent(column: column)),
+        Expanded(
+          child: _SortableHeaderContent(
+            column: column,
+            alignEnd: column.alignEnd,
+          ),
+        ),
         if (column.showFilter) ...[
           const SizedBox(width: 4),
           Icon(
@@ -234,21 +247,30 @@ class _HeaderCell extends StatelessWidget {
 }
 
 class _SortableHeaderContent extends StatelessWidget {
-  const _SortableHeaderContent({required this.column});
+  const _SortableHeaderContent({
+    required this.column,
+    this.alignEnd = false,
+  });
 
   final InventoryListColumn column;
+  final bool alignEnd;
 
   @override
   Widget build(BuildContext context) {
     final label = Text(
       column.label,
-      textAlign: TextAlign.left,
+      textAlign: alignEnd ? TextAlign.right : TextAlign.left,
       style: InventoryStyles.listHeaderStyle,
-      overflow: TextOverflow.ellipsis,
+      softWrap: false,
+      overflow: TextOverflow.visible,
     );
 
     if (!column.sortable || column.onSort == null) {
-      return label;
+      return Align(
+        alignment: alignEnd ? Alignment.centerRight : Alignment.centerLeft,
+        widthFactor: 1,
+        child: label,
+      );
     }
 
     final sortIcon = column.isSorted
@@ -262,8 +284,12 @@ class _SortableHeaderContent extends StatelessWidget {
     final labelRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Flexible(child: label),
-        if (sortIcon != null) ...[
+        if (alignEnd && sortIcon != null) ...[
+          sortIcon,
+          const SizedBox(width: 4),
+        ],
+        label,
+        if (!alignEnd && sortIcon != null) ...[
           const SizedBox(width: 4),
           sortIcon,
         ],
@@ -276,7 +302,7 @@ class _SortableHeaderContent extends StatelessWidget {
         onTap: column.onSort,
         behavior: HitTestBehavior.opaque,
         child: Align(
-          alignment: Alignment.centerLeft,
+          alignment: alignEnd ? Alignment.centerRight : Alignment.centerLeft,
           widthFactor: 1,
           child: labelRow,
         ),
