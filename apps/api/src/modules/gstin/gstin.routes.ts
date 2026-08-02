@@ -4,8 +4,8 @@ import { authenticate } from '../../middleware/auth.middleware';
 import { requireBusiness } from '../../middleware/require-business.middleware';
 import { createGstinController } from './gstin.controller';
 
-export const createGstinRoutes = (_config: AppConfig): FastifyPluginAsync => {
-  const controller = createGstinController();
+export const createGstinRoutes = (config: AppConfig): FastifyPluginAsync => {
+  const controller = createGstinController(config);
 
   return async (app) => {
     const preHandler = [authenticate, requireBusiness];

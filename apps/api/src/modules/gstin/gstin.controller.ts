@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
 import { sendData } from '../../shared/http/response';
 import { verifyGstinBodySchema } from './gstin.dto';
@@ -15,14 +16,14 @@ function formatZodError(error: ZodError): Record<string, string[]> {
   return errors;
 }
 
-export function createGstinController() {
-  const service = new GstinService();
+export function createGstinController(config: AppConfig) {
+  const service = new GstinService(config);
 
   return {
     verify: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const body = verifyGstinBodySchema.parse(request.body);
-        const data = service.verifyGSTIN(body.gstin);
+        const data = await service.verifyGSTIN(body.gstin, request.log);
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {

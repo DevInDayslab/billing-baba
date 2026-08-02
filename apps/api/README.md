@@ -37,6 +37,7 @@ Optional:
 | `JWT_SECRET` | Access token signing secret |
 | `JWT_REFRESH_SECRET` | Refresh token signing secret |
 | `MSG91_AUTH_KEY` | MSG91 server auth key for OTP verification |
+| `GSTVERIFY_API_KEY` | GSTVerify API key for live GSTIN verification; omit or leave empty to use mock responses locally |
 | `ENABLE_DEV_LOGIN` | `true` to register `POST /auth/dev-login` locally; **must be `false` in production** |
 | `CORS_ORIGINS` | Comma-separated allowed origins (production) |
 
