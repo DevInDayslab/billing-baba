@@ -1,5 +1,7 @@
-import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'dart:async';
+
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
@@ -49,7 +51,26 @@ final mobileBusinessSelectionProvider =
 class MobileBusinessSelectionNotifier
     extends Notifier<MobileBusinessSelectionState> {
   @override
-  MobileBusinessSelectionState build() => const MobileBusinessSelectionState();
+  MobileBusinessSelectionState build() {
+    ref.listen(companyDirectoryProvider, (_, next) {
+      final entries = next.value;
+      if (entries != null) {
+        unawaited(Future(() => _applyInitialSelection(entries)));
+      }
+    });
+
+    final entries = ref.watch(companyDirectoryProvider).value;
+    if (entries != null) {
+      unawaited(Future(() => _applyInitialSelection(entries)));
+    }
+
+    return const MobileBusinessSelectionState();
+  }
+
+  void _applyInitialSelection(List<CompanyListEntry> entries) {
+    if (!ref.mounted) return;
+    seedInitialSelection(entries);
+  }
 
   void reset() => state = const MobileBusinessSelectionState();
 

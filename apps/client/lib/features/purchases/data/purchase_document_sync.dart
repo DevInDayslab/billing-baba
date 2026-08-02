@@ -184,6 +184,7 @@ class PurchaseDocumentSync {
                   existing?.supplierInvoiceNumber,
             ),
             dueDate: Value(_str(payload, 'due_date') ?? existing?.dueDate),
+            godownId: Value(_str(payload, 'godown_id') ?? existing?.godownId),
             notes: Value(_str(payload, 'notes') ?? existing?.notes),
             paidAmount: Value(
               _str(payload, 'paid_amount') ?? existing?.paidAmount ?? '0',

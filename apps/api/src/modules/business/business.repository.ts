@@ -20,6 +20,7 @@ import type {
   BusinessProfile,
   CommerceSettings,
 } from './business.types';
+import { seedWalkInPartyForBusiness } from '../../shared/parties/walk-in-party';
 import {
   defaultPricingTierLabels,
   PRICING_TIER_VALUES,
@@ -628,6 +629,8 @@ export class BusinessRepository {
         { businessId: business.id, name: 'General' },
         { businessId: business.id, name: 'Services' },
       ]);
+
+      await seedWalkInPartyForBusiness(tx, business.id);
 
       return {
         id: business.id,

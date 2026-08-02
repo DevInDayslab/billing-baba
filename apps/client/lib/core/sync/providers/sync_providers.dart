@@ -16,7 +16,9 @@ import 'package:billing_baba/features/crm/data/crm_sync.dart';
 import 'package:billing_baba/features/inventory/data/brand_sync.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
+import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:billing_baba/features/purchases/data/expense_sync.dart';
@@ -116,6 +118,10 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     dealSync: DealSync(db),
     expenseSync: ExpenseSync(db),
     expenseCategorySync: ExpenseCategorySync(db),
+    stockLevelSync: StockLevelSync(
+      InventoryStockLocalDataSource(db),
+      metadata,
+    ),
   );
 });
 

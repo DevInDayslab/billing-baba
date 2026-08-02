@@ -5,25 +5,30 @@ import 'package:billing_baba/features/purchases/application/purchase_bills_provi
 import 'package:billing_baba/features/purchases/application/purchase_fa_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_orders_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
 import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/application/job_work_orders_provider.dart';
+import 'package:billing_baba/features/sales/application/job_work_service.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
-import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_catalog.dart';
-import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_live_mapper.dart';
-import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
+import 'package:billing_baba/features/sales/models/payment_in_model.dart';
+import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:flutter/material.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_catalog.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_mapper.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/src/providers/provider.dart';
 
 /// Live transaction rows keyed by [MobileTransactionScopeDefinition.scopeId].
-///
-/// Backed by the same desktop list providers so mobile and desktop stay in sync.
-final mobileTransactionItemsProvider =
+final ProviderFamily<AsyncValue<List<MobileTransactionListItem>>, String>
+mobileTransactionItemsProvider =
     Provider.family<AsyncValue<List<MobileTransactionListItem>>, String>((
       ref,
       scopeId,
@@ -36,156 +41,304 @@ final mobileTransactionItemsProvider =
         return const AsyncValue.data([]);
       }
 
-      return _watchLiveItems(ref, definition);
+      return _itemsForRoute(ref, definition);
     });
 
-AsyncValue<List<MobileTransactionListItem>> _watchLiveItems(
+AsyncValue<List<MobileTransactionListItem>> _itemsForRoute(
   Ref ref,
   MobileTransactionScopeDefinition definition,
 ) {
-  final icon = definition.leadingIcon ?? Icons.receipt_long_outlined;
+  final icon = definition.leadingIcon;
 
   return switch (definition.route) {
-    AppRoutes.saleInvoices => ref
-        .watch(saleInvoicesProvider)
-        .whenData(
-          (page) => page.items
-              .map(
-                (item) => MobileTransactionLiveMapper.fromSaleInvoice(
-                  item,
-                  leadingIcon: icon,
-                ),
-              )
-              .toList(),
-        ),
-    AppRoutes.saleEstimateQuotation => ref
-        .watch(estimateQuotationsProvider)
-        .whenData(
-          (page) => page.items
-              .map(
-                (item) => MobileTransactionLiveMapper.fromSaleInvoice(
-                  item,
-                  leadingIcon: icon,
-                ),
-              )
-              .toList(),
-        ),
-    AppRoutes.saleProformaInvoice => ref
-        .watch(salesDocumentsListProvider(proformaListScope()))
-        .whenData(
-          (page) => page.items
-              .map(
-                (item) => MobileTransactionLiveMapper.fromSaleInvoice(
-                  item,
-                  leadingIcon: icon,
-                ),
-              )
-              .toList(),
-        ),
-    AppRoutes.salePaymentIn => ref
-        .watch(paymentInRecordsProvider)
-        .whenData(
-          (page) => page.items
-              .map(MobileTransactionLiveMapper.fromPaymentIn)
-              .toList(),
-        ),
-    AppRoutes.saleOrder => ref
-        .watch(saleOrdersProvider)
-        .whenData(
-          (page) => page.items
-              .map(
-                (item) => MobileTransactionLiveMapper.fromSaleInvoice(
-                  item,
-                  leadingIcon: icon,
-                  useSaleOrderStatus: true,
-                ),
-              )
-              .toList(),
-        ),
-    AppRoutes.saleDeliveryChallan => ref
-        .watch(deliveryChallansProvider)
-        .whenData(
-          (page) => page.items
-              .map(
-                (item) => MobileTransactionLiveMapper.fromSaleInvoice(
-                  item,
-                  leadingIcon: icon,
-                ),
-              )
-              .toList(),
-        ),
-    AppRoutes.saleJobWorkOut => ref
-        .watch(jobWorkOrdersListProvider)
-        .whenData(
-          (page) => page.items
-              .map(MobileTransactionLiveMapper.fromJobWork)
-              .toList(),
-        ),
-    AppRoutes.saleReturnCreditNote => ref
-        .watch(saleReturnsProvider)
-        .whenData(
-          (page) => page.items
-              .map(
-                (item) => MobileTransactionLiveMapper.fromSaleInvoice(
-                  item,
-                  leadingIcon: icon,
-                ),
-              )
-              .toList(),
-        ),
-    AppRoutes.saleFa => ref
-        .watch(saleFaProvider)
-        .whenData(
-          (page) =>
-              page.items.map(MobileTransactionLiveMapper.fromSaleFa).toList(),
-        ),
-    AppRoutes.purchaseBills => ref
-        .watch(purchaseBillsProvider)
-        .whenData(
-          (page) => page.items
-              .map(MobileTransactionLiveMapper.fromPurchaseBill)
-              .toList(),
-        ),
-    AppRoutes.purchasePaymentOut => ref
-        .watch(paymentOutRecordsProvider)
-        .whenData(
-          (page) => page.items
-              .map(MobileTransactionLiveMapper.fromPaymentOut)
-              .toList(),
-        ),
-    AppRoutes.purchaseExpenses => ref
-        .watch(expenseTransactionsProvider)
-        .whenData(
-          (items) =>
-              items.map(MobileTransactionLiveMapper.fromExpense).toList(),
-        ),
-    AppRoutes.purchaseOrder => ref
-        .watch(purchaseOrdersProvider)
-        .whenData(
-          (page) => page.items
-              .map(MobileTransactionLiveMapper.fromPurchaseOrder)
-              .toList(),
-        ),
-    AppRoutes.purchaseReturnDebitNote => ref
-        .watch(purchaseReturnsProvider)
-        .whenData(
-          (page) => page.items
-              .map(MobileTransactionLiveMapper.fromPurchaseReturn)
-              .toList(),
-        ),
-    AppRoutes.purchaseFa => ref
-        .watch(purchaseFaProvider)
-        .whenData(
-          (page) => page.items
-              .map(MobileTransactionLiveMapper.fromPurchaseFa)
-              .toList(),
-        ),
+    AppRoutes.saleInvoices => _mapPaginatedSaleInvoices(
+      ref.watch(saleInvoicesProvider),
+      icon,
+    ),
+    AppRoutes.saleEstimateQuotation => _mapPaginatedSaleInvoices(
+      ref.watch(estimateQuotationsProvider),
+      icon,
+      useOpenDocumentMapper: true,
+    ),
+    AppRoutes.saleProformaInvoice => _mapPaginatedSaleInvoices(
+      ref.watch(salesDocumentsListProvider(proformaListScope())),
+      icon,
+      useOpenDocumentMapper: true,
+    ),
+    AppRoutes.salePaymentIn => _mapPaymentIn(
+      ref.watch(paymentInRecordsProvider),
+      icon,
+    ),
+    AppRoutes.saleOrder => _mapPaginatedSaleInvoices(
+      ref.watch(saleOrdersProvider),
+      icon,
+      useOpenDocumentMapper: true,
+    ),
+    AppRoutes.saleDeliveryChallan => _mapPaginatedSaleInvoices(
+      ref.watch(deliveryChallansProvider),
+      icon,
+      useOpenDocumentMapper: true,
+    ),
+    AppRoutes.saleJobWorkOut => _mapJobWorkOrders(
+      ref.watch(jobWorkOrdersListProvider),
+      icon,
+    ),
+    AppRoutes.saleReturnCreditNote => _mapPaginatedSaleInvoices(
+      ref.watch(saleReturnsProvider),
+      icon,
+    ),
+    AppRoutes.saleFa => _mapSaleFa(
+      ref.watch(saleFaProvider),
+      icon,
+    ),
+    AppRoutes.purchaseBills => _mapPurchaseBills(
+      ref.watch(purchaseBillsProvider),
+      icon,
+    ),
+    AppRoutes.purchasePaymentOut => _mapPaymentOut(
+      ref.watch(paymentOutRecordsProvider),
+      icon,
+    ),
+    AppRoutes.purchaseExpenses => _mapExpenses(
+      ref.watch(expenseTransactionsProvider),
+      icon,
+    ),
+    AppRoutes.purchaseOrder => _mapPurchaseOrders(
+      ref.watch(purchaseOrdersProvider),
+      icon,
+    ),
+    AppRoutes.purchaseReturnDebitNote => _mapPurchaseReturns(
+      ref.watch(purchaseReturnsProvider),
+      icon,
+    ),
+    AppRoutes.purchaseFa => _mapPurchaseFa(
+      ref.watch(purchaseFaProvider),
+      icon,
+    ),
     _ => const AsyncValue.data([]),
   };
 }
 
-/// Pull-to-refresh for a mobile transaction list route.
-Future<void> refreshMobileTransactionItems(WidgetRef ref, String route) async {
+AsyncValue<List<MobileTransactionListItem>> _mapPaginatedSaleInvoices(
+  AsyncValue<PaginatedSaleInvoices> asyncValue,
+  IconData? icon, {
+  bool useOpenDocumentMapper = false,
+}) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) {
+      final items = page.items.map((invoice) {
+        if (useOpenDocumentMapper) {
+          return MobileTransactionMapper.fromOpenSaleDocument(
+            invoice,
+            leadingIcon: icon,
+          );
+        }
+        return MobileTransactionMapper.fromSaleInvoice(
+          invoice,
+          leadingIcon: icon,
+        );
+      }).toList();
+      return AsyncValue.data(items);
+    },
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapPaymentIn(
+  AsyncValue<PaginatedPaymentIn> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (payment) => MobileTransactionMapper.fromPaymentIn(
+              payment,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapPaymentOut(
+  AsyncValue<PaginatedPaymentOut> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (payment) => MobileTransactionMapper.fromPaymentOut(
+              payment,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapJobWorkOrders(
+  AsyncValue<PaginatedJobWorkOrders> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (order) => MobileTransactionMapper.fromJobWorkOrder(
+              order,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapSaleFa(
+  AsyncValue<PaginatedSaleFaRecords> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (fa) => MobileTransactionMapper.fromSaleFa(
+              fa,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapPurchaseBills(
+  AsyncValue<PaginatedPurchaseBills> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (bill) => MobileTransactionMapper.fromPurchaseBill(
+              bill,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapPurchaseOrders(
+  AsyncValue<PaginatedPurchaseOrders> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (order) => MobileTransactionMapper.fromPurchaseOrder(
+              order,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapPurchaseReturns(
+  AsyncValue<PaginatedPurchaseReturns> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (returnDoc) => MobileTransactionMapper.fromPurchaseReturn(
+              returnDoc,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapPurchaseFa(
+  AsyncValue<PaginatedPurchaseFaRecords> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (page) => AsyncValue.data(
+      page.items
+          .map(
+            (fa) => MobileTransactionMapper.fromPurchaseFa(
+              fa,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+AsyncValue<List<MobileTransactionListItem>> _mapExpenses(
+  AsyncValue<List<ExpenseTransactionModel>> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (expenses) => AsyncValue.data(
+      expenses
+          .map(
+            (expense) => MobileTransactionMapper.fromExpense(
+              expense,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+/// Refreshes the backend provider backing a mobile transaction list scope.
+Future<void> refreshMobileTransactionItems(
+  WidgetRef ref,
+  String scopeId,
+) async {
+  final definition = MobileTransactionCatalog.all
+      .where((item) => item.scopeId == scopeId)
+      .firstOrNull;
+  if (definition == null) return;
+
+  await _refreshRoute(ref, definition.route);
+}
+
+Future<void> _refreshRoute(WidgetRef ref, String route) async {
   switch (route) {
     case AppRoutes.saleInvoices:
       await ref.read(saleInvoicesProvider.notifier).refresh();

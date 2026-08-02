@@ -47,6 +47,21 @@ class GodownLocalSource {
     return _toDto(row);
   }
 
+  /// Returns the active default godown id for [businessId], or null if none.
+  Future<String?> getDefaultGodownId(String businessId) async {
+    final rows = await (_db.select(_db.godownsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.isDeleted.equals(false) &
+                t.isDefault.equals(true),
+          )
+          ..limit(1))
+        .get();
+    if (rows.isEmpty) return null;
+    return rows.first.id;
+  }
+
   Future<void> upsertRow({
     required String id,
     required String businessId,

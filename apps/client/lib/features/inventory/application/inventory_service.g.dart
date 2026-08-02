@@ -46,4 +46,4 @@ final class InventoryServiceProvider
   }
 }
 
-String _$inventoryServiceHash() => r'da34ad789c38f196c81bef85e78cbef6892a090f';
+String _$inventoryServiceHash() => r'a687a181da64d76874a966c57eb98db1b8259267';

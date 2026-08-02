@@ -5,6 +5,7 @@ import { salesDocuments } from '../../../db/schema/sales/tables';
 import { purchaseDocuments } from '../../../db/schema/purchases/tables';
 import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
 import type { RowEntityDef, SyncedRowBase } from './row-entities';
+import { ensureWalkInParty } from '../../../shared/parties/walk-in-party';
 import { getRowEntity, listRowEntities } from './row-entities';
 
 export type {
@@ -46,6 +47,17 @@ export class RowApplier {
       };
     }
 
+    if (definition.pullOnly) {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'PULL_ONLY_ENTITY',
+          message: `Row entity_type '${input.entityType}' is a server-derived projection and cannot be pushed; pull to receive updates`,
+        },
+      };
+    }
+
     const existing = await this.findRow(
       definition,
       input.businessId,
@@ -65,6 +77,13 @@ export class RowApplier {
     if (definition.beforeApply) {
       const guardOutcome = await definition.beforeApply(input, existing);
       if (guardOutcome) return guardOutcome;
+    }
+
+    if (input.entityType === 'sales_documents') {
+      const partyId = input.payload.party_id;
+      if (typeof partyId === 'string' && partyId.length > 0) {
+        await ensureWalkInParty(this.db, input.businessId, partyId);
+      }
     }
 
     switch (input.operation) {
@@ -410,14 +429,16 @@ export class RowApplier {
 
     if (
       parent.documentType !== 'tax_invoice' &&
-      parent.documentType !== 'sales_return'
+      parent.documentType !== 'sales_return' &&
+      parent.documentType !== 'pos'
     ) {
       return {
         status: 'error',
         result: {
           mutation_id: input.mutationId,
           code: 'VALIDATION_FAILED',
-          message: 'Only tax_invoice and sales_return line sync is supported',
+          message:
+            'Only tax_invoice, sales_return, and pos line sync is supported',
         },
       };
     }

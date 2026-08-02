@@ -184,6 +184,7 @@ class SalesDocumentSync {
             convertedFromId: Value(
               _str(payload, 'converted_from_id') ?? existing?.convertedFromId,
             ),
+            godownId: Value(_str(payload, 'godown_id') ?? existing?.godownId),
             notes: Value(_str(payload, 'notes') ?? existing?.notes),
             syncVersion: Value(syncVersion),
             createdAt: (existing?.createdAt ?? updatedAt).toUtc(),

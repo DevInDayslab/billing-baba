@@ -112,6 +112,8 @@ class _MobilePartyDetailsPageState
     );
   }
 
+  List<PartyModel> _resolveParties(List<PartyModel> parties) => parties;
+
   @override
   Widget build(BuildContext context) {
     final selectedId = ref.watch(selectedPartyIdProvider);
@@ -145,6 +147,7 @@ class _MobilePartyDetailsPageState
         onSearchChanged: _onSearchChanged,
         onRefresh: _onRefresh,
         onSelectParty: _selectParty,
+        resolveParties: _resolveParties,
         onFilterSelected: _onFilterSelected,
         onAddParty: () => showAddPartyDialog(context),
       ),
@@ -158,6 +161,7 @@ class _PartyListBody extends ConsumerWidget {
     required this.onSearchChanged,
     required this.onRefresh,
     required this.onSelectParty,
+    required this.resolveParties,
     required this.onFilterSelected,
     required this.onAddParty,
   });
@@ -166,16 +170,19 @@ class _PartyListBody extends ConsumerWidget {
   final ValueChanged<String> onSearchChanged;
   final Future<void> Function() onRefresh;
   final ValueChanged<String> onSelectParty;
+  final List<PartyModel> Function(List<PartyModel>) resolveParties;
   final Future<void> Function(PartyListFilter) onFilterSelected;
   final VoidCallback onAddParty;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partiesAsync = ref.watch(partyListProvider);
-    final parties = ref.watch(partiesListProvider);
+    final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
+    final parties = resolveParties(ref.watch(partiesListProvider));
     final sortedParties = sortMobileParties(
       parties,
       ref.watch(mobilePartyListSortProvider),
+      outstandingIndex: outstandingIndex,
     );
     final activeFilter = ref.watch(partyListFilterProvider);
     final sortState = ref.watch(mobilePartyListSortProvider);
@@ -195,9 +202,7 @@ class _PartyListBody extends ConsumerWidget {
               context: context,
               selected: activeFilter,
             );
-            if (result != null) {
-              await onFilterSelected(result);
-            }
+            if (result != null) await onFilterSelected(result);
           },
           onSortTap: () async {
             final result = await showPartySortSheet(
@@ -220,6 +225,7 @@ class _PartyListBody extends ConsumerWidget {
                 ? const Center(child: CircularProgressIndicator())
                 : _PartyListView(
                     parties: sortedParties,
+                    outstandingIndex: outstandingIndex,
                     onRefresh: onRefresh,
                     onSelectParty: onSelectParty,
                     isFiltered:
@@ -247,6 +253,7 @@ class _PartyListBody extends ConsumerWidget {
 
               return _PartyListView(
                 parties: sortedParties,
+                outstandingIndex: outstandingIndex,
                 onRefresh: onRefresh,
                 onSelectParty: onSelectParty,
                 isFiltered:
@@ -264,12 +271,14 @@ class _PartyListBody extends ConsumerWidget {
 class _PartyListView extends StatelessWidget {
   const _PartyListView({
     required this.parties,
+    required this.outstandingIndex,
     required this.onRefresh,
     required this.onSelectParty,
     required this.isFiltered,
   });
 
   final List<PartyModel> parties;
+  final Map<String, double>? outstandingIndex;
   final Future<void> Function() onRefresh;
   final ValueChanged<String> onSelectParty;
   final bool isFiltered;
@@ -292,6 +301,7 @@ class _PartyListView extends StatelessWidget {
           final party = parties[index];
           return MobilePartyCard(
             party: party,
+            displayBalance: projectedPartyBalance(party, outstandingIndex),
             onTap: () => onSelectParty(party.id),
           );
         },

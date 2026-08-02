@@ -166,9 +166,9 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleDeliveryChallan => AppRoutes.addDeliveryChallan,
     AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
     AppRoutes.saleFa => AppRoutes.addSaleFa,
-    AppRoutes.salePaymentIn => null,
-    AppRoutes.saleProformaInvoice => null,
-    AppRoutes.saleJobWorkOut => null,
+      AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
+      AppRoutes.saleProformaInvoice => AppRoutes.addEstimate,
+      AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
     _ => null,
   };
 
@@ -201,7 +201,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.purchaseOrder => AppRoutes.addPurchaseOrder,
     AppRoutes.purchaseReturnDebitNote => AppRoutes.addDebitNote,
     AppRoutes.purchaseFa => AppRoutes.addPurchaseFa,
-    AppRoutes.purchasePaymentOut => null,
+    AppRoutes.purchasePaymentOut => AppRoutes.addPaymentOut,
     _ => null,
   };
 

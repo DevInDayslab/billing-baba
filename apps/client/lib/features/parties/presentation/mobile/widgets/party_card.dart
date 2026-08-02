@@ -11,22 +11,27 @@ class MobilePartyCard extends StatelessWidget {
     required this.party,
     required this.onTap,
     super.key,
+    this.displayBalance,
     this.isSelected = false,
   });
 
   final PartyModel party;
   final VoidCallback onTap;
+
+  /// Projected ledger outstanding — mirrors desktop [projectedPartyBalance].
+  final double? displayBalance;
   final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final amountColor = party.hasReceivable
+    final balance = displayBalance ?? party.balance;
+    final amountColor = balance > 0
         ? inventoryPositiveColor
-        : party.hasPayable
+        : balance < 0
         ? inventoryNegativeColor
         : AppColors.textSecondary;
-    final amountText = PartyModel.displayOutstanding(party.balance);
+    final amountText = PartyModel.displayOutstanding(balance);
 
     return MobileCard(
       selected: isSelected,

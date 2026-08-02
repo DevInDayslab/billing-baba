@@ -6,7 +6,10 @@ import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
+import 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/data/party_local_source.dart';
@@ -43,19 +46,30 @@ Future<PartyService> partyService(Ref ref) async {
   } on Object {
     deviceId = null;
   }
+  // Rebuild when the active business changes so party ops get a fresh business id.
+  final currentBusiness = ref.watch(currentBusinessProvider);
+
+  String businessIdReader() {
+    final fromProfile = currentBusiness?.id.trim() ??
+        ref.read(currentBusinessProvider)?.id.trim() ??
+        '';
+    if (fromProfile.isNotEmpty) return fromProfile;
+    return storage.read(StorageKeys.lastOpenedBusinessId)?.trim() ?? '';
+  }
+
   final repository = PartyRepository(api.dio);
   final local = PartyLocalSource(db);
   final master = PartyMasterRepository(
     local: local,
     syncQueue: queue,
     remote: repository,
-    businessIdReader: () =>
-        storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+    businessIdReader: businessIdReader,
     deviceIdReader: () => deviceId,
   );
   return PartyService(
     cache: PartyCache(storage),
     master: master,
+    businessIdReader: businessIdReader,
   );
 }
 
@@ -63,15 +77,20 @@ class PartyService {
   PartyService({
     required this._cache,
     required this._master,
-  });
+    required String Function() businessIdReader,
+  }) : _businessIdReader = businessIdReader;
 
   final PartyCache _cache;
   final PartyMasterRepository _master;
+  final String Function() _businessIdReader;
 
   bool _isShowingCachedData = false;
   bool get isShowingCachedData => _isShowingCachedData;
 
-  String? get _businessId => _cache.readBusinessId();
+  String? get _businessId {
+    final businessId = _businessIdReader().trim();
+    return businessId.isEmpty ? null : businessId;
+  }
 
   Future<List<PartyModel>> fetchParties({
     String? searchQuery,
@@ -366,11 +385,37 @@ class PartyList extends _$PartyList {
       ..watch(partyBackendSearchProvider);
 
     final service = await ref.watch(partyServiceProvider.future);
+    final filter = ref.read(partyListFilterProvider);
+    final ledgerService = await ref.watch(partyLedgerServiceProvider.future);
+    final businessId = await ref.watch(partyLedgerBusinessIdProvider.future);
+    final outstandingIndex =
+        await ledgerService.fetchOutstandingIndex(businessId: businessId);
+    final fetchFilter = filter == PartyListFilter.toReceive ||
+            filter == PartyListFilter.toPay
+        ? PartyListFilter.all
+        : filter;
     final parties = await service.fetchParties(
       searchQuery: ref.read(partyBackendSearchProvider),
-      filter: ref.read(partyListFilterProvider),
+      filter: fetchFilter,
       typeFilter: ref.read(partyTypeFilterProvider),
     );
+
+    if (filter == PartyListFilter.toReceive || filter == PartyListFilter.toPay) {
+      return parties.where((party) {
+        final balance = projectedPartyBalance(party, outstandingIndex);
+        final projected = party.copyWith(balance: balance);
+        return switch (filter) {
+          PartyListFilter.toReceive => projected.hasReceivable,
+          PartyListFilter.toPay => projected.hasPayable,
+          _ => true,
+        };
+      }).toList()
+        ..sort(
+          (a, b) => projectedPartyBalance(b, outstandingIndex).abs().compareTo(
+            projectedPartyBalance(a, outstandingIndex).abs(),
+          ),
+        );
+    }
 
     return parties;
   }
@@ -383,11 +428,42 @@ class PartyList extends _$PartyList {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final service = await ref.read(partyServiceProvider.future);
-      return service.fetchParties(
+      final PartyListFilter activeFilter =
+          filter ?? ref.read(partyListFilterProvider);
+      final ledgerService = await ref.read(partyLedgerServiceProvider.future);
+      final businessId = await ref.read(partyLedgerBusinessIdProvider.future);
+      final outstandingIndex =
+          await ledgerService.fetchOutstandingIndex(businessId: businessId);
+      final PartyListFilter fetchFilter =
+          activeFilter == PartyListFilter.toReceive ||
+              activeFilter == PartyListFilter.toPay
+          ? PartyListFilter.all
+          : activeFilter;
+      final parties = await service.fetchParties(
         searchQuery: searchQuery ?? ref.read(partyBackendSearchProvider),
-        filter: filter ?? ref.read(partyListFilterProvider),
+        filter: fetchFilter,
         typeFilter: typeFilter ?? ref.read(partyTypeFilterProvider),
       );
+
+      if (activeFilter == PartyListFilter.toReceive ||
+          activeFilter == PartyListFilter.toPay) {
+        return parties.where((party) {
+          final balance = projectedPartyBalance(party, outstandingIndex);
+          final projected = party.copyWith(balance: balance);
+          return switch (activeFilter) {
+            PartyListFilter.toReceive => projected.hasReceivable,
+            PartyListFilter.toPay => projected.hasPayable,
+            _ => true,
+          };
+        }).toList()
+          ..sort(
+            (a, b) => projectedPartyBalance(b, outstandingIndex).abs().compareTo(
+              projectedPartyBalance(a, outstandingIndex).abs(),
+            ),
+          );
+      }
+
+      return parties;
     });
   }
 

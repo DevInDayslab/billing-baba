@@ -18,6 +18,7 @@ import 'package:billing_baba/features/inventory/application/inventory_items_prov
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
 import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -160,6 +161,7 @@ void invalidateAllBusinessScopedProvidersOn(
   container
     ..invalidate(commerceSettingsProvider)
     ..invalidate(partyListProvider)
+    ..invalidate(partyLedgerBusinessIdProvider)
     ..invalidate(partyServiceProvider)
     ..invalidate(partyGroupsProvider)
     ..invalidate(partyGroupsStorageReadyProvider)

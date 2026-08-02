@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/routing/app_routes.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/presentation/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/splash_page.dart';
@@ -18,7 +19,6 @@ import 'package:billing_baba/features/collaboration/presentation/sync_share_page
 import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/leads_screen.dart';
-import 'package:billing_baba/features/dashboard/presentation/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/home_page.dart';
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
 import 'package:billing_baba/features/developer/presentation/developer_components_page.dart';
@@ -27,22 +27,22 @@ import 'package:billing_baba/features/developer/presentation/table_filters_playg
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/categories_screen.dart';
-import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_details_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/mobile_inventory_masters_page.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/mobile_stock_transfer_placeholder_page.dart';
 import 'package:billing_baba/features/inventory/presentation/units_screen.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
-import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
-import 'package:billing_baba/features/subscription/presentation/mobile/payment_processing_page.dart';
-import 'package:billing_baba/features/subscription/presentation/mobile/payment_success_page.dart';
-import 'package:billing_baba/features/subscription/presentation/mobile/review_order_summary_page.dart';
-import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_page.dart';
 import 'package:billing_baba/features/plans_pricing/application/plans_pricing_license_constants.dart';
+import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_page.dart';
+import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
 import 'package:billing_baba/features/pos/presentation/pos_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_expense_page.dart';
+import 'package:billing_baba/features/purchases/presentation/add_payment_out_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_purchase_fa_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_purchase_order_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_purchase_page.dart';
@@ -62,13 +62,15 @@ import 'package:billing_baba/features/reports/presentation/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_delivery_challan_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_estimate_page.dart';
+import 'package:billing_baba/features/sales/presentation/add_job_work_page.dart';
+import 'package:billing_baba/features/sales/presentation/add_payment_in_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_page.dart';
 import 'package:billing_baba/features/sales/presentation/delivery_challan_page.dart';
-import 'package:billing_baba/features/sales/presentation/mobile/sale_invoice_more_settings_page.dart';
 import 'package:billing_baba/features/sales/presentation/estimate_quotation_page.dart';
 import 'package:billing_baba/features/sales/presentation/job_work_out_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/sale_invoice_more_settings_page.dart';
 import 'package:billing_baba/features/sales/presentation/payment_in_page.dart';
 import 'package:billing_baba/features/sales/presentation/proforma_invoice_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_fa_page.dart';
@@ -79,6 +81,9 @@ import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/settings/presentation/print_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/transaction_messages_screen.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/payment_processing_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/payment_success_page.dart';
+import 'package:billing_baba/features/subscription/presentation/mobile/review_order_summary_page.dart';
 import 'package:billing_baba/features/utilities/presentation/barcode_generator_page.dart';
 import 'package:billing_baba/features/utilities/presentation/import_items_page.dart';
 import 'package:flutter/material.dart';
@@ -100,6 +105,7 @@ GoRouter createAppRouter({
   bool showSplash = true,
 }) {
   ref.watch(companySessionBootstrapProvider);
+  ref.watch(syncEngineLifecycleProvider);
   return GoRouter(
     initialLocation: initialLocation,
     refreshListenable: RouterRefreshListenable(ref),
@@ -261,12 +267,14 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.itemsGodowns,
-            builder: (context, state) => const ComingSoonPage(title: 'Godowns'),
+            builder: (context, state) => const MobileInventoryMastersPage(
+              type: InventoryMasterType.godowns,
+            ),
           ),
           GoRoute(
             path: AppRoutes.itemsStockTransfer,
             builder: (context, state) =>
-                const ComingSoonPage(title: 'Stock Transfer'),
+                const MobileStockTransferPlaceholderPage(),
           ),
           GoRoute(
             path: AppRoutes.itemsSettings,
@@ -345,6 +353,13 @@ GoRouter createAppRouter({
             builder: (context, state) => const PaymentInPage(),
           ),
           GoRoute(
+            path: AppRoutes.addPaymentIn,
+            name: 'addPaymentIn',
+            builder: (context, state) => AddPaymentInPage(
+              paymentId: state.uri.queryParameters['paymentId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.saleOrder,
             builder: (context, state) => const SaleOrderPage(),
           ),
@@ -379,6 +394,18 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.saleJobWorkOut,
             builder: (context, state) => const JobWorkOutPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addJobWork,
+            name: 'addJobWork',
+            builder: (context, state) => const AddJobWorkPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editJobWork}/:orderId',
+            name: 'editJobWork',
+            builder: (context, state) => AddJobWorkPage(
+              orderId: state.pathParameters['orderId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.saleReturnCreditNote,
@@ -432,6 +459,13 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.purchasePaymentOut,
             builder: (context, state) => const PaymentOutPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPaymentOut,
+            name: 'addPaymentOut',
+            builder: (context, state) => AddPaymentOutPage(
+              paymentId: state.uri.queryParameters['paymentId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.purchaseExpenses,

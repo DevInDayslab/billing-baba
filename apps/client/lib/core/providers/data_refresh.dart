@@ -25,10 +25,15 @@ void invalidateDashboard(Ref ref) {
   ref.invalidate(dashboardProvider);
 }
 
+void invalidatePartyOutstandingIndex(Ref ref) {
+  final service = ref.read(partyLedgerServiceProvider).asData?.value;
+  service?.invalidateCache();
+  ref.invalidate(partyOutstandingIndexProvider);
+}
+
 void invalidatePartyBalances(Ref ref) {
-  ref
-    ..invalidate(partyListProvider)
-    ..invalidate(partyOutstandingIndexProvider);
+  invalidatePartyOutstandingIndex(ref);
+  ref.invalidate(partyListProvider);
 }
 
 void invalidatePartyTimeline(Ref ref, String partyId) {

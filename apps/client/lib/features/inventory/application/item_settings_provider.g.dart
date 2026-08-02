@@ -49,7 +49,7 @@ final class ItemSettingsRepositoryProvider
 }
 
 String _$itemSettingsRepositoryHash() =>
-    r'f4a2c8e91d7b3e5a6c0f1d2e3b4a5968c7d8e9f0';
+    r'7d8d62268741a448f1c987fb095bca34178f46d7';
 
 @ProviderFor(ItemSettingsNotifier)
 final itemSettingsProvider = ItemSettingsNotifierProvider._();
@@ -76,7 +76,7 @@ final class ItemSettingsNotifierProvider
 }
 
 String _$itemSettingsNotifierHash() =>
-    r'a1b2c3d4e5f6789012345678abcdef9012345678';
+    r'e6f9beda1dfe8d1aa061bbf6e50a8fbcafe24aec';
 
 abstract class _$ItemSettingsNotifier extends $AsyncNotifier<ItemSettings> {
   FutureOr<ItemSettings> build();

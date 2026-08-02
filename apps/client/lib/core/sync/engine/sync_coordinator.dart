@@ -16,6 +16,7 @@ import 'package:billing_baba/features/inventory/data/brand_sync.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
+import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:billing_baba/features/purchases/data/expense_sync.dart';
@@ -56,6 +57,7 @@ class SyncCoordinator {
     this._dealSync,
     this._expenseSync,
     this._expenseCategorySync,
+    this._stockLevelSync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
     this.brandEntityType = 'brands',
@@ -76,6 +78,7 @@ class SyncCoordinator {
     this.dealsEntityType = 'deals',
     this.expensesEntityType = 'expenses',
     this.expenseCategoriesEntityType = 'expense_categories',
+    this.stockLevelsEntityType = 'stock_levels',
   }) : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
@@ -100,6 +103,7 @@ class SyncCoordinator {
   final DealSync? _dealSync;
   final ExpenseSync? _expenseSync;
   final ExpenseCategorySync? _expenseCategorySync;
+  final StockLevelSync? _stockLevelSync;
   final Uuid _uuid;
   final String categoryEntityType;
   final String brandEntityType;
@@ -120,6 +124,7 @@ class SyncCoordinator {
   final String dealsEntityType;
   final String expensesEntityType;
   final String expenseCategoriesEntityType;
+  final String stockLevelsEntityType;
 
   String get _pullEntityTypes =>
       '$categoryEntityType,$brandEntityType,$partyEntityType,$itemEntityType,'
@@ -129,7 +134,8 @@ class SyncCoordinator {
       '$purchaseDocumentLinesEntityType,$leadsEntityType,'
       '$leadActivitiesEntityType,$contactsEntityType,'
       '$contactActivitiesEntityType,$dealsEntityType,'
-      '$expensesEntityType,$expenseCategoriesEntityType';
+      '$expensesEntityType,$expenseCategoriesEntityType,'
+      '$stockLevelsEntityType';
 
   bool _isRowEntity(String? type) =>
       type == categoryEntityType ||
@@ -249,6 +255,7 @@ class SyncCoordinator {
       final serverSchema = _readInt(statusPayload['schema_version']);
       _lastMaxPushMutations =
           _readInt(statusPayload['max_push_mutations']) ?? 100;
+      final supportedPushEntities = _readSupportedPushEntities(statusPayload);
       final pullCursor = _metadata.pullCursorFor(businessId);
       final bootstrappedAt = _metadata.bootstrappedAtFor(businessId);
       final lastServerSchemaVersion = _metadata.lastServerSchemaVersionFor(
@@ -303,6 +310,7 @@ class SyncCoordinator {
                 j.kind == SyncQueueKind.row &&
                 j.businessId == businessId &&
                 _isRowEntity(j.entityType) &&
+                supportedPushEntities.contains(j.entityType) &&
                 j.status == SyncQueueStatus.pending,
           )
           .toList();
@@ -539,13 +547,77 @@ class SyncCoordinator {
     return (uploaded: uploaded, conflicts: conflicts, failures: failures);
   }
 
+  /// One-time stock_levels bootstrap when stockLevelsReconciledAt is unset.
+  ///
+  /// Uses epoch cursor and stock_levels-only entity filter so rows older than the
+  /// shared pull cursor are still received. Does not advance the global cursor.
+  Future<int> _pullStockLevelsFromEpoch({
+    required String businessId,
+    required String deviceId,
+    required String appVersion,
+    required int syncGeneration,
+  }) async {
+    if (_stockLevelSync == null) return 0;
+    if (_metadata.stockLevelsReconciledAtFor(businessId) != null) return 0;
+
+    var downloaded = 0;
+    var cursor = epochSyncCursor();
+    var pages = 0;
+    const maxPages = 50;
+    const limit = 500;
+
+    while (pages < maxPages) {
+      if (SyncPauseGate.instance.isStale(syncGeneration)) {
+        return downloaded;
+      }
+
+      pages += 1;
+      final response = await _api.pull(
+        deviceId: deviceId,
+        appVersion: appVersion,
+        cursor: cursor,
+        limit: limit,
+        entityTypes: stockLevelsEntityType,
+      );
+
+      if (SyncPauseGate.instance.isStale(syncGeneration)) {
+        return downloaded;
+      }
+
+      final changes = _asList(response['changes']);
+      downloaded += await _applyPullChanges(
+        changes: changes,
+        businessId: businessId,
+      );
+
+      final next = response['next_cursor']?.toString();
+      if (next != null && next.isNotEmpty) {
+        cursor = next;
+      }
+
+      final hasMore = response['has_more'] == true;
+      if (!hasMore || changes.isEmpty) break;
+    }
+
+    await _metadata.setStockLevelsReconciledAtFor(
+      businessId,
+      DateTime.now().toUtc(),
+    );
+    return downloaded;
+  }
+
   Future<int> _pullAll({
     required String businessId,
     required String deviceId,
     required String appVersion,
     required int syncGeneration,
   }) async {
-    var downloaded = 0;
+    var downloaded = await _pullStockLevelsFromEpoch(
+      businessId: businessId,
+      deviceId: deviceId,
+      appVersion: appVersion,
+      syncGeneration: syncGeneration,
+    );
     var cursor = _metadata.pullCursorFor(businessId) ?? epochSyncCursor();
     var pages = 0;
     const maxPages = 50;
@@ -569,39 +641,10 @@ class SyncCoordinator {
       }
 
       final changes = _asList(response['changes']);
-      for (final change in changes) {
-        final entityType = change['entity_type']?.toString();
-        final entityId = change['entity_id']?.toString();
-        if (entityType == null || entityId == null) continue;
-
-        final syncVersion = _readInt(change['sync_version']) ?? 1;
-        final updatedAt =
-            DateTime.tryParse(
-              change['updated_at']?.toString() ?? '',
-            )?.toUtc() ??
-            DateTime.now().toUtc();
-        final isDeleted = change['is_deleted'] == true;
-        final deletedAt = DateTime.tryParse(
-          change['deleted_at']?.toString() ?? '',
-        )?.toUtc();
-        final payload = change['payload'];
-        final payloadMap = payload is Map<String, dynamic>
-            ? payload
-            : (payload is Map ? Map<String, dynamic>.from(payload) : null);
-
-        await _applyChange(
-          entityType: entityType,
-          businessId: businessId,
-          entityId: entityId,
-          syncVersion: syncVersion,
-          updatedAt: updatedAt,
-          isDeleted: isDeleted,
-          deletedAt: deletedAt,
-          deviceId: change['device_id']?.toString(),
-          payload: payloadMap,
-        );
-        if (!isDeleted) downloaded += 1;
-      }
+      downloaded += await _applyPullChanges(
+        changes: changes,
+        businessId: businessId,
+      );
 
       final next = response['next_cursor']?.toString();
       if (next != null && next.isNotEmpty) {
@@ -613,6 +656,47 @@ class SyncCoordinator {
       if (!hasMore || changes.isEmpty) break;
     }
 
+    return downloaded;
+  }
+
+  Future<int> _applyPullChanges({
+    required List<Map<String, dynamic>> changes,
+    required String businessId,
+  }) async {
+    var downloaded = 0;
+    for (final change in changes) {
+      final entityType = change['entity_type']?.toString();
+      final entityId = change['entity_id']?.toString();
+      if (entityType == null || entityId == null) continue;
+
+      final syncVersion = _readInt(change['sync_version']) ?? 1;
+      final updatedAt =
+          DateTime.tryParse(
+            change['updated_at']?.toString() ?? '',
+          )?.toUtc() ??
+          DateTime.now().toUtc();
+      final isDeleted = change['is_deleted'] == true;
+      final deletedAt = DateTime.tryParse(
+        change['deleted_at']?.toString() ?? '',
+      )?.toUtc();
+      final payload = change['payload'];
+      final payloadMap = payload is Map<String, dynamic>
+          ? payload
+          : (payload is Map ? Map<String, dynamic>.from(payload) : null);
+
+      await _applyChange(
+        entityType: entityType,
+        businessId: businessId,
+        entityId: entityId,
+        syncVersion: syncVersion,
+        updatedAt: updatedAt,
+        isDeleted: isDeleted,
+        deletedAt: deletedAt,
+        deviceId: change['device_id']?.toString(),
+        payload: payloadMap,
+      );
+      if (!isDeleted) downloaded += 1;
+    }
     return downloaded;
   }
 
@@ -810,6 +894,17 @@ class SyncCoordinator {
         );
       case 'expense_categories':
         await _expenseCategorySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'stock_levels':
+        await _stockLevelSync?.applyChange(
           businessId: businessId,
           entityId: entityId,
           syncVersion: syncVersion,
@@ -1025,6 +1120,49 @@ class SyncCoordinator {
     if (value is String) return int.tryParse(value);
     return null;
   }
+
+  /// Entity types the server accepts on `/sync/push` (from `/sync/status`).
+  ///
+  /// Intersects with [_clientPushableEntityTypes] so a server that advertises
+  /// entities before push validation supports them does not poison the batch.
+  static Set<String> _readSupportedPushEntities(
+    Map<String, dynamic> statusPayload,
+  ) {
+    final raw = statusPayload['supported_entities'];
+    if (raw is List) {
+      final fromServer = raw
+          .map((e) => e.toString())
+          .where((s) => s.isNotEmpty)
+          .toSet();
+      if (fromServer.isNotEmpty) {
+        return fromServer.intersection(_clientPushableEntityTypes);
+      }
+    }
+    return _clientPushableEntityTypes;
+  }
+
+  /// Row entity types this client build can push (must match server push schema).
+  static const Set<String> _clientPushableEntityTypes = {
+    'categories',
+    'brands',
+    'parties',
+    'items',
+    'unit_definitions',
+    'tax_rates',
+    'godowns',
+    'leads',
+    'lead_activities',
+    'contacts',
+    'contact_activities',
+    'deals',
+    'expense_categories',
+    'expenses',
+    'business_settings',
+    'sales_documents',
+    'sales_document_lines',
+    'purchase_documents',
+    'purchase_document_lines',
+  };
 
   static bool _isAuthFailure(Object error) {
     if (error is DioException) {

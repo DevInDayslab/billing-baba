@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../../db/client';
 import { salesDocuments } from '../../../../db/schema/sales/tables';
 import { AppError } from '../../../../shared/errors/app-error';
+import { ensureWalkInParty, walkInPartyIdForBusiness } from '../../../../shared/parties/walk-in-party';
 import { SalesDocumentRepository } from '../../../sales/sales-document.repository';
 import { finalizeSalesDocument } from '../../../sales/sales-finalize.service';
 import type { FinalizeSalePaymentInput } from '../../../sales/sales-finalize-payment.service';
@@ -91,6 +92,15 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
 
   if (document.status !== 'draft') {
     return documentAlreadyFinalized(input);
+  }
+
+  await ensureWalkInParty(
+    db,
+    input.businessId,
+    walkInPartyIdForBusiness(input.businessId),
+  );
+  if (document.partyId) {
+    await ensureWalkInParty(db, input.businessId, document.partyId);
   }
 
   const localNumber =

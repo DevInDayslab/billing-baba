@@ -203,7 +203,7 @@ void main() {
     expect(api.pullCalls, 2);
     expect(
       api.lastPullEntityTypes,
-      'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories',
+      'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels',
     );
     // Bootstrap starts from epoch cursor (opaque base64), then stores next_cursor.
     expect(api.lastPullCursor, isNotNull);
@@ -289,7 +289,7 @@ void main() {
     expect(api.pullCalls, 1);
     expect(
       api.lastPullEntityTypes,
-      'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories',
+      'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels',
     );
     final mutations = api.lastPushBody!['mutations'] as List;
     expect(mutations, hasLength(3));
@@ -347,5 +347,74 @@ void main() {
     final state = await runOrchestrate();
 
     expect(state.lifecycle, SyncLifecycleState.failed);
+  });
+
+  test('unsupported entity types are skipped in push batch', () async {
+    await storage.write(StorageKeys.lastOpenedBusinessId, 'biz-1');
+    await storage.write(StorageKeys.syncPullCursor, 'cursor-abc');
+    await storage.write(
+      StorageKeys.syncBootstrappedAt,
+      DateTime.utc(2026).toIso8601String(),
+    );
+    await storage.write(StorageKeys.syncLastServerSchemaVersion, '1');
+
+    api.statusPayload = {
+      'schema_version': 1,
+      'protocol_version': 1,
+      'supported_entities': [
+        'categories',
+        'parties',
+        'items',
+        'unit_definitions',
+        'tax_rates',
+        'godowns',
+        'business_settings',
+        'sales_documents',
+        'sales_document_lines',
+        'purchase_documents',
+        'purchase_document_lines',
+      ],
+    };
+
+    final leadJob = await queue.enqueueRowMutation(
+      businessId: 'biz-1',
+      entityType: 'leads',
+      entityId: '33333333-3333-3333-3333-333333333333',
+      operation: SyncQueueOperation.create,
+      payload: {'name': 'Prospect'},
+    );
+
+    final partyJob = await queue.enqueueRowMutation(
+      businessId: 'biz-1',
+      entityType: 'parties',
+      entityId: '00000000-0000-0000-0000-0000000000p1',
+      operation: SyncQueueOperation.create,
+      payload: {'name': 'A', 'mobile': '9000000000', 'party_type': 'customer'},
+    );
+
+    await db.into(db.partiesLocal).insert(
+          PartiesLocalCompanion.insert(
+            id: '00000000-0000-0000-0000-0000000000p1',
+            businessId: 'biz-1',
+            name: 'A',
+            mobile: const Value('9000000000'),
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        );
+
+    final state = await runOrchestrate();
+
+    expect(api.pushCalls, 1);
+    final mutations = api.lastPushBody!['mutations'] as List;
+    expect(mutations, hasLength(1));
+    expect(mutations.first['entity_type'], 'parties');
+    expect(mutations.first['mutation_id'], partyJob.mutationId);
+
+    final pending = await queue.listPending(businessId: 'biz-1');
+    expect(pending, hasLength(1));
+    expect(pending.first.mutationId, leadJob.mutationId);
+    expect(pending.first.entityType, 'leads');
+    expect(state.lastResultMessage, contains('push=1'));
   });
 }

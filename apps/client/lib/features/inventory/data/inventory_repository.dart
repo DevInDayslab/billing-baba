@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/database/database.dart';
+import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/brand_master_repository.dart';
@@ -49,6 +52,7 @@ class InventoryRepository {
     this._brands,
     this._deviceIdReader,
     this._stockApplier,
+    this._metadata,
   });
 
   final InventoryRemoteDataSource _remote;
@@ -63,6 +67,7 @@ class InventoryRepository {
   final BrandMasterRepository? _brands;
   final String? Function()? _deviceIdReader;
   final InventoryDocumentStockApplier? _stockApplier;
+  final SyncMetadataStore? _metadata;
 
   InventoryRemoteDataSource get remoteDataSource => _remote;
 
@@ -295,11 +300,12 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) => _items.countActive(
-    searchQuery: searchQuery,
-    type: type,
-    categoryId: categoryId,
-  );
+  }) =>
+      _items.countActive(
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+      );
 
   Future<List<ItemListDto>> listItemsPage({
     required int limit,
@@ -307,13 +313,14 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) => _items.listPage(
-    limit: limit,
-    offset: offset,
-    searchQuery: searchQuery,
-    type: type,
-    categoryId: categoryId,
-  );
+  }) =>
+      _items.listPage(
+        limit: limit,
+        offset: offset,
+        searchQuery: searchQuery,
+        type: type,
+        categoryId: categoryId,
+      );
 
   Stream<List<ItemListDto>> watchItemsPage({
     required int limit,
@@ -321,22 +328,99 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) => _items.watchPage(
-    limit: limit,
-    offset: offset,
-    searchQuery: searchQuery,
-    type: type,
-    categoryId: categoryId,
-  );
+  }) {
+    final businessId = _requireBusinessId();
+    final itemsStream = _items.watchPage(
+      limit: limit,
+      offset: offset,
+      searchQuery: searchQuery,
+      type: type,
+      categoryId: categoryId,
+    );
+    final stockStream = _debounceStream(
+      _stockLocal.watchStockLevels(businessId: businessId),
+      const Duration(milliseconds: 75),
+    );
+    return _watchItemsPageReactingToStock(itemsStream, stockStream);
+  }
+
+  Stream<List<ItemListDto>> _watchItemsPageReactingToStock(
+    Stream<List<ItemListDto>> itemsStream,
+    Stream<void> stockStream,
+  ) {
+    final controller = StreamController<List<ItemListDto>>();
+    List<ItemListDto>? latestItems;
+    StreamSubscription<List<ItemListDto>>? itemsSub;
+    StreamSubscription<void>? stockSub;
+
+    void emitLatest() {
+      final items = latestItems;
+      if (items != null && !controller.isClosed) {
+        controller.add(items);
+      }
+    }
+
+    controller.onListen = () {
+      itemsSub = itemsStream.listen(
+        (items) {
+          latestItems = items;
+          controller.add(items);
+        },
+        onError: controller.addError,
+      );
+      stockSub = stockStream.listen(
+        (_) => emitLatest(),
+        onError: controller.addError,
+      );
+    };
+
+    controller.onCancel = () async {
+      await itemsSub?.cancel();
+      await stockSub?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  /// Coalesces rapid stock-level watch events (e.g. sync batches) into one emit.
+  Stream<void> _debounceStream(Stream<void> source, Duration duration) {
+    late final StreamController<void> controller;
+    StreamSubscription<void>? sourceSub;
+    Timer? timer;
+
+    controller = StreamController<void>(
+      onListen: () {
+        sourceSub = source.listen(
+          (_) {
+            timer?.cancel();
+            timer = Timer(duration, () {
+              if (!controller.isClosed) {
+                controller.add(null);
+              }
+            });
+          },
+          onError: controller.addError,
+          onDone: () {
+            timer?.cancel();
+            controller.close();
+          },
+        );
+      },
+      onCancel: () async {
+        timer?.cancel();
+        await sourceSub?.cancel();
+      },
+    );
+
+    return controller.stream;
+  }
 
   Future<Map<String, double>> localStockQuantitiesForItems(
     Iterable<String> itemIds,
   ) async {
     final all = await localStockQuantitiesByItem();
     final ids = itemIds.toSet();
-    return Map.fromEntries(
-      all.entries.where((entry) => ids.contains(entry.key)),
-    );
+    return Map.fromEntries(all.entries.where((entry) => ids.contains(entry.key)));
   }
 
   Future<ItemDetailDto> getItem(String id) async {
@@ -407,9 +491,7 @@ class InventoryRepository {
 
   Future<void> deleteItemLocation(String id) => _remote.deleteItemLocation(id);
 
-  Future<PaginatedStockLevelsDto> getStockLevels(
-    StockLevelListQuery query,
-  ) async {
+  Future<PaginatedStockLevelsDto> getStockLevels(StockLevelListQuery query) async {
     final businessId = _requireBusinessId();
     if (query.itemId != null && query.itemId!.isNotEmpty) {
       final rows = await _stockLocal.listStockLevelRowsForItem(
@@ -453,6 +535,10 @@ class InventoryRepository {
 
   Future<Map<String, double>> localStockQuantitiesByItem() async {
     final businessId = _requireBusinessId();
+    if (_metadata?.stockLevelsReconciledAtFor(businessId) != null) {
+      await _stockLocal.removeLiteralDefaultGodownRows(businessId: businessId);
+      await _stockLocal.collapseDuplicateStockTriples(businessId: businessId);
+    }
     var quantities = await _stockLocal.quantitiesByItem(businessId: businessId);
     if (quantities.isEmpty) {
       await _maybeBackfillBusinessStock(businessId);
@@ -462,11 +548,12 @@ class InventoryRepository {
   }
 
   Future<void> _maybeBackfillBusinessStock(String businessId) async {
+    if (_metadata?.stockLevelsReconciledAtFor(businessId) != null) {
+      return;
+    }
     final applier = _stockApplier;
     if (applier == null) return;
-    final hasMovements = await _stockLocal.hasAnyMovements(
-      businessId: businessId,
-    );
+    final hasMovements = await _stockLocal.hasAnyMovements(businessId: businessId);
     if (hasMovements) return;
     await applier.backfillBusinessStock(
       businessId: businessId,

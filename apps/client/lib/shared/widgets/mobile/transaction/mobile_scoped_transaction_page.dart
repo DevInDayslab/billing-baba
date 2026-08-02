@@ -2,9 +2,11 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_catalog.dart';
 import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_items_provider.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_mapper.dart';
 import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Route-driven wrapper around [MobileTransactionPage].
 ///
@@ -43,11 +45,16 @@ class MobileScopedTransactionPage extends ConsumerWidget {
       config: config,
       itemsAsync: itemsAsync,
       filterMatcher: MobileTransactionCatalog.statusFilterMatcher,
-      onRefresh: () => refreshMobileTransactionItems(ref, definition.route),
+      onRefresh: () => refreshMobileTransactionItems(ref, definition.scopeId),
       onItemTap: (item) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${item.title} — details coming soon')),
-        );
+        final detailRoute = MobileTransactionMapper.detailRouteFor(route, item.id);
+        if (detailRoute != null) {
+          context.push(detailRoute);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${item.title} — open on desktop to edit')),
+          );
+        }
       },
     );
   }

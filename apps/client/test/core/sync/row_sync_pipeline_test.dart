@@ -455,7 +455,7 @@ void main() {
       expect(android.metadata.pullCursor, isNotNull);
       expect(
         android.api.lastPullEntityTypes,
-        'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories',
+        'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels',
       );
 
       final cats = await android.categories.listActive('biz-1');

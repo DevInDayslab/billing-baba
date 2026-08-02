@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/application/pos_sale_mapper.dart';
 import 'package:billing_baba/features/pos/application/pos_session_service.dart';
@@ -19,13 +20,14 @@ part 'pos_sale_service.g.dart';
 Future<PosSaleService> posSaleService(Ref ref) async {
   final sessionService = await ref.watch(posSessionServiceProvider.future);
   final localDataSource = PosLocalDataSource(ref.watch(appDatabaseProvider));
-  final commandRepository = await ref.watch(
-    salesInvoiceCommandRepositoryProvider.future,
-  );
+  final godownLocal = GodownLocalSource(ref.watch(appDatabaseProvider));
+  final commandRepository =
+      await ref.watch(salesInvoiceCommandRepositoryProvider.future);
   return PosSaleService(
     sessionService: sessionService,
     localDataSource: localDataSource,
     commandRepository: commandRepository,
+    godownLocal: godownLocal,
   );
 }
 
@@ -34,11 +36,13 @@ class PosSaleService {
     required this._sessionService,
     required this._localDataSource,
     required this._commandRepository,
+    required this._godownLocal,
   });
 
   final PosSessionService _sessionService;
   final PosLocalDataSource _localDataSource;
   final SalesInvoiceCommandRepository _commandRepository;
+  final GodownLocalSource _godownLocal;
 
   Future<PosSale> completeSale({
     required String businessId,
@@ -72,9 +76,12 @@ class PosSaleService {
       totalPayable: cart.totalPayable,
     );
 
+    final defaultGodownId = await _godownLocal.getDefaultGodownId(businessId);
+
     await _commandRepository.finalize(
       documentId: draft.id,
       localDocumentNumber: draft.documentNumber,
+      godownId: defaultGodownId,
       payment: payment,
     );
 
@@ -118,8 +125,7 @@ class PosSaleService {
     String? customerName,
     String? notes,
   }) {
-    final totalAmount =
-        cart.subtotal - cart.totalDiscount - cart.billDiscountAmount;
+    final totalAmount = cart.subtotal - cart.totalDiscount - cart.billDiscountAmount;
     final taxAmount = cart.totalTax;
     final finalAmount = cart.totalPayable;
     final completedAt =
@@ -128,9 +134,8 @@ class PosSaleService {
     final saleItems = <PosSaleLineItem>[];
     for (var i = 0; i < cart.items.length; i++) {
       final cartItem = cart.items[i];
-      final lineDto = i < finalizedDto.lines.length
-          ? finalizedDto.lines[i]
-          : null;
+      final lineDto =
+          i < finalizedDto.lines.length ? finalizedDto.lines[i] : null;
       saleItems.add(
         PosSaleLineItem(
           name: cartItem.item.name,

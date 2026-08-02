@@ -132,9 +132,13 @@ void main() {
     expect(stored?.status, 'finalized');
     expect(stored?.documentType, SalesDocumentType.pos.apiValue);
 
-    final commandJobs = await queue.listPending();
+    final pendingJobs = await queue.listPending();
     expect(
-      commandJobs.any(
+      pendingJobs.any((job) => job.kind == SyncQueueKind.row),
+      isTrue,
+    );
+    expect(
+      pendingJobs.any(
         (job) =>
             job.kind == SyncQueueKind.command &&
             job.payload['command'] == 'finalize_sale',

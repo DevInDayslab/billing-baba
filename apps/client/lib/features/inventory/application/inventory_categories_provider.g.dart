@@ -35,7 +35,7 @@ final class InventoryCategoriesProvider
 }
 
 String _$inventoryCategoriesHash() =>
-    r'19a38c1aa25bf586071a1bb9313618ec274474af';
+    r'e82f5a0d21610eeb612a40bd5477c1777acec5b7';
 
 abstract class _$InventoryCategories
     extends $AsyncNotifier<List<InventoryCategory>> {

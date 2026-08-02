@@ -117,10 +117,6 @@ class _MobileBusinessListPageState
           onRetry: () => ref.invalidate(companyDirectoryProvider),
         ),
         data: (allEntries) {
-          ref
-              .read(mobileBusinessSelectionProvider.notifier)
-              .seedInitialSelection(allEntries);
-
           if (allEntries.isEmpty) {
             return _EmptyState(onCreate: _onCreateBusiness);
           }

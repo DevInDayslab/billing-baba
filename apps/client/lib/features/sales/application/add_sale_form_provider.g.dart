@@ -58,7 +58,7 @@ final class AddSaleFormProvider
   }
 }
 
-String _$addSaleFormHash() => r'92f9ed810c8cf31f96f6b700956bc4fbe65cb23b';
+String _$addSaleFormHash() => r'a4fbb1014787ac798badb8810f00a095abb1d21b';
 
 final class AddSaleFormFamily extends $Family
     with

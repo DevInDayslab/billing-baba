@@ -80,7 +80,7 @@ describe('sync pushBodySchema', () => {
     expect(result.success).toBe(false);
   });
 
-  test('rejects unknown row entity_type', () => {
+  test('accepts registered row entity_type brands', () => {
     const result = pushBodySchema.safeParse({
       ...validBatch,
       mutations: [
@@ -88,6 +88,25 @@ describe('sync pushBodySchema', () => {
           mutation_id: 'a1111111-1111-4111-8111-111111111111',
           kind: 'row',
           entity_type: 'brands',
+          entity_id: 'b2222222-2222-4222-8222-222222222222',
+          operation: 'create',
+          base_sync_version: 0,
+          payload: { name: 'Acme' },
+          client_updated_at: '2026-07-26T05:01:00.000Z',
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test('rejects unknown row entity_type', () => {
+    const result = pushBodySchema.safeParse({
+      ...validBatch,
+      mutations: [
+        {
+          mutation_id: 'a1111111-1111-4111-8111-111111111111',
+          kind: 'row',
+          entity_type: 'not_a_real_entity',
           entity_id: 'b2222222-2222-4222-8222-222222222222',
           operation: 'create',
           base_sync_version: 0,

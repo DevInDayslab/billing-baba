@@ -2,6 +2,7 @@ import { categories, items, parties } from '../../../db/schema';
 import {
   brands,
   godowns,
+  stockLevels,
   unitDefinitions,
 } from '../../../db/schema/inventory/tables';
 import {
@@ -58,6 +59,8 @@ export type RowEntityDef = {
     input: RowMutationInput,
     existing: SyncedRowBase | null,
   ) => ApplyOutcome | null;
+  /** Server-derived rows: included in pull, rejected on push. */
+  pullOnly?: boolean;
 };
 
 function defineEntity(input: {
@@ -288,7 +291,7 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
         'notes',
       ],
     }),
-    beforeApply: guardDraftDocumentRow(['tax_invoice', 'sales_return']),
+    beforeApply: guardDraftDocumentRow(['tax_invoice', 'sales_return', 'pos']),
   },
   sales_document_lines: defineEntity({
     entityType: 'sales_document_lines',
@@ -354,6 +357,20 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'sortOrder',
     ],
   }),
+  stock_levels: {
+    ...defineEntity({
+      entityType: 'stock_levels',
+      table: stockLevels,
+      allowedColumns: [
+        'itemId',
+        'godownId',
+        'quantity',
+        'averageCost',
+        'reorderLevel',
+      ],
+    }),
+    pullOnly: true,
+  },
 };
 
 export const REGISTERED_ROW_ENTITY_TYPES = Object.keys(ROW_ENTITIES) as [
@@ -367,6 +384,10 @@ export function getRowEntity(entityType: string): RowEntityDef | undefined {
 
 export function isRegisteredRowEntity(entityType: string): boolean {
   return entityType in ROW_ENTITIES;
+}
+
+export function isPullOnlyRowEntity(entityType: string): boolean {
+  return ROW_ENTITIES[entityType]?.pullOnly === true;
 }
 
 export function listRowEntities(): RowEntityDef[] {

@@ -83,7 +83,7 @@ final class PartyLedgerBusinessIdProvider
 }
 
 String _$partyLedgerBusinessIdHash() =>
-    r'9f607cd1d4a83db54d16102781f837a52defd85b';
+    r'76286aab1d3a454518738effe90edb70a5ba85f0';
 
 @ProviderFor(PartyProfileProjection)
 final partyProfileProjectionProvider = PartyProfileProjectionFamily._();

@@ -6,7 +6,10 @@ import {
 } from './apply/command-ack.repository';
 import { CommandApplier } from './apply/commands/command-applier';
 import { MutationAckRepository } from './apply/mutation-ack.repository';
-import { isRegisteredRowEntity } from './apply/row-entities';
+import {
+  isPullOnlyRowEntity,
+  isRegisteredRowEntity,
+} from './apply/row-entities';
 import { RowApplier } from './apply/row-applier';
 import { SYNC_MAX_PUSH_MUTATIONS } from './sync.constants';
 import { syncBatchTooLarge } from './sync.errors';
@@ -136,6 +139,15 @@ export class PushService {
         replayed.push({
           ...prior,
           idempotent_replay: true,
+        });
+        continue;
+      }
+
+      if (isPullOnlyRowEntity(mutation.entity_type)) {
+        errors.push({
+          mutation_id: mutation.mutation_id,
+          code: 'PULL_ONLY_ENTITY',
+          message: `Row entity_type '${mutation.entity_type}' is a server-derived projection and cannot be pushed; pull to receive updates`,
         });
         continue;
       }

@@ -226,6 +226,7 @@ class SalesInvoiceCommandRepository {
           taxOption: input.taxOption,
         ),
         deviceId: _deviceIdReader?.call(),
+        priority: SyncQueuePriority.high,
         clientUpdatedAt: now,
       );
     }
@@ -278,7 +279,7 @@ class SalesInvoiceCommandRepository {
     final commandPayload = <String, dynamic>{
       'document_id': documentId,
       'local_document_number': localNumber,
-      'godown_id': ?godownId,
+      if (godownId != null && godownId.isNotEmpty) 'godown_id': godownId,
     };
 
     if (payment != null &&
