@@ -1,23 +1,19 @@
 import 'dart:async';
 
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
-import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _fieldBorder = Color(0xFFE0E0E0);
 const _saveBlue = Color(0xFF42A5F5);
-const _partyListMaxHeight = 280.0;
 
-/// Vyapar-style party field with inline saved-parties list.
-///
-/// Loads parties from [partyPickerListProvider] (local SQLite / API, same as
-/// desktop). Create uses the shared [showAddPartyDialog] flow.
+/// Vyapar-style customer field with inline saved-parties list.
 class MobileSalePartyPickerField extends ConsumerStatefulWidget {
   const MobileSalePartyPickerField({
     required this.controller,
@@ -27,9 +23,6 @@ class MobileSalePartyPickerField extends ConsumerStatefulWidget {
     super.key,
     this.hasError = false,
     this.partyTypeFilter = PartyTypeFilter.customer,
-    this.label = 'Customer',
-    this.hintText = 'Customer name',
-    this.allowCreateParty = true,
   });
 
   final TextEditingController controller;
@@ -38,9 +31,6 @@ class MobileSalePartyPickerField extends ConsumerStatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final bool hasError;
   final PartyTypeFilter partyTypeFilter;
-  final String label;
-  final String hintText;
-  final bool allowCreateParty;
 
   @override
   ConsumerState<MobileSalePartyPickerField> createState() =>
@@ -58,7 +48,10 @@ class _MobileSalePartyPickerFieldState
     super.initState();
     _focusNode.addListener(_handleFocusChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensurePartiesLoaded();
+      final partiesAsync = ref.read(partyPickerListProvider);
+      if (!partiesAsync.hasValue || (partiesAsync.value?.isEmpty ?? true)) {
+        unawaited(ref.read(partyPickerListProvider.future));
+      }
     });
   }
 
@@ -68,13 +61,6 @@ class _MobileSalePartyPickerFieldState
       ..removeListener(_handleFocusChange)
       ..dispose();
     super.dispose();
-  }
-
-  void _ensurePartiesLoaded() {
-    final partiesAsync = ref.read(partyPickerListProvider);
-    if (!partiesAsync.hasValue || (partiesAsync.value?.isEmpty ?? true)) {
-      unawaited(ref.read(partyPickerListProvider.future));
-    }
   }
 
   void _handleFocusChange() {
@@ -90,7 +76,10 @@ class _MobileSalePartyPickerFieldState
   }
 
   void _expand() {
-    _ensurePartiesLoaded();
+    final partiesAsync = ref.read(partyPickerListProvider);
+    if (!partiesAsync.hasValue || (partiesAsync.value?.isEmpty ?? true)) {
+      unawaited(ref.read(partyPickerListProvider.future));
+    }
     setState(() {
       _isExpanded = true;
       _searchQuery = widget.controller.text.trim();
@@ -106,20 +95,14 @@ class _MobileSalePartyPickerFieldState
     final query = _searchQuery.trim().toLowerCase();
     if (query.isEmpty) return filtered;
 
-    final queryWords = query
-        .split(RegExp(r'\s+'))
-        .where((word) => word.isNotEmpty)
-        .toList();
-
     return filtered.where((party) {
       final searchable = [
         party.name,
-        party.additionalField1,
         party.phone,
         party.gstin,
         party.email,
       ].join(' ').toLowerCase();
-      return queryWords.every(searchable.contains);
+      return searchable.contains(query);
     }).toList();
   }
 
@@ -129,15 +112,13 @@ class _MobileSalePartyPickerFieldState
     _collapse();
   }
 
-  /// Mirrors desktop party search create + reselect flow.
   Future<void> _addNewParty() async {
     _collapse();
     final result = await showAddPartyDialog(context);
     if (!mounted || result == null) return;
 
-    ref
-      ..invalidate(partyPickerListProvider)
-      ..invalidate(partiesListProvider);
+    ref.invalidate(partyPickerListProvider);
+    ref.invalidate(partiesListProvider);
 
     widget.controller.text = result.partyName;
     widget.onSearchChanged(result.partyName);
@@ -163,20 +144,15 @@ class _MobileSalePartyPickerFieldState
     }
   }
 
-  String _balanceLabel(
-    PartyModel party,
-    Map<String, double>? outstandingIndex,
-  ) {
-    final balance = projectedPartyBalance(party, outstandingIndex);
-    if (balance == 0) return '0';
-    return PartyModel.displayOutstanding(balance);
+  String _balanceLabel(PartyModel party) {
+    if (party.balance == 0) return '0';
+    return PartyModel.displayOutstanding(party.balance);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final partiesAsync = ref.watch(partyPickerListProvider);
-    final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
     final borderColor = widget.hasError ? AppColors.error : _fieldBorder;
 
     return Column(
@@ -188,9 +164,9 @@ class _MobileSalePartyPickerFieldState
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
-            children: [
-              TextSpan(text: widget.label),
-              const TextSpan(
+            children: const [
+              TextSpan(text: 'Customer'),
+              TextSpan(
                 text: ' *',
                 style: TextStyle(color: AppColors.error),
               ),
@@ -211,7 +187,7 @@ class _MobileSalePartyPickerFieldState
             color: AppColors.textPrimary,
           ),
           decoration: InputDecoration(
-            hintText: widget.hintText,
+            hintText: 'Customer name',
             hintStyle: theme.textTheme.bodyLarge?.copyWith(
               color: AppColors.textSecondary.withValues(alpha: 0.55),
             ),
@@ -278,100 +254,75 @@ class _MobileSalePartyPickerFieldState
                           ),
                         ),
                       ),
-                      if (widget.allowCreateParty)
-                        GestureDetector(
-                          onTap: () => unawaited(_addNewParty()),
-                          child: Text(
-                            'Add new party',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: _saveBlue,
-                              fontWeight: FontWeight.w600,
-                            ),
+                      GestureDetector(
+                        onTap: _addNewParty,
+                        child: Text(
+                          'Add new party',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: _saveBlue,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxHeight: _partyListMaxHeight,
+                partiesAsync.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(AppSpacing.xl),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
-                  child: partiesAsync.when(
-                    loading: () => const Padding(
-                      padding: EdgeInsets.all(AppSpacing.xl),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                    error: (error, _) => Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            PartyErrorMapper.messageFor(error),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.error,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextButton(
-                            onPressed: () {
-                              ref.invalidate(partyPickerListProvider);
-                              unawaited(
-                                ref.read(partyPickerListProvider.future),
-                              );
-                            },
-                            child: const Text('Retry'),
-                          ),
-                        ],
+                  error: (error, _) => Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Text(
+                      PartyErrorMapper.messageFor(error),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.error,
                       ),
                     ),
-                    data: (parties) {
-                      final filtered = _filteredParties(parties);
-                      if (filtered.isEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            0,
-                            AppSpacing.md,
-                            AppSpacing.lg,
-                          ),
-                          child: Text(
-                            parties.isEmpty
-                                ? 'No saved parties yet. Tap Add new party.'
-                                : 'No parties found',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        );
-                      }
-
-                      return ListView.separated(
-                        shrinkWrap: true,
-                        padding: EdgeInsets.zero,
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) => Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: AppColors.textSecondary.withValues(
-                            alpha: 0.12,
+                  ),
+                  data: (parties) {
+                    final filtered = _filteredParties(parties);
+                    if (filtered.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          0,
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                        ),
+                        child: Text(
+                          'No parties found',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                        itemBuilder: (context, index) {
-                          final party = filtered[index];
-                          return _PartyRow(
-                            party: party,
-                            balanceLabel: _balanceLabel(
-                              party,
-                              outstandingIndex,
-                            ),
-                            isSelected: widget.selectedPartyId == party.id,
-                            onTap: () => _selectParty(party),
-                          );
-                        },
                       );
-                    },
-                  ),
+                    }
+
+                    return Column(
+                      children: [
+                        for (var i = 0; i < filtered.length; i++) ...[
+                          if (i > 0)
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.12,
+                              ),
+                            ),
+                          _PartyRow(
+                            party: filtered[i],
+                            balanceLabel: _balanceLabel(filtered[i]),
+                            isSelected:
+                                widget.selectedPartyId == filtered[i].id,
+                            onTap: () => _selectParty(filtered[i]),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -400,9 +351,7 @@ class _PartyRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: isSelected
-          ? _saveBlue.withValues(alpha: 0.06)
-          : Colors.transparent,
+      color: isSelected ? _saveBlue.withValues(alpha: 0.06) : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(

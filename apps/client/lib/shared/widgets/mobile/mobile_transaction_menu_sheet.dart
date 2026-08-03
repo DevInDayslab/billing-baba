@@ -74,7 +74,7 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
         MobileTransactionMenuItem(
           label: 'Sale Invoice',
           icon: Icons.receipt_long_outlined,
-          onTap: () => go(AppRoutes.saleInvoices),
+          onTap: () => go(AppRoutes.addSale),
         ),
         MobileTransactionMenuItem(
           label: 'Mobile POS',

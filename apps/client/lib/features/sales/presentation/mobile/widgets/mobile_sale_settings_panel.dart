@@ -84,7 +84,9 @@ class _MobileSaleSettingsPanelState
           TransactionMessageType.sale: enabled,
         },
       );
-      await ref.read(transactionMessageSettingsProvider.notifier).save(updated);
+      await ref
+          .read(transactionMessageSettingsProvider.notifier)
+          .save(updated);
     } finally {
       if (mounted) setState(() => _isSavingSms = false);
     }
@@ -95,11 +97,9 @@ class _MobileSaleSettingsPanelState
     setState(() => _isSavingPrefix = true);
 
     try {
-      await ref
-          .read(saleInvoiceSettingsProvider.notifier)
-          .updateSettings(
-            (settings) => settings.copyWith(salePrefixEnabled: enabled),
-          );
+      await ref.read(saleInvoiceSettingsProvider.notifier).updateSettings(
+        (settings) => settings.copyWith(salePrefixEnabled: enabled),
+      );
     } finally {
       if (mounted) setState(() => _isSavingPrefix = false);
     }
@@ -112,8 +112,7 @@ class _MobileSaleSettingsPanelState
     final settingsAsync = ref.watch(transactionMessageSettingsProvider);
     final saleSettingsAsync = ref.watch(saleInvoiceSettingsProvider);
     final transactionSmsEnabled = settingsAsync.maybeWhen(
-      data: (settings) =>
-          settings.isAutoSendEnabled(TransactionMessageType.sale),
+      data: (settings) => settings.isAutoSendEnabled(TransactionMessageType.sale),
       orElse: () => true,
     );
     final salePrefixEnabled = saleSettingsAsync.maybeWhen(
@@ -173,7 +172,8 @@ class _MobileSaleSettingsPanelState
                       description:
                           'Customize the Prefix to your Sale Invoice.Ex: INV',
                       value: salePrefixEnabled,
-                      isLoading: _isSavingPrefix || saleSettingsAsync.isLoading,
+                      isLoading:
+                          _isSavingPrefix || saleSettingsAsync.isLoading,
                       onChanged: (value) => unawaited(_setSalePrefix(value)),
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -183,8 +183,7 @@ class _MobileSaleSettingsPanelState
                           'Send an automatic SMS to your Customer with details of the Sale.',
                       value: transactionSmsEnabled,
                       isLoading: _isSavingSms || settingsAsync.isLoading,
-                      onChanged: (value) =>
-                          unawaited(_setTransactionSms(value)),
+                      onChanged: (value) => unawaited(_setTransactionSms(value)),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     _NavigationSettingTile(
@@ -226,8 +225,7 @@ class _MobileSaleSettingsPanelState
                     const SizedBox(height: AppSpacing.md),
                     _BillingTypeOption(
                       label: 'Full Sale',
-                      isSelected:
-                          _billingType == MobileSaleBillingType.fullSale,
+                      isSelected: _billingType == MobileSaleBillingType.fullSale,
                       onTap: () => setState(
                         () => _billingType = MobileSaleBillingType.fullSale,
                       ),

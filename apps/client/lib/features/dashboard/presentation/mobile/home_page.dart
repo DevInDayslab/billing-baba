@@ -7,6 +7,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_transactions_provider.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_header.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_party_section.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_quick_links.dart';
@@ -240,7 +241,9 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
         color: AppColors.background,
         child: SafeArea(
           bottom: false,
-          child: Column(
+          child: Stack(
+            children: [
+              Column(
             children: [
               MobileHomeHeader(
                 onAvatarTap: () => context.push(AppRoutes.editProfile),
@@ -357,12 +360,30 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                             );
                           },
                         ),
-                      const SliverToBoxAdapter(
+                      SliverToBoxAdapter(
                         child: SizedBox(
-                          height: MobileBottomNavigation.barHeight + AppSpacing.md,
+                          height:
+                              MobileBottomNavigation.fabBottomInset +
+                              52 +
+                              AppSpacing.md,
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: MobileBottomNavigation.fabBottomInset,
+                child: Center(
+                  child: FractionallySizedBox(
+                    widthFactor: 0.5,
+                    child: MobileHomeAddSaleFab(
+                      onPressed: () => context.push(AppRoutes.addSale),
+                    ),
                   ),
                 ),
               ),
