@@ -610,56 +610,6 @@ class _RazorpayDesktopCheckoutDialogState
 }
 
 /// Flutter chrome above the WebView so Cancel stays outside the platform view.
-class _CheckoutHostChrome extends StatelessWidget {
-  const _CheckoutHostChrome({
-    required this.isStuck,
-    required this.onCancel,
-  });
-
-  final bool isStuck;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                isStuck ? 'Payment is taking too long' : 'Complete payment',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isStuck ? AppColors.error : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: onCancel,
-              style: TextButton.styleFrom(
-                foregroundColor: isStuck
-                    ? AppColors.error
-                    : AppColors.textSecondary,
-              ),
-              child: const Text('Cancel'),
-            ),
-            IconButton(
-              tooltip: 'Cancel payment (Esc)',
-              onPressed: onCancel,
-              icon: Icon(
-                Icons.close,
-                color: isStuck ? AppColors.error : AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _CheckoutStuckBanner extends StatelessWidget {
   const _CheckoutStuckBanner();
 

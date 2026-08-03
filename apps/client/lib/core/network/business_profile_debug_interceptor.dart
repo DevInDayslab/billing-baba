@@ -24,7 +24,7 @@ class BusinessProfileDebugInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
     if (BusinessProfileDebugLog.enabled &&
         _isProfileRequest(response.requestOptions)) {
       BusinessProfileDebugLog.section('HTTP RESPONSE');

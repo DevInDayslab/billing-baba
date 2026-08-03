@@ -1,9 +1,6 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
@@ -14,6 +11,9 @@ import 'package:billing_baba/features/reports/presentation/mobile/application/it
 import 'package:billing_baba/features/reports/presentation/mobile/models/item_detail_display_row.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,7 +57,8 @@ class _MobileItemDetailReportScreenState
   void _syncItemSearchFromFilters() {
     final itemId = ref.read(reportFiltersProvider).itemId;
     if (itemId == null) return;
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items =
+        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
     final item = items.where((entry) => entry.id == itemId).firstOrNull;
     if (item != null) {
       _itemSearchController.text = item.name;
@@ -105,7 +106,8 @@ class _MobileItemDetailReportScreenState
   }
 
   Future<void> _openItemPicker() async {
-    final items = ref.read(inventoryItemsProvider).value ?? [];
+    final items =
+        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
     if (items.isEmpty) return;
 
     final selected = await showModalBottomSheet<InventoryItem>(
@@ -194,7 +196,7 @@ class _MobileItemDetailReportScreenState
     final reportAsync = ref.watch(itemDetailReportProvider);
     final range = filters.effectiveDateRange;
     final displayRows = reportAsync.maybeWhen(
-      data: (report) => _displayRows(report),
+      data: _displayRows,
       orElse: () => _displayRows(reportAsync.value),
     );
     final hasItem = filters.itemId != null && filters.itemId!.isNotEmpty;
@@ -286,7 +288,7 @@ class _MobileItemDetailReportScreenState
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.calendar_today_outlined,
                             size: 16,
                             color: AppColors.primary,
@@ -403,7 +405,7 @@ class _MobileItemDetailReportScreenState
                 return ListView.separated(
                   padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                   itemCount: displayRows.length,
-                  separatorBuilder: (_, __) => const Divider(
+                  separatorBuilder: (_, _) => const Divider(
                     height: 1,
                     color: Color(0xFFEEEEEE),
                   ),
@@ -467,14 +469,14 @@ class _TableHeader extends StatelessWidget {
       decoration: TextDecoration.underline,
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
+    return const Padding(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 3,
             child: Text('Date', style: style),
           ),
@@ -620,7 +622,7 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: filtered.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final item = filtered[index];
                   return ListTile(

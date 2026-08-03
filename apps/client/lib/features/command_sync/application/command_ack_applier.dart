@@ -105,7 +105,7 @@ class CommandAckApplier {
     await _stockLocal.applyStockAdjustmentAck(
       adjustmentId: adjustmentId,
       movementIds: movementIds
-          .whereType<Map>()
+          .whereType<Map<String, dynamic>>()
           .map(Map<String, dynamic>.from)
           .toList(),
       updatedAt: updatedAt,

@@ -277,7 +277,7 @@ class UpdateItemRequest {
       json['alias'] = alias;
     }
     if (clearSearchKeywords) {
-      json['search_keywords'] = [];
+      json['search_keywords'] = <dynamic>[];
     } else if (searchKeywords != null) {
       json['search_keywords'] = searchKeywords;
     }

@@ -549,8 +549,6 @@ class _MetaLine {
   final String value;
 }
 
-const _partyHeaderNameMaxLength = 20;
-
 class _PartyHeaderActionIcon extends StatelessWidget {
   const _PartyHeaderActionIcon({
     required this.tooltip,

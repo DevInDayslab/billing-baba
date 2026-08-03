@@ -6,7 +6,6 @@ import 'package:billing_baba/features/inventory/application/inventory_catalog.da
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
-import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
@@ -53,30 +52,6 @@ void invalidateItemCaches(
 }
 
 const _uuid = Uuid();
-
-List<InventoryItem> _catalogItems({
-  String? searchQuery,
-  ItemType? type,
-  String? categoryId,
-}) {
-  var items = InventoryCatalog.items;
-  if (type != null) {
-    items = items.where((item) => item.type == type).toList();
-  }
-  if (categoryId != null) {
-    items = items.where((item) => item.categoryId == categoryId).toList();
-  }
-  final query = searchQuery?.trim();
-  if (query != null && query.isNotEmpty) {
-    final engine = InventorySearchEngine.build(
-      items: items.map(
-        InventorySearchableFields.fromInventoryItem,
-      ),
-    );
-    items = engine.searchItems(items, query: query);
-  }
-  return items;
-}
 
 InventoryItemsQuery _currentQuery(Ref ref) {
   return InventoryItemsQuery(

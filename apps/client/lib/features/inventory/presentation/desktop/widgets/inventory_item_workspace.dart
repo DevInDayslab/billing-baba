@@ -1,5 +1,4 @@
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_detail_panel.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_left_panel.dart';

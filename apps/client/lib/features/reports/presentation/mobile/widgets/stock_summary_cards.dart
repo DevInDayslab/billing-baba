@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_display_row.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';

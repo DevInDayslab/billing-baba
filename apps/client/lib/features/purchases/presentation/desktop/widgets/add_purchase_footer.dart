@@ -3,7 +3,6 @@ import 'package:billing_baba/features/purchases/application/add_purchase_form_pr
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
@@ -189,32 +188,6 @@ class AddPurchaseFooter extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  Future<void> _promptAddImage(
-    BuildContext context,
-    AddPurchaseForm notifier,
-    int currentCount,
-  ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
-    );
-    if (attachment != null) notifier.addImage(attachment);
-  }
-
-  Future<void> _promptAddDocument(
-    BuildContext context,
-    AddPurchaseForm notifier,
-    int currentCount,
-  ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
-    );
-    if (attachment != null) notifier.addDocument(attachment);
   }
 }
 

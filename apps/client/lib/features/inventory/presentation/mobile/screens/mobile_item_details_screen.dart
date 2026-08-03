@@ -1,12 +1,6 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_button.dart';
-import 'package:billing_baba/core/widgets/app_error.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_app_bar.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_search_field.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
@@ -18,6 +12,12 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_detail_metrics.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_stock_history_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_transaction_tile.dart';
+import 'package:billing_baba/shared/widgets/app_button.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,7 +60,8 @@ class _MobileItemDetailsScreenState
   }
 
   InventoryItem? _resolveDisplayItem() {
-    final listItem = (ref.watch(inventoryItemsProvider).value ?? [])
+    final listItem = (ref.watch(inventoryItemsProvider).value?.items ??
+            const <InventoryItem>[])
         .where((entry) => entry.id == widget.itemId)
         .firstOrNull;
     final detailAsync = ref.watch(productDetailProvider(widget.itemId));

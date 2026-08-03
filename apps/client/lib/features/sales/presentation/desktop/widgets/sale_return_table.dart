@@ -23,7 +23,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
-const _tableHeaderBg = Color(0xFFF5F7FA);
 const _zebraRowBg = Color(0xFFFAFAFA);
 const _summaryFooterBg = Color(0xFFF5F5F5);
 

@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/platform_file_output.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/utils/platform_file_output.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';

@@ -216,7 +216,7 @@ class CommandSyncRunner {
   List<Map<String, dynamic>> _asList(Object? value) {
     if (value is! List) return const [];
     return value
-        .whereType<Map>()
+        .whereType<Map<String, dynamic>>()
         .map(Map<String, dynamic>.from)
         .toList();
   }

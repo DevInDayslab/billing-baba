@@ -49,15 +49,15 @@ void main() {
             'total_stock_value': '5000',
             'low_stock_count': 1,
             'negative_stock_count': 0,
-            'low_stock_items': [],
+            'low_stock_items': <dynamic>[],
           },
           'charts': {
-            'sales_trend': {'granularity': 'day', 'points': []},
-            'purchases_trend': {'granularity': 'day', 'points': []},
+            'sales_trend': {'granularity': 'day', 'points': <dynamic>[]},
+            'purchases_trend': {'granularity': 'day', 'points': <dynamic>[]},
           },
-          'alerts': [],
-          'recent_transactions': [],
-          'quick_reports': [],
+          'alerts': <dynamic>[],
+          'recent_transactions': <dynamic>[],
+          'quick_reports': <dynamic>[],
         },
       );
 
@@ -96,15 +96,15 @@ void main() {
             'total_stock_value': '0',
             'low_stock_count': 0,
             'negative_stock_count': 0,
-            'low_stock_items': [],
+            'low_stock_items': <dynamic>[],
           },
           'charts': {
-            'sales_trend': {'granularity': 'day', 'points': []},
-            'purchases_trend': {'granularity': 'day', 'points': []},
+            'sales_trend': {'granularity': 'day', 'points': <dynamic>[]},
+            'purchases_trend': {'granularity': 'day', 'points': <dynamic>[]},
           },
-          'alerts': [],
-          'recent_transactions': [],
-          'quick_reports': [],
+          'alerts': <dynamic>[],
+          'recent_transactions': <dynamic>[],
+          'quick_reports': <dynamic>[],
         },
       );
 

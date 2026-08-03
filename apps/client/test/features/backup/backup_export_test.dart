@@ -8,7 +8,6 @@ import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
 import 'package:billing_baba/features/backup/backup_constants.dart';
 import 'package:billing_baba/features/backup/data/backup_exporter.dart';
 import 'package:billing_baba/features/backup/models/backup_manifest.dart';
-import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

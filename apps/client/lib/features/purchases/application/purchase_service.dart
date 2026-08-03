@@ -406,7 +406,6 @@ class PurchaseService {
         ..sort((a, b) => b.date.compareTo(a.date));
 
       final total = localDocs.isNotEmpty ? items.length : response.meta.total;
-      final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
       final start = (query.page - 1) * query.limit;
       final pageItems = await _enrichReturnSyncState(
         items.skip(start).take(query.limit).toList(),
@@ -1277,21 +1276,6 @@ class PurchaseService {
   ) {
     final totalPages = total == 0 ? 1 : (total / limit).ceil();
     return PaginatedPurchaseDocuments(
-      items: items,
-      currentPage: page,
-      totalPages: totalPages,
-      totalItems: total,
-    );
-  }
-
-  PaginatedPurchaseBills _paginateBills(
-    List<PurchaseBillModel> items,
-    int page,
-    int limit,
-    int total,
-  ) {
-    final totalPages = total == 0 ? 1 : (total / limit).ceil();
-    return PaginatedPurchaseBills(
       items: items,
       currentPage: page,
       totalPages: totalPages,

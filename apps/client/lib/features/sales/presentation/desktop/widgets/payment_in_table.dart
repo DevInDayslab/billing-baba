@@ -17,7 +17,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
-const _tableHeaderBg = Color(0xFFF5F7FA);
 const _zebraRowBg = Color(0xFFFAFAFA);
 
 const _dateColWidth = 148.0;

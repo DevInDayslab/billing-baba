@@ -103,7 +103,7 @@ class BackupImporter {
         _readEntry(archive, kBibaBusinessPrefsEntry).content as List<int>,
       ),
     ) as Map<String, dynamic>;
-    final pendingQueue = jsonDecode(
+    jsonDecode(
       utf8.decode(
         _readEntry(archive, kBibaPendingQueueEntry).content as List<int>,
       ),

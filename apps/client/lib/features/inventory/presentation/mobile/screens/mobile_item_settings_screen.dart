@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_settings_detail_page.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_settings/item_settings_mobile_panel.dart';
