@@ -262,7 +262,6 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
               Column(
             children: [
               MobileHomeHeader(
-                onAvatarTap: () => context.push(AppRoutes.editProfile),
                 onBusinessTap: () => context.push(AppRoutes.businessList),
                 onSettingsTap: () => context.push(AppRoutes.settings),
                 onNotificationTap: () => context.push(AppRoutes.notifications),

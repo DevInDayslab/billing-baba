@@ -1,10 +1,15 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card_menu.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/create_business_dialog.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/delete_business_dialog.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/edit_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/mobile/application/business_selection_controller.dart';
 import 'package:billing_baba/features/business/presentation/mobile/widgets/business_selection_tile.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
@@ -16,6 +21,7 @@ import 'package:billing_baba/shared/widgets/app_button.dart';
 import 'package:billing_baba/shared/widgets/app_empty.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/app_loader.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,6 +94,114 @@ class _MobileBusinessListPageState
     }
 
     context.go(AppRoutes.home);
+  }
+
+  Future<void> _handleCardAction(
+    CompanyListEntry entry,
+    CompanyCardMenuAction action,
+  ) async {
+    switch (action) {
+      case CompanyCardMenuAction.edit:
+        final updated = await showEditBusinessModal(
+          context,
+          businessId: entry.id,
+        );
+        if (!mounted || updated != true) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${entry.name} updated successfully')),
+        );
+        ref.invalidate(companyDirectoryProvider);
+      case CompanyCardMenuAction.delete:
+        final confirmed = await showDeleteBusinessDialog(
+          context,
+          companyName: entry.name,
+        );
+        if (!mounted || confirmed != true) return;
+
+        final container = ProviderScope.containerOf(context, listen: false);
+        try {
+          await container
+              .read(businessListProvider.notifier)
+              .deleteBusiness(entry.id);
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${entry.name} deleted')),
+          );
+          ref.invalidate(companyDirectoryProvider);
+        } on Object catch (error) {
+          if (!context.mounted) return;
+          final message = error is DioException
+              ? ApiErrorParser.userFacingMessage(error)
+              : 'Could not delete company. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        }
+      case CompanyCardMenuAction.manageUsers:
+        if (!context.mounted) return;
+        context.go(AppRoutes.collaborationSyncShare);
+      case CompanyCardMenuAction.backup:
+        if (!context.mounted) return;
+        context.go(AppRoutes.settingsBackup);
+      case CompanyCardMenuAction.leave:
+        final sessionService = await ref.read(
+          companySessionServiceProvider.future,
+        );
+        await sessionService.leaveCompany(entry);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Left ${entry.name}')),
+        );
+        ref.invalidate(companyDirectoryProvider);
+      case CompanyCardMenuAction.accept:
+        await _acceptInvite(entry);
+      case CompanyCardMenuAction.reject:
+        await _rejectInvite(entry);
+      case CompanyCardMenuAction.open:
+        break;
+    }
+  }
+
+  Future<void> _acceptInvite(CompanyListEntry entry) async {
+    final invitationId = entry.invitationId;
+    if (invitationId == null) return;
+    try {
+      final sessionService = await ref.read(
+        companySessionServiceProvider.future,
+      );
+      await sessionService.acceptInvite(invitationId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Joined ${entry.name}')),
+      );
+      ref.invalidate(companyDirectoryProvider);
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
+      );
+    }
+  }
+
+  Future<void> _rejectInvite(CompanyListEntry entry) async {
+    final invitationId = entry.invitationId;
+    if (invitationId == null) return;
+    try {
+      final sessionService = await ref.read(
+        companySessionServiceProvider.future,
+      );
+      await sessionService.rejectInvite(invitationId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invitation rejected')),
+      );
+      ref.invalidate(companyDirectoryProvider);
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(OfflineUiMessages.messageFor(error))),
+      );
+    }
   }
 
   @override
@@ -168,6 +282,8 @@ class _MobileBusinessListPageState
                                     mobileBusinessSelectionProvider.notifier,
                                   )
                                   .select(entry.id),
+                              onMenuAction: (action) =>
+                                  _handleCardAction(entry, action),
                             ),
                           ),
                         ),
@@ -191,6 +307,8 @@ class _MobileBusinessListPageState
                                     mobileBusinessSelectionProvider.notifier,
                                   )
                                   .select(entry.id),
+                              onMenuAction: (action) =>
+                                  _handleCardAction(entry, action),
                             ),
                           ),
                         ),

@@ -14,15 +14,19 @@ enum CompanyCardMenuAction {
   reject,
 }
 
+enum BusinessCardMenuVariant { full, mobile }
+
 class BusinessCardMenu extends StatelessWidget {
   const BusinessCardMenu({
     required this.entry,
     required this.onAction,
+    this.variant = BusinessCardMenuVariant.full,
     super.key,
   });
 
   final CompanyListEntry entry;
   final ValueChanged<CompanyCardMenuAction>? onAction;
+  final BusinessCardMenuVariant variant;
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +68,10 @@ class BusinessCardMenu extends StatelessWidget {
   }
 
   List<PopupMenuEntry<CompanyCardMenuAction>> _menuItems() {
+    if (variant == BusinessCardMenuVariant.mobile) {
+      return _mobileMenuItems();
+    }
+
     return switch (entry.relationship) {
       CompanyRelationship.owner => [
         const PopupMenuItem(
@@ -107,6 +115,57 @@ class BusinessCardMenu extends StatelessWidget {
           child: _MenuRow(icon: Icons.logout, label: 'Leave'),
         ),
       ],
+      CompanyRelationship.member => [
+        const PopupMenuItem(
+          value: CompanyCardMenuAction.leave,
+          child: _MenuRow(icon: Icons.logout, label: 'Leave'),
+        ),
+      ],
+      CompanyRelationship.pendingInvite => [
+        const PopupMenuItem(
+          value: CompanyCardMenuAction.accept,
+          child: _MenuRow(
+            icon: Icons.check_circle_outline,
+            label: 'Accept',
+          ),
+        ),
+        const PopupMenuItem(
+          value: CompanyCardMenuAction.reject,
+          child: _MenuRow(
+            icon: Icons.cancel_outlined,
+            label: 'Reject',
+            destructive: true,
+          ),
+        ),
+      ],
+      CompanyRelationship.expiredInvite => const [],
+    };
+  }
+
+  List<PopupMenuEntry<CompanyCardMenuAction>> _mobileMenuItems() {
+    return switch (entry.relationship) {
+      CompanyRelationship.owner => [
+        const PopupMenuItem(
+          value: CompanyCardMenuAction.edit,
+          child: _MenuRow(icon: Icons.edit_outlined, label: 'Edit Company'),
+        ),
+        const PopupMenuItem(
+          value: CompanyCardMenuAction.manageUsers,
+          child: _MenuRow(
+            icon: Icons.people_outline,
+            label: 'Manage Users',
+          ),
+        ),
+        const PopupMenuItem(
+          value: CompanyCardMenuAction.delete,
+          child: _MenuRow(
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete Company',
+            destructive: true,
+          ),
+        ),
+      ],
+      CompanyRelationship.secondaryAdmin ||
       CompanyRelationship.member => [
         const PopupMenuItem(
           value: CompanyCardMenuAction.leave,
