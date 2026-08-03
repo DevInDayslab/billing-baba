@@ -8,6 +8,7 @@ import 'package:billing_baba/features/inventory/application/inventory_search_pro
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_catalog.dart';
+import 'package:billing_baba/shared/utils/camera_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,6 +51,7 @@ class PosBarcodeScannerLayer extends ConsumerStatefulWidget {
 class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer> {
   bool _isProcessing = false;
   bool _isHardwareMode = false;
+  bool? _cameraAvailable;
   String? _lastBarcode;
   DateTime? _lastScanAt;
   final StringBuffer _barcodeBuffer = StringBuffer();
@@ -58,6 +60,31 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
   static const _fullScreenWindowWidth = 280.0;
   static const _fullScreenWindowHeight = 180.0;
   static final _nonDigit = RegExp(r'\D');
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_initializeCamera());
+  }
+
+  Future<void> _initializeCamera() async {
+    final available = await isBarcodeCameraAvailable();
+    if (!mounted) return;
+
+    if (!available) {
+      setState(() {
+        _cameraAvailable = false;
+        _isHardwareMode = true;
+      });
+      HardwareKeyboard.instance.addHandler(_onHardwareKey);
+      return;
+    }
+
+    setState(() => _cameraAvailable = true);
+    if (!_isHardwareMode) {
+      await widget.controller.start();
+    }
+  }
 
   @override
   void dispose() {
@@ -69,6 +96,7 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
 
   void _setHardwareMode(bool hardware) {
     if (_isHardwareMode == hardware) return;
+    if (!hardware && _cameraAvailable != true) return;
 
     if (hardware) {
       unawaited(widget.controller.stop());
@@ -282,11 +310,18 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
                 color: Colors.white,
                 child: _HardwareScannerPlaceholder(),
               )
+            else if (_cameraAvailable == null)
+              const ColoredBox(color: Colors.black)
             else
               MobileScanner(
                 controller: widget.controller,
                 scanWindow: scanWindow,
                 onDetect: _onBarcodeDetected,
+                errorBuilder: (context, error) => _CameraScannerErrorState(
+                  message: error.errorDetails?.message ??
+                      'Unable to access the camera.',
+                  onRetry: () => unawaited(widget.controller.start()),
+                ),
               ),
             if (!_isHardwareMode)
               if (widget.isFullScreen)
@@ -318,6 +353,7 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
                 child: _FullScreenTopBar(
                   controller: widget.controller,
                   isHardwareMode: _isHardwareMode,
+                  cameraEnabled: _cameraAvailable == true,
                   onBack: widget.onCollapse,
                   onModeChanged: _setHardwareMode,
                 ),
@@ -330,6 +366,7 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
                 child: Center(
                   child: _ScannerModeToggle(
                     isHardwareMode: _isHardwareMode,
+                    cameraEnabled: _cameraAvailable == true,
                     onChanged: _setHardwareMode,
                     onDarkBackground: !_isHardwareMode,
                   ),
@@ -373,10 +410,12 @@ class _ScannerModeToggle extends StatelessWidget {
   const _ScannerModeToggle({
     required this.isHardwareMode,
     required this.onChanged,
+    this.cameraEnabled = true,
     this.onDarkBackground = false,
   });
 
   final bool isHardwareMode;
+  final bool cameraEnabled;
   final ValueChanged<bool> onChanged;
   final bool onDarkBackground;
 
@@ -407,7 +446,7 @@ class _ScannerModeToggle extends StatelessWidget {
             _ToggleSegment(
               icon: Icons.photo_camera_outlined,
               selected: !isHardwareMode,
-              onTap: () => onChanged(false),
+              onTap: cameraEnabled ? () => onChanged(false) : null,
               unselectedIconColor: unselectedIconColor,
             ),
           ],
@@ -427,7 +466,7 @@ class _ToggleSegment extends StatelessWidget {
 
   final IconData icon;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color unselectedIconColor;
 
   @override
@@ -443,8 +482,10 @@ class _ToggleSegment extends StatelessWidget {
           height: 32,
           child: Icon(
             icon,
-            size: AppIconSize.md,
-            color: selected ? Colors.white : unselectedIconColor,
+            color: onTap == null
+                ? unselectedIconColor.withValues(alpha: 0.35)
+                : (selected ? Colors.white : unselectedIconColor),
+            size: 20,
           ),
         ),
       ),
@@ -492,6 +533,52 @@ class _HardwareScannerPlaceholder extends StatelessWidget {
   }
 }
 
+class _CameraScannerErrorState extends StatelessWidget {
+  const _CameraScannerErrorState({
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.black,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.no_photography_outlined,
+                color: Colors.white70,
+                size: 40,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: AppTypography.inter(
+                  fontSize: AppTypography.bodySmallSize,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(
+                onPressed: onRetry,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _StripIconButton extends StatelessWidget {
   const _StripIconButton({
     required this.icon,
@@ -526,12 +613,14 @@ class _FullScreenTopBar extends StatelessWidget {
   const _FullScreenTopBar({
     required this.controller,
     required this.isHardwareMode,
+    required this.cameraEnabled,
     required this.onBack,
     required this.onModeChanged,
   });
 
   final MobileScannerController controller;
   final bool isHardwareMode;
+  final bool cameraEnabled;
   final VoidCallback onBack;
   final ValueChanged<bool> onModeChanged;
 
@@ -560,6 +649,7 @@ class _FullScreenTopBar extends StatelessWidget {
                 child: Center(
                   child: _ScannerModeToggle(
                     isHardwareMode: isHardwareMode,
+                    cameraEnabled: cameraEnabled,
                     onChanged: onModeChanged,
                     onDarkBackground: !isHardwareMode,
                   ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/barcode_confidence.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/barcode_scanner_viewfinder.dart';
+import 'package:billing_baba/shared/utils/camera_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -35,6 +36,7 @@ class MobileBarcodeScannerScreen extends StatefulWidget {
 class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen> {
   final MobileScannerController _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
+    autoStart: false,
     formats: const [
       BarcodeFormat.ean13,
       BarcodeFormat.ean8,
@@ -49,9 +51,29 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
 
   bool _torchEnabled = false;
   bool _isProcessing = false;
+  bool? _cameraAvailable;
   String? _lastScannedValue;
   DateTime? _lastScanAt;
   Rect? _scanWindow;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_initializeCamera());
+  }
+
+  Future<void> _initializeCamera() async {
+    final available = await isBarcodeCameraAvailable();
+    if (!mounted) return;
+
+    if (!available) {
+      setState(() => _cameraAvailable = false);
+      return;
+    }
+
+    setState(() => _cameraAvailable = true);
+    await _controller.start();
+  }
 
   @override
   void dispose() {
@@ -140,17 +162,27 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
             return Stack(
               fit: StackFit.expand,
               children: [
-                MobileScanner(
-                  controller: _controller,
-                  scanWindow: _scanWindow,
-                  onDetect: _handleDetection,
-                  errorBuilder: (context, error) => _ScannerErrorState(
-                    message: error.errorDetails?.message ??
-                        'Unable to access the camera.',
-                    onRetry: () => unawaited(_controller.start()),
+                if (_cameraAvailable == null)
+                  const ColoredBox(color: Colors.black)
+                else if (_cameraAvailable == false)
+                  _ScannerErrorState(
+                    message: 'No camera is available on this device. '
+                        'Use a physical phone or connect a USB/Bluetooth scanner.',
+                    onRetry: () => Navigator.of(context).pop(),
+                    retryLabel: 'Go back',
+                  )
+                else
+                  MobileScanner(
+                    controller: _controller,
+                    scanWindow: _scanWindow,
+                    onDetect: _handleDetection,
+                    errorBuilder: (context, error) => _ScannerErrorState(
+                      message: error.errorDetails?.message ??
+                          'Unable to access the camera.',
+                      onRetry: () => unawaited(_controller.start()),
+                    ),
                   ),
-                ),
-                if (_scanWindow != null)
+                if (_cameraAvailable == true && _scanWindow != null)
                   BarcodeScannerViewfinder(scanWindow: _scanWindow!),
                 SafeArea(
                   child: Column(
@@ -162,14 +194,15 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
                     ],
                   ),
                 ),
-                Positioned(
-                  right: AppSpacing.lg,
-                  bottom: AppSpacing.xl + 8,
-                  child: _TorchButton(
-                    enabled: _torchEnabled,
-                    onPressed: _toggleTorch,
+                if (_cameraAvailable == true)
+                  Positioned(
+                    right: AppSpacing.lg,
+                    bottom: AppSpacing.xl + 8,
+                    child: _TorchButton(
+                      enabled: _torchEnabled,
+                      onPressed: _toggleTorch,
+                    ),
                   ),
-                ),
               ],
             );
           },
@@ -287,10 +320,12 @@ class _ScannerErrorState extends StatelessWidget {
   const _ScannerErrorState({
     required this.message,
     required this.onRetry,
+    this.retryLabel = 'Retry',
   });
 
   final String message;
   final VoidCallback onRetry;
+  final String retryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +354,7 @@ class _ScannerErrorState extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: onRetry,
-                child: const Text('Retry'),
+                child: Text(retryLabel),
               ),
             ],
           ),

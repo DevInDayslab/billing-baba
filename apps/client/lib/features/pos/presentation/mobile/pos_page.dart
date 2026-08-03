@@ -49,6 +49,7 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage>
     super.initState();
     _scannerController = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
+      autoStart: false,
     );
     _scanLineController = AnimationController(
       vsync: this,
