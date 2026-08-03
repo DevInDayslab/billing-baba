@@ -52,7 +52,7 @@ abstract final class MobileNavDestinations {
     MobileNavDestination(
       tab: MobileNavTab.dashboard,
       label: 'DASHBOARD',
-      route: AppRoutes.reports,
+      route: AppRoutes.reportsDashboard,
       icon: Icons.show_chart_outlined,
       selectedIcon: Icons.show_chart_rounded,
     ),

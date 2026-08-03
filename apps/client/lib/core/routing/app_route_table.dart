@@ -20,6 +20,7 @@ import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/leads_screen.dart';
 import 'package:billing_baba/features/dashboard/presentation/home_page.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/dashboard_page.dart';
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
 import 'package:billing_baba/features/developer/presentation/developer_components_page.dart';
 import 'package:billing_baba/features/developer/presentation/diagnostics_page.dart';
@@ -549,7 +550,7 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.reportsDashboard,
-            redirect: (context, state) => AppRoutes.reports,
+            builder: (context, state) => const MobileDashboardPage(),
           ),
           GoRoute(
             path: AppRoutes.reportsSales,
