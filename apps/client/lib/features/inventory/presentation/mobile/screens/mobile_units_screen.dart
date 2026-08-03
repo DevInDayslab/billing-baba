@@ -2,12 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_error.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
@@ -16,6 +10,12 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_conversion_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/units/mobile_add_unit_sheet.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -53,9 +53,7 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
       final trimmed = query.trim();
       ref.read(unitBackendSearchProvider.notifier).query = trimmed;
       unawaited(
-        ref
-            .read(inventoryUnitsProvider.notifier)
-            .refresh(
+        ref.read(inventoryUnitsProvider.notifier).refresh(
               searchQuery: trimmed.isEmpty ? null : trimmed,
             ),
       );
@@ -63,9 +61,7 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref
-        .read(inventoryUnitsProvider.notifier)
-        .refresh(
+    return ref.read(inventoryUnitsProvider.notifier).refresh(
           searchQuery: ref.read(unitBackendSearchProvider),
         );
   }
@@ -99,9 +95,8 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final error = await ref
-        .read(inventoryUnitsProvider.notifier)
-        .deleteUnit(unit.id);
+    final error =
+        await ref.read(inventoryUnitsProvider.notifier).deleteUnit(unit.id);
     if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -141,13 +136,12 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
 
     final selected = await showMobileBottomSheet<InventoryUnit>(
       context: context,
-      useRootNavigator: true,
       title: title,
       maxHeightFraction: 0.7,
       builder: (_) => ListView.separated(
         shrinkWrap: true,
         itemCount: units.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final unit = units[index];
           return ListTile(
@@ -186,7 +180,8 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
   }
 
   Future<void> _showItemsForUnit(InventoryUnit unit) async {
-    final items = ref.read(inventoryItemListProvider);
+    final items =
+        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
     final shortName = unit.shortName.toLowerCase();
     final matching = items
         .where(
@@ -201,7 +196,6 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
 
     await showMobileBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
       title: 'Items in ${unit.shortName}',
       maxHeightFraction: 0.75,
       builder: (_) {
@@ -219,7 +213,7 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
         return ListView.separated(
           shrinkWrap: true,
           itemCount: matching.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
+          separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final item = matching[index];
             return ListTile(
@@ -267,7 +261,6 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
         title: 'Units',
         showBusinessHeader: false,
         showNotification: false,
-        showSettings: true,
         onSettingsTap: () => context.push(AppRoutes.itemsSettings),
       ),
       body: Stack(
@@ -344,16 +337,14 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                             ),
                           ),
                           itemCount: units.length,
-                          separatorBuilder: (_, __) => const Divider(
+                          separatorBuilder: (_, _) => const Divider(
                             height: 1,
                             thickness: 1,
                             color: Color(0xFFEEEEEE),
                           ),
                           itemBuilder: (context, index) {
                             final unit = units[index];
-                            final isExpanded = _expandedUnitIds.contains(
-                              unit.id,
-                            );
+                            final isExpanded = _expandedUnitIds.contains(unit.id);
                             final hasConversions = _hasConversions(unit);
                             return _UnitListTile(
                               unit: unit,
@@ -363,8 +354,7 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                                   ? () => unawaited(_toggleExpanded(unit))
                                   : null,
                               onEdit: () => unawaited(_editUnit(unit)),
-                              onDelete: () =>
-                                  unawaited(_confirmDeleteUnit(unit)),
+                              onDelete: () => unawaited(_confirmDeleteUnit(unit)),
                               onDeleteConversion: (conversion) => unawaited(
                                 _deleteConversion(unit, conversion),
                               ),
@@ -447,11 +437,7 @@ class _UnitListTile extends StatelessWidget {
     required this.unit,
     required this.isExpanded,
     required this.hasConversions,
-    this.onToggleExpand,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onDeleteConversion,
-    required this.onAddConversion,
+    required this.onEdit, required this.onDelete, required this.onDeleteConversion, required this.onAddConversion, this.onToggleExpand,
   });
 
   final InventoryUnit unit;
@@ -506,19 +492,17 @@ class _UnitListTile extends StatelessWidget {
                       children: [
                         Text(
                           unit.fullName.toUpperCase(),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           unit.shortName,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -559,7 +543,9 @@ class _UnitListTile extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   conversion.label,
-                                  style: Theme.of(context).textTheme.bodyMedium
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
                                       ?.copyWith(
                                         color: AppColors.textPrimary,
                                       ),
@@ -567,7 +553,9 @@ class _UnitListTile extends StatelessWidget {
                               ),
                               Text(
                                 '${conversion.factor}x',
-                                style: Theme.of(context).textTheme.bodyMedium
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),

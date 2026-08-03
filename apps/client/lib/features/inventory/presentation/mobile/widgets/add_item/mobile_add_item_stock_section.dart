@@ -129,7 +129,8 @@ class MobileAddItemStockSection extends StatelessWidget {
                     decimal: true,
                   ),
                   inputFormatters: [_decimalFormatter],
-                  onChanged: (v) => onMinStockChanged(double.tryParse(v) ?? 0),
+                  onChanged: (v) =>
+                      onMinStockChanged(double.tryParse(v) ?? 0),
                 ),
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),
                 MobileAddItemField(

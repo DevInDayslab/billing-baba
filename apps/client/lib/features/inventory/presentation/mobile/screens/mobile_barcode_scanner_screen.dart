@@ -32,8 +32,7 @@ class MobileBarcodeScannerScreen extends StatefulWidget {
       _MobileBarcodeScannerScreenState();
 }
 
-class _MobileBarcodeScannerScreenState
-    extends State<MobileBarcodeScannerScreen> {
+class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen> {
   final MobileScannerController _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     formats: const [
@@ -124,9 +123,7 @@ class _MobileBarcodeScannerScreenState
   Future<void> _toggleTorch() async {
     await _controller.toggleTorch();
     if (!mounted) return;
-    setState(
-      () => _torchEnabled = _controller.value.torchState == TorchState.on,
-    );
+    setState(() => _torchEnabled = _controller.value.torchState == TorchState.on);
   }
 
   @override
@@ -148,8 +145,7 @@ class _MobileBarcodeScannerScreenState
                   scanWindow: _scanWindow,
                   onDetect: _handleDetection,
                   errorBuilder: (context, error) => _ScannerErrorState(
-                    message:
-                        error.errorDetails?.message ??
+                    message: error.errorDetails?.message ??
                         'Unable to access the camera.',
                     onRetry: () => unawaited(_controller.start()),
                   ),
@@ -277,9 +273,7 @@ class _TorchButton extends StatelessWidget {
           width: 52,
           height: 52,
           child: Icon(
-            enabled
-                ? Icons.flashlight_on_rounded
-                : Icons.flashlight_off_rounded,
+            enabled ? Icons.flashlight_on_rounded : Icons.flashlight_off_rounded,
             color: AppColors.primary,
             size: 26,
           ),

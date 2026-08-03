@@ -88,15 +88,11 @@ class _MobileImportExcelContentState
                 AppSpacing.xl,
               ),
               children: [
-                _StepsCard(
-                  onDownloadSample: () => unawaited(_downloadSample()),
-                ),
+                _StepsCard(onDownloadSample: () => unawaited(_downloadSample())),
                 const SizedBox(height: AppSpacing.lg),
                 _UploadCard(
                   fileName: state.isParsing ? null : state.fileName,
-                  onBrowse: state.isParsing
-                      ? null
-                      : () => unawaited(_pickFile()),
+                  onBrowse: state.isParsing ? null : () => unawaited(_pickFile()),
                 ),
                 if (state.rows.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.lg),
@@ -156,9 +152,7 @@ class _MobileImportExcelContentState
       await ref.read(importItemsExcelProvider.notifier).parseBytes(bytes);
     } on Object catch (error) {
       if (!mounted) return;
-      ref
-          .read(importItemsExcelProvider.notifier)
-          .cancelParsing(
+      ref.read(importItemsExcelProvider.notifier).cancelParsing(
             error: 'Failed to read file: $error',
           );
       ScaffoldMessenger.of(context).showSnackBar(
@@ -179,9 +173,8 @@ class _MobileImportExcelContentState
     }
 
     try {
-      final result = await ref
-          .read(importItemsExcelProvider.notifier)
-          .confirmImport();
+      final result =
+          await ref.read(importItemsExcelProvider.notifier).confirmImport();
       if (!mounted) return;
 
       if (result == null) {
@@ -220,15 +213,10 @@ class _MobileImportExcelContentState
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  ...result.errors
-                      .take(5)
-                      .map(
+                  ...result.errors.take(5).map(
                         (error) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            error,
-                            style: const TextStyle(fontSize: 12),
-                          ),
+                          child: Text(error, style: const TextStyle(fontSize: 12)),
                         ),
                       ),
                 ],
@@ -296,8 +284,7 @@ class _StepsCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             const _StepLine(
               step: 'STEP 1',
-              text:
-                  'Download the sample template and fill in your item details.',
+              text: 'Download the sample template and fill in your item details.',
             ),
             const SizedBox(height: AppSpacing.md),
             OutlinedButton.icon(
@@ -433,16 +420,16 @@ class _PreviewSection extends StatelessWidget {
   final VoidCallback onImport;
 
   Color _statusColor(ImportRowStatus status) => switch (status) {
-    ImportRowStatus.valid => inventoryPositiveColor,
-    ImportRowStatus.duplicate => inventoryNegativeColor,
-    ImportRowStatus.error => const Color(0xFFE65100),
-  };
+        ImportRowStatus.valid => inventoryPositiveColor,
+        ImportRowStatus.duplicate => inventoryNegativeColor,
+        ImportRowStatus.error => const Color(0xFFE65100),
+      };
 
   String _statusLabel(ImportRowStatus status) => switch (status) {
-    ImportRowStatus.valid => 'Valid',
-    ImportRowStatus.duplicate => 'Duplicate',
-    ImportRowStatus.error => 'Error',
-  };
+        ImportRowStatus.valid => 'Valid',
+        ImportRowStatus.duplicate => 'Duplicate',
+        ImportRowStatus.error => 'Error',
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -621,9 +608,7 @@ class _ParsingOverlay extends StatelessWidget {
                     const CircularProgressIndicator(),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      fileName == null
-                          ? 'Parsing file...'
-                          : 'Parsing $fileName',
+                      fileName == null ? 'Parsing file...' : 'Parsing $fileName',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ],

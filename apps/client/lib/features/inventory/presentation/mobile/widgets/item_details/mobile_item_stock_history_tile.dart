@@ -31,9 +31,8 @@ class MobileItemStockHistoryTile extends StatelessWidget {
     final unit = transaction.unit ?? unitLabel;
     final changeText =
         '$signedPrefix${formatQuantityValue(transaction.quantity)} $unit';
-    final balanceText = balance == null
-        ? inventoryEmDash
-        : formatQuantityValue(balance!);
+    final balanceText =
+        balance == null ? inventoryEmDash : formatQuantityValue(balance!);
     final userName = transaction.createdByName?.trim();
     final notes = transaction.notes?.trim();
     final reference = transaction.referenceNo.trim().isNotEmpty
@@ -84,8 +83,7 @@ class MobileItemStockHistoryTile extends StatelessWidget {
             _MetaLine(label: 'Updated By', value: userName),
           if (godown != null && godown.isNotEmpty)
             _MetaLine(label: 'Godown', value: godown),
-          if (reference != null)
-            _MetaLine(label: 'Reference', value: reference),
+          if (reference != null) _MetaLine(label: 'Reference', value: reference),
           if (notes != null && notes.isNotEmpty)
             _MetaLine(label: 'Notes', value: notes),
         ],

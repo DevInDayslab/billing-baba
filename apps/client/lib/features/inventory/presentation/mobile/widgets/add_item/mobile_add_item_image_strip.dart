@@ -37,8 +37,7 @@ class MobileAddItemImageStrip extends ConsumerStatefulWidget {
       _MobileAddItemImageStripState();
 }
 
-class _MobileAddItemImageStripState
-    extends ConsumerState<MobileAddItemImageStrip> {
+class _MobileAddItemImageStripState extends ConsumerState<MobileAddItemImageStrip> {
   bool _seedApplied = false;
 
   @override
@@ -76,7 +75,7 @@ class _MobileAddItemImageStripState
   Widget build(BuildContext context) {
     final remote = widget.itemId != null
         ? ref.watch(itemImagesProvider(widget.itemId!)).value ??
-              const <ItemImageModel>[]
+            const <ItemImageModel>[]
         : const <ItemImageModel>[];
     final sortedRemote = List<ItemImageModel>.from(remote)
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -95,8 +94,7 @@ class _MobileAddItemImageStripState
         height: MobileAddItemImageStrip.thumbSize,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          itemCount:
-              sortedRemote.length +
+          itemCount: sortedRemote.length +
               widget.pendingPhotos.length +
               (canAdd ? 1 : 0),
           separatorBuilder: (_, __) => const SizedBox(width: 10),
@@ -158,7 +156,8 @@ class _RemoteThumb extends StatelessWidget {
               sourceMediaAssetId: image.mediaAssetId,
               displayContext: ImageDisplayContext.galleryThumb,
               fit: BoxFit.cover,
-              memCacheWidth: (MobileAddItemImageStrip.thumbSize * 2).round(),
+              memCacheWidth:
+                  (MobileAddItemImageStrip.thumbSize * 2).round(),
               placeholder: ColoredBox(
                 color: Colors.grey.shade100,
                 child: const Center(

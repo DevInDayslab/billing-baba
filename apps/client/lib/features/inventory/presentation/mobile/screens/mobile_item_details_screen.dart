@@ -1,12 +1,6 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_button.dart';
-import 'package:billing_baba/shared/widgets/app_error.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
@@ -18,6 +12,12 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_detail_metrics.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_stock_history_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_transaction_tile.dart';
+import 'package:billing_baba/shared/widgets/app_button.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,8 +60,8 @@ class _MobileItemDetailsScreenState
   }
 
   InventoryItem? _resolveDisplayItem() {
-    final listItem = ref
-        .watch(inventoryItemListProvider)
+    final listItem = (ref.watch(inventoryItemsProvider).value?.items ??
+            const <InventoryItem>[])
         .where((entry) => entry.id == widget.itemId)
         .firstOrNull;
     final detailAsync = ref.watch(productDetailProvider(widget.itemId));
@@ -115,7 +115,8 @@ class _MobileItemDetailsScreenState
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => AppError(
             message: InventoryErrorMapper.messageFor(error),
-            onRetry: () => ref.invalidate(productDetailProvider(widget.itemId)),
+            onRetry: () =>
+                ref.invalidate(productDetailProvider(widget.itemId)),
           ),
           data: (_) => const MobileEmptyState(
             title: 'Item not found',
@@ -137,16 +138,13 @@ class _MobileItemDetailsScreenState
         : null;
     final contextData = ref.watch(productDetailContextProvider(widget.itemId));
     final unitLabel = displayItem.baseUnitShortName ?? 'pcs';
-    final transactionsAsync = ref.watch(
-      productTransactionsProvider(widget.itemId),
-    );
-    final paginated = ref.watch(
-      paginatedProductTransactionsProvider(widget.itemId),
-    );
+    final transactionsAsync =
+        ref.watch(productTransactionsProvider(widget.itemId));
+    final paginated =
+        ref.watch(paginatedProductTransactionsProvider(widget.itemId));
     final stockAfter = ref.watch(productStockAfterProvider(widget.itemId));
-    final hasSearch = ref
-        .watch(productTransactionSearchQueryProvider)
-        .isNotEmpty;
+    final hasSearch =
+        ref.watch(productTransactionSearchQueryProvider).isNotEmpty;
     final sectionTitle = isProduct ? 'Stock History' : 'Transactions';
 
     return Scaffold(
@@ -346,7 +344,8 @@ class _PaginationBar extends ConsumerWidget {
         ),
         IconButton(
           tooltip: 'Next page',
-          onPressed: canGoNext ? () => notifier.setPage(currentPage + 1) : null,
+          onPressed:
+              canGoNext ? () => notifier.setPage(currentPage + 1) : null,
           icon: const Icon(Icons.chevron_right_rounded),
         ),
       ],

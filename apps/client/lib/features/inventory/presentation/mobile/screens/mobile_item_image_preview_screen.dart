@@ -8,12 +8,10 @@ import 'package:flutter/material.dart';
 sealed class MobileItemImagePreviewOutcome {}
 
 /// User removed the photo from the add-item form.
-final class MobileItemImagePreviewDeleted
-    extends MobileItemImagePreviewOutcome {}
+final class MobileItemImagePreviewDeleted extends MobileItemImagePreviewOutcome {}
 
 /// User cropped or otherwise updated the photo.
-final class MobileItemImagePreviewUpdated
-    extends MobileItemImagePreviewOutcome {
+final class MobileItemImagePreviewUpdated extends MobileItemImagePreviewOutcome {
   MobileItemImagePreviewUpdated(this.bytes);
 
   final Uint8List bytes;
@@ -69,11 +67,11 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
   Future<void> _edit(BuildContext context) async {
     final cropped = await Navigator.of(context, rootNavigator: true)
         .push<Uint8List>(
-          MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (_) => MobileItemImageEditorScreen(imageBytes: imageBytes),
-          ),
-        );
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => MobileItemImageEditorScreen(imageBytes: imageBytes),
+      ),
+    );
     if (cropped == null || !context.mounted) return;
     _popWithOutcome(context, MobileItemImagePreviewUpdated(cropped));
   }
@@ -161,10 +159,8 @@ Future<MobileItemImagePreviewOutcome?> openMobileItemImagePreview(
   BuildContext context, {
   required Uint8List imageBytes,
 }) {
-  return Navigator.of(
-    context,
-    rootNavigator: true,
-  ).push<MobileItemImagePreviewOutcome>(
+  return Navigator.of(context, rootNavigator: true)
+      .push<MobileItemImagePreviewOutcome>(
     MaterialPageRoute(
       fullscreenDialog: true,
       builder: (_) => MobileItemImagePreviewScreen(imageBytes: imageBytes),

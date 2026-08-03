@@ -5,7 +5,6 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_editor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
 enum _ItemImageSource { gallery, camera }
 
 /// Picks an item photo from gallery or camera, then opens the 1:1 crop editor.

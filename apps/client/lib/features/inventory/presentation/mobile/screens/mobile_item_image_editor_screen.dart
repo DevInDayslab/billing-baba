@@ -86,9 +86,8 @@ class _MobileItemImageEditorScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
-          onPressed: _isCropping
-              ? null
-              : () => Navigator.of(context, rootNavigator: true).pop(),
+          onPressed:
+              _isCropping ? null : () => Navigator.of(context, rootNavigator: true).pop(),
         ),
         title: const Text('Edit Photo'),
         centerTitle: true,

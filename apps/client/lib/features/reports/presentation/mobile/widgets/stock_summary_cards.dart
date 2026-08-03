@@ -1,8 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_display_row.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_scaffold.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_theme.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -23,7 +21,8 @@ class StockSummaryStatCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MobileReportMetricsBand(
+    return Container(
+      color: const Color(0xFFEAF2FB),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -44,7 +43,7 @@ class StockSummaryStatCards extends StatelessWidget {
               child: _StatCard(
                 label: 'Low Stock Items',
                 value: '$lowStockCount',
-                valueColor: MobileReportTheme.negative,
+                valueColor: const Color(0xFFE53935),
               ),
             ),
             const Gap(AppSpacing.sm),
@@ -109,8 +108,7 @@ class _StatCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
+              fontWeight: FontWeight.w700,
               color: valueColor ?? AppColors.textPrimary,
             ),
           ),

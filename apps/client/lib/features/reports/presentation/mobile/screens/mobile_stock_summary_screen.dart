@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
@@ -18,7 +17,6 @@ import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_stock_summary_mock_data.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_display_row.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_scaffold.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_cards.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_filter_sheet.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
@@ -70,8 +68,7 @@ class _MobileStockSummaryScreenState
     _filters = StockSummaryMobileFilters(
       categoryId: reportFilters.categoryId,
       categoryLabel: _categoryLabelForId(reportFilters.categoryId),
-      stock:
-          initialStock ??
+      stock: initialStock ??
           (reportFilters.inStockOnly
               ? StockSummaryStockFilter.inStock
               : StockSummaryStockFilter.all),
@@ -338,8 +335,7 @@ class _MobileStockSummaryScreenState
         children: [
           _DateToggle(
             enabled: _showStockAsOnDate,
-            date:
-                ref.watch(reportFiltersProvider).selectedDate ?? DateTime.now(),
+            date: ref.watch(reportFiltersProvider).selectedDate ?? DateTime.now(),
             hasActiveFilters: _filters.hasActiveFilters,
             onChanged: (enabled) {
               setState(() => _showStockAsOnDate = enabled);
@@ -370,9 +366,14 @@ class _MobileStockSummaryScreenState
               ),
             ),
           if (viewData.usingMock)
-            const MobileReportInfoBanner(
-              message:
-                  'Showing demo stock data — connect to load live report.',
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Text(
+                'Showing demo stock data — connect to load live report.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ),
           StockSummaryStatCards(
             itemCount: viewData.itemCount,
@@ -387,14 +388,14 @@ class _MobileStockSummaryScreenState
               error: (error, _) => viewData.rows.isEmpty
                   ? AppError(
                       message: error.toString(),
-                      onRetry: () => ref.invalidate(stockSummaryReportProvider),
+                      onRetry: () =>
+                          ref.invalidate(stockSummaryReportProvider),
                     )
                   : _StockSummaryList(rows: viewData.rows),
               data: (_) => viewData.rows.isEmpty
                   ? MobileEmptyState(
                       title: 'No stock items',
-                      message:
-                          _filters.hasActiveFilters || _searchQuery.isNotEmpty
+                      message: _filters.hasActiveFilters || _searchQuery.isNotEmpty
                           ? 'Try changing your search or filters.'
                           : 'Add items to see stock summary.',
                       icon: Icons.inventory_2_outlined,
@@ -432,11 +433,11 @@ class _StockSummaryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
         AppSpacing.sm,
         AppSpacing.lg,
-        MobileBottomNavigation.contentBottomPadding(context),
+        AppSpacing.xxxl,
       ),
       itemCount: rows.length,
       separatorBuilder: (_, _) => const Gap(AppSpacing.md),
