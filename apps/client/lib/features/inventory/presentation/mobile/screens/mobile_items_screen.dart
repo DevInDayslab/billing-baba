@@ -12,6 +12,7 @@ import 'package:billing_baba/features/inventory/application/inventory_search_pro
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/application/mobile_item_mock_data.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_list_view.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_more_options_sheet.dart';
@@ -24,6 +25,7 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -70,27 +72,40 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     final query = _searchQuery.trim().toLowerCase();
     if (query.isEmpty) return filtered.toList();
 
-    return filtered.where((item) {
-      final name = item.name.toLowerCase();
-      final barcode = item.barcode?.toLowerCase() ?? '';
-      final alias = item.alias?.toLowerCase() ?? '';
-      final shortName = item.shortName?.toLowerCase() ?? '';
-      return name.contains(query) ||
-          barcode.contains(query) ||
-          alias.contains(query) ||
-          shortName.contains(query);
-    }).toList();
+    return filtered
+        .where((item) {
+          final name = item.name.toLowerCase();
+          final barcode = item.barcode?.toLowerCase() ?? '';
+          final alias = item.alias?.toLowerCase() ?? '';
+          final shortName = item.shortName?.toLowerCase() ?? '';
+          return name.contains(query) ||
+              barcode.contains(query) ||
+              alias.contains(query) ||
+              shortName.contains(query);
+        })
+        .toList();
   }
 
   Map<String, String> _categoryNamesById() {
     final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
-    return {
-      for (final category in categories) category.id: category.name,
-    };
+    if (categories.isNotEmpty) {
+      return {
+        for (final category in categories) category.id: category.name,
+      };
+    }
+    return MobileItemMockData.categoryNamesById;
   }
 
   List<InventoryItem> _displayItems(List<InventoryItem> apiItems) {
-    return _filterItems(apiItems);
+    final fromApi = _filterItems(apiItems);
+    if (fromApi.isNotEmpty || !kDebugMode) return fromApi;
+    return _filterItems(MobileItemMockData.items);
+  }
+
+  bool _isUsingMockData(List<InventoryItem> apiItems) {
+    return kDebugMode &&
+        _filterItems(apiItems).isEmpty &&
+        _displayItems(apiItems).isNotEmpty;
   }
 
   Widget _itemsSliver({
@@ -114,11 +129,15 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     final barcode = await showMobileBarcodeScanner(context);
     if (!mounted || barcode == null) return;
 
-    final items = ref.read(inventoryItemListProvider);
+    final items =
+        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
+    final displayItems = items.isNotEmpty
+        ? items
+        : (kDebugMode ? MobileItemMockData.items : const <InventoryItem>[]);
     final engine = ref.read(inventorySearchEngineProvider);
     final match = findInventoryItemByBarcodeOrQuery(
       engine,
-      items,
+      displayItems,
       query: barcode,
     );
 
@@ -150,11 +169,9 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
       ],
     );
     if (result == null || !mounted) return;
-    ref
-        .read(inventoryItemFiltersProvider.notifier)
-        .apply(
-          InventoryItemFiltersState(selected: {result}),
-        );
+    ref.read(inventoryItemFiltersProvider.notifier).apply(
+      InventoryItemFiltersState(selected: {result}),
+    );
     setState(() {});
   }
 
@@ -249,6 +266,7 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     final categoryNamesById = _categoryNamesById();
     final apiItems = itemsAsync.value?.items ?? const <InventoryItem>[];
     final displayItems = _displayItems(apiItems);
+    final usingMock = _isUsingMockData(apiItems);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -285,6 +303,21 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                           onMoreTap: _showMoreSheet,
                         ),
                       ),
+                      if (usingMock)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                            ),
+                            child: Text(
+                              'Showing demo items — connect to load live data.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                          ),
+                        ),
                       itemsAsync.when(
                         loading: () => displayItems.isEmpty
                             ? const SliverFillRemaining(
@@ -318,9 +351,8 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                               hasScrollBody: false,
                               child: MobileEmptyState(
                                 title: 'No items found',
-                                message:
-                                    _searchQuery.isNotEmpty ||
-                                        filters.hasActiveFilters
+                                message: _searchQuery.isNotEmpty ||
+                                    filters.hasActiveFilters
                                     ? 'Try changing your search or filter.'
                                     : 'Add your first item to get started.',
                                 icon: Icons.inventory_2_outlined,

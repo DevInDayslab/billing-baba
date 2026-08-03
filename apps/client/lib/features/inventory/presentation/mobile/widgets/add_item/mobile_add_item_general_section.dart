@@ -74,7 +74,8 @@ class MobileAddItemGeneralSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nameLabel = _isProduct ? 'Item Name *' : 'Service Name *';
-    final codeLabel = _isProduct ? 'Item Code / Barcode' : 'Service Code';
+    final codeLabel =
+        _isProduct ? 'Item Code / Barcode' : 'Service Code';
     final taxLabel = _isProduct ? 'HSN/SAC Code' : 'SAC Code';
 
     return ColoredBox(
@@ -164,11 +165,7 @@ class MobileAddItemGeneralSection extends StatelessWidget {
               onChanged: onHsnChanged,
               suffixIcon: IconButton(
                 onPressed: () {},
-                icon: const Icon(
-                  Icons.search,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                icon: const Icon(Icons.search, size: 20, color: AppColors.primary),
                 tooltip: 'Search $taxLabel',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 40),

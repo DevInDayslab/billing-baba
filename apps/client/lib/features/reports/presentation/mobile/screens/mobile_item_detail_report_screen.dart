@@ -1,10 +1,6 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_error.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
@@ -12,11 +8,12 @@ import 'package:billing_baba/features/reports/application/report_providers.dart'
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/item_detail_report_helpers.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_export_chips.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_scaffold.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/item_detail_display_row.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,7 +57,8 @@ class _MobileItemDetailReportScreenState
   void _syncItemSearchFromFilters() {
     final itemId = ref.read(reportFiltersProvider).itemId;
     if (itemId == null) return;
-    final items = ref.read(inventoryItemListProvider);
+    final items =
+        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
     final item = items.where((entry) => entry.id == itemId).firstOrNull;
     if (item != null) {
       _itemSearchController.text = item.name;
@@ -108,7 +106,8 @@ class _MobileItemDetailReportScreenState
   }
 
   Future<void> _openItemPicker() async {
-    final items = ref.read(inventoryItemListProvider);
+    final items =
+        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
     if (items.isEmpty) return;
 
     final selected = await showModalBottomSheet<InventoryItem>(
@@ -197,20 +196,40 @@ class _MobileItemDetailReportScreenState
     final reportAsync = ref.watch(itemDetailReportProvider);
     final range = filters.effectiveDateRange;
     final displayRows = reportAsync.maybeWhen(
-      data: (report) => _displayRows(report),
+      data: _displayRows,
       orElse: () => _displayRows(reportAsync.value),
     );
     final hasItem = filters.itemId != null && filters.itemId!.isNotEmpty;
 
-    return MobileReportScaffold(
-      title: 'Item Detail Report',
-      actions: [
-        MobileReportExportChips(
-          showCa: false,
-          onPdf: () => _exportPdf(displayRows),
-          onExcel: () => _exportExcel(displayRows),
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        backgroundColor: _headerTeal,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).maybePop(),
         ),
-      ],
+        title: const Text(
+          'Item Detail Report',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+        ),
+        actions: [
+          _ExportChip(
+            label: 'Pdf',
+            backgroundColor: const Color(0xFFE53935),
+            onTap: () => _exportPdf(displayRows),
+          ),
+          const Gap(AppSpacing.sm),
+          _ExportChip(
+            label: 'xls',
+            backgroundColor: const Color(0xFF2E7D32),
+            onTap: () => _exportExcel(displayRows),
+          ),
+          const Gap(AppSpacing.sm),
+        ],
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -245,9 +264,7 @@ class _MobileItemDetailReportScreenState
                           ),
                           Icon(
                             Icons.keyboard_arrow_down_rounded,
-                            color: AppColors.textSecondary.withValues(
-                              alpha: 0.8,
-                            ),
+                            color: AppColors.textSecondary.withValues(alpha: 0.8),
                           ),
                         ],
                       ),
@@ -271,7 +288,7 @@ class _MobileItemDetailReportScreenState
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.calendar_today_outlined,
                             size: 16,
                             color: AppColors.primary,
@@ -386,11 +403,9 @@ class _MobileItemDetailReportScreenState
                   );
                 }
                 return ListView.separated(
-                  padding: EdgeInsets.only(
-                    bottom: MobileBottomNavigation.contentBottomPadding(context),
-                  ),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                   itemCount: displayRows.length,
-                  separatorBuilder: (_, __) => const Divider(
+                  separatorBuilder: (_, _) => const Divider(
                     height: 1,
                     color: Color(0xFFEEEEEE),
                   ),
@@ -408,6 +423,41 @@ class _MobileItemDetailReportScreenState
   }
 }
 
+class _ExportChip extends StatelessWidget {
+  const _ExportChip({
+    required this.label,
+    required this.backgroundColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color backgroundColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _TableHeader extends StatelessWidget {
   const _TableHeader();
 
@@ -419,14 +469,14 @@ class _TableHeader extends StatelessWidget {
       decoration: TextDecoration.underline,
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
+    return const Padding(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 3,
             child: Text('Date', style: style),
           ),
@@ -436,11 +486,7 @@ class _TableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text(
-              'Purchase qty',
-              style: style,
-              textAlign: TextAlign.right,
-            ),
+            child: Text('Purchase qty', style: style, textAlign: TextAlign.right),
           ),
           Expanded(
             flex: 2,
@@ -448,11 +494,7 @@ class _TableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text(
-              'Closing qty',
-              style: style,
-              textAlign: TextAlign.right,
-            ),
+            child: Text('Closing qty', style: style, textAlign: TextAlign.right),
           ),
         ],
       ),
@@ -549,8 +591,8 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
     final filtered = query.isEmpty
         ? widget.items
         : widget.items
-              .where((item) => item.name.toLowerCase().contains(query))
-              .toList();
+            .where((item) => item.name.toLowerCase().contains(query))
+            .toList();
 
     return SafeArea(
       child: Padding(
@@ -580,7 +622,7 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: filtered.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final item = filtered[index];
                   return ListTile(

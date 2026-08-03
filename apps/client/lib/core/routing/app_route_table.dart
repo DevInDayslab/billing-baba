@@ -19,6 +19,7 @@ import 'package:billing_baba/features/collaboration/presentation/sync_share_page
 import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/leads_screen.dart';
+import 'package:billing_baba/features/dashboard/presentation/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/dashboard_page.dart';
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
@@ -31,8 +32,6 @@ import 'package:billing_baba/features/inventory/presentation/categories_screen.d
 import 'package:billing_baba/features/inventory/presentation/item_details_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/mobile_inventory_masters_page.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/mobile_stock_transfer_placeholder_page.dart';
 import 'package:billing_baba/features/inventory/presentation/units_screen.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
@@ -268,14 +267,12 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.itemsGodowns,
-            builder: (context, state) => const MobileInventoryMastersPage(
-              type: InventoryMasterType.godowns,
-            ),
+            builder: (context, state) => const ComingSoonPage(title: 'Godowns'),
           ),
           GoRoute(
             path: AppRoutes.itemsStockTransfer,
             builder: (context, state) =>
-                const MobileStockTransferPlaceholderPage(),
+                const ComingSoonPage(title: 'Stock Transfer'),
           ),
           GoRoute(
             path: AppRoutes.itemsSettings,

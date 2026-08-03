@@ -47,8 +47,8 @@ class MobileAddItemFooter extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: MobileAddItemTheme.saveRed,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: MobileAddItemTheme.saveRed
-                        .withValues(alpha: 0.5),
+                    disabledBackgroundColor:
+                        MobileAddItemTheme.saveRed.withValues(alpha: 0.5),
                     shape: const RoundedRectangleBorder(),
                     textStyle: const TextStyle(
                       fontSize: 16,

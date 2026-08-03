@@ -37,8 +37,7 @@ class MobileItemDetailMetrics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final metrics =
-        stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
+    final metrics = stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
 
     return MobileCard(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -80,8 +79,7 @@ class MobileItemDetailMetrics extends StatelessWidget {
                 ),
                 _MetricTile(
                   label: 'Stock Value',
-                  value:
-                      stockSummary?.stockValue != null &&
+                  value: stockSummary?.stockValue != null &&
                           stockSummary!.stockValue! > 0
                       ? _currencyFormat.format(stockSummary!.stockValue)
                       : inventoryEmDash,
@@ -100,9 +98,8 @@ class MobileItemDetailMetrics extends StatelessWidget {
               const Gap(AppSpacing.md),
               _DetailRow(
                 label: 'Last Stock Update',
-                value: DateFormat(
-                  'dd MMM yyyy, hh:mm a',
-                ).format(latestStockUpdate!.updatedAt.toLocal()),
+                value: DateFormat('dd MMM yyyy, hh:mm a')
+                    .format(latestStockUpdate!.updatedAt.toLocal()),
               ),
               _DetailRow(
                 label: 'Updated By',

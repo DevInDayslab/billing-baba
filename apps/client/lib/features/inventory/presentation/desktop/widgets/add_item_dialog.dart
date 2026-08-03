@@ -163,7 +163,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final form = ref.read(addItemFormProvider);
     final units = ref.read(unitsProvider);
     if (form.baseUnitId == null) return null;
-    return units.where((unit) => unit.id == form.baseUnitId).firstOrNull;
+    return units
+        .where((unit) => unit.id == form.baseUnitId)
+        .firstOrNull;
   }
 
   @override
@@ -308,8 +310,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           _mrpController.text = mrp.toString();
         }
       }
-      if (detailDto.reorderLevel != null &&
-          detailDto.reorderLevel!.isNotEmpty) {
+      if (detailDto.reorderLevel != null && detailDto.reorderLevel!.isNotEmpty) {
         final reorderLevel = double.tryParse(detailDto.reorderLevel!);
         if (reorderLevel != null) {
           notifier.updateMinStock(reorderLevel);
@@ -413,9 +414,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     try {
       await ref.read(localItemSuppliersProvider.notifier).ensureInitialized();
-      final localSuppliers = ref
-          .read(localItemSuppliersProvider.notifier)
-          .suppliersFor(item.id);
+      final localSuppliers =
+          ref.read(localItemSuppliersProvider.notifier).suppliersFor(item.id);
       if (localSuppliers.isNotEmpty) {
         notifier.setSupplierPartyIds(localSuppliers);
       }
@@ -959,8 +959,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     String? selectedCategory,
     ItemSettings itemSettings,
   ) {
-    final showBarcodeScan =
-        form.itemType == ItemType.product &&
+    final showBarcodeScan = form.itemType == ItemType.product &&
         itemSettings.barcodeScanningEnabled;
 
     return Column(
@@ -1130,8 +1129,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           left: FormSpacing.page,
           right: FormSpacing.page,
           top: FormSpacing.page,
-          bottom:
-              MediaQuery.viewInsetsOf(sheetContext).bottom + FormSpacing.page,
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom + FormSpacing.page,
         ),
         child: SingleChildScrollView(
           child: ManufacturingSection(
@@ -1442,10 +1440,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textPrimary,
                 side: const BorderSide(color: _cardBorder),
-                minimumSize: Size(
-                  compact ? double.infinity : 0,
-                  FormSpacing.inputHeight,
-                ),
+                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
                 padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
@@ -1460,10 +1455,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               onPressed: _isSaving ? null : () => _save(saveAndNew: false),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                minimumSize: Size(
-                  compact ? double.infinity : 0,
-                  FormSpacing.inputHeight,
-                ),
+                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
                 padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 28),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),

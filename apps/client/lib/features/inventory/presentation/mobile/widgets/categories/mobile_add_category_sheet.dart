@@ -175,10 +175,7 @@ class _AddCategorySheetBodyState extends ConsumerState<_AddCategorySheetBody> {
                 iconSize: 22,
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 36,
-                  height: 36,
-                ),
+                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
               ),
             ],
           ),
@@ -223,11 +220,10 @@ class _AddCategorySheetBodyState extends ConsumerState<_AddCategorySheetBody> {
                         )
                       : Text(
                           actionLabel,
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                 ),
               ),

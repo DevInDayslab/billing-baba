@@ -230,10 +230,7 @@ class _TaxModeChip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textPrimary,
-              ),
+              style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
             ),
             const SizedBox(width: 2),
             const Icon(Icons.arrow_drop_down, size: 18),

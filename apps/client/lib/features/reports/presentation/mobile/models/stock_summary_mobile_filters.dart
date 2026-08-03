@@ -63,9 +63,7 @@ class StockSummaryMobileFilters {
   }) {
     return StockSummaryMobileFilters(
       categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
-      categoryLabel: clearCategory
-          ? 'All'
-          : (categoryLabel ?? this.categoryLabel),
+      categoryLabel: clearCategory ? 'All' : (categoryLabel ?? this.categoryLabel),
       stock: stock ?? this.stock,
       status: status ?? this.status,
     );
