@@ -24,17 +24,11 @@ final mobileHomeTransactionsProvider =
         expensesAsync,
       ];
 
-      if (loadingStates.every((state) => state.isLoading)) {
+      final allSettled = loadingStates.every(
+        (state) => state.hasValue || state.hasError,
+      );
+      if (!allSettled) {
         return const AsyncValue.loading();
-      }
-
-      for (final state in loadingStates) {
-        if (state.hasError && !state.hasValue) {
-          return AsyncValue.error(
-            state.error!,
-            state.stackTrace ?? StackTrace.empty,
-          );
-        }
       }
 
       final items = <MobileHomeTransactionItem>[];

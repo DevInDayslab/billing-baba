@@ -1,9 +1,8 @@
-import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
+import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_dashboard_mock_data.dart';
@@ -13,6 +12,7 @@ import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobi
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_dashboard_header.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_dashboard_reports_section.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_dashboard_sales_card.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,7 +36,6 @@ class MobileDashboardPage extends ConsumerWidget {
             loading: () => _DashboardBody(
               dashboard: MobileDashboardMockData.dashboard(period: period),
               period: period,
-              isLoading: true,
             ),
             error: (_, _) => _DashboardBody(
               dashboard: MobileDashboardMockData.dashboard(period: period),

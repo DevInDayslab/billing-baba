@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/sync/application/sync_ui_state_provider.dart';
@@ -17,7 +18,12 @@ import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobi
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
+import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
+import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
@@ -235,6 +241,16 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
     final homeState = ref.watch(mobileHomeControllerProvider);
     final isPartyView = homeState.activeView == MobileHomeView.partyDetails;
     final transactionsAsync = ref.watch(mobileHomeTransactionsProvider);
+    final feedSources = [
+      ref.watch(saleInvoicesProvider),
+      ref.watch(estimateQuotationsProvider),
+      ref.watch(paymentInRecordsProvider),
+      ref.watch(purchaseBillsProvider),
+      ref.watch(expenseTransactionsProvider),
+    ];
+    final feedUnreachable = feedSources.every(
+      (state) => state.hasError && !state.hasValue,
+    );
 
     return MobilePlatformScope(
       child: ColoredBox(
@@ -313,7 +329,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                           ),
                           error: (error, _) => SliverFillRemaining(
                             child: AppError(
-                              message: error.toString(),
+                              message: OfflineUiMessages.messageFor(error),
                               onRetry: () =>
                                   unawaited(refreshMobileHomeTransactions(ref)),
                             ),
@@ -326,11 +342,15 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                             );
 
                             if (transactions.isEmpty) {
-                              return const SliverFillRemaining(
+                              return SliverFillRemaining(
                                 hasScrollBody: false,
                                 child: MobileEmptyState(
-                                  title: 'No transactions found',
-                                  message: 'Try a different search term.',
+                                  title: feedUnreachable
+                                      ? 'Working offline'
+                                      : 'No transactions found',
+                                  message: feedUnreachable
+                                      ? OfflineUiMessages.workingOffline
+                                      : 'Try a different search term.',
                                   icon: Icons.receipt_long_outlined,
                                 ),
                               );
