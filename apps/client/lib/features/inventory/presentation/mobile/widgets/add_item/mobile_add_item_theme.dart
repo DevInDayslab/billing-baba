@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 abstract final class MobileAddItemTheme {
   static const saveRed = Color(0xFFE53935);
   static const tabActiveRed = Color(0xFFD32F2F);
-  static const sectionBand = Color(0xFFE8F4FD);
+  /// Matches form surface so section gaps do not show as sky-blue bands.
+  static const Color sectionBand = AppColors.surface;
   static const fieldBorder = Color(0xFFBDBDBD);
   static const inlineButtonBg = Color(0xFFE3F2FD);
   static const inlineButtonText = Color(0xFF1976D2);

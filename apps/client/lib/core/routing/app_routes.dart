@@ -17,6 +17,7 @@ abstract final class AppRoutes {
   static const items = '/items';
   static const itemsDetail = '/items/details';
   static const itemsCategories = '/items/categories';
+  static const itemsBrands = '/items/brands';
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
   static const itemsStockTransfer = '/items/stock-transfer';

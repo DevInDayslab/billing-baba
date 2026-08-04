@@ -80,10 +80,15 @@ export class GodownService extends InventoryServiceBase {
     const name = input.name.trim();
     await this.assertNameAvailable(businessId, name);
 
+    if (input.is_default) {
+      await this.repository.clearDefaultFlags(businessId);
+    }
+
     return this.repository.create({
       businessId,
       name,
       address: input.address ?? null,
+      isDefault: input.is_default ?? false,
       createdBy: userId ?? null,
       updatedBy: userId ?? null,
     });
@@ -108,9 +113,23 @@ export class GodownService extends InventoryServiceBase {
       await this.assertNameAvailable(businessId, name, godownId);
     }
 
+    if (input.is_default === true) {
+      await this.repository.clearDefaultFlags(businessId, godownId);
+    }
+
+    if (input.is_default === false && existing.is_default) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Cannot unset the only default godown. Set another godown as default first.',
+        400,
+        { is_default: ['A business must have one default godown'] },
+      );
+    }
+
     const updated = await this.repository.update(businessId, godownId, {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
       ...(input.address !== undefined ? { address: input.address } : {}),
+      ...(input.is_default !== undefined ? { isDefault: input.is_default } : {}),
       updatedBy: userId ?? null,
     });
 

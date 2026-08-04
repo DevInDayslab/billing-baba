@@ -54,6 +54,11 @@ class MobileBottomNavigation extends StatelessWidget {
         AppSpacing.lg;
   }
 
+  /// Scroll padding for screens that float a FAB above the raised POS button.
+  static double fabScrollPadding({double floatingActionHeight = 52}) {
+    return fabBottomInset + floatingActionHeight + AppSpacing.lg;
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = destinations ?? MobileNavDestinations.visible();
@@ -63,11 +68,14 @@ class MobileBottomNavigation extends StatelessWidget {
     final rightItems = sides.length > 2
         ? sides.sublist(2)
         : <MobileNavDestination>[];
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return SafeArea(
-      top: false,
+    // Paint the solid bar through the home-indicator inset; keep icons in the
+    // safe content band so they are not obscured by the system gesture area.
+    return ColoredBox(
+      color: AppColors.surface,
       child: SizedBox(
-        height: barHeight,
+        height: barHeight + bottomInset,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.bottomCenter,
@@ -89,28 +97,31 @@ class MobileBottomNavigation extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: SizedBox(
-                  height: barHeight,
-                  child: Row(
-                    children: [
-                      for (final destination in leftItems)
-                        Expanded(
-                          child: _SideNavItem(
-                            destination: destination,
-                            isSelected: destination.tab == currentTab,
-                            onTap: () => onTabSelected(destination.tab),
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomInset),
+                  child: SizedBox(
+                    height: barHeight,
+                    child: Row(
+                      children: [
+                        for (final destination in leftItems)
+                          Expanded(
+                            child: _SideNavItem(
+                              destination: destination,
+                              isSelected: destination.tab == currentTab,
+                              onTap: () => onTabSelected(destination.tab),
+                            ),
                           ),
-                        ),
-                      const Expanded(child: SizedBox.shrink()),
-                      for (final destination in rightItems)
-                        Expanded(
-                          child: _SideNavItem(
-                            destination: destination,
-                            isSelected: destination.tab == currentTab,
-                            onTap: () => onTabSelected(destination.tab),
+                        const Expanded(child: SizedBox.shrink()),
+                        for (final destination in rightItems)
+                          Expanded(
+                            child: _SideNavItem(
+                              destination: destination,
+                              isSelected: destination.tab == currentTab,
+                              onTap: () => onTabSelected(destination.tab),
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

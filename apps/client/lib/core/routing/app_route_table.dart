@@ -28,6 +28,8 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/brands_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/godowns_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/categories_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_details_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
@@ -262,12 +264,16 @@ GoRouter createAppRouter({
             builder: (context, state) => const CategoriesScreen(),
           ),
           GoRoute(
+            path: AppRoutes.itemsBrands,
+            builder: (context, state) => const BrandsScreen(),
+          ),
+          GoRoute(
             path: AppRoutes.itemsUnits,
             builder: (context, state) => const UnitsScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsGodowns,
-            builder: (context, state) => const ComingSoonPage(title: 'Godowns'),
+            builder: (context, state) => const GodownsScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsStockTransfer,

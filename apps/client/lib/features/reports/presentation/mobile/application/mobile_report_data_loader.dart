@@ -9,13 +9,11 @@ import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_formatters.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_mock_data.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_subsection_registry.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/mobile_report_view_model.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -195,21 +193,13 @@ abstract final class MobileReportDataLoader {
       _ => AsyncData(_empty(config)),
     };
 
-    // Riverpod retries failed providers; during retries [hasError] stays true
-    // while [isLoading] flickers. Prefer demo data over an endless shimmer
-    // when the API is unreachable (physical devices / offline-first).
+    // Prefer empty/offline error UX over demo data when the API is unreachable.
     if (async.hasError && _shouldUseDemoFallback(async.error!)) {
-      return AsyncData(MobileReportMockData.forConfig(config));
+      return AsyncData(_empty(config));
     }
 
     if (async.hasValue) {
-      return AsyncData(_withMockFallback(async.requireValue, config));
-    }
-
-    // First load / debug: show demo immediately instead of shimmer while the
-    // unreachable API request is in flight (and while Riverpod retries).
-    if (async.isLoading && kDebugMode) {
-      return AsyncData(MobileReportMockData.forConfig(config));
+      return AsyncData(async.requireValue);
     }
 
     return async.when(
@@ -218,16 +208,15 @@ abstract final class MobileReportDataLoader {
       loading: () => const AsyncLoading(),
       error: (error, stackTrace) {
         if (_shouldUseDemoFallback(error)) {
-          return AsyncData(MobileReportMockData.forConfig(config));
+          return AsyncData(_empty(config));
         }
         return AsyncError(error, stackTrace);
       },
-      data: (data) => AsyncData(_withMockFallback(data, config)),
+      data: AsyncData.new,
     );
   }
 
   static bool _shouldUseDemoFallback(Object error) {
-    if (kDebugMode) return true;
     if (error is ReportsException && error.code == 'OFFLINE') return true;
     if (error is DioException && ApiErrorParser.isOffline(error)) return true;
     if (NetworkExceptionClassifier.isConnectivityError(error)) return true;
@@ -338,14 +327,6 @@ abstract final class MobileReportDataLoader {
     }
   }
 
-  static MobileReportViewData _withMockFallback(
-    MobileReportViewData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    if (data.rows.isNotEmpty || !kDebugMode) return data;
-    return MobileReportMockData.forConfig(config);
-  }
-
   static MobileReportViewData _empty(MobileReportSubsectionConfig config) {
     return MobileReportViewData(
       summaryMetrics: [
@@ -393,8 +374,7 @@ abstract final class MobileReportDataLoader {
     MobileReportSubsectionConfig config, {
     required String title,
     required String reference,
-    DateTime? dateTime,
-    required List<String> values,
+    required List<String> values, DateTime? dateTime,
   }) {
     return MobileReportRow(
       title: title,
@@ -612,7 +592,7 @@ abstract final class MobileReportDataLoader {
             reference: item.isHeader ? 'HEADER' : config.referencePrefix,
             values: [
               formatReportCurrency(item.amount),
-              item.isHeader ? 'Header' : 'Line',
+              if (item.isHeader) 'Header' else 'Line',
               '${item.indent}',
             ],
           ),
@@ -775,7 +755,7 @@ abstract final class MobileReportDataLoader {
             reference: item.isHeader ? 'HEADER' : config.referencePrefix,
             values: [
               formatReportCurrency(item.amount),
-              item.isHeader ? 'Header' : 'Line',
+              if (item.isHeader) 'Header' else 'Line',
               '${item.indent}',
             ],
           ),

@@ -26,6 +26,10 @@ class AuthService {
   /// Serializes every `/auth/refresh` call across Dio clients and business selection.
   static Future<void> _refreshMutexChain = Future<void>.value();
 
+  /// Coalesces concurrent [refreshStoredSession] callers onto one in-flight refresh
+  /// so rotated refresh tokens are not reused (which would clear the session).
+  static Future<AuthSession?>? _inflightRefreshStoredSession;
+
   static Future<T> _withRefreshLock<T>(Future<T> Function() action) {
     final operation = _refreshMutexChain.then((_) => action());
     _refreshMutexChain = operation.then((_) {}, onError: (_) {});
@@ -192,10 +196,42 @@ class AuthService {
             ? storedBusinessId
             : null);
 
-    return _withRefreshLock(() async {
+    final inflight = _inflightRefreshStoredSession;
+    if (inflight != null) {
+      return inflight;
+    }
+
+    late final Future<AuthSession?> operation;
+    operation = _withRefreshLock(() async {
+      // Another refresh may have completed (e.g. selectBusiness) while we waited.
+      final latestAccess = await _storage.readSecure(StorageKeys.accessToken);
+      final latestRefresh = await _storage.readSecure(StorageKeys.refreshToken);
+      if (latestAccess != null &&
+          latestAccess.isNotEmpty &&
+          latestAccess != accessToken &&
+          latestRefresh != null &&
+          latestRefresh.isNotEmpty) {
+        return AuthSession(
+          accessToken: latestAccess,
+          refreshToken: latestRefresh,
+          expiresIn: 0,
+          user: AuthUser(
+            id: JwtUtils.sessionUserId(latestAccess) ?? 'unknown',
+            phone: JwtUtils.phone(latestAccess) ??
+                _storage.read(StorageKeys.accountPhone) ??
+                '',
+            role: JwtUtils.role(latestAccess),
+          ),
+          businesses: const [],
+        );
+      }
+
+      final tokenToUse = latestRefresh ?? token;
+      if (tokenToUse.isEmpty) return null;
+
       try {
         final session = await _repository.refresh(
-          refreshToken: token,
+          refreshToken: tokenToUse,
           businessId: effectiveBusinessId,
         );
         final persistBusinessId = _businessIdForSession(
@@ -218,7 +254,14 @@ class AuthService {
         }
         return null;
       }
+    }).whenComplete(() {
+      if (identical(_inflightRefreshStoredSession, operation)) {
+        _inflightRefreshStoredSession = null;
+      }
     });
+
+    _inflightRefreshStoredSession = operation;
+    return operation;
   }
 
   Future<AuthSession> loginWithMsg91Token({
@@ -295,8 +338,12 @@ class AuthService {
     required String refreshToken,
   }) async {
     return _withRefreshLock(() async {
+      // Prefer the latest stored refresh token — a concurrent access-token
+      // refresh may have already rotated the one passed by the caller.
+      final latestRefresh =
+          await _storage.readSecure(StorageKeys.refreshToken) ?? refreshToken;
       final session = await _repository.refresh(
-        refreshToken: refreshToken,
+        refreshToken: latestRefresh,
         businessId: businessId,
       );
       await persistSession(session, businessId: businessId);

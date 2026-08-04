@@ -67,6 +67,9 @@ abstract final class ApiEndpoints {
   static const inventoryItemsAlternativesIndex =
       '$inventoryItems/alternatives-index';
   static String inventoryItem(String id) => '$inventoryItems/$id';
+  static String inventoryItemSuppliers(String itemId) =>
+      '${inventoryItem(itemId)}/suppliers';
+  static String inventoryItemBom(String itemId) => '${inventoryItem(itemId)}/bom';
   static String inventoryItemImages(String itemId) =>
       '${inventoryItem(itemId)}/images';
   static String inventoryItemImage(String itemId, String imageId) =>
@@ -88,6 +91,8 @@ abstract final class ApiEndpoints {
       '$storageImages/$sourceAssetId/variants';
   static String storageImageVariantUrl(String sourceAssetId, String variant) =>
       '$storageImages/$sourceAssetId/variants/$variant/url';
+  static String storageFileUrl(String assetId) =>
+      '/api/v1/storage/files/$assetId/url';
 
   static String inventoryItemTierPrices(String itemId) =>
       '${inventoryItem(itemId)}/tier-prices';

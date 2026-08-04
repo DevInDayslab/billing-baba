@@ -14,7 +14,7 @@ import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_stock_summary_mock_data.dart';
+import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_display_row.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_cards.dart';
@@ -22,7 +22,6 @@ import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -182,26 +181,11 @@ class _MobileStockSummaryScreenState
     return filtered;
   }
 
-  bool _isUsingMockData(StockSummaryReportData? report) {
-    return kDebugMode && (report == null || report.rows.isEmpty);
-  }
-
   _StockSummaryViewData _resolveViewData({
-    required StockSummaryReportData? report,
+    required StockSummaryReportData report,
     required Map<String, String> categoryNamesById,
   }) {
-    if (_isUsingMockData(report)) {
-      final rows = _applyLocalFilters(MobileStockSummaryMockData.rows);
-      return _StockSummaryViewData(
-        rows: rows,
-        itemCount: MobileStockSummaryMockData.itemCount,
-        lowStockCount: MobileStockSummaryMockData.lowStockCount,
-        stockValue: MobileStockSummaryMockData.totalStockValue,
-        usingMock: true,
-      );
-    }
-
-    final mapped = _mapReportRows(report!, categoryNamesById);
+    final mapped = _mapReportRows(report, categoryNamesById);
     final rows = _applyLocalFilters(mapped);
     final lowStockCount = mapped.where((row) => row.isLowStock).length;
 
@@ -210,7 +194,6 @@ class _MobileStockSummaryScreenState
       itemCount: report.meta.total,
       lowStockCount: lowStockCount,
       stockValue: report.totalStockValue,
-      usingMock: false,
     );
   }
 
@@ -291,10 +274,17 @@ class _MobileStockSummaryScreenState
         report: report,
         categoryNamesById: categoryNamesById,
       ),
-      orElse: () => _resolveViewData(
-        report: reportAsync.value,
-        categoryNamesById: categoryNamesById,
-      ),
+      orElse: () => reportAsync.value == null
+          ? const _StockSummaryViewData(
+              rows: [],
+              itemCount: 0,
+              lowStockCount: 0,
+              stockValue: 0,
+            )
+          : _resolveViewData(
+              report: reportAsync.value!,
+              categoryNamesById: categoryNamesById,
+            ),
     );
 
     return Scaffold(
@@ -365,16 +355,6 @@ class _MobileStockSummaryScreenState
                 onChanged: _onSearchChanged,
               ),
             ),
-          if (viewData.usingMock)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text(
-                'Showing demo stock data — connect to load live report.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
           StockSummaryStatCards(
             itemCount: viewData.itemCount,
             lowStockCount: viewData.lowStockCount,
@@ -387,7 +367,7 @@ class _MobileStockSummaryScreenState
                   : _StockSummaryList(rows: viewData.rows),
               error: (error, _) => viewData.rows.isEmpty
                   ? AppError(
-                      message: error.toString(),
+                      message: ReportsErrorMapper.messageFor(error),
                       onRetry: () =>
                           ref.invalidate(stockSummaryReportProvider),
                     )
@@ -415,14 +395,12 @@ class _StockSummaryViewData {
     required this.itemCount,
     required this.lowStockCount,
     required this.stockValue,
-    required this.usingMock,
   });
 
   final List<StockSummaryDisplayRow> rows;
   final int itemCount;
   final int lowStockCount;
   final double stockValue;
-  final bool usingMock;
 }
 
 class _StockSummaryList extends StatelessWidget {

@@ -20,6 +20,14 @@ abstract final class StorageKeys {
   static const partyGroupNames = 'party_group_names';
   static const localItemTierPrices = 'local_item_tier_prices';
   static const localItemSuppliers = 'local_item_suppliers';
+
+  /// Marks one-time migration from [localItemSuppliers] SharedPreferences cache.
+  static String itemSuppliersMigratedFor(String businessId) =>
+      'item_suppliers_migrated_$businessId';
+
+  /// Marks one-time migration from [localItemTierPrices] SharedPreferences cache.
+  static String itemTierPricesMigratedFor(String businessId) =>
+      'item_tier_prices_migrated_$businessId';
   static const saleLineItemColumnVisibility =
       'sale_line_item_column_visibility';
   static const itemSettings = 'item_settings';

@@ -258,6 +258,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
         child: SafeArea(
           bottom: false,
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
               Column(
             children: [
@@ -279,7 +280,12 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Expanded(
-                child: RefreshIndicator(
+                // Shell uses extendBody — keep list painting under the FAB/nav
+                // so rows stay visible beside/behind the Add Sale pill.
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeBottom: true,
+                  child: RefreshIndicator(
                   onRefresh: () async {
                     if (isPartyView) {
                       await ref.read(partyListProvider.notifier).refresh();
@@ -311,15 +317,13 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                         ),
                       ),
                       if (isPartyView)
-                        SliverFillRemaining(
-                          child: MobileHomePartySection(
-                            searchQuery: homeState.searchQuery,
-                            onSelectParty: (partyId) {
-                              ref.read(selectedPartyIdProvider.notifier).selected =
-                                  partyId;
-                              unawaited(context.push(AppRoutes.partyDetails));
-                            },
-                          ),
+                        MobileHomePartySection(
+                          searchQuery: homeState.searchQuery,
+                          onSelectParty: (partyId) {
+                            ref.read(selectedPartyIdProvider.notifier).selected =
+                                partyId;
+                            unawaited(context.push(AppRoutes.partyDetails));
+                          },
                         )
                       else
                         transactionsAsync.when(
@@ -381,14 +385,12 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                         ),
                       SliverToBoxAdapter(
                         child: SizedBox(
-                          height:
-                              MobileBottomNavigation.fabBottomInset +
-                              52 +
-                              AppSpacing.md,
+                          height: MobileBottomNavigation.fabScrollPadding(),
                         ),
                       ),
                     ],
                   ),
+                ),
                 ),
               ),
             ],
@@ -398,10 +400,16 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                 right: 0,
                 bottom: MobileBottomNavigation.fabBottomInset,
                 child: Center(
-                  child: FractionallySizedBox(
-                    widthFactor: 0.5,
+                  child: Material(
+                    type: MaterialType.transparency,
                     child: MobileHomeAddSaleFab(
-                      onPressed: () => context.push(AppRoutes.addSale),
+                      label: isPartyView ? 'Add Party' : 'Add New Sale',
+                      icon: isPartyView
+                          ? Icons.person_add_alt_1_rounded
+                          : Icons.currency_rupee_rounded,
+                      onPressed: () => isPartyView
+                          ? unawaited(showAddPartyDialog(context))
+                          : context.push(AppRoutes.addSale),
                     ),
                   ),
                 ),

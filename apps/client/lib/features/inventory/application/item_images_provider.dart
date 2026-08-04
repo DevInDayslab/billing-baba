@@ -25,8 +25,15 @@ class ItemImages extends _$ItemImages {
   @override
   Future<List<ItemImageModel>> build(String itemId) async {
     _itemId = itemId;
-    final service = await ref.watch(inventoryServiceProvider.future);
-    return service.fetchItemImages(itemId);
+    final previous = state.asData?.value;
+    try {
+      final service = await ref.watch(inventoryServiceProvider.future);
+      return await service.fetchItemImages(itemId);
+    } on Object {
+      // Keep seeded / previous gallery visible when the gallery API fails.
+      if (previous != null && previous.isNotEmpty) return previous;
+      return const [];
+    }
   }
 
   List<ItemImageModel> get _current => state.value ?? const [];

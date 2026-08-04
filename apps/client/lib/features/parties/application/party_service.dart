@@ -386,10 +386,6 @@ class PartyList extends _$PartyList {
 
     final service = await ref.watch(partyServiceProvider.future);
     final filter = ref.read(partyListFilterProvider);
-    final ledgerService = await ref.watch(partyLedgerServiceProvider.future);
-    final businessId = await ref.watch(partyLedgerBusinessIdProvider.future);
-    final outstandingIndex =
-        await ledgerService.fetchOutstandingIndex(businessId: businessId);
     final fetchFilter = filter == PartyListFilter.toReceive ||
             filter == PartyListFilter.toPay
         ? PartyListFilter.all
@@ -401,6 +397,10 @@ class PartyList extends _$PartyList {
     );
 
     if (filter == PartyListFilter.toReceive || filter == PartyListFilter.toPay) {
+      final ledgerService = await ref.watch(partyLedgerServiceProvider.future);
+      final businessId = await ref.watch(partyLedgerBusinessIdProvider.future);
+      final outstandingIndex =
+          await ledgerService.fetchOutstandingIndex(businessId: businessId);
       return parties.where((party) {
         final balance = projectedPartyBalance(party, outstandingIndex);
         final projected = party.copyWith(balance: balance);
@@ -430,10 +430,6 @@ class PartyList extends _$PartyList {
       final service = await ref.read(partyServiceProvider.future);
       final PartyListFilter activeFilter =
           filter ?? ref.read(partyListFilterProvider);
-      final ledgerService = await ref.read(partyLedgerServiceProvider.future);
-      final businessId = await ref.read(partyLedgerBusinessIdProvider.future);
-      final outstandingIndex =
-          await ledgerService.fetchOutstandingIndex(businessId: businessId);
       final PartyListFilter fetchFilter =
           activeFilter == PartyListFilter.toReceive ||
               activeFilter == PartyListFilter.toPay
@@ -447,6 +443,10 @@ class PartyList extends _$PartyList {
 
       if (activeFilter == PartyListFilter.toReceive ||
           activeFilter == PartyListFilter.toPay) {
+        final ledgerService = await ref.read(partyLedgerServiceProvider.future);
+        final businessId = await ref.read(partyLedgerBusinessIdProvider.future);
+        final outstandingIndex =
+            await ledgerService.fetchOutstandingIndex(businessId: businessId);
         return parties.where((party) {
           final balance = projectedPartyBalance(party, outstandingIndex);
           final projected = party.copyWith(balance: balance);

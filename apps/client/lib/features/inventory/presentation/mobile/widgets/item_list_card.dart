@@ -1,10 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
-import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -16,11 +18,13 @@ class ItemListCard extends StatelessWidget {
     super.key,
     this.categoryName,
     this.onTap,
+    this.onLongPress,
   });
 
   final InventoryItem item;
   final String? categoryName;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -28,6 +32,7 @@ class ItemListCard extends StatelessWidget {
     decimalDigits: 2,
   );
 
+  static const _thumbSize = 56.0;
   static const _labelSalePrice = 'Sale Price';
   static const _labelPurchasePrice = 'Purchase Price';
   static const _labelInStock = 'In Stock';
@@ -52,6 +57,7 @@ class ItemListCard extends StatelessWidget {
 
     return MobileCard(
       onTap: onTap,
+      onLongPress: onLongPress,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,41 +65,43 @@ class ItemListCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _ItemThumb(imageUrl: item.primaryImageUrl),
+              const Gap(AppSpacing.md),
               Expanded(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        item.name,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              item.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (item.alternativeItemIds.isNotEmpty) ...[
+                            const Gap(AppSpacing.sm),
+                            const Icon(
+                              Icons.inventory_2_outlined,
+                              size: AppIconSize.md,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    if (item.alternativeItemIds.isNotEmpty) ...[
+                    if (categoryName != null &&
+                        categoryName!.trim().isNotEmpty) ...[
                       const Gap(AppSpacing.sm),
-                      Icon(
-                        Icons.inventory_2_outlined,
-                        size: AppIconSize.md,
-                        color: AppColors.textSecondary,
-                      ),
+                      _CategoryBadge(label: categoryName!),
                     ],
                   ],
-                ),
-              ),
-              if (categoryName != null && categoryName!.trim().isNotEmpty) ...[
-                const Gap(AppSpacing.sm),
-                _CategoryBadge(label: categoryName!),
-              ],
-              const Gap(AppSpacing.xs),
-              ShareMenuButton(
-                child: Icon(
-                  Icons.open_in_new_rounded,
-                  size: AppIconSize.md,
-                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -175,6 +183,70 @@ class ItemListCard extends StatelessWidget {
   static String _formatMoney(double? value) {
     if (value == null) return inventoryEmDash;
     return _currencyFormat.format(value);
+  }
+}
+
+class _ItemThumb extends StatelessWidget {
+  const _ItemThumb({this.imageUrl});
+
+  final String? imageUrl;
+
+  static const double _size = ItemListCard._thumbSize;
+  static final BorderRadius _radius = BorderRadius.circular(8);
+
+  @override
+  Widget build(BuildContext context) {
+    final url = normalizeImageUrl(imageUrl);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: _radius,
+        border: Border.all(color: const Color(0xFFE8EAED)),
+        color: AppColors.background,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(7),
+        child: SizedBox(
+          width: _size,
+          height: _size,
+          child: url == null
+              ? const ColoredBox(
+                  color: AppColors.background,
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: AppIconSize.lg,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : AppNetworkImage(
+                  imageUrl: url,
+                  displayContext: ImageDisplayContext.galleryThumb,
+                  width: _size,
+                  height: _size,
+                  memCacheWidth: (_size * 2).round(),
+                  loadWhenVisible: false,
+                  placeholder: const ColoredBox(
+                    color: AppColors.background,
+                    child: Center(
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  errorWidget: const ColoredBox(
+                    color: AppColors.background,
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      size: AppIconSize.md,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
   }
 }
 

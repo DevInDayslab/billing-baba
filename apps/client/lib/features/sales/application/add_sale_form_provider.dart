@@ -9,8 +9,7 @@ import 'package:billing_baba/features/loyalty/loyalty_points_calculator.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/pricing/application/item_api_tier_prices_provider.dart';
-import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -64,7 +63,7 @@ class AddSaleForm extends _$AddSaleForm {
 
     state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
-      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+      await ref.read(itemTierPricesProvider.notifier).ensureInitialized();
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleForm(documentId);
       final items = await _resolveItemNames(loaded.items);
@@ -94,7 +93,7 @@ class AddSaleForm extends _$AddSaleForm {
   Future<void> duplicateDocument(String sourceDocumentId) async {
     state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
-      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+      await ref.read(itemTierPricesProvider.notifier).ensureInitialized();
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleForm(sourceDocumentId);
       final items = await _resolveItemNames(loaded.items);
@@ -129,7 +128,7 @@ class AddSaleForm extends _$AddSaleForm {
 
     state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
-      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+      await ref.read(itemTierPricesProvider.notifier).ensureInitialized();
       final service = await ref.read(salesServiceProvider.future);
       final loadedForms = <AddSaleFormState>[];
       for (final orderId in orderIds) {
@@ -502,21 +501,14 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   Future<void> _repriceLineItemsForPartyTierAsync() async {
-    await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
-    final inventory = ref.read(inventoryItemListProvider);
-    if (inventory.isNotEmpty) {
-      await ref
-          .read(itemApiTierPricesProvider.notifier)
-          .preloadForItemIds(inventory.map((item) => item.id));
-    }
+    await ref.read(itemTierPricesProvider.notifier).ensureInitialized();
     _repriceLineItemsForPartyTier();
   }
 
   Future<void> _repriceLineItemsForPartyTier() async {
     final partyTier = state.partyPriceTier;
     final fallback = await readInvoiceFallbackTaxPercent(ref);
-    final localStore = ref.read(localItemTierPricesProvider);
-    final apiStore = ref.read(itemApiTierPricesProvider);
+    final tierStore = ref.read(itemTierPricesProvider).value ?? {};
     final inventory = ref.read(inventoryItemListProvider);
     final inventoryById = {for (final item in inventory) item.id: item};
 
@@ -528,11 +520,7 @@ class AddSaleForm extends _$AddSaleForm {
 
       final catalogItem = saleItemOptionFromInventory(
         inventoryItem,
-        tierPrices: mergedTierPricesForItem(
-          apiStore: apiStore,
-          localStore: localStore,
-          itemId: line.itemId!,
-        ),
+        tierPrices: tierStore[line.itemId!] ?? const {},
       );
       return applyCatalogItemToLine(
         line,

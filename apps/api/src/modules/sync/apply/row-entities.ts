@@ -2,6 +2,11 @@ import { categories, items, parties } from '../../../db/schema';
 import {
   brands,
   godowns,
+  itemAlternatives,
+  itemBomCosts,
+  itemBomMaterials,
+  itemSuppliers,
+  itemTierPrices,
   stockLevels,
   unitDefinitions,
 } from '../../../db/schema/inventory/tables';
@@ -182,6 +187,38 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
     entityType: 'brands',
     table: brands,
     allowedColumns: ['name'],
+  }),
+  item_suppliers: defineEntity({
+    entityType: 'item_suppliers',
+    table: itemSuppliers,
+    allowedColumns: ['itemId', 'partyId', 'isDefault', 'sortOrder'],
+  }),
+  item_bom_materials: defineEntity({
+    entityType: 'item_bom_materials',
+    table: itemBomMaterials,
+    allowedColumns: [
+      'itemId',
+      'rawItemId',
+      'qty',
+      'unitId',
+      'purchasePrice',
+      'sortOrder',
+    ],
+  }),
+  item_bom_costs: defineEntity({
+    entityType: 'item_bom_costs',
+    table: itemBomCosts,
+    allowedColumns: ['itemId', 'description', 'amount', 'sortOrder'],
+  }),
+  item_alternatives: defineEntity({
+    entityType: 'item_alternatives',
+    table: itemAlternatives,
+    allowedColumns: ['itemId', 'alternativeItemId', 'sortOrder'],
+  }),
+  item_tier_prices: defineEntity({
+    entityType: 'item_tier_prices',
+    table: itemTierPrices,
+    allowedColumns: ['itemId', 'pricingTier', 'price'],
   }),
   leads: defineEntity({
     entityType: 'leads',

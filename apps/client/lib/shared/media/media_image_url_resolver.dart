@@ -25,9 +25,20 @@ class MediaImageUrlResolver {
           )).future,
         );
         if (url.isNotEmpty) return url;
-      } catch (_) {
+      } on Object {
         continue;
       }
+    }
+
+    // Staging uploads (and other sources without variants) still need a fresh
+    // signed URL — persisted primary_image_url signatures expire in ~1 hour.
+    try {
+      final sourceUrl = await _ref.read(
+        mediaSourceUrlProvider(sourceMediaAssetId).future,
+      );
+      if (sourceUrl.isNotEmpty) return sourceUrl;
+    } on Object {
+      // Fall through to caller-supplied URL.
     }
 
     if (fallbackUrl != null && fallbackUrl.isNotEmpty) {
@@ -35,6 +46,26 @@ class MediaImageUrlResolver {
     }
 
     throw StateError('Unable to resolve image URL for $sourceMediaAssetId');
+  }
+
+  Future<String> resolveSource({
+    required String sourceMediaAssetId,
+    String? fallbackUrl,
+  }) async {
+    try {
+      final sourceUrl = await _ref.read(
+        mediaSourceUrlProvider(sourceMediaAssetId).future,
+      );
+      if (sourceUrl.isNotEmpty) return sourceUrl;
+    } on Object {
+      // Fall through to caller-supplied URL.
+    }
+
+    if (fallbackUrl != null && fallbackUrl.isNotEmpty) {
+      return fallbackUrl;
+    }
+
+    throw StateError('Unable to resolve source URL for $sourceMediaAssetId');
   }
 
   List<ImageVariant> _fallbackChain(ImageVariant preferred) {

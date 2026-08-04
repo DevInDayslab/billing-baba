@@ -1,6 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Design token placeholders — finalize values from Figma.
 abstract final class AppColors {
@@ -141,14 +142,17 @@ class AppThemeScope extends StatelessWidget {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
 
-    return MediaQuery(
-      data: mediaQuery.copyWith(
-        textScaler: TextScaler.noScaling,
-        platformBrightness: Brightness.light,
-      ),
-      child: CupertinoTheme(
-        data: const CupertinoThemeData(brightness: Brightness.light),
-        child: child,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: AppTheme.lightSystemUi,
+      child: MediaQuery(
+        data: mediaQuery.copyWith(
+          textScaler: TextScaler.noScaling,
+          platformBrightness: Brightness.light,
+        ),
+        child: CupertinoTheme(
+          data: const CupertinoThemeData(brightness: Brightness.light),
+          child: child,
+        ),
       ),
     );
   }
@@ -156,6 +160,16 @@ class AppThemeScope extends StatelessWidget {
 
 /// Application theme configuration.
 abstract final class AppTheme {
+  /// Dark status/navigation icons for light app surfaces (white/gray).
+  static const lightSystemUi = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    systemNavigationBarColor: AppColors.surface,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarDividerColor: Colors.transparent,
+  );
+
   static ThemeData get light {
     final textTheme = AppTypography.textTheme.apply(
       bodyColor: AppColors.textPrimary,
@@ -173,6 +187,13 @@ abstract final class AppTheme {
       typography: AppTypography.typography,
       primaryTextTheme: textTheme,
       scaffoldBackgroundColor: AppColors.background,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        systemOverlayStyle: lightSystemUi,
+      ),
       dialogTheme: const DialogThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,

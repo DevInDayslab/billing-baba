@@ -17,6 +17,10 @@ import 'package:billing_baba/features/inventory/data/brand_sync.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
+import 'package:billing_baba/features/inventory/data/item_alternative_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_bom_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_supplier_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_tier_price_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
@@ -105,6 +109,11 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     brandSync: BrandSync(db),
     partySync: PartySync(db),
     itemSync: ItemSync(db),
+    itemSupplierSync: ItemSupplierSync(db),
+    itemBomMaterialSync: ItemBomMaterialSync(db),
+    itemBomCostSync: ItemBomCostSync(db),
+    itemAlternativeSync: ItemAlternativeSync(db),
+    itemTierPriceSync: ItemTierPriceSync(db),
     unitSync: UnitSync(db),
     taxRateSync: TaxRateSync(db),
     godownSync: GodownSync(db),

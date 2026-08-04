@@ -53,8 +53,14 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
   var _autoRetried = false;
   late Future<String> _resolvedUrlFuture;
 
+  String? get _effectiveMediaAssetId {
+    final explicit = widget.sourceMediaAssetId?.trim();
+    if (explicit != null && explicit.isNotEmpty) return explicit;
+    return extractMediaAssetIdFromUrl(widget.imageUrl);
+  }
+
   String? get _cacheKey => buildImageCacheKey(
-    mediaAssetId: widget.sourceMediaAssetId,
+    mediaAssetId: _effectiveMediaAssetId,
     displayContext: widget.displayContext,
     fallbackUrl: widget.imageUrl,
   );
@@ -85,7 +91,7 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
 
   Future<String> _resolveUrl() {
     return resolveImageUrl(
-      sourceMediaAssetId: widget.sourceMediaAssetId,
+      sourceMediaAssetId: _effectiveMediaAssetId,
       displayContext: widget.displayContext,
       fallbackUrl: widget.imageUrl,
       resolver: ref.read(mediaImageUrlResolverProvider),
@@ -93,7 +99,7 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
   }
 
   Future<void> _refreshSignedUrlAndRetry() async {
-    final mediaAssetId = widget.sourceMediaAssetId?.trim();
+    final mediaAssetId = _effectiveMediaAssetId;
     if (mediaAssetId != null && mediaAssetId.isNotEmpty) {
       invalidateMediaVariantUrls(ref.container, mediaAssetId);
       ImageDebugLog.signedUrlRefreshed(mediaAssetId);

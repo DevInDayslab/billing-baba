@@ -24,11 +24,27 @@ final mobileHomeTransactionsProvider =
         expensesAsync,
       ];
 
-      final allSettled = loadingStates.every(
-        (state) => state.hasValue || state.hasError,
+      final hasAnyData = loadingStates.any((state) => state.hasValue);
+      final stillLoading = loadingStates.any(
+        (state) => state.isLoading && !state.hasValue,
       );
-      if (!allSettled) {
+
+      // Show whatever has arrived — waiting for all five feed sources to settle
+      // left the home screen on a spinner while sync / fetch-all was in flight.
+      if (!hasAnyData && stillLoading) {
         return const AsyncValue.loading();
+      }
+
+      if (!hasAnyData) {
+        for (final state in loadingStates) {
+          if (state.hasError) {
+            return AsyncValue.error(
+              state.error!,
+              state.stackTrace ?? StackTrace.current,
+            );
+          }
+        }
+        return const AsyncValue.data([]);
       }
 
       final items = <MobileHomeTransactionItem>[];
@@ -55,7 +71,7 @@ final mobileHomeTransactionsProvider =
         return bDate.compareTo(aDate);
       });
 
-      return AsyncValue.data(items.take(50).toList());
+      return AsyncValue.data(items);
     });
 
 DateTime _parseHomeDate(String label) {

@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_field.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_theme.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_tier_pricing_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +28,11 @@ class MobileAddItemPricingSection extends StatefulWidget {
     required this.taxRate,
     required this.onTaxRateChanged,
     this.showWholesalePrice = false,
+    this.showTierPricing = false,
+    this.tierPrices = const [],
+    this.apiTierLabels = const {},
+    this.priceControllerFor,
+    this.onUpdateTierPrice,
     super.key,
   });
 
@@ -48,6 +54,13 @@ class MobileAddItemPricingSection extends StatefulWidget {
   final String taxRate;
   final ValueChanged<String> onTaxRateChanged;
   final bool showWholesalePrice;
+  final bool showTierPricing;
+  final List<ItemTierPriceRow> tierPrices;
+  final Map<String, String> apiTierLabels;
+  final TextEditingController Function(String id, String initial)?
+  priceControllerFor;
+  final void Function(String id, {String? tierKey, double? price})?
+  onUpdateTierPrice;
 
   @override
   State<MobileAddItemPricingSection> createState() =>
@@ -196,6 +209,15 @@ class _MobileAddItemPricingSectionState
               onChanged: widget.onTaxRateChanged,
             ),
           ),
+          if (widget.showTierPricing &&
+              widget.priceControllerFor != null &&
+              widget.onUpdateTierPrice != null)
+            MobileTierPricingSection(
+              tierPrices: widget.tierPrices,
+              apiTierLabels: widget.apiTierLabels,
+              priceControllerFor: widget.priceControllerFor!,
+              onUpdateTierPrice: widget.onUpdateTierPrice!,
+            ),
         ],
       ),
     );

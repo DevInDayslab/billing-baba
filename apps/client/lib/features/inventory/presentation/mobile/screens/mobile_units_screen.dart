@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
@@ -321,8 +325,16 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                     title: 'No units found',
                     message: 'Add a unit to measure your inventory items.',
                     icon: Icons.straighten_outlined,
-                    actionLabel: 'Add Unit',
-                    onAction: () => unawaited(_addUnit()),
+                    actionLabel: ref
+                            .read(permissionServiceProvider)
+                            .canCreate(PermissionModule.item)
+                        ? 'Add Unit'
+                        : null,
+                    onAction: ref
+                            .read(permissionServiceProvider)
+                            .canCreate(PermissionModule.item)
+                        ? () => unawaited(_addUnit())
+                        : null,
                   ),
                   _ => Stack(
                     children: [
@@ -346,6 +358,8 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                             final unit = units[index];
                             final isExpanded = _expandedUnitIds.contains(unit.id);
                             final hasConversions = _hasConversions(unit);
+                            final permissions =
+                                ref.read(permissionServiceProvider);
                             return _UnitListTile(
                               unit: unit,
                               isExpanded: isExpanded,
@@ -353,17 +367,28 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                               onToggleExpand: hasConversions
                                   ? () => unawaited(_toggleExpanded(unit))
                                   : null,
-                              onEdit: () => unawaited(_editUnit(unit)),
-                              onDelete: () => unawaited(_confirmDeleteUnit(unit)),
-                              onDeleteConversion: (conversion) => unawaited(
-                                _deleteConversion(unit, conversion),
-                              ),
-                              onAddConversion: () => unawaited(
-                                showAddConversionDialog(
-                                  context,
-                                  initialBaseUnitId: unit.id,
-                                ),
-                              ),
+                              onEdit: permissions.canEdit(PermissionModule.item)
+                                  ? () => unawaited(_editUnit(unit))
+                                  : null,
+                              onDelete:
+                                  permissions.canDelete(PermissionModule.item)
+                                  ? () => unawaited(_confirmDeleteUnit(unit))
+                                  : null,
+                              onDeleteConversion:
+                                  permissions.canEdit(PermissionModule.item)
+                                  ? (conversion) => unawaited(
+                                      _deleteConversion(unit, conversion),
+                                    )
+                                  : null,
+                              onAddConversion:
+                                  permissions.canEdit(PermissionModule.item)
+                                  ? () => unawaited(
+                                      showAddConversionDialog(
+                                        context,
+                                        initialBaseUnitId: unit.id,
+                                      ),
+                                    )
+                                  : null,
                             );
                           },
                         ),
@@ -385,8 +410,12 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
             left: 0,
             right: 0,
             bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
-            child: Center(
-              child: _AddUnitFab(onPressed: () => unawaited(_addUnit())),
+            child: PermissionGate(
+              module: PermissionModule.item,
+              action: PermissionAction.create,
+              child: Center(
+                child: _AddUnitFab(onPressed: () => unawaited(_addUnit())),
+              ),
             ),
           ),
         ],
@@ -437,17 +466,21 @@ class _UnitListTile extends StatelessWidget {
     required this.unit,
     required this.isExpanded,
     required this.hasConversions,
-    required this.onEdit, required this.onDelete, required this.onDeleteConversion, required this.onAddConversion, this.onToggleExpand,
+    this.onEdit,
+    this.onDelete,
+    this.onDeleteConversion,
+    this.onAddConversion,
+    this.onToggleExpand,
   });
 
   final InventoryUnit unit;
   final bool isExpanded;
   final bool hasConversions;
   final VoidCallback? onToggleExpand;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-  final ValueChanged<UnitConversion> onDeleteConversion;
-  final VoidCallback onAddConversion;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final ValueChanged<UnitConversion>? onDeleteConversion;
+  final VoidCallback? onAddConversion;
 
   @override
   Widget build(BuildContext context) {
@@ -508,12 +541,13 @@ class _UnitListTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  color: AppColors.textSecondary,
-                  tooltip: 'Edit unit',
-                  onPressed: onEdit,
-                ),
+                if (onEdit != null)
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    color: AppColors.textSecondary,
+                    tooltip: 'Edit unit',
+                    onPressed: onEdit,
+                  ),
               ],
             ),
           ),
@@ -560,36 +594,39 @@ class _UnitListTile extends StatelessWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  size: 18,
+                              if (onDeleteConversion != null)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                  ),
+                                  color: AppColors.textSecondary,
+                                  onPressed: () =>
+                                      onDeleteConversion!(conversion),
                                 ),
-                                color: AppColors.textSecondary,
-                                onPressed: () => onDeleteConversion(conversion),
-                              ),
                             ],
                           ),
                         ),
                     ],
                   ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg + 32,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: onAddConversion,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Add Conversion'),
+          if (onAddConversion != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg + 32,
+                0,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: onAddConversion,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Add Conversion'),
+                ),
               ),
             ),
-          ),
         ],
       ],
     );

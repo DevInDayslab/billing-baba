@@ -27,6 +27,14 @@ class AuthInterceptor extends Interceptor {
     if ((token == null || token.isEmpty) && _accessTokenFallback != null) {
       token = await _accessTokenFallback.call();
     }
+    // Avoid sending unauthenticated API calls that trigger parallel 401→refresh
+    // storms. If access is missing but refresh exists, refresh first.
+    if ((token == null || token.isEmpty) && _onRefreshToken != null) {
+      final refreshToken = await _storage.readSecure(StorageKeys.refreshToken);
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        token = await _onRefreshToken.call();
+      }
+    }
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }

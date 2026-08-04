@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+
 /// Shared mobile app bar with business identity, notifications, and settings.
 ///
 /// Pass [title] to override the business header. Pass [actions] for page-specific
@@ -52,10 +53,12 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     return AppBar(
       backgroundColor: backgroundColor ?? AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
       surfaceTintColor: Colors.transparent,
       elevation: elevation ?? 0,
       scrolledUnderElevation: 1,
       centerTitle: false,
+      systemOverlayStyle: AppTheme.lightSystemUi,
       leading: _buildLeading(context, business),
       title: _buildTitle(context, theme, business),
       actions: _buildActions(),

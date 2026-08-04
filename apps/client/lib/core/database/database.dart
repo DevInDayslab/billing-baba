@@ -8,6 +8,11 @@ import 'package:billing_baba/core/database/tables/deals_tables.dart';
 import 'package:billing_baba/core/database/tables/expenses_tables.dart';
 import 'package:billing_baba/core/database/tables/godowns_table.dart';
 import 'package:billing_baba/core/database/tables/inventory_stock_tables.dart';
+import 'package:billing_baba/core/database/tables/item_alternatives_table.dart';
+import 'package:billing_baba/core/database/tables/item_bom_costs_table.dart';
+import 'package:billing_baba/core/database/tables/item_bom_materials_table.dart';
+import 'package:billing_baba/core/database/tables/item_suppliers_table.dart';
+import 'package:billing_baba/core/database/tables/item_tier_prices_table.dart';
 import 'package:billing_baba/core/database/tables/items_table.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
 import 'package:billing_baba/core/database/tables/parties_table.dart';
@@ -38,6 +43,11 @@ part 'database.g.dart';
     BrandsLocal,
     PartiesLocal,
     ItemsLocal,
+    ItemAlternativesLocal,
+    ItemSuppliersLocal,
+    ItemBomMaterialsLocal,
+    ItemBomCostsLocal,
+    ItemTierPricesLocal,
     UnitDefinitionsLocal,
     TaxRatesLocal,
     GodownsLocal,
@@ -57,7 +67,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Drift schema version — keep in sync with [schemaVersion].
-  static const currentSchemaVersion = 20;
+  static const currentSchemaVersion = 24;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -190,6 +200,54 @@ class AppDatabase extends _$AppDatabase {
       if (from < 20) {
         await _createSyncQueueIndexes(m);
       }
+      if (from < 21) {
+        await m.createTable(itemSuppliersLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_suppliers_local_business_id ON item_suppliers_local (business_id)',
+        );
+      }
+      if (from < 22) {
+        await m.createTable(itemAlternativesLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_alternatives_local_business_id ON item_alternatives_local (business_id)',
+        );
+      }
+      if (from < 22) {
+        await m.createTable(itemTierPricesLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_tier_prices_local_business_id ON item_tier_prices_local (business_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_tier_prices_local_item_id ON item_tier_prices_local (item_id)',
+        );
+      }
+      if (from < 23) {
+        await m.createTable(itemBomMaterialsLocal);
+        await m.createTable(itemBomCostsLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_materials_local_business_id ON item_bom_materials_local (business_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_costs_local_business_id ON item_bom_costs_local (business_id)',
+        );
+      }
+      if (from < 24) {
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_suppliers_local_item_id ON item_suppliers_local (item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_alternatives_local_item_id ON item_alternatives_local (item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_alternatives_local_alternative_item_id ON item_alternatives_local (alternative_item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_materials_local_item_id ON item_bom_materials_local (item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_costs_local_item_id ON item_bom_costs_local (item_id)',
+        );
+      }
     },
   );
 
@@ -209,6 +267,11 @@ class AppDatabase extends _$AppDatabase {
       'sync_queue',
       'parties_local',
       'items_local',
+      'item_alternatives_local',
+      'item_suppliers_local',
+      'item_bom_materials_local',
+      'item_bom_costs_local',
+      'item_tier_prices_local',
       'categories_local',
       'brands_local',
       'sales_documents_local',

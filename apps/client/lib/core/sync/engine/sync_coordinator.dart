@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:flutter/foundation.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/engine/device_identity.dart';
@@ -15,6 +16,10 @@ import 'package:billing_baba/features/crm/data/crm_sync.dart';
 import 'package:billing_baba/features/inventory/data/brand_sync.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_alternative_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_bom_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_supplier_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_tier_price_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
@@ -44,6 +49,11 @@ class SyncCoordinator {
     this._brandSync,
     this._partySync,
     this._itemSync,
+    this._itemSupplierSync,
+    this._itemBomMaterialSync,
+    this._itemBomCostSync,
+    this._itemAlternativeSync,
+    this._itemTierPriceSync,
     this._unitSync,
     this._taxRateSync,
     this._godownSync,
@@ -63,6 +73,11 @@ class SyncCoordinator {
     this.brandEntityType = 'brands',
     this.partyEntityType = 'parties',
     this.itemEntityType = 'items',
+    this.itemSuppliersEntityType = 'item_suppliers',
+    this.itemBomMaterialsEntityType = 'item_bom_materials',
+    this.itemBomCostsEntityType = 'item_bom_costs',
+    this.itemAlternativesEntityType = 'item_alternatives',
+    this.itemTierPricesEntityType = 'item_tier_prices',
     this.unitEntityType = 'unit_definitions',
     this.taxRateEntityType = 'tax_rates',
     this.godownEntityType = 'godowns',
@@ -90,6 +105,11 @@ class SyncCoordinator {
   final BrandSync? _brandSync;
   final PartySync? _partySync;
   final ItemSync? _itemSync;
+  final ItemSupplierSync? _itemSupplierSync;
+  final ItemBomMaterialSync? _itemBomMaterialSync;
+  final ItemBomCostSync? _itemBomCostSync;
+  final ItemAlternativeSync? _itemAlternativeSync;
+  final ItemTierPriceSync? _itemTierPriceSync;
   final UnitSync? _unitSync;
   final TaxRateSync? _taxRateSync;
   final GodownSync? _godownSync;
@@ -109,6 +129,11 @@ class SyncCoordinator {
   final String brandEntityType;
   final String partyEntityType;
   final String itemEntityType;
+  final String itemSuppliersEntityType;
+  final String itemBomMaterialsEntityType;
+  final String itemBomCostsEntityType;
+  final String itemAlternativesEntityType;
+  final String itemTierPricesEntityType;
   final String unitEntityType;
   final String taxRateEntityType;
   final String godownEntityType;
@@ -128,7 +153,7 @@ class SyncCoordinator {
 
   String get _pullEntityTypes =>
       '$categoryEntityType,$brandEntityType,$partyEntityType,$itemEntityType,'
-      '$unitEntityType,$taxRateEntityType,$godownEntityType,'
+      '$itemSuppliersEntityType,$itemBomMaterialsEntityType,$itemBomCostsEntityType,$itemAlternativesEntityType,$itemTierPricesEntityType,$unitEntityType,$taxRateEntityType,$godownEntityType,'
       '$businessSettingsEntityType,$salesDocumentsEntityType,'
       '$salesDocumentLinesEntityType,$purchaseDocumentsEntityType,'
       '$purchaseDocumentLinesEntityType,$leadsEntityType,'
@@ -142,6 +167,11 @@ class SyncCoordinator {
       type == brandEntityType ||
       type == partyEntityType ||
       type == itemEntityType ||
+      type == itemSuppliersEntityType ||
+      type == itemBomMaterialsEntityType ||
+      type == itemBomCostsEntityType ||
+      type == itemAlternativesEntityType ||
+      type == itemTierPricesEntityType ||
       type == unitEntityType ||
       type == taxRateEntityType ||
       type == godownEntityType ||
@@ -756,6 +786,61 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'item_suppliers':
+        await _itemSupplierSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'item_bom_materials':
+        await _itemBomMaterialSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'item_bom_costs':
+        await _itemBomCostSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'item_alternatives':
+        await _itemAlternativeSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'item_tier_prices':
+        await _itemTierPriceSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       case 'unit_definitions':
         await _unitSync?.applyChange(
           businessId: businessId,
@@ -956,6 +1041,41 @@ class SyncCoordinator {
           updatedAt: updatedAt,
           deviceId: deviceId,
         );
+      case 'item_suppliers':
+        await _itemSupplierSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'item_bom_materials':
+        await _itemBomMaterialSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'item_bom_costs':
+        await _itemBomCostSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'item_alternatives':
+        await _itemAlternativeSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'item_tier_prices':
+        await _itemTierPriceSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
       case 'unit_definitions':
         await _unitSync?.updateAckMeta(
           entityId: entityId,
@@ -1147,6 +1267,11 @@ class SyncCoordinator {
     'brands',
     'parties',
     'items',
+    'item_suppliers',
+    'item_bom_materials',
+    'item_bom_costs',
+    'item_tier_prices',
+    'item_alternatives',
     'unit_definitions',
     'tax_rates',
     'godowns',
@@ -1163,6 +1288,11 @@ class SyncCoordinator {
     'purchase_documents',
     'purchase_document_lines',
   };
+
+  /// Exposed for unit tests verifying inventory child-entity push coverage.
+  @visibleForTesting
+  static Set<String> get clientPushableEntityTypesForTest =>
+      _clientPushableEntityTypes;
 
   static bool _isAuthFailure(Object error) {
     if (error is DioException) {

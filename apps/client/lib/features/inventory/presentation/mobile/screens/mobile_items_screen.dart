@@ -1,36 +1,41 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/core/sync/application/sync_ui_state_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_header.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
-import 'package:billing_baba/features/inventory/application/inventory_item_filter_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
-import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/application/mobile_item_mock_data.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/inventory_item_filter_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_list_view.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_more_options_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_quick_links.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_search_bar.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/mobile_item_delete.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Mobile Items tab — product list with search, quick links, and add-item flow.
+/// Mobile Items tab — product/service list with search, quick links, and add-item flow.
 class MobileItemsScreen extends ConsumerStatefulWidget {
   const MobileItemsScreen({super.key});
 
@@ -40,12 +45,18 @@ class MobileItemsScreen extends ConsumerStatefulWidget {
 
 class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
   late final TextEditingController _searchController;
-  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final scope = ref.read(itemSettingsProvider).value?.itemTypeScope ??
+          ItemTypeScope.productsAndServices;
+      _ensureTabMatchesScope(scope);
+      _syncSearchControllerFromProvider();
+    });
   }
 
   @override
@@ -54,58 +65,42 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     super.dispose();
   }
 
+  void _syncSearchControllerFromProvider() {
+    final tabIndex = ref.read(inventoryItemsTabIndexProvider);
+    final query = tabIndex == inventoryServicesTabIndex
+        ? ref.read(serviceSearchQueryProvider)
+        : ref.read(productSearchQueryProvider);
+    if (_searchController.text != query) {
+      _searchController.text = query;
+    }
+  }
+
+  bool get _isServicesTab =>
+      ref.watch(inventoryItemsTabIndexProvider) == inventoryServicesTabIndex;
+
+  ItemType get _activeItemType =>
+      _isServicesTab ? ItemType.service : ItemType.product;
+
+  bool _showTypeTabs(ItemTypeScope scope) =>
+      scope == ItemTypeScope.productsAndServices;
+
   void _onSearchChanged(String query) {
-    setState(() => _searchQuery = query);
+    if (_isServicesTab) {
+      ref.read(serviceSearchQueryProvider.notifier).query = query;
+    } else {
+      ref.read(productSearchQueryProvider.notifier).query = query;
+    }
   }
 
   Future<void> _onRefresh() {
     return ref.read(inventoryItemsProvider.notifier).refresh();
   }
 
-  List<InventoryItem> _filterItems(List<InventoryItem> items) {
-    final filters = ref.read(inventoryItemFiltersProvider);
-    final products = items.where((item) => item.type == ItemType.product);
-    final filtered = products.where(
-      (item) => InventoryItemFilterService.matches(item, filters: filters),
-    );
-
-    final query = _searchQuery.trim().toLowerCase();
-    if (query.isEmpty) return filtered.toList();
-
-    return filtered
-        .where((item) {
-          final name = item.name.toLowerCase();
-          final barcode = item.barcode?.toLowerCase() ?? '';
-          final alias = item.alias?.toLowerCase() ?? '';
-          final shortName = item.shortName?.toLowerCase() ?? '';
-          return name.contains(query) ||
-              barcode.contains(query) ||
-              alias.contains(query) ||
-              shortName.contains(query);
-        })
-        .toList();
-  }
-
   Map<String, String> _categoryNamesById() {
     final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
-    if (categories.isNotEmpty) {
-      return {
-        for (final category in categories) category.id: category.name,
-      };
-    }
-    return MobileItemMockData.categoryNamesById;
-  }
-
-  List<InventoryItem> _displayItems(List<InventoryItem> apiItems) {
-    final fromApi = _filterItems(apiItems);
-    if (fromApi.isNotEmpty || !kDebugMode) return fromApi;
-    return _filterItems(MobileItemMockData.items);
-  }
-
-  bool _isUsingMockData(List<InventoryItem> apiItems) {
-    return kDebugMode &&
-        _filterItems(apiItems).isEmpty &&
-        _displayItems(apiItems).isNotEmpty;
+    return {
+      for (final category in categories) category.id: category.name,
+    };
   }
 
   Widget _itemsSliver({
@@ -122,22 +117,57 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
           extra: item,
         );
       },
+      onItemLongPress: _showItemActions,
     ).buildSliver();
+  }
+
+  void _showItemActions(InventoryItem item) {
+    final permissions = ref.read(permissionServiceProvider);
+    final actions = <MobileSheetAction>[
+      if (permissions.canEdit(PermissionModule.item))
+        MobileSheetAction(
+          icon: Icons.edit_outlined,
+          label: 'Edit Item',
+          onTap: () => unawaited(
+            showAddItemDialog(
+              context,
+              initialType: item.type,
+              editItem: item,
+            ),
+          ),
+        ),
+      if (permissions.canDelete(PermissionModule.item))
+        MobileSheetAction(
+          icon: Icons.delete_outline_rounded,
+          label: 'Delete Item',
+          onTap: () => unawaited(_deleteItem(item)),
+        ),
+    ];
+    if (actions.isEmpty) return;
+    unawaited(
+      showMobileMoreActionsSheet(
+        context: context,
+        title: item.name,
+        actions: actions,
+      ),
+    );
+  }
+
+  Future<void> _deleteItem(InventoryItem item) async {
+    await confirmAndDeleteInventoryItem(context, ref, item);
   }
 
   Future<void> _onBarcodeScan() async {
     final barcode = await showMobileBarcodeScanner(context);
     if (!mounted || barcode == null) return;
 
-    final items =
-        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
-    final displayItems = items.isNotEmpty
-        ? items
-        : (kDebugMode ? MobileItemMockData.items : const <InventoryItem>[]);
+    final products = ref.read(productsProvider);
+    final services = ref.read(servicesProvider);
+    final allItems = [...products, ...services];
     final engine = ref.read(inventorySearchEngineProvider);
     final match = findInventoryItemByBarcodeOrQuery(
       engine,
-      displayItems,
+      allItems,
       query: barcode,
     );
 
@@ -156,23 +186,12 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
 
   Future<void> _showFilterSheet() async {
     final current = ref.read(inventoryItemFiltersProvider);
-    final result = await showMobileFilterSheet<InventoryItemFilterOption>(
+    final result = await showMobileInventoryItemFilterSheet(
       context: context,
-      title: 'Filter Items',
-      selected: current.selected.isNotEmpty ? current.selected.first : null,
-      options: [
-        for (final option in inventoryListFilterOptions)
-          MobileOption(
-            value: option,
-            label: option.label,
-          ),
-      ],
+      initial: current,
     );
     if (result == null || !mounted) return;
-    ref.read(inventoryItemFiltersProvider.notifier).apply(
-      InventoryItemFiltersState(selected: {result}),
-    );
-    setState(() {});
+    ref.read(inventoryItemFiltersProvider.notifier).apply(result);
   }
 
   void _showMoreSheet() {
@@ -187,15 +206,25 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
             onTap: () => context.push(AppRoutes.itemsCategories),
           ),
           MobileSheetAction(
+            icon: Icons.branding_watermark_outlined,
+            label: 'Brands',
+            onTap: () => context.push(AppRoutes.itemsBrands),
+          ),
+          MobileSheetAction(
+            icon: Icons.warehouse_outlined,
+            label: 'Godowns',
+            onTap: () => context.push(AppRoutes.itemsGodowns),
+          ),
+          MobileSheetAction(
             icon: Icons.straighten_outlined,
             label: 'Units',
             onTap: () => context.push(AppRoutes.itemsUnits),
           ),
-          MobileSheetAction(
-            icon: Icons.upload_file_outlined,
-            label: 'Import Items',
-            onTap: () => context.push(AppRoutes.utilitiesImportItems),
-          ),
+          // MobileSheetAction(
+          //   icon: Icons.upload_file_outlined,
+          //   label: 'Import Items',
+          //   onTap: () => context.push(AppRoutes.utilitiesImportItems),
+          // ),
         ],
       ),
     );
@@ -259,40 +288,108 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     ];
   }
 
+  void _onTabSelected(int index) {
+    ref.read(inventoryItemsTabIndexProvider.notifier).tabIndex = index;
+    _syncSearchControllerFromProvider();
+  }
+
+  void _ensureTabMatchesScope(ItemTypeScope scope) {
+    final notifier = ref.read(inventoryItemsTabIndexProvider.notifier);
+    switch (scope) {
+      case ItemTypeScope.productsOnly:
+        if (notifier.tabIndex != inventoryProductsTabIndex) {
+          notifier.tabIndex = inventoryProductsTabIndex;
+        }
+      case ItemTypeScope.servicesOnly:
+        if (notifier.tabIndex != inventoryServicesTabIndex) {
+          notifier.tabIndex = inventoryServicesTabIndex;
+        }
+      case ItemTypeScope.productsAndServices:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final itemsAsync = ref.watch(inventoryItemsProvider);
     final filters = ref.watch(inventoryItemFiltersProvider);
     final categoryNamesById = _categoryNamesById();
-    final apiItems = itemsAsync.value?.items ?? const <InventoryItem>[];
-    final displayItems = _displayItems(apiItems);
-    final usingMock = _isUsingMockData(apiItems);
+    final itemSettings =
+        ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+    final scope = itemSettings.itemTypeScope;
+    final showTypeTabs = _showTypeTabs(scope);
+
+    ref.listen<ItemTypeScope>(
+      itemSettingsProvider.select(
+        (async) =>
+            async.value?.itemTypeScope ?? ItemTypeScope.productsAndServices,
+      ),
+      (previous, next) {
+        _ensureTabMatchesScope(next);
+        _syncSearchControllerFromProvider();
+      },
+    );
+
+    final tabIndex = ref.watch(inventoryItemsTabIndexProvider);
+    final displayItems = showTypeTabs && tabIndex == inventoryServicesTabIndex
+        ? ref.watch(servicesProvider)
+        : ref.watch(productsProvider);
+    final searchQuery = _isServicesTab
+        ? ref.watch(serviceSearchQueryProvider)
+        : ref.watch(productSearchQueryProvider);
+    final emptyMessage = _isServicesTab
+        ? 'No services found'
+        : 'No products found';
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: MobileAppBar(
-        onBusinessTap: () => context.push(AppRoutes.businessList),
-        onNotificationTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notifications coming soon')),
-          );
-        },
-        onSettingsTap: () => context.push(AppRoutes.settingsPreferences),
-      ),
-      body: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: RefreshIndicator(
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MobileHomeHeader(
+                  onBusinessTap: () => context.push(AppRoutes.businessList),
+                  onSettingsTap: () => context.push(AppRoutes.settings),
+                  onNotificationTap: () =>
+                      context.push(AppRoutes.notifications),
+                  onSyncTap: () {
+                    unawaited(
+                      ref
+                          .read(manualSyncVisualStateProvider.notifier)
+                          .syncNow(),
+                    );
+                  },
+                ),
+                Expanded(
+                  child: RefreshIndicator(
                   onRefresh: _onRefresh,
-                  child: CustomScrollView(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.metrics.pixels >=
+                          notification.metrics.maxScrollExtent - 200) {
+                        unawaited(
+                          ref.read(inventoryItemsProvider.notifier).loadMore(),
+                        );
+                      }
+                      return false;
+                    },
+                    child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       SliverToBoxAdapter(
                         child: ItemQuickLinks(links: _quickLinks()),
                       ),
+                      if (showTypeTabs)
+                        SliverToBoxAdapter(
+                          child: MobileAddItemTabBar(
+                            tabs: const ['Products', 'Services'],
+                            activeIndex: tabIndex,
+                            onTabSelected: _onTabSelected,
+                          ),
+                        ),
                       SliverToBoxAdapter(
                         child: ItemSearchBar(
                           searchController: _searchController,
@@ -303,21 +400,6 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                           onMoreTap: _showMoreSheet,
                         ),
                       ),
-                      if (usingMock)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.lg,
-                            ),
-                            child: Text(
-                              'Showing demo items — connect to load live data.',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                            ),
-                          ),
-                        ),
                       itemsAsync.when(
                         loading: () => displayItems.isEmpty
                             ? const SliverFillRemaining(
@@ -351,14 +433,11 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                               hasScrollBody: false,
                               child: MobileEmptyState(
                                 title: 'No items found',
-                                message: _searchQuery.isNotEmpty ||
+                                message: searchQuery.isNotEmpty ||
                                     filters.hasActiveFilters
                                     ? 'Try changing your search or filter.'
-                                    : 'Add your first item to get started.',
+                                    : emptyMessage,
                                 icon: Icons.inventory_2_outlined,
-                                actionLabel: 'Add New Item',
-                                onAction: () =>
-                                    unawaited(showAddItemDialog(context)),
                               ),
                             );
                           }
@@ -378,6 +457,7 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                       ),
                     ],
                   ),
+                  ),
                 ),
               ),
             ],
@@ -385,62 +465,26 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _AddItemFab(
-                  onPressed: () => unawaited(showAddItemDialog(context)),
+            bottom: MobileBottomNavigation.fabBottomInset,
+            child: PermissionGate(
+              module: PermissionModule.item,
+              action: PermissionAction.create,
+              child: Center(
+                child: MobileHomeAddSaleFab(
+                  label: _isServicesTab ? 'Add Service' : 'Add Item',
+                  icon: Icons.add_rounded,
+                  onPressed: () => unawaited(
+                    showAddItemDialog(
+                      context,
+                      initialType: _activeItemType,
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Compact pill FAB for adding a new inventory item.
-class _AddItemFab extends StatelessWidget {
-  const _AddItemFab({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: MobileHomeAddSaleFab.accentRed,
-      elevation: 2,
-      shadowColor: MobileHomeAddSaleFab.accentRed.withValues(alpha: 0.25),
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(999),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm + 2,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.add_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Add Item',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

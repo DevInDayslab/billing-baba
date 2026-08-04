@@ -27,6 +27,9 @@ const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
 
 export { itemAlternatives } from './item-alternatives.table';
+export { itemBomCosts } from './item-bom-costs.table';
+export { itemBomMaterials } from './item-bom-materials.table';
+export { itemSuppliers } from './item-suppliers.table';
 
 export const categories = pgTable(
   'categories',
@@ -179,9 +182,14 @@ export const itemTierPrices = pgTable(
     price: money('price').notNull(),
   },
   (table) => [
-    uniqueIndex('uq_item_tier_prices_item_tier').on(
-      table.itemId,
-      table.pricingTier,
+    uniqueIndex('uq_item_tier_prices_item_tier_active')
+      .on(table.itemId, table.pricingTier)
+      .where(sql`${table.isDeleted} = false`),
+    syncPullIndex(
+      'item_tier_prices',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
     ),
   ],
 );

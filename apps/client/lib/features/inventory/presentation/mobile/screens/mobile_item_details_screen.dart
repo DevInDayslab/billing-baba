@@ -1,17 +1,20 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/adjust_stock_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/adjust_stock/mobile_adjust_stock_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_detail_metrics.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_stock_history_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/item_details/mobile_item_transaction_tile.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/mobile_item_delete.dart';
 import 'package:billing_baba/shared/widgets/app_button.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
@@ -22,6 +25,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
 /// Mobile item ledger screen — pricing, stock metrics, and history/transactions.
 class MobileItemDetailsScreen extends ConsumerStatefulWidget {
@@ -91,6 +95,12 @@ class _MobileItemDetailsScreenState
     ref.invalidate(productTransactionsProvider(widget.itemId));
   }
 
+  Future<void> _deleteItem(InventoryItem item) async {
+    final deleted = await confirmAndDeleteInventoryItem(context, ref, item);
+    if (!mounted || !deleted) return;
+    context.pop();
+  }
+
   void _onSearchChanged(String query) {
     ref.read(productTransactionSearchQueryProvider.notifier).query = query;
     ref.read(productTransactionFiltersProvider.notifier).setPage(0);
@@ -147,6 +157,10 @@ class _MobileItemDetailsScreenState
         ref.watch(productTransactionSearchQueryProvider).isNotEmpty;
     final sectionTitle = isProduct ? 'Stock History' : 'Transactions';
 
+    final permissions = ref.watch(permissionServiceProvider);
+    final canEdit = permissions.canEdit(PermissionModule.item);
+    final canDelete = permissions.canDelete(PermissionModule.item);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: MobileAppBar(
@@ -156,11 +170,18 @@ class _MobileItemDetailsScreenState
         showNotification: false,
         showSettings: false,
         actions: [
-          MobileIconActionButton(
-            icon: Icons.edit_outlined,
-            tooltip: 'Edit item',
-            onPressed: () => unawaited(_editItem(displayItem)),
-          ),
+          if (canEdit)
+            MobileIconActionButton(
+              icon: Icons.edit_outlined,
+              tooltip: 'Edit item',
+              onPressed: () => unawaited(_editItem(displayItem)),
+            ),
+          if (canDelete)
+            MobileIconActionButton(
+              icon: Icons.delete_outline_rounded,
+              tooltip: 'Delete item',
+              onPressed: () => unawaited(_deleteItem(displayItem)),
+            ),
         ],
       ),
       body: RefreshIndicator(
@@ -196,7 +217,7 @@ class _MobileItemDetailsScreenState
                 sliver: SliverToBoxAdapter(
                   child: AppButton(
                     label: 'Adjust Stock',
-                    onPressed: () => showAdjustStockDialog(
+                    onPressed: () => showMobileAdjustStockSheet(
                       context,
                       item: displayItem,
                     ),

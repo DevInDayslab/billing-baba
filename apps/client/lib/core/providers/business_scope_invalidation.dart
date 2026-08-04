@@ -16,7 +16,10 @@ import 'package:billing_baba/features/dashboard/application/dashboard_provider.d
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
-import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_alternatives_index_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_bom_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_suppliers_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
@@ -24,7 +27,6 @@ import 'package:billing_baba/features/parties/application/party_reminder_schedul
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
-import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
@@ -179,8 +181,10 @@ void invalidateAllBusinessScopedProvidersOn(
     ..invalidate(partyReminderScheduleRepositoryProvider)
     ..invalidate(dashboardWidgetPreferencesProvider)
     ..invalidate(saleLineItemColumnVisibilityStateProvider)
-    ..invalidate(localItemTierPricesProvider)
-    ..invalidate(localItemSuppliersProvider)
+    ..invalidate(itemTierPricesProvider)
+    ..invalidate(itemSuppliersProvider)
+    ..invalidate(itemBomProvider)
+    ..invalidate(itemAlternativesIndexProvider)
     ..invalidate(posCartProvider)
     ..invalidate(posSalesListProvider)
     ..invalidate(dashboardProvider)

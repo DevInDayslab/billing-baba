@@ -1645,6 +1645,97 @@ Sale invoices showed an out-of-stock warning for zero-stock items, but clicking 
 
 ---
 
+## ADR-042: Item Suppliers Junction Table
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-04 |
+| **Status** | Accepted |
+
+#### Context
+
+Items can be sourced from multiple supplier parties. The client previously stored item↔supplier links in local-only preferences with no API or sync support.
+
+#### Decision
+
+- Add `item_suppliers` junction table (`business_id`, `item_id`, `party_id`, `is_default`, `sort_order`) with standard sync columns and soft delete.
+- Unique active constraint on `(business_id, item_id, party_id)`; at most one `is_default` per item enforced in the API service layer.
+- Expose `GET` and `PUT /inventory/items/:itemId/suppliers` (replace-set semantics).
+- Register `item_suppliers` for offline sync push/pull.
+
+#### Consequences
+
+- Client can migrate from local-only supplier links to synced storage.
+- Supplier parties must be `supplier` or `both` party types when assigned via API.
+- Default supplier is optional; reordering uses `sort_order`.
+
+---
+
+## ADR-043: Item Manufacturing BOM
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-04 |
+| **Status** | Accepted |
+
+#### Context
+
+Product items can define a bill of materials (raw materials + additional manufacturing costs) for cost estimation. The Add Item UI existed but BOM data was not persisted or synced.
+
+#### Decision
+
+- Add `item_bom_materials` (`item_id`, `raw_item_id`, `qty`, `unit_id`, `purchase_price` snapshot, `sort_order`) and `item_bom_costs` (`item_id`, `description`, `amount`, `sort_order`) with standard sync columns.
+- Unique active constraint on `(business_id, item_id, raw_item_id)` for materials.
+- Expose `GET` and `PUT /inventory/items/:itemId/bom` (replace-set semantics for both child collections).
+- Register `item_bom_materials` and `item_bom_costs` for offline sync push/pull.
+- Client stores BOM in Drift, queues row mutations, and saves from Add Item form (desktop tab + mobile manufacturing screen).
+
+#### Consequences
+
+- Finished goods cannot reference themselves as raw materials (API validation).
+- Raw material and unit IDs must exist and be active when saved via API.
+- Purchase price on BOM lines is a snapshot; item master price changes do not auto-update BOM lines.
+
+---
+
+## ADR-044: Mobile Inventory Phase Complete
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-04 |
+| **Status** | Accepted (amended 2026-08-04 — finalization sprint) |
+| **Author** | Engineering |
+
+#### Context
+
+Mobile inventory had multiple P0 gaps: delete UI, brands/godowns screens, suppliers and manufacturing prototypes (SharedPreferences / form-only), tier pricing and alternatives without offline sync, and list/reports polish items (mock data, single-select filters, desktop dialogs on mobile).
+
+A production readiness audit then found release blockers: `item_alternatives` missing from client push allowlist, incomplete delete cascade, missing sync pull indexes / partial unique on tier prices, weak RBAC on mobile, and incomplete backend validation.
+
+#### Decision
+
+Declare **Phase 1 — Inventory** production-ready after the Inventory Completion Roadmap **and** the Inventory Finalization Sprint:
+
+- **Sprint 1–3:** Delete item UI; mobile brands/godowns CRUD; `item_suppliers` full stack; tier/alternatives/BOM offline sync; stock sheet; Products/Services tabs; multi-select filters.
+- **Finalization:**
+  - Push `item_alternatives` offline mutations.
+  - Repository-level delete cascade (tiers, suppliers, BOM, owned + reverse alternatives).
+  - Migration `0051_item_sync_indexes` (sync pull indexes + partial unique on tier prices).
+  - Mobile `PermissionGate` / permission checks on create/edit/delete for items and master data.
+  - Default supplier selection; brand/category filters; manufacturing setting gate; mobile list lazy load.
+  - Backend: required default supplier, positive BOM qty, circular BOM detection, item delete guards, godown single-default.
+  - Remove deprecated SharedPreferences providers and debug report mock fallbacks.
+
+**Still deferred:** Stock Transfer route (`ComingSoonPage`), P2 custom/additional item fields, full desktop ComingSoon replacements for brands/godowns/categories/units detail routes (desktop uses split-panel for items).
+
+#### Consequences
+
+- Inventory module is frozen unless fixing bugs; new inventory work requires a new ADR or explicit scope expansion.
+- Legacy `local_item_suppliers_*` / `local_item_tier_prices_*` SharedPreferences keys are migrated then purged.
+- Stock Transfer and custom item fields remain future work.
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

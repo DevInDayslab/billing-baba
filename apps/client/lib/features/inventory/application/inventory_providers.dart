@@ -583,7 +583,7 @@ final itemStockLevelsProvider =
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
-final itemTierPricesProvider =
+final itemTierPricesForItemProvider =
     FutureProvider.family<List<TierPriceModel>, String>((ref, itemId) async {
       final service = await ref.watch(inventoryServiceProvider.future);
       return service.fetchItemTierPrices(itemId);

@@ -25,30 +25,40 @@ class ItemTierPriceRow {
 class RawMaterialRow {
   const RawMaterialRow({
     required this.id,
+    this.rawItemId,
     this.itemName = '',
     this.qty = 0,
+    this.unitId,
     this.unitLabel = 'None',
     this.purchasePrice = 0,
   });
 
   final String id;
+  final String? rawItemId;
   final String itemName;
   final double qty;
+  final String? unitId;
   final String unitLabel;
   final double purchasePrice;
 
   double get estimatedCost => qty * purchasePrice;
 
   RawMaterialRow copyWith({
+    String? rawItemId,
+    bool clearRawItemId = false,
     String? itemName,
     double? qty,
+    String? unitId,
+    bool clearUnitId = false,
     String? unitLabel,
     double? purchasePrice,
   }) {
     return RawMaterialRow(
       id: id,
+      rawItemId: clearRawItemId ? null : (rawItemId ?? this.rawItemId),
       itemName: itemName ?? this.itemName,
       qty: qty ?? this.qty,
+      unitId: clearUnitId ? null : (unitId ?? this.unitId),
       unitLabel: unitLabel ?? this.unitLabel,
       purchasePrice: purchasePrice ?? this.purchasePrice,
     );
@@ -75,8 +85,6 @@ class AdditionalCostRow {
   }
 }
 
-enum ItemTrackingMode { none, batch, serial }
-
 class AddItemFormState {
   const AddItemFormState({
     this.itemType = ItemType.product,
@@ -93,7 +101,6 @@ class AddItemFormState {
     this.godownId,
     this.primaryImageUrl = '',
     this.description = '',
-    this.trackingMode = ItemTrackingMode.none,
     this.activeTab = 0,
     this.mrp = 0,
     this.salePrice = 0,
@@ -115,7 +122,10 @@ class AddItemFormState {
     this.tierPrices = const [],
     this.alternativeItemIds = const [],
     this.supplierPartyIds = const [],
+    this.defaultSupplierPartyId,
     this.itemNameError = false,
+    this.baseUnitError = false,
+    this.fieldErrors = const {},
     this.isDirty = false,
   });
 
@@ -133,7 +143,6 @@ class AddItemFormState {
   final String? godownId;
   final String primaryImageUrl;
   final String description;
-  final ItemTrackingMode trackingMode;
   final int activeTab;
   final double mrp;
   final double salePrice;
@@ -155,8 +164,14 @@ class AddItemFormState {
   final List<ItemTierPriceRow> tierPrices;
   final List<String> alternativeItemIds;
   final List<String> supplierPartyIds;
+  final String? defaultSupplierPartyId;
   final bool itemNameError;
+  final bool baseUnitError;
+  /// Server / extra validation messages keyed by API field name.
+  final Map<String, String> fieldErrors;
   final bool isDirty;
+
+  String? errorFor(String field) => fieldErrors[field];
 
   double get rawMaterialTotal =>
       rawMaterials.fold(0, (sum, row) => sum + row.estimatedCost);
@@ -191,7 +206,6 @@ class AddItemFormState {
     bool clearGodown = false,
     String? primaryImageUrl,
     String? description,
-    ItemTrackingMode? trackingMode,
     int? activeTab,
     double? mrp,
     double? salePrice,
@@ -213,7 +227,12 @@ class AddItemFormState {
     List<ItemTierPriceRow>? tierPrices,
     List<String>? alternativeItemIds,
     List<String>? supplierPartyIds,
+    String? defaultSupplierPartyId,
+    bool clearDefaultSupplier = false,
     bool? itemNameError,
+    bool? baseUnitError,
+    Map<String, String>? fieldErrors,
+    bool clearFieldErrors = false,
     bool? isDirty,
   }) {
     return AddItemFormState(
@@ -233,7 +252,6 @@ class AddItemFormState {
       godownId: clearGodown ? null : (godownId ?? this.godownId),
       primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
       description: description ?? this.description,
-      trackingMode: trackingMode ?? this.trackingMode,
       activeTab: activeTab ?? this.activeTab,
       mrp: mrp ?? this.mrp,
       salePrice: salePrice ?? this.salePrice,
@@ -257,7 +275,12 @@ class AddItemFormState {
       tierPrices: tierPrices ?? this.tierPrices,
       alternativeItemIds: alternativeItemIds ?? this.alternativeItemIds,
       supplierPartyIds: supplierPartyIds ?? this.supplierPartyIds,
+      defaultSupplierPartyId: clearDefaultSupplier
+          ? null
+          : (defaultSupplierPartyId ?? this.defaultSupplierPartyId),
       itemNameError: itemNameError ?? this.itemNameError,
+      baseUnitError: baseUnitError ?? this.baseUnitError,
+      fieldErrors: clearFieldErrors ? const {} : (fieldErrors ?? this.fieldErrors),
       isDirty: isDirty ?? this.isDirty,
     );
   }
