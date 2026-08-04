@@ -54,12 +54,61 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
     _searchController = TextEditingController(
       text: ref.read(mobileHomeControllerProvider).searchQuery,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (ref.read(mobileHomeControllerProvider).activeView ==
+          MobileHomeView.partyDetails) {
+        _adoptPartyListSearchIfNeeded();
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Parties list search writes shared providers. When Home's party view opens,
+  /// move that query into the home search bar so it can be cleared.
+  void _adoptPartyListSearchIfNeeded() {
+    final partyQuery = ref.read(partySearchQueryProvider).trim();
+    final backendQuery = ref.read(partyBackendSearchProvider).trim();
+    final active = partyQuery.isNotEmpty ? partyQuery : backendQuery;
+    if (active.isEmpty) return;
+
+    _applySearchToBar(active);
+    ref.read(partySearchQueryProvider.notifier).query = '';
+    ref.read(partyBackendSearchProvider.notifier).query = '';
+    unawaited(ref.read(partyListProvider.notifier).refresh(searchQuery: ''));
+  }
+
+  void _applySearchToBar(String query) {
+    if (_searchController.text == query) {
+      ref.read(mobileHomeControllerProvider.notifier).setSearch(query);
+      return;
+    }
+    _searchController.value = TextEditingValue(
+      text: query,
+      selection: TextSelection.collapsed(offset: query.length),
+    );
+    ref.read(mobileHomeControllerProvider.notifier).setSearch(query);
+  }
+
+  void _onHomeViewChanged(MobileHomeView view) {
+    ref.read(mobileHomeControllerProvider.notifier).setView(view);
+    if (view == MobileHomeView.partyDetails) {
+      _adoptPartyListSearchIfNeeded();
+    }
+  }
+
+  void _syncSearchBarFromController() {
+    final query = ref.read(mobileHomeControllerProvider).searchQuery;
+    if (_searchController.text == query) return;
+    _searchController.value = TextEditingValue(
+      text: query,
+      selection: TextSelection.collapsed(offset: query.length),
+    );
   }
 
   void _showFilterSheet() {
@@ -240,6 +289,12 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
   Widget build(BuildContext context) {
     final homeState = ref.watch(mobileHomeControllerProvider);
     final isPartyView = homeState.activeView == MobileHomeView.partyDetails;
+    // Parties page may set search on dispose while Home is still under the stack.
+    ref.listen(mobileHomeControllerProvider, (previous, next) {
+      if (previous?.searchQuery == next.searchQuery) return;
+      if (_searchController.text == next.searchQuery) return;
+      _syncSearchBarFromController();
+    });
     final transactionsAsync = ref.watch(mobileHomeTransactionsProvider);
     final feedSources = [
       ref.watch(saleInvoicesProvider),
@@ -276,7 +331,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
               ),
               MobileHomeViewToggle(
                 activeView: homeState.activeView,
-                onChanged: ref.read(mobileHomeControllerProvider.notifier).setView,
+                onChanged: _onHomeViewChanged,
               ),
               const SizedBox(height: AppSpacing.sm),
               Expanded(
@@ -288,7 +343,8 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                   child: RefreshIndicator(
                   onRefresh: () async {
                     if (isPartyView) {
-                      await ref.read(partyListProvider.notifier).refresh();
+                      ref.invalidate(allPartiesListProvider);
+                      await ref.read(allPartiesListProvider.future);
                     } else {
                       await refreshMobileHomeTransactions(ref);
                     }

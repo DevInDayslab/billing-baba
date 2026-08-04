@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -31,6 +32,7 @@ class MobilePartyDetailsPage extends ConsumerStatefulWidget {
 class _MobilePartyDetailsPageState
     extends ConsumerState<MobilePartyDetailsPage> {
   late final TextEditingController _searchController;
+  ProviderContainer? _container;
   Timer? _searchDebounce;
 
   @override
@@ -45,10 +47,36 @@ class _MobilePartyDetailsPageState
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _container = ProviderScope.containerOf(context);
+  }
+
+  @override
   void dispose() {
     _searchDebounce?.cancel();
+    _handOffSearchToHomeAndClear();
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Home embeds the same [partyListProvider]; hand the query to Home's search
+  /// bar (so it can be cleared) and reset the shared list filter.
+  void _handOffSearchToHomeAndClear() {
+    final container = _container;
+    if (container == null) return;
+
+    final partyQuery = container.read(partySearchQueryProvider).trim();
+    final backendQuery = container.read(partyBackendSearchProvider).trim();
+    final active = partyQuery.isNotEmpty ? partyQuery : backendQuery;
+    if (active.isEmpty) return;
+
+    container.read(mobileHomeControllerProvider.notifier).setSearch(active);
+    container.read(partySearchQueryProvider.notifier).query = '';
+    container.read(partyBackendSearchProvider.notifier).query = '';
+    unawaited(
+      container.read(partyListProvider.notifier).refresh(searchQuery: ''),
+    );
   }
 
   Future<void> _initialize() async {
@@ -134,6 +162,7 @@ class _MobilePartyDetailsPageState
         title: 'Parties',
         showBusinessHeader: false,
         showNotification: false,
+        showSettings: false,
         actions: [
           MobileIconActionButton(
             icon: Icons.person_add_alt_1_outlined,
@@ -196,7 +225,6 @@ class _PartyListBody extends ConsumerWidget {
           onSearchChanged: onSearchChanged,
           activeFilter: activeFilter,
           sortState: sortState,
-          onAddParty: onAddParty,
           onFilterTap: () async {
             final result = await showPartyFilterSheet(
               context: context,

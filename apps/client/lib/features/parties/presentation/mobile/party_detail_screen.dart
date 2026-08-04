@@ -15,9 +15,10 @@ import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_whatsapp_actions.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_more_actions_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_payment_sheets.dart';
-import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_share_channel_sheet.dart';
+import 'package:billing_baba/features/parties/presentation/utils/party_ledger_print_actions.dart';
 import 'package:billing_baba/features/parties/presentation/utils/party_ledger_transaction_table_actions.dart';
 import 'package:billing_baba/features/parties/presentation/utils/party_transaction_navigation.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
@@ -25,6 +26,7 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -195,12 +197,32 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
     });
   }
 
+  Future<void> _printLedger({
+    required PartyModel party,
+    required double outstanding,
+    double? creditLimit,
+  }) async {
+    final ledger = ref.read(partyTimelineProvider(party.id)).value;
+    final transactions = ledger?.transactions ?? const [];
+    await PartyLedgerPrintActions.previewLedger(
+      context: context,
+      ref: ref,
+      party: party,
+      transactions: transactions,
+      outstanding: outstanding,
+      creditLimit: creditLimit ?? ledger?.summary.creditLimit,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ledgerAsync = ref.watch(partyTimelineProvider(party.id));
     final permissions = ref.watch(permissionServiceProvider);
     final canEditParty = permissions.canEdit(PermissionModule.party);
     final canViewHiddenLedger = permissions.canViewHiddenLedger;
+    final canShareMessaging =
+        permissions.canShare(PermissionModule.party) ||
+        permissions.canShare(PermissionModule.sale);
     final outstanding = ledgerAsync.maybeWhen(
       data: (ledger) => ledger.summary.outstanding,
       orElse: () => party.balance,
@@ -209,6 +231,10 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
       data: (ledger) =>
           PartyModel.displayOutstanding(ledger.summary.outstanding),
       orElse: () => PartyModel.displayOutstanding(party.balance),
+    );
+    final creditLimit = ledgerAsync.maybeWhen(
+      data: (ledger) => ledger.summary.creditLimit,
+      orElse: () => null,
     );
     final creditLimitLabel = ledgerAsync.maybeWhen(
       data: (ledger) {
@@ -233,6 +259,7 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFEAF4FF),
+      extendBody: true,
       appBar: MobileAppBar(
         title: 'Party Details',
         showBackButton: true,
@@ -261,56 +288,59 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: FilledButton(
-                  onPressed: PartyActions.canReceivePayment(party)
-                      ? () => showMobileReceivePaymentSheet(
-                          context: context,
-                          ref: ref,
-                          party: party,
-                        )
-                      : PartyActions.canRecordPayment(party)
-                      ? () => showMobileRecordPaymentSheet(
-                          context: context,
-                          ref: ref,
-                          party: party,
-                        )
-                      : null,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
+      bottomNavigationBar: Material(
+        type: MaterialType.transparency,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: PartyActions.canReceivePayment(party)
+                        ? () => showMobileReceivePaymentSheet(
+                            context: context,
+                            ref: ref,
+                            party: party,
+                          )
+                        : PartyActions.canRecordPayment(party)
+                        ? () => showMobileRecordPaymentSheet(
+                            context: context,
+                            ref: ref,
+                            party: party,
+                          )
+                        : null,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
                     ),
+                    child: const Text('Take Payment'),
                   ),
-                  child: const Text('Take Payment'),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: FilledButton(
-                  onPressed: _openAddSale,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.error,
-                    minimumSize: const Size.fromHeight(52),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _openAddSale,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
                     ),
+                    child: const Text('Add Sale'),
                   ),
-                  child: const Text('Add Sale'),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -330,7 +360,7 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
             AppSpacing.md,
             AppSpacing.sm,
             AppSpacing.md,
-            AppSpacing.xl,
+            120,
           ),
           children: [
             _MinimalPartySummaryCard(
@@ -343,20 +373,19 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
             ),
             const SizedBox(height: AppSpacing.md),
             _MinimalActionRow(
-              onReminderTap: () => unawaited(
-                showPartySendReminderSheet(
-                  context: context,
-                  ref: ref,
-                  party: party,
-                  outstanding: outstanding,
-                ),
-              ),
+              onReminderTap: canShareMessaging
+                  ? () => PartyWhatsAppActions.sendPaymentReminderNow(
+                      context,
+                      ref,
+                      party,
+                      outstanding: outstanding,
+                    )
+                  : null,
               onStatementTap: () => unawaited(
-                showPartySendStatementSheet(
-                  context: context,
-                  ref: ref,
+                _printLedger(
                   party: party,
                   outstanding: outstanding,
+                  creditLimit: creditLimit,
                 ),
               ),
             ),
@@ -376,6 +405,13 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
                 });
               },
               onFilterTap: () => unawaited(_openFilterSheet()),
+              onPrintTap: () => unawaited(
+                _printLedger(
+                  party: party,
+                  outstanding: outstanding,
+                  creditLimit: creditLimit,
+                ),
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             _PartyTransactionsSection(
@@ -410,12 +446,14 @@ class _TransactionSearchBar extends StatelessWidget {
     required this.controller,
     required this.onSearchChanged,
     required this.onFilterTap,
+    this.onPrintTap,
     this.isFilterActive = false,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onFilterTap;
+  final VoidCallback? onPrintTap;
   final bool isFilterActive;
 
   @override
@@ -459,12 +497,36 @@ class _TransactionSearchBar extends StatelessWidget {
             ),
           ),
         ),
+        if (onPrintTap != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: onPrintTap,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFD9E7F6)),
+                ),
+                child: const Icon(
+                  Icons.print_outlined,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
 }
 
-class _PartyTransactionsSection extends StatelessWidget {
+class _PartyTransactionsSection extends ConsumerWidget {
   const _PartyTransactionsSection({
     required this.party,
     required this.ledgerAsync,
@@ -479,8 +541,39 @@ class _PartyTransactionsSection extends StatelessWidget {
   final int filteredCount;
   final bool hasActiveQuery;
 
+  Future<void> _showTransactionMoreMenu(
+    BuildContext context,
+    WidgetRef ref,
+    PartyLedgerTransactionModel transaction,
+  ) async {
+    final entries = PartyLedgerTransactionTableActions.menuEntriesFor(
+      transaction,
+      forMobile: true,
+    );
+    if (entries.isEmpty) return;
+
+    await showMobileMoreActionsSheet(
+      context: context,
+      title: PartyModel.displayOrDash(transaction.referenceNumber),
+      actions: [
+        for (final entry in entries)
+          MobileSheetAction(
+            label: entry.label,
+            onTap: () => unawaited(
+              PartyLedgerTransactionTableActions.handleAction(
+                context: context,
+                ref: ref,
+                transaction: transaction,
+                action: entry.action,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ledgerAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
@@ -524,6 +617,25 @@ class _PartyTransactionsSection extends StatelessWidget {
                   item: _mapLedgerTransaction(party: party, transaction: tx),
                   onTap: () =>
                       navigateToPartyLedgerTransaction(context, tx),
+                  onPrint: () => unawaited(
+                    PartyLedgerTransactionTableActions.handleAction(
+                      context: context,
+                      ref: ref,
+                      transaction: tx,
+                      action: 'print',
+                    ),
+                  ),
+                  onShare: () => unawaited(
+                    PartyLedgerTransactionTableActions.handleAction(
+                      context: context,
+                      ref: ref,
+                      transaction: tx,
+                      action: 'share',
+                    ),
+                  ),
+                  onMore: () => unawaited(
+                    _showTransactionMoreMenu(context, ref, tx),
+                  ),
                 ),
               ),
           ],
@@ -769,8 +881,8 @@ class _MinimalActionRow extends StatelessWidget {
     required this.onStatementTap,
   });
 
-  final VoidCallback onReminderTap;
-  final VoidCallback onStatementTap;
+  final VoidCallback? onReminderTap;
+  final VoidCallback? onStatementTap;
 
   @override
   Widget build(BuildContext context) {

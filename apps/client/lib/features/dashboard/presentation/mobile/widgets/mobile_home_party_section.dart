@@ -1,7 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
-import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_card.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
@@ -25,7 +24,8 @@ class MobileHomePartySection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final partiesAsync = ref.watch(partyListProvider);
+    // Use the unfiltered cache list so Parties-page search never sticks on Home.
+    final partiesAsync = ref.watch(allPartiesListProvider);
     final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
 
     return partiesAsync.when(
@@ -37,7 +37,7 @@ class MobileHomePartySection extends ConsumerWidget {
         hasScrollBody: false,
         child: AppError(
           message: PartyErrorMapper.messageFor(error),
-          onRetry: () => ref.read(partyListProvider.notifier).refresh(),
+          onRetry: () => ref.invalidate(allPartiesListProvider),
         ),
       ),
       data: (parties) {

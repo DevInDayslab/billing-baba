@@ -17,11 +17,13 @@ class PartyNotesAttachmentsSection extends ConsumerStatefulWidget {
   const PartyNotesAttachmentsSection({
     required this.party,
     this.useMobileCards = false,
+    this.showNotes = true,
     super.key,
   });
 
   final PartyModel party;
   final bool useMobileCards;
+  final bool showNotes;
 
   @override
   ConsumerState<PartyNotesAttachmentsSection> createState() =>
@@ -69,24 +71,29 @@ class _PartyNotesAttachmentsSectionState
   }
 
   Future<void> _loadAttachments() async {
-    final service = await readDocumentAttachmentService(ref);
-    final remote = service == null
-        ? const <SaleFormAttachment>[]
-        : await service.fetchAttachments(
-            entityType: _entityType,
-            entityId: widget.party.id,
-          );
-    final offline = await restoreOfflineTransactionAttachments(
-      entityType: _entityType,
-      entityId: widget.party.id,
-    );
-    final remoteSplit = splitTransactionAttachments(remote);
-    if (!mounted) return;
-    setState(() {
-      _images = [...remoteSplit.images, ...offline.images];
-      _documents = [...remoteSplit.documents, ...offline.documents];
-      _loadingAttachments = false;
-    });
+    try {
+      final service = await readDocumentAttachmentService(ref);
+      final remote = service == null
+          ? const <SaleFormAttachment>[]
+          : await service.fetchAttachments(
+              entityType: _entityType,
+              entityId: widget.party.id,
+            );
+      final offline = await restoreOfflineTransactionAttachments(
+        entityType: _entityType,
+        entityId: widget.party.id,
+      );
+      final remoteSplit = splitTransactionAttachments(remote);
+      if (!mounted) return;
+      setState(() {
+        _images = [...remoteSplit.images, ...offline.images];
+        _documents = [...remoteSplit.documents, ...offline.documents];
+        _loadingAttachments = false;
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() => _loadingAttachments = false);
+    }
   }
 
   Future<void> _saveNotes() async {
@@ -167,45 +174,50 @@ class _PartyNotesAttachmentsSectionState
 
     final section = Column(
       children: [
-        MobileListSection(
-          title: 'Notes',
-          children: [
-            TextField(
-              controller: _notesController,
-              maxLines: 5,
-              enabled: canEdit && !_savingNotes,
-              decoration: const InputDecoration(
-                hintText: 'Add private notes about this party',
-                border: OutlineInputBorder(),
+        if (widget.showNotes) ...[
+          MobileListSection(
+            title: 'Notes',
+            children: [
+              TextField(
+                controller: _notesController,
+                maxLines: 5,
+                enabled: canEdit && !_savingNotes,
+                decoration: const InputDecoration(
+                  hintText: 'Add private notes about this party',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                FilledButton(
-                  onPressed: canEdit && !_savingNotes ? _saveNotes : null,
-                  child: _savingNotes
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save Notes'),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                OutlinedButton(
-                  onPressed: canDelete && !_savingNotes ? _clearNotes : null,
-                  child: const Text('Clear'),
-                ),
-              ],
-            ),
-          ],
-        ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  FilledButton(
+                    onPressed: canEdit && !_savingNotes ? _saveNotes : null,
+                    child: _savingNotes
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save Notes'),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: canDelete && !_savingNotes ? _clearNotes : null,
+                    child: const Text('Clear'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
         if (_loadingAttachments)
-          const Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            child: CircularProgressIndicator(),
-          )
+          // Avoid a sticky spinner on party detail when the network is slow.
+          widget.showNotes
+              ? const Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: CircularProgressIndicator(),
+                )
+              : const SizedBox.shrink()
         else
           transactionAttachmentsSection(
             context: context,
