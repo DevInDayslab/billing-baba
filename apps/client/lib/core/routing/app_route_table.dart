@@ -303,6 +303,8 @@ GoRouter createAppRouter({
               attachOrderIds: state.extra is List<String>
                   ? state.extra! as List<String>
                   : null,
+              initialPartyId: state.uri.queryParameters['partyId'],
+              initialPartyName: state.uri.queryParameters['partyName'],
             ),
           ),
           GoRoute(

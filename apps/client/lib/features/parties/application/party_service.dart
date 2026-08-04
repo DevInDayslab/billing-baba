@@ -7,10 +7,9 @@ import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
-import 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/data/party_local_source.dart';
 import 'package:billing_baba/features/parties/data/party_master_repository.dart';
@@ -22,6 +21,7 @@ import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
+import 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 export 'party_error_mapper.dart'
@@ -77,8 +77,8 @@ class PartyService {
   PartyService({
     required this._cache,
     required this._master,
-    required String Function() businessIdReader,
-  }) : _businessIdReader = businessIdReader;
+    required this._businessIdReader,
+  });
 
   final PartyCache _cache;
   final PartyMasterRepository _master;
@@ -155,6 +155,15 @@ class PartyService {
     final updated = await _master.update(
       partyId,
       UpdatePartyRequest(isActive: isActive),
+    );
+    return _dtoToModel(businessId, updated);
+  }
+
+  Future<PartyModel> updatePartyNotes(String partyId, String? notes) async {
+    final businessId = _requireBusinessId();
+    final updated = await _master.update(
+      partyId,
+      UpdatePartyRequest(notes: notes),
     );
     return _dtoToModel(businessId, updated);
   }
@@ -428,9 +437,9 @@ class PartyList extends _$PartyList {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final service = await ref.read(partyServiceProvider.future);
-      final PartyListFilter activeFilter =
-          filter ?? ref.read(partyListFilterProvider);
-      final PartyListFilter fetchFilter =
+      final activeFilter =
+          filter ?? ref.read(partyListFilterProvider)!;
+      final fetchFilter =
           activeFilter == PartyListFilter.toReceive ||
               activeFilter == PartyListFilter.toPay
           ? PartyListFilter.all
@@ -616,6 +625,15 @@ class PartyList extends _$PartyList {
       await refresh();
       rethrow;
     }
+  }
+
+  Future<PartyModel> updatePartyNotes(String partyId, String? notes) async {
+    final service = await ref.read(partyServiceProvider.future);
+    final updated = await service.updatePartyNotes(partyId, notes);
+    _upsertInState(updated);
+    ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+    refreshAfterPartyMutation(ref, refreshList: false);
+    return updated;
   }
 
   /// Optimistically patch profile image fields after upload/delete.

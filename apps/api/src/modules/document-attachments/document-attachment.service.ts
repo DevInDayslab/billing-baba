@@ -14,6 +14,7 @@ import {
 } from './document-attachment.constants';
 import { assertAttachmentEntityExists } from './document-attachment.entity-resolver';
 import { DocumentAttachmentRepository } from './document-attachment.repository';
+import type { UserRole } from '../auth/auth.types';
 import type {
   DocumentAttachmentRecord,
   DocumentAttachmentResponse,
@@ -78,10 +79,12 @@ export class DocumentAttachmentService {
   async listAttachments(
     businessId: string,
     accountId: string,
+    role: UserRole | undefined,
     entityType: DocumentAttachmentEntityType,
     entityId: string,
   ): Promise<DocumentAttachmentResponse[]> {
     await this.assertAccess(businessId, accountId, entityType, entityId);
+    this.assertCanView(role);
     const rows = await this.repository.listByEntity(
       businessId,
       entityType,
@@ -93,6 +96,7 @@ export class DocumentAttachmentService {
   async createUploadIntent(
     businessId: string,
     accountId: string,
+    role: UserRole | undefined,
     entityType: DocumentAttachmentEntityType,
     entityId: string,
     mimeType: string,
@@ -100,6 +104,7 @@ export class DocumentAttachmentService {
     checksum?: string | null,
   ): Promise<UploadIntent> {
     await this.assertAccess(businessId, accountId, entityType, entityId);
+    this.assertCanWrite(role);
 
     const count = await this.repository.countByEntity(
       businessId,
@@ -137,6 +142,7 @@ export class DocumentAttachmentService {
     businessId: string,
     accountId: string,
     userId: string | undefined,
+    role: UserRole | undefined,
     entityType: DocumentAttachmentEntityType,
     entityId: string,
     intentId: string,
@@ -148,6 +154,7 @@ export class DocumentAttachmentService {
     },
   ): Promise<DocumentAttachmentResponse> {
     await this.assertAccess(businessId, accountId, entityType, entityId);
+    this.assertCanWrite(role);
 
     const asset = await this.storage.completeUpload(
       businessId,
@@ -198,6 +205,7 @@ export class DocumentAttachmentService {
         businessId,
         accountId,
         userId,
+        role,
         options.replacesAttachmentId,
         { skipNotFound: true },
       );
@@ -216,6 +224,7 @@ export class DocumentAttachmentService {
     businessId: string,
     accountId: string,
     userId: string | undefined,
+    role: UserRole | undefined,
     attachmentId: string,
     options: { skipNotFound?: boolean } = {},
   ): Promise<void> {
@@ -231,6 +240,7 @@ export class DocumentAttachmentService {
       row.entity_type,
       row.entity_id,
     );
+    this.assertCanDelete(role);
 
     const mediaAssetId = row.media_asset_id;
     const deleted = await this.repository.softDelete(
@@ -258,6 +268,7 @@ export class DocumentAttachmentService {
   async getDownloadUrl(
     businessId: string,
     accountId: string,
+    role: UserRole | undefined,
     attachmentId: string,
   ): Promise<{ download_url: string; mime_type: string; file_name: string }> {
     const row = await this.repository.findById(businessId, attachmentId);
@@ -271,6 +282,7 @@ export class DocumentAttachmentService {
       row.entity_type,
       row.entity_id,
     );
+    this.assertCanView(role);
 
     if (!row.media_asset_id) {
       throw new AppError('NOT_FOUND', 'Attachment file not available', 404);
@@ -293,6 +305,7 @@ export class DocumentAttachmentService {
     businessId: string,
     accountId: string,
     userId: string | undefined,
+    role: UserRole | undefined,
     attachmentId: string,
     patch: { fileName?: string; label?: string | null },
   ): Promise<DocumentAttachmentResponse> {
@@ -307,6 +320,7 @@ export class DocumentAttachmentService {
       row.entity_type,
       row.entity_id,
     );
+    this.assertCanWrite(role);
 
     const updated = await this.repository.updateMetadata(
       businessId,
@@ -372,5 +386,35 @@ export class DocumentAttachmentService {
       throw new AppError('FORBIDDEN', 'Business access denied', 403);
     }
     await this.assertEntityExistsFn!(businessId, entityType, entityId);
+  }
+
+  private assertCanView(role: UserRole | undefined): void {
+    if (!role) {
+      throw new AppError(
+        'FORBIDDEN',
+        'You do not have permission to view attachments',
+        403,
+      );
+    }
+  }
+
+  private assertCanWrite(role: UserRole | undefined): void {
+    if (role !== 'owner' && role !== 'manager') {
+      throw new AppError(
+        'FORBIDDEN',
+        'You do not have permission to modify attachments',
+        403,
+      );
+    }
+  }
+
+  private assertCanDelete(role: UserRole | undefined): void {
+    if (role !== 'owner' && role !== 'manager') {
+      throw new AppError(
+        'FORBIDDEN',
+        'You do not have permission to delete attachments',
+        403,
+      );
+    }
   }
 }

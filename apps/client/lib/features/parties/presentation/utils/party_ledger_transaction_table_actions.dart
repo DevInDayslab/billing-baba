@@ -298,8 +298,7 @@ abstract final class PartyLedgerTransactionTableActions {
         return true;
       case 'preview_delivery_challan':
       case 'view_history':
-        _showComingSoon(context, action);
-        return true;
+        return false;
       case 'delete':
       case 'cancel_transaction':
         return false;
@@ -386,7 +385,7 @@ abstract final class PartyLedgerTransactionTableActions {
       case PartyLedgerTransactionKind.jobWork:
       case PartyLedgerTransactionKind.expense:
       case PartyLedgerTransactionKind.unknown:
-        _showComingSoon(context, action);
+        _showActionUnavailable(context, action);
     }
   }
 
@@ -561,14 +560,14 @@ abstract final class PartyLedgerTransactionTableActions {
     switch (action) {
       case 'delete':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Delete coming soon')),
+          const SnackBar(content: Text('Delete is not available yet')),
         );
       case 'view_history':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('View History coming soon')),
+          const SnackBar(content: Text('History is not available yet')),
         );
       default:
-        _showComingSoon(context, action);
+        _showActionUnavailable(context, action);
     }
   }
 
@@ -651,9 +650,9 @@ abstract final class PartyLedgerTransactionTableActions {
         _ => null,
       };
 
-  static void _showComingSoon(BuildContext context, String action) {
+  static void _showActionUnavailable(BuildContext context, String action) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action coming soon')),
+      SnackBar(content: Text('$action is not available for this transaction')),
     );
   }
 }

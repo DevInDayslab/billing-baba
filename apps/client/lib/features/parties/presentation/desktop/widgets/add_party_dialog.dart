@@ -1230,6 +1230,17 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               fontWeight: FontWeight.w600,
             ),
           ),
+          actions: [
+            if (_isEditMode)
+              IconButton(
+                tooltip: 'Delete party',
+                onPressed: _isSaving ? null : _confirmAndDeleteParty,
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.error,
+                ),
+              ),
+          ],
         ),
         body: SafeArea(top: false, child: content),
       );
@@ -2416,6 +2427,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     if (isMobile && !_isEditMode) {
       return _buildMobileCreateFooter();
     }
+    if (isMobile && _isEditMode) {
+      return _buildMobileEditFooter();
+    }
 
     return SafeArea(
       top: false,
@@ -2600,6 +2614,50 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileEditFooter() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: FilledButton(
+          onPressed: _isSaving ? null : () => _save(saveAndNew: false),
+          style: FilledButton.styleFrom(
+            backgroundColor: _saveBlue,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(48),
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+          ),
+          child: _isSaving
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Update'),
         ),
       ),
     );

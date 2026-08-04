@@ -44,6 +44,8 @@ class DesktopAddSalePage extends ConsumerStatefulWidget {
     this.invoiceId,
     this.duplicateFromId,
     this.attachOrderIds,
+    this.initialPartyId,
+    this.initialPartyName,
     this.readOnly = false,
     super.key,
   });
@@ -51,6 +53,8 @@ class DesktopAddSalePage extends ConsumerStatefulWidget {
   final String? invoiceId;
   final String? duplicateFromId;
   final List<String>? attachOrderIds;
+  final String? initialPartyId;
+  final String? initialPartyName;
   final bool readOnly;
 
   @override
@@ -76,6 +80,8 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
     }
     if (widget.duplicateFromId != null) return _duplicateSessionKey;
     if (widget.invoiceId != null) return widget.invoiceId!;
+    final partyId = widget.initialPartyId?.trim();
+    if (partyId != null && partyId.isNotEmpty) return 'party_$partyId';
     if (_supportsTabs) {
       return ref.read(saleTabsProvider()).activeTab.sessionKey;
     }
@@ -102,6 +108,18 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initializeForm());
     } else {
       _initialized = true;
+      final partyId = widget.initialPartyId?.trim();
+      final partyName = widget.initialPartyName?.trim();
+      if (partyId != null &&
+          partyId.isNotEmpty &&
+          partyName != null &&
+          partyName.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref
+              .read(addSaleFormProvider(sessionKey: _sessionKey).notifier)
+              .updateParty(partyId: partyId, partyName: partyName);
+        });
+      }
     }
   }
 

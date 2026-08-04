@@ -28,12 +28,16 @@ class MobileAddSalePage extends ConsumerStatefulWidget {
     this.invoiceId,
     this.duplicateFromId,
     this.attachOrderIds,
+    this.initialPartyId,
+    this.initialPartyName,
     this.readOnly = false,
   });
 
   final String? invoiceId;
   final String? duplicateFromId;
   final List<String>? attachOrderIds;
+  final String? initialPartyId;
+  final String? initialPartyName;
   final bool readOnly;
 
   @override
@@ -64,6 +68,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     }
     if (widget.duplicateFromId != null) return _duplicateSessionKey;
     if (widget.invoiceId != null) return widget.invoiceId!;
+    final partyId = widget.initialPartyId?.trim();
+    if (partyId != null && partyId.isNotEmpty) return 'party_$partyId';
     return 'default';
   }
 
@@ -87,10 +93,19 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     } else {
       _initialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        final notifier = ref.read(
+          addSaleFormProvider(sessionKey: _sessionKey).notifier,
+        );
         if (!widget.readOnly) {
-          ref
-              .read(addSaleFormProvider(sessionKey: _sessionKey).notifier)
-              .toggleSaleType(SaleType.credit);
+          notifier.toggleSaleType(SaleType.credit);
+        }
+        final partyId = widget.initialPartyId?.trim();
+        final partyName = widget.initialPartyName?.trim();
+        if (partyId != null &&
+            partyId.isNotEmpty &&
+            partyName != null &&
+            partyName.isNotEmpty) {
+          notifier.updateParty(partyId: partyId, partyName: partyName);
         }
         _syncControllersFromForm();
       });

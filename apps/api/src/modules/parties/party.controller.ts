@@ -7,6 +7,7 @@ import {
   createPartyBodySchema,
   listPartiesQuerySchema,
   partyIdParamSchema,
+  upsertPartyNotesBodySchema,
   updatePartyBodySchema,
 } from './party.schema';
 import { PartyService } from './party.service';
@@ -168,6 +169,83 @@ export function createPartyController(config: AppConfig) {
           throw new AppError(
             'VALIDATION_ERROR',
             'Invalid request parameters',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    getNotes: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = partyIdParamSchema.parse(request.params);
+        const data = await service.getPartyNotes(
+          businessId,
+          accountId,
+          id,
+          request.role,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid party ID',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    upsertNotes: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId, userId } = requireAuthContext(request);
+        const { id } = partyIdParamSchema.parse(request.params);
+        const body = upsertPartyNotesBodySchema.parse(request.body);
+        const data = await service.upsertPartyNotes(
+          businessId,
+          accountId,
+          userId,
+          id,
+          body.notes,
+          request.role,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    clearNotes: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId, userId } = requireAuthContext(request);
+        const { id } = partyIdParamSchema.parse(request.params);
+        const data = await service.upsertPartyNotes(
+          businessId,
+          accountId,
+          userId,
+          id,
+          null,
+          request.role,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid party ID',
             400,
             formatZodError(error),
           );

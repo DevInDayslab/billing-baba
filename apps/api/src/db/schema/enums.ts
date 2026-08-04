@@ -62,6 +62,7 @@ export const documentAttachmentEntityTypeEnum = pgEnum(
     'payment_out',
     'expense',
     'job_work',
+    'party',
   ],
 );
 

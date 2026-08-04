@@ -16,6 +16,7 @@ abstract final class ApiEndpoints {
   static String partyDeleteStatus(String id) =>
       '/api/v1/parties/$id/delete-status';
   static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
+  static String partyNotes(String id) => '/api/v1/parties/$id/notes';
   static String partyLoyalty(String id) => '/api/v1/parties/$id/loyalty';
   static String partyProfileImage(String id) =>
       '/api/v1/parties/$id/profile-image';
