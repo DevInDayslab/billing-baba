@@ -4,6 +4,8 @@ import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_nav_destinations.dart';
@@ -39,9 +41,37 @@ class _MobileShellState extends ConsumerState<MobileShell> {
     });
   }
 
+  void _onTabSelected(MobileNavTab tab) {
+    final destination = MobileNavDestinations.destinationForTab(tab);
+    if (destination == null) return;
+
+    final router = GoRouter.of(context);
+    // Prefer router.state — GoRouterState.of(shell) can lag behind pushed pages.
+    final location = router.state.uri.path;
+    final alreadyAtRoot = location == destination.route;
+
+    // Re-selecting Home always restores the default transactions view.
+    if (tab == MobileNavTab.home) {
+      ref
+          .read(mobileHomeControllerProvider.notifier)
+          .setView(MobileHomeView.transactionDetails);
+    }
+
+    if (!alreadyAtRoot) {
+      // Switching tabs or returning from a nested route under this tab.
+      context.go(destination.route);
+      return;
+    }
+
+    // Path is already the tab root — still clear any leftover push history.
+    while (router.canPop()) {
+      router.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
+    final location = GoRouter.of(context).state.uri.path;
     final currentTab = MobileNavDestinations.tabForLocation(location);
     final hideBottomNav = location == AppRoutes.pos;
 
@@ -54,14 +84,7 @@ class _MobileShellState extends ConsumerState<MobileShell> {
             ? null
             : MobileBottomNavigation(
                 currentTab: currentTab,
-                onTabSelected: (tab) {
-                  final destination = MobileNavDestinations.destinationForTab(
-                    tab,
-                  );
-                  if (destination == null) return;
-                  if (destination.route == location) return;
-                  context.go(destination.route);
-                },
+                onTabSelected: _onTabSelected,
               ),
       ),
     );

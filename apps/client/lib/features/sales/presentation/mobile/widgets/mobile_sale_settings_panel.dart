@@ -203,18 +203,6 @@ class _MobileSaleSettingsPanelState
                       },
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _NavigationSettingTile(
-                      title: 'Additional Charges',
-                      showBadge: true,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Additional charges coming soon'),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
                     Text(
                       'Billing Type',
                       style: theme.textTheme.titleMedium?.copyWith(

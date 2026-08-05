@@ -459,7 +459,10 @@ class _LineItemRow extends ConsumerWidget {
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Barcode scanner coming soon'),
+                              content: Text(
+                                'Scan with a USB/Bluetooth barcode scanner, '
+                                'or type the code and press Enter',
+                              ),
                             ),
                           );
                         },

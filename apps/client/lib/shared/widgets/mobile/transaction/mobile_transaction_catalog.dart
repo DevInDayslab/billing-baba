@@ -41,7 +41,7 @@ class MobileTransactionScopeDefinition {
   final String? emptyMessage;
   final IconData? leadingIcon;
 
-  /// Party-to-party payment lists (Payment-In / Payment-Out).
+  /// Party payment lists (Payment-In / Payment-Out).
   final bool isP2P;
 
   MobileTransactionPageConfig config(
@@ -151,7 +151,7 @@ abstract final class MobileTransactionCatalog {
       ),
   ];
 
-  /// Non sale/purchase list routes (excludes P2P payment lists).
+  /// Non sale/purchase list routes (excludes payment-in/out lists).
   static final List<MobileTransactionScopeDefinition> _otherDefinitions = [
     // Reserved for future "other" transaction modules (stock transfer, etc.).
   ];
@@ -167,7 +167,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
     AppRoutes.saleFa => AppRoutes.addSaleFa,
       AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
-      AppRoutes.saleProformaInvoice => AppRoutes.addEstimate,
+      AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
       AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
     _ => null,
   };

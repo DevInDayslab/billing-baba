@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/forms/mobile_select_spinner_dialog.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +21,12 @@ class MobileItemPickResult {
   final double pricePerUnit;
 }
 
+/// Opens a select-spinner style dialog to pick an item (and qty/price).
 Future<MobileItemPickResult?> showMobileItemPickerSheet(
   BuildContext context, {
   String title = 'Add item',
 }) {
-  return showMobileBottomSheet<MobileItemPickResult>(
+  return showMobileSelectSpinnerDialog<MobileItemPickResult>(
     context: context,
     builder: (context) => MobileItemPickerSheet(title: title),
   );
@@ -82,75 +83,68 @@ class _MobileItemPickerSheetState extends ConsumerState<MobileItemPickerSheet> {
   Widget build(BuildContext context) {
     final items = ref.watch(inventoryItemListProvider);
 
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MobileSelectSpinnerHeader(
+          title: widget.title,
+          onClose: () => Navigator.of(context).pop(),
+        ),
+        if (_selected == null) ...[
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: AppTypography.inter(
-                      fontSize: AppTypography.titleSize,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded),
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
+            child: MobileSearchField(
+              hint: 'Search items',
+              onChanged: (value) => setState(() => _query = value),
             ),
           ),
-          if (_selected == null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: MobileSearchField(
-                hint: 'Search items',
-                onChanged: (value) => setState(() => _query = value),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Flexible(
-              child: Builder(
-                builder: (context) {
-                  final q = _query.trim().toLowerCase();
-                  final filtered = items.where((InventoryItem item) {
-                    if (q.isEmpty) return true;
-                    return item.name.toLowerCase().contains(q) ||
-                        (item.barcode?.contains(q) ?? false);
-                  }).toList();
-                  if (filtered.isEmpty) {
-                    return const MobileEmptyState(
-                      title: 'No items found',
-                      icon: Icons.inventory_2_outlined,
-                    );
-                  }
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final item = filtered[index];
-                      return ListTile(
-                        title: Text(item.name),
-                        subtitle: Text(
-                          '₹ ${(item.salePrice ?? 0).toStringAsFixed(2)}',
-                        ),
-                        onTap: () => _selectItem(item),
-                      );
-                    },
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                final q = _query.trim().toLowerCase();
+                final filtered = items.where((item) {
+                  if (q.isEmpty) return true;
+                  return item.name.toLowerCase().contains(q) ||
+                      (item.barcode?.contains(q) ?? false);
+                }).toList();
+                if (filtered.isEmpty) {
+                  return const MobileEmptyState(
+                    title: 'No items found',
+                    icon: Icons.inventory_2_outlined,
                   );
-                },
-              ),
+                }
+                return ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final item = filtered[index];
+                    return ListTile(
+                      title: Text(item.name),
+                      subtitle: Text(
+                        '₹ ${(item.salePrice ?? 0).toStringAsFixed(2)}',
+                      ),
+                      onTap: () => _selectItem(item),
+                    );
+                  },
+                );
+              },
             ),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          ),
+        ] else
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                0,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -202,9 +196,8 @@ class _MobileItemPickerSheetState extends ConsumerState<MobileItemPickerSheet> {
                 ],
               ),
             ),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

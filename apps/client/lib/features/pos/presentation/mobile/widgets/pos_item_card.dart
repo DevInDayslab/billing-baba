@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
+import 'package:billing_baba/features/pos/presentation/widgets/pos_quantity_pad_sheet.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +42,8 @@ class PosItemCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AspectRatio(
-              aspectRatio: 1.15,
+              // Slightly shorter image so price + qty controls always fit.
+              aspectRatio: 1.3,
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(AppRadius.md),
@@ -59,10 +62,9 @@ class PosItemCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             item.name,
@@ -89,33 +91,53 @@ class PosItemCard extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _currencyFormat.format(item.price),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
+                    // Price alone — never shares a row with −/+.
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _currencyFormat.format(item.price),
+                        maxLines: 1,
+                        softWrap: false,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
                         ),
-                        if (!isOutOfStock && cartQty == 0)
-                          _CircleAddButton(
-                            onPressed: () => cart.addItem(item),
-                          )
-                        else if (!isOutOfStock)
-                          _QuantityStepper(
-                            quantity: cartQty,
-                            tint: primaryTint,
-                            onDecrease: () =>
-                                cart.updateQuantity(item.id, cartQty - 1),
-                            onIncrease: () => cart.addItem(item),
-                          ),
-                      ],
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.xs),
+                    // − / qty / + on the next row so price stays fully visible.
+                    if (!isOutOfStock && cartQty == 0)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _CircleAddButton(
+                          onPressed: () => cart.addItem(item),
+                        ),
+                      )
+                    else if (!isOutOfStock)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _QuantityStepper(
+                          quantity: cartQty,
+                          tint: primaryTint,
+                          onDecrease: () =>
+                              cart.updateQuantity(item.id, cartQty - 1),
+                          onIncrease: () => cart.addItem(item),
+                          onQuantityTap: () async {
+                            final qty = await showPosQuantityPad(
+                              context,
+                              itemName: item.name,
+                              initialQuantity: cartQty,
+                              maxQuantity:
+                                  item.stock > 0 ? item.stock : null,
+                            );
+                            if (qty == null || !context.mounted) return;
+                            cart.updateQuantity(item.id, qty);
+                          },
+                        ),
+                      )
+                    else
+                      const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -148,7 +170,10 @@ class _ItemImage extends StatelessWidget {
 
     return AppNetworkImage(
       imageUrl: url,
+      sourceMediaAssetId: item.imageMediaAssetId,
+      displayContext: ImageDisplayContext.grid,
       memCacheWidth: 300,
+      loadWhenVisible: false,
     );
   }
 }
@@ -186,12 +211,14 @@ class _QuantityStepper extends StatelessWidget {
     required this.tint,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onQuantityTap,
   });
 
   final int quantity;
   final Color tint;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final VoidCallback onQuantityTap;
 
   @override
   Widget build(BuildContext context) {
@@ -209,13 +236,22 @@ class _QuantityStepper extends StatelessWidget {
             icon: Icons.remove_rounded,
             onPressed: onDecrease,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: Text(
-              '$quantity',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+          InkWell(
+            onTap: onQuantityTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: Text(
+                '$quantity',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.primary.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ),

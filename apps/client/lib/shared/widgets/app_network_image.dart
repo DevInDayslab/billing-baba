@@ -27,7 +27,7 @@ class AppNetworkImage extends ConsumerStatefulWidget {
     this.placeholder,
     this.errorWidget,
     this.loadWhenVisible = true,
-    this.fadeInDuration = const Duration(milliseconds: 200),
+    this.fadeInDuration = Duration.zero,
   });
 
   final String imageUrl;
@@ -68,10 +68,9 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
   @override
   void initState() {
     super.initState();
+    // Eager images paint immediately; lazy ones wait for first visibility.
+    _isVisible = !widget.loadWhenVisible;
     _resolvedUrlFuture = _resolveUrl();
-    if (!widget.loadWhenVisible) {
-      _isVisible = true;
-    }
   }
 
   @override
@@ -89,7 +88,26 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
     }
   }
 
-  Future<String> _resolveUrl() {
+  Future<String> _resolveUrl() async {
+    final fallback = normalizeImageUrl(widget.imageUrl) ?? '';
+    final cacheKey = _cacheKey;
+
+    // Disk-cache hit: reuse the provided URL. Avoid signed-URL refresh that
+    // would churn the provider and flash a remount on every navigation.
+    if (cacheKey != null) {
+      try {
+        final cached = await appImageCacheManager.getFileFromCache(cacheKey);
+        if (cached != null) {
+          ImageDebugLog.loadedFromDisk(cacheKey);
+          if (fallback.isNotEmpty) return fallback;
+          final original = normalizeImageUrl(cached.originalUrl);
+          if (original != null) return original;
+        }
+      } on Object {
+        // Fall through to normal resolve.
+      }
+    }
+
     return resolveImageUrl(
       sourceMediaAssetId: _effectiveMediaAssetId,
       displayContext: widget.displayContext,
@@ -107,7 +125,12 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
     if (!mounted) return;
     setState(() {
       _retryKey += 1;
-      _resolvedUrlFuture = _resolveUrl();
+      _resolvedUrlFuture = resolveImageUrl(
+        sourceMediaAssetId: _effectiveMediaAssetId,
+        displayContext: widget.displayContext,
+        fallbackUrl: widget.imageUrl,
+        resolver: ref.read(mediaImageUrlResolverProvider),
+      );
     });
   }
 
@@ -159,8 +182,10 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
       ImageDebugLog.loadedFromMemory(cacheKey);
     }
 
+    // Key on stable identity only — never the signed URL. URL query rotation
+    // must not remount the image or replay the fade/placeholder.
     final child = CachedNetworkImage(
-      key: ValueKey('$url-$cacheKey-$_retryKey'),
+      key: ValueKey('img-${cacheKey ?? stripUrlQuery(url)}-$_retryKey'),
       imageUrl: url,
       cacheKey: cacheKey,
       cacheManager: appImageCacheManager,
@@ -170,6 +195,8 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
       memCacheWidth: _effectiveMemCacheWidth(context),
       fadeInDuration: widget.fadeInDuration,
       fadeOutDuration: Duration.zero,
+      placeholderFadeInDuration: Duration.zero,
+      useOldImageOnUrlChange: true,
       placeholder: (_, _) => widget.placeholder ?? _defaultPlaceholder(),
       errorWidget: (_, _, _) {
         _scheduleLoadErrorRetry();
@@ -192,10 +219,12 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
       return widget.placeholder ?? _defaultPlaceholder();
     }
 
+    final fallback = normalizeImageUrl(widget.imageUrl);
+
     return FutureBuilder<String>(
       future: _resolvedUrlFuture,
       builder: (context, snapshot) {
-        final url = normalizeImageUrl(snapshot.data ?? widget.imageUrl);
+        final url = normalizeImageUrl(snapshot.data) ?? fallback;
         if (url == null) {
           return widget.errorWidget ?? _defaultErrorWidget();
         }
@@ -211,12 +240,13 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
     }
 
     return VisibilityDetector(
-      key: Key('app-network-image-${widget.imageUrl}-$_retryKey'),
+      key: Key('app-network-image-${_cacheKey ?? widget.imageUrl}'),
       onVisibilityChanged: (info) {
         if (!mounted) return;
-        final visible = info.visibleFraction > 0;
-        if (visible != _isVisible) {
-          setState(() => _isVisible = visible);
+        // Latch visible once — unloading on scroll-away causes reload flashes
+        // when the same image scrolls or navigates back into view.
+        if (info.visibleFraction > 0 && !_isVisible) {
+          setState(() => _isVisible = true);
         }
       },
       child: _buildContent(context),

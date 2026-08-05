@@ -4,6 +4,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_formatters.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_filter_sheet.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
@@ -14,15 +15,18 @@ import 'package:gap/gap.dart';
 /// Period, date range, filter chips, and filters button for mobile reports.
 class MobileReportFilterHeader extends ConsumerWidget {
   const MobileReportFilterHeader({
-    required this.filterChips,
     required this.onFiltersChanged,
     super.key,
+    this.extraChips = const [],
   });
 
-  final List<String> filterChips;
+  /// Called after period, date range, or sheet filters change so data reloads.
   final VoidCallback onFiltersChanged;
 
-  static const _periodOptions = [
+  /// Optional report-specific chips (e.g. "Txns Type - Sale").
+  final List<String> extraChips;
+
+  static const List<ReportPeriod> _periodOptions = [
     ReportPeriod.thisMonth,
     ReportPeriod.lastMonth,
     ReportPeriod.thisWeek,
@@ -39,6 +43,10 @@ class MobileReportFilterHeader extends ConsumerWidget {
     final filters = ref.watch(reportFiltersProvider);
     final range = filters.effectiveDateRange;
     final theme = Theme.of(context);
+    final filterChips = buildMobileReportFilterChips(
+      filters,
+      extraChips: extraChips,
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -61,6 +69,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
               child: Row(
                 children: [
                   Expanded(
+                    flex: 2,
                     child: _FilterTapArea(
                       label: filters.periodLabel,
                       icon: Icons.keyboard_arrow_down_rounded,
@@ -73,8 +82,12 @@ class MobileReportFilterHeader extends ConsumerWidget {
                     color: MobileReportTheme.divider,
                   ),
                   Expanded(
+                    flex: 3,
                     child: _FilterTapArea(
-                      label: formatMobileReportDateRange(range.start, range.end),
+                      label: formatMobileReportDateRange(
+                        range.start,
+                        range.end,
+                      ),
                       icon: Icons.calendar_today_outlined,
                       iconSize: 15,
                       onTap: () => unawaited(_pickDateRange(context, ref)),
@@ -95,7 +108,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
                 ),
                 const Spacer(),
                 FilledButton.tonalIcon(
-                  onPressed: onFiltersChanged,
+                  onPressed: () => unawaited(_openFilters(context, ref)),
                   icon: const Icon(Icons.tune_rounded, size: 16),
                   label: const Text('Filters'),
                   style: FilledButton.styleFrom(
@@ -128,6 +141,17 @@ class MobileReportFilterHeader extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openFilters(BuildContext context, WidgetRef ref) async {
+    final filters = ref.read(reportFiltersProvider);
+    final draft = await showMobileReportFilterSheet(
+      context: context,
+      initial: filters,
+    );
+    if (draft == null) return;
+    applyMobileReportFilterDraft(ref, draft);
+    onFiltersChanged();
   }
 
   Future<void> _pickPeriod(BuildContext context, WidgetRef ref) async {

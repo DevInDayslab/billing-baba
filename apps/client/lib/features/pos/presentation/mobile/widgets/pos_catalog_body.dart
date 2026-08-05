@@ -85,7 +85,8 @@ class PosCatalogBody extends ConsumerWidget {
                 crossAxisCount: 2,
                 mainAxisSpacing: AppSpacing.md,
                 crossAxisSpacing: AppSpacing.md,
-                childAspectRatio: 0.65,
+                // Taller cells so price + qty stepper never clip.
+                childAspectRatio: 0.58,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {

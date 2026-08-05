@@ -1,0 +1,384 @@
+import 'dart:async';
+
+import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/sales/application/sale_document_form_provider.dart';
+import 'package:billing_baba/features/sales/models/sale_document_model.dart';
+import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
+import 'package:billing_baba/shared/widgets/mobile/forms/mobile_forms.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Shared mobile create form for Estimate and Proforma (same provider family).
+class MobileAddSaleDocumentPage extends ConsumerStatefulWidget {
+  const MobileAddSaleDocumentPage({
+    required this.documentType,
+    required this.listRoute,
+    super.key,
+    this.documentId,
+    this.duplicateFromId,
+  });
+
+  final SaleDocumentType documentType;
+  final String listRoute;
+  final String? documentId;
+  final String? duplicateFromId;
+
+  @override
+  ConsumerState<MobileAddSaleDocumentPage> createState() =>
+      _MobileAddSaleDocumentPageState();
+}
+
+class _MobileAddSaleDocumentPageState
+    extends ConsumerState<MobileAddSaleDocumentPage> {
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _termsTextController;
+  var _initialized = false;
+
+  MobileDocumentVisibility get _visibility =>
+      MobileDocumentVisibility.saleDocument;
+
+  String get _title {
+    final isEdit = widget.documentId != null;
+    return switch (widget.documentType) {
+      SaleDocumentType.estimate => isEdit ? 'Edit Estimate' : 'Estimate',
+      SaleDocumentType.proforma =>
+        isEdit ? 'Edit Proforma' : 'Proforma Invoice',
+    };
+  }
+
+  String get _closeTitle => switch (widget.documentType) {
+    SaleDocumentType.estimate => 'Close Estimate',
+    SaleDocumentType.proforma => 'Close Proforma Invoice',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController = TextEditingController();
+    _termsTextController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _termsTextController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initialize() async {
+    final notifier = ref.read(
+      saleDocumentFormProvider(widget.documentType).notifier,
+    );
+    if (widget.duplicateFromId != null) {
+      await notifier.duplicateDocument(widget.duplicateFromId!);
+    } else if (widget.documentId != null) {
+      await notifier.loadDocument(widget.documentId!);
+    } else {
+      notifier.openForm();
+    }
+    if (!mounted) return;
+    final form = ref.read(saleDocumentFormProvider(widget.documentType));
+    _descriptionController.text = form.description;
+    _termsTextController.text = form.termsText;
+    setState(() => _initialized = true);
+  }
+
+  SaleDocumentFormState _form() =>
+      ref.watch(saleDocumentFormProvider(widget.documentType));
+
+  SaleDocumentFormNotifier _notifier() =>
+      ref.read(saleDocumentFormProvider(widget.documentType).notifier);
+
+  Future<bool> _handleClose() async {
+    final confirmed = await showCloseFormDialog(context, title: _closeTitle);
+    if (!confirmed || !mounted) return false;
+    _notifier().resetForm();
+    return true;
+  }
+
+  Future<void> _pickParty() async {
+    final party = await pickMobileDocumentParty(
+      context,
+    );
+    if (party != null) {
+      _notifier().updatePartyWithId(partyId: party.id, partyName: party.name);
+    }
+  }
+
+  Future<void> _addLine() async {
+    final result = await pickMobileDocumentItem(context);
+    if (result == null) return;
+    final items = _form().items;
+    final lastEmpty = items.isNotEmpty && items.last.itemName.trim().isEmpty;
+    if (!lastEmpty) _notifier().addLineItem();
+    final index = _form().items.length - 1;
+    _notifier().updateLineItem(
+      index,
+      SaleLineItem(
+        id: _form().items[index].id,
+        itemId: result.item.id,
+        itemName: result.item.name,
+        qty: result.quantity,
+        pricePerUnit: result.pricePerUnit,
+        unit: result.item.baseUnitShortName ?? 'NONE',
+        taxPercent: result.item.defaultTaxRate ?? 0,
+        mrp: result.item.mrp ?? 0,
+        isConfirmed: true,
+      ),
+    );
+  }
+
+  Future<void> _save({required bool saveAndNew}) async {
+    final error = await _notifier().save();
+    if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+
+    final form = _form();
+    final docId = form.documentId;
+    if (docId != null && docId.isNotEmpty) {
+      final request = switch (widget.documentType) {
+        SaleDocumentType.estimate => PrintRequest.estimate(docId),
+        SaleDocumentType.proforma => PrintRequest.proformaInvoice(docId),
+      };
+      await DocumentPrintActions.print(context, ref, request);
+      if (!mounted) return;
+    }
+
+    if (saveAndNew) {
+      _notifier().resetForm();
+      _notifier().openForm();
+      _descriptionController.clear();
+      _termsTextController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.documentType.saveSuccessMessage}. Ready for new.')),
+      );
+      return;
+    }
+
+    _notifier().resetForm();
+    await leaveTransactionFormPage(
+      context: context,
+      isDirty: false,
+      isSaving: false,
+      listRoute: widget.listRoute,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final form = _form();
+    final notifier = _notifier();
+    final confirmed = form.items
+        .where((item) => item.itemName.trim().isNotEmpty)
+        .toList();
+
+    return MobileDocumentFormScaffold(
+      title: _title,
+      visibility: _visibility,
+      isLoading: !_initialized || form.isLoading,
+      isSaving: form.isSaving,
+      onClose: _handleClose,
+      onSave: () => unawaited(_save(saveAndNew: false)),
+      onSaveAndNew: () => unawaited(_save(saveAndNew: true)),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (form.saveError != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Text(
+                form.saveError!,
+                style: const TextStyle(color: AppColors.error),
+              ),
+            ),
+          MobileDocumentHeader(
+            visibility: _visibility,
+            documentNumberLabel: 'Ref No.',
+            documentNumberValue: form.refNo.isEmpty ? 'Auto' : form.refNo,
+            documentNumberIsPlaceholder: form.refNo.isEmpty,
+            dateValue: formatSaleSingleDate(form.invoiceDate),
+            dateIsPlaceholder: form.invoiceDate == null,
+            onDateTap: () async {
+              final date = await showMobileDatePicker(
+                context,
+                initialDate: form.invoiceDate,
+              );
+              if (date != null) notifier.updateInvoiceDate(date);
+            },
+            timeValue: formatSaleTime(form.invoiceTime),
+            timeIsPlaceholder: form.invoiceTime == null,
+            onTimeTap: () async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: form.invoiceTime ?? TimeOfDay.now(),
+              );
+              if (picked != null) notifier.updateInvoiceTime(picked);
+            },
+            stateOfSupplyValue: form.stateOfSupply,
+            onStateOfSupplyTap: () async {
+              final selected = await showMobileOptionSheet<String>(
+                context: context,
+                title: 'State of supply',
+                selected: form.stateOfSupply,
+                options: [
+                  for (final state in SaleDropdownOptions.indianStates)
+                    MobileOption(value: state, label: state),
+                ],
+              );
+              if (selected != null) notifier.updateStateOfSupply(selected);
+            },
+            godownValue: form.godown,
+            onGodownTap: () async {
+              final godowns = ref.read(inventoryGodownsProvider).value ?? [];
+              final options = godowns.isNotEmpty
+                  ? godowns.map((g) => g.name).toList()
+                  : SaleDropdownOptions.godowns;
+              final selected = await showMobileOptionSheet<String>(
+                context: context,
+                title: 'Godown',
+                selected: form.godown,
+                options: [
+                  for (final name in options)
+                    MobileOption(value: name, label: name),
+                ],
+              );
+              if (selected == null) return;
+              final match =
+                  godowns.where((g) => g.name == selected).firstOrNull;
+              notifier.updateGodown(selected, godownId: match?.id);
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          MobileDocumentPartySection(
+            visibility: _visibility,
+            useInlinePartySearch: false,
+            partyValue: form.party,
+            partyHasError: form.partyHasError,
+            onPickParty: () => unawaited(_pickParty()),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          MobileDocumentItemsSection(
+            visibility: _visibility,
+            lines: [
+              for (final item in confirmed)
+                MobileDocumentLineDisplay(
+                  name: item.itemName,
+                  qtyLabel:
+                      '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
+                  amountLabel: MobileDocumentItemsSection.formatAmount(
+                    item.amount,
+                  ),
+                ),
+            ],
+            onAddItems: () => unawaited(_addLine()),
+            onRemoveLine: (i) {
+              final index = form.items.indexWhere(
+                (item) => item.id == confirmed[i].id,
+              );
+              if (index >= 0) notifier.removeLineItem(index);
+            },
+            onLineTap: (i) async {
+              final item = confirmed[i];
+              final index = form.items.indexWhere((e) => e.id == item.id);
+              if (index < 0) return;
+              final draft = await showMobileDocumentLineEditSheet(
+                context: context,
+                itemName: item.itemName,
+                fields: MobileDocumentLineEditFields.sale,
+                initial: MobileDocumentLineEditDraft(
+                  qty: item.qty,
+                  unit: item.unit,
+                  pricePerUnit: item.pricePerUnit,
+                  discountPercent: item.discountPercent,
+                  taxPercent: item.taxPercent,
+                  serialNo: item.serialNo,
+                  batchNo: item.batchNo,
+                  mrp: item.mrp,
+                  description: item.description,
+                ),
+              );
+              if (draft == null || !mounted) return;
+              notifier.updateLineItem(
+                index,
+                item.copyWith(
+                  qty: draft.qty,
+                  unit: draft.unit,
+                  pricePerUnit: draft.pricePerUnit,
+                  discountPercent: draft.discountPercent,
+                  taxPercent: draft.taxPercent,
+                  serialNo: draft.serialNo,
+                  batchNo: draft.batchNo,
+                  mrp: draft.mrp,
+                  description: draft.description,
+                  priceManuallyOverridden: true,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          MobileDocumentTotalsSection(
+            visibility: _visibility,
+            totalAmount: form.rawGrandTotal,
+            subtotal: form.subtotal,
+            taxAmount: form.taxAmount,
+            roundOff: form.roundOff,
+            onRoundOffChanged: (value) => notifier.toggleRoundOff(value: value),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          MobileDocumentNotesAttachmentsSection(
+            visibility: _visibility,
+            descriptionController: _descriptionController,
+            onDescriptionChanged: notifier.updateDescription,
+            termsTitle: form.termsTitle,
+            termsTextController: _termsTextController,
+            onTermsTitleTap: () async {
+              final picked = await pickMobileTermsTitle(
+                context,
+                selected: form.termsTitle,
+              );
+              if (picked != null) notifier.updateTermsTitle(picked);
+            },
+            onTermsTextChanged: notifier.updateTermsText,
+            images: form.attachedImages,
+            documents: form.attachedDocuments,
+            onAddImage: () => unawaited(
+              transactionAddImage(
+                context: context,
+                ref: ref,
+                entityType: DocumentAttachmentEntityType.estimate.apiValue,
+                entityId: form.documentId,
+                onAdded: notifier.addImage,
+              ),
+            ),
+            onAddDocument: () => unawaited(
+              transactionAddDocument(
+                context: context,
+                ref: ref,
+                entityType: DocumentAttachmentEntityType.estimate.apiValue,
+                entityId: form.documentId,
+                onAdded: notifier.addDocument,
+              ),
+            ),
+            onRemoveImage: notifier.removeImage,
+            onRemoveDocument: notifier.removeDocument,
+          ),
+        ],
+      ),
+    );
+  }
+}

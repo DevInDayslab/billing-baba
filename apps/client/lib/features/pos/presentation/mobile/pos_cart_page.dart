@@ -8,6 +8,7 @@ import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
+import 'package:billing_baba/features/pos/presentation/widgets/pos_quantity_pad_sheet.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/app_text_field.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
@@ -373,6 +374,8 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
                   onDecrease: (item) =>
                       cart.updateQuantity(item.item.id, item.quantity - 1),
                   onIncrease: (item) => cart.addItem(item.item),
+                  onSetQuantity: (item, qty) =>
+                      cart.updateQuantity(item.item.id, qty),
                   onAddMoreItems: () => context.pop(),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -827,6 +830,7 @@ class _ItemsSection extends StatelessWidget {
     required this.priceListLabel,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onSetQuantity,
     required this.onAddMoreItems,
   });
 
@@ -834,6 +838,7 @@ class _ItemsSection extends StatelessWidget {
   final String priceListLabel;
   final void Function(CartItem item) onDecrease;
   final void Function(CartItem item) onIncrease;
+  final void Function(CartItem item, int qty) onSetQuantity;
   final VoidCallback onAddMoreItems;
 
   @override
@@ -891,6 +896,17 @@ class _ItemsSection extends StatelessWidget {
                     priceListLabel: priceListLabel,
                     onDecrease: () => onDecrease(cartItem),
                     onIncrease: () => onIncrease(cartItem),
+                    onQuantityTap: () async {
+                      final qty = await showPosQuantityPad(
+                        context,
+                        itemName: cartItem.item.name,
+                        initialQuantity: cartItem.quantity,
+                        maxQuantity: cartItem.item.stock > 0
+                            ? cartItem.item.stock
+                            : null,
+                      );
+                      if (qty != null) onSetQuantity(cartItem, qty);
+                    },
                   ),
                   if (showDivider)
                     const Padding(
@@ -926,12 +942,14 @@ class _CartItemRow extends StatelessWidget {
     required this.priceListLabel,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onQuantityTap,
   });
 
   final CartItem cartItem;
   final String priceListLabel;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final VoidCallback onQuantityTap;
 
   @override
   Widget build(BuildContext context) {
@@ -982,6 +1000,7 @@ class _CartItemRow extends StatelessWidget {
                 tint: primaryTint,
                 onDecrease: onDecrease,
                 onIncrease: onIncrease,
+                onQuantityTap: onQuantityTap,
               ),
             ],
           ),
@@ -997,12 +1016,14 @@ class _QuantityStepper extends StatelessWidget {
     required this.tint,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onQuantityTap,
   });
 
   final int quantity;
   final Color tint;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final VoidCallback onQuantityTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1017,13 +1038,22 @@ class _QuantityStepper extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _StepperButton(icon: Icons.remove_rounded, onPressed: onDecrease),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: Text(
-              '$quantity',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+          InkWell(
+            onTap: onQuantityTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: Text(
+                '$quantity',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.primary.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ),

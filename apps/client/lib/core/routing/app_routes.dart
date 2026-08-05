@@ -52,6 +52,8 @@ abstract final class AppRoutes {
   static const addEstimate = '/sale/add-estimate';
   static const duplicateEstimate = '/sale/add-estimate/duplicate';
   static const editEstimate = '/sale/edit-estimate';
+  static const addProforma = '/sale/add-proforma';
+  static const editProforma = '/sale/edit-proforma';
   static const purchase = '/purchase';
   static const purchaseBills = '/purchase/bills';
   static const purchasePaymentOut = '/purchase/payment-out';

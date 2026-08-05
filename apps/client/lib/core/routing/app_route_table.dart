@@ -66,6 +66,7 @@ import 'package:billing_baba/features/sales/presentation/add_delivery_challan_pa
 import 'package:billing_baba/features/sales/presentation/add_estimate_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_job_work_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_payment_in_page.dart';
+import 'package:billing_baba/features/sales/presentation/add_proforma_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_page.dart';
@@ -353,6 +354,18 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.saleProformaInvoice,
             builder: (context, state) => const ProformaInvoicePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addProforma,
+            name: 'addProforma',
+            builder: (context, state) => const AddProformaPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editProforma}/:proformaId',
+            name: 'editProforma',
+            builder: (context, state) => AddProformaPage(
+              proformaId: state.pathParameters['proformaId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.salePaymentIn,
