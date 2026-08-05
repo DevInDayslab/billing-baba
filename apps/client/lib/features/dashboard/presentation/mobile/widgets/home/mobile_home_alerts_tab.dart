@@ -1,16 +1,18 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_task_tile.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_todo_filters.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_todo_status_tabs.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_todo_task_tile.dart';
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_editor_dialog.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Alerts tab — mobile port of the desktop TODO widget.
+/// Todo tab — mobile home reminders and tasks.
 class MobileHomeAlertsTab extends ConsumerStatefulWidget {
   const MobileHomeAlertsTab({super.key});
 
@@ -62,6 +64,7 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final primary = Theme.of(context).colorScheme.primary;
     final tasksAsync = ref.watch(tasksProvider);
     final allTasks = tasksAsync.value ?? const <TaskModel>[];
     final scopedTasks = DashboardTodoFilterLogic.applyScope(
@@ -88,38 +91,74 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  'Daily Alerts',
-                  style: AppTypography.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daily Todo',
+                      style: AppTypography.inter(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    RichText(
+                      text: TextSpan(
+                        style: AppTypography.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          height: 1.3,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '${summary.pending} Pending',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const TextSpan(text: '  •  '),
+                          TextSpan(
+                            text: '${summary.overdue} Overdue',
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              IconButton(
-                onPressed: () => unawaited(_openEditor()),
-                icon: const Icon(Icons.add_rounded),
-                color: Theme.of(context).colorScheme.primary,
+              Material(
+                color: primary,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () => unawaited(_openEditor()),
+                  borderRadius: BorderRadius.circular(12),
+                  child: const SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: DashboardTodoSummaryLine(
-            pending: summary.pending,
-            overdue: summary.overdue,
-          ),
-        ),
         const SizedBox(height: AppSpacing.sm),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: DashboardTodoStatusChips(
-            selected: _statusChip,
-            overdueCount: overdueCount,
-            onChanged: (value) => setState(() => _statusChip = value),
-          ),
+        MobileHomeTodoStatusTabs(
+          selected: _statusChip,
+          overdueCount: overdueCount,
+          onChanged: (value) => setState(() => _statusChip = value),
         ),
         const SizedBox(height: AppSpacing.sm),
         Expanded(
@@ -147,7 +186,8 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
                       DashboardTodoStatusChip.pending =>
                         "You're all caught up!",
                     },
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: AppTypography.inter(
+                      fontSize: 13,
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -155,33 +195,22 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
               }
 
               return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg,
-                  AppSpacing.sm,
+                  AppSpacing.xs,
                   AppSpacing.lg,
-                  AppSpacing.xxxl,
+                  MobileBottomNavigation.contentBottomPadding(context),
                 ),
                 itemCount: tasks.length,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, index) {
                   final task = tasks[index];
-                  return Material(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.cardBorder,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: AppRadius.cardBorder,
-                        boxShadow: AppShadows.subtle,
-                      ),
-                      child: DashboardTaskTile(
-                        key: ValueKey(task.id),
-                        task: task,
-                        onToggleComplete: () =>
-                            unawaited(_toggleComplete(task)),
-                        onOpen: () => unawaited(_openEditor(editTask: task)),
-                      ),
-                    ),
+                  return MobileHomeTodoTaskTile(
+                    key: ValueKey(task.id),
+                    task: task,
+                    onToggleComplete: () => unawaited(_toggleComplete(task)),
+                    onOpen: () => unawaited(_openEditor(editTask: task)),
                   );
                 },
               );
@@ -193,7 +222,7 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
   }
 }
 
-/// Badge count for the Alerts tab (pending + overdue).
+/// Badge count for the Todo tab (pending + overdue).
 int mobileHomeAlertsBadgeCount(List<TaskModel> tasks) {
   final summary = DashboardTodoFilterLogic.summaryCounts(tasks);
   return summary.pending + summary.overdue;

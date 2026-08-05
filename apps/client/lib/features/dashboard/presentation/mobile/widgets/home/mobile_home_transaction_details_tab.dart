@@ -5,14 +5,13 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_transactions_provider.dart';
-import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_category_chips.dart';
-import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_outline_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_transaction_date_filters.dart';
-import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_transaction_search_row.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_transaction_type_tabs.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_transaction_card.dart';
 import 'package:billing_baba/features/parties/presentation/utils/party_ledger_transaction_table_actions.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_transaction_type_filter_sheet.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +28,6 @@ class MobileHomeTransactionDetailsTab extends ConsumerStatefulWidget {
 class _MobileHomeTransactionDetailsTabState
     extends ConsumerState<MobileHomeTransactionDetailsTab>
     with AutomaticKeepAliveClientMixin {
-  late final TextEditingController _searchController;
   late DateTimeRange _dateRange;
   MobileHomeTransactionQuickPeriod _quickPeriod =
       MobileHomeTransactionQuickPeriod.today;
@@ -41,15 +39,6 @@ class _MobileHomeTransactionDetailsTabState
   void initState() {
     super.initState();
     _dateRange = dateRangeForHomeQuickPeriod(_quickPeriod);
-    _searchController = TextEditingController(
-      text: ref.read(mobileHomeControllerProvider).searchQuery,
-    );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _showFilterSheet() {
@@ -95,19 +84,6 @@ class _MobileHomeTransactionDetailsTabState
     );
   }
 
-  void _handlePdf(MobileHomeTransactionItem item) {
-    final transaction = item.ledgerTransaction;
-    if (transaction == null) return;
-    unawaited(
-      PartyLedgerTransactionTableActions.handleAction(
-        context: context,
-        ref: ref,
-        transaction: transaction,
-        action: 'open_pdf',
-      ),
-    );
-  }
-
   void _exportTransactions(List<MobileHomeTransactionItem> transactions) {
     if (transactions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,12 +125,7 @@ class _MobileHomeTransactionDetailsTabState
     super.build(context);
     final homeState = ref.watch(mobileHomeControllerProvider);
     final transactionsAsync = ref.watch(mobileHomeTransactionsProvider);
-
-    ref.listen(mobileHomeControllerProvider, (previous, next) {
-      if (previous?.searchQuery == next.searchQuery) return;
-      if (_searchController.text == next.searchQuery) return;
-      _searchController.text = next.searchQuery;
-    });
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -192,41 +163,43 @@ class _MobileHomeTransactionDetailsTabState
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              MobileHomeOutlineAction(
-                icon: Icons.tune_rounded,
-                label: 'Filter',
-                onTap: _showFilterSheet,
+              IconButton(
+                onPressed: _showFilterSheet,
+                icon: Icon(Icons.tune_rounded, color: primary, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+                tooltip: 'Filter',
               ),
-              const SizedBox(width: AppSpacing.sm),
-              MobileHomeOutlineAction(
-                icon: Icons.download_rounded,
-                label: 'Download',
-                onTap: () {
+              IconButton(
+                onPressed: () {
                   final data = transactionsAsync.value ?? const [];
-                  final filtered = filterHomeTransactions(
-                    data,
-                    homeState.searchQuery,
+                  final filtered = resolveMobileHomeDisplayTransactions(
+                    source: data,
+                    query: homeState.searchQuery,
                     typeFilters: homeState.transactionTypeFilters,
                     dateRange: _dateRange,
                   );
                   _exportTransactions(filtered);
                 },
+                icon: Icon(Icons.download_rounded, color: primary, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+                tooltip: 'Download',
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        MobileHomeCategoryChips(
+        MobileHomeTransactionTypeTabs(
           selected: homeState.transactionTypeFilters,
           onChanged: ref
               .read(mobileHomeControllerProvider.notifier)
               .setTransactionTypeFilters,
-        ),
-        MobileHomeTransactionSearchRow(
-          controller: _searchController,
-          onChanged: ref.read(mobileHomeControllerProvider.notifier).setSearch,
-          onSettingsTap: _showFilterSheet,
         ),
         MobileHomeTransactionDateFilters(
           dateRange: _dateRange,
@@ -245,9 +218,9 @@ class _MobileHomeTransactionDetailsTabState
                 onRetry: () => unawaited(refreshMobileHomeTransactions(ref)),
               ),
               data: (allTransactions) {
-                final transactions = filterHomeTransactions(
-                  allTransactions,
-                  homeState.searchQuery,
+                final transactions = resolveMobileHomeDisplayTransactions(
+                  source: allTransactions,
+                  query: homeState.searchQuery,
                   typeFilters: homeState.transactionTypeFilters,
                   dateRange: _dateRange,
                 );
@@ -268,11 +241,11 @@ class _MobileHomeTransactionDetailsTabState
 
                 return ListView.separated(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(
+                  padding: EdgeInsets.fromLTRB(
                     AppSpacing.lg,
-                    AppSpacing.xs,
+                    AppSpacing.sm,
                     AppSpacing.lg,
-                    AppSpacing.xxxl,
+                    MobileBottomNavigation.contentBottomPadding(context),
                   ),
                   itemCount: transactions.length,
                   separatorBuilder: (_, _) =>
@@ -283,7 +256,6 @@ class _MobileHomeTransactionDetailsTabState
                       item: item,
                       onPrint: () => _handlePrint(item),
                       onShare: () => _handleShare(item),
-                      onPdf: () => _handlePdf(item),
                     );
                   },
                 );

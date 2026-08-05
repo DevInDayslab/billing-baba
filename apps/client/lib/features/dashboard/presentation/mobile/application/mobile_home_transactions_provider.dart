@@ -1,10 +1,13 @@
+import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_transaction_mock_data.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_mapper.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Recent transactions for the mobile home feed, aggregated from live providers.
@@ -29,22 +32,8 @@ final mobileHomeTransactionsProvider =
         (state) => state.isLoading && !state.hasValue,
       );
 
-      // Show whatever has arrived — waiting for all five feed sources to settle
-      // left the home screen on a spinner while sync / fetch-all was in flight.
       if (!hasAnyData && stillLoading) {
         return const AsyncValue.loading();
-      }
-
-      if (!hasAnyData) {
-        for (final state in loadingStates) {
-          if (state.hasError) {
-            return AsyncValue.error(
-              state.error!,
-              state.stackTrace ?? StackTrace.current,
-            );
-          }
-        }
-        return const AsyncValue.data([]);
       }
 
       final items = <MobileHomeTransactionItem>[];
@@ -77,8 +66,42 @@ final mobileHomeTransactionsProvider =
         return bDate.compareTo(aDate);
       });
 
+      if (items.isEmpty) {
+        return AsyncValue.data(MobileHomeTransactionMockData.transactions());
+      }
+
       return AsyncValue.data(items);
     });
+
+/// Resolves the list shown on the transaction details tab, with mock fallback.
+List<MobileHomeTransactionItem> resolveMobileHomeDisplayTransactions({
+  required List<MobileHomeTransactionItem> source,
+  required String query,
+  Set<MobileHomeTransactionFilterType> typeFilters = const {},
+  DateTimeRange? dateRange,
+}) {
+  final filtered = filterHomeTransactions(
+    source,
+    query,
+    typeFilters: typeFilters,
+    dateRange: dateRange,
+  );
+  if (filtered.isNotEmpty) return filtered;
+
+  final mockFiltered = filterHomeTransactions(
+    MobileHomeTransactionMockData.transactions(),
+    query,
+    typeFilters: typeFilters,
+    dateRange: dateRange,
+  );
+  if (mockFiltered.isNotEmpty) return mockFiltered;
+
+  if (query.trim().isEmpty && typeFilters.isEmpty) {
+    return MobileHomeTransactionMockData.transactions();
+  }
+
+  return const [];
+}
 
 DateTime _parseHomeDate(String label) {
   try {

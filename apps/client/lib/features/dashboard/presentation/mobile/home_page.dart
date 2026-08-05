@@ -11,6 +11,7 @@ import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_search_bar.dart';
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -80,31 +81,37 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
     });
 
     return MobilePlatformScope(
-      child: ColoredBox(
-        color: AppColors.background,
-        child: SafeArea(
-          bottom: false,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppTheme.lightSystemUi,
+        child: ColoredBox(
+          color: AppColors.background,
           child: Column(
             children: [
               ColoredBox(
                 color: AppColors.surface,
-                child: Column(
-                  children: [
-                    MobileAppHeader(
-                      onBusinessTap: () => context.push(AppRoutes.businessList),
-                      onSettingsTap: () => context.push(AppRoutes.settings),
-                      onNotificationTap: () =>
-                          context.push(AppRoutes.notifications),
-                    ),
-                    if (homeState.activeView !=
-                        MobileHomeView.transactionDetails)
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    children: [
+                      MobileAppHeader(
+                        onBusinessTap: () =>
+                            context.push(AppRoutes.businessList),
+                        onSettingsTap: () => context.push(AppRoutes.settings),
+                        onNotificationTap: () =>
+                            context.push(AppRoutes.notifications),
+                      ),
                       MobileHomeSearchBar(
                         controller: _searchController,
                         onChanged: ref
                             .read(mobileHomeControllerProvider.notifier)
                             .setSearch,
+                        hint: homeState.activeView ==
+                                MobileHomeView.transactionDetails
+                            ? 'Search by item, party or number'
+                            : 'Search transactions, parties, invoices...',
                       ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               MobileHomeTabBar(

@@ -25,7 +25,6 @@ class MobileHomeOutlineAction extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppRadius.buttonBorder,
         child: Ink(
-          width: 84,
           decoration: BoxDecoration(
             borderRadius: AppRadius.buttonBorder,
             border: Border.all(color: AppColors.chipBorder),
@@ -37,6 +36,7 @@ class MobileHomeOutlineAction extends StatelessWidget {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 16, color: primary),
               const SizedBox(width: 4),

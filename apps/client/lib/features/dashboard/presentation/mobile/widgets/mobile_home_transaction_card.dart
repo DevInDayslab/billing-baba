@@ -9,14 +9,12 @@ class MobileHomeTransactionCard extends StatelessWidget {
     super.key,
     this.onPrint,
     this.onShare,
-    this.onPdf,
     this.onTap,
   });
 
   final MobileHomeTransactionItem item;
   final VoidCallback? onPrint;
   final VoidCallback? onShare;
-  final VoidCallback? onPdf;
   final VoidCallback? onTap;
 
   @override
@@ -38,76 +36,91 @@ class MobileHomeTransactionCard extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: 10,
+            vertical: 12,
           ),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: colors.bg,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(iconData, color: colors.fg, size: 18),
+                child: Icon(iconData, color: colors.fg, size: 22),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item.title ?? item.partyName,
-                      style: AppTypography.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        height: 1.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            item.title ?? item.partyName,
+                            style: AppTypography.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (item.paymentMethod != null &&
+                            item.paymentMethod!.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          _PaymentPill(
+                            label: item.paymentMethod!,
+                            colors: colors,
+                          ),
+                        ],
+                      ],
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       item.documentNumber,
                       style: AppTypography.inter(
                         fontSize: 11,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
-                        height: 1.3,
+                        height: 1.25,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       item.timeLabel ?? item.dateLabel,
                       style: AppTypography.inter(
                         fontSize: 10.5,
                         color: AppColors.textSecondary.withValues(alpha: 0.85),
-                        height: 1.3,
+                        height: 1.25,
                       ),
                     ),
                   ],
                 ),
               ),
-              _ActionButton(
-                icon: Icons.print_outlined,
-                onTap: onPrint,
-                semanticLabel: 'Print ${item.documentNumber}',
+              const SizedBox(width: AppSpacing.xs),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ActionButton(
+                    icon: Icons.print_outlined,
+                    onTap: onPrint,
+                    semanticLabel: 'Print ${item.documentNumber}',
+                  ),
+                  _ActionButton(
+                    icon: Icons.share_outlined,
+                    onTap: onShare,
+                    semanticLabel: 'Share ${item.documentNumber}',
+                  ),
+                ],
               ),
-              _ActionButton(
-                icon: Icons.share_outlined,
-                onTap: onShare,
-                semanticLabel: 'Share ${item.documentNumber}',
-              ),
-              _PdfAction(onTap: onPdf),
               const SizedBox(width: AppSpacing.xs),
               _AmountBadge(
                 amount: item.totalLabel,
-                paymentMethod: item.paymentMethod,
                 colors: colors,
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary.withValues(alpha: 0.4),
-                size: 18,
               ),
             ],
           ),
@@ -120,8 +133,8 @@ class MobileHomeTransactionCard extends StatelessWidget {
     return switch (type) {
       MobileHomeTransactionFilterType.sale => Icons.shopping_cart_outlined,
       MobileHomeTransactionFilterType.purchase => Icons.shopping_bag_outlined,
-      MobileHomeTransactionFilterType.paymentIn => Icons.south_west_rounded,
-      MobileHomeTransactionFilterType.paymentOut => Icons.north_east_rounded,
+      MobileHomeTransactionFilterType.paymentIn => Icons.arrow_upward_rounded,
+      MobileHomeTransactionFilterType.paymentOut => Icons.arrow_downward_rounded,
       MobileHomeTransactionFilterType.expense =>
         Icons.account_balance_wallet_outlined,
       _ => Icons.receipt_long_outlined,
@@ -147,13 +160,13 @@ class _ActionButton extends StatelessWidget {
       label: semanticLabel,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(5),
           child: Icon(
             icon,
-            size: 15,
-            color: AppColors.textSecondary.withValues(alpha: 0.55),
+            size: 18,
+            color: AppColors.textSecondary.withValues(alpha: 0.65),
           ),
         ),
       ),
@@ -161,29 +174,31 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _PdfAction extends StatelessWidget {
-  const _PdfAction({this.onTap});
+class _PaymentPill extends StatelessWidget {
+  const _PaymentPill({
+    required this.label,
+    required this.colors,
+  });
 
-  final VoidCallback? onTap;
+  final String label;
+  final ColorPair colors;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Open PDF',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Text(
-            'PDF',
-            style: AppTypography.inter(
-              fontSize: 10,
-              color: AppColors.danger,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: colors.bg,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colors.fg.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.inter(
+          fontSize: 9,
+          color: colors.fg,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
         ),
       ),
     );
@@ -194,52 +209,34 @@ class _AmountBadge extends StatelessWidget {
   const _AmountBadge({
     required this.amount,
     required this.colors,
-    this.paymentMethod,
   });
 
   final String amount;
   final ColorPair colors;
-  final String? paymentMethod;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 72),
+      constraints: const BoxConstraints(minWidth: 68, maxWidth: 88),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: 6,
+        vertical: 7,
       ),
       decoration: BoxDecoration(
         color: colors.bg,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            amount,
-            style: AppTypography.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: colors.fg,
-              height: 1.1,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (paymentMethod != null && paymentMethod!.isNotEmpty)
-            Text(
-              paymentMethod!,
-              style: AppTypography.inter(
-                fontSize: 9,
-                color: colors.fg.withValues(alpha: 0.8),
-                fontWeight: FontWeight.w600,
-                height: 1.2,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-        ],
+      child: Text(
+        amount,
+        style: AppTypography.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: colors.fg,
+          height: 1.1,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.right,
       ),
     );
   }

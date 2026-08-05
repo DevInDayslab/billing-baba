@@ -107,7 +107,7 @@ class MobileFinancialAssetsRow extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
-            height: 132,
+            height: 148,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(right: AppSpacing.lg),

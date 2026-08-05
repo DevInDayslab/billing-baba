@@ -45,7 +45,7 @@ class AppThemeScope extends StatelessWidget {
 abstract final class AppTheme {
   /// Dark status/navigation icons for light app surfaces (white/gray).
   static const lightSystemUi = SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
+    statusBarColor: AppColors.surface,
     statusBarIconBrightness: Brightness.dark,
     statusBarBrightness: Brightness.light,
     systemNavigationBarColor: AppColors.surface,

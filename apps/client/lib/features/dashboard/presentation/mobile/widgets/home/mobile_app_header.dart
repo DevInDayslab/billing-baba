@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/sync/application/sync_ui_state.dart';
 import 'package:billing_baba/core/sync/application/sync_ui_state_provider.dart';
+import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
@@ -123,15 +124,58 @@ class MobileAppHeader extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 2),
-          Text(
-            '${_syncLabel(sync, manualState)} · $nowLabel',
-            style: AppTypography.inter(
-              fontSize: 10.5,
-              color: AppColors.textSecondary.withValues(alpha: 0.85),
-              height: 1.2,
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.sync_rounded,
+                  size: 11,
+                  color: AppColors.textSecondary.withValues(alpha: 0.65),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    _syncLabel(sync, manualState),
+                    style: AppTypography.inter(
+                      fontSize: 10.5,
+                      color: AppColors.textSecondary.withValues(alpha: 0.85),
+                      height: 1.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  ' | ',
+                  style: AppTypography.inter(
+                    fontSize: 10.5,
+                    color: AppColors.textSecondary.withValues(alpha: 0.45),
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    nowLabel,
+                    style: AppTypography.inter(
+                      fontSize: 10.5,
+                      color: AppColors.textSecondary.withValues(alpha: 0.85),
+                      height: 1.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: _onlineColor(sync),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -155,5 +199,13 @@ class MobileAppHeader extends ConsumerWidget {
     if (diff.inMinutes < 60) return 'Last sync ${diff.inMinutes} min ago';
     if (diff.inHours < 24) return 'Last sync ${diff.inHours} hr ago';
     return 'Last sync ${DateFormat('d MMM').format(last)}';
+  }
+
+  static Color _onlineColor(SyncUiSnapshot sync) {
+    return switch (sync.connectivity) {
+      SyncConnectivityStatus.online => AppColors.success,
+      SyncConnectivityStatus.offline => AppColors.warning,
+      _ => AppColors.textSecondary,
+    };
   }
 }

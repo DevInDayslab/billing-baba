@@ -10,6 +10,7 @@ import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_nav_destinations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -76,16 +77,19 @@ class _MobileShellState extends ConsumerState<MobileShell> {
     final hideBottomNav = location == AppRoutes.pos;
 
     return MobilePlatformScope(
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        extendBody: true,
-        body: widget.child,
-        bottomNavigationBar: hideBottomNav
-            ? null
-            : MobileBottomNavigation(
-                currentTab: currentTab,
-                onTabSelected: _onTabSelected,
-              ),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppTheme.lightSystemUi,
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          extendBody: true,
+          body: widget.child,
+          bottomNavigationBar: hideBottomNav
+              ? null
+              : MobileBottomNavigation(
+                  currentTab: currentTab,
+                  onTabSelected: _onTabSelected,
+                ),
+        ),
       ),
     );
   }

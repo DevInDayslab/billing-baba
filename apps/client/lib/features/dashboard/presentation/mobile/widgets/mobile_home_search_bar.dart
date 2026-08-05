@@ -42,6 +42,7 @@ class MobileHomeSearchBar extends StatelessWidget {
                 color: AppColors.surface,
                 borderRadius: AppRadius.searchBorder,
                 border: Border.all(color: AppColors.chipBorder),
+                boxShadow: AppShadows.subtle,
               ),
               child: Row(
                 children: [
@@ -77,19 +78,7 @@ class MobileHomeSearchBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 40,
-                    height: _rowHeight,
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.mic_none_rounded,
-                        color: primary,
-                        size: 20,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
+                  const SizedBox(width: AppSpacing.md),
                   if (showFilter && onFilterTap != null)
                     IconButton(
                       onPressed: onFilterTap,

@@ -23,7 +23,6 @@ class MobileHomeCategoryChips extends StatelessWidget {
           label: 'Payment Out',
           type: MobileHomeTransactionFilterType.paymentOut,
         ),
-        (label: 'Expense', type: MobileHomeTransactionFilterType.expense),
       ];
 
   @override

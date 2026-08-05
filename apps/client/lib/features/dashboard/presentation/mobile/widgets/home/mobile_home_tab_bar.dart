@@ -35,8 +35,8 @@ class MobileHomeTabBar extends StatelessWidget {
     ),
     (
       view: MobileHomeView.alerts,
-      icon: Icons.notifications_none_rounded,
-      label: 'Alerts',
+      icon: Icons.checklist_rounded,
+      label: 'Todo',
     ),
   ];
 
@@ -180,24 +180,27 @@ class _Segment extends StatelessWidget {
                   ),
                   if (badgeCount > 0)
                     Positioned(
-                      right: -14,
-                      top: -6,
+                      right: -16,
+                      top: -8,
                       child: Container(
+                        constraints: const BoxConstraints(minWidth: 18),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 1,
+                          horizontal: 5,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.danger,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: AppColors.surface,
+                            width: 1.5,
                           ),
                         ),
                         child: Text(
                           badgeCount > 99 ? '99+' : '$badgeCount',
+                          textAlign: TextAlign.center,
                           style: AppTypography.inter(
-                            fontSize: 8,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                             height: 1,

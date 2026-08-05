@@ -29,8 +29,37 @@ abstract final class MobileTransactionMapper {
 
   static String formatAmount(double amount) => _currencyFormat.format(amount);
 
-  static String formatHomeAmount(double amount) =>
-      '₹ ${amount.toStringAsFixed(amount == amount.roundToDouble() ? 0 : 2)}';
+  static String formatHomeAmount(double amount) => formatHomeAmountIndian(amount);
+
+  /// Compact Indian notation for the mobile home transaction feed (L / Cr).
+  static String formatHomeAmountIndian(double amount) {
+    final abs = amount.abs();
+    if (abs >= 10000000) {
+      return _compactIndianAmount(amount, 10000000, 'Cr');
+    }
+    if (abs >= 100000) {
+      return _compactIndianAmount(amount, 100000, 'L');
+    }
+
+    final digits = amount == amount.roundToDouble() ? 0 : 2;
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '₹',
+      decimalDigits: digits,
+    ).format(amount);
+  }
+
+  static String _compactIndianAmount(
+    double amount,
+    double divisor,
+    String suffix,
+  ) {
+    final scaled = amount / divisor;
+    final text = scaled == scaled.roundToDouble()
+        ? scaled.toInt().toString()
+        : scaled.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+    return '₹$text$suffix';
+  }
 
   static MobileTransactionListItem fromSaleInvoice(
     SaleInvoiceModel invoice, {

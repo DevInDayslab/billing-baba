@@ -601,14 +601,6 @@ class _PartyTransactionsSection extends ConsumerWidget {
                       action: 'share',
                     ),
                   ),
-                  onPdf: () => unawaited(
-                    PartyLedgerTransactionTableActions.handleAction(
-                      context: context,
-                      ref: ref,
-                      transaction: tx,
-                      action: 'open_pdf',
-                    ),
-                  ),
                 ),
               ),
           ],
