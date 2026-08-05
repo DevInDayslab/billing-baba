@@ -31,9 +31,7 @@ class MobileDashboardSalesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isPositive = growthPercent >= 0;
-    final growthColor = isPositive
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFC62828);
+    final growthColor = isPositive ? AppColors.success : AppColors.danger;
 
     return MobileCard(
       onTap: onTap,
@@ -114,7 +112,7 @@ class MobileDashboardSalesCard extends StatelessWidget {
             height: 140,
             child: DashboardTrendChart(
               points: sales.trendPoints,
-              lineColor: const Color(0xFF5D5FEF),
+              lineColor: AppColors.primary,
               period: period,
               minimal: true,
             ),

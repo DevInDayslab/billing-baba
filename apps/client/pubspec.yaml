@@ -81,6 +81,7 @@ dependencies:
 
   # Desktop Razorpay checkout (InAppWebView host + netbanking popups).
   flutter_inappwebview: ^6.1.5
+  razorpay_flutter: ^1.4.5
   win32: ^6.3.0
   ffi: ^2.2.0
 

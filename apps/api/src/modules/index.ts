@@ -23,6 +23,7 @@ import { createNotificationsModule } from './notifications/notifications.routes'
 import { partiesModule } from './parties';
 import { purchasesModule } from './purchases';
 import { reportsModule } from './reports';
+import { createPaymentGatewayModule } from './payment-gateway';
 import { createSalesModule } from './sales';
 import { settingsModule } from './settings';
 import { createStorageModule } from './storage';
@@ -80,6 +81,9 @@ export async function registerModules(
       });
       await api.register(createSubscriptionModule(config), {
         prefix: '/subscription',
+      });
+      await api.register(createPaymentGatewayModule(config), {
+        prefix: '/payments',
       });
       await api.register(gstinModule(config), { prefix: '/gstin' });
     },

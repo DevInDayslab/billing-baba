@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
+import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
@@ -24,6 +25,7 @@ abstract final class MobileTransactionMapper {
   );
   static final _listDateFormat = DateFormat('dd MMM yyyy');
   static final _homeDateFormat = DateFormat('dd MMM, yy');
+  static final _homeTimeFormat = DateFormat('h:mm a');
 
   static String formatAmount(double amount) => _currencyFormat.format(amount);
 
@@ -197,8 +199,14 @@ abstract final class MobileTransactionMapper {
   }) {
     final (statusLabel, statusColor) = switch (order.status) {
       PurchaseOrderStatus.open => ('Open', AppColors.primary),
-      PurchaseOrderStatus.orderCompleted => ('Completed', const Color(0xFF2E7D32)),
-      PurchaseOrderStatus.partiallyReceived => ('Partial', const Color(0xFFE65100)),
+      PurchaseOrderStatus.orderCompleted => (
+        'Completed',
+        const Color(0xFF2E7D32),
+      ),
+      PurchaseOrderStatus.partiallyReceived => (
+        'Partial',
+        const Color(0xFFE65100),
+      ),
       PurchaseOrderStatus.cancelled => ('Cancelled', const Color(0xFF9E9E9E)),
     };
     return MobileTransactionListItem(
@@ -282,7 +290,9 @@ abstract final class MobileTransactionMapper {
     );
   }
 
-  static MobileHomeTransactionItem homeFromSaleInvoice(SaleInvoiceModel invoice) {
+  static MobileHomeTransactionItem homeFromSaleInvoice(
+    SaleInvoiceModel invoice,
+  ) {
     final isEstimate = invoice.documentSeries == SalesConstants.estimateSeries;
     final filterType = isEstimate
         ? MobileHomeTransactionFilterType.estimate
@@ -300,16 +310,24 @@ abstract final class MobileTransactionMapper {
       id: invoice.id,
       partyName: invoice.partyName,
       documentNumber: invoice.invoiceNo,
+      title: isEstimate ? 'Estimate' : 'Cash Sale',
       statusLabel: statusLabel,
       statusType: statusType,
       filterType: filterType,
       dateLabel: _homeDateFormat.format(invoice.date),
+      timeLabel: _homeTimeFormat.format(invoice.date),
+      transactionDate: invoice.date,
       dueDateLabel: invoice.dueDate != null
           ? 'Due : ${_homeDateFormat.format(invoice.dueDate!)}'
           : null,
       totalLabel: formatHomeAmount(invoice.amount),
       balanceLabel: 'Balance',
       balanceValueLabel: formatHomeAmount(invoice.balance),
+      paymentMethod: invoice.paymentType,
+      ledgerTransaction: _ledgerFromSaleInvoice(
+        invoice,
+        isEstimate: isEstimate,
+      ),
     );
   }
 
@@ -321,45 +339,66 @@ abstract final class MobileTransactionMapper {
       id: payment.id,
       partyName: payment.partyName,
       documentNumber: payment.receiptNo,
+      title: 'Payment In',
       statusLabel: statusLabel,
-      statusType: MobileHomeTransactionStatusType.payinUnused,
+      statusType: MobileHomeTransactionStatusType.paymentIn,
       filterType: MobileHomeTransactionFilterType.paymentIn,
       dateLabel: _homeDateFormat.format(payment.date),
+      timeLabel: _homeTimeFormat.format(payment.date),
+      transactionDate: payment.date,
       totalLabel: formatHomeAmount(payment.receivedAmount),
       balanceLabel: 'Unused',
       balanceValueLabel: formatHomeAmount(payment.balanceDue),
+      paymentMethod: payment.paymentType,
+      ledgerTransaction: _ledgerFromPaymentIn(payment),
     );
   }
 
-  static MobileHomeTransactionItem homeFromPurchaseBill(PurchaseBillModel bill) {
+  static MobileHomeTransactionItem homeFromPurchaseBill(
+    PurchaseBillModel bill,
+  ) {
     return MobileHomeTransactionItem(
       id: bill.id,
       partyName: bill.partyName,
       documentNumber: bill.invoiceNo,
-      statusLabel: 'PURCHASE : ${_purchaseBillStatusLabel(bill.status).toUpperCase()}',
-      statusType: MobileHomeTransactionStatusType.estimateOpen,
+      title: 'Purchase from ${bill.partyName}',
+      statusLabel:
+          'PURCHASE : ${_purchaseBillStatusLabel(bill.status).toUpperCase()}',
+      statusType: MobileHomeTransactionStatusType.purchase,
       filterType: MobileHomeTransactionFilterType.purchase,
       dateLabel: _homeDateFormat.format(bill.date),
+      timeLabel: _homeTimeFormat.format(bill.date),
+      transactionDate: bill.date,
       dueDateLabel: 'Due : ${_homeDateFormat.format(bill.dueDate)}',
       totalLabel: formatHomeAmount(bill.amount),
       balanceLabel: 'Balance',
       balanceValueLabel: formatHomeAmount(bill.balanceDue),
+      paymentMethod: bill.paymentType,
+      ledgerTransaction: _ledgerFromPurchaseBill(bill),
     );
   }
 
-  static MobileHomeTransactionItem homeFromExpense(ExpenseTransactionModel expense) {
+  static MobileHomeTransactionItem homeFromExpense(
+    ExpenseTransactionModel expense,
+  ) {
     final amount = expense.amount ?? 0;
     return MobileHomeTransactionItem(
       id: expense.id,
       partyName: expense.party,
       documentNumber: expense.transactionNo,
-      statusLabel: 'EXPENSE : ${expense.status?.name.toUpperCase() ?? 'RECORDED'}',
-      statusType: MobileHomeTransactionStatusType.estimateOpen,
-      filterType: MobileHomeTransactionFilterType.purchase,
+      title: 'Expense',
+      statusLabel:
+          'EXPENSE : ${expense.status?.name.toUpperCase() ?? 'RECORDED'}',
+      statusType: MobileHomeTransactionStatusType.expense,
+      filterType: MobileHomeTransactionFilterType.expense,
       dateLabel: _homeDateFormat.format(expense.date),
+      timeLabel: _homeTimeFormat.format(expense.date),
+      transactionDate: expense.date,
       totalLabel: formatHomeAmount(amount),
       balanceLabel: 'Balance',
       balanceValueLabel: formatHomeAmount(expense.balance ?? 0),
+      paymentMethod: expense.paymentType,
+      ledgerTransaction: _ledgerFromExpense(expense),
     );
   }
 
@@ -407,6 +446,104 @@ abstract final class MobileTransactionMapper {
       PurchaseFaStatus.overdue => ('Overdue', const Color(0xFFB71C1C)),
       PurchaseFaStatus.cancelled => ('Cancelled', const Color(0xFF9E9E9E)),
     };
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromSaleInvoice(
+    SaleInvoiceModel invoice, {
+    required bool isEstimate,
+  }) {
+    return PartyLedgerTransactionModel(
+      id: invoice.id,
+      date: invoice.date,
+      createdAt: invoice.date,
+      type: isEstimate ? 'Estimate' : 'Sale',
+      entryType: 'debit',
+      source: 'sales_documents',
+      sourceType: isEstimate ? 'estimate' : 'tax_invoice',
+      referenceId: invoice.id,
+      referenceNumber: invoice.invoiceNo,
+      documentDate: invoice.date,
+      dueDate: invoice.dueDate,
+      total: invoice.amount,
+      balance: invoice.balance,
+      status: invoice.status.name,
+      debit: invoice.amount,
+      credit: 0,
+      balanceAfter: invoice.balance,
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromPaymentIn(
+    PaymentInModel payment,
+  ) {
+    return PartyLedgerTransactionModel(
+      id: payment.id,
+      date: payment.date,
+      createdAt: payment.date,
+      type: 'Payment-In',
+      entryType: 'credit',
+      source: 'payments',
+      sourceType: 'payment_in',
+      referenceId: payment.id,
+      referenceNumber: payment.receiptNo,
+      documentDate: payment.date,
+      total: payment.receivedAmount,
+      balance: payment.balanceDue,
+      status: payment.status.name,
+      debit: 0,
+      credit: payment.receivedAmount,
+      balanceAfter: payment.balanceDue,
+      direction: 'received',
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromPurchaseBill(
+    PurchaseBillModel bill,
+  ) {
+    return PartyLedgerTransactionModel(
+      id: bill.id,
+      date: bill.date,
+      createdAt: bill.date,
+      type: 'Purchase',
+      entryType: 'credit',
+      source: 'purchase_documents',
+      sourceType: 'purchase_bill',
+      referenceId: bill.id,
+      referenceNumber: bill.invoiceNo,
+      documentDate: bill.date,
+      dueDate: bill.dueDate,
+      total: bill.amount,
+      balance: bill.balanceDue,
+      status: bill.status.name,
+      debit: 0,
+      credit: bill.amount,
+      balanceAfter: bill.balanceDue,
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromExpense(
+    ExpenseTransactionModel expense,
+  ) {
+    final amount = expense.amount ?? 0;
+    return PartyLedgerTransactionModel(
+      id: expense.id,
+      date: expense.date,
+      createdAt: expense.date,
+      type: 'Expense',
+      entryType: 'credit',
+      source: 'expenses',
+      sourceType: 'expense',
+      referenceId: expense.id,
+      referenceNumber: expense.transactionNo,
+      documentDate: expense.date,
+      dueDate: expense.dueDate,
+      total: amount,
+      balance: expense.balance ?? 0,
+      status: expense.status?.name,
+      debit: 0,
+      credit: amount,
+      balanceAfter: expense.balance ?? 0,
+    );
   }
 
   /// Maps a mobile transaction route to the corresponding edit route.

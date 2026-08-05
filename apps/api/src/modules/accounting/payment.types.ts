@@ -33,7 +33,7 @@ export type PaymentInsertValues = {
   referenceNumber?: string | null;
   notes?: string | null;
   shortPaymentHandling?: string | null;
-  source?: 'manual' | 'document_finalize';
+  source?: 'manual' | 'document_finalize' | 'razorpay_gateway';
   createdBy?: string | null;
   updatedBy?: string | null;
 };

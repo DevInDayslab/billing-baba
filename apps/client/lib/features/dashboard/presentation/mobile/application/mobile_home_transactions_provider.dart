@@ -50,24 +50,30 @@ final mobileHomeTransactionsProvider =
       final items = <MobileHomeTransactionItem>[];
 
       salesAsync.whenData((page) {
-        items.addAll(page.items.map(MobileTransactionMapper.homeFromSaleInvoice));
+        items.addAll(
+          page.items.map(MobileTransactionMapper.homeFromSaleInvoice),
+        );
       });
       estimatesAsync.whenData((page) {
-        items.addAll(page.items.map(MobileTransactionMapper.homeFromSaleInvoice));
+        items.addAll(
+          page.items.map(MobileTransactionMapper.homeFromSaleInvoice),
+        );
       });
       paymentInAsync.whenData((page) {
         items.addAll(page.items.map(MobileTransactionMapper.homeFromPaymentIn));
       });
       purchasesAsync.whenData((page) {
-        items.addAll(page.items.map(MobileTransactionMapper.homeFromPurchaseBill));
+        items.addAll(
+          page.items.map(MobileTransactionMapper.homeFromPurchaseBill),
+        );
       });
       expensesAsync.whenData((expenses) {
         items.addAll(expenses.map(MobileTransactionMapper.homeFromExpense));
       });
 
       items.sort((a, b) {
-        final aDate = _parseHomeDate(a.dateLabel);
-        final bDate = _parseHomeDate(b.dateLabel);
+        final aDate = a.transactionDate ?? _parseHomeDate(a.dateLabel);
+        final bDate = b.transactionDate ?? _parseHomeDate(b.dateLabel);
         return bDate.compareTo(aDate);
       });
 

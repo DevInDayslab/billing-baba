@@ -12,7 +12,7 @@ class MobileBusinessProfileSignatureSection extends StatelessWidget {
   final VoidCallback? onCreate;
   final VoidCallback? onUpload;
 
-  static const _actionBlue = Color(0xFF42A5F5);
+  static const _actionBlue = AppColors.primary;
 
   @override
   Widget build(BuildContext context) {

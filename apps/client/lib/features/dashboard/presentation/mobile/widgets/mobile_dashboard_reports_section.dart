@@ -43,7 +43,7 @@ class MobileDashboardReportsSection extends ConsumerWidget {
               TextButton(
                 onPressed: () => context.go(AppRoutes.reports),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF5D5FEF),
+                  foregroundColor: AppColors.primary,
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -171,7 +171,7 @@ class _ReportTile extends StatelessWidget {
   }
 
   (IconData, Color) _iconFor(String key) => switch (key) {
-    'sale_report' => (Icons.bar_chart_rounded, const Color(0xFF5D5FEF)),
+    'sale_report' => (Icons.bar_chart_rounded, AppColors.primary),
     'purchase_report' => (
       Icons.shopping_cart_outlined,
       const Color(0xFFEF6C00),

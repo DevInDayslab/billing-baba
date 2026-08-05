@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/short_payment_handling_dialog.dart';
+import 'package:billing_baba/features/payments/presentation/mobile/widgets/payment_recovery_banner.dart';
+import 'package:billing_baba/features/payments/presentation/shared/payment_flow_launcher.dart';
+import 'package:billing_baba/features/payments/presentation/shared/payment_intent_builder.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
@@ -137,6 +140,21 @@ class _MobileAddPaymentInPageState
     Navigator.of(context).pop();
   }
 
+  Future<void> _payOnline(PaymentInForm notifier) async {
+    final form = ref.read(paymentInFormProvider);
+    final intent = paymentIntentFromPaymentInForm(form);
+    if (intent == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Select a party and enter a received amount first'),
+        ),
+      );
+      return;
+    }
+    await PaymentFlowLauncher.start(context, ref, intent: intent);
+  }
+
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(paymentInFormProvider);
@@ -164,6 +182,7 @@ class _MobileAddPaymentInPageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const MobileOfflineBanner(),
+          const PaymentRecoveryBanner(),
           if (form.saveError != null)
             Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
           MobileDocumentPartySection(
@@ -204,6 +223,14 @@ class _MobileAddPaymentInPageState
             onChanged: (value) {
               notifier.updateDiscount(double.tryParse(value) ?? 0);
             },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton.icon(
+            onPressed: form.isSaving
+                ? null
+                : () => unawaited(_payOnline(notifier)),
+            icon: const Icon(Icons.payments_rounded, size: 18),
+            label: const Text('Pay online (UPI / Card)'),
           ),
           const SizedBox(height: AppSpacing.lg),
           MobileDocumentHeader(

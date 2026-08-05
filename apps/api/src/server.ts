@@ -3,6 +3,7 @@ import { config as loadEnv } from 'dotenv';
 import { buildApp } from './app';
 import { loadAppConfig } from './config/app_config';
 import { resolveGeminiModel } from './modules/purchases/purchase-document-gemini.parser';
+import { startPaymentReconciliationWorker } from './modules/payment-gateway/payment-reconciliation.worker';
 import { startSubscriptionScheduler } from './modules/subscription/subscription.scheduler';
 import {
   auditGeminiAuthEnvironment,
@@ -23,6 +24,7 @@ async function startServer(): Promise<void> {
   await app.listen({ host: config.host, port: config.port });
 
   startSubscriptionScheduler(app, config);
+  startPaymentReconciliationWorker(app, config);
 
   app.log.info(
     `${config.appName} v${config.version} listening on http://${config.host}:${config.port}`,

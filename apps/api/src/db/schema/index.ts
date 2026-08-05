@@ -22,6 +22,7 @@ export * from './meta/tables';
 export * from './notifications/relations';
 export * from './notifications/send-log';
 export * from './notifications/tables';
+export * from './payments/gateway-tables';
 export * from './purchases/relations';
 export * from './purchases/tables';
 export * from './sales/invoice-share-tokens';

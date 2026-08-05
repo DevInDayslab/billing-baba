@@ -1736,6 +1736,44 @@ Declare **Phase 1 — Inventory** production-ready after the Inventory Completio
 
 ---
 
+## ADR-041: Razorpay Payment Gateway for Invoice Collections (Mobile)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-05 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Businesses need to collect customer payments online (UPI, cards, net banking) against invoices and Payment In records. Subscription Razorpay already exists for SaaS billing; invoice collection requires a separate gateway flow integrated with accounting `payments`.
+
+#### Decision
+
+- New API module at `/api/v1/payments` (`payment-gateway`): `create-order`, `verify`, `status/:id`, `webhook`.
+- Platform Razorpay keys (same env as subscription); no per-business merchant keys in v1.
+- Shared payment infrastructure under `apps/api/src/shared/payments/` (`razorpay_client`, `razorpay_signature`, `payment-mode.mapper`, `PaymentValidationService`).
+- `gateway_payment_intents` table with debug fields (`business_name`, `customer_name`, etc.), `intent_payload_version`, and granular statuses (`created` → `checkout_open` → `callback_received` → `verifying` → `verified`).
+- Webhooks enqueue `gateway_reconciliation_jobs`; background worker processes asynchronously (respond 200 immediately).
+- On verify: HMAC signature → fetch payment from Razorpay → `PaymentValidationService` → `PaymentService.createPayment` with `source: razorpay_gateway`.
+- Flutter `features/payments/`: `PaymentController` → `PaymentCheckoutService` → native `razorpay_flutter` → `PaymentRepository` → API. Never mark success without backend verify.
+- Local `gateway_payment_sessions_local` for offline verification retry; recovery on app resume, reconnect, and 5-minute poll.
+- Feature flags: `razorpayNative`, `razorpayWebViewFallback`, `paymentRecoveryEnabled`, `paymentWebhookRecovery`, `paymentLoggingVerbose`.
+
+#### Consequences
+
+- Invoice payments are online-authoritative; accounting payment row created only after server verification.
+- Subscription and gateway share Razorpay client code; future gateways (PhonePe, Cashfree) extend `shared/payments/`.
+- WebView checkout remains fallback behind flag; mobile default is native SDK.
+
+#### Alternatives Considered
+
+- Client-side signature verification — rejected (security).
+- Synchronous webhook processing — rejected (reliability under load).
+- Per-business Razorpay accounts — deferred to follow-up.
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

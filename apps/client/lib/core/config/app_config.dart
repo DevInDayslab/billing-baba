@@ -144,6 +144,40 @@ abstract final class AppConfig {
   static bool get showSyncDiagnostics =>
       showDeveloperMenu || diagnosticsEnabled;
 
+  /// Native Razorpay SDK on mobile (default true on Android/iOS).
+  static bool get razorpayNative =>
+      dotenv.env['RAZORPAY_NATIVE']?.toLowerCase() != 'false';
+
+  /// WebView Razorpay fallback when native SDK cannot initialize.
+  static bool get razorpayWebViewFallback =>
+      dotenv.env['RAZORPAY_WEBVIEW_FALLBACK']?.toLowerCase() == 'true';
+
+  /// Enables pending-verification recovery on app resume / reconnect.
+  static bool get paymentRecoveryEnabled =>
+      dotenv.env['PAYMENT_RECOVERY_ENABLED']?.toLowerCase() != 'false';
+
+  /// Poll backend status when local verification is pending.
+  static bool get paymentWebhookRecovery =>
+      dotenv.env['PAYMENT_WEBHOOK_RECOVERY']?.toLowerCase() != 'false';
+
+  /// Verbose payment gateway analytics logs (never secrets).
+  static bool get paymentLoggingVerbose =>
+      consoleVerbose ||
+      dotenv.env['PAYMENT_LOGGING_VERBOSE']?.toLowerCase() == 'true';
+
+  /// Checkout session timeout in seconds.
+  static int get paymentCheckoutTimeoutSeconds =>
+      int.tryParse(dotenv.env['PAYMENT_CHECKOUT_TIMEOUT'] ?? '') ?? 900;
+
+  /// Verification API timeout in seconds.
+  static int get paymentVerificationTimeoutSeconds =>
+      int.tryParse(dotenv.env['PAYMENT_VERIFY_TIMEOUT'] ?? '') ?? 30;
+
+  /// Recovery poll interval while verification is pending.
+  static Duration get paymentRecoveryPollInterval => Duration(
+    minutes: int.tryParse(dotenv.env['PAYMENT_RECOVERY_POLL_MINUTES'] ?? '') ?? 5,
+  );
+
   /// Logs resolved config once at startup (console when verbose, file per [minLogLevel]).
   static void logStartupConfig() {
     if (!consoleVerbose && !shouldLog(LogLevel.info)) return;

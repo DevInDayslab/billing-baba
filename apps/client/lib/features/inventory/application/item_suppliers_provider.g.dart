@@ -33,7 +33,7 @@ final class ItemSuppliersProvider
   ItemSuppliers create() => ItemSuppliers();
 }
 
-String _$itemSuppliersHash() => r'a957c8fe63359523a7a37b138d44b081f8d9fa92';
+String _$itemSuppliersHash() => r'ac98b8d32c80d7661b2114ca8273caaa6b9133e0';
 
 abstract class _$ItemSuppliers
     extends $AsyncNotifier<Map<String, List<String>>> {

@@ -6,6 +6,7 @@ import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
 import 'package:billing_baba/core/database/tables/expenses_tables.dart';
+import 'package:billing_baba/core/database/tables/gateway_payment_sessions_table.dart';
 import 'package:billing_baba/core/database/tables/godowns_table.dart';
 import 'package:billing_baba/core/database/tables/inventory_stock_tables.dart';
 import 'package:billing_baba/core/database/tables/item_alternatives_table.dart';
@@ -61,13 +62,14 @@ part 'database.g.dart';
     StockLevelsLocal,
     ExpenseCategoriesLocal,
     ExpensesLocal,
+    GatewayPaymentSessionsLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Drift schema version — keep in sync with [schemaVersion].
-  static const currentSchemaVersion = 24;
+  static const currentSchemaVersion = 25;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -247,6 +249,9 @@ class AppDatabase extends _$AppDatabase {
         await m.database.customStatement(
           'CREATE INDEX IF NOT EXISTS idx_item_bom_costs_local_item_id ON item_bom_costs_local (item_id)',
         );
+      }
+      if (from < 25) {
+        await m.createTable(gatewayPaymentSessionsLocal);
       }
     },
   );

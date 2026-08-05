@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 const _fieldBorder = Color(0xFFE0E0E0);
 const _creditGreen = Color(0xFF43A047);
-const _saveBlue = Color(0xFF42A5F5);
+const _saveBlue = AppColors.primary;
 const _toggleTrack = Color(0xFFF0F0F0);
 
 /// Credit / Cash segmented toggle in the sale form app bar.

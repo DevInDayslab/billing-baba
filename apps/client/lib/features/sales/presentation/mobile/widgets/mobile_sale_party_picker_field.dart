@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _fieldBorder = Color(0xFFE0E0E0);
-const _saveBlue = Color(0xFF42A5F5);
+const _saveBlue = AppColors.primary;
 
 /// Vyapar-style customer field with inline saved-parties list.
 class MobileSalePartyPickerField extends ConsumerStatefulWidget {

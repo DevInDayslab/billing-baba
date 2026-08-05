@@ -1,5 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/payments/domain/payment_intent_type.dart';
+import 'package:billing_baba/features/payments/presentation/shared/payment_flow_launcher.dart';
+import 'package:billing_baba/features/payments/presentation/shared/payment_intent_builder.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -93,6 +96,16 @@ class _MobileReceivePaymentSheetBodyState
     });
   }
 
+  Future<void> _payOnline() async {
+    final form = ref.read(paymentInFormProvider);
+    final intent = paymentIntentFromPaymentInForm(
+      form,
+      type: PaymentIntentType.partyOutstanding,
+    );
+    if (intent == null) return;
+    await PaymentFlowLauncher.start(widget.parentContext, widget.ref, intent: intent);
+  }
+
   Future<void> _save() async {
     final result =
         await ref.read(paymentInFormProvider.notifier).savePayment();
@@ -173,6 +186,12 @@ class _MobileReceivePaymentSheetBodyState
           },
         ),
         const SizedBox(height: AppSpacing.md),
+        OutlinedButton.icon(
+          onPressed: form.isSaving ? null : _payOnline,
+          icon: const Icon(Icons.payments_rounded, size: 18),
+          label: const Text('Pay online'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         FilledButton(
           onPressed: form.isSaving ? null : _save,
           child: form.isSaving

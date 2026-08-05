@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 /// Shared visual tokens for mobile report screens.
 abstract final class MobileReportTheme {
-  static const accent = AppColors.primary;
-  static const accentSoft = Color(0xFFE3F2FD);
+  static const accent = Color(0xFF6C3CE9);
+  static const accentSoft = Color(0xFFF3EEFF);
   static const metricsGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

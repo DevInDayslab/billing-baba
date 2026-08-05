@@ -26,7 +26,6 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -541,37 +540,6 @@ class _PartyTransactionsSection extends ConsumerWidget {
   final int filteredCount;
   final bool hasActiveQuery;
 
-  Future<void> _showTransactionMoreMenu(
-    BuildContext context,
-    WidgetRef ref,
-    PartyLedgerTransactionModel transaction,
-  ) async {
-    final entries = PartyLedgerTransactionTableActions.menuEntriesFor(
-      transaction,
-      forMobile: true,
-    );
-    if (entries.isEmpty) return;
-
-    await showMobileMoreActionsSheet(
-      context: context,
-      title: PartyModel.displayOrDash(transaction.referenceNumber),
-      actions: [
-        for (final entry in entries)
-          MobileSheetAction(
-            label: entry.label,
-            onTap: () => unawaited(
-              PartyLedgerTransactionTableActions.handleAction(
-                context: context,
-                ref: ref,
-                transaction: transaction,
-                action: entry.action,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ledgerAsync.when(
@@ -633,8 +601,13 @@ class _PartyTransactionsSection extends ConsumerWidget {
                       action: 'share',
                     ),
                   ),
-                  onMore: () => unawaited(
-                    _showTransactionMoreMenu(context, ref, tx),
+                  onPdf: () => unawaited(
+                    PartyLedgerTransactionTableActions.handleAction(
+                      context: context,
+                      ref: ref,
+                      transaction: tx,
+                      action: 'open_pdf',
+                    ),
                   ),
                 ),
               ),

@@ -303,4 +303,11 @@ abstract final class ApiEndpoints {
   static const subscriptionCreateOrder = '$subscription/create-order';
   static const subscriptionVerify = '$subscription/verify';
   static const subscriptionRefresh = '$subscription/refresh';
+
+  static const paymentGateway = '/api/v1/payments';
+  static const paymentGatewayCreateOrder = '$paymentGateway/create-order';
+  static const paymentGatewayVerify = '$paymentGateway/verify';
+  static String paymentGatewayStatus(String id) => '$paymentGateway/status/$id';
+  static String paymentGatewayCheckoutOpen(String id) =>
+      '$paymentGateway/checkout-open/$id';
 }

@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Authenticated mobile shell with bottom navigation (Home, Dashboard, POS, Items, Menu).
+/// Authenticated mobile shell with bottom navigation (Home, Items, POS, Parties, Reports).
 class MobileShell extends ConsumerStatefulWidget {
   const MobileShell({
     required this.child,

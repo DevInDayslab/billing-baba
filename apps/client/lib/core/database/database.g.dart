@@ -27609,6 +27609,600 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
   }
 }
 
+class $GatewayPaymentSessionsLocalTable extends GatewayPaymentSessionsLocal
+    with
+        TableInfo<
+          $GatewayPaymentSessionsLocalTable,
+          GatewayPaymentSessionsLocalData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GatewayPaymentSessionsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _intentIdMeta = const VerificationMeta(
+    'intentId',
+  );
+  @override
+  late final GeneratedColumn<String> intentId = GeneratedColumn<String>(
+    'intent_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _razorpayOrderIdMeta = const VerificationMeta(
+    'razorpayOrderId',
+  );
+  @override
+  late final GeneratedColumn<String> razorpayOrderId = GeneratedColumn<String>(
+    'razorpay_order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentIdMeta = const VerificationMeta(
+    'paymentId',
+  );
+  @override
+  late final GeneratedColumn<String> paymentId = GeneratedColumn<String>(
+    'payment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _signatureMeta = const VerificationMeta(
+    'signature',
+  );
+  @override
+  late final GeneratedColumn<String> signature = GeneratedColumn<String>(
+    'signature',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intentPayloadJsonMeta = const VerificationMeta(
+    'intentPayloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> intentPayloadJson =
+      GeneratedColumn<String>(
+        'intent_payload_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _verifyAttemptsMeta = const VerificationMeta(
+    'verifyAttempts',
+  );
+  @override
+  late final GeneratedColumn<int> verifyAttempts = GeneratedColumn<int>(
+    'verify_attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastRetryAtMeta = const VerificationMeta(
+    'lastRetryAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastRetryAt = GeneratedColumn<DateTime>(
+    'last_retry_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    intentId,
+    razorpayOrderId,
+    paymentId,
+    signature,
+    status,
+    intentPayloadJson,
+    verifyAttempts,
+    lastRetryAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'gateway_payment_sessions_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GatewayPaymentSessionsLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('intent_id')) {
+      context.handle(
+        _intentIdMeta,
+        intentId.isAcceptableOrUnknown(data['intent_id']!, _intentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_intentIdMeta);
+    }
+    if (data.containsKey('razorpay_order_id')) {
+      context.handle(
+        _razorpayOrderIdMeta,
+        razorpayOrderId.isAcceptableOrUnknown(
+          data['razorpay_order_id']!,
+          _razorpayOrderIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_razorpayOrderIdMeta);
+    }
+    if (data.containsKey('payment_id')) {
+      context.handle(
+        _paymentIdMeta,
+        paymentId.isAcceptableOrUnknown(data['payment_id']!, _paymentIdMeta),
+      );
+    }
+    if (data.containsKey('signature')) {
+      context.handle(
+        _signatureMeta,
+        signature.isAcceptableOrUnknown(data['signature']!, _signatureMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('intent_payload_json')) {
+      context.handle(
+        _intentPayloadJsonMeta,
+        intentPayloadJson.isAcceptableOrUnknown(
+          data['intent_payload_json']!,
+          _intentPayloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_intentPayloadJsonMeta);
+    }
+    if (data.containsKey('verify_attempts')) {
+      context.handle(
+        _verifyAttemptsMeta,
+        verifyAttempts.isAcceptableOrUnknown(
+          data['verify_attempts']!,
+          _verifyAttemptsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_retry_at')) {
+      context.handle(
+        _lastRetryAtMeta,
+        lastRetryAt.isAcceptableOrUnknown(
+          data['last_retry_at']!,
+          _lastRetryAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {intentId};
+  @override
+  GatewayPaymentSessionsLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GatewayPaymentSessionsLocalData(
+      intentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}intent_id'],
+      )!,
+      razorpayOrderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}razorpay_order_id'],
+      )!,
+      paymentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_id'],
+      ),
+      signature: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signature'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      intentPayloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}intent_payload_json'],
+      )!,
+      verifyAttempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}verify_attempts'],
+      )!,
+      lastRetryAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_retry_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $GatewayPaymentSessionsLocalTable createAlias(String alias) {
+    return $GatewayPaymentSessionsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class GatewayPaymentSessionsLocalData extends DataClass
+    implements Insertable<GatewayPaymentSessionsLocalData> {
+  final String intentId;
+  final String razorpayOrderId;
+  final String? paymentId;
+  final String? signature;
+  final String status;
+  final String intentPayloadJson;
+  final int verifyAttempts;
+  final DateTime? lastRetryAt;
+  final DateTime createdAt;
+  const GatewayPaymentSessionsLocalData({
+    required this.intentId,
+    required this.razorpayOrderId,
+    this.paymentId,
+    this.signature,
+    required this.status,
+    required this.intentPayloadJson,
+    required this.verifyAttempts,
+    this.lastRetryAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['intent_id'] = Variable<String>(intentId);
+    map['razorpay_order_id'] = Variable<String>(razorpayOrderId);
+    if (!nullToAbsent || paymentId != null) {
+      map['payment_id'] = Variable<String>(paymentId);
+    }
+    if (!nullToAbsent || signature != null) {
+      map['signature'] = Variable<String>(signature);
+    }
+    map['status'] = Variable<String>(status);
+    map['intent_payload_json'] = Variable<String>(intentPayloadJson);
+    map['verify_attempts'] = Variable<int>(verifyAttempts);
+    if (!nullToAbsent || lastRetryAt != null) {
+      map['last_retry_at'] = Variable<DateTime>(lastRetryAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  GatewayPaymentSessionsLocalCompanion toCompanion(bool nullToAbsent) {
+    return GatewayPaymentSessionsLocalCompanion(
+      intentId: Value(intentId),
+      razorpayOrderId: Value(razorpayOrderId),
+      paymentId: paymentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentId),
+      signature: signature == null && nullToAbsent
+          ? const Value.absent()
+          : Value(signature),
+      status: Value(status),
+      intentPayloadJson: Value(intentPayloadJson),
+      verifyAttempts: Value(verifyAttempts),
+      lastRetryAt: lastRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastRetryAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory GatewayPaymentSessionsLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GatewayPaymentSessionsLocalData(
+      intentId: serializer.fromJson<String>(json['intentId']),
+      razorpayOrderId: serializer.fromJson<String>(json['razorpayOrderId']),
+      paymentId: serializer.fromJson<String?>(json['paymentId']),
+      signature: serializer.fromJson<String?>(json['signature']),
+      status: serializer.fromJson<String>(json['status']),
+      intentPayloadJson: serializer.fromJson<String>(json['intentPayloadJson']),
+      verifyAttempts: serializer.fromJson<int>(json['verifyAttempts']),
+      lastRetryAt: serializer.fromJson<DateTime?>(json['lastRetryAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'intentId': serializer.toJson<String>(intentId),
+      'razorpayOrderId': serializer.toJson<String>(razorpayOrderId),
+      'paymentId': serializer.toJson<String?>(paymentId),
+      'signature': serializer.toJson<String?>(signature),
+      'status': serializer.toJson<String>(status),
+      'intentPayloadJson': serializer.toJson<String>(intentPayloadJson),
+      'verifyAttempts': serializer.toJson<int>(verifyAttempts),
+      'lastRetryAt': serializer.toJson<DateTime?>(lastRetryAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  GatewayPaymentSessionsLocalData copyWith({
+    String? intentId,
+    String? razorpayOrderId,
+    Value<String?> paymentId = const Value.absent(),
+    Value<String?> signature = const Value.absent(),
+    String? status,
+    String? intentPayloadJson,
+    int? verifyAttempts,
+    Value<DateTime?> lastRetryAt = const Value.absent(),
+    DateTime? createdAt,
+  }) => GatewayPaymentSessionsLocalData(
+    intentId: intentId ?? this.intentId,
+    razorpayOrderId: razorpayOrderId ?? this.razorpayOrderId,
+    paymentId: paymentId.present ? paymentId.value : this.paymentId,
+    signature: signature.present ? signature.value : this.signature,
+    status: status ?? this.status,
+    intentPayloadJson: intentPayloadJson ?? this.intentPayloadJson,
+    verifyAttempts: verifyAttempts ?? this.verifyAttempts,
+    lastRetryAt: lastRetryAt.present ? lastRetryAt.value : this.lastRetryAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  GatewayPaymentSessionsLocalData copyWithCompanion(
+    GatewayPaymentSessionsLocalCompanion data,
+  ) {
+    return GatewayPaymentSessionsLocalData(
+      intentId: data.intentId.present ? data.intentId.value : this.intentId,
+      razorpayOrderId: data.razorpayOrderId.present
+          ? data.razorpayOrderId.value
+          : this.razorpayOrderId,
+      paymentId: data.paymentId.present ? data.paymentId.value : this.paymentId,
+      signature: data.signature.present ? data.signature.value : this.signature,
+      status: data.status.present ? data.status.value : this.status,
+      intentPayloadJson: data.intentPayloadJson.present
+          ? data.intentPayloadJson.value
+          : this.intentPayloadJson,
+      verifyAttempts: data.verifyAttempts.present
+          ? data.verifyAttempts.value
+          : this.verifyAttempts,
+      lastRetryAt: data.lastRetryAt.present
+          ? data.lastRetryAt.value
+          : this.lastRetryAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GatewayPaymentSessionsLocalData(')
+          ..write('intentId: $intentId, ')
+          ..write('razorpayOrderId: $razorpayOrderId, ')
+          ..write('paymentId: $paymentId, ')
+          ..write('signature: $signature, ')
+          ..write('status: $status, ')
+          ..write('intentPayloadJson: $intentPayloadJson, ')
+          ..write('verifyAttempts: $verifyAttempts, ')
+          ..write('lastRetryAt: $lastRetryAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    intentId,
+    razorpayOrderId,
+    paymentId,
+    signature,
+    status,
+    intentPayloadJson,
+    verifyAttempts,
+    lastRetryAt,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GatewayPaymentSessionsLocalData &&
+          other.intentId == this.intentId &&
+          other.razorpayOrderId == this.razorpayOrderId &&
+          other.paymentId == this.paymentId &&
+          other.signature == this.signature &&
+          other.status == this.status &&
+          other.intentPayloadJson == this.intentPayloadJson &&
+          other.verifyAttempts == this.verifyAttempts &&
+          other.lastRetryAt == this.lastRetryAt &&
+          other.createdAt == this.createdAt);
+}
+
+class GatewayPaymentSessionsLocalCompanion
+    extends UpdateCompanion<GatewayPaymentSessionsLocalData> {
+  final Value<String> intentId;
+  final Value<String> razorpayOrderId;
+  final Value<String?> paymentId;
+  final Value<String?> signature;
+  final Value<String> status;
+  final Value<String> intentPayloadJson;
+  final Value<int> verifyAttempts;
+  final Value<DateTime?> lastRetryAt;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const GatewayPaymentSessionsLocalCompanion({
+    this.intentId = const Value.absent(),
+    this.razorpayOrderId = const Value.absent(),
+    this.paymentId = const Value.absent(),
+    this.signature = const Value.absent(),
+    this.status = const Value.absent(),
+    this.intentPayloadJson = const Value.absent(),
+    this.verifyAttempts = const Value.absent(),
+    this.lastRetryAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GatewayPaymentSessionsLocalCompanion.insert({
+    required String intentId,
+    required String razorpayOrderId,
+    this.paymentId = const Value.absent(),
+    this.signature = const Value.absent(),
+    required String status,
+    required String intentPayloadJson,
+    this.verifyAttempts = const Value.absent(),
+    this.lastRetryAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : intentId = Value(intentId),
+       razorpayOrderId = Value(razorpayOrderId),
+       status = Value(status),
+       intentPayloadJson = Value(intentPayloadJson);
+  static Insertable<GatewayPaymentSessionsLocalData> custom({
+    Expression<String>? intentId,
+    Expression<String>? razorpayOrderId,
+    Expression<String>? paymentId,
+    Expression<String>? signature,
+    Expression<String>? status,
+    Expression<String>? intentPayloadJson,
+    Expression<int>? verifyAttempts,
+    Expression<DateTime>? lastRetryAt,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (intentId != null) 'intent_id': intentId,
+      if (razorpayOrderId != null) 'razorpay_order_id': razorpayOrderId,
+      if (paymentId != null) 'payment_id': paymentId,
+      if (signature != null) 'signature': signature,
+      if (status != null) 'status': status,
+      if (intentPayloadJson != null) 'intent_payload_json': intentPayloadJson,
+      if (verifyAttempts != null) 'verify_attempts': verifyAttempts,
+      if (lastRetryAt != null) 'last_retry_at': lastRetryAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GatewayPaymentSessionsLocalCompanion copyWith({
+    Value<String>? intentId,
+    Value<String>? razorpayOrderId,
+    Value<String?>? paymentId,
+    Value<String?>? signature,
+    Value<String>? status,
+    Value<String>? intentPayloadJson,
+    Value<int>? verifyAttempts,
+    Value<DateTime?>? lastRetryAt,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return GatewayPaymentSessionsLocalCompanion(
+      intentId: intentId ?? this.intentId,
+      razorpayOrderId: razorpayOrderId ?? this.razorpayOrderId,
+      paymentId: paymentId ?? this.paymentId,
+      signature: signature ?? this.signature,
+      status: status ?? this.status,
+      intentPayloadJson: intentPayloadJson ?? this.intentPayloadJson,
+      verifyAttempts: verifyAttempts ?? this.verifyAttempts,
+      lastRetryAt: lastRetryAt ?? this.lastRetryAt,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (intentId.present) {
+      map['intent_id'] = Variable<String>(intentId.value);
+    }
+    if (razorpayOrderId.present) {
+      map['razorpay_order_id'] = Variable<String>(razorpayOrderId.value);
+    }
+    if (paymentId.present) {
+      map['payment_id'] = Variable<String>(paymentId.value);
+    }
+    if (signature.present) {
+      map['signature'] = Variable<String>(signature.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (intentPayloadJson.present) {
+      map['intent_payload_json'] = Variable<String>(intentPayloadJson.value);
+    }
+    if (verifyAttempts.present) {
+      map['verify_attempts'] = Variable<int>(verifyAttempts.value);
+    }
+    if (lastRetryAt.present) {
+      map['last_retry_at'] = Variable<DateTime>(lastRetryAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GatewayPaymentSessionsLocalCompanion(')
+          ..write('intentId: $intentId, ')
+          ..write('razorpayOrderId: $razorpayOrderId, ')
+          ..write('paymentId: $paymentId, ')
+          ..write('signature: $signature, ')
+          ..write('status: $status, ')
+          ..write('intentPayloadJson: $intentPayloadJson, ')
+          ..write('verifyAttempts: $verifyAttempts, ')
+          ..write('lastRetryAt: $lastRetryAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -27662,6 +28256,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExpenseCategoriesLocalTable expenseCategoriesLocal =
       $ExpenseCategoriesLocalTable(this);
   late final $ExpensesLocalTable expensesLocal = $ExpensesLocalTable(this);
+  late final $GatewayPaymentSessionsLocalTable gatewayPaymentSessionsLocal =
+      $GatewayPaymentSessionsLocalTable(this);
   late final Index idxSyncQueueStatus = Index(
     'idx_sync_queue_status',
     'CREATE INDEX idx_sync_queue_status ON sync_queue (status)',
@@ -27734,6 +28330,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stockLevelsLocal,
     expenseCategoriesLocal,
     expensesLocal,
+    gatewayPaymentSessionsLocal,
     idxSyncQueueStatus,
     idxSyncQueueBusinessId,
     idxSyncQueueStatusBusinessId,
@@ -40933,6 +41530,309 @@ typedef $$ExpensesLocalTableProcessedTableManager =
       ExpenseTableData,
       PrefetchHooks Function()
     >;
+typedef $$GatewayPaymentSessionsLocalTableCreateCompanionBuilder =
+    GatewayPaymentSessionsLocalCompanion Function({
+      required String intentId,
+      required String razorpayOrderId,
+      Value<String?> paymentId,
+      Value<String?> signature,
+      required String status,
+      required String intentPayloadJson,
+      Value<int> verifyAttempts,
+      Value<DateTime?> lastRetryAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$GatewayPaymentSessionsLocalTableUpdateCompanionBuilder =
+    GatewayPaymentSessionsLocalCompanion Function({
+      Value<String> intentId,
+      Value<String> razorpayOrderId,
+      Value<String?> paymentId,
+      Value<String?> signature,
+      Value<String> status,
+      Value<String> intentPayloadJson,
+      Value<int> verifyAttempts,
+      Value<DateTime?> lastRetryAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$GatewayPaymentSessionsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $GatewayPaymentSessionsLocalTable> {
+  $$GatewayPaymentSessionsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get intentId => $composableBuilder(
+    column: $table.intentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get razorpayOrderId => $composableBuilder(
+    column: $table.razorpayOrderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentId => $composableBuilder(
+    column: $table.paymentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signature => $composableBuilder(
+    column: $table.signature,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get intentPayloadJson => $composableBuilder(
+    column: $table.intentPayloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get verifyAttempts => $composableBuilder(
+    column: $table.verifyAttempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GatewayPaymentSessionsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $GatewayPaymentSessionsLocalTable> {
+  $$GatewayPaymentSessionsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get intentId => $composableBuilder(
+    column: $table.intentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get razorpayOrderId => $composableBuilder(
+    column: $table.razorpayOrderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentId => $composableBuilder(
+    column: $table.paymentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signature => $composableBuilder(
+    column: $table.signature,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get intentPayloadJson => $composableBuilder(
+    column: $table.intentPayloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get verifyAttempts => $composableBuilder(
+    column: $table.verifyAttempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GatewayPaymentSessionsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GatewayPaymentSessionsLocalTable> {
+  $$GatewayPaymentSessionsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get intentId =>
+      $composableBuilder(column: $table.intentId, builder: (column) => column);
+
+  GeneratedColumn<String> get razorpayOrderId => $composableBuilder(
+    column: $table.razorpayOrderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentId =>
+      $composableBuilder(column: $table.paymentId, builder: (column) => column);
+
+  GeneratedColumn<String> get signature =>
+      $composableBuilder(column: $table.signature, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get intentPayloadJson => $composableBuilder(
+    column: $table.intentPayloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get verifyAttempts => $composableBuilder(
+    column: $table.verifyAttempts,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$GatewayPaymentSessionsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GatewayPaymentSessionsLocalTable,
+          GatewayPaymentSessionsLocalData,
+          $$GatewayPaymentSessionsLocalTableFilterComposer,
+          $$GatewayPaymentSessionsLocalTableOrderingComposer,
+          $$GatewayPaymentSessionsLocalTableAnnotationComposer,
+          $$GatewayPaymentSessionsLocalTableCreateCompanionBuilder,
+          $$GatewayPaymentSessionsLocalTableUpdateCompanionBuilder,
+          (
+            GatewayPaymentSessionsLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $GatewayPaymentSessionsLocalTable,
+              GatewayPaymentSessionsLocalData
+            >,
+          ),
+          GatewayPaymentSessionsLocalData,
+          PrefetchHooks Function()
+        > {
+  $$GatewayPaymentSessionsLocalTableTableManager(
+    _$AppDatabase db,
+    $GatewayPaymentSessionsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GatewayPaymentSessionsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$GatewayPaymentSessionsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$GatewayPaymentSessionsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> intentId = const Value.absent(),
+                Value<String> razorpayOrderId = const Value.absent(),
+                Value<String?> paymentId = const Value.absent(),
+                Value<String?> signature = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> intentPayloadJson = const Value.absent(),
+                Value<int> verifyAttempts = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GatewayPaymentSessionsLocalCompanion(
+                intentId: intentId,
+                razorpayOrderId: razorpayOrderId,
+                paymentId: paymentId,
+                signature: signature,
+                status: status,
+                intentPayloadJson: intentPayloadJson,
+                verifyAttempts: verifyAttempts,
+                lastRetryAt: lastRetryAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String intentId,
+                required String razorpayOrderId,
+                Value<String?> paymentId = const Value.absent(),
+                Value<String?> signature = const Value.absent(),
+                required String status,
+                required String intentPayloadJson,
+                Value<int> verifyAttempts = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GatewayPaymentSessionsLocalCompanion.insert(
+                intentId: intentId,
+                razorpayOrderId: razorpayOrderId,
+                paymentId: paymentId,
+                signature: signature,
+                status: status,
+                intentPayloadJson: intentPayloadJson,
+                verifyAttempts: verifyAttempts,
+                lastRetryAt: lastRetryAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GatewayPaymentSessionsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GatewayPaymentSessionsLocalTable,
+      GatewayPaymentSessionsLocalData,
+      $$GatewayPaymentSessionsLocalTableFilterComposer,
+      $$GatewayPaymentSessionsLocalTableOrderingComposer,
+      $$GatewayPaymentSessionsLocalTableAnnotationComposer,
+      $$GatewayPaymentSessionsLocalTableCreateCompanionBuilder,
+      $$GatewayPaymentSessionsLocalTableUpdateCompanionBuilder,
+      (
+        GatewayPaymentSessionsLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $GatewayPaymentSessionsLocalTable,
+          GatewayPaymentSessionsLocalData
+        >,
+      ),
+      GatewayPaymentSessionsLocalData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -41015,4 +41915,10 @@ class $AppDatabaseManager {
       );
   $$ExpensesLocalTableTableManager get expensesLocal =>
       $$ExpensesLocalTableTableManager(_db, _db.expensesLocal);
+  $$GatewayPaymentSessionsLocalTableTableManager
+  get gatewayPaymentSessionsLocal =>
+      $$GatewayPaymentSessionsLocalTableTableManager(
+        _db,
+        _db.gatewayPaymentSessionsLocal,
+      );
 }

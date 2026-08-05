@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-const _panelBlue = Color(0xFF42A5F5);
+const _panelBlue = AppColors.primary;
 const _badgeRed = Color(0xFFE53935);
 
 enum MobileSaleBillingType {

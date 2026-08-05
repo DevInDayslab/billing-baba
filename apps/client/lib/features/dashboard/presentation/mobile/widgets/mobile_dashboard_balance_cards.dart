@@ -34,8 +34,8 @@ class MobileDashboardBalanceCards extends StatelessWidget {
             subtitle: overview.receivablePartyCount == 0
                 ? 'No receivables'
                 : '${overview.receivablePartyCount} parties',
-            backgroundColor: const Color(0xFFE8F5E9),
-            accentColor: const Color(0xFF2E7D32),
+            backgroundColor: AppColors.successSoft,
+            accentColor: AppColors.success,
             icon: Icons.south_west_rounded,
             onTap: onYoullGetTap,
           ),
@@ -48,8 +48,8 @@ class MobileDashboardBalanceCards extends StatelessWidget {
             subtitle: overview.payablePartyCount == 0
                 ? 'No payables'
                 : '${overview.payablePartyCount} parties',
-            backgroundColor: const Color(0xFFFFEBEE),
-            accentColor: const Color(0xFFC62828),
+            backgroundColor: AppColors.dangerSoft,
+            accentColor: AppColors.danger,
             icon: Icons.north_east_rounded,
             onTap: onYoullGiveTap,
           ),

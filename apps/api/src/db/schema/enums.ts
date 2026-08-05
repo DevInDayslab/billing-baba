@@ -139,7 +139,32 @@ export const paymentDirectionEnum = pgEnum('payment_direction', [
 export const paymentSourceEnum = pgEnum('payment_source', [
   'manual',
   'document_finalize',
+  'razorpay_gateway',
 ]);
+
+export const gatewayPaymentIntentTypeEnum = pgEnum('gateway_payment_intent_type', [
+  'payment_in',
+  'payment_out',
+  'sale_invoice',
+  'purchase_bill',
+  'pos',
+  'party_outstanding',
+  'advance',
+]);
+
+export const gatewayPaymentIntentStatusEnum = pgEnum(
+  'gateway_payment_intent_status',
+  [
+    'created',
+    'checkout_open',
+    'callback_received',
+    'verifying',
+    'verified',
+    'failed',
+    'cancelled',
+    'expired',
+  ],
+);
 
 export const shortPaymentHandlingEnum = pgEnum('short_payment_handling', [
   'official_balance',

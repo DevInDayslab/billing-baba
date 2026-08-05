@@ -14,6 +14,7 @@ abstract final class ChartAxisFormatters {
   static final _dayMonth = DateFormat('d MMM');
   static final _weekday = DateFormat('EEE');
   static final _month = DateFormat('MMM');
+  static final _hourTime = DateFormat('ha');
 
   /// Full currency for tooltips, e.g. `₹10,560`.
   static String formatCurrency(double value) => _tooltipCurrency.format(value);
@@ -40,7 +41,7 @@ abstract final class ChartAxisFormatters {
   /// X-axis label text based on the active dashboard period.
   static String formatXAxis(DateTime date, DashboardPeriod period) {
     return switch (period) {
-      DashboardPeriod.today ||
+      DashboardPeriod.today => _hourTime.format(date).toLowerCase(),
       DashboardPeriod.thisWeek => _weekday.format(date),
       DashboardPeriod.thisYear ||
       DashboardPeriod.allTime => _month.format(date),

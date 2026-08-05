@@ -8,7 +8,7 @@ import 'package:billing_baba/features/collaboration/domain/models/permission_act
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
-import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_header.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_app_header.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
@@ -274,7 +274,7 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
       ItemQuickLink(
         label: 'Item Settings',
         icon: Icons.tune_outlined,
-        iconColor: const Color(0xFF5D5FEF),
+        iconColor: AppColors.primary,
         backgroundColor: const Color(0xFFEDE7F6),
         onTap: () => context.push(AppRoutes.itemsSettings),
       ),
@@ -350,18 +350,11 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                MobileHomeHeader(
+                MobileAppHeader(
                   onBusinessTap: () => context.push(AppRoutes.businessList),
                   onSettingsTap: () => context.push(AppRoutes.settings),
                   onNotificationTap: () =>
                       context.push(AppRoutes.notifications),
-                  onSyncTap: () {
-                    unawaited(
-                      ref
-                          .read(manualSyncVisualStateProvider.notifier)
-                          .syncNow(),
-                    );
-                  },
                 ),
                 Expanded(
                   child: RefreshIndicator(

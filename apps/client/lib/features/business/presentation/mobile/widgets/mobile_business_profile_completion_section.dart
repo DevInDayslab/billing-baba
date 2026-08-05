@@ -10,7 +10,7 @@ class MobileBusinessProfileCompletionSection extends StatelessWidget {
 
   final int percent;
 
-  static const _progressBlue = Color(0xFF42A5F5);
+  static const _progressBlue = AppColors.primary;
 
   @override
   Widget build(BuildContext context) {

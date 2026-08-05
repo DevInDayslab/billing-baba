@@ -29,7 +29,7 @@ export type PartyLedgerEntryRow = {
   referenceType: string | null;
   referenceNumber: string | null;
   paymentDirection: 'received' | 'paid' | null;
-  paymentSource: 'manual' | 'document_finalize' | null;
+  paymentSource: 'manual' | 'document_finalize' | 'razorpay_gateway' | null;
   salesDocumentType: string | null;
   purchaseDocumentType: string | null;
   documentTotal: string | null;
