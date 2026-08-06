@@ -29,6 +29,7 @@ const ENTITY_MODULE_MAP: Record<string, PermissionModule> = {
   contacts: 'party_smart_connect',
   contact_activities: 'party_smart_connect',
   deals: 'party_smart_connect',
+  todos: 'settings',
   stock_levels: 'stock_transfer',
 };
 

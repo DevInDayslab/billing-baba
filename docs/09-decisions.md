@@ -1778,6 +1778,42 @@ Businesses need to collect customer payments online (UPI, cards, net banking) ag
 
 Use for future decisions. Do not remove.
 
+### ADR-025: Dashboard Todos as Offline-First Sync Entity
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-06 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Dashboard todos (personal reminders on Home → Alerts) were stored as JSON blobs in SharedPreferences per business. They did not sync across devices, were excluded from backup, and diverged from the offline-first architecture used by parties, inventory, and CRM entities.
+
+#### Decision
+
+Promote todos to a first-class row-sync entity:
+
+- Extend Postgres `todos` with client fields (`is_pinned`, `category`, `reminder_at`, document link FKs, `attachment_ids`).
+- Register `todos` in the API row-sync registry (`/sync/push`, `/sync/pull`).
+- Add Drift table `todos_local` and client `TodoMasterRepository` + `TodoSync`.
+- Expose REST CRUD at `/api/v1/todos` for hydration fallback only.
+- Migrate legacy `dashboard_tasks_{businessId}` SharedPreferences JSON into Drift on first load, enqueue create mutations, then delete legacy keys.
+
+#### Consequences
+
+- Todos sync automatically with the existing SyncCoordinator (no parallel sync path).
+- Desktop and mobile share the same todo list per business when online.
+- Company-switch warm reads todos from Drift instead of SharedPreferences.
+- Schema migration required on API (`0054_todos_sync_fields.sql`) and client (Drift v27).
+
+#### Alternatives Considered
+
+- **REST-only fetch on load:** Faster to ship but not offline-first; rejected.
+- **Keep SharedPreferences + periodic upload:** Duplicate sync mechanism; rejected.
+
+---
+
 ### ADR-<ID>: <Title>
 
 | Field | Value |

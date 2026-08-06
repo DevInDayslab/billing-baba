@@ -29,6 +29,7 @@ import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart
 import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
 import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
+import 'package:billing_baba/features/tasks/data/todo_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
@@ -68,6 +69,7 @@ class SyncCoordinator {
     this._expenseSync,
     this._expenseCategorySync,
     this._stockLevelSync,
+    this._todoSync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
     this.brandEntityType = 'brands',
@@ -94,6 +96,7 @@ class SyncCoordinator {
     this.expensesEntityType = 'expenses',
     this.expenseCategoriesEntityType = 'expense_categories',
     this.stockLevelsEntityType = 'stock_levels',
+    this.todosEntityType = 'todos',
   }) : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
@@ -124,6 +127,7 @@ class SyncCoordinator {
   final ExpenseSync? _expenseSync;
   final ExpenseCategorySync? _expenseCategorySync;
   final StockLevelSync? _stockLevelSync;
+  final TodoSync? _todoSync;
   final Uuid _uuid;
   final String categoryEntityType;
   final String brandEntityType;
@@ -150,6 +154,7 @@ class SyncCoordinator {
   final String expensesEntityType;
   final String expenseCategoriesEntityType;
   final String stockLevelsEntityType;
+  final String todosEntityType;
 
   String get _pullEntityTypes =>
       '$categoryEntityType,$brandEntityType,$partyEntityType,$itemEntityType,'
@@ -160,7 +165,7 @@ class SyncCoordinator {
       '$leadActivitiesEntityType,$contactsEntityType,'
       '$contactActivitiesEntityType,$dealsEntityType,'
       '$expensesEntityType,$expenseCategoriesEntityType,'
-      '$stockLevelsEntityType';
+      '$stockLevelsEntityType,$todosEntityType';
 
   bool _isRowEntity(String? type) =>
       type == categoryEntityType ||
@@ -186,7 +191,8 @@ class SyncCoordinator {
       type == contactActivitiesEntityType ||
       type == dealsEntityType ||
       type == expensesEntityType ||
-      type == expenseCategoriesEntityType;
+      type == expenseCategoriesEntityType ||
+      type == todosEntityType;
 
   bool _busy = false;
   int _lastMaxPushMutations = 100;
@@ -999,6 +1005,17 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'todos':
+        await _todoSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       default:
         // Unknown entity — ignore until that entity ships.
         break;
@@ -1171,6 +1188,13 @@ class SyncCoordinator {
           updatedAt: updatedAt,
           deviceId: deviceId,
         );
+      case 'todos':
+        await _todoSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
       default:
         break;
     }
@@ -1287,6 +1311,7 @@ class SyncCoordinator {
     'sales_document_lines',
     'purchase_documents',
     'purchase_document_lines',
+    'todos',
   };
 
   /// Exposed for unit tests verifying inventory child-entity push coverage.

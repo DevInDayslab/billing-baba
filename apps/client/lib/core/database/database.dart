@@ -23,6 +23,7 @@ import 'package:billing_baba/core/database/tables/purchase_document_tables.dart'
 import 'package:billing_baba/core/database/tables/sales_document_tables.dart';
 import 'package:billing_baba/core/database/tables/sync_queue_table.dart';
 import 'package:billing_baba/core/database/tables/tax_rates_table.dart';
+import 'package:billing_baba/core/database/tables/todos_table.dart';
 import 'package:billing_baba/core/database/tables/unit_definitions_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
@@ -65,13 +66,14 @@ part 'database.g.dart';
     ExpensesLocal,
     GatewayPaymentSessionsLocal,
     NotificationsLocal,
+    TodosLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Drift schema version — keep in sync with [schemaVersion].
-  static const currentSchemaVersion = 26;
+  static const currentSchemaVersion = 27;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -264,6 +266,12 @@ class AppDatabase extends _$AppDatabase {
           'CREATE INDEX IF NOT EXISTS idx_notifications_local_business_read ON notifications_local (business_id, read)',
         );
       }
+      if (from < 27) {
+        await m.createTable(todosLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_todos_local_business_id ON todos_local (business_id)',
+        );
+      }
     },
   );
 
@@ -297,6 +305,7 @@ class AppDatabase extends _$AppDatabase {
       'leads',
       'contacts',
       'deals',
+      'todos_local',
     ];
     for (final table in tables) {
       await m.database.customStatement(

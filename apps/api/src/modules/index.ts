@@ -28,6 +28,7 @@ import { createSalesModule } from './sales';
 import { settingsModule } from './settings';
 import { createStorageModule } from './storage';
 import { createSubscriptionModule } from './subscription';
+import { createTodoRoutes } from './todos/todo.routes';
 import { syncModule } from './sync';
 import { gstinModule } from './gstin';
 
@@ -79,6 +80,7 @@ export async function registerModules(
       await api.register(createNotificationsModule(config), {
         prefix: '/notifications',
       });
+      await api.register(createTodoRoutes(), { prefix: '/todos' });
       await api.register(createSubscriptionModule(config), {
         prefix: '/subscription',
       });

@@ -4,7 +4,7 @@ import 'package:billing_baba/core/database/database.dart' show AppDatabase;
 const kBibaFormatVersion = 1;
 
 /// Drift schema generation included in backups (see [AppDatabase.schemaVersion]).
-const kBibaSchemaVersion = 16;
+const kBibaSchemaVersion = 17;
 
 const kBibaDatabaseEntry = 'database.sqlite';
 const kBibaManifestEntry = 'manifest.json';
@@ -31,6 +31,7 @@ const kBibaTablesIncluded = [
   'purchase_document_lines_local',
   'local_document_counters',
   'sync_queue',
+  'todos_local',
 ];
 
 /// Preference keys restored with business-scoped backup (never auth tokens).

@@ -34,6 +34,8 @@ abstract final class ApiEndpoints {
       '/api/v1/crm/contacts/$id/activities';
   static const crmDeals = '/api/v1/crm/deals';
   static String crmDeal(String id) => '/api/v1/crm/deals/$id';
+  static const todos = '/api/v1/todos';
+  static String todo(String id) => '/api/v1/todos/$id';
   static const sync = '/api/v1/sync';
   static const syncDevices = '$sync/devices';
   static const syncStatus = '$sync/status';

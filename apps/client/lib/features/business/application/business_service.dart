@@ -10,6 +10,7 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/business_local_data_cleanup.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
@@ -22,7 +23,6 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
-import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
@@ -262,7 +262,6 @@ class BusinessService {
         stockItemCount: 0,
         createdAt: nowIso,
         updatedAt: nowIso,
-        address: null,
       ),
     );
     BusinessOpenDebugLog.step('offline-dev', 'seeded default godown');
@@ -733,7 +732,12 @@ class BusinessList extends _$BusinessList {
       SyncPauseGate.instance.resume();
     }
 
-    await ensureSyncEngineStarted(ref);
+    await ensureSyncEngineStarted(ref, runInitialSync: false);
+    unawaited(
+      ref.read(commandAwareSyncEngineProvider.future).then((engine) {
+        if (engine.isRunning) unawaited(engine.syncNow());
+      }),
+    );
   }
 
   void _ensureOpenRefMounted(String step) {

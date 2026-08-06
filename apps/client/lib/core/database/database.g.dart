@@ -28879,6 +28879,1247 @@ class NotificationsLocalCompanion
   }
 }
 
+class $TodosLocalTable extends TodosLocal
+    with TableInfo<$TodosLocalTable, TodoTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TodosLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('medium'),
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partyIdMeta = const VerificationMeta(
+    'partyId',
+  );
+  @override
+  late final GeneratedColumn<String> partyId = GeneratedColumn<String>(
+    'party_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dueDateMeta = const VerificationMeta(
+    'dueDate',
+  );
+  @override
+  late final GeneratedColumn<String> dueDate = GeneratedColumn<String>(
+    'due_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reminderAtMeta = const VerificationMeta(
+    'reminderAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> reminderAt = GeneratedColumn<DateTime>(
+    'reminder_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isCompletedMeta = const VerificationMeta(
+    'isCompleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
+    'is_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_completed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isPinnedMeta = const VerificationMeta(
+    'isPinned',
+  );
+  @override
+  late final GeneratedColumn<bool> isPinned = GeneratedColumn<bool>(
+    'is_pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_pinned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _linkedInvoiceIdMeta = const VerificationMeta(
+    'linkedInvoiceId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedInvoiceId = GeneratedColumn<String>(
+    'linked_invoice_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _linkedPurchaseIdMeta = const VerificationMeta(
+    'linkedPurchaseId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedPurchaseId = GeneratedColumn<String>(
+    'linked_purchase_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _linkedProductIdMeta = const VerificationMeta(
+    'linkedProductId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedProductId = GeneratedColumn<String>(
+    'linked_product_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _attachmentIdsJsonMeta = const VerificationMeta(
+    'attachmentIdsJson',
+  );
+  @override
+  late final GeneratedColumn<String> attachmentIdsJson =
+      GeneratedColumn<String>(
+        'attachment_ids_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    title,
+    description,
+    priority,
+    category,
+    partyId,
+    dueDate,
+    reminderAt,
+    isCompleted,
+    completedAt,
+    isPinned,
+    linkedInvoiceId,
+    linkedPurchaseId,
+    linkedProductId,
+    attachmentIdsJson,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'todos_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TodoTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    if (data.containsKey('party_id')) {
+      context.handle(
+        _partyIdMeta,
+        partyId.isAcceptableOrUnknown(data['party_id']!, _partyIdMeta),
+      );
+    }
+    if (data.containsKey('due_date')) {
+      context.handle(
+        _dueDateMeta,
+        dueDate.isAcceptableOrUnknown(data['due_date']!, _dueDateMeta),
+      );
+    }
+    if (data.containsKey('reminder_at')) {
+      context.handle(
+        _reminderAtMeta,
+        reminderAt.isAcceptableOrUnknown(data['reminder_at']!, _reminderAtMeta),
+      );
+    }
+    if (data.containsKey('is_completed')) {
+      context.handle(
+        _isCompletedMeta,
+        isCompleted.isAcceptableOrUnknown(
+          data['is_completed']!,
+          _isCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_pinned')) {
+      context.handle(
+        _isPinnedMeta,
+        isPinned.isAcceptableOrUnknown(data['is_pinned']!, _isPinnedMeta),
+      );
+    }
+    if (data.containsKey('linked_invoice_id')) {
+      context.handle(
+        _linkedInvoiceIdMeta,
+        linkedInvoiceId.isAcceptableOrUnknown(
+          data['linked_invoice_id']!,
+          _linkedInvoiceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('linked_purchase_id')) {
+      context.handle(
+        _linkedPurchaseIdMeta,
+        linkedPurchaseId.isAcceptableOrUnknown(
+          data['linked_purchase_id']!,
+          _linkedPurchaseIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('linked_product_id')) {
+      context.handle(
+        _linkedProductIdMeta,
+        linkedProductId.isAcceptableOrUnknown(
+          data['linked_product_id']!,
+          _linkedProductIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('attachment_ids_json')) {
+      context.handle(
+        _attachmentIdsJsonMeta,
+        attachmentIdsJson.isAcceptableOrUnknown(
+          data['attachment_ids_json']!,
+          _attachmentIdsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TodoTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TodoTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
+      partyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_id'],
+      ),
+      dueDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}due_date'],
+      ),
+      reminderAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}reminder_at'],
+      ),
+      isCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_completed'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      isPinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_pinned'],
+      )!,
+      linkedInvoiceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_invoice_id'],
+      ),
+      linkedPurchaseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_purchase_id'],
+      ),
+      linkedProductId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_product_id'],
+      ),
+      attachmentIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attachment_ids_json'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $TodosLocalTable createAlias(String alias) {
+    return $TodosLocalTable(attachedDatabase, alias);
+  }
+}
+
+class TodoTableData extends DataClass implements Insertable<TodoTableData> {
+  final String id;
+  final String businessId;
+  final String title;
+  final String? description;
+  final String priority;
+  final String? category;
+  final String? partyId;
+  final String? dueDate;
+  final DateTime? reminderAt;
+  final bool isCompleted;
+  final DateTime? completedAt;
+  final bool isPinned;
+  final String? linkedInvoiceId;
+  final String? linkedPurchaseId;
+  final String? linkedProductId;
+  final String attachmentIdsJson;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const TodoTableData({
+    required this.id,
+    required this.businessId,
+    required this.title,
+    this.description,
+    required this.priority,
+    this.category,
+    this.partyId,
+    this.dueDate,
+    this.reminderAt,
+    required this.isCompleted,
+    this.completedAt,
+    required this.isPinned,
+    this.linkedInvoiceId,
+    this.linkedPurchaseId,
+    this.linkedProductId,
+    required this.attachmentIdsJson,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['priority'] = Variable<String>(priority);
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
+    if (!nullToAbsent || partyId != null) {
+      map['party_id'] = Variable<String>(partyId);
+    }
+    if (!nullToAbsent || dueDate != null) {
+      map['due_date'] = Variable<String>(dueDate);
+    }
+    if (!nullToAbsent || reminderAt != null) {
+      map['reminder_at'] = Variable<DateTime>(reminderAt);
+    }
+    map['is_completed'] = Variable<bool>(isCompleted);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['is_pinned'] = Variable<bool>(isPinned);
+    if (!nullToAbsent || linkedInvoiceId != null) {
+      map['linked_invoice_id'] = Variable<String>(linkedInvoiceId);
+    }
+    if (!nullToAbsent || linkedPurchaseId != null) {
+      map['linked_purchase_id'] = Variable<String>(linkedPurchaseId);
+    }
+    if (!nullToAbsent || linkedProductId != null) {
+      map['linked_product_id'] = Variable<String>(linkedProductId);
+    }
+    map['attachment_ids_json'] = Variable<String>(attachmentIdsJson);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  TodosLocalCompanion toCompanion(bool nullToAbsent) {
+    return TodosLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      priority: Value(priority),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
+      partyId: partyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyId),
+      dueDate: dueDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDate),
+      reminderAt: reminderAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderAt),
+      isCompleted: Value(isCompleted),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      isPinned: Value(isPinned),
+      linkedInvoiceId: linkedInvoiceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedInvoiceId),
+      linkedPurchaseId: linkedPurchaseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedPurchaseId),
+      linkedProductId: linkedProductId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedProductId),
+      attachmentIdsJson: Value(attachmentIdsJson),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory TodoTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TodoTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      priority: serializer.fromJson<String>(json['priority']),
+      category: serializer.fromJson<String?>(json['category']),
+      partyId: serializer.fromJson<String?>(json['partyId']),
+      dueDate: serializer.fromJson<String?>(json['dueDate']),
+      reminderAt: serializer.fromJson<DateTime?>(json['reminderAt']),
+      isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      isPinned: serializer.fromJson<bool>(json['isPinned']),
+      linkedInvoiceId: serializer.fromJson<String?>(json['linkedInvoiceId']),
+      linkedPurchaseId: serializer.fromJson<String?>(json['linkedPurchaseId']),
+      linkedProductId: serializer.fromJson<String?>(json['linkedProductId']),
+      attachmentIdsJson: serializer.fromJson<String>(json['attachmentIdsJson']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'priority': serializer.toJson<String>(priority),
+      'category': serializer.toJson<String?>(category),
+      'partyId': serializer.toJson<String?>(partyId),
+      'dueDate': serializer.toJson<String?>(dueDate),
+      'reminderAt': serializer.toJson<DateTime?>(reminderAt),
+      'isCompleted': serializer.toJson<bool>(isCompleted),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'isPinned': serializer.toJson<bool>(isPinned),
+      'linkedInvoiceId': serializer.toJson<String?>(linkedInvoiceId),
+      'linkedPurchaseId': serializer.toJson<String?>(linkedPurchaseId),
+      'linkedProductId': serializer.toJson<String?>(linkedProductId),
+      'attachmentIdsJson': serializer.toJson<String>(attachmentIdsJson),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  TodoTableData copyWith({
+    String? id,
+    String? businessId,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    String? priority,
+    Value<String?> category = const Value.absent(),
+    Value<String?> partyId = const Value.absent(),
+    Value<String?> dueDate = const Value.absent(),
+    Value<DateTime?> reminderAt = const Value.absent(),
+    bool? isCompleted,
+    Value<DateTime?> completedAt = const Value.absent(),
+    bool? isPinned,
+    Value<String?> linkedInvoiceId = const Value.absent(),
+    Value<String?> linkedPurchaseId = const Value.absent(),
+    Value<String?> linkedProductId = const Value.absent(),
+    String? attachmentIdsJson,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => TodoTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    priority: priority ?? this.priority,
+    category: category.present ? category.value : this.category,
+    partyId: partyId.present ? partyId.value : this.partyId,
+    dueDate: dueDate.present ? dueDate.value : this.dueDate,
+    reminderAt: reminderAt.present ? reminderAt.value : this.reminderAt,
+    isCompleted: isCompleted ?? this.isCompleted,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    isPinned: isPinned ?? this.isPinned,
+    linkedInvoiceId: linkedInvoiceId.present
+        ? linkedInvoiceId.value
+        : this.linkedInvoiceId,
+    linkedPurchaseId: linkedPurchaseId.present
+        ? linkedPurchaseId.value
+        : this.linkedPurchaseId,
+    linkedProductId: linkedProductId.present
+        ? linkedProductId.value
+        : this.linkedProductId,
+    attachmentIdsJson: attachmentIdsJson ?? this.attachmentIdsJson,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  TodoTableData copyWithCompanion(TodosLocalCompanion data) {
+    return TodoTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      category: data.category.present ? data.category.value : this.category,
+      partyId: data.partyId.present ? data.partyId.value : this.partyId,
+      dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
+      reminderAt: data.reminderAt.present
+          ? data.reminderAt.value
+          : this.reminderAt,
+      isCompleted: data.isCompleted.present
+          ? data.isCompleted.value
+          : this.isCompleted,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      isPinned: data.isPinned.present ? data.isPinned.value : this.isPinned,
+      linkedInvoiceId: data.linkedInvoiceId.present
+          ? data.linkedInvoiceId.value
+          : this.linkedInvoiceId,
+      linkedPurchaseId: data.linkedPurchaseId.present
+          ? data.linkedPurchaseId.value
+          : this.linkedPurchaseId,
+      linkedProductId: data.linkedProductId.present
+          ? data.linkedProductId.value
+          : this.linkedProductId,
+      attachmentIdsJson: data.attachmentIdsJson.present
+          ? data.attachmentIdsJson.value
+          : this.attachmentIdsJson,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TodoTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('priority: $priority, ')
+          ..write('category: $category, ')
+          ..write('partyId: $partyId, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('reminderAt: $reminderAt, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('isPinned: $isPinned, ')
+          ..write('linkedInvoiceId: $linkedInvoiceId, ')
+          ..write('linkedPurchaseId: $linkedPurchaseId, ')
+          ..write('linkedProductId: $linkedProductId, ')
+          ..write('attachmentIdsJson: $attachmentIdsJson, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    title,
+    description,
+    priority,
+    category,
+    partyId,
+    dueDate,
+    reminderAt,
+    isCompleted,
+    completedAt,
+    isPinned,
+    linkedInvoiceId,
+    linkedPurchaseId,
+    linkedProductId,
+    attachmentIdsJson,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TodoTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.priority == this.priority &&
+          other.category == this.category &&
+          other.partyId == this.partyId &&
+          other.dueDate == this.dueDate &&
+          other.reminderAt == this.reminderAt &&
+          other.isCompleted == this.isCompleted &&
+          other.completedAt == this.completedAt &&
+          other.isPinned == this.isPinned &&
+          other.linkedInvoiceId == this.linkedInvoiceId &&
+          other.linkedPurchaseId == this.linkedPurchaseId &&
+          other.linkedProductId == this.linkedProductId &&
+          other.attachmentIdsJson == this.attachmentIdsJson &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class TodosLocalCompanion extends UpdateCompanion<TodoTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<String> priority;
+  final Value<String?> category;
+  final Value<String?> partyId;
+  final Value<String?> dueDate;
+  final Value<DateTime?> reminderAt;
+  final Value<bool> isCompleted;
+  final Value<DateTime?> completedAt;
+  final Value<bool> isPinned;
+  final Value<String?> linkedInvoiceId;
+  final Value<String?> linkedPurchaseId;
+  final Value<String?> linkedProductId;
+  final Value<String> attachmentIdsJson;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const TodosLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.category = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.reminderAt = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.isPinned = const Value.absent(),
+    this.linkedInvoiceId = const Value.absent(),
+    this.linkedPurchaseId = const Value.absent(),
+    this.linkedProductId = const Value.absent(),
+    this.attachmentIdsJson = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TodosLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String title,
+    this.description = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.category = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.reminderAt = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.isPinned = const Value.absent(),
+    this.linkedInvoiceId = const Value.absent(),
+    this.linkedPurchaseId = const Value.absent(),
+    this.linkedProductId = const Value.absent(),
+    this.attachmentIdsJson = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       title = Value(title),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TodoTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? priority,
+    Expression<String>? category,
+    Expression<String>? partyId,
+    Expression<String>? dueDate,
+    Expression<DateTime>? reminderAt,
+    Expression<bool>? isCompleted,
+    Expression<DateTime>? completedAt,
+    Expression<bool>? isPinned,
+    Expression<String>? linkedInvoiceId,
+    Expression<String>? linkedPurchaseId,
+    Expression<String>? linkedProductId,
+    Expression<String>? attachmentIdsJson,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (priority != null) 'priority': priority,
+      if (category != null) 'category': category,
+      if (partyId != null) 'party_id': partyId,
+      if (dueDate != null) 'due_date': dueDate,
+      if (reminderAt != null) 'reminder_at': reminderAt,
+      if (isCompleted != null) 'is_completed': isCompleted,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (isPinned != null) 'is_pinned': isPinned,
+      if (linkedInvoiceId != null) 'linked_invoice_id': linkedInvoiceId,
+      if (linkedPurchaseId != null) 'linked_purchase_id': linkedPurchaseId,
+      if (linkedProductId != null) 'linked_product_id': linkedProductId,
+      if (attachmentIdsJson != null) 'attachment_ids_json': attachmentIdsJson,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TodosLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<String>? priority,
+    Value<String?>? category,
+    Value<String?>? partyId,
+    Value<String?>? dueDate,
+    Value<DateTime?>? reminderAt,
+    Value<bool>? isCompleted,
+    Value<DateTime?>? completedAt,
+    Value<bool>? isPinned,
+    Value<String?>? linkedInvoiceId,
+    Value<String?>? linkedPurchaseId,
+    Value<String?>? linkedProductId,
+    Value<String>? attachmentIdsJson,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return TodosLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      priority: priority ?? this.priority,
+      category: category ?? this.category,
+      partyId: partyId ?? this.partyId,
+      dueDate: dueDate ?? this.dueDate,
+      reminderAt: reminderAt ?? this.reminderAt,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
+      isPinned: isPinned ?? this.isPinned,
+      linkedInvoiceId: linkedInvoiceId ?? this.linkedInvoiceId,
+      linkedPurchaseId: linkedPurchaseId ?? this.linkedPurchaseId,
+      linkedProductId: linkedProductId ?? this.linkedProductId,
+      attachmentIdsJson: attachmentIdsJson ?? this.attachmentIdsJson,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (partyId.present) {
+      map['party_id'] = Variable<String>(partyId.value);
+    }
+    if (dueDate.present) {
+      map['due_date'] = Variable<String>(dueDate.value);
+    }
+    if (reminderAt.present) {
+      map['reminder_at'] = Variable<DateTime>(reminderAt.value);
+    }
+    if (isCompleted.present) {
+      map['is_completed'] = Variable<bool>(isCompleted.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (isPinned.present) {
+      map['is_pinned'] = Variable<bool>(isPinned.value);
+    }
+    if (linkedInvoiceId.present) {
+      map['linked_invoice_id'] = Variable<String>(linkedInvoiceId.value);
+    }
+    if (linkedPurchaseId.present) {
+      map['linked_purchase_id'] = Variable<String>(linkedPurchaseId.value);
+    }
+    if (linkedProductId.present) {
+      map['linked_product_id'] = Variable<String>(linkedProductId.value);
+    }
+    if (attachmentIdsJson.present) {
+      map['attachment_ids_json'] = Variable<String>(attachmentIdsJson.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TodosLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('priority: $priority, ')
+          ..write('category: $category, ')
+          ..write('partyId: $partyId, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('reminderAt: $reminderAt, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('isPinned: $isPinned, ')
+          ..write('linkedInvoiceId: $linkedInvoiceId, ')
+          ..write('linkedPurchaseId: $linkedPurchaseId, ')
+          ..write('linkedProductId: $linkedProductId, ')
+          ..write('attachmentIdsJson: $attachmentIdsJson, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -28936,6 +30177,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $GatewayPaymentSessionsLocalTable(this);
   late final $NotificationsLocalTable notificationsLocal =
       $NotificationsLocalTable(this);
+  late final $TodosLocalTable todosLocal = $TodosLocalTable(this);
   late final Index idxSyncQueueStatus = Index(
     'idx_sync_queue_status',
     'CREATE INDEX idx_sync_queue_status ON sync_queue (status)',
@@ -29010,6 +30252,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     expensesLocal,
     gatewayPaymentSessionsLocal,
     notificationsLocal,
+    todosLocal,
     idxSyncQueueStatus,
     idxSyncQueueBusinessId,
     idxSyncQueueStatusBusinessId,
@@ -42847,6 +44090,549 @@ typedef $$NotificationsLocalTableProcessedTableManager =
       NotificationTableData,
       PrefetchHooks Function()
     >;
+typedef $$TodosLocalTableCreateCompanionBuilder =
+    TodosLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String title,
+      Value<String?> description,
+      Value<String> priority,
+      Value<String?> category,
+      Value<String?> partyId,
+      Value<String?> dueDate,
+      Value<DateTime?> reminderAt,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<bool> isPinned,
+      Value<String?> linkedInvoiceId,
+      Value<String?> linkedPurchaseId,
+      Value<String?> linkedProductId,
+      Value<String> attachmentIdsJson,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$TodosLocalTableUpdateCompanionBuilder =
+    TodosLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> title,
+      Value<String?> description,
+      Value<String> priority,
+      Value<String?> category,
+      Value<String?> partyId,
+      Value<String?> dueDate,
+      Value<DateTime?> reminderAt,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<bool> isPinned,
+      Value<String?> linkedInvoiceId,
+      Value<String?> linkedPurchaseId,
+      Value<String?> linkedProductId,
+      Value<String> attachmentIdsJson,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$TodosLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $TodosLocalTable> {
+  $$TodosLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get reminderAt => $composableBuilder(
+    column: $table.reminderAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedInvoiceId => $composableBuilder(
+    column: $table.linkedInvoiceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedPurchaseId => $composableBuilder(
+    column: $table.linkedPurchaseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedProductId => $composableBuilder(
+    column: $table.linkedProductId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attachmentIdsJson => $composableBuilder(
+    column: $table.attachmentIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TodosLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $TodosLocalTable> {
+  $$TodosLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get reminderAt => $composableBuilder(
+    column: $table.reminderAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedInvoiceId => $composableBuilder(
+    column: $table.linkedInvoiceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedPurchaseId => $composableBuilder(
+    column: $table.linkedPurchaseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedProductId => $composableBuilder(
+    column: $table.linkedProductId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get attachmentIdsJson => $composableBuilder(
+    column: $table.attachmentIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TodosLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TodosLocalTable> {
+  $$TodosLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get partyId =>
+      $composableBuilder(column: $table.partyId, builder: (column) => column);
+
+  GeneratedColumn<String> get dueDate =>
+      $composableBuilder(column: $table.dueDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get reminderAt => $composableBuilder(
+    column: $table.reminderAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isPinned =>
+      $composableBuilder(column: $table.isPinned, builder: (column) => column);
+
+  GeneratedColumn<String> get linkedInvoiceId => $composableBuilder(
+    column: $table.linkedInvoiceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get linkedPurchaseId => $composableBuilder(
+    column: $table.linkedPurchaseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get linkedProductId => $composableBuilder(
+    column: $table.linkedProductId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get attachmentIdsJson => $composableBuilder(
+    column: $table.attachmentIdsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$TodosLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TodosLocalTable,
+          TodoTableData,
+          $$TodosLocalTableFilterComposer,
+          $$TodosLocalTableOrderingComposer,
+          $$TodosLocalTableAnnotationComposer,
+          $$TodosLocalTableCreateCompanionBuilder,
+          $$TodosLocalTableUpdateCompanionBuilder,
+          (
+            TodoTableData,
+            BaseReferences<_$AppDatabase, $TodosLocalTable, TodoTableData>,
+          ),
+          TodoTableData,
+          PrefetchHooks Function()
+        > {
+  $$TodosLocalTableTableManager(_$AppDatabase db, $TodosLocalTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TodosLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TodosLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TodosLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+                Value<String?> partyId = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<DateTime?> reminderAt = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
+                Value<String?> linkedInvoiceId = const Value.absent(),
+                Value<String?> linkedPurchaseId = const Value.absent(),
+                Value<String?> linkedProductId = const Value.absent(),
+                Value<String> attachmentIdsJson = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TodosLocalCompanion(
+                id: id,
+                businessId: businessId,
+                title: title,
+                description: description,
+                priority: priority,
+                category: category,
+                partyId: partyId,
+                dueDate: dueDate,
+                reminderAt: reminderAt,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                isPinned: isPinned,
+                linkedInvoiceId: linkedInvoiceId,
+                linkedPurchaseId: linkedPurchaseId,
+                linkedProductId: linkedProductId,
+                attachmentIdsJson: attachmentIdsJson,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+                Value<String?> partyId = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<DateTime?> reminderAt = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
+                Value<String?> linkedInvoiceId = const Value.absent(),
+                Value<String?> linkedPurchaseId = const Value.absent(),
+                Value<String?> linkedProductId = const Value.absent(),
+                Value<String> attachmentIdsJson = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TodosLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                title: title,
+                description: description,
+                priority: priority,
+                category: category,
+                partyId: partyId,
+                dueDate: dueDate,
+                reminderAt: reminderAt,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                isPinned: isPinned,
+                linkedInvoiceId: linkedInvoiceId,
+                linkedPurchaseId: linkedPurchaseId,
+                linkedProductId: linkedProductId,
+                attachmentIdsJson: attachmentIdsJson,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TodosLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TodosLocalTable,
+      TodoTableData,
+      $$TodosLocalTableFilterComposer,
+      $$TodosLocalTableOrderingComposer,
+      $$TodosLocalTableAnnotationComposer,
+      $$TodosLocalTableCreateCompanionBuilder,
+      $$TodosLocalTableUpdateCompanionBuilder,
+      (
+        TodoTableData,
+        BaseReferences<_$AppDatabase, $TodosLocalTable, TodoTableData>,
+      ),
+      TodoTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -42937,4 +44723,6 @@ class $AppDatabaseManager {
       );
   $$NotificationsLocalTableTableManager get notificationsLocal =>
       $$NotificationsLocalTableTableManager(_db, _db.notificationsLocal);
+  $$TodosLocalTableTableManager get todosLocal =>
+      $$TodosLocalTableTableManager(_db, _db.todosLocal);
 }

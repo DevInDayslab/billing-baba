@@ -23,6 +23,7 @@ import {
   purchaseDocumentLines,
   purchaseDocuments,
 } from '../../../db/schema/purchases/tables';
+import { todos } from '../../../db/schema/notifications/tables';
 import {
   salesDocumentLines,
   salesDocuments,
@@ -271,6 +272,26 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'amount',
       'expectedCloseDate',
       'description',
+    ],
+  }),
+  todos: defineEntity({
+    entityType: 'todos',
+    table: todos,
+    allowedColumns: [
+      'title',
+      'description',
+      'priority',
+      'category',
+      'partyId',
+      'dueDate',
+      'reminderAt',
+      'isCompleted',
+      'completedAt',
+      'isPinned',
+      'linkedInvoiceId',
+      'linkedPurchaseId',
+      'linkedProductId',
+      'attachmentIds',
     ],
   }),
   expense_categories: defineEntity({

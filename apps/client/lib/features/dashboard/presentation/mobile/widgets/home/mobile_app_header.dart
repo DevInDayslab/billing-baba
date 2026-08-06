@@ -123,56 +123,79 @@ class MobileAppHeader extends ConsumerWidget {
           ),
           const SizedBox(height: 2),
           Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.sync_rounded,
-                  size: 11,
-                  color: AppColors.textSecondary.withValues(alpha: 0.65),
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    _syncLabel(sync, manualState),
-                    style: AppTypography.inter(
-                      fontSize: 10.5,
-                      color: AppColors.textSecondary.withValues(alpha: 0.85),
-                      height: 1.2,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: manualState == ManualSyncVisualState.syncing
+                    ? null
+                    : () => ref
+                          .read(manualSyncVisualStateProvider.notifier)
+                          .syncNow(),
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.sync_rounded,
+                        size: 11,
+                        color: AppColors.textSecondary.withValues(alpha: 0.65),
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          _syncLabel(sync, manualState),
+                          style: AppTypography.inter(
+                            fontSize: 10.5,
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.85,
+                            ),
+                            height: 1.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        ' | ',
+                        style: AppTypography.inter(
+                          fontSize: 10.5,
+                          color: AppColors.textSecondary.withValues(
+                            alpha: 0.45,
+                          ),
+                        ),
+                      ),
+                      Flexible(
+                        child: Text(
+                          nowLabel,
+                          style: AppTypography.inter(
+                            fontSize: 10.5,
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.85,
+                            ),
+                            height: 1.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: _onlineColor(sync),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  ' | ',
-                  style: AppTypography.inter(
-                    fontSize: 10.5,
-                    color: AppColors.textSecondary.withValues(alpha: 0.45),
-                  ),
-                ),
-                Flexible(
-                  child: Text(
-                    nowLabel,
-                    style: AppTypography.inter(
-                      fontSize: 10.5,
-                      color: AppColors.textSecondary.withValues(alpha: 0.85),
-                      height: 1.2,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Container(
-                  width: 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: _onlineColor(sync),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],

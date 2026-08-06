@@ -33,6 +33,11 @@ abstract final class StorageKeys {
   static const itemSettings = 'item_settings';
   static const saleInvoiceSettings = 'sale_invoice_settings';
   static const dashboardTasks = 'dashboard_tasks';
+
+  /// Marks one-time migration from [dashboardTasks] SharedPreferences cache.
+  static String dashboardTasksMigratedFor(String businessId) =>
+      'dashboard_tasks_migrated_$businessId';
+
   static const dashboardSideWidgets = 'dashboard_side_widgets';
   static const dashboardSnapshots = 'dashboard_snapshots';
   static const barcodeImportDraft = 'barcode_import_draft';

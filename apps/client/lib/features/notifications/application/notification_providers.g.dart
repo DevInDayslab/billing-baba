@@ -243,7 +243,7 @@ final class NotificationFilterControllerProvider
 }
 
 String _$notificationFilterControllerHash() =>
-    r'd789411f240c7dc4c6306f266ee7ea0bc6e4d41e';
+    r'bb7ab7f19846c8e3313830347505809d2e7953af';
 
 abstract class _$NotificationFilterController
     extends $AsyncNotifier<NotificationFilter> {
