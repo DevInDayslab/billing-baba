@@ -84,8 +84,8 @@ class _TransactionTypeFilterBody extends StatefulWidget {
 
 class _TransactionTypeFilterBodyState
     extends State<_TransactionTypeFilterBody> {
-  static const _applyRed = Color(0xFFE53935);
-  static const _clearBackground = Color(0xFFF5F5F5);
+  static const _applyColor = AppColors.primary;
+  static const _clearBackground = AppColors.chipBackground;
 
   late Set<MobileHomeTransactionFilterType> _selection;
 
@@ -181,7 +181,7 @@ class _TransactionTypeFilterBodyState
               child: FilledButton(
                 onPressed: () => widget.onApply(Set.unmodifiable(_selection)),
                 style: FilledButton.styleFrom(
-                  backgroundColor: _applyRed,
+                  backgroundColor: _applyColor,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(48),
                   shape: RoundedRectangleBorder(
@@ -210,7 +210,7 @@ class _FilterCheckbox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool?> onChanged;
 
-  static const _applyRed = Color(0xFFE53935);
+  static const _activeColor = AppColors.primary;
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +229,7 @@ class _FilterCheckbox extends StatelessWidget {
           color: AppColors.textSecondary.withValues(alpha: 0.45),
           width: 1.5,
         ),
-        activeColor: _applyRed,
+        activeColor: _activeColor,
         checkColor: Colors.white,
       ),
     );

@@ -28,11 +28,14 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/brands_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/categories_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/godowns_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_details_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
 import 'package:billing_baba/features/inventory/presentation/units_screen.dart';
+import 'package:billing_baba/features/notifications/presentation/mobile/notification_settings_screen.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
@@ -64,6 +67,7 @@ import 'package:billing_baba/features/sales/presentation/add_delivery_challan_pa
 import 'package:billing_baba/features/sales/presentation/add_estimate_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_job_work_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_payment_in_page.dart';
+import 'package:billing_baba/features/sales/presentation/add_proforma_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_sale_page.dart';
@@ -262,12 +266,16 @@ GoRouter createAppRouter({
             builder: (context, state) => const CategoriesScreen(),
           ),
           GoRoute(
+            path: AppRoutes.itemsBrands,
+            builder: (context, state) => const BrandsScreen(),
+          ),
+          GoRoute(
             path: AppRoutes.itemsUnits,
             builder: (context, state) => const UnitsScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsGodowns,
-            builder: (context, state) => const ComingSoonPage(title: 'Godowns'),
+            builder: (context, state) => const GodownsScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsStockTransfer,
@@ -297,6 +305,8 @@ GoRouter createAppRouter({
               attachOrderIds: state.extra is List<String>
                   ? state.extra! as List<String>
                   : null,
+              initialPartyId: state.uri.queryParameters['partyId'],
+              initialPartyName: state.uri.queryParameters['partyName'],
             ),
           ),
           GoRoute(
@@ -347,6 +357,18 @@ GoRouter createAppRouter({
             builder: (context, state) => const ProformaInvoicePage(),
           ),
           GoRoute(
+            path: AppRoutes.addProforma,
+            name: 'addProforma',
+            builder: (context, state) => const AddProformaPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editProforma}/:proformaId',
+            name: 'editProforma',
+            builder: (context, state) => AddProformaPage(
+              proformaId: state.pathParameters['proformaId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.salePaymentIn,
             builder: (context, state) => const PaymentInPage(),
           ),
@@ -355,6 +377,8 @@ GoRouter createAppRouter({
             name: 'addPaymentIn',
             builder: (context, state) => AddPaymentInPage(
               paymentId: state.uri.queryParameters['paymentId'],
+              initialPartyId: state.uri.queryParameters['partyId'],
+              initialPartyName: state.uri.queryParameters['partyName'],
             ),
           ),
           GoRoute(
@@ -463,6 +487,8 @@ GoRouter createAppRouter({
             name: 'addPaymentOut',
             builder: (context, state) => AddPaymentOutPage(
               paymentId: state.uri.queryParameters['paymentId'],
+              initialPartyId: state.uri.queryParameters['partyId'],
+              initialPartyName: state.uri.queryParameters['partyName'],
             ),
           ),
           GoRoute(
@@ -666,6 +692,11 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.settingsBackup,
             builder: (context, state) => const BackupRestorePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsNotifications,
+            builder: (context, state) =>
+                const MobileNotificationSettingsScreen(),
           ),
           GoRoute(
             path: AppRoutes.settingsReports,

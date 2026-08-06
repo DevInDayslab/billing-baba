@@ -142,12 +142,6 @@ export class ItemAlternativesService extends InventoryServiceBase {
     sameCategory: RecommendedItem[];
   }> {
     await this.assertBusinessAccess(businessId, accountId);
-    console.log(
-      'getRecommendations called for itemId:',
-      itemId,
-      'businessId:',
-      businessId,
-    );
 
     const [sourceItem] = await this.db
       .select({
@@ -173,7 +167,6 @@ export class ItemAlternativesService extends InventoryServiceBase {
       businessId,
       itemId,
     );
-    console.log('manually_configured count:', manuallyConfigured.length);
     const manuallyConfiguredIds = manuallyConfigured.map(
       (alt) => alt.alternativeItemId,
     );

@@ -50,7 +50,7 @@ final class ItemAlternativesRepositoryProvider
 }
 
 String _$itemAlternativesRepositoryHash() =>
-    r'5fd5eeba1650e74e97befc4b23ae09f97e16f807';
+    r'74164b36541f4de2e0d466df6e160fb815c9c09b';
 
 @ProviderFor(ItemAlternativesNotifier)
 final itemAlternativesProvider = ItemAlternativesNotifierFamily._();

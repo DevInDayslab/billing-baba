@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
@@ -66,9 +67,21 @@ Future<void> _executeCommand(
     case SearchActionKind.showAddItemDialog:
       if (context.mounted) await showAddItemDialog(context);
     case SearchActionKind.showPaymentInDialog:
-      if (context.mounted) unawaited(showPaymentInDialog(context));
+      if (context.mounted) {
+        if (AppPlatform.current.isMobile) {
+          unawaited(context.push(AppRoutes.addPaymentIn));
+        } else {
+          unawaited(showPaymentInDialog(context));
+        }
+      }
     case SearchActionKind.showPaymentOutDialog:
-      if (context.mounted) unawaited(showPaymentOutDialog(context));
+      if (context.mounted) {
+        if (AppPlatform.current.isMobile) {
+          unawaited(context.push(AppRoutes.addPaymentOut));
+        } else {
+          unawaited(showPaymentOutDialog(context));
+        }
+      }
     case SearchActionKind.openReport:
       final intent = item.reportIntent;
       if (intent != null) {

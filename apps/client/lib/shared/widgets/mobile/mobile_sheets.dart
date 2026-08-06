@@ -9,16 +9,23 @@ import 'package:flutter/material.dart';
 Future<void> showMobileQuickActionsSheet({
   required BuildContext context,
   required List<MobileQuickAction> actions,
+  List<MobileQuickActionSection>? sections,
   String title = 'Quick Actions',
 }) {
-  if (actions.isEmpty) return Future.value();
+  final resolvedSections = sections ??
+      (actions.isEmpty
+          ? null
+          : [MobileQuickActionSection(title: '', actions: actions)]);
+  if (resolvedSections == null || resolvedSections.isEmpty) {
+    return Future.value();
+  }
 
   return showMobileBottomSheet<void>(
     context: context,
     title: title,
     builder: (sheetContext) {
-      return _QuickActionsGrid(
-        actions: actions,
+      return _GroupedQuickActionsGrid(
+        sections: resolvedSections,
         onAction: (action) {
           Navigator.of(sheetContext).pop();
           action.onTap();
@@ -200,6 +207,45 @@ class _SheetTitle extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
             ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _GroupedQuickActionsGrid extends StatelessWidget {
+  const _GroupedQuickActionsGrid({
+    required this.sections,
+    required this.onAction,
+  });
+
+  final List<MobileQuickActionSection> sections;
+  final ValueChanged<MobileQuickAction> onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < sections.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.lg),
+          if (sections[i].title.isNotEmpty) ...[
+            Text(
+              sections[i].title,
+              style: AppTypography.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          _QuickActionsGrid(
+            actions: sections[i].actions,
+            onAction: onAction,
           ),
         ],
       ],

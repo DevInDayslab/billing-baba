@@ -1236,9 +1236,20 @@ class Auth extends _$Auth {
         businessId: businessId,
       );
       if (session != null) {
-        _setAuthStatus(_statusForSession(session));
-        state = state.copyWith(session: session);
-        return session;
+        final current = state.session;
+        // Coalesced peer-refresh may return JWT-only session without businesses.
+        final merged = session.businesses.isEmpty && current != null
+            ? session.copyWith(
+                businesses: current.businesses,
+                user: session.user.copyWith(
+                  name: session.user.name ?? current.user.name,
+                  role: session.user.role ?? current.user.role,
+                ),
+              )
+            : session;
+        _setAuthStatus(_statusForSession(merged));
+        state = state.copyWith(session: merged);
+        return merged;
       }
 
       // refreshStoredSession clears secure storage on 401/403 but previously

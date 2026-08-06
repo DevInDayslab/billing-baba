@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/tasks/data/task_repository.dart';
 import 'package:billing_baba/features/tasks/models/task_category.dart';
@@ -6,12 +5,6 @@ import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'tasks_provider.g.dart';
-
-@Riverpod(keepAlive: true)
-Future<TaskRepository> taskRepository(Ref ref) async {
-  final storage = await ref.watch(storageServiceProvider.future);
-  return TaskRepository(storage);
-}
 
 @Riverpod(keepAlive: true)
 class TaskFilterState extends _$TaskFilterState {
@@ -42,12 +35,11 @@ class Tasks extends _$Tasks {
     return repo.load(businessId);
   }
 
-  Future<void> _persist(List<TaskModel> tasks) async {
+  Future<void> _reload() async {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) return;
-
     final repo = await _repository();
-    await repo.save(businessId, tasks);
+    state = AsyncData(await repo.load(businessId));
   }
 
   Future<TaskModel?> add({
@@ -60,16 +52,13 @@ class Tasks extends _$Tasks {
     if (trimmed.isEmpty) return null;
 
     final repo = await _repository();
-    final task = repo.create(
+    final task = await repo.persistCreate(
       title: trimmed,
       description: description,
       category: category,
       reminderAt: reminderAt,
     );
-    final current = state.value ?? [];
-    final next = repo.upsert(current, task);
-    state = AsyncData(next);
-    await _persist(next);
+    await _reload();
     return task;
   }
 
@@ -78,23 +67,15 @@ class Tasks extends _$Tasks {
     if (trimmed.isEmpty) return false;
 
     final repo = await _repository();
-    final updated = task.copyWith(
-      title: trimmed,
-      updatedAt: DateTime.now(),
-    );
-    final current = state.value ?? [];
-    final next = repo.upsert(current, updated);
-    state = AsyncData(next);
-    await _persist(next);
+    await repo.persistUpdate(task.copyWith(title: trimmed));
+    await _reload();
     return true;
   }
 
   Future<void> delete(String id) async {
     final repo = await _repository();
-    final current = state.value ?? [];
-    final next = repo.remove(current, id);
-    state = AsyncData(next);
-    await _persist(next);
+    await repo.persistDelete(id);
+    await _reload();
   }
 
   /// Returns the previous task snapshot for undo, or null if not found.
@@ -113,18 +94,15 @@ class Tasks extends _$Tasks {
     );
 
     final repo = await _repository();
-    final next = repo.upsert(current, updated);
-    state = AsyncData(next);
-    await _persist(next);
+    await repo.persistUpdate(updated);
+    await _reload();
     return previous;
   }
 
   Future<void> restore(TaskModel snapshot) async {
     final repo = await _repository();
-    final current = state.value ?? [];
-    final next = repo.upsert(current, snapshot);
-    state = AsyncData(next);
-    await _persist(next);
+    await repo.persistUpdate(snapshot);
+    await _reload();
   }
 
   /// Returns false when pin cap is reached.
@@ -133,8 +111,10 @@ class Tasks extends _$Tasks {
     final current = state.value ?? [];
     final next = repo.togglePin(current, id);
     if (next == null) return false;
-    state = AsyncData(next);
-    await _persist(next);
+
+    final updated = next.firstWhere((t) => t.id == id);
+    await repo.persistUpdate(updated);
+    await _reload();
     return true;
   }
 
@@ -144,19 +124,18 @@ class Tasks extends _$Tasks {
     if (source == null) return null;
 
     final repo = await _repository();
-    final copy = repo.duplicate(source);
-    final next = repo.upsert(current, copy);
-    state = AsyncData(next);
-    await _persist(next);
-    return copy;
+    final created = await repo.persistDuplicate(source);
+    await _reload();
+    return created;
   }
 
   Future<void> clearCompleted() async {
     final repo = await _repository();
     final current = state.value ?? [];
-    final next = repo.clearCompleted(current);
-    state = AsyncData(next);
-    await _persist(next);
+    for (final task in current.where((t) => t.isCompleted)) {
+      await repo.persistDelete(task.id);
+    }
+    await _reload();
   }
 
   /// Seeds provider state after a business switch without awaiting [.future].

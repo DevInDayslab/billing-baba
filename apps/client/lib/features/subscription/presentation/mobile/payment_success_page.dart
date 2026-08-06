@@ -76,7 +76,9 @@ class _PaymentSuccessPageState extends ConsumerState<PaymentSuccessPage>
       PlanDuration.oneYear => 365,
       PlanDuration.threeYears => 365 * 3,
     };
-    final expiresAt = DateTime.now().add(Duration(days: validityDays));
+    final verifyResult = result.verifyResult;
+    final expiresAt = verifyResult?.expiresAt ??
+        DateTime.now().add(Duration(days: validityDays));
     final formattedExpiry = DateFormat('dd MMMM yyyy').format(expiresAt);
 
     return PopScope(

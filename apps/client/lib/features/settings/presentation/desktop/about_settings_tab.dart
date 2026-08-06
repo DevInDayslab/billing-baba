@@ -29,87 +29,87 @@ class AboutSettingsTab extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.xxl,
-                  vertical: AppSpacing.xxxl,
+                  vertical: AppSpacing.xl,
                 ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.surface.withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: listPanelCardBorder.withValues(alpha: 0.9),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: listPanelCardBorder.withValues(alpha: 0.9),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.textPrimary.withValues(
+                            alpha: 0.035,
+                          ),
+                          blurRadius: 32,
+                          offset: const Offset(0, 12),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.textPrimary.withValues(
-                              alpha: 0.035,
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 48,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/images/logo.png',
+                            height: 120,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+                          Text(
+                            AppConfig.appName,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.inter(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.6,
+                              height: 1.15,
                             ),
-                            blurRadius: 32,
-                            offset: const Offset(0, 12),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            _tagline,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.inter(
+                              fontSize: AppTypography.bodyMediumSize,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 0.15,
+                              height: 1.45,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xxl),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: AppSpacing.sm,
+                            runSpacing: AppSpacing.sm,
+                            children: [
+                              _MetaChip(
+                                label: 'Version $version ($build)',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.xxl),
+                          Text(
+                            '© ${DateTime.now().year} Billing Baba',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.inter(
+                              fontSize: AppTypography.bodySmallSize,
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.7,
+                              ),
+                              letterSpacing: 0.25,
+                            ),
                           ),
                         ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(40),
-                        child: Column(
-                          children: [
-                            const Spacer(),
-                            Image.asset(
-                              'assets/images/logo.png',
-                              height: 160,
-                              fit: BoxFit.contain,
-                            ),
-                            const SizedBox(height: AppSpacing.xxl),
-                            Text(
-                              AppConfig.appName,
-                              textAlign: TextAlign.center,
-                              style: AppTypography.inter(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                                letterSpacing: -0.6,
-                                height: 1.15,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              _tagline,
-                              textAlign: TextAlign.center,
-                              style: AppTypography.inter(
-                                fontSize: AppTypography.bodyMediumSize,
-                                color: AppColors.textSecondary,
-                                letterSpacing: 0.15,
-                                height: 1.45,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.xxxl),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              spacing: AppSpacing.sm,
-                              runSpacing: AppSpacing.sm,
-                              children: [
-                                _MetaChip(
-                                  label: 'Version $version ($build)',
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                            Text(
-                              '© ${DateTime.now().year} Billing Baba',
-                              textAlign: TextAlign.center,
-                              style: AppTypography.inter(
-                                fontSize: AppTypography.bodySmallSize,
-                                color: AppColors.textSecondary.withValues(
-                                  alpha: 0.7,
-                                ),
-                                letterSpacing: 0.25,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ),

@@ -12,7 +12,7 @@ class MobileAddItemPhotoButton extends StatelessWidget {
     super.key,
     this.imageBytes,
     this.size = defaultSize,
-    this.accentColor = const Color(0xFF5D5FEF),
+    this.accentColor = AppColors.primary,
   });
 
   final Uint8List? imageBytes;

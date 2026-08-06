@@ -336,6 +336,63 @@ export class PartyService {
     return { canDelete: false, references };
   }
 
+  async getPartyNotes(
+    businessId: string,
+    accountId: string,
+    partyId: string,
+    role?: UserRole,
+  ): Promise<{ notes: string | null; party: PartyRecord }> {
+    this.assertCanViewNotes(role);
+    const party = await this.getParty(businessId, accountId, partyId, role);
+    return { notes: party.notes ?? null, party };
+  }
+
+  async upsertPartyNotes(
+    businessId: string,
+    accountId: string,
+    userId: string | undefined,
+    partyId: string,
+    notes: string | null | undefined,
+    role?: UserRole,
+  ): Promise<{ notes: string | null; party: PartyRecord }> {
+    this.assertCanEditNotes(role);
+    await this.assertBusinessAccess(businessId, accountId);
+    const existing = await this.repository.findById(businessId, partyId);
+    if (!existing) {
+      throw new AppError('NOT_FOUND', 'Party not found', 404);
+    }
+    const updated = await this.repository.update(businessId, partyId, {
+      notes: notes?.trim() || null,
+      updatedBy: userId ?? null,
+    });
+    if (!updated) {
+      throw new AppError('NOT_FOUND', 'Party not found', 404);
+    }
+    const enriched = await this.enrich(businessId, accountId, updated);
+    const visible = applyHiddenLedgerVisibility(enriched, role);
+    return { notes: visible.notes ?? null, party: visible };
+  }
+
+  private assertCanViewNotes(role?: UserRole): void {
+    if (!role) {
+      throw new AppError(
+        'FORBIDDEN',
+        'You do not have permission to view party notes',
+        403,
+      );
+    }
+  }
+
+  private assertCanEditNotes(role?: UserRole): void {
+    if (role !== 'owner' && role !== 'manager') {
+      throw new AppError(
+        'FORBIDDEN',
+        'You do not have permission to modify party notes',
+        403,
+      );
+    }
+  }
+
   async deleteParty(
     businessId: string,
     accountId: string,

@@ -1,16 +1,20 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
 /// Mobile metrics card mirroring the desktop item detail header.
-class MobileItemDetailMetrics extends StatelessWidget {
+///
+/// Shows the item name and the first four metrics. Secondary fields
+/// (stock value, reserved qty, last update, etc.) sit under a collapsed
+/// "More details" section that toggles open on tap.
+class MobileItemDetailMetrics extends StatefulWidget {
   const MobileItemDetailMetrics({
     required this.item,
     required this.mode,
@@ -28,16 +32,122 @@ class MobileItemDetailMetrics extends StatelessWidget {
   final LatestStockUpdate? latestStockUpdate;
   final String? categoryName;
 
+  @override
+  State<MobileItemDetailMetrics> createState() =>
+      _MobileItemDetailMetricsState();
+}
+
+class _MobileItemDetailMetricsState extends State<MobileItemDetailMetrics> {
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
     decimalDigits: 2,
   );
 
+  var _detailsExpanded = false;
+
+  void _toggleDetails() {
+    setState(() => _detailsExpanded = !_detailsExpanded);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final metrics = stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
+    final item = widget.item;
+    final metrics =
+        widget.stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
+    final isProduct = widget.mode == InventoryDetailHeaderMode.product;
+
+    final primaryMetrics = isProduct
+        ? [
+            _MetricTile(
+              label: 'Sale Price',
+              value: _formatMoney(item.salePrice, suffix: ' (incl)'),
+            ),
+            _MetricTile(
+              label: 'Purchase Price',
+              value: _formatMoney(item.purchasePrice, suffix: ' (excl)'),
+            ),
+            _MetricTile(
+              label: 'Available for Sale',
+              value: formatQuantityValue(metrics.availableForSale),
+            ),
+            _MetricTile(
+              label: 'Stock Quantity',
+              value: formatQuantityValue(metrics.physicalQuantity),
+              valueColor: listQuantityColor(
+                metrics.physicalQuantity,
+                reorderLevel: item.reorderLevel,
+              ),
+            ),
+          ]
+        : [
+            _MetricTile(
+              label: 'Sale Price',
+              value: _formatMoney(item.salePrice, suffix: ' (incl)'),
+            ),
+            _MetricTile(
+              label: 'Purchase Price',
+              value: _formatMoney(item.purchasePrice, suffix: ' (excl)'),
+            ),
+            _MetricTile(
+              label: 'HSN',
+              value: displayOrDash(item.hsnCode),
+            ),
+            _MetricTile(
+              label: 'Category',
+              value: displayOrDash(widget.categoryName),
+            ),
+          ];
+
+    final secondaryMetrics = isProduct
+        ? [
+            _MetricTile(
+              label: 'Stock Value',
+              value: widget.stockSummary?.stockValue != null &&
+                      widget.stockSummary!.stockValue! > 0
+                  ? _currencyFormat.format(widget.stockSummary!.stockValue)
+                  : inventoryEmDash,
+            ),
+            _MetricTile(
+              label: 'Reserved Quantity',
+              value: metrics.reservedQuantity > 0
+                  ? formatQuantityValue(metrics.reservedQuantity)
+                  : inventoryEmDash,
+            ),
+          ]
+        : [
+            _MetricTile(
+              label: 'Unit',
+              value: displayOrDash(item.baseUnitShortName),
+            ),
+          ];
+
+    final secondaryRows = <Widget>[
+      if (isProduct && widget.latestStockUpdate != null) ...[
+        _DetailRow(
+          label: 'Last Stock Update',
+          value: DateFormat('dd MMM yyyy, hh:mm a')
+              .format(widget.latestStockUpdate!.updatedAt.toLocal()),
+        ),
+        _DetailRow(
+          label: 'Updated By',
+          value: displayOrDash(widget.latestStockUpdate!.updatedByName),
+        ),
+        _DetailRow(
+          label: 'Last Change',
+          value: widget.latestStockUpdate!.changeDescription,
+        ),
+      ],
+      if (!isProduct && (item.description?.trim().isNotEmpty ?? false))
+        _DetailRow(
+          label: 'Description',
+          value: item.description!.trim(),
+        ),
+    ];
+
+    final hasSecondary =
+        secondaryMetrics.isNotEmpty || secondaryRows.isNotEmpty;
 
     return MobileCard(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -54,96 +164,39 @@ class MobileItemDetailMetrics extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const Gap(AppSpacing.md),
-          if (mode == InventoryDetailHeaderMode.product) ...[
-            _MetricGrid(
-              children: [
-                _MetricTile(
-                  label: 'Sale Price',
-                  value: _formatMoney(item.salePrice, suffix: ' (incl)'),
-                ),
-                _MetricTile(
-                  label: 'Purchase Price',
-                  value: _formatMoney(item.purchasePrice, suffix: ' (excl)'),
-                ),
-                _MetricTile(
-                  label: 'Available for Sale',
-                  value: formatQuantityValue(metrics.availableForSale),
-                ),
-                _MetricTile(
-                  label: 'Stock Quantity',
-                  value: formatQuantityValue(metrics.physicalQuantity),
-                  valueColor: listQuantityColor(
-                    metrics.physicalQuantity,
-                    reorderLevel: item.reorderLevel,
-                  ),
-                ),
-                _MetricTile(
-                  label: 'Stock Value',
-                  value: stockSummary?.stockValue != null &&
-                          stockSummary!.stockValue! > 0
-                      ? _currencyFormat.format(stockSummary!.stockValue)
-                      : inventoryEmDash,
-                ),
-                _MetricTile(
-                  label: 'Reserved Quantity',
-                  value: metrics.reservedQuantity > 0
-                      ? formatQuantityValue(metrics.reservedQuantity)
-                      : inventoryEmDash,
-                ),
-              ],
+          _MetricGrid(children: primaryMetrics),
+          if (hasSecondary) ...[
+            const Gap(AppSpacing.sm),
+            _MoreDetailsToggle(
+              expanded: _detailsExpanded,
+              onTap: _toggleDetails,
             ),
-            if (latestStockUpdate != null) ...[
-              const Gap(AppSpacing.md),
-              const Divider(height: 1),
-              const Gap(AppSpacing.md),
-              _DetailRow(
-                label: 'Last Stock Update',
-                value: DateFormat('dd MMM yyyy, hh:mm a')
-                    .format(latestStockUpdate!.updatedAt.toLocal()),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (secondaryMetrics.isNotEmpty)
+                      _MetricGrid(children: secondaryMetrics),
+                    if (secondaryRows.isNotEmpty) ...[
+                      if (secondaryMetrics.isNotEmpty) ...[
+                        const Gap(AppSpacing.md),
+                        const Divider(height: 1),
+                        const Gap(AppSpacing.md),
+                      ],
+                      ...secondaryRows,
+                    ],
+                  ],
+                ),
               ),
-              _DetailRow(
-                label: 'Updated By',
-                value: displayOrDash(latestStockUpdate!.updatedByName),
-              ),
-              _DetailRow(
-                label: 'Last Change',
-                value: latestStockUpdate!.changeDescription,
-              ),
-            ],
-          ] else ...[
-            _MetricGrid(
-              children: [
-                _MetricTile(
-                  label: 'Sale Price',
-                  value: _formatMoney(item.salePrice, suffix: ' (incl)'),
-                ),
-                _MetricTile(
-                  label: 'Purchase Price',
-                  value: _formatMoney(item.purchasePrice, suffix: ' (excl)'),
-                ),
-                _MetricTile(
-                  label: 'HSN',
-                  value: displayOrDash(item.hsnCode),
-                ),
-                _MetricTile(
-                  label: 'Category',
-                  value: displayOrDash(categoryName),
-                ),
-                _MetricTile(
-                  label: 'Unit',
-                  value: displayOrDash(item.baseUnitShortName),
-                ),
-              ],
+              crossFadeState: _detailsExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+              sizeCurve: Curves.easeInOut,
             ),
-            if ((item.description?.trim().isNotEmpty ?? false)) ...[
-              const Gap(AppSpacing.md),
-              const Divider(height: 1),
-              const Gap(AppSpacing.sm),
-              _DetailRow(
-                label: 'Description',
-                value: item.description!.trim(),
-              ),
-            ],
           ],
         ],
       ),
@@ -153,6 +206,54 @@ class MobileItemDetailMetrics extends StatelessWidget {
   String _formatMoney(double? value, {String suffix = ''}) {
     if (value == null) return inventoryEmDash;
     return '${_currencyFormat.format(value)}$suffix';
+  }
+}
+
+class _MoreDetailsToggle extends StatelessWidget {
+  const _MoreDetailsToggle({
+    required this.expanded,
+    required this.onTap,
+  });
+
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  expanded ? 'Hide details' : 'More details',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              AnimatedRotation(
+                turns: expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: AppIconSize.md,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

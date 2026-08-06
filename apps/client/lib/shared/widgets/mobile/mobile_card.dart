@@ -9,6 +9,7 @@ class MobileCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.onTap,
+    this.onLongPress,
     this.borderColor,
     this.backgroundColor,
     this.selected = false,
@@ -18,6 +19,7 @@ class MobileCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final Color? borderColor;
   final Color? backgroundColor;
   final bool selected;
@@ -50,12 +52,13 @@ class MobileCard extends StatelessWidget {
       child: child,
     );
 
-    if (onTap == null) return card;
+    if (onTap == null && onLongPress == null) return card;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: AppRadius.lgBorder,
         child: card,
       ),

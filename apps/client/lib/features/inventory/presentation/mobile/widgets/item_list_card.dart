@@ -1,26 +1,32 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
-import 'package:billing_baba/shared/widgets/share_menu_button.dart';
-import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
 /// Single inventory item card for the mobile items list.
+///
+/// Layout mirrors common POS item rows: thumbnail + name/category on top,
+/// then a full-width 3-column metric row (sale / purchase / in stock).
 class ItemListCard extends StatelessWidget {
   const ItemListCard({
     required this.item,
     super.key,
     this.categoryName,
     this.onTap,
+    this.onLongPress,
   });
 
   final InventoryItem item;
   final String? categoryName;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -28,72 +34,62 @@ class ItemListCard extends StatelessWidget {
     decimalDigits: 2,
   );
 
-  static const _labelSalePrice = 'Sale Price';
-  static const _labelPurchasePrice = 'Purchase Price';
-  static const _labelInStock = 'In Stock';
-  static const _labelReservedQty = 'Reserved Qty';
-  static const _labelAvailableQty = 'Available Qty';
+  static const _thumbSize = 52.0;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final metrics = InventoryStockCalculator.metricsFromItem(item);
     final stockQty = item.quantity;
     final reservedQty = item.reservedQuantity;
-    final availableQty = item.availableForSale ?? metrics.availableForSale;
-    final showSecondaryRow =
-        _hasReservedQty(reservedQty) ||
-        _hasAvailableQty(
-          availableQty: availableQty,
-          stockQty: stockQty,
-          reservedQty: reservedQty,
-          hasExplicitAvailable: item.availableForSale != null,
-        );
+    final showReserved = reservedQty != null && reservedQty != 0;
+    final hasCategory =
+        categoryName != null && categoryName!.trim().isNotEmpty;
 
     return MobileCard(
       onTap: onTap,
+      onLongPress: onLongPress,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _ItemThumb(imageUrl: item.primaryImageUrl),
+              const Gap(AppSpacing.md),
               Expanded(
                 child: Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        item.name,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              item.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                                height: 1.2,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (item.alternativeItemIds.isNotEmpty) ...[
+                            const Gap(AppSpacing.xs),
+                            const Icon(
+                              Icons.inventory_2_outlined,
+                              size: AppIconSize.sm,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    if (item.alternativeItemIds.isNotEmpty) ...[
+                    if (hasCategory) ...[
                       const Gap(AppSpacing.sm),
-                      Icon(
-                        Icons.inventory_2_outlined,
-                        size: AppIconSize.md,
-                        color: AppColors.textSecondary,
-                      ),
+                      _CategoryBadge(label: categoryName!),
                     ],
                   ],
-                ),
-              ),
-              if (categoryName != null && categoryName!.trim().isNotEmpty) ...[
-                const Gap(AppSpacing.sm),
-                _CategoryBadge(label: categoryName!),
-              ],
-              const Gap(AppSpacing.xs),
-              ShareMenuButton(
-                child: Icon(
-                  Icons.open_in_new_rounded,
-                  size: AppIconSize.md,
-                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -102,15 +98,15 @@ class ItemListCard extends StatelessWidget {
           _MetricRow(
             children: [
               _MetricCell(
-                label: _labelSalePrice,
+                label: 'Sale Price',
                 value: _formatMoney(item.salePrice),
               ),
               _MetricCell(
-                label: _labelPurchasePrice,
+                label: 'Purchase Price',
                 value: _formatMoney(item.purchasePrice),
               ),
               _MetricCell(
-                label: _labelInStock,
+                label: 'In Stock',
                 value: stockQty == null
                     ? inventoryEmDash
                     : formatQuantityValue(stockQty),
@@ -121,48 +117,20 @@ class ItemListCard extends StatelessWidget {
               ),
             ],
           ),
-          if (showSecondaryRow) ...[
+          if (showReserved) ...[
             const Gap(AppSpacing.sm),
             _MetricRow(
               children: [
-                if (_hasReservedQty(reservedQty))
-                  _MetricCell(
-                    label: _labelReservedQty,
-                    value: formatQuantityValue(reservedQty!),
-                  ),
-                if (_hasAvailableQty(
-                  availableQty: availableQty,
-                  stockQty: stockQty,
-                  reservedQty: reservedQty,
-                  hasExplicitAvailable: item.availableForSale != null,
-                ))
-                  _MetricCell(
-                    label: _labelAvailableQty,
-                    value: formatQuantityValue(availableQty),
-                    alignEnd: true,
-                  ),
+                _MetricCell(
+                  label: 'Reserved Qty',
+                  value: formatQuantityValue(reservedQty),
+                ),
               ],
             ),
           ],
         ],
       ),
     );
-  }
-
-  static bool _hasReservedQty(double? reservedQty) {
-    return reservedQty != null && reservedQty != 0;
-  }
-
-  static bool _hasAvailableQty({
-    required double availableQty,
-    required double? stockQty,
-    required double? reservedQty,
-    required bool hasExplicitAvailable,
-  }) {
-    if (hasExplicitAvailable) return true;
-    if (reservedQty != null && reservedQty != 0) return true;
-    if (stockQty != null) return true;
-    return availableQty != 0;
   }
 
   static Color _inStockColor(double? quantity) {
@@ -178,6 +146,70 @@ class ItemListCard extends StatelessWidget {
   }
 }
 
+class _ItemThumb extends StatelessWidget {
+  const _ItemThumb({this.imageUrl});
+
+  final String? imageUrl;
+
+  static const double _size = ItemListCard._thumbSize;
+  static final BorderRadius _radius = BorderRadius.circular(10);
+
+  @override
+  Widget build(BuildContext context) {
+    final url = normalizeImageUrl(imageUrl);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: _radius,
+        border: Border.all(color: const Color(0xFFE8EAED)),
+        color: const Color(0xFFF7F8FA),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: SizedBox(
+          width: _size,
+          height: _size,
+          child: url == null
+              ? const ColoredBox(
+                  color: Color(0xFFF7F8FA),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 22,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : AppNetworkImage(
+                  imageUrl: url,
+                  displayContext: ImageDisplayContext.galleryThumb,
+                  width: _size,
+                  height: _size,
+                  memCacheWidth: (_size * 2).round(),
+                  loadWhenVisible: false,
+                  placeholder: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  errorWidget: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CategoryBadge extends StatelessWidget {
   const _CategoryBadge({required this.label});
 
@@ -186,14 +218,14 @@ class _CategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(maxWidth: 110),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE8EAED)),
       ),
       child: Text(
         label.toUpperCase(),
@@ -218,6 +250,7 @@ class _MetricRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var i = 0; i < children.length; i++) ...[
           if (i > 0) const Gap(AppSpacing.sm),
@@ -244,6 +277,7 @@ class _MetricCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final align = alignEnd ? TextAlign.end : TextAlign.start;
 
     return Column(
       crossAxisAlignment: alignEnd
@@ -254,20 +288,25 @@ class _MetricCell extends StatelessWidget {
           label,
           style: theme.textTheme.bodySmall?.copyWith(
             color: AppColors.textSecondary,
-            fontSize: 11,
+            fontSize: 12,
+            height: 1.2,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          textAlign: align,
         ),
-        const Gap(AppSpacing.xxs),
+        const Gap(2),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: valueColor ?? AppColors.textPrimary,
+            fontSize: 14,
+            height: 1.2,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          textAlign: align,
         ),
       ],
     );

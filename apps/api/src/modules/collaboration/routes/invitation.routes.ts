@@ -29,7 +29,11 @@ export function createInvitationRoutes(config: AppConfig): FastifyPluginAsync {
       controller.cancel,
     );
     app.get('/:token', controller.getByToken);
-    app.post('/:token/accept', controller.accept);
-    app.post('/:token/reject', controller.reject);
+    app.post('/:token/accept', { preHandler: [authenticate] }, controller.accept);
+    app.post(
+      '/:token/reject',
+      { preHandler: [authenticate] },
+      controller.reject,
+    );
   };
 }

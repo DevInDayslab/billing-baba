@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
@@ -37,9 +38,16 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _gstLeftColumnWidth = 220.0;
 const _defaultDecimal = '0.00';
 const _defaultState = 'Andhra Pradesh';
+const _saveBlue = Color(0xFF42A5F5);
 
 /// Shows the Add Party modal from sale forms and party pickers.
 Future<AddPartyResult?> showAddPartyDialog(BuildContext context) {
+  if (AppPlatform.current.isMobile) {
+    return _showPartyFormMobileRoute(
+      context,
+      child: const AddPartyDialog(),
+    );
+  }
   return showFormDialog<AddPartyResult>(
     context: context,
     child: const AddPartyDialog(),
@@ -51,6 +59,12 @@ Future<AddPartyResult?> showEditPartyDialog(
   BuildContext context, {
   required PartyModel party,
 }) {
+  if (AppPlatform.current.isMobile) {
+    return _showPartyFormMobileRoute(
+      context,
+      child: AddPartyDialog(partyToEdit: party),
+    );
+  }
   return showFormDialog<AddPartyResult>(
     context: context,
     child: AddPartyDialog(partyToEdit: party),
@@ -62,9 +76,27 @@ Future<AddPartyResult?> showDuplicatePartyDialog(
   BuildContext context, {
   required PartyModel party,
 }) {
+  if (AppPlatform.current.isMobile) {
+    return _showPartyFormMobileRoute(
+      context,
+      child: AddPartyDialog(duplicateFrom: party),
+    );
+  }
   return showFormDialog<AddPartyResult>(
     context: context,
     child: AddPartyDialog(duplicateFrom: party),
+  );
+}
+
+Future<AddPartyResult?> _showPartyFormMobileRoute(
+  BuildContext context, {
+  required Widget child,
+}) {
+  return Navigator.of(context).push<AddPartyResult>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => child,
+    ),
   );
 }
 
@@ -1177,17 +1209,60 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = AppPlatform.current.isMobile;
+    final content = _buildDialogContent(showHeader: !isMobile, rounded: !isMobile);
+
+    if (isMobile) {
+      final title = _isEditMode ? 'Edit Party' : 'Add Party';
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          actions: [
+            if (_isEditMode)
+              IconButton(
+                tooltip: 'Delete party',
+                onPressed: _isSaving ? null : _confirmAndDeleteParty,
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.error,
+                ),
+              ),
+          ],
+        ),
+        body: SafeArea(top: false, child: content),
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildDialogContent({required bool showHeader, required bool rounded}) {
     return Material(
       color: AppColors.surface,
-      borderRadius: AppRadius.lgBorder,
+      borderRadius: rounded ? AppRadius.lgBorder : BorderRadius.zero,
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildHeader(),
-              const Divider(height: 1, color: _cardBorder),
+              if (showHeader) ...[
+                _buildHeader(),
+                const Divider(height: 1, color: _cardBorder),
+              ],
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -2348,10 +2423,23 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildFooter() {
-    return SizedBox(
-      height: FormSpacing.footerHeight,
+    final isMobile = AppPlatform.current.isMobile;
+    if (isMobile && !_isEditMode) {
+      return _buildMobileCreateFooter();
+    }
+    if (isMobile && _isEditMode) {
+      return _buildMobileEditFooter();
+    }
+
+    return SafeArea(
+      top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
+        padding: const EdgeInsets.fromLTRB(
+          FormSpacing.page,
+          AppSpacing.sm,
+          FormSpacing.page,
+          AppSpacing.sm,
+        ),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isNarrow = constraints.maxWidth < 480;
@@ -2419,7 +2507,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               if (isNarrow) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     deleteButton,
                     const SizedBox(height: AppSpacing.sm),
@@ -2440,7 +2528,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             if (isNarrow) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   saveAndNewButton,
                   const SizedBox(height: AppSpacing.sm),
@@ -2458,6 +2546,118 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileCreateFooter() {
+    final theme = Theme.of(context);
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: _isSaving ? null : () => _save(saveAndNew: true),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+                ),
+                child: Text(
+                  'Save & New',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: FilledButton(
+                onPressed: _isSaving ? null : () => _save(saveAndNew: false),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _saveBlue,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Save'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileEditFooter() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: FilledButton(
+          onPressed: _isSaving ? null : () => _save(saveAndNew: false),
+          style: FilledButton.styleFrom(
+            backgroundColor: _saveBlue,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(48),
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+          ),
+          child: _isSaving
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Update'),
         ),
       ),
     );

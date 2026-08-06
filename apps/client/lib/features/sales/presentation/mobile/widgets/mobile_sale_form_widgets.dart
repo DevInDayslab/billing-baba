@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 const _fieldBorder = Color(0xFFE0E0E0);
 const _creditGreen = Color(0xFF43A047);
-const _saveBlue = Color(0xFF42A5F5);
+const _saveBlue = AppColors.primary;
 const _toggleTrack = Color(0xFFF0F0F0);
 
 /// Credit / Cash segmented toggle in the sale form app bar.
@@ -435,9 +435,9 @@ class MobileSaleTotalRow extends StatelessWidget {
 class MobileSaleBottomBar extends StatelessWidget {
   const MobileSaleBottomBar({
     required this.onSave,
-    required this.onSaveAndNew,
     required this.onMore,
     super.key,
+    this.onSaveAndNew,
     this.isSaving = false,
   });
 
@@ -472,25 +472,27 @@ class MobileSaleBottomBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: TextButton(
-                onPressed: isSaving ? null : onSaveAndNew,
-                style: TextButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.mdBorder,
+            if (onSaveAndNew != null) ...[
+              Expanded(
+                child: TextButton(
+                  onPressed: isSaving ? null : onSaveAndNew,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.mdBorder,
+                    ),
                   ),
-                ),
-                child: Text(
-                  'Save & New',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                  child: Text(
+                    'Save & New',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Expanded(
               child: FilledButton(
                 onPressed: isSaving ? null : onSave,

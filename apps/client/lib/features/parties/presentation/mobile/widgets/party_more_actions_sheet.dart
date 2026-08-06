@@ -1,7 +1,11 @@
+import 'dart:async';
+
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
-import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_whatsapp_actions.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_export_actions.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_payment_sheets.dart';
+import 'package:billing_baba/features/parties/presentation/utils/party_ledger_print_actions.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
@@ -31,24 +35,35 @@ Future<void> showPartyMoreActionsSheet({
         onTap: () => PartyActions.duplicate(context, ref, party),
       ),
       MobileSheetAction(
-        icon: Icons.sms_outlined,
-        label: 'Send SMS Reminder',
-        onTap: () => PartyWhatsAppActions.sendPaymentReminderNow(
-          context,
-          ref,
-          party,
-          outstanding: outstanding,
-        ),
+        icon: Icons.print_outlined,
+        label: 'Print Ledger',
+        onTap: () {
+          final ledger = ref.read(partyTimelineProvider(party.id)).value;
+          unawaited(
+            PartyLedgerPrintActions.previewLedger(
+              context: context,
+              ref: ref,
+              party: party,
+              transactions: ledger?.transactions ?? const [],
+              outstanding: outstanding,
+              creditLimit: ledger?.summary.creditLimit,
+            ),
+          );
+        },
       ),
       MobileSheetAction(
-        icon: Icons.schedule_rounded,
-        label: 'Set Reminder',
-        onTap: () => PartyWhatsAppActions.showReminderDialog(
-          context,
-          ref,
-          party,
-          outstanding: outstanding,
-        ),
+        icon: Icons.table_chart_outlined,
+        label: 'Export Ledger',
+        onTap: () {
+          final ledger = ref.read(partyTimelineProvider(party.id)).value;
+          unawaited(
+            PartyExportActions.exportLedgerTransactions(
+              context,
+              partyName: party.name,
+              transactions: ledger?.transactions ?? const [],
+            ),
+          );
+        },
       ),
       if (canReceive)
         MobileSheetAction(

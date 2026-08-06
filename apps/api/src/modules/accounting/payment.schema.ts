@@ -53,7 +53,7 @@ export const createPaymentBodySchema = z
     shortfall_amount: moneyString.optional(),
     allocations: z.array(allocationSchema).optional().default([]),
     source: z
-      .enum(['manual', 'document_finalize'] as const)
+      .enum(['manual', 'document_finalize', 'razorpay_gateway'] as const)
       .optional()
       .default('manual'),
   })

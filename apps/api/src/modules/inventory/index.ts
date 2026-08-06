@@ -5,6 +5,8 @@ import { createBrandRoutes } from './brand.routes';
 import { createCategoryRoutes } from './category.routes';
 import { createGodownRoutes } from './godown.routes';
 import { createItemRoutes } from './item.routes';
+import { createItemBomRoutes } from './item-bom.routes';
+import { createItemSupplierRoutes } from './item-supplier.routes';
 import { createItemLocationRoutes } from './item-location.routes';
 import { createMovementRoutes } from './movement.routes';
 import { createPriceHistoryRoutes } from './price-history.routes';
@@ -23,6 +25,8 @@ export const inventoryModule =
     });
     await app.register(createGodownRoutes(), { prefix: '/godowns' });
     await app.register(createItemRoutes(config), { prefix: '/items' });
+    await app.register(createItemSupplierRoutes(), { prefix: '/items' });
+    await app.register(createItemBomRoutes(), { prefix: '/items' });
     await app.register(createBarcodeLookupRoutes(), { prefix: '/barcode' });
     await app.register(createItemLocationRoutes(config), {
       prefix: '/item-locations',

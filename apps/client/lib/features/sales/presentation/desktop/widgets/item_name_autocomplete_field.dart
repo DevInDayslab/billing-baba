@@ -8,8 +8,7 @@ import 'package:billing_baba/features/inventory/application/item_alternatives_in
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
-import 'package:billing_baba/features/pricing/application/item_api_tier_prices_provider.dart';
-import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:collection/collection.dart';
@@ -117,7 +116,7 @@ class ItemNameAutocompleteFieldState
     final created = await showAddItemDialog(context);
     if (!mounted || created == null) return;
 
-    await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+    await ref.read(itemTierPricesProvider.notifier).ensureInitialized();
     if (!mounted) return;
 
     final resolved =
@@ -130,7 +129,7 @@ class ItemNameAutocompleteFieldState
     final catalogItem = saleItemOptionFromInventory(
       resolved,
       tierPrices:
-          ref.read(localItemTierPricesProvider)[resolved.id] ?? const {},
+          ref.read(itemTierPricesProvider).value?[resolved.id] ?? const {},
     );
     _controller.text = catalogItem.name;
     widget.onChanged(catalogItem.name);
@@ -382,22 +381,14 @@ class ItemNameAutocompleteFieldState
                                   onTap: () async {
                                     await ref
                                         .read(
-                                          itemApiTierPricesProvider.notifier,
-                                        )
-                                        .preloadForItemIds([item.id]);
-                                    await ref
-                                        .read(
-                                          localItemTierPricesProvider.notifier,
+                                          itemTierPricesProvider.notifier,
                                         )
                                         .ensureInitialized();
                                     if (!mounted) return;
 
-                                    final localStore = ref.read(
-                                      localItemTierPricesProvider,
-                                    );
-                                    final apiStore = ref.read(
-                                      itemApiTierPricesProvider,
-                                    );
+                                    final tierStore =
+                                        ref.read(itemTierPricesProvider).value ??
+                                        const {};
                                     final resolved =
                                         saleItemOptionFromInventory(
                                           inventory.firstWhere(
@@ -412,11 +403,8 @@ class ItemNameAutocompleteFieldState
                                                   item.defaultTaxPercent,
                                             ),
                                           ),
-                                          tierPrices: mergedTierPricesForItem(
-                                            apiStore: apiStore,
-                                            localStore: localStore,
-                                            itemId: item.id,
-                                          ),
+                                          tierPrices:
+                                              tierStore[item.id] ?? const {},
                                           isAlternativeSuggestion:
                                               item.isAlternativeSuggestion,
                                         );

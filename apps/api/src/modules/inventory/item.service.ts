@@ -575,6 +575,42 @@ export class ItemService extends InventoryServiceBase {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
     }
 
+    const stockQty = await this.repository.getTotalStockQuantity(
+      businessId,
+      itemId,
+    );
+    if (stockQty !== 0) {
+      throw new AppError(
+        'ITEM_HAS_STOCK',
+        'Cannot delete item with non-zero stock. Adjust stock to zero first.',
+        422,
+      );
+    }
+
+    const bomUsage = await this.repository.countBomReferences(
+      businessId,
+      itemId,
+    );
+    if (bomUsage > 0) {
+      throw new AppError(
+        'ITEM_USED_IN_BOM',
+        'Cannot delete item used as a raw material in manufacturing BOMs',
+        422,
+      );
+    }
+
+    const docUsage = await this.repository.countDocumentLineReferences(
+      businessId,
+      itemId,
+    );
+    if (docUsage > 0) {
+      throw new AppError(
+        'ITEM_HAS_TRANSACTIONS',
+        'Cannot delete item referenced by sales or purchase documents',
+        422,
+      );
+    }
+
     const deleted = await this.repository.softDelete(
       businessId,
       itemId,

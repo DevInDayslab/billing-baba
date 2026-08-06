@@ -26,6 +26,9 @@ import {
   stockLevels,
   unitDefinitions,
 } from '../../db/schema/inventory/tables';
+import { itemBomMaterials } from '../../db/schema/inventory/item-bom-materials.table';
+import { purchaseDocumentLines } from '../../db/schema/purchases/tables';
+import { salesDocumentLines } from '../../db/schema/sales/tables';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { parseMoney } from './inventory.utils';
 import {
@@ -612,6 +615,50 @@ export class ItemRepository {
       .returning({ id: items.id });
 
     return Boolean(row);
+  }
+
+  async countBomReferences(
+    businessId: string,
+    rawItemId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(itemBomMaterials)
+      .where(
+        and(
+          eq(itemBomMaterials.businessId, businessId),
+          eq(itemBomMaterials.rawItemId, rawItemId),
+          eq(itemBomMaterials.isDeleted, false),
+        ),
+      );
+    return row?.count ?? 0;
+  }
+
+  async countDocumentLineReferences(
+    businessId: string,
+    itemId: string,
+  ): Promise<number> {
+    const [salesRow] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(salesDocumentLines)
+      .where(
+        and(
+          eq(salesDocumentLines.businessId, businessId),
+          eq(salesDocumentLines.itemId, itemId),
+          eq(salesDocumentLines.isDeleted, false),
+        ),
+      );
+    const [purchaseRow] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(purchaseDocumentLines)
+      .where(
+        and(
+          eq(purchaseDocumentLines.businessId, businessId),
+          eq(purchaseDocumentLines.itemId, itemId),
+          eq(purchaseDocumentLines.isDeleted, false),
+        ),
+      );
+    return (salesRow?.count ?? 0) + (purchaseRow?.count ?? 0);
   }
 
   async loadTierPrices(

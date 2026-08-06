@@ -44,11 +44,14 @@ class MobileReportRowCard extends StatelessWidget {
                 ),
                 const Gap(AppSpacing.sm),
                 Expanded(
+                  flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         row.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -59,6 +62,8 @@ class MobileReportRowCard extends StatelessWidget {
                         const Gap(2),
                         Text(
                           formatMobileReportMetaDateTime(row.dateTime!),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -67,20 +72,31 @@ class MobileReportRowCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: MobileReportTheme.chipBackground,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    row.reference,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                const Gap(AppSpacing.sm),
+                Flexible(
+                  flex: 2,
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 140),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: MobileReportTheme.chipBackground,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        row.reference,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -126,6 +142,8 @@ class _ValueColumn extends StatelessWidget {
       children: [
         Text(
           column.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.labelSmall?.copyWith(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,

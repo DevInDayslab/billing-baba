@@ -15,7 +15,7 @@ class MobileHomeAddSaleFab extends StatelessWidget {
   final IconData icon;
 
   /// Shared accent used by inventory/utility mobile FABs and primary actions.
-  static const accentRed = AppColors.error;
+  static const Color accentRed = AppColors.error;
 
   @override
   Widget build(BuildContext context) {
@@ -68,16 +68,14 @@ class MobileHomeAddSaleFab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.15,
-                    ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.15,
                   ),
                 ),
               ],

@@ -646,6 +646,86 @@ export class CollaborationRepository {
     return this.findActiveMemberByContact(companyId, phone, email);
   }
 
+  async provisionCollaboratorUser(input: {
+    businessId: string;
+    accountId: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+  }): Promise<string> {
+    const [existing] = await this.db
+      .select({
+        id: users.id,
+        isActive: users.isActive,
+      })
+      .from(users)
+      .where(
+        and(
+          eq(users.businessId, input.businessId),
+          eq(users.accountId, input.accountId),
+          eq(users.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      if (!existing.isActive) {
+        await this.db
+          .update(users)
+          .set({
+            isActive: true,
+            name: input.name,
+            phone: input.phone,
+            email: input.email,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, existing.id));
+      }
+      return existing.id;
+    }
+
+    const [created] = await this.db
+      .insert(users)
+      .values({
+        businessId: input.businessId,
+        accountId: input.accountId,
+        name: input.name,
+        phone: input.phone,
+        email: input.email,
+        role: 'staff',
+      })
+      .returning({ id: users.id });
+
+    if (!created) {
+      throw new Error('Failed to provision collaborator user');
+    }
+
+    return created.id;
+  }
+
+  async deactivateCollaboratorUser(
+    businessId: string,
+    accountId: string,
+  ): Promise<void> {
+    const now = new Date();
+    await this.db
+      .update(users)
+      .set({
+        isActive: false,
+        isDeleted: true,
+        deletedAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(users.businessId, businessId),
+          eq(users.accountId, accountId),
+          eq(users.role, 'staff'),
+          eq(users.isDeleted, false),
+        ),
+      );
+  }
+
   async markMemberRemoved(id: string): Promise<CompanyMemberRow | null> {
     const now = new Date();
     const [row] = await this.db

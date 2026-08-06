@@ -4,18 +4,15 @@ import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
-import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_formatters.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_mock_data.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_subsection_registry.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/mobile_report_view_model.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,184 +29,226 @@ abstract final class MobileReportDataLoader {
     }
 
     final async = switch ((group, subsectionId)) {
-      (ReportNavGroup.transaction, 'sale') => ref
-          .watch(saleReportProvider)
-          .whenData((data) => _fromSale(data, config)),
-      (ReportNavGroup.transaction, 'purchase') => ref
-          .watch(purchaseReportProvider)
-          .whenData((data) => _fromPurchase(data, config)),
-      (ReportNavGroup.transaction, 'dayBook') => ref
-          .watch(dayBookReportProvider)
-          .whenData((data) => _fromDayBook(data, config)),
-      (ReportNavGroup.transaction, 'allTransaction') => ref
-          .watch(allTransactionsReportProvider)
-          .whenData((data) => _fromTransactions(data.rows, data.meta.total, config)),
-      (ReportNavGroup.transaction, 'profitLoss') => ref
-          .watch(profitLossReportProvider)
-          .whenData((data) => _fromProfitLoss(data, config)),
-      (ReportNavGroup.transaction, 'billWiseProfit') => ref
-          .watch(billWiseProfitReportProvider)
-          .whenData((data) => _fromBillWiseProfit(data, config)),
-      (ReportNavGroup.transaction, 'cashFlow') => ref
-          .watch(cashFlowReportProvider)
-          .whenData((data) => _fromCashFlow(data, config)),
-      (ReportNavGroup.transaction, 'trialBalance') => ref
-          .watch(trialBalanceReportProvider)
-          .whenData((data) => _fromTrialBalance(data, config)),
-      (ReportNavGroup.transaction, 'balanceSheet') => ref
-          .watch(balanceSheetReportProvider)
-          .whenData((data) => _fromBalanceSheet(data, config)),
-      (ReportNavGroup.party, 'partyStatement') => ref
-          .watch(partyStatementReportProvider)
-          .whenData(
-            (data) => data == null
-                ? _empty(config)
-                : _fromPartyStatement(data, config),
-          ),
-      (ReportNavGroup.party, 'partyWiseProfitLoss') => ref
-          .watch(partyWiseProfitLossReportProvider)
-          .whenData((data) => _fromPartyWiseProfitLoss(data, config)),
-      (ReportNavGroup.party, 'allParties') => ref
-          .watch(partyOutstandingReportProvider)
-          .whenData((data) => _fromAllParties(data, config)),
-      (ReportNavGroup.party, 'partyReportByItem') => ref
-          .watch(partyReportByItemReportProvider)
-          .whenData(
-            (data) => data == null
-                ? _empty(config)
-                : _fromPartyByItem(data, config),
-          ),
-      (ReportNavGroup.party, 'salePurchaseByParty') => ref
-          .watch(salePurchaseByPartyReportProvider)
-          .whenData((data) => _fromSalePurchaseByParty(data, config)),
-      (ReportNavGroup.party, 'salePurchaseByPartyGroup') => ref
-          .watch(salePurchaseByPartyGroupReportProvider)
-          .whenData((data) => _fromSalePurchaseByPartyGroup(data, config)),
-      (ReportNavGroup.gst, 'gstr1') => ref
-          .watch(gstr1ReportProvider)
-          .whenData((data) => _fromGstr(data.rows, config)),
-      (ReportNavGroup.gst, 'gstr2') => ref
-          .watch(gstr2ReportProvider)
-          .whenData((data) => _fromGstr(data.rows, config)),
-      (ReportNavGroup.gst, 'gstr3b') => ref
-          .watch(gstr3bReportProvider)
-          .whenData((data) => _fromGstr3b(data, config)),
-      (ReportNavGroup.gst, 'gstr9') => ref
-          .watch(gstr9ReportProvider)
-          .whenData((data) => _fromGstr9(data, config)),
-      (ReportNavGroup.gst, 'saleSummaryByHsn') => ref
-          .watch(saleSummaryByHsnReportProvider)
-          .whenData((data) => _fromHsn(data, config)),
-      (ReportNavGroup.gst, 'sacReport') => ref
-          .watch(sacReportReportProvider)
-          .whenData((data) => _fromSac(data, config)),
-      (ReportNavGroup.itemStock, 'itemReportByParty') => ref
-          .watch(itemReportByPartyReportProvider)
-          .whenData((data) => _fromItemReportByParty(data, config)),
-      (ReportNavGroup.itemStock, 'itemWiseProfitLoss') => ref
-          .watch(itemWiseProfitLossReportProvider)
-          .whenData((data) => _fromItemWiseProfitLoss(data, config)),
-      (ReportNavGroup.itemStock, 'lowStockSummary') => ref
-          .watch(lowStockReportProvider)
-          .whenData((data) => _fromLowStock(data, config)),
-      (ReportNavGroup.itemStock, 'stockDetail') => ref
-          .watch(stockDetailReportProvider)
-          .whenData((data) => _fromStockDetail(data, config)),
-      (ReportNavGroup.itemStock, 'salePurchaseReportByItemCategory') => ref
-          .watch(salePurchaseByItemCategoryReportProvider)
-          .whenData((data) => _fromCategoryAmount(data, config)),
-      (ReportNavGroup.itemStock, 'stockSummaryReportByItemCategory') => ref
-          .watch(stockSummaryByItemCategoryReportProvider)
-          .whenData((data) => _fromCategoryAmount(data, config)),
-      (ReportNavGroup.itemStock, 'itemCategoryWiseProfitLoss') => ref
-          .watch(itemCategoryWiseProfitLossReportProvider)
-          .whenData((data) => _fromCategoryAmount(data, config)),
-      (ReportNavGroup.itemStock, 'itemWiseDiscount') => ref
-          .watch(itemWiseDiscountReportProvider)
-          .whenData((data) => _fromItemWiseDiscount(data, config)),
-      (ReportNavGroup.itemStock, 'manufacturingReport') => ref
-          .watch(manufacturingReportProvider)
-          .whenData((data) => _fromManufacturing(data, config)),
-      (ReportNavGroup.itemStock, 'consumptionReport') => ref
-          .watch(consumptionReportProvider)
-          .whenData((data) => _fromConsumption(data, config)),
-      (ReportNavGroup.itemStock, 'stockTransferReport') => ref
-          .watch(stockTransferReportProvider)
-          .whenData((data) => _fromStockTransfer(data, config)),
-      (ReportNavGroup.businessStatus, 'bankStatement') => ref
-          .watch(bankStatementReportProvider)
-          .whenData(
-            (data) => data == null
-                ? _empty(config)
-                : _fromBankStatement(data, config),
-          ),
-      (ReportNavGroup.taxes, 'gstReport') => ref
-          .watch(gstTaxReportProvider)
-          .whenData((data) => _fromGstTax(data, config)),
-      (ReportNavGroup.taxes, 'gstRateReport') => ref
-          .watch(gstTaxRateReportProvider)
-          .whenData((data) => _fromGstTaxRate(data, config)),
-      (ReportNavGroup.taxes, 'formNo27Eq') => ref
-          .watch(form27eqReportProvider)
-          .whenData((data) => _fromTaxInvoices(data, config)),
-      (ReportNavGroup.taxes, 'tcsReceivable') => ref
-          .watch(tcsReceivableReportProvider)
-          .whenData((data) => _fromTaxInvoices(data, config)),
-      (ReportNavGroup.taxes, 'tdsPayable') => ref
-          .watch(tdsPayableReportProvider)
-          .whenData((data) => _fromTaxInvoices(data, config)),
-      (ReportNavGroup.taxes, 'tdsReceivable') => ref
-          .watch(tdsReceivableReportProvider)
-          .whenData((data) => _fromTaxInvoices(data, config)),
-      (ReportNavGroup.expenseReport, 'expense') => ref
-          .watch(expensesReportProvider)
-          .whenData((data) => _fromExpenses(data, config)),
-      (ReportNavGroup.expenseReport, 'expenseCategoryReport') => ref
-          .watch(expenseByCategoryReportProvider)
-          .whenData((data) => _fromExpenseCategories(data, config)),
-      (ReportNavGroup.expenseReport, 'expenseItemReport') => ref
-          .watch(expenseByItemReportProvider)
-          .whenData((data) => _fromExpenseItems(data, config)),
-      (ReportNavGroup.salePurchaseOrderReport, 'salePurchaseOrders') => ref
-          .watch(salePurchaseOrdersReportProvider)
-          .whenData((data) => _fromSalePurchaseOrders(data, config)),
-      (ReportNavGroup.salePurchaseOrderReport, 'salePurchaseOrderItem') => ref
-          .watch(salePurchaseOrderItemsReportProvider)
-          .whenData((data) => _fromSalePurchaseOrderItems(data, config)),
-      (ReportNavGroup.otherIncomeReport, 'otherIncome') => ref
-          .watch(otherIncomeReportProvider)
-          .whenData((data) => _fromOtherIncome(data, config)),
-      (ReportNavGroup.otherIncomeReport, 'otherIncomeCategoryReport') => ref
-          .watch(otherIncomeByCategoryReportProvider)
-          .whenData((data) => _fromOtherIncomeCategories(data, config)),
-      (ReportNavGroup.otherIncomeReport, 'otherIncomeItemReport') => ref
-          .watch(otherIncomeByItemReportProvider)
-          .whenData((data) => _fromOtherIncomeItems(data, config)),
-      (ReportNavGroup.loanAccounts, 'loanStatement') => ref
-          .watch(loanStatementReportProvider)
-          .whenData(
-            (data) => data == null
-                ? _empty(config)
-                : _fromLoanStatement(data, config),
-          ),
+      (ReportNavGroup.transaction, 'sale') =>
+        ref
+            .watch(saleReportProvider)
+            .whenData((data) => _fromSale(data, config)),
+      (ReportNavGroup.transaction, 'purchase') =>
+        ref
+            .watch(purchaseReportProvider)
+            .whenData((data) => _fromPurchase(data, config)),
+      (ReportNavGroup.transaction, 'dayBook') =>
+        ref
+            .watch(dayBookReportProvider)
+            .whenData((data) => _fromDayBook(data, config)),
+      (ReportNavGroup.transaction, 'allTransaction') =>
+        ref
+            .watch(allTransactionsReportProvider)
+            .whenData(
+              (data) => _fromTransactions(data.rows, data.meta.total, config),
+            ),
+      (ReportNavGroup.transaction, 'profitLoss') =>
+        ref
+            .watch(profitLossReportProvider)
+            .whenData((data) => _fromProfitLoss(data, config)),
+      (ReportNavGroup.transaction, 'billWiseProfit') =>
+        ref
+            .watch(billWiseProfitReportProvider)
+            .whenData((data) => _fromBillWiseProfit(data, config)),
+      (ReportNavGroup.transaction, 'cashFlow') =>
+        ref
+            .watch(cashFlowReportProvider)
+            .whenData((data) => _fromCashFlow(data, config)),
+      (ReportNavGroup.transaction, 'trialBalance') =>
+        ref
+            .watch(trialBalanceReportProvider)
+            .whenData((data) => _fromTrialBalance(data, config)),
+      (ReportNavGroup.transaction, 'balanceSheet') =>
+        ref
+            .watch(balanceSheetReportProvider)
+            .whenData((data) => _fromBalanceSheet(data, config)),
+      (ReportNavGroup.party, 'partyStatement') =>
+        ref
+            .watch(partyStatementReportProvider)
+            .whenData(
+              (data) => data == null
+                  ? _empty(config)
+                  : _fromPartyStatement(data, config),
+            ),
+      (ReportNavGroup.party, 'partyWiseProfitLoss') =>
+        ref
+            .watch(partyWiseProfitLossReportProvider)
+            .whenData((data) => _fromPartyWiseProfitLoss(data, config)),
+      (ReportNavGroup.party, 'allParties') =>
+        ref
+            .watch(partyOutstandingReportProvider)
+            .whenData((data) => _fromAllParties(data, config)),
+      (ReportNavGroup.party, 'partyReportByItem') =>
+        ref
+            .watch(partyReportByItemReportProvider)
+            .whenData(
+              (data) => data == null
+                  ? _empty(config)
+                  : _fromPartyByItem(data, config),
+            ),
+      (ReportNavGroup.party, 'salePurchaseByParty') =>
+        ref
+            .watch(salePurchaseByPartyReportProvider)
+            .whenData((data) => _fromSalePurchaseByParty(data, config)),
+      (ReportNavGroup.party, 'salePurchaseByPartyGroup') =>
+        ref
+            .watch(salePurchaseByPartyGroupReportProvider)
+            .whenData((data) => _fromSalePurchaseByPartyGroup(data, config)),
+      (ReportNavGroup.gst, 'gstr1') =>
+        ref
+            .watch(gstr1ReportProvider)
+            .whenData((data) => _fromGstr(data.rows, config)),
+      (ReportNavGroup.gst, 'gstr2') =>
+        ref
+            .watch(gstr2ReportProvider)
+            .whenData((data) => _fromGstr(data.rows, config)),
+      (ReportNavGroup.gst, 'gstr3b') =>
+        ref
+            .watch(gstr3bReportProvider)
+            .whenData((data) => _fromGstr3b(data, config)),
+      (ReportNavGroup.gst, 'gstr9') =>
+        ref
+            .watch(gstr9ReportProvider)
+            .whenData((data) => _fromGstr9(data, config)),
+      (ReportNavGroup.gst, 'saleSummaryByHsn') =>
+        ref
+            .watch(saleSummaryByHsnReportProvider)
+            .whenData((data) => _fromHsn(data, config)),
+      (ReportNavGroup.gst, 'sacReport') =>
+        ref
+            .watch(sacReportReportProvider)
+            .whenData((data) => _fromSac(data, config)),
+      (ReportNavGroup.itemStock, 'itemReportByParty') =>
+        ref
+            .watch(itemReportByPartyReportProvider)
+            .whenData((data) => _fromItemReportByParty(data, config)),
+      (ReportNavGroup.itemStock, 'itemWiseProfitLoss') =>
+        ref
+            .watch(itemWiseProfitLossReportProvider)
+            .whenData((data) => _fromItemWiseProfitLoss(data, config)),
+      (ReportNavGroup.itemStock, 'lowStockSummary') =>
+        ref
+            .watch(lowStockReportProvider)
+            .whenData((data) => _fromLowStock(data, config)),
+      (ReportNavGroup.itemStock, 'stockDetail') =>
+        ref
+            .watch(stockDetailReportProvider)
+            .whenData((data) => _fromStockDetail(data, config)),
+      (ReportNavGroup.itemStock, 'salePurchaseReportByItemCategory') =>
+        ref
+            .watch(salePurchaseByItemCategoryReportProvider)
+            .whenData((data) => _fromCategoryAmount(data, config)),
+      (ReportNavGroup.itemStock, 'stockSummaryReportByItemCategory') =>
+        ref
+            .watch(stockSummaryByItemCategoryReportProvider)
+            .whenData((data) => _fromCategoryAmount(data, config)),
+      (ReportNavGroup.itemStock, 'itemCategoryWiseProfitLoss') =>
+        ref
+            .watch(itemCategoryWiseProfitLossReportProvider)
+            .whenData((data) => _fromCategoryAmount(data, config)),
+      (ReportNavGroup.itemStock, 'itemWiseDiscount') =>
+        ref
+            .watch(itemWiseDiscountReportProvider)
+            .whenData((data) => _fromItemWiseDiscount(data, config)),
+      (ReportNavGroup.itemStock, 'manufacturingReport') =>
+        ref
+            .watch(manufacturingReportProvider)
+            .whenData((data) => _fromManufacturing(data, config)),
+      (ReportNavGroup.itemStock, 'consumptionReport') =>
+        ref
+            .watch(consumptionReportProvider)
+            .whenData((data) => _fromConsumption(data, config)),
+      (ReportNavGroup.itemStock, 'stockTransferReport') =>
+        ref
+            .watch(stockTransferReportProvider)
+            .whenData((data) => _fromStockTransfer(data, config)),
+      (ReportNavGroup.businessStatus, 'bankStatement') =>
+        ref
+            .watch(bankStatementReportProvider)
+            .whenData(
+              (data) => data == null
+                  ? _empty(config)
+                  : _fromBankStatement(data, config),
+            ),
+      (ReportNavGroup.taxes, 'gstReport') =>
+        ref
+            .watch(gstTaxReportProvider)
+            .whenData((data) => _fromGstTax(data, config)),
+      (ReportNavGroup.taxes, 'gstRateReport') =>
+        ref
+            .watch(gstTaxRateReportProvider)
+            .whenData((data) => _fromGstTaxRate(data, config)),
+      (ReportNavGroup.taxes, 'formNo27Eq') =>
+        ref
+            .watch(form27eqReportProvider)
+            .whenData((data) => _fromTaxInvoices(data, config)),
+      (ReportNavGroup.taxes, 'tcsReceivable') =>
+        ref
+            .watch(tcsReceivableReportProvider)
+            .whenData((data) => _fromTaxInvoices(data, config)),
+      (ReportNavGroup.taxes, 'tdsPayable') =>
+        ref
+            .watch(tdsPayableReportProvider)
+            .whenData((data) => _fromTaxInvoices(data, config)),
+      (ReportNavGroup.taxes, 'tdsReceivable') =>
+        ref
+            .watch(tdsReceivableReportProvider)
+            .whenData((data) => _fromTaxInvoices(data, config)),
+      (ReportNavGroup.expenseReport, 'expense') =>
+        ref
+            .watch(expensesReportProvider)
+            .whenData((data) => _fromExpenses(data, config)),
+      (ReportNavGroup.expenseReport, 'expenseCategoryReport') =>
+        ref
+            .watch(expenseByCategoryReportProvider)
+            .whenData((data) => _fromExpenseCategories(data, config)),
+      (ReportNavGroup.expenseReport, 'expenseItemReport') =>
+        ref
+            .watch(expenseByItemReportProvider)
+            .whenData((data) => _fromExpenseItems(data, config)),
+      (ReportNavGroup.salePurchaseOrderReport, 'salePurchaseOrders') =>
+        ref
+            .watch(salePurchaseOrdersReportProvider)
+            .whenData((data) => _fromSalePurchaseOrders(data, config)),
+      (ReportNavGroup.salePurchaseOrderReport, 'salePurchaseOrderItem') =>
+        ref
+            .watch(salePurchaseOrderItemsReportProvider)
+            .whenData((data) => _fromSalePurchaseOrderItems(data, config)),
+      (ReportNavGroup.otherIncomeReport, 'otherIncome') =>
+        ref
+            .watch(otherIncomeReportProvider)
+            .whenData((data) => _fromOtherIncome(data, config)),
+      (ReportNavGroup.otherIncomeReport, 'otherIncomeCategoryReport') =>
+        ref
+            .watch(otherIncomeByCategoryReportProvider)
+            .whenData((data) => _fromOtherIncomeCategories(data, config)),
+      (ReportNavGroup.otherIncomeReport, 'otherIncomeItemReport') =>
+        ref
+            .watch(otherIncomeByItemReportProvider)
+            .whenData((data) => _fromOtherIncomeItems(data, config)),
+      (ReportNavGroup.loanAccounts, 'loanStatement') =>
+        ref
+            .watch(loanStatementReportProvider)
+            .whenData(
+              (data) => data == null
+                  ? _empty(config)
+                  : _fromLoanStatement(data, config),
+            ),
       _ => AsyncData(_empty(config)),
     };
 
-    // Riverpod retries failed providers; during retries [hasError] stays true
-    // while [isLoading] flickers. Prefer demo data over an endless shimmer
-    // when the API is unreachable (physical devices / offline-first).
+    // Prefer empty/offline error UX over demo data when the API is unreachable.
     if (async.hasError && _shouldUseDemoFallback(async.error!)) {
-      return AsyncData(MobileReportMockData.forConfig(config));
+      return AsyncData(_empty(config));
     }
 
     if (async.hasValue) {
-      return AsyncData(_withMockFallback(async.requireValue, config));
-    }
-
-    // First load / debug: show demo immediately instead of shimmer while the
-    // unreachable API request is in flight (and while Riverpod retries).
-    if (async.isLoading && kDebugMode) {
-      return AsyncData(MobileReportMockData.forConfig(config));
+      return AsyncData(async.requireValue);
     }
 
     return async.when(
@@ -218,16 +257,15 @@ abstract final class MobileReportDataLoader {
       loading: () => const AsyncLoading(),
       error: (error, stackTrace) {
         if (_shouldUseDemoFallback(error)) {
-          return AsyncData(MobileReportMockData.forConfig(config));
+          return AsyncData(_empty(config));
         }
         return AsyncError(error, stackTrace);
       },
-      data: (data) => AsyncData(_withMockFallback(data, config)),
+      data: AsyncData.new,
     );
   }
 
   static bool _shouldUseDemoFallback(Object error) {
-    if (kDebugMode) return true;
     if (error is ReportsException && error.code == 'OFFLINE') return true;
     if (error is DioException && ApiErrorParser.isOffline(error)) return true;
     if (NetworkExceptionClassifier.isConnectivityError(error)) return true;
@@ -338,14 +376,6 @@ abstract final class MobileReportDataLoader {
     }
   }
 
-  static MobileReportViewData _withMockFallback(
-    MobileReportViewData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    if (data.rows.isNotEmpty || !kDebugMode) return data;
-    return MobileReportMockData.forConfig(config);
-  }
-
   static MobileReportViewData _empty(MobileReportSubsectionConfig config) {
     return MobileReportViewData(
       summaryMetrics: [
@@ -361,21 +391,15 @@ abstract final class MobileReportDataLoader {
       ],
       rows: const [],
       totalCount: 0,
-      filterChips: _defaultChips,
     );
   }
-
-  static const _defaultChips = [
-    'Firm - All firms',
-    'URP User - All Users',
-  ];
 
   static MobileReportViewData _build({
     required MobileReportSubsectionConfig config,
     required int count,
     required List<MobileReportSummaryMetric> metrics,
     required List<MobileReportRow> rows,
-    List<String> filterChips = _defaultChips,
+    List<String> filterChips = const [],
     List<String> exportHeaders = const ['Name', 'Reference', 'Value'],
     List<List<String>> exportRows = const [],
   }) {
@@ -393,12 +417,12 @@ abstract final class MobileReportDataLoader {
     MobileReportSubsectionConfig config, {
     required String title,
     required String reference,
-    DateTime? dateTime,
     required List<String> values,
+    DateTime? dateTime,
   }) {
     return MobileReportRow(
       title: title,
-      reference: reference,
+      reference: shortenMobileReportReference(reference),
       dateTime: dateTime,
       columns: [
         for (var i = 0; i < config.columnLabels.length; i++)
@@ -433,10 +457,9 @@ abstract final class MobileReportDataLoader {
         ),
       ],
       rows: [
-        for (final invoice in data.rows)
-          _fromSaleInvoice(invoice, config),
+        for (final invoice in data.rows) _fromSaleInvoice(invoice, config),
       ],
-      filterChips: [..._defaultChips, 'Txns Type - Sale'],
+      filterChips: const ['Txns Type - Sale'],
     );
   }
 
@@ -492,7 +515,7 @@ abstract final class MobileReportDataLoader {
             ],
           ),
       ],
-      filterChips: [..._defaultChips, 'Txns Type - Purchase'],
+      filterChips: const ['Txns Type - Purchase'],
     );
   }
 
@@ -500,6 +523,21 @@ abstract final class MobileReportDataLoader {
     DayBookReportData data,
     MobileReportSubsectionConfig config,
   ) {
+    final rowMoneyIn = data.rows.fold<double>(
+      0,
+      (sum, row) => sum + row.moneyIn,
+    );
+    final rowMoneyOut = data.rows.fold<double>(
+      0,
+      (sum, row) => sum + row.moneyOut,
+    );
+    final totalMoneyIn = data.totalMoneyIn != 0 || rowMoneyIn == 0
+        ? data.totalMoneyIn
+        : rowMoneyIn;
+    final totalMoneyOut = data.totalMoneyOut != 0 || rowMoneyOut == 0
+        ? data.totalMoneyOut
+        : rowMoneyOut;
+
     return _build(
       config: config,
       count: data.rows.length,
@@ -510,11 +548,11 @@ abstract final class MobileReportDataLoader {
         ),
         MobileReportSummaryMetric(
           label: config.summaryLabels[1],
-          value: formatReportCurrency(data.totalMoneyIn),
+          value: formatReportCurrency(totalMoneyIn),
         ),
         MobileReportSummaryMetric(
           label: config.summaryLabels[2],
-          value: formatReportCurrency(data.totalMoneyOut),
+          value: formatReportCurrency(totalMoneyOut),
         ),
       ],
       rows: [
@@ -612,7 +650,7 @@ abstract final class MobileReportDataLoader {
             reference: item.isHeader ? 'HEADER' : config.referencePrefix,
             values: [
               formatReportCurrency(item.amount),
-              item.isHeader ? 'Header' : 'Line',
+              if (item.isHeader) 'Header' else 'Line',
               '${item.indent}',
             ],
           ),
@@ -624,7 +662,10 @@ abstract final class MobileReportDataLoader {
     BillWiseProfitReportData data,
     MobileReportSubsectionConfig config,
   ) {
-    final totalProfit = data.rows.fold<double>(0, (sum, row) => sum + row.profit);
+    final totalProfit = data.rows.fold<double>(
+      0,
+      (sum, row) => sum + row.profit,
+    );
     return _build(
       config: config,
       count: data.meta.total,
@@ -667,7 +708,11 @@ abstract final class MobileReportDataLoader {
   ) {
     var running = data.openingBalance;
     final rows = <MobileReportRow>[];
+    var rowMoneyIn = 0.0;
+    var rowMoneyOut = 0.0;
     for (final row in data.rows) {
+      rowMoneyIn += row.moneyIn;
+      rowMoneyOut += row.moneyOut;
       running += row.moneyIn - row.moneyOut;
       rows.add(
         _row(
@@ -683,6 +728,17 @@ abstract final class MobileReportDataLoader {
         ),
       );
     }
+
+    // Prefer API totals; fall back to row sums when API returns zeros.
+    final totalMoneyIn = data.totalMoneyIn != 0 || rowMoneyIn == 0
+        ? data.totalMoneyIn
+        : rowMoneyIn;
+    final closingBalance =
+        data.closingBalance != 0 ||
+            (rowMoneyIn == 0 && rowMoneyOut == 0 && data.openingBalance == 0)
+        ? data.closingBalance
+        : data.openingBalance + rowMoneyIn - rowMoneyOut;
+
     return _build(
       config: config,
       count: data.rows.length,
@@ -693,11 +749,11 @@ abstract final class MobileReportDataLoader {
         ),
         MobileReportSummaryMetric(
           label: config.summaryLabels[1],
-          value: formatReportCurrency(data.totalMoneyIn),
+          value: formatReportCurrency(totalMoneyIn),
         ),
         MobileReportSummaryMetric(
           label: config.summaryLabels[2],
-          value: formatReportCurrency(data.closingBalance),
+          value: formatReportCurrency(closingBalance),
         ),
       ],
       rows: rows,
@@ -745,7 +801,10 @@ abstract final class MobileReportDataLoader {
     BalanceSheetReportData data,
     MobileReportSubsectionConfig config,
   ) {
-    final assets = data.assets.fold<double>(0, (sum, item) => sum + item.amount);
+    final assets = data.assets.fold<double>(
+      0,
+      (sum, item) => sum + item.amount,
+    );
     final liabilities = data.liabilities.fold<double>(
       0,
       (sum, item) => sum + item.amount,
@@ -775,7 +834,7 @@ abstract final class MobileReportDataLoader {
             reference: item.isHeader ? 'HEADER' : config.referencePrefix,
             values: [
               formatReportCurrency(item.amount),
-              item.isHeader ? 'Header' : 'Line',
+              if (item.isHeader) 'Header' else 'Line',
               '${item.indent}',
             ],
           ),
@@ -825,7 +884,10 @@ abstract final class MobileReportDataLoader {
     PartyWiseProfitLossReportData data,
     MobileReportSubsectionConfig config,
   ) {
-    final totalProfit = data.rows.fold<double>(0, (sum, row) => sum + row.profit);
+    final totalProfit = data.rows.fold<double>(
+      0,
+      (sum, row) => sum + row.profit,
+    );
     return _build(
       config: config,
       count: data.meta.total,
@@ -915,7 +977,12 @@ abstract final class MobileReportDataLoader {
     return _build(
       config: config,
       count: data.meta.total,
-      metrics: _countTotalMetrics(data.meta.total, data.rows, (row) => row.amount, config: config),
+      metrics: _countTotalMetrics(
+        data.meta.total,
+        data.rows,
+        (row) => row.amount,
+        config: config,
+      ),
       rows: [
         for (final row in data.rows)
           _row(
@@ -997,7 +1064,12 @@ abstract final class MobileReportDataLoader {
     return _build(
       config: config,
       count: rows.length,
-      metrics: _countTotalMetrics(rows.length, rows, (row) => row.value, config: config),
+      metrics: _countTotalMetrics(
+        rows.length,
+        rows,
+        (row) => row.value,
+        config: config,
+      ),
       rows: [
         for (final row in rows)
           _row(
@@ -1138,7 +1210,12 @@ abstract final class MobileReportDataLoader {
     return _build(
       config: config,
       count: data.meta.total,
-      metrics: _countTotalMetrics(data.meta.total, data.rows, (row) => row.amount, config: config),
+      metrics: _countTotalMetrics(
+        data.meta.total,
+        data.rows,
+        (row) => row.amount,
+        config: config,
+      ),
       rows: [
         for (final row in data.rows)
           _row(
@@ -1318,7 +1395,12 @@ abstract final class MobileReportDataLoader {
     return _build(
       config: config,
       count: data.meta.total,
-      metrics: _countTotalMetrics(data.meta.total, data.rows, (row) => row.cost, config: config),
+      metrics: _countTotalMetrics(
+        data.meta.total,
+        data.rows,
+        (row) => row.cost,
+        config: config,
+      ),
       rows: [
         for (final row in data.rows)
           _row(
@@ -1343,7 +1425,12 @@ abstract final class MobileReportDataLoader {
     return _build(
       config: config,
       count: data.meta.total,
-      metrics: _countTotalMetrics(data.meta.total, data.rows, (row) => row.value, config: config),
+      metrics: _countTotalMetrics(
+        data.meta.total,
+        data.rows,
+        (row) => row.value,
+        config: config,
+      ),
       rows: [
         for (final row in data.rows)
           _row(
@@ -1829,8 +1916,8 @@ abstract final class MobileReportDataLoader {
     MobileReportSubsectionConfig? config,
   }) {
     final total = rows.fold<double>(0, (sum, row) => sum + amountSelector(row));
-    final labels = config?.summaryLabels ??
-        const ['No of Txns', 'Total', 'Balance Due'];
+    final labels =
+        config?.summaryLabels ?? const ['No of Txns', 'Total', 'Balance Due'];
     return [
       MobileReportSummaryMetric(label: labels[0], value: '$count'),
       MobileReportSummaryMetric(

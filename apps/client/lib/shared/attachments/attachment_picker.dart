@@ -12,7 +12,7 @@ Future<SaleFormAttachment?> pickTransactionAttachment({
     type: FileType.custom,
     allowedExtensions: imagesOnly
         ? const ['png', 'jpg', 'jpeg', 'webp']
-        : const ['png', 'jpg', 'jpeg', 'webp', 'pdf'],
+        : const ['png', 'jpg', 'jpeg', 'webp', 'pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx'],
     withData: true,
   );
 

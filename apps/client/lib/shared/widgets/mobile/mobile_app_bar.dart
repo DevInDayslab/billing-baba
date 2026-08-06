@@ -1,6 +1,9 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
+import 'package:billing_baba/features/notifications/application/notification_providers.dart';
+import 'package:billing_baba/features/notifications/presentation/mobile/widgets/notification_icon_button.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,13 +55,15 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     return AppBar(
       backgroundColor: backgroundColor ?? AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
       surfaceTintColor: Colors.transparent,
       elevation: elevation ?? 0,
       scrolledUnderElevation: 1,
       centerTitle: false,
+      systemOverlayStyle: AppTheme.lightSystemUi,
       leading: _buildLeading(context, business),
       title: _buildTitle(context, theme, business),
-      actions: _buildActions(),
+      actions: _buildActions(ref),
     );
   }
 
@@ -162,14 +167,15 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
     );
   }
 
-  List<Widget> _buildActions() {
+  List<Widget> _buildActions(WidgetRef ref) {
+    final unreadCount = ref.watch(notificationUnreadCountProvider).value ?? 0;
     final trailing = <Widget>[
       ...?actions,
-      if (showNotification)
-        MobileIconActionButton(
+      if (showNotification && AppConfig.showMobileNotifications)
+        NotificationIconButton(
+          onTap: onNotificationTap,
+          unreadCount: unreadCount,
           icon: Icons.notifications_outlined,
-          tooltip: 'Notifications',
-          onPressed: onNotificationTap,
         ),
       if (showSettings)
         MobileIconActionButton(

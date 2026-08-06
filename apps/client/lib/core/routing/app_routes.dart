@@ -17,6 +17,7 @@ abstract final class AppRoutes {
   static const items = '/items';
   static const itemsDetail = '/items/details';
   static const itemsCategories = '/items/categories';
+  static const itemsBrands = '/items/brands';
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
   static const itemsStockTransfer = '/items/stock-transfer';
@@ -51,6 +52,8 @@ abstract final class AppRoutes {
   static const addEstimate = '/sale/add-estimate';
   static const duplicateEstimate = '/sale/add-estimate/duplicate';
   static const editEstimate = '/sale/edit-estimate';
+  static const addProforma = '/sale/add-proforma';
+  static const editProforma = '/sale/edit-proforma';
   static const purchase = '/purchase';
   static const purchaseBills = '/purchase/bills';
   static const purchasePaymentOut = '/purchase/payment-out';
@@ -110,6 +113,7 @@ abstract final class AppRoutes {
   static const settingsPrint = '/settings/print';
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
+  static const settingsNotifications = '/settings/notifications';
   static const settingsReports = '/settings/reports';
 
   static String settingsReportGroup(String groupId) =>

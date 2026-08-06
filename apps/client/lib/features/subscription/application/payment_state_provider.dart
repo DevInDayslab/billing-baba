@@ -1,7 +1,8 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/features/subscription/application/mock_payment_service.dart';
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session.dart';
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session_provider.dart';
-import 'package:billing_baba/features/subscription/application/subscription_local_activation.dart';
+import 'package:billing_baba/features/subscription/application/subscription_mobile_checkout_flow.dart';
 import 'package:billing_baba/features/subscription/application/subscription_order_pricing.dart';
 import 'package:billing_baba/features/subscription/domain/models/payment_outcome.dart';
 import 'package:billing_baba/features/subscription/domain/models/payment_result.dart';
@@ -20,11 +21,13 @@ class PaymentState {
     this.status = PaymentStatus.idle,
     this.result,
     this.errorMessage,
+    this.pendingCredentials,
   });
 
   final PaymentStatus status;
   final PaymentResult? result;
   final String? errorMessage;
+  final SubscriptionPendingPaymentCredentials? pendingCredentials;
 
   bool get isLoading => status == PaymentStatus.loading;
   bool get isProcessing => status == PaymentStatus.loading;
@@ -33,13 +36,18 @@ class PaymentState {
     PaymentStatus? status,
     PaymentResult? result,
     String? errorMessage,
+    SubscriptionPendingPaymentCredentials? pendingCredentials,
     bool clearResult = false,
     bool clearError = false,
+    bool clearPendingCredentials = false,
   }) {
     return PaymentState(
       status: status ?? this.status,
       result: clearResult ? null : (result ?? this.result),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      pendingCredentials: clearPendingCredentials
+          ? null
+          : (pendingCredentials ?? this.pendingCredentials),
     );
   }
 }
@@ -74,6 +82,10 @@ class PaymentStateNotifier extends Notifier<PaymentState> {
     state = const PaymentState();
   }
 
+  bool get _useMockPayment =>
+      AppConfig.subscriptionMockPayment &&
+      ref.read(mockPaymentDebugOutcomeProvider) != null;
+
   Future<PaymentResult?> processPayment() async {
     if (state.isLoading) return null;
 
@@ -86,15 +98,67 @@ class PaymentStateNotifier extends Notifier<PaymentState> {
       return null;
     }
 
-    final pricing = SubscriptionOrderPricing.calculate(
-      input: session.input,
-      couponDiscountOnTaxable: session.couponDiscountOnTaxable,
-    );
-
     state = state.copyWith(
       status: PaymentStatus.loading,
       clearResult: true,
       clearError: true,
+      clearPendingCredentials: true,
+    );
+
+    if (_useMockPayment) {
+      return _processMockPayment(session);
+    }
+
+    final checkout = SubscriptionMobileCheckoutFlow(ref);
+    final checkoutResult = await checkout.process(session);
+
+    ref
+        .read(subscriptionCheckoutSessionProvider.notifier)
+        .recordTransactionId(checkoutResult.result?.transactionId);
+
+    if (checkoutResult.pendingCredentials != null) {
+      ref
+          .read(subscriptionCheckoutSessionProvider.notifier)
+          .recordPendingPayment(checkoutResult.pendingCredentials!);
+    }
+
+    state = _stateForCheckoutResult(checkoutResult);
+    return checkoutResult.result;
+  }
+
+  Future<PaymentResult?> retryStatusCheck() async {
+    final session = ref.read(subscriptionCheckoutSessionProvider);
+    if (session == null) return null;
+
+    final credentials =
+        state.pendingCredentials ?? session.pendingPaymentCredentials;
+    if (credentials == null) {
+      state = state.copyWith(
+        status: PaymentStatus.failed,
+        errorMessage: 'No pending payment to verify. Please try again.',
+      );
+      return null;
+    }
+
+    state = state.copyWith(status: PaymentStatus.loading, clearError: true);
+
+    final checkout = SubscriptionMobileCheckoutFlow(ref);
+    final checkoutResult = await checkout.retryVerification(credentials);
+
+    ref
+        .read(subscriptionCheckoutSessionProvider.notifier)
+        .recordTransactionId(checkoutResult.result?.transactionId);
+
+    state = _stateForCheckoutResult(checkoutResult);
+    return checkoutResult.result;
+  }
+
+  Future<PaymentResult?> _processMockPayment(
+    SubscriptionCheckoutSession session,
+  ) async {
+    final pricing = SubscriptionOrderPricing.calculate(
+      input: session.input,
+      couponDiscountOnTaxable: session.couponDiscountOnTaxable,
     );
 
     final debugOutcome = ref.read(mockPaymentDebugOutcomeProvider);
@@ -110,7 +174,7 @@ class PaymentStateNotifier extends Notifier<PaymentState> {
           .read(subscriptionCheckoutSessionProvider.notifier)
           .recordTransactionId(result.transactionId);
 
-      state = _stateForResult(result, session);
+      state = _stateForMockResult(result, session);
       return result;
     } on Object {
       state = state.copyWith(
@@ -121,42 +185,40 @@ class PaymentStateNotifier extends Notifier<PaymentState> {
     }
   }
 
-  Future<PaymentResult?> retryStatusCheck() async {
-    final session = ref.read(subscriptionCheckoutSessionProvider);
-    if (session == null) return null;
-
-    state = state.copyWith(status: PaymentStatus.loading, clearError: true);
-
-    final debugOutcome =
-        ref.read(mockPaymentDebugOutcomeProvider) ?? PaymentOutcome.success;
-    final pricing = SubscriptionOrderPricing.calculate(
-      input: session.input,
-      couponDiscountOnTaxable: session.couponDiscountOnTaxable,
-    );
-
-    final paymentService = ref.read(mockPaymentServiceProvider);
-    final result = await paymentService.processPayment(
-      amount: pricing.total,
-      debugOutcome: debugOutcome,
-    );
-
-    ref
-        .read(subscriptionCheckoutSessionProvider.notifier)
-        .recordTransactionId(result.transactionId);
-
-    state = _stateForResult(result, session);
-    return result;
+  PaymentState _stateForCheckoutResult(
+    SubscriptionMobileCheckoutResult checkoutResult,
+  ) {
+    return switch (checkoutResult.outcome) {
+      PaymentOutcome.success => PaymentState(
+        status: PaymentStatus.success,
+        result: checkoutResult.result,
+      ),
+      PaymentOutcome.pending => PaymentState(
+        status: PaymentStatus.pending,
+        result: checkoutResult.result,
+        errorMessage: checkoutResult.errorMessage,
+        pendingCredentials: checkoutResult.pendingCredentials,
+      ),
+      PaymentOutcome.failed => PaymentState(
+        status: PaymentStatus.failed,
+        result: checkoutResult.result,
+        errorMessage:
+            checkoutResult.errorMessage ??
+            checkoutResult.result?.failureMessage ??
+            'Payment could not be processed. Please try again.',
+      ),
+    };
   }
 
-  PaymentState _stateForResult(
+  PaymentState _stateForMockResult(
     PaymentResult result,
     SubscriptionCheckoutSession session,
   ) {
     return switch (result.outcome) {
-      PaymentOutcome.success => () {
-        activateLocalSubscription(ref, session: session);
-        return PaymentState(status: PaymentStatus.success, result: result);
-      }(),
+      PaymentOutcome.success => PaymentState(
+        status: PaymentStatus.success,
+        result: result,
+      ),
       PaymentOutcome.pending => PaymentState(
         status: PaymentStatus.pending,
         result: result,

@@ -18,6 +18,9 @@ export const createPartyRoutes = (config: AppConfig): FastifyPluginAsync => {
     app.post('/', { preHandler }, controller.create);
     app.get('/:id/delete-status', { preHandler }, controller.getDeleteStatus);
     app.get('/:id/ledger', { preHandler }, controller.getLedger);
+    app.get('/:id/notes', { preHandler }, controller.getNotes);
+    app.put('/:id/notes', { preHandler }, controller.upsertNotes);
+    app.delete('/:id/notes', { preHandler }, controller.clearNotes);
     app.get('/:id/loyalty', { preHandler }, loyaltyController.getPartyBalance);
     app.get(
       '/:id/loyalty/transactions',

@@ -1,6 +1,10 @@
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -43,6 +47,7 @@ class AddItemForm extends Notifier<AddItemFormState> {
     state = state.copyWith(
       itemName: value,
       itemNameError: false,
+      clearFieldErrors: true,
       isDirty: true,
     );
   }
@@ -64,7 +69,31 @@ class AddItemForm extends Notifier<AddItemFormState> {
   }
 
   void setSupplierPartyIds(List<String> partyIds) {
-    state = state.copyWith(supplierPartyIds: partyIds, isDirty: true);
+    final cleaned = partyIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList();
+    final currentDefault = state.defaultSupplierPartyId;
+    final nextDefault = cleaned.isEmpty
+        ? null
+        : (currentDefault != null && cleaned.contains(currentDefault)
+              ? currentDefault
+              : cleaned.first);
+    state = state.copyWith(
+      supplierPartyIds: cleaned,
+      defaultSupplierPartyId: nextDefault,
+      clearDefaultSupplier: nextDefault == null,
+      isDirty: true,
+    );
+  }
+
+  void setDefaultSupplierPartyId(String? partyId) {
+    if (partyId != null && !state.supplierPartyIds.contains(partyId)) return;
+    state = state.copyWith(
+      defaultSupplierPartyId: partyId,
+      clearDefaultSupplier: partyId == null,
+      isDirty: true,
+    );
   }
 
   void updateHsn(String value) {
@@ -90,6 +119,8 @@ class AddItemForm extends Notifier<AddItemFormState> {
     state = state.copyWith(
       baseUnitId: baseUnitId,
       secondaryUnitId: secondaryUnitId,
+      baseUnitError: false,
+      clearFieldErrors: true,
       isDirty: true,
     );
   }
@@ -124,17 +155,6 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void updateDescription(String value) {
     state = state.copyWith(description: value, isDirty: true);
-  }
-
-  void setTrackingMode(ItemTrackingMode mode) {
-    state = state.copyWith(trackingMode: mode, isDirty: true);
-  }
-
-  void clearTracking() {
-    state = state.copyWith(
-      trackingMode: ItemTrackingMode.none,
-      isDirty: true,
-    );
   }
 
   void setActiveTab(int index) {
@@ -203,8 +223,12 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void updateRawMaterial(
     String id, {
+    String? rawItemId,
+    bool clearRawItemId = false,
     String? itemName,
     double? qty,
+    String? unitId,
+    bool clearUnitId = false,
     String? unitLabel,
     double? purchasePrice,
   }) {
@@ -213,8 +237,12 @@ class AddItemForm extends Notifier<AddItemFormState> {
           .map(
             (row) => row.id == id
                 ? row.copyWith(
+                    rawItemId: rawItemId,
+                    clearRawItemId: clearRawItemId,
                     itemName: itemName,
                     qty: qty,
+                    unitId: unitId,
+                    clearUnitId: clearUnitId,
                     unitLabel: unitLabel,
                     purchasePrice: purchasePrice,
                   )
@@ -222,6 +250,43 @@ class AddItemForm extends Notifier<AddItemFormState> {
           )
           .toList(),
       isDirty: true,
+    );
+  }
+
+  void selectRawMaterialItem(String id, SaleItemOption item) {
+    state = state.copyWith(
+      rawMaterials: state.rawMaterials
+          .map(
+            (row) => row.id == id
+                ? row.copyWith(
+                    rawItemId: item.id,
+                    itemName: item.name,
+                    unitLabel: saleItemDefaultUnit(item),
+                    purchasePrice: item.purchasePrice,
+                  )
+                : row,
+          )
+          .toList(),
+      isDirty: true,
+    );
+  }
+
+  void setBomRows({
+    required List<RawMaterialRow> rawMaterials,
+    required List<AdditionalCostRow> additionalCosts,
+  }) {
+    state = state.copyWith(
+      rawMaterials: rawMaterials,
+      additionalCosts: additionalCosts,
+      isDirty: true,
+    );
+  }
+
+  void setBomFromModel(ItemBomModel bom) {
+    final rows = AddItemFormMapper.bomToFormRows(bom);
+    setBomRows(
+      rawMaterials: rows.rawMaterials,
+      additionalCosts: rows.additionalCosts,
     );
   }
 
@@ -321,10 +386,80 @@ class AddItemForm extends Notifier<AddItemFormState> {
     state = state.copyWith(tierPrices: rows, isDirty: true);
   }
 
+  void ensureAllTierRows() {
+    final used = state.tierPrices.map((row) => row.tierKey).toSet();
+    final missing = PriceTier.all.where((tier) => !used.contains(tier)).toList();
+    if (missing.isEmpty) return;
+    state = state.copyWith(
+      tierPrices: [
+        ...state.tierPrices,
+        for (final tier in missing)
+          ItemTierPriceRow(id: _nextRowId(), tierKey: tier),
+      ],
+      isDirty: true,
+    );
+  }
+
   bool validate() {
-    final isValid = state.itemName.trim().isNotEmpty;
-    state = state.copyWith(itemNameError: !isValid);
-    return isValid;
+    final nameMissing = state.itemName.trim().isEmpty;
+    // Services can fall back to a default unit; products must pick one.
+    final unitMissing = state.itemType == ItemType.product &&
+        (state.baseUnitId == null || state.baseUnitId!.isEmpty);
+
+    state = state.copyWith(
+      itemNameError: nameMissing,
+      baseUnitError: unitMissing,
+      clearFieldErrors: true,
+    );
+    return !nameMissing && !unitMissing;
+  }
+
+  /// Maps API / service validation onto form fields. Returns true when at least
+  /// one visible field was marked so the UI can skip a global toast.
+  bool applyFieldErrors(Map<String, String> errors) {
+    if (errors.isEmpty) return false;
+
+    var nameError = false;
+    var unitError = false;
+    for (final entry in errors.entries) {
+      final key = entry.key.toLowerCase();
+      if (key == 'name' || key == 'item_name') {
+        nameError = true;
+      } else if (key.contains('base_unit') || key == 'unit') {
+        unitError = true;
+      }
+    }
+
+    state = state.copyWith(
+      itemNameError: nameError || state.itemNameError,
+      baseUnitError: unitError || state.baseUnitError,
+      fieldErrors: errors,
+    );
+    return nameError || unitError;
+  }
+
+  /// Maps known client/service exception messages onto form fields.
+  bool applyExceptionMessage(String message) {
+    final lower = message.toLowerCase();
+    if (lower.contains('base unit')) {
+      state = state.copyWith(baseUnitError: true);
+      return true;
+    }
+    if (lower.contains('item name') ||
+        lower.contains('name is required') ||
+        lower.contains('service name')) {
+      state = state.copyWith(itemNameError: true);
+      return true;
+    }
+    return false;
+  }
+
+  void clearErrors() {
+    state = state.copyWith(
+      itemNameError: false,
+      baseUnitError: false,
+      clearFieldErrors: true,
+    );
   }
 
   void reset({ItemType? itemType}) {

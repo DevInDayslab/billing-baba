@@ -13,6 +13,7 @@ abstract final class RoutePermissionRegistry {
     AppRoutes.partyHiddenLedger: PermissionModule.party,
     AppRoutes.items: PermissionModule.item,
     AppRoutes.itemsCategories: PermissionModule.item,
+    AppRoutes.itemsBrands: PermissionModule.item,
     AppRoutes.itemsUnits: PermissionModule.item,
     AppRoutes.itemsGodowns: PermissionModule.item,
     AppRoutes.itemsStockTransfer: PermissionModule.stockTransfer,

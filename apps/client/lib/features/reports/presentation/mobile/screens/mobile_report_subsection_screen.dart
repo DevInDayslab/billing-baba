@@ -36,9 +36,9 @@ class MobileReportSubsectionScreen extends ConsumerWidget {
         : MobileReportSubsectionRegistry.config(group, subsectionId);
 
     if (group == null || config == null) {
-      return MobileReportScaffold(
+      return const MobileReportScaffold(
         title: 'Report',
-        body: const Center(child: Text('Report not found')),
+        body: Center(child: Text('Report not found')),
       );
     }
 
@@ -157,7 +157,7 @@ class _ReportBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MobileReportFilterHeader(
-          filterChips: data.filterChips,
+          extraChips: data.filterChips,
           onFiltersChanged: onFiltersChanged,
         ),
         if (data.usingMock)

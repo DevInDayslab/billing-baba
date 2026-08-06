@@ -12,12 +12,14 @@ class ItemListView extends StatelessWidget {
     super.key,
     this.onRefresh,
     this.onItemTap,
+    this.onItemLongPress,
   });
 
   final List<InventoryItem> items;
   final Map<String, String> categoryNamesById;
   final Future<void> Function()? onRefresh;
   final ValueChanged<InventoryItem>? onItemTap;
+  final ValueChanged<InventoryItem>? onItemLongPress;
 
   static const _listPadding = EdgeInsets.fromLTRB(
     AppSpacing.lg,
@@ -56,6 +58,8 @@ class ItemListView extends StatelessWidget {
       item: item,
       categoryName: categoryNamesById[item.categoryId],
       onTap: onItemTap == null ? null : () => onItemTap!(item),
+      onLongPress:
+          onItemLongPress == null ? null : () => onItemLongPress!(item),
     );
   }
 }

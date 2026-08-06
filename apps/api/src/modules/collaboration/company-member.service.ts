@@ -239,6 +239,13 @@ export class CompanyMemberService {
         invitation.phone,
         invitation.email,
       );
+
+      if (activeMember.accountId) {
+        await this.repository.deactivateCollaboratorUser(
+          businessId,
+          activeMember.accountId,
+        );
+      }
       return;
     }
 
@@ -277,6 +284,11 @@ export class CompanyMemberService {
     }
 
     await this.repository.markInvitationLeftByMember(
+      member.companyId,
+      accountId,
+    );
+
+    await this.repository.deactivateCollaboratorUser(
       member.companyId,
       accountId,
     );

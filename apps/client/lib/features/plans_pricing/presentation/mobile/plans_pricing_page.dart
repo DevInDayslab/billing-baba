@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/application/mobile_feature_comparison_data.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/application/mobile_plans_selection_provider.dart';
@@ -14,9 +13,10 @@ import 'package:billing_baba/features/subscription/application/plans_pricing_vie
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session.dart';
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
-import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
+import 'package:billing_baba/features/subscription/application/subscription_plan_type_resolver.dart';
 import 'package:billing_baba/features/subscription/domain/subscription_plan_metadata.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_input.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -85,11 +85,6 @@ class _PlansPricingBody extends ConsumerWidget {
   PricingPlanType _planTypeFor(PricingPlan plan) =>
       plan.isGold ? PricingPlanType.gold : PricingPlanType.platinum;
 
-  SubscriptionPlanType _subscriptionTypeFor(PricingPlanType type) =>
-      type == PricingPlanType.gold
-          ? SubscriptionPlanType.gold
-          : SubscriptionPlanType.platinum;
-
   void _openReviewOrder(
     BuildContext context,
     WidgetRef ref,
@@ -97,7 +92,7 @@ class _PlansPricingBody extends ConsumerWidget {
     PlanPlatform platform,
     PlanDuration duration,
   ) {
-    final planType = _subscriptionTypeFor(_planTypeFor(plan));
+    final planType = subscriptionPlanTypeFor(plan);
     final pricing = plan.pricingFor(platform, duration);
     final metadata = metadataFor(planType);
 

@@ -1645,9 +1645,174 @@ Sale invoices showed an out-of-stock warning for zero-stock items, but clicking 
 
 ---
 
+## ADR-042: Item Suppliers Junction Table
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-04 |
+| **Status** | Accepted |
+
+#### Context
+
+Items can be sourced from multiple supplier parties. The client previously stored item↔supplier links in local-only preferences with no API or sync support.
+
+#### Decision
+
+- Add `item_suppliers` junction table (`business_id`, `item_id`, `party_id`, `is_default`, `sort_order`) with standard sync columns and soft delete.
+- Unique active constraint on `(business_id, item_id, party_id)`; at most one `is_default` per item enforced in the API service layer.
+- Expose `GET` and `PUT /inventory/items/:itemId/suppliers` (replace-set semantics).
+- Register `item_suppliers` for offline sync push/pull.
+
+#### Consequences
+
+- Client can migrate from local-only supplier links to synced storage.
+- Supplier parties must be `supplier` or `both` party types when assigned via API.
+- Default supplier is optional; reordering uses `sort_order`.
+
+---
+
+## ADR-043: Item Manufacturing BOM
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-04 |
+| **Status** | Accepted |
+
+#### Context
+
+Product items can define a bill of materials (raw materials + additional manufacturing costs) for cost estimation. The Add Item UI existed but BOM data was not persisted or synced.
+
+#### Decision
+
+- Add `item_bom_materials` (`item_id`, `raw_item_id`, `qty`, `unit_id`, `purchase_price` snapshot, `sort_order`) and `item_bom_costs` (`item_id`, `description`, `amount`, `sort_order`) with standard sync columns.
+- Unique active constraint on `(business_id, item_id, raw_item_id)` for materials.
+- Expose `GET` and `PUT /inventory/items/:itemId/bom` (replace-set semantics for both child collections).
+- Register `item_bom_materials` and `item_bom_costs` for offline sync push/pull.
+- Client stores BOM in Drift, queues row mutations, and saves from Add Item form (desktop tab + mobile manufacturing screen).
+
+#### Consequences
+
+- Finished goods cannot reference themselves as raw materials (API validation).
+- Raw material and unit IDs must exist and be active when saved via API.
+- Purchase price on BOM lines is a snapshot; item master price changes do not auto-update BOM lines.
+
+---
+
+## ADR-044: Mobile Inventory Phase Complete
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-04 |
+| **Status** | Accepted (amended 2026-08-04 — finalization sprint) |
+| **Author** | Engineering |
+
+#### Context
+
+Mobile inventory had multiple P0 gaps: delete UI, brands/godowns screens, suppliers and manufacturing prototypes (SharedPreferences / form-only), tier pricing and alternatives without offline sync, and list/reports polish items (mock data, single-select filters, desktop dialogs on mobile).
+
+A production readiness audit then found release blockers: `item_alternatives` missing from client push allowlist, incomplete delete cascade, missing sync pull indexes / partial unique on tier prices, weak RBAC on mobile, and incomplete backend validation.
+
+#### Decision
+
+Declare **Phase 1 — Inventory** production-ready after the Inventory Completion Roadmap **and** the Inventory Finalization Sprint:
+
+- **Sprint 1–3:** Delete item UI; mobile brands/godowns CRUD; `item_suppliers` full stack; tier/alternatives/BOM offline sync; stock sheet; Products/Services tabs; multi-select filters.
+- **Finalization:**
+  - Push `item_alternatives` offline mutations.
+  - Repository-level delete cascade (tiers, suppliers, BOM, owned + reverse alternatives).
+  - Migration `0051_item_sync_indexes` (sync pull indexes + partial unique on tier prices).
+  - Mobile `PermissionGate` / permission checks on create/edit/delete for items and master data.
+  - Default supplier selection; brand/category filters; manufacturing setting gate; mobile list lazy load.
+  - Backend: required default supplier, positive BOM qty, circular BOM detection, item delete guards, godown single-default.
+  - Remove deprecated SharedPreferences providers and debug report mock fallbacks.
+
+**Still deferred:** Stock Transfer route (`ComingSoonPage`), P2 custom/additional item fields, full desktop ComingSoon replacements for brands/godowns/categories/units detail routes (desktop uses split-panel for items).
+
+#### Consequences
+
+- Inventory module is frozen unless fixing bugs; new inventory work requires a new ADR or explicit scope expansion.
+- Legacy `local_item_suppliers_*` / `local_item_tier_prices_*` SharedPreferences keys are migrated then purged.
+- Stock Transfer and custom item fields remain future work.
+
+---
+
+## ADR-041: Razorpay Payment Gateway for Invoice Collections (Mobile)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-05 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Businesses need to collect customer payments online (UPI, cards, net banking) against invoices and Payment In records. Subscription Razorpay already exists for SaaS billing; invoice collection requires a separate gateway flow integrated with accounting `payments`.
+
+#### Decision
+
+- New API module at `/api/v1/payments` (`payment-gateway`): `create-order`, `verify`, `status/:id`, `webhook`.
+- Platform Razorpay keys (same env as subscription); no per-business merchant keys in v1.
+- Shared payment infrastructure under `apps/api/src/shared/payments/` (`razorpay_client`, `razorpay_signature`, `payment-mode.mapper`, `PaymentValidationService`).
+- `gateway_payment_intents` table with debug fields (`business_name`, `customer_name`, etc.), `intent_payload_version`, and granular statuses (`created` → `checkout_open` → `callback_received` → `verifying` → `verified`).
+- Webhooks enqueue `gateway_reconciliation_jobs`; background worker processes asynchronously (respond 200 immediately).
+- On verify: HMAC signature → fetch payment from Razorpay → `PaymentValidationService` → `PaymentService.createPayment` with `source: razorpay_gateway`.
+- Flutter `features/payments/`: `PaymentController` → `PaymentCheckoutService` → native `razorpay_flutter` → `PaymentRepository` → API. Never mark success without backend verify.
+- Local `gateway_payment_sessions_local` for offline verification retry; recovery on app resume, reconnect, and 5-minute poll.
+- Feature flags: `razorpayNative`, `razorpayWebViewFallback`, `paymentRecoveryEnabled`, `paymentWebhookRecovery`, `paymentLoggingVerbose`.
+
+#### Consequences
+
+- Invoice payments are online-authoritative; accounting payment row created only after server verification.
+- Subscription and gateway share Razorpay client code; future gateways (PhonePe, Cashfree) extend `shared/payments/`.
+- WebView checkout remains fallback behind flag; mobile default is native SDK.
+
+#### Alternatives Considered
+
+- Client-side signature verification — rejected (security).
+- Synchronous webhook processing — rejected (reliability under load).
+- Per-business Razorpay accounts — deferred to follow-up.
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.
+
+### ADR-025: Dashboard Todos as Offline-First Sync Entity
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-06 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Dashboard todos (personal reminders on Home → Alerts) were stored as JSON blobs in SharedPreferences per business. They did not sync across devices, were excluded from backup, and diverged from the offline-first architecture used by parties, inventory, and CRM entities.
+
+#### Decision
+
+Promote todos to a first-class row-sync entity:
+
+- Extend Postgres `todos` with client fields (`is_pinned`, `category`, `reminder_at`, document link FKs, `attachment_ids`).
+- Register `todos` in the API row-sync registry (`/sync/push`, `/sync/pull`).
+- Add Drift table `todos_local` and client `TodoMasterRepository` + `TodoSync`.
+- Expose REST CRUD at `/api/v1/todos` for hydration fallback only.
+- Migrate legacy `dashboard_tasks_{businessId}` SharedPreferences JSON into Drift on first load, enqueue create mutations, then delete legacy keys.
+
+#### Consequences
+
+- Todos sync automatically with the existing SyncCoordinator (no parallel sync path).
+- Desktop and mobile share the same todo list per business when online.
+- Company-switch warm reads todos from Drift instead of SharedPreferences.
+- Schema migration required on API (`0054_todos_sync_fields.sql`) and client (Drift v27).
+
+#### Alternatives Considered
+
+- **REST-only fetch on load:** Faster to ship but not offline-first; rejected.
+- **Keep SharedPreferences + periodic upload:** Duplicate sync mechanism; rejected.
+
+---
 
 ### ADR-<ID>: <Title>
 

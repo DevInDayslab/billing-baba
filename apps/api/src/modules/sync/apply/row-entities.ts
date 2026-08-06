@@ -2,6 +2,11 @@ import { categories, items, parties } from '../../../db/schema';
 import {
   brands,
   godowns,
+  itemAlternatives,
+  itemBomCosts,
+  itemBomMaterials,
+  itemSuppliers,
+  itemTierPrices,
   stockLevels,
   unitDefinitions,
 } from '../../../db/schema/inventory/tables';
@@ -18,6 +23,7 @@ import {
   purchaseDocumentLines,
   purchaseDocuments,
 } from '../../../db/schema/purchases/tables';
+import { todos } from '../../../db/schema/notifications/tables';
 import {
   salesDocumentLines,
   salesDocuments,
@@ -183,6 +189,38 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
     table: brands,
     allowedColumns: ['name'],
   }),
+  item_suppliers: defineEntity({
+    entityType: 'item_suppliers',
+    table: itemSuppliers,
+    allowedColumns: ['itemId', 'partyId', 'isDefault', 'sortOrder'],
+  }),
+  item_bom_materials: defineEntity({
+    entityType: 'item_bom_materials',
+    table: itemBomMaterials,
+    allowedColumns: [
+      'itemId',
+      'rawItemId',
+      'qty',
+      'unitId',
+      'purchasePrice',
+      'sortOrder',
+    ],
+  }),
+  item_bom_costs: defineEntity({
+    entityType: 'item_bom_costs',
+    table: itemBomCosts,
+    allowedColumns: ['itemId', 'description', 'amount', 'sortOrder'],
+  }),
+  item_alternatives: defineEntity({
+    entityType: 'item_alternatives',
+    table: itemAlternatives,
+    allowedColumns: ['itemId', 'alternativeItemId', 'sortOrder'],
+  }),
+  item_tier_prices: defineEntity({
+    entityType: 'item_tier_prices',
+    table: itemTierPrices,
+    allowedColumns: ['itemId', 'pricingTier', 'price'],
+  }),
   leads: defineEntity({
     entityType: 'leads',
     table: leads,
@@ -234,6 +272,26 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'amount',
       'expectedCloseDate',
       'description',
+    ],
+  }),
+  todos: defineEntity({
+    entityType: 'todos',
+    table: todos,
+    allowedColumns: [
+      'title',
+      'description',
+      'priority',
+      'category',
+      'partyId',
+      'dueDate',
+      'reminderAt',
+      'isCompleted',
+      'completedAt',
+      'isPinned',
+      'linkedInvoiceId',
+      'linkedPurchaseId',
+      'linkedProductId',
+      'attachmentIds',
     ],
   }),
   expense_categories: defineEntity({

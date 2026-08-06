@@ -6,15 +6,13 @@ import 'package:billing_baba/features/inventory/application/inventory_catalog.da
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
-import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
-import 'package:billing_baba/features/pricing/application/item_api_tier_prices_provider.dart';
-import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -41,10 +39,9 @@ void invalidateItemCaches(
       if (!ref.mounted) return;
       ref
         ..invalidate(productDetailProvider(itemId))
-        ..invalidate(itemTierPricesProvider(itemId))
+        ..invalidate(itemTierPricesForItemProvider(itemId))
         ..invalidate(itemStockLevelsProvider(itemId))
         ..invalidate(productTransactionsProvider(itemId));
-      ref.read(itemApiTierPricesProvider.notifier).removeItem(itemId);
       if (refreshDashboard) {
         invalidateDashboard(ref);
       }
@@ -53,30 +50,6 @@ void invalidateItemCaches(
 }
 
 const _uuid = Uuid();
-
-List<InventoryItem> _catalogItems({
-  String? searchQuery,
-  ItemType? type,
-  String? categoryId,
-}) {
-  var items = InventoryCatalog.items;
-  if (type != null) {
-    items = items.where((item) => item.type == type).toList();
-  }
-  if (categoryId != null) {
-    items = items.where((item) => item.categoryId == categoryId).toList();
-  }
-  final query = searchQuery?.trim();
-  if (query != null && query.isNotEmpty) {
-    final engine = InventorySearchEngine.build(
-      items: items.map(
-        InventorySearchableFields.fromInventoryItem,
-      ),
-    );
-    items = engine.searchItems(items, query: query);
-  }
-  return items;
-}
 
 InventoryItemsQuery _currentQuery(Ref ref) {
   return InventoryItemsQuery(
@@ -288,11 +261,14 @@ class InventoryItems extends _$InventoryItems {
     InventoryItem server,
   ) {
     if (!isPendingLocalInventoryItemId(local.id)) return;
-    final tiers = ref.read(localItemTierPricesProvider)[local.id];
+    final tiers = ref.read(itemTierPricesProvider).value?[local.id];
     if (tiers == null || tiers.isEmpty) return;
-    ref.read(localItemTierPricesProvider.notifier)
-      ..setTierPrices(server.id, tiers)
-      ..removeItem(local.id);
+    unawaited(() async {
+      await ref
+          .read(itemTierPricesProvider.notifier)
+          .setTierPrices(server.id, tiers);
+      await ref.read(itemTierPricesProvider.notifier).removeItem(local.id);
+    }());
   }
 
   void _upsertItem(InventoryItem item) {
@@ -426,7 +402,6 @@ class InventoryItems extends _$InventoryItems {
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteItem(id);
-      ref.read(localItemTierPricesProvider.notifier).removeItem(id);
       invalidateItemCaches(ref, id, refreshDashboard: true);
       return null;
     } on InventoryException catch (error) {

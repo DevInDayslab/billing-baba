@@ -22,7 +22,7 @@ class MobileAddItemTabBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          MobileAddItemTheme.sectionBandDivider(),
+          const SizedBox(height: MobileAddItemTheme.sectionSpacing),
           SizedBox(
             height: 44,
             child: Row(
@@ -61,23 +61,25 @@ class _TabItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive
-                  ? MobileAddItemTheme.tabActiveRed
-                  : AppColors.textSecondary,
+          Expanded(
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  color: isActive
+                      ? MobileAddItemTheme.tabActiveRed
+                      : AppColors.textSecondary,
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 10),
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             height: 3,
-            width: double.infinity,
             color: isActive
                 ? MobileAddItemTheme.tabActiveRed
                 : Colors.transparent,

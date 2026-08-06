@@ -119,9 +119,10 @@ abstract final class PartyLedgerTransactionTableActions {
   }
 
   static List<PartyLedgerMenuEntry> menuEntriesFor(
-    PartyLedgerTransactionModel transaction,
-  ) {
-    return switch (kindFor(transaction)) {
+    PartyLedgerTransactionModel transaction, {
+    bool forMobile = false,
+  }) {
+    final entries = switch (kindFor(transaction)) {
       PartyLedgerTransactionKind.saleInvoice => const [
         PartyLedgerMenuEntry(action: 'view_edit', label: 'View/Edit'),
         PartyLedgerMenuEntry(
@@ -224,6 +225,19 @@ abstract final class PartyLedgerTransactionTableActions {
         PartyLedgerMenuEntry(action: 'view_edit', label: 'View/Edit'),
       ],
     };
+
+    if (!forMobile) return entries;
+
+    const excluded = {
+      'open_pdf',
+      'preview',
+      'preview_delivery_challan',
+      'view_history',
+    };
+    return [
+      for (final entry in entries)
+        if (!excluded.contains(entry.action)) entry,
+    ];
   }
 
   /// Runs only after the user picks a menu item — never before the popup opens.
@@ -274,6 +288,7 @@ abstract final class PartyLedgerTransactionTableActions {
       case 'open_pdf':
       case 'preview':
       case 'print':
+      case 'share':
         await _handlePrintAction(
           context,
           ref,
@@ -298,8 +313,7 @@ abstract final class PartyLedgerTransactionTableActions {
         return true;
       case 'preview_delivery_challan':
       case 'view_history':
-        _showComingSoon(context, action);
-        return true;
+        return false;
       case 'delete':
       case 'cancel_transaction':
         return false;
@@ -329,53 +343,105 @@ abstract final class PartyLedgerTransactionTableActions {
   ) async {
     final referenceId = transaction.referenceId!.trim();
     final filename = _filenameFor(transaction);
+    final useNativePrint = action == 'print';
 
     switch (kindFor(transaction)) {
       case PartyLedgerTransactionKind.saleInvoice:
-        await SaleInvoicePrintActions.preview(
-          context,
-          ref,
-          referenceId,
-          filename: filename,
-        );
+        if (useNativePrint) {
+          await SaleInvoicePrintActions.print(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        } else if (action == 'share') {
+          await SaleInvoicePrintActions.share(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        } else {
+          await SaleInvoicePrintActions.preview(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        }
       case PartyLedgerTransactionKind.saleReturn:
         final request = PrintRequest.creditNote(referenceId);
-        await DocumentPrintActions.preview(
+        await _documentPrintOrShare(
           context,
           ref,
           request,
           filename: filename,
+          action: action,
         );
       case PartyLedgerTransactionKind.purchaseBill:
         final request = PrintRequest.purchaseBill(referenceId);
-        await DocumentPrintActions.preview(
+        await _documentPrintOrShare(
           context,
           ref,
           request,
           filename: filename,
+          action: action,
         );
       case PartyLedgerTransactionKind.purchaseReturn:
         final request = PrintRequest.debitNote(referenceId);
-        await DocumentPrintActions.preview(
+        await _documentPrintOrShare(
           context,
           ref,
           request,
           filename: filename,
+          action: action,
         );
       case PartyLedgerTransactionKind.paymentIn:
-        await VoucherPrintActions.previewPaymentIn(
-          context,
-          ref,
-          referenceId,
-          filename: filename,
-        );
+        if (useNativePrint) {
+          await VoucherPrintActions.printPaymentIn(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        } else if (action == 'share') {
+          await VoucherPrintActions.sharePaymentIn(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        } else {
+          await VoucherPrintActions.previewPaymentIn(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        }
       case PartyLedgerTransactionKind.paymentOut:
-        await VoucherPrintActions.previewPaymentOut(
-          context,
-          ref,
-          referenceId,
-          filename: filename,
-        );
+        if (useNativePrint) {
+          await VoucherPrintActions.printPaymentOut(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        } else if (action == 'share') {
+          await VoucherPrintActions.sharePaymentOut(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        } else {
+          await VoucherPrintActions.previewPaymentOut(
+            context,
+            ref,
+            referenceId,
+            filename: filename,
+          );
+        }
       case PartyLedgerTransactionKind.estimate:
       case PartyLedgerTransactionKind.proforma:
       case PartyLedgerTransactionKind.saleOrder:
@@ -386,8 +452,41 @@ abstract final class PartyLedgerTransactionTableActions {
       case PartyLedgerTransactionKind.jobWork:
       case PartyLedgerTransactionKind.expense:
       case PartyLedgerTransactionKind.unknown:
-        _showComingSoon(context, action);
+        _showActionUnavailable(context, action);
     }
+  }
+
+  static Future<void> _documentPrintOrShare(
+    BuildContext context,
+    WidgetRef ref,
+    PrintRequest request, {
+    required String filename,
+    required String action,
+  }) async {
+    if (action == 'print') {
+      await DocumentPrintActions.print(
+        context,
+        ref,
+        request,
+        filename: filename,
+      );
+      return;
+    }
+    if (action == 'share') {
+      await DocumentPrintActions.share(
+        context,
+        ref,
+        request,
+        filename: filename,
+      );
+      return;
+    }
+    await DocumentPrintActions.preview(
+      context,
+      ref,
+      request,
+      filename: filename,
+    );
   }
 
   static String _filenameFor(PartyLedgerTransactionModel transaction) {
@@ -561,14 +660,14 @@ abstract final class PartyLedgerTransactionTableActions {
     switch (action) {
       case 'delete':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Delete coming soon')),
+          const SnackBar(content: Text('Delete is not available yet')),
         );
       case 'view_history':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('View History coming soon')),
+          const SnackBar(content: Text('History is not available yet')),
         );
       default:
-        _showComingSoon(context, action);
+        _showActionUnavailable(context, action);
     }
   }
 
@@ -651,9 +750,9 @@ abstract final class PartyLedgerTransactionTableActions {
         _ => null,
       };
 
-  static void _showComingSoon(BuildContext context, String action) {
+  static void _showActionUnavailable(BuildContext context, String action) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action coming soon')),
+      SnackBar(content: Text('$action is not available for this transaction')),
     );
   }
 }

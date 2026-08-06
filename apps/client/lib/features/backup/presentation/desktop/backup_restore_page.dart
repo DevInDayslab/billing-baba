@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/backup/application/backup_service.dart';
 import 'package:billing_baba/features/backup/data/backup_importer.dart';
+import 'package:billing_baba/features/backup/presentation/mobile/mobile_backup_export_sheet.dart';
 import 'package:billing_baba/shared/utils/platform_file_output.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,42 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
     try {
       final service = await ref.read(backupServiceProvider.future);
       final result = await service.exportBackup();
+      if (PlatformFileOutput.isMobile) {
+        if (!mounted) return;
+        setState(() => _busy = false);
+
+        final action = await showMobileBackupExportSheet(context: context);
+        if (!mounted || action == null) {
+          setState(() => _statusMessage = 'Export cancelled');
+          return;
+        }
+
+        setState(() => _busy = true);
+        switch (action) {
+          case MobileBackupExportAction.saveToDevice:
+            final path = await PlatformFileOutput.saveToDevice(
+              filename: result.suggestedFilename,
+              bytes: result.bytes,
+              extension: 'biba',
+            );
+            if (!mounted) return;
+            setState(() {
+              _statusMessage = path == null
+                  ? 'Export cancelled'
+                  : 'Backup saved to $path';
+            });
+          case MobileBackupExportAction.share:
+            await PlatformFileOutput.shareFromTemp(
+              filename: result.suggestedFilename,
+              bytes: result.bytes,
+              mimeType: 'application/zip',
+              extension: 'biba',
+            );
+            if (!mounted) return;
+            setState(() => _statusMessage = 'Backup ready to share');
+        }
+        return;
+      }
       final path = await PlatformFileOutput.saveViaDialog(
         filename: result.suggestedFilename,
         bytes: result.bytes,
@@ -99,8 +136,11 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
           ),
           const Gap(8),
           Text(
-            'Create a backup file on this computer, or restore from a '
-            '.biba file. Choose the save location when you create a backup.',
+            PlatformFileOutput.isMobile
+                ? 'Create a local backup (.biba) or restore from a backup file. '
+                      'When exporting, choose to save on this device or share.'
+                : 'Create a backup file on this computer, or restore from a '
+                      '.biba file. Choose the save location when you create a backup.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.textSecondary,
             ),

@@ -136,14 +136,30 @@ class PrintService {
     final settings = await _loadSettings();
     final bytes = await _renderPdf(request, settings: settings);
     if (!context.mounted) return;
+    final document = _documentFromBytes(
+      bytes: bytes,
+      name: name ?? _defaultFilename(request),
+      settings: settings,
+    );
+    final format = layoutPdfFormatFor(settings);
+
+    // Mobile: system print sheet. Desktop: in-app preview with Print action.
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      await _outputService.printToDevice(
+        context: context,
+        document: document,
+        format: format,
+        copies: settings.numberOfCopies,
+      );
+      return;
+    }
+
     await _outputService.printDocument(
       context: context,
-      document: _documentFromBytes(
-        bytes: bytes,
-        name: name ?? _defaultFilename(request),
-        settings: settings,
-      ),
-      format: layoutPdfFormatFor(settings),
+      document: document,
+      format: format,
       copies: settings.numberOfCopies,
     );
   }

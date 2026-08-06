@@ -6,11 +6,26 @@ abstract final class InventoryItemFilterService {
     InventoryItem item, {
     required InventoryItemFiltersState filters,
   }) {
-    if (filters.selected.isEmpty) return true;
+    if (!filters.hasActiveFilters) return true;
 
     for (final option in filters.selected) {
       if (!_matchesOption(item, option)) return false;
     }
+
+    if (filters.brandIds.isNotEmpty) {
+      final brandId = item.brandId;
+      if (brandId == null || !filters.brandIds.contains(brandId)) {
+        return false;
+      }
+    }
+
+    if (filters.categoryIds.isNotEmpty) {
+      final categoryId = item.categoryId;
+      if (categoryId == null || !filters.categoryIds.contains(categoryId)) {
+        return false;
+      }
+    }
+
     return true;
   }
 

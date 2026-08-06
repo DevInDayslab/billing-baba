@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/business/utils/business_avatar_color.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -55,8 +56,11 @@ class BusinessAvatar extends StatelessWidget {
         height: diameter,
         child: AppNetworkImage(
           imageUrl: url,
+          displayContext: ImageDisplayContext.list,
           width: diameter,
           height: diameter,
+          memCacheWidth: (diameter * 3).round(),
+          loadWhenVisible: false,
           placeholder: _initialsAvatar(),
           errorWidget: _initialsAvatar(),
         ),

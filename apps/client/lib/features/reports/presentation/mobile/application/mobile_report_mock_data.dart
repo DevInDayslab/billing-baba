@@ -67,8 +67,6 @@ abstract final class MobileReportMockData {
     totalCount: 20,
     usingMock: true,
     filterChips: [
-      'Firm - All firms',
-      'URP User - All Users',
       'Txns Type - Sale',
     ],
     exportHeaders: ['Party', 'Reference', 'Amount', 'Balance', 'Due Date'],
@@ -129,8 +127,6 @@ abstract final class MobileReportMockData {
     totalCount: 12,
     usingMock: true,
     filterChips: [
-      'Firm - All firms',
-      'URP User - All Users',
       'Txns Type - Purchase',
     ],
     exportHeaders: ['Party', 'Reference', 'Amount', 'Balance', 'Date'],
@@ -180,10 +176,6 @@ abstract final class MobileReportMockData {
       rows: rows,
       totalCount: rows.length,
       usingMock: true,
-      filterChips: const [
-        'Firm - All firms',
-        'URP User - All Users',
-      ],
       exportHeaders: [
         'Name',
         'Reference',
@@ -240,9 +232,7 @@ abstract final class MobileReportMockData {
       return lower.contains('level') ? '$index' : dateSamples[index];
     }
     if (lower.contains('status') || lower.contains('type')) {
-      return lower.contains('type')
-          ? typeSamples[index]
-          : statusSamples[index];
+      return lower.contains('type') ? typeSamples[index] : statusSamples[index];
     }
     if (lower.contains('%') || lower.contains('disc %')) {
       return '${5 + index * 2}%';

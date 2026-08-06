@@ -2,6 +2,16 @@ import 'dart:async';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
+import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/categories/mobile_add_category_sheet.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
@@ -9,12 +19,6 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
-import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
-import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
-import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
-import 'package:billing_baba/features/inventory/inventory_constants.dart';
-import 'package:billing_baba/features/inventory/models/category_model.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/categories/mobile_add_category_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -114,22 +118,27 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
   void _showCategoryActions(InventoryCategory category) {
     if (category.isUncategorized) return;
 
+    final permissions = ref.read(permissionServiceProvider);
+    final actions = <MobileSheetAction>[
+      if (permissions.canEdit(PermissionModule.item))
+        MobileSheetAction(
+          icon: Icons.edit_outlined,
+          label: 'Edit Category',
+          onTap: () => unawaited(_editCategory(category)),
+        ),
+      if (permissions.canDelete(PermissionModule.item))
+        MobileSheetAction(
+          icon: Icons.delete_outline_rounded,
+          label: 'Delete Category',
+          onTap: () => unawaited(_confirmDeleteCategory(category)),
+        ),
+    ];
+    if (actions.isEmpty) return;
     unawaited(
       showMobileMoreActionsSheet(
         context: context,
         title: category.name,
-        actions: [
-          MobileSheetAction(
-            icon: Icons.edit_outlined,
-            label: 'Edit Category',
-            onTap: () => unawaited(_editCategory(category)),
-          ),
-          MobileSheetAction(
-            icon: Icons.delete_outline_rounded,
-            label: 'Delete Category',
-            onTap: () => unawaited(_confirmDeleteCategory(category)),
-          ),
-        ],
+        actions: actions,
       ),
     );
   }
@@ -148,7 +157,6 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
         title: 'Categories',
         showBusinessHeader: false,
         showNotification: false,
-        showSettings: true,
         onSettingsTap: () => context.push(AppRoutes.itemsSettings),
       ),
       body: Stack(
@@ -185,8 +193,16 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
                     title: 'No categories found',
                     message: 'Add a category to organize your items.',
                     icon: Icons.category_outlined,
-                    actionLabel: 'Add Category',
-                    onAction: () => unawaited(_addCategory()),
+                    actionLabel: ref
+                            .read(permissionServiceProvider)
+                            .canCreate(PermissionModule.item)
+                        ? 'Add Category'
+                        : null,
+                    onAction: ref
+                            .read(permissionServiceProvider)
+                            .canCreate(PermissionModule.item)
+                        ? () => unawaited(_addCategory())
+                        : null,
                   ),
                   _ => Stack(
                     children: [
@@ -201,7 +217,7 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
                             ),
                           ),
                           itemCount: categories.length,
-                          separatorBuilder: (_, __) => const Divider(
+                          separatorBuilder: (_, _) => const Divider(
                             height: 1,
                             thickness: 1,
                             color: Color(0xFFEEEEEE),
@@ -235,7 +251,11 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
             right: 0,
             bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
             child: Center(
+            child: PermissionGate(
+              module: PermissionModule.item,
+              action: PermissionAction.create,
               child: _AddCategoryFab(onPressed: () => unawaited(_addCategory())),
+            ),
             ),
           ),
         ],

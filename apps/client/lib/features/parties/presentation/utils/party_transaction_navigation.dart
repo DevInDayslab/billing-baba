@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/core/routing/mobile_document_routes.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +18,7 @@ void navigateToPartyLedgerTransaction(
   final route = switch (source) {
     'sales_documents' => switch (transaction.sourceType) {
       'estimate' => '${AppRoutes.editEstimate}/$referenceId',
+      'proforma' => '${AppRoutes.editProforma}/$referenceId',
       'sale_order' => '${AppRoutes.editSaleOrder}/$referenceId',
       'delivery_challan' => '${AppRoutes.editDeliveryChallan}/$referenceId',
       'sales_return' => '${AppRoutes.editCreditNote}/$referenceId',
@@ -27,14 +29,13 @@ void navigateToPartyLedgerTransaction(
       'purchase_return' => '${AppRoutes.editDebitNote}/$referenceId',
       _ => '${AppRoutes.editPurchase}/$referenceId',
     },
-    'payments' =>
-      transaction.direction == 'paid'
-          ? AppRoutes.purchasePaymentOut
-          : AppRoutes.salePaymentIn,
+    'payments' => transaction.direction == 'paid'
+        ? MobileDocumentRoutes.addPaymentOut(paymentId: referenceId)
+        : MobileDocumentRoutes.addPaymentIn(paymentId: referenceId),
     'expenses' => '${AppRoutes.editExpense}/$referenceId',
     'sale_fa_batches' => '${AppRoutes.editSaleFa}/$referenceId',
     'purchase_fa_batches' => '${AppRoutes.editPurchaseFa}/$referenceId',
-    'job_work_orders' => AppRoutes.saleJobWorkOut,
+    'job_work_orders' => '${AppRoutes.editJobWork}/$referenceId',
     _ => null,
   };
 

@@ -22,10 +22,11 @@ class HiddenLedgerHistorySection extends ConsumerWidget {
     final entriesAsync = ref.watch(partyHiddenLedgerEntriesProvider(partyId));
 
     return entriesAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      // Avoid a sticky spinner on party detail when the network is flaky —
+      // failed/loading states stay invisible until data arrives.
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
+      loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (entries) {
         if (entries.isEmpty) return const SizedBox.shrink();

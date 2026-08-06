@@ -1,37 +1,49 @@
-import 'dart:convert';
-
-import 'package:billing_baba/core/constants/storage_keys.dart';
-import 'package:billing_baba/core/services/storage_service.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/tasks/data/todo_local_source.dart';
+import 'package:billing_baba/features/tasks/data/todo_master_repository.dart';
+import 'package:billing_baba/features/tasks/data/todo_repository.dart';
 import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
-class TaskRepository {
-  TaskRepository(this._storage);
+part 'task_repository.g.dart';
 
-  final StorageService _storage;
+@Riverpod(keepAlive: true)
+Future<TodoMasterRepository> todoMasterRepository(Ref ref) async {
+  final db = ref.watch(appDatabaseProvider);
+  final storage = await ref.watch(storageServiceProvider.future);
+  final api = await ref.watch(apiClientProvider.future);
+  String? deviceId;
+  try {
+    final identity = await ref.watch(syncDeviceIdentityProvider.future);
+    deviceId = await identity.deviceId();
+  } on Object {
+    deviceId = null;
+  }
+  return TodoMasterRepository(
+    local: TodoLocalSource(db),
+    syncQueue: ref.watch(syncQueueProvider),
+    remote: TodoRepository(api.dio),
+    storage: storage,
+    businessIdReader: () => ref.read(currentBusinessProvider)?.id ?? '',
+    deviceIdReader: () => deviceId,
+  );
+}
+
+/// Facade preserving the legacy [TaskRepository] API for task UI/providers.
+class TaskRepository {
+  TaskRepository(this._master);
+
+  final TodoMasterRepository _master;
   static const _uuid = Uuid();
 
-  String _key(String businessId) => '${StorageKeys.dashboardTasks}_$businessId';
-
   Future<List<TaskModel>> load(String businessId) async {
-    final raw = _storage.read(_key(businessId));
-    if (raw == null || raw.isEmpty) return [];
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! List) return [];
-      return decoded
-          .whereType<Map<Object?, Object?>>()
-          .map((e) => TaskModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-    } on Object {
-      return [];
-    }
-  }
-
-  Future<void> save(String businessId, List<TaskModel> tasks) async {
-    final payload = tasks.map((t) => t.toJson()).toList();
-    await _storage.write(_key(businessId), jsonEncode(payload));
+    return _master.listActive();
   }
 
   TaskModel create({
@@ -64,7 +76,6 @@ class TaskRepository {
     );
   }
 
-  /// Returns updated list, or `null` if pin cap would be exceeded.
   List<TaskModel>? togglePin(List<TaskModel> tasks, String id) {
     final index = tasks.indexWhere((t) => t.id == id);
     if (index == -1) return tasks;
@@ -102,9 +113,38 @@ class TaskRepository {
     return tasks.where((t) => !t.isCompleted).toList();
   }
 
+  Future<TaskModel> persistCreate({
+    required String title,
+    String? description,
+    TaskCategory? category,
+    DateTime? reminderAt,
+  }) {
+    return _master.create(
+      title: title,
+      description: description,
+      category: category,
+      reminderAt: reminderAt,
+    );
+  }
+
+  Future<TaskModel> persistUpdate(TaskModel task) => _master.update(task);
+
+  Future<TaskModel> persistDuplicate(TaskModel source) async {
+    final copy = duplicate(source);
+    return _master.createFromTask(copy);
+  }
+
+  Future<void> persistDelete(String id) => _master.softDelete(id);
+
   static String? _nullableTrim(String? value) {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) return null;
     return trimmed;
   }
+}
+
+@Riverpod(keepAlive: true)
+Future<TaskRepository> taskRepository(Ref ref) async {
+  final master = await ref.watch(todoMasterRepositoryProvider.future);
+  return TaskRepository(master);
 }

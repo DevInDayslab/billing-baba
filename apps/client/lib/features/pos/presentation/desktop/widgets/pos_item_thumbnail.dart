@@ -118,6 +118,7 @@ class _ImageThumb extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         memCacheWidth: memCacheWidth,
+        loadWhenVisible: false,
         placeholder: fallback,
         errorWidget: fallback,
       ),

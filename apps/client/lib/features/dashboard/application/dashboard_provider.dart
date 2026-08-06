@@ -88,4 +88,8 @@ class Dashboard extends _$Dashboard {
     final service = await ref.read(dashboardServiceProvider.future);
     return service.fetchDashboard(DashboardQuery(period: period));
   }
+
+  void seedCached(DashboardViewState cached) {
+    state = AsyncData(cached);
+  }
 }

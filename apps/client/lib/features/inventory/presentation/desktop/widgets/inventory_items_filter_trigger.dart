@@ -70,7 +70,12 @@ class _InventoryItemsFilterTriggerState
           final filter =
               FilterUtils.fromResult(result) as MultiSelectColumnFilter?;
           if (filter == null || filter.values.isEmpty) {
-            widget.onApply(const InventoryItemFiltersState());
+            widget.onApply(
+              InventoryItemFiltersState(
+                brandIds: widget.initialFilters.brandIds,
+                categoryIds: widget.initialFilters.categoryIds,
+              ),
+            );
             return;
           }
           final selected = <InventoryItemFilterOption>{};
@@ -78,7 +83,13 @@ class _InventoryItemsFilterTriggerState
             final match = _optionByLabel[label];
             if (match != null) selected.add(match);
           }
-          widget.onApply(InventoryItemFiltersState(selected: selected));
+          widget.onApply(
+            InventoryItemFiltersState(
+              selected: selected,
+              brandIds: widget.initialFilters.brandIds,
+              categoryIds: widget.initialFilters.categoryIds,
+            ),
+          );
         },
       ),
     );

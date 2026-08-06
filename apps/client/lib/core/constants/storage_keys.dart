@@ -20,11 +20,24 @@ abstract final class StorageKeys {
   static const partyGroupNames = 'party_group_names';
   static const localItemTierPrices = 'local_item_tier_prices';
   static const localItemSuppliers = 'local_item_suppliers';
+
+  /// Marks one-time migration from [localItemSuppliers] SharedPreferences cache.
+  static String itemSuppliersMigratedFor(String businessId) =>
+      'item_suppliers_migrated_$businessId';
+
+  /// Marks one-time migration from [localItemTierPrices] SharedPreferences cache.
+  static String itemTierPricesMigratedFor(String businessId) =>
+      'item_tier_prices_migrated_$businessId';
   static const saleLineItemColumnVisibility =
       'sale_line_item_column_visibility';
   static const itemSettings = 'item_settings';
   static const saleInvoiceSettings = 'sale_invoice_settings';
   static const dashboardTasks = 'dashboard_tasks';
+
+  /// Marks one-time migration from [dashboardTasks] SharedPreferences cache.
+  static String dashboardTasksMigratedFor(String businessId) =>
+      'dashboard_tasks_migrated_$businessId';
+
   static const dashboardSideWidgets = 'dashboard_side_widgets';
   static const dashboardSnapshots = 'dashboard_snapshots';
   static const barcodeImportDraft = 'barcode_import_draft';
@@ -35,6 +48,16 @@ abstract final class StorageKeys {
   static const recentSearchPageIds = 'recent_search_page_ids';
   static const collaborationMembers = 'collaboration_members';
   static const collaborationInvitations = 'collaboration_invitations';
+  static const mobileMenuExpandedSection = 'mobile_menu_expanded_section';
+  static const notificationFilter = 'notification_filter';
+  static const notificationPermissionAsked = 'notification_permission_asked';
+  static const notificationPermissionDenied = 'notification_permission_denied';
+
+  static String notificationPreferencesFor(String businessId) =>
+      'notification_preferences_$businessId';
+
+  static String scheduledRemindersFor(String businessId) =>
+      'scheduled_reminders_$businessId';
 
   /// Stable install-lifetime sync device id (UUID).
   static const syncDeviceId = 'sync_device_id';

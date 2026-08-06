@@ -1,5 +1,7 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/features/subscription/application/mock_coupon_service.dart';
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session.dart';
+import 'package:billing_baba/features/subscription/application/subscription_mobile_checkout_flow.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final subscriptionCheckoutSessionProvider =
@@ -31,6 +33,10 @@ class SubscriptionCheckoutSessionNotifier
   }
 
   String? applyCoupon(String code) {
+    if (!AppConfig.subscriptionMockPayment) {
+      return 'Coupons are not available for online checkout yet.';
+    }
+
     final current = state;
     if (current == null) return 'No active checkout session.';
 
@@ -58,10 +64,18 @@ class SubscriptionCheckoutSessionNotifier
     state = current.copyWith(clearCoupon: true, couponDiscountOnTaxable: 0);
   }
 
-  void recordTransactionId(String transactionId) {
+  void recordTransactionId(String? transactionId) {
+    final current = state;
+    if (current == null || transactionId == null || transactionId.isEmpty) {
+      return;
+    }
+    state = current.copyWith(lastTransactionId: transactionId);
+  }
+
+  void recordPendingPayment(SubscriptionPendingPaymentCredentials credentials) {
     final current = state;
     if (current == null) return;
-    state = current.copyWith(lastTransactionId: transactionId);
+    state = current.copyWith(pendingPaymentCredentials: credentials);
   }
 
   void clearSession() {

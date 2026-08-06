@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
-import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
+import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
@@ -16,6 +17,7 @@ import 'package:billing_baba/features/collaboration/domain/models/company_relati
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:billing_baba/features/collaboration/domain/role_permission_registry.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,6 +64,7 @@ class CompanySessionService {
 
     _ref.read(businessSessionLoadingProvider.notifier).start(entry.id);
     CompanySession session;
+    SyncPauseGate.instance.pause();
     try {
       await _scopeCompany(entry);
 
@@ -80,13 +83,21 @@ class CompanySessionService {
             );
 
       _applySession(session, skipScopedInvalidation: true);
-      unawaited(_warmCompanyInBackground(entry.id));
+      await warmBusinessScopedProvidersCritical(
+        _ref,
+        businessId: entry.id,
+      );
     } on Object {
       _ref.read(businessSessionLoadingProvider.notifier).clear();
       rethrow;
+    } finally {
+      SyncPauseGate.instance.resume();
     }
 
-    await ensureSyncEngineStarted(_ref);
+    _ref.read(businessSessionLoadingProvider.notifier).clear();
+    unawaited(_warmCompanyDeferred(entry.id));
+    await ensureSyncEngineStarted(_ref, runInitialSync: false);
+    unawaited(_triggerInitialSync());
     return session;
   }
 
@@ -196,15 +207,25 @@ class CompanySessionService {
     BusinessOpenDebugLog.step('scopeCompany', 'complete');
   }
 
-  Future<void> _warmCompanyInBackground(String businessId) async {
+  Future<void> _warmCompanyDeferred(String businessId) async {
     try {
-      await warmBusinessScopedProviders(_ref, businessId: businessId);
+      await warmBusinessScopedProvidersDeferred(
+        _ref,
+        businessId: businessId,
+      );
     } on Object catch (error) {
-      BusinessOpenDebugLog.step('warm', 'background failed: $error');
-    } finally {
-      if (_ref.mounted) {
-        _ref.read(businessSessionLoadingProvider.notifier).clear();
+      BusinessOpenDebugLog.step('warm-deferred', 'failed: $error');
+    }
+  }
+
+  Future<void> _triggerInitialSync() async {
+    try {
+      final engine = await _ref.read(commandAwareSyncEngineProvider.future);
+      if (engine.isRunning) {
+        unawaited(engine.syncNow());
       }
+    } on Object catch (error) {
+      BusinessOpenDebugLog.step('sync', 'deferred sync skipped: $error');
     }
   }
 

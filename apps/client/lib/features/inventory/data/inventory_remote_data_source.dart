@@ -3,6 +3,8 @@ import 'package:billing_baba/features/inventory/models/dto/brand_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/godown_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_bom_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_supplier_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_location_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_summary_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
@@ -14,6 +16,8 @@ import 'package:billing_baba/features/inventory/models/requests/brand_requests.d
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/godown_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
+import 'package:billing_baba/features/inventory/models/requests/item_bom_requests.dart';
+import 'package:billing_baba/features/inventory/models/requests/item_supplier_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/unit_requests.dart';
 import 'package:dio/dio.dart';
@@ -106,6 +110,60 @@ class InventoryRemoteDataSource {
 
   Future<void> deleteBrand(String id) async {
     await _dio.delete<void>(ApiEndpoints.inventoryBrand(id));
+  }
+
+  Future<List<ItemSupplierDto>> listItemSuppliers(String itemId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.inventoryItemSuppliers(itemId),
+    );
+    final data = response.data?['data'];
+    if (data is! List) return const [];
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(ItemSupplierDto.fromJson)
+        .toList();
+  }
+
+  Future<List<ItemSupplierDto>> replaceItemSuppliers(
+    String itemId,
+    ReplaceItemSuppliersRequest request,
+  ) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      ApiEndpoints.inventoryItemSuppliers(itemId),
+      data: request.toJson(),
+    );
+    final data = response.data?['data'];
+    if (data is! List) return const [];
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(ItemSupplierDto.fromJson)
+        .toList();
+  }
+
+  Future<ItemBomDto> getItemBom(String itemId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.inventoryItemBom(itemId),
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic>) {
+      return const ItemBomDto();
+    }
+    return ItemBomDto.fromJson(data);
+  }
+
+  Future<ItemBomDto> replaceItemBom(
+    String itemId,
+    ReplaceItemBomRequest request,
+  ) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      ApiEndpoints.inventoryItemBom(itemId),
+      data: request.toJson(),
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic>) {
+      return const ItemBomDto();
+    }
+    return ItemBomDto.fromJson(data);
   }
 
   Future<PaginatedUnitsDto> listUnits(UnitListQuery query) async {

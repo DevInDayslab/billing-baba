@@ -1,17 +1,22 @@
-import 'package:collection/collection.dart';
-import 'package:billing_baba/core/router/app_routes.dart';
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/purchases/application/add_expense_form_provider.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
-import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
-import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/shared/widgets/mobile/forms/mobile_forms.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class MobileAddExpensePage extends ConsumerStatefulWidget {
   const MobileAddExpensePage({super.key, this.expenseId});
@@ -26,12 +31,13 @@ class MobileAddExpensePage extends ConsumerStatefulWidget {
 class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
-  final _dateFormat = DateFormat('dd MMM yyyy');
+  final _expenseNumberController = TextEditingController();
 
   @override
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
+    _expenseNumberController.dispose();
     super.dispose();
   }
 
@@ -60,7 +66,7 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
   }
 
   Future<void> _pickParty(AddExpenseForm notifier) async {
-    final party = await showMobilePartyPickerSheet(
+    final party = await pickMobileDocumentParty(
       context,
       typeFilter: PartyTypeFilter.supplier,
       title: 'Select supplier',
@@ -71,25 +77,17 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
   }
 
   Future<void> _pickPaymentType(AddExpenseForm notifier) async {
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: ListView(
-          children: [
-            for (final type in SaleDropdownOptions.paymentTypes)
-              ListTile(
-                title: Text(type),
-                onTap: () => Navigator.pop(context, type),
-              ),
-          ],
-        ),
-      ),
+    final picked = await pickMobilePaymentType(
+      context,
+      selected: ref
+          .read(addExpenseFormProvider(expenseId: widget.expenseId))
+          .paymentType,
     );
     if (picked != null) notifier.updatePaymentType(picked);
   }
 
   Future<void> _addLine(AddExpenseForm notifier) async {
-    final result = await showMobileItemPickerSheet(context);
+    final result = await pickMobileDocumentItem(context);
     if (result == null) return;
     final items = ref.read(
       addExpenseFormProvider(expenseId: widget.expenseId),
@@ -130,6 +128,9 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
     if (_descriptionController.text != form.description) {
       _descriptionController.text = form.description;
     }
+    if (_expenseNumberController.text != form.expenseNumber) {
+      _expenseNumberController.text = form.expenseNumber;
+    }
     final paymentAmount = form.paymentAmount > 0
         ? form.paymentAmount.toStringAsFixed(2)
         : form.grandTotal.toStringAsFixed(2);
@@ -137,37 +138,35 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
       _amountController.text = paymentAmount;
     }
 
-    final lines = form.items
+    final visibility = MobileDocumentVisibility(
+      showDueDate: form.gstEnabled,
+      showPaymentTerms: form.gstEnabled,
+      showStateOfSupply: form.gstEnabled,
+      showParty: form.gstEnabled,
+      showPaymentSection: true,
+      showDescription: true,
+      showAttachments: true,
+      showSaveAndNew: false,
+    );
+
+    final confirmed = form.items
         .where((item) => item.itemName.trim().isNotEmpty)
-        .map(
-          (item) => MobileLineItemDisplay(
-            title: item.itemName,
-            quantity: item.qty,
-            unitPrice: item.pricePerUnit,
-            total: item.amount,
-          ),
-        )
         .toList();
 
-    return MobileFormScaffold(
-      title: isEdit ? 'Edit expense' : 'Add expense',
+    return MobileDocumentFormScaffold(
+      title: isEdit ? 'Edit Expense' : 'Expense',
+      visibility: visibility,
       isLoading: form.isLoading,
       isSaving: form.isSaving,
-      loadingLabel: isEdit ? 'Updating expense…' : 'Saving expense…',
-      primaryActionLabel: 'Save expense',
-      onPrimaryAction: () => _save(notifier),
-      onBack: () => leaveTransactionFormPage(
-        context: context,
-        isDirty: form.isDirty,
-        isSaving: form.isSaving,
-        listRoute: AppRoutes.purchaseExpenses,
-      ),
-      topBanner: const MobileOfflineBanner(
-        message: 'Expense sync needs internet when online-only fields are used.',
-      ),
+      onClose: () => showCloseFormDialog(context, title: 'Close Expense'),
+      onSave: () => unawaited(_save(notifier)),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const MobileOfflineBanner(
+            message:
+                'Expense sync needs internet when online-only fields are used.',
+          ),
           if (form.saveError != null)
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -201,10 +200,16 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
                   errorText: form.partyHasError ? 'Required' : null,
                   onTap: () => _pickParty(notifier),
                 ),
+              MobileSaleFormField(
+                label: 'Expense No',
+                controller: _expenseNumberController,
+                hintText: 'Expense number',
+                onChanged: notifier.updateExpenseNumber,
+              ),
               MobileFormPickerField(
-                label: 'Date',
+                label: form.gstEnabled ? 'Bill Date' : 'Date',
                 value: form.expenseDate != null
-                    ? _dateFormat.format(form.expenseDate!)
+                    ? formatSaleSingleDate(form.expenseDate)
                     : '',
                 onTap: () async {
                   final date = await showMobileDatePicker(
@@ -214,24 +219,122 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
                   if (date != null) notifier.updateExpenseDate(date);
                 },
               ),
-              MobileFormTextField(
-                label: 'Notes',
-                controller: _descriptionController,
-                onChanged: notifier.updateDescription,
-                maxLines: 3,
+              MobileSalePickerField(
+                label: 'Time',
+                value: formatSaleTime(form.expenseTime),
+                isPlaceholder: form.expenseTime == null,
+                trailingIcon: Icons.schedule_outlined,
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: form.expenseTime ?? TimeOfDay.now(),
+                  );
+                  if (picked != null) notifier.updateExpenseTime(picked);
+                },
               ),
+              if (form.gstEnabled) ...[
+                MobileFormPickerField(
+                  label: 'Payment Terms',
+                  value: form.paymentTerms,
+                  onTap: () async {
+                    final selected = await showMobileOptionSheet<String>(
+                      context: context,
+                      title: 'Payment Terms',
+                      selected: form.paymentTerms,
+                      options: [
+                        for (final term in SaleDropdownOptions.paymentTerms)
+                          MobileOption(value: term, label: term),
+                      ],
+                    );
+                    if (selected != null) {
+                      notifier.updatePaymentTerms(selected);
+                    }
+                  },
+                ),
+                MobileFormPickerField(
+                  label: 'Due Date',
+                  value: form.dueDate != null
+                      ? formatSaleSingleDate(form.dueDate)
+                      : 'Select date',
+                  onTap: () async {
+                    final date = await showMobileDatePicker(
+                      context,
+                      initialDate: form.dueDate ?? form.expenseDate,
+                    );
+                    if (date != null) notifier.updateDueDate(date);
+                  },
+                ),
+                MobileFormPickerField(
+                  label: 'State of supply',
+                  value: form.stateOfSupply,
+                  onTap: () async {
+                    final selected = await showMobileOptionSheet<String>(
+                      context: context,
+                      title: 'State of supply',
+                      selected: form.stateOfSupply,
+                      options: [
+                        for (final state in SaleDropdownOptions.indianStates)
+                          MobileOption(value: state, label: state),
+                      ],
+                    );
+                    if (selected != null) {
+                      notifier.updateStateOfSupply(selected);
+                    }
+                  },
+                ),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          MobileLineItemsEditor(
-            lines: lines,
-            onAdd: () => _addLine(notifier),
-            onRemove: notifier.removeLineItem,
-            emptyMessage: form.gstEnabled
-                ? 'Add bill line items.'
-                : 'Add an item or enter amount below.',
+          MobileDocumentItemsSection(
+            visibility: visibility,
+            lines: [
+              for (final item in confirmed)
+                MobileDocumentLineDisplay(
+                  name: item.itemName,
+                  qtyLabel:
+                      '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
+                  amountLabel:
+                      MobileDocumentItemsSection.formatAmount(item.amount),
+                ),
+            ],
+            onAddItems: () => unawaited(_addLine(notifier)),
+            onRemoveLine: (i) {
+              final index = form.items.indexWhere(
+                (item) => item.id == confirmed[i].id,
+              );
+              if (index >= 0) notifier.removeLineItem(index);
+            },
+            onLineTap: (i) async {
+              final item = confirmed[i];
+              final index = form.items.indexWhere((e) => e.id == item.id);
+              if (index < 0) return;
+              final draft = await showMobileDocumentLineEditSheet(
+                context: context,
+                itemName: item.itemName,
+                fields: MobileDocumentLineEditFields.expense,
+                initial: MobileDocumentLineEditDraft(
+                  qty: item.qty,
+                  unit: 'NONE',
+                  pricePerUnit: item.pricePerUnit,
+                  taxPercent: item.taxPercent,
+                  description: item.description,
+                ),
+              );
+              if (draft == null || !mounted) return;
+              notifier.updateLineItem(
+                index,
+                item.copyWith(
+                  qty: draft.qty,
+                  pricePerUnit: draft.pricePerUnit,
+                  taxPercent: draft.taxPercent,
+                  description: draft.description,
+                ),
+              );
+            },
           ),
-          if (!form.gstEnabled)
+          if (!form.gstEnabled) ...[
+            const SizedBox(height: AppSpacing.lg),
             MobileFormTextField(
               label: 'Amount',
               controller: _amountController,
@@ -255,15 +358,43 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
                 }
               },
             ),
-          MobileFormPickerField(
-            label: 'Payment mode',
-            value: form.paymentType,
-            onTap: () => _pickPaymentType(notifier),
-          ),
-          MobileDocumentSummaryCard(
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          MobileDocumentTotalsSection(
+            visibility: visibility,
+            totalAmount: form.grandTotal,
             subtotal: form.subtotal,
-            tax: form.totalTax,
-            total: form.grandTotal,
+            taxAmount: form.totalTax,
+            paymentType: form.paymentType,
+            onPaymentTypeTap: () => _pickPaymentType(notifier),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          MobileDocumentNotesAttachmentsSection(
+            visibility: visibility,
+            descriptionController: _descriptionController,
+            onDescriptionChanged: notifier.updateDescription,
+            images: form.attachedImages,
+            documents: form.attachedDocuments,
+            onAddImage: () => unawaited(
+              transactionAddImage(
+                context: context,
+                ref: ref,
+                entityType: DocumentAttachmentEntityType.expense.apiValue,
+                entityId: form.expenseId,
+                onAdded: notifier.addImage,
+              ),
+            ),
+            onAddDocument: () => unawaited(
+              transactionAddDocument(
+                context: context,
+                ref: ref,
+                entityType: DocumentAttachmentEntityType.expense.apiValue,
+                entityId: form.expenseId,
+                onAdded: notifier.addDocument,
+              ),
+            ),
+            onRemoveImage: notifier.removeImage,
+            onRemoveDocument: notifier.removeDocument,
           ),
         ],
       ),

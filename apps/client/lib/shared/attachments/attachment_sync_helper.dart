@@ -51,6 +51,11 @@ const attachmentAllowedMimes = {
   'image/jpeg',
   'image/webp',
   'application/pdf',
+  'text/plain',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 };
 
 const int attachmentMaxBytes = 10 * 1024 * 1024;

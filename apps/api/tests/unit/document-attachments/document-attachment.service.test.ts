@@ -83,6 +83,7 @@ describe('DocumentAttachmentService', () => {
       service.createUploadIntent(
         BIZ,
         ACC,
+        'manager',
         'sale',
         DOC,
         'application/pdf',
@@ -147,6 +148,7 @@ describe('DocumentAttachmentService', () => {
       BIZ,
       ACC,
       '77777777-7777-7777-7777-777777777777',
+      'manager',
       'sale',
       DOC,
       '88888888-8888-8888-8888-888888888888',
@@ -186,6 +188,7 @@ describe('DocumentAttachmentService', () => {
       BIZ,
       ACC,
       '77777777-7777-7777-7777-777777777777',
+      'manager',
       sampleAttachment.id,
     );
     expect(deleted).toBe(true);
@@ -216,6 +219,7 @@ describe('DocumentAttachmentService', () => {
         BIZ,
         ACC,
         '77777777-7777-7777-7777-777777777777',
+        'manager',
         sampleAttachment.id,
       ),
     ).resolves.toBeUndefined();
@@ -259,6 +263,7 @@ describe('DocumentAttachmentService', () => {
     const intent = await service.createUploadIntent(
       BIZ,
       ACC,
+      'manager',
       'estimate',
       DOC,
       'image/png',
@@ -267,5 +272,107 @@ describe('DocumentAttachmentService', () => {
 
     expect(intent.intentId).toBe('88888888-8888-8888-8888-888888888888');
     expect(capturedPurpose).toBe('sales');
+  });
+
+  test('createUploadIntent uses documents purpose for party attachments', async () => {
+    let capturedPurpose = '';
+
+    const repository = {
+      countByEntity: async () => 0,
+    } as unknown as DocumentAttachmentRepository;
+
+    const storage = {
+      createUploadIntent: async (
+        _b: string,
+        _a: string,
+        input: { purpose?: string; ownerType?: string | null },
+      ): Promise<UploadIntent> => {
+        capturedPurpose = input.purpose ?? '';
+        expect(input.ownerType).toBe('party');
+        return {
+          intentId: '99999999-8888-7777-6666-555555555555',
+          uploadUrl: 'https://upload',
+          storageKey: 'key',
+          headers: {},
+          expiresAt: new Date().toISOString(),
+          maxBytes: 10_485_760,
+          mimeType: 'application/pdf',
+        };
+      },
+    } as unknown as StorageService;
+
+    const service = new DocumentAttachmentService({
+      config: baseConfig(),
+      repository,
+      storage,
+      membership,
+      assertEntityExists: noopEntityAssert,
+    });
+
+    const intent = await service.createUploadIntent(
+      BIZ,
+      ACC,
+      'manager',
+      'party',
+      DOC,
+      'application/pdf',
+      2048,
+    );
+
+    expect(intent.intentId).toBe('99999999-8888-7777-6666-555555555555');
+    expect(capturedPurpose).toBe('documents');
+  });
+
+  test('staff cannot create attachment upload intent', async () => {
+    const repository = {
+      countByEntity: async () => 0,
+    } as unknown as DocumentAttachmentRepository;
+
+    const service = new DocumentAttachmentService({
+      config: baseConfig(),
+      repository,
+      storage: {} as StorageService,
+      membership,
+      assertEntityExists: noopEntityAssert,
+    });
+
+    await expect(
+      service.createUploadIntent(
+        BIZ,
+        ACC,
+        'staff',
+        'party',
+        DOC,
+        'application/pdf',
+        100,
+      ),
+    ).rejects.toThrow(AppError);
+  });
+
+  test('staff can view attachment download url', async () => {
+    const repository = {
+      findById: async () => ({ ...sampleAttachment, entity_type: 'party' as const }),
+    } as unknown as DocumentAttachmentRepository;
+
+    const storage = {
+      resolveBusinessAssetUrl: async () => 'https://cdn/party-note.pdf',
+    } as unknown as StorageService;
+
+    const service = new DocumentAttachmentService({
+      config: baseConfig(),
+      repository,
+      storage,
+      membership,
+      assertEntityExists: noopEntityAssert,
+    });
+
+    const result = await service.getDownloadUrl(
+      BIZ,
+      ACC,
+      'staff',
+      sampleAttachment.id,
+    );
+
+    expect(result.download_url).toBe('https://cdn/party-note.pdf');
   });
 });

@@ -38,6 +38,16 @@ void main() {
       );
     });
 
+    test('strips signed query params from fallback cache keys', () {
+      expect(
+        buildImageCacheKey(
+          fallbackUrl:
+              'https://cdn.example/staging/a.jpg?X-Amz-Signature=expired',
+        ),
+        'https://cdn.example/staging/a.jpg',
+      );
+    });
+
     test('prefers media asset key over fallback URL', () {
       expect(
         buildImageCacheKey(
@@ -46,6 +56,28 @@ void main() {
           fallbackUrl: 'https://example.com/old-signed.jpg',
         ),
         'media:asset-123:medium',
+      );
+    });
+  });
+
+  group('extractMediaAssetIdFromUrl', () {
+    test('reads staging object asset id', () {
+      expect(
+        extractMediaAssetIdFromUrl(
+          'https://cdn.example/development/businesses/b/staging/'
+          '6e159456-cc59-459f-9f41-1cfe051dbfde.jpg?X-Amz-Expires=3600',
+        ),
+        '6e159456-cc59-459f-9f41-1cfe051dbfde',
+      );
+    });
+
+    test('reads processed variant asset id', () {
+      expect(
+        extractMediaAssetIdFromUrl(
+          'https://cdn.example/branding/logo/biz/'
+          '758d99c0-31dd-430a-8bde-fb803887035a-original.webp',
+        ),
+        '758d99c0-31dd-430a-8bde-fb803887035a',
       );
     });
   });

@@ -130,21 +130,26 @@ class _HeldBillCard extends StatelessWidget {
         .take(2)
         .join(', ');
 
-    return Column(
-      children: [
-        Material(
-          color: AppColors.surface,
-          elevation: 1,
-          shadowColor: Colors.black.withValues(alpha: 0.08),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.mdBorder,
-            side: const BorderSide(color: Color(0xFFE8EAED)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
+    return Material(
+      color: AppColors.surface,
+      elevation: 1,
+      shadowColor: Colors.black.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadius.mdBorder,
+        side: const BorderSide(color: Color(0xFFE8EAED)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          InkWell(
             onTap: onResume,
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.xl + AppSpacing.sm,
+                AppSpacing.md,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -211,21 +216,24 @@ class _HeldBillCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        IconButton(
-          onPressed: onDiscard,
-          tooltip: 'Discard held bill',
-          visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-          icon: Icon(
-            Icons.close_rounded,
-            color: AppColors.textSecondary.withValues(alpha: 0.8),
-            size: AppIconSize.md,
+          Positioned(
+            top: AppSpacing.xs,
+            right: AppSpacing.xs,
+            child: IconButton(
+              onPressed: onDiscard,
+              tooltip: 'Discard held bill',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              icon: Icon(
+                Icons.close_rounded,
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                size: AppIconSize.md,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

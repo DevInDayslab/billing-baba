@@ -1,39 +1,26 @@
 import 'dart:async';
-import 'dart:typed_data';
 
-import 'package:billing_baba/core/routing/app_routes.dart';
-import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_preview_screen.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_footer.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_general_section.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_header.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_online_store_section.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_pricing_section.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_settings_sheet.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_stock_section.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_image_strip.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_item_image_picker.dart';
-import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
+import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/add_item_form_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
-import 'package:billing_baba/features/inventory/application/item_images_provider.dart';
-import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_bom_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
-import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_suppliers_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
@@ -48,14 +35,29 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/suppliers_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/tier_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/select_unit_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_preview_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_manufacturing_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_footer.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_general_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_header.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_image_strip.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_online_store_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_pricing_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_settings_sheet.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_stock_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_item_image_picker.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
-import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -135,6 +137,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final Map<String, TextEditingController> _tierPriceControllers = {};
   final _primaryImageUrlController = TextEditingController();
   final List<Uint8List> _pendingItemPhotos = [];
+  final _mobileFormScrollController = ScrollController();
   bool _isSaving = false;
   String? _rackLocationId;
   String? _rackPhotoUrl;
@@ -150,14 +153,28 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   int _tabCountFor(ItemType type) {
     if (_isMobileFullPage) {
-      return type == ItemType.product ? 3 : 2;
+      if (type == ItemType.product) {
+        return widget.editItem != null ? 5 : 4;
+      }
+      return 2;
     }
     return type == ItemType.product ? 6 : 2;
   }
 
-  List<String> _mobileTabsFor(ItemType type) => type == ItemType.product
-      ? const ['Pricing', 'Stock', 'Online Store']
-      : const ['Pricing', 'Online Store'];
+  List<String> _mobileTabsFor(ItemType type) {
+    if (type == ItemType.product && widget.editItem != null) {
+      return const [
+        'Pricing',
+        'Stock',
+        'Online Store',
+        'Alternatives',
+        'Suppliers',
+      ];
+    }
+    return type == ItemType.product
+        ? const ['Pricing', 'Stock', 'Online Store', 'Suppliers']
+        : const ['Pricing', 'Online Store'];
+  }
 
   InventoryUnit? _selectedBaseUnit() {
     final form = ref.read(addItemFormProvider);
@@ -294,7 +311,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         // Tier prices may be unavailable offline; form still opens from local item.
       }
 
-      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+      await ref.read(itemTierPricesProvider.notifier).ensureInitialized();
 
       if (detailDto.purchasePrice.isNotEmpty) {
         final purchasePrice = double.tryParse(detailDto.purchasePrice);
@@ -379,7 +396,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         _wholesalePriceController.text = wholesale.toString();
       }
 
-      final localTiers = ref.read(localItemTierPricesProvider)[item.id];
+      final localTiers = ref.read(itemTierPricesProvider).value?[item.id];
       if (localTiers != null && localTiers.isNotEmpty) {
         final rows = localTiers.entries
             .map(
@@ -413,14 +430,21 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
 
     try {
-      await ref.read(localItemSuppliersProvider.notifier).ensureInitialized();
+      await ref.read(itemSuppliersProvider.notifier).ensureInitialized();
       final localSuppliers =
-          ref.read(localItemSuppliersProvider.notifier).suppliersFor(item.id);
+          ref.read(itemSuppliersProvider.notifier).suppliersFor(item.id);
       if (localSuppliers.isNotEmpty) {
         notifier.setSupplierPartyIds(localSuppliers);
       }
     } on Object {
       // Local suppliers cache is best-effort.
+    }
+
+    try {
+      final bom = await ref.read(itemBomProvider.notifier).fetchForItem(item.id);
+      notifier.setBomFromModel(bom);
+    } on Object {
+      // BOM cache is best-effort.
     }
   }
 
@@ -489,6 +513,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     for (final controller in _tierPriceControllers.values) {
       controller.dispose();
     }
+    _mobileFormScrollController.dispose();
     super.dispose();
   }
 
@@ -502,7 +527,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   Future<void> _save({required bool saveAndNew}) async {
     if (_isSaving) return;
     final notifier = ref.read(addItemFormProvider.notifier);
-    if (!notifier.validate()) return;
+    if (!notifier.validate()) {
+      _revealFieldErrors();
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -518,23 +546,44 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               form,
               initialOpeningQty: _initialOpeningQty,
             );
-        ref
-            .read(localItemTierPricesProvider.notifier)
+        await ref
+            .read(itemTierPricesProvider.notifier)
             .setTierPrices(editItem.id, form.tierPriceMap);
-        ref
-            .read(localItemSuppliersProvider.notifier)
-            .setSuppliers(editItem.id, form.supplierPartyIds);
+        await ref
+            .read(itemSuppliersProvider.notifier)
+            .setSuppliers(
+              editItem.id,
+              form.supplierPartyIds,
+              defaultPartyId: form.defaultSupplierPartyId,
+            );
+        await ref
+            .read(itemBomProvider.notifier)
+            .replaceFromAddItemForm(editItem.id, form);
       } else {
         savedItem = await ref
             .read(inventoryItemsProvider.notifier)
             .addItemFromForm(form);
         if (savedItem != null) {
-          ref
-              .read(localItemTierPricesProvider.notifier)
+          await ref
+              .read(itemTierPricesProvider.notifier)
               .setTierPrices(savedItem.id, form.tierPriceMap);
-          ref
-              .read(localItemSuppliersProvider.notifier)
-              .setSuppliers(savedItem.id, form.supplierPartyIds);
+          await ref
+              .read(itemSuppliersProvider.notifier)
+              .setSuppliers(
+                savedItem.id,
+                form.supplierPartyIds,
+                defaultPartyId: form.defaultSupplierPartyId,
+              );
+          await ref
+              .read(itemBomProvider.notifier)
+              .replaceFromAddItemForm(savedItem.id, form);
+          if (form.alternativeItemIds.isNotEmpty) {
+            final service = await ref.read(inventoryServiceProvider.future);
+            await service.replaceItemAlternatives(
+              savedItem.id,
+              form.alternativeItemIds,
+            );
+          }
         }
       }
 
@@ -559,10 +608,19 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     } on ApiValidationException catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
+      final mapped = notifier.applyFieldErrors(error.fieldErrors);
+      if (mapped) {
+        _revealFieldErrors();
+        return;
+      }
       _showSaveError(InventoryErrorMapper.validationMessage(error));
     } on InventoryException catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
+      if (notifier.applyExceptionMessage(error.message)) {
+        _revealFieldErrors();
+        return;
+      }
       _showSaveError(error.message);
     } catch (error) {
       if (!mounted) return;
@@ -571,7 +629,31 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
   }
 
+  void _revealFieldErrors() {
+    if (_isMobileFullPage && _mobileFormScrollController.hasClients) {
+      unawaited(
+        _mobileFormScrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        ),
+      );
+    }
+  }
+
   void _showSaveError(String message) {
+    if (_isMobileFullPage) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      return;
+    }
     showTransactionErrorToast(context, message: message);
   }
 
@@ -597,7 +679,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         );
       }
       if (mounted) {
-        setState(() => _pendingItemPhotos.clear());
+        setState(_pendingItemPhotos.clear);
       }
     } on Object catch (error) {
       if (!mounted) return;
@@ -791,22 +873,29 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
 
     if (_isMobileFullPage) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(form),
-              Expanded(
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: formBody,
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppTheme.lightSystemUi,
+        child: Scaffold(
+          backgroundColor: AppColors.surface,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(form),
+                Expanded(
+                  child: ColoredBox(
+                    color: AppColors.background,
+                    child: SingleChildScrollView(
+                      controller: _mobileFormScrollController,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: formBody,
+                    ),
+                  ),
                 ),
-              ),
-              _buildFooter(),
-            ],
+                _buildFooter(),
+              ],
+            ),
           ),
         ),
       );
@@ -877,6 +966,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         categories,
         categoryOptions,
         selectedCategory,
+        brands,
+        brandOptions,
+        selectedBrand,
         itemSettings,
       );
     }
@@ -905,6 +997,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             itemCodeController: _itemCodeController,
             descriptionController: _descriptionController,
             itemNameError: form.itemNameError,
+            baseUnitError: form.baseUnitError,
             onItemNameChanged: notifier.updateItemName,
             onShortNameChanged: notifier.updateShortName,
             onAliasChanged: notifier.updateAlias,
@@ -957,6 +1050,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     List<InventoryCategory> categories,
     List<String> categoryOptions,
     String? selectedCategory,
+    List<BrandModel> brands,
+    List<String> brandOptions,
+    String? selectedBrand,
     ItemSettings itemSettings,
   ) {
     final showBarcodeScan = form.itemType == ItemType.product &&
@@ -982,6 +1078,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           descriptionController: _descriptionController,
           hsnController: _hsnController,
           itemNameError: form.itemNameError,
+          baseUnitError: form.baseUnitError,
           onItemNameChanged: notifier.updateItemName,
           onItemCodeChanged: notifier.updateItemCode,
           onDescriptionChanged: notifier.updateDescription,
@@ -996,12 +1093,20 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           selectedCategory: selectedCategory,
           categories: categories,
           onCategorySelected: notifier.setCategory,
-          trackingMode: form.trackingMode,
-          onTrackingModeChanged: notifier.setTrackingMode,
+          selectedBrand: selectedBrand,
+          brands: brands,
+          onBrandSelected: notifier.setBrand,
           onAddManufacturingDetails: _openManufacturingSheet,
           onScanBarcode: showBarcodeScan ? _scanBarcode : null,
           showCategory: itemSettings.itemCategory,
           showDescription: itemSettings.descriptionEnabled,
+          showManufacturing:
+              form.itemType == ItemType.product && itemSettings.manufacturing,
+          // Match desktop: alternatives field on create (edit uses Alternatives tab).
+          showAlternatives: widget.editItem == null,
+          selectedAlternativeItemIds: form.alternativeItemIds,
+          excludeAlternativeItemId: widget.editItem?.id,
+          onAlternativeItemIdsChanged: notifier.setAlternativeItemIds,
         ),
         MobileAddItemTabBar(
           tabs: _mobileTabsFor(form.itemType),
@@ -1021,33 +1126,56 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  Widget _buildMobilePricingSection({
+    required AddItemFormState form,
+    required AddItemForm notifier,
+    required bool isService,
+    required ItemSettings itemSettings,
+  }) {
+    if (itemSettings.wholesalePrice) {
+      notifier.ensureAllTierRows();
+    }
+    return MobileAddItemPricingSection(
+      isService: isService,
+      mrpController: _mrpController,
+      onMrpChanged: notifier.updateMrp,
+      salePriceController: _salePriceController,
+      salePriceTaxMode: form.salePriceTaxMode,
+      onSalePriceChanged: notifier.updateSalePrice,
+      onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
+      wholesalePriceController: _wholesalePriceController,
+      wholesalePriceTaxMode: form.wholesalePriceTaxMode,
+      onWholesalePriceChanged: notifier.updateWholesalePrice,
+      onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
+      purchasePriceController: _atPriceController,
+      purchasePriceTaxMode: form.purchasePriceTaxMode,
+      onPurchasePriceChanged: notifier.updateAtPrice,
+      onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
+      taxRate: form.taxRate,
+      onTaxRateChanged: notifier.setTaxRate,
+      showWholesalePrice: itemSettings.wholesalePrice,
+      showTierPricing: itemSettings.wholesalePrice,
+      tierPrices: form.tierPrices,
+      apiTierLabels: ref.watch(pricingTierLabelsProvider),
+      priceControllerFor: _tierPriceController,
+      onUpdateTierPrice: notifier.updateTierPriceRow,
+    );
+  }
+
   Widget _buildMobileTabContent(
     AddItemFormState form,
     AddItemForm notifier,
     ItemSettings itemSettings,
   ) {
     final tabIndex = form.activeTab;
+    final godowns = ref.watch(inventoryGodownsProvider).value ?? const [];
     if (form.itemType == ItemType.service) {
       return switch (tabIndex) {
-        0 => MobileAddItemPricingSection(
+        0 => _buildMobilePricingSection(
+          form: form,
+          notifier: notifier,
           isService: true,
-          mrpController: _mrpController,
-          onMrpChanged: notifier.updateMrp,
-          salePriceController: _salePriceController,
-          salePriceTaxMode: form.salePriceTaxMode,
-          onSalePriceChanged: notifier.updateSalePrice,
-          onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
-          wholesalePriceController: _wholesalePriceController,
-          wholesalePriceTaxMode: form.wholesalePriceTaxMode,
-          onWholesalePriceChanged: notifier.updateWholesalePrice,
-          onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
-          purchasePriceController: _atPriceController,
-          purchasePriceTaxMode: form.purchasePriceTaxMode,
-          onPurchasePriceChanged: notifier.updateAtPrice,
-          onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
-          taxRate: form.taxRate,
-          onTaxRateChanged: notifier.setTaxRate,
-          showWholesalePrice: itemSettings.wholesalePrice,
+          itemSettings: itemSettings,
         ),
         _ => MobileAddItemOnlineStoreSection(
           itemType: form.itemType,
@@ -1060,25 +1188,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
 
     return switch (tabIndex) {
-      0 => MobileAddItemPricingSection(
+      0 => _buildMobilePricingSection(
+        form: form,
+        notifier: notifier,
         isService: false,
-        mrpController: _mrpController,
-        onMrpChanged: notifier.updateMrp,
-        salePriceController: _salePriceController,
-        salePriceTaxMode: form.salePriceTaxMode,
-        onSalePriceChanged: notifier.updateSalePrice,
-        onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
-        wholesalePriceController: _wholesalePriceController,
-        wholesalePriceTaxMode: form.wholesalePriceTaxMode,
-        onWholesalePriceChanged: notifier.updateWholesalePrice,
-        onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
-        purchasePriceController: _atPriceController,
-        purchasePriceTaxMode: form.purchasePriceTaxMode,
-        onPurchasePriceChanged: notifier.updateAtPrice,
-        onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
-        taxRate: form.taxRate,
-        onTaxRateChanged: notifier.setTaxRate,
-        showWholesalePrice: itemSettings.wholesalePrice,
+        itemSettings: itemSettings,
       ),
       1 => MobileAddItemStockSection(
         openingQtyController: _openingQtyController,
@@ -1092,13 +1206,29 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         onLocationChanged: notifier.updateLocation,
         onAsOfDateSelected: notifier.setAsOfDate,
         asOfDatePickerKey: _asOfDatePickerKey,
+        godowns: godowns,
+        selectedGodownId: form.godownId,
+        onGodownSelected: notifier.setGodown,
       ),
-      _ => MobileAddItemOnlineStoreSection(
+      2 => MobileAddItemOnlineStoreSection(
         itemType: form.itemType,
         priceController: _onlineStorePriceController,
         descriptionController: _onlineStoreDescriptionController,
         onPriceChanged: notifier.updateOnlineStorePrice,
         onDescriptionChanged: notifier.updateOnlineStoreDescription,
+      ),
+      3 when widget.editItem != null => Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: AlternativesSection(itemId: widget.editItem?.id),
+      ),
+      _ => Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: SuppliersSection(
+          selectedPartyIds: form.supplierPartyIds,
+          onChanged: notifier.setSupplierPartyIds,
+          defaultPartyId: form.defaultSupplierPartyId,
+          onDefaultChanged: notifier.setDefaultSupplierPartyId,
+        ),
       ),
     };
   }
@@ -1115,42 +1245,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   }
 
   Future<void> _openManufacturingSheet() async {
-    final form = ref.read(addItemFormProvider);
-    final notifier = ref.read(addItemFormProvider.notifier);
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          left: FormSpacing.page,
-          right: FormSpacing.page,
-          top: FormSpacing.page,
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom + FormSpacing.page,
-        ),
-        child: SingleChildScrollView(
-          child: ManufacturingSection(
-            form: form,
-            rawControllerFor: _rawController,
-            onUpdateRawMaterial: notifier.updateRawMaterial,
-            onRemoveRawMaterial: notifier.removeRawMaterialRow,
-            onAddRawMaterial: notifier.addRawMaterialRow,
-            onAddAdditionalCost: notifier.addAdditionalCost,
-            onUpdateAdditionalCost: notifier.updateAdditionalCost,
-            onRemoveAdditionalCost: notifier.removeAdditionalCost,
-            additionalCostControllers: _additionalCostControllers,
-          ),
-        ),
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => const MobileItemManufacturingScreen(),
       ),
     );
   }
 
   Widget _buildHeader(AddItemFormState form) {
     final title = widget.editItem != null ? 'Edit Item' : 'Add Item';
-    final titleStyle = const TextStyle(
+    const titleStyle = TextStyle(
       fontSize: 18,
       fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,
@@ -1359,6 +1463,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       form: form,
       rawControllerFor: _rawController,
       onUpdateRawMaterial: notifier.updateRawMaterial,
+      onSelectRawMaterialItem: notifier.selectRawMaterialItem,
       onRemoveRawMaterial: notifier.removeRawMaterialRow,
       onAddRawMaterial: notifier.addRawMaterialRow,
       onAddAdditionalCost: notifier.addAdditionalCost,
@@ -1378,6 +1483,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     return SuppliersSection(
       selectedPartyIds: form.supplierPartyIds,
       onChanged: notifier.setSupplierPartyIds,
+      defaultPartyId: form.defaultSupplierPartyId,
+      onDefaultChanged: notifier.setDefaultSupplierPartyId,
     );
   }
 

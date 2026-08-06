@@ -63,6 +63,10 @@
 	<string>Camera access is required to scan item barcodes and capture item photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photo library access is required to select item images.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

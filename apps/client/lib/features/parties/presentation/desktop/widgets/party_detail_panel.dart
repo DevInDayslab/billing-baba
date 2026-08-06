@@ -20,6 +20,7 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/party
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_ledger_transactions_section.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_preview_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_whatsapp_actions.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_notes_attachments_section.dart';
 import 'package:billing_baba/features/parties/repositories/party_reminder_schedule_repository.dart';
 import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
@@ -137,6 +138,7 @@ class _PartyDetailContent extends ConsumerWidget {
             child: HiddenLedgerSummaryTile(partyId: party.id),
           ),
         if (canViewHiddenLedger) HiddenLedgerHistorySection(partyId: party.id),
+        PartyNotesAttachmentsSection(party: party),
         const Divider(height: 1, thickness: 1),
         Expanded(
           child: ledgerAsync.when(
@@ -549,8 +551,6 @@ class _MetaLine {
   final String label;
   final String value;
 }
-
-const _partyHeaderNameMaxLength = 20;
 
 class _PartyHeaderActionIcon extends StatelessWidget {
   const _PartyHeaderActionIcon({

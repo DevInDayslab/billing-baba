@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/subscription/application/mock_payment_service.dart';
 import 'package:billing_baba/features/subscription/application/payment_state_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session_provider.dart';
+import 'package:billing_baba/features/subscription/application/subscription_checkout_support.dart';
 import 'package:billing_baba/features/subscription/domain/models/payment_outcome.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/widgets/payment_failed_dialog.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/widgets/payment_pending_dialog.dart';
@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Cashfree-style payment processing screen with mock status polling.
+/// Razorpay payment processing screen for mobile subscription checkout.
 class PaymentProcessingPage extends ConsumerStatefulWidget {
   const PaymentProcessingPage({super.key});
 
@@ -58,12 +58,21 @@ class _PaymentProcessingPageState extends ConsumerState<PaymentProcessingPage>
     if (result == null) {
       final paymentState = ref.read(paymentStateProvider);
       if (paymentState.status == PaymentStatus.failed) {
+        if (_isCancellation(paymentState.errorMessage)) {
+          ref.read(paymentStateProvider.notifier).reset();
+          context.go(AppRoutes.subscriptionReview);
+          return;
+        }
         await _showFailedDialog();
       }
       return;
     }
 
     await _handleOutcome(result.outcome);
+  }
+
+  bool _isCancellation(String? message) {
+    return message?.toLowerCase().contains('cancelled') ?? false;
   }
 
   Future<void> _showFailedDialog() async {
@@ -220,7 +229,7 @@ class _PaymentProcessingPageState extends ConsumerState<PaymentProcessingPage>
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 const Text(
-                  'Checking payment status...',
+                  'Opening secure checkout...',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
@@ -245,16 +254,16 @@ class _PaymentProcessingPageState extends ConsumerState<PaymentProcessingPage>
                   const SizedBox(height: 24),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Powered by secure payment gateway',
+                  'Powered by Razorpay',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Need help? Call ${MockPaymentService.supportPhoneNumber}',
-                  style: const TextStyle(
+                const Text(
+                  'Need help? Call ${SubscriptionCheckoutSupport.supportPhoneNumber}',
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
