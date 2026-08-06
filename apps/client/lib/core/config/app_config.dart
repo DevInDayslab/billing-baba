@@ -120,6 +120,9 @@ abstract final class AppConfig {
 
   static String get _websiteBase => websiteUrl.replaceAll(RegExp(r'/+$'), '');
 
+  /// Mobile notifications center (mock UI) — hidden until backend is ready.
+  static const showMobileNotifications = false;
+
   /// Product documentation / features overview on the public site.
   static String get documentationUrl => '$_websiteBase/features';
 
@@ -175,7 +178,8 @@ abstract final class AppConfig {
 
   /// Recovery poll interval while verification is pending.
   static Duration get paymentRecoveryPollInterval => Duration(
-    minutes: int.tryParse(dotenv.env['PAYMENT_RECOVERY_POLL_MINUTES'] ?? '') ?? 5,
+    minutes:
+        int.tryParse(dotenv.env['PAYMENT_RECOVERY_POLL_MINUTES'] ?? '') ?? 5,
   );
 
   /// Logs resolved config once at startup (console when verbose, file per [minLogLevel]).

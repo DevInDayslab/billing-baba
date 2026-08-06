@@ -159,9 +159,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
             child: Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                onPressed: _isLoggingOut
-                    ? null
-                    : () => unawaited(_logout()),
+                onPressed: _isLoggingOut ? null : () => unawaited(_logout()),
                 icon: _isLoggingOut
                     ? const SizedBox(
                         width: 18,

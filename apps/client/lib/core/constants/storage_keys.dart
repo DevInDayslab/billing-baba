@@ -43,6 +43,7 @@ abstract final class StorageKeys {
   static const recentSearchPageIds = 'recent_search_page_ids';
   static const collaborationMembers = 'collaboration_members';
   static const collaborationInvitations = 'collaboration_invitations';
+  static const mobileMenuExpandedSection = 'mobile_menu_expanded_section';
 
   /// Stable install-lifetime sync device id (UUID).
   static const syncDeviceId = 'sync_device_id';

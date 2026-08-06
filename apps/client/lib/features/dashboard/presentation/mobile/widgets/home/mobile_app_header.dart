@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/sync/application/sync_ui_state.dart';
 import 'package:billing_baba/core/sync/application/sync_ui_state_provider.dart';
 import 'package:billing_baba/core/sync/models/sync_state.dart';
@@ -99,17 +100,18 @@ class MobileAppHeader extends ConsumerWidget {
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: onNotificationTap,
-                icon: const Icon(Icons.notifications_none_rounded),
-                color: AppColors.textPrimary,
-                iconSize: 22,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 36,
+              if (AppConfig.showMobileNotifications)
+                IconButton(
+                  onPressed: onNotificationTap,
+                  icon: const Icon(Icons.notifications_none_rounded),
+                  color: AppColors.textPrimary,
+                  iconSize: 22,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
                 ),
-              ),
               IconButton(
                 onPressed: onSettingsTap,
                 icon: const Icon(Icons.settings_outlined),

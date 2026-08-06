@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
@@ -5,7 +6,6 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 
 /// Shared mobile app bar with business identity, notifications, and settings.
 ///
@@ -168,7 +168,7 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
   List<Widget> _buildActions() {
     final trailing = <Widget>[
       ...?actions,
-      if (showNotification)
+      if (showNotification && AppConfig.showMobileNotifications)
         MobileIconActionButton(
           icon: Icons.notifications_outlined,
           tooltip: 'Notifications',
