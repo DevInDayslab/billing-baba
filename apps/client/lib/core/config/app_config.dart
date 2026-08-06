@@ -151,6 +151,10 @@ abstract final class AppConfig {
   static bool get razorpayNative =>
       dotenv.env['RAZORPAY_NATIVE']?.toLowerCase() != 'false';
 
+  /// Frontend-only mock subscription payments — set `SUBSCRIPTION_MOCK_PAYMENT=true`.
+  static bool get subscriptionMockPayment =>
+      dotenv.env['SUBSCRIPTION_MOCK_PAYMENT']?.toLowerCase() == 'true';
+
   /// WebView Razorpay fallback when native SDK cannot initialize.
   static bool get razorpayWebViewFallback =>
       dotenv.env['RAZORPAY_WEBVIEW_FALLBACK']?.toLowerCase() == 'true';

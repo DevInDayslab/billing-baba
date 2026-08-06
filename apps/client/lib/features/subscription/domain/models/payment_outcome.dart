@@ -1,4 +1,4 @@
-/// Result of a mock subscription payment attempt.
+/// Result of a subscription payment attempt.
 enum PaymentOutcome {
   success,
   pending,

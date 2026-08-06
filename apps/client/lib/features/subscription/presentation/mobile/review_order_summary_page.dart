@@ -1,9 +1,11 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/features/subscription/application/payment_state_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_checkout_session_provider.dart';
-import 'package:billing_baba/features/subscription/application/subscription_order_pricing.dart';
+import 'package:billing_baba/features/subscription/application/subscription_plans_provider.dart';
+import 'package:billing_baba/features/subscription/application/subscription_server_pricing.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/utils/subscription_price_format.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/widgets/coupon_input_section.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/widgets/expandable_gstin_field.dart';
@@ -38,6 +40,8 @@ class _ReviewOrderSummaryPageState
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(subscriptionCheckoutSessionProvider);
+    final plansAsync = ref.watch(subscriptionPlansProvider);
+
     if (session == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -71,63 +75,158 @@ class _ReviewOrderSummaryPageState
       );
     }
 
-    final pricing = SubscriptionOrderPricing.calculate(
-      input: session.input,
-      couponDiscountOnTaxable: session.couponDiscountOnTaxable,
-    );
-    final paymentState = ref.watch(paymentStateProvider);
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: const MobileAppBar(
-        title: 'Review Order Summary',
-        showBackButton: true,
-        showBusinessHeader: false,
-        showNotification: false,
-        showSettings: false,
+    return plansAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
+      error: (error, _) => Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: const MobileAppBar(
+          title: 'Review Order Summary',
+          showBackButton: true,
+          showBusinessHeader: false,
+          showNotification: false,
+          showSettings: false,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                SelectedPlanSummaryCard(input: session.input),
-                const SizedBox(height: AppSpacing.md),
-                OrderPriceBreakdown(pricing: pricing),
-                const SizedBox(height: AppSpacing.md),
-                CouponInputSection(
-                  appliedCouponCode: session.appliedCouponCode,
-                  onApply: (code) async {
-                    return ref
-                        .read(subscriptionCheckoutSessionProvider.notifier)
-                        .applyCoupon(code);
-                  },
-                  onRemove: () => ref
-                      .read(subscriptionCheckoutSessionProvider.notifier)
-                      .removeCoupon(),
+                const Text(
+                  'Unable to load plan pricing. Please try again.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ExpandableGstinField(
-                  initialValue: session.gstin,
-                  onChanged: (value) => ref
-                      .read(subscriptionCheckoutSessionProvider.notifier)
-                      .updateGstin(value),
+                FilledButton(
+                  onPressed: () =>
+                      ref.read(subscriptionPlansProvider.notifier).reload(),
+                  child: const Text('Retry'),
                 ),
               ],
             ),
           ),
-          _StickyPayCta(
-            total: pricing.total,
-            isLoading: _isPaying || paymentState.isLoading,
-            onPressed: () => _handlePay(pricing.total),
+        ),
+      ),
+      data: (plans) {
+        final serverPlan = SubscriptionServerPricing.planFor(
+          plans,
+          session.input.planType,
+        );
+        if (serverPlan == null) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: MobileAppBar(
+              title: 'Review Order Summary',
+              showBackButton: true,
+              showBusinessHeader: false,
+              showNotification: false,
+              showSettings: false,
+            ),
+            body: Center(
+              child: Text(
+                'Selected plan is not available for purchase.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+          );
+        }
+
+        final pricing = SubscriptionServerPricing.fromPlanAmount(
+          serverPlan.amount,
+        );
+        final paymentState = ref.watch(paymentStateProvider);
+        final showCouponSection = AppConfig.subscriptionMockPayment;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: const MobileAppBar(
+            title: 'Review Order Summary',
+            showBackButton: true,
+            showBusinessHeader: false,
+            showNotification: false,
+            showSettings: false,
           ),
-        ],
+          body: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  children: [
+                    SelectedPlanSummaryCard(input: session.input),
+                    const SizedBox(height: AppSpacing.md),
+                    OrderPriceBreakdown(pricing: pricing),
+                    const SizedBox(height: AppSpacing.md),
+                    const _ServerPricingNotice(),
+                    if (showCouponSection) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      CouponInputSection(
+                        appliedCouponCode: session.appliedCouponCode,
+                        onApply: (code) async {
+                          return ref
+                              .read(
+                                subscriptionCheckoutSessionProvider.notifier,
+                              )
+                              .applyCoupon(code);
+                        },
+                        onRemove: () => ref
+                            .read(subscriptionCheckoutSessionProvider.notifier)
+                            .removeCoupon(),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
+                    ExpandableGstinField(
+                      initialValue: session.gstin,
+                      onChanged: (value) => ref
+                          .read(subscriptionCheckoutSessionProvider.notifier)
+                          .updateGstin(value),
+                    ),
+                  ],
+                ),
+              ),
+              _StickyPayCta(
+                total: pricing.total,
+                isLoading: _isPaying || paymentState.isLoading,
+                onPressed: () => _handlePay(pricing.total),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ServerPricingNotice extends StatelessWidget {
+  const _ServerPricingNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F0FF),
+        borderRadius: AppRadius.mdBorder,
+        border: Border.all(color: const Color(0xFFD8CCFF)),
+      ),
+      child: const Text(
+        'The payable amount is confirmed by our servers when checkout opens. '
+        'Coupons and multi-year pricing are not applied to Razorpay checkout yet.',
+        style: TextStyle(
+          fontSize: 12,
+          color: AppColors.textSecondary,
+          height: 1.4,
+        ),
       ),
     );
   }

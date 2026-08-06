@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/subscription/application/subscription_mobile_checkout_flow.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_input.dart';
 
 /// In-memory checkout session preserved across review → payment → retry.
@@ -8,6 +9,7 @@ class SubscriptionCheckoutSession {
     this.couponDiscountOnTaxable = 0,
     this.gstin,
     this.lastTransactionId,
+    this.pendingPaymentCredentials,
   });
 
   final ReviewOrderSummaryInput input;
@@ -15,6 +17,7 @@ class SubscriptionCheckoutSession {
   final double couponDiscountOnTaxable;
   final String? gstin;
   final String? lastTransactionId;
+  final SubscriptionPendingPaymentCredentials? pendingPaymentCredentials;
 
   bool get hasCoupon => appliedCouponCode != null;
 
@@ -24,9 +27,11 @@ class SubscriptionCheckoutSession {
     double? couponDiscountOnTaxable,
     String? gstin,
     String? lastTransactionId,
+    SubscriptionPendingPaymentCredentials? pendingPaymentCredentials,
     bool clearCoupon = false,
     bool clearGstin = false,
     bool clearTransactionId = false,
+    bool clearPendingPayment = false,
   }) {
     return SubscriptionCheckoutSession(
       input: input ?? this.input,
@@ -39,6 +44,9 @@ class SubscriptionCheckoutSession {
       lastTransactionId: clearTransactionId
           ? null
           : (lastTransactionId ?? this.lastTransactionId),
+      pendingPaymentCredentials: clearPendingPayment
+          ? null
+          : (pendingPaymentCredentials ?? this.pendingPaymentCredentials),
     );
   }
 }

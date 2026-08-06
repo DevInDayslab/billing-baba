@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/subscription/application/mock_payment_service.dart';
+import 'package:billing_baba/features/subscription/application/subscription_checkout_support.dart';
 import 'package:billing_baba/features/subscription/application/payment_state_provider.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/utils/subscription_price_format.dart';
 import 'package:flutter/material.dart';
@@ -74,9 +74,9 @@ Future<void> showPaymentPendingDialog(
                   value: formatSubscriptionPrice(result.amount),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                _InfoRow(
+                const _InfoRow(
                   label: 'Help',
-                  value: MockPaymentService.supportPhoneNumber,
+                  value: SubscriptionCheckoutSupport.supportPhoneNumber,
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 SizedBox(
