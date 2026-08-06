@@ -365,22 +365,22 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
             LengthLimitingTextInputFormatter(15),
             FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
           ],
-          suffix: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Show on card',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Switch(
-                value: _showGstinOnCard,
-                onChanged: (value) => setState(() => _showGstinOnCard = value),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ],
-          ),
+          // suffix: Row(
+          //   mainAxisSize: MainAxisSize.min,
+          //   children: [
+          //     Text(
+          //       'Show on card',
+          //       style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          //         color: AppColors.textSecondary,
+          //       ),
+          //     ),
+          //     Switch(
+          //       value: _showGstinOnCard,
+          //       onChanged: (value) => setState(() => _showGstinOnCard = value),
+          //       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          //     ),
+          //   ],
+          // ),
         ),
         const SizedBox(height: AppSpacing.lg),
         MobileBusinessProfileLabeledField(
