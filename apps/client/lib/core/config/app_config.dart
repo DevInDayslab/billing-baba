@@ -120,8 +120,8 @@ abstract final class AppConfig {
 
   static String get _websiteBase => websiteUrl.replaceAll(RegExp(r'/+$'), '');
 
-  /// Mobile notifications center (mock UI) — hidden until backend is ready.
-  static const showMobileNotifications = false;
+  /// Mobile notifications center.
+  static const showMobileNotifications = true;
 
   /// Product documentation / features overview on the public site.
   static String get documentationUrl => '$_websiteBase/features';

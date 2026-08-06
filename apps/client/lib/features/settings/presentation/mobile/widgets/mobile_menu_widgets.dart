@@ -365,6 +365,7 @@ class MobileMenuLeafTile extends StatelessWidget {
     required this.item,
     required this.onTap,
     this.dense = false,
+    this.showSubtitle = true,
     this.showChevron = true,
     super.key,
   });
@@ -372,6 +373,7 @@ class MobileMenuLeafTile extends StatelessWidget {
   final MobileMenuItem item;
   final VoidCallback onTap;
   final bool dense;
+  final bool showSubtitle;
   final bool showChevron;
 
   @override
@@ -385,7 +387,9 @@ class MobileMenuLeafTile extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
-            vertical: dense ? 10 : (item.subtitle != null ? 12 : 16),
+            vertical: dense
+                ? 10
+                : (showSubtitle && item.subtitle != null ? 12 : 16),
           ),
           child: Row(
             children: [
@@ -416,7 +420,7 @@ class MobileMenuLeafTile extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    if (item.subtitle != null) ...[
+                    if (showSubtitle && item.subtitle != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         item.subtitle!,

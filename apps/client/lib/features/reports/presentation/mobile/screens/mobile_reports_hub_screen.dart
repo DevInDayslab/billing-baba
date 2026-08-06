@@ -26,7 +26,6 @@ class MobileReportsHubScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: const MobileAppBar(
         title: 'Reports',
-        showBackButton: true,
         showBusinessHeader: false,
         showNotification: false,
         showSettings: false,

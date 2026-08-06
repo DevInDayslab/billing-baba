@@ -28203,6 +28203,682 @@ class GatewayPaymentSessionsLocalCompanion
   }
 }
 
+class $NotificationsLocalTable extends NotificationsLocal
+    with TableInfo<$NotificationsLocalTable, NotificationTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NotificationsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _readMeta = const VerificationMeta('read');
+  @override
+  late final GeneratedColumn<bool> read = GeneratedColumn<bool>(
+    'read',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("read" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _actionRouteMeta = const VerificationMeta(
+    'actionRoute',
+  );
+  @override
+  late final GeneratedColumn<String> actionRoute = GeneratedColumn<String>(
+    'action_route',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _actionPayloadMeta = const VerificationMeta(
+    'actionPayload',
+  );
+  @override
+  late final GeneratedColumn<String> actionPayload = GeneratedColumn<String>(
+    'action_payload',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isLocalMeta = const VerificationMeta(
+    'isLocal',
+  );
+  @override
+  late final GeneratedColumn<bool> isLocal = GeneratedColumn<bool>(
+    'is_local',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_local" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _futureRemoteIdMeta = const VerificationMeta(
+    'futureRemoteId',
+  );
+  @override
+  late final GeneratedColumn<String> futureRemoteId = GeneratedColumn<String>(
+    'future_remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    title,
+    body,
+    type,
+    createdAt,
+    read,
+    actionRoute,
+    actionPayload,
+    isLocal,
+    futureRemoteId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'notifications_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NotificationTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('read')) {
+      context.handle(
+        _readMeta,
+        read.isAcceptableOrUnknown(data['read']!, _readMeta),
+      );
+    }
+    if (data.containsKey('action_route')) {
+      context.handle(
+        _actionRouteMeta,
+        actionRoute.isAcceptableOrUnknown(
+          data['action_route']!,
+          _actionRouteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('action_payload')) {
+      context.handle(
+        _actionPayloadMeta,
+        actionPayload.isAcceptableOrUnknown(
+          data['action_payload']!,
+          _actionPayloadMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_local')) {
+      context.handle(
+        _isLocalMeta,
+        isLocal.isAcceptableOrUnknown(data['is_local']!, _isLocalMeta),
+      );
+    }
+    if (data.containsKey('future_remote_id')) {
+      context.handle(
+        _futureRemoteIdMeta,
+        futureRemoteId.isAcceptableOrUnknown(
+          data['future_remote_id']!,
+          _futureRemoteIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NotificationTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NotificationTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      read: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}read'],
+      )!,
+      actionRoute: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action_route'],
+      ),
+      actionPayload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action_payload'],
+      ),
+      isLocal: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_local'],
+      )!,
+      futureRemoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}future_remote_id'],
+      ),
+    );
+  }
+
+  @override
+  $NotificationsLocalTable createAlias(String alias) {
+    return $NotificationsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class NotificationTableData extends DataClass
+    implements Insertable<NotificationTableData> {
+  final String id;
+  final String businessId;
+  final String title;
+  final String body;
+  final String type;
+  final DateTime createdAt;
+  final bool read;
+  final String? actionRoute;
+  final String? actionPayload;
+  final bool isLocal;
+  final String? futureRemoteId;
+  const NotificationTableData({
+    required this.id,
+    required this.businessId,
+    required this.title,
+    required this.body,
+    required this.type,
+    required this.createdAt,
+    required this.read,
+    this.actionRoute,
+    this.actionPayload,
+    required this.isLocal,
+    this.futureRemoteId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['title'] = Variable<String>(title);
+    map['body'] = Variable<String>(body);
+    map['type'] = Variable<String>(type);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['read'] = Variable<bool>(read);
+    if (!nullToAbsent || actionRoute != null) {
+      map['action_route'] = Variable<String>(actionRoute);
+    }
+    if (!nullToAbsent || actionPayload != null) {
+      map['action_payload'] = Variable<String>(actionPayload);
+    }
+    map['is_local'] = Variable<bool>(isLocal);
+    if (!nullToAbsent || futureRemoteId != null) {
+      map['future_remote_id'] = Variable<String>(futureRemoteId);
+    }
+    return map;
+  }
+
+  NotificationsLocalCompanion toCompanion(bool nullToAbsent) {
+    return NotificationsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      title: Value(title),
+      body: Value(body),
+      type: Value(type),
+      createdAt: Value(createdAt),
+      read: Value(read),
+      actionRoute: actionRoute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actionRoute),
+      actionPayload: actionPayload == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actionPayload),
+      isLocal: Value(isLocal),
+      futureRemoteId: futureRemoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(futureRemoteId),
+    );
+  }
+
+  factory NotificationTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NotificationTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      title: serializer.fromJson<String>(json['title']),
+      body: serializer.fromJson<String>(json['body']),
+      type: serializer.fromJson<String>(json['type']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      read: serializer.fromJson<bool>(json['read']),
+      actionRoute: serializer.fromJson<String?>(json['actionRoute']),
+      actionPayload: serializer.fromJson<String?>(json['actionPayload']),
+      isLocal: serializer.fromJson<bool>(json['isLocal']),
+      futureRemoteId: serializer.fromJson<String?>(json['futureRemoteId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'title': serializer.toJson<String>(title),
+      'body': serializer.toJson<String>(body),
+      'type': serializer.toJson<String>(type),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'read': serializer.toJson<bool>(read),
+      'actionRoute': serializer.toJson<String?>(actionRoute),
+      'actionPayload': serializer.toJson<String?>(actionPayload),
+      'isLocal': serializer.toJson<bool>(isLocal),
+      'futureRemoteId': serializer.toJson<String?>(futureRemoteId),
+    };
+  }
+
+  NotificationTableData copyWith({
+    String? id,
+    String? businessId,
+    String? title,
+    String? body,
+    String? type,
+    DateTime? createdAt,
+    bool? read,
+    Value<String?> actionRoute = const Value.absent(),
+    Value<String?> actionPayload = const Value.absent(),
+    bool? isLocal,
+    Value<String?> futureRemoteId = const Value.absent(),
+  }) => NotificationTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    title: title ?? this.title,
+    body: body ?? this.body,
+    type: type ?? this.type,
+    createdAt: createdAt ?? this.createdAt,
+    read: read ?? this.read,
+    actionRoute: actionRoute.present ? actionRoute.value : this.actionRoute,
+    actionPayload: actionPayload.present
+        ? actionPayload.value
+        : this.actionPayload,
+    isLocal: isLocal ?? this.isLocal,
+    futureRemoteId: futureRemoteId.present
+        ? futureRemoteId.value
+        : this.futureRemoteId,
+  );
+  NotificationTableData copyWithCompanion(NotificationsLocalCompanion data) {
+    return NotificationTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      title: data.title.present ? data.title.value : this.title,
+      body: data.body.present ? data.body.value : this.body,
+      type: data.type.present ? data.type.value : this.type,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      read: data.read.present ? data.read.value : this.read,
+      actionRoute: data.actionRoute.present
+          ? data.actionRoute.value
+          : this.actionRoute,
+      actionPayload: data.actionPayload.present
+          ? data.actionPayload.value
+          : this.actionPayload,
+      isLocal: data.isLocal.present ? data.isLocal.value : this.isLocal,
+      futureRemoteId: data.futureRemoteId.present
+          ? data.futureRemoteId.value
+          : this.futureRemoteId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('read: $read, ')
+          ..write('actionRoute: $actionRoute, ')
+          ..write('actionPayload: $actionPayload, ')
+          ..write('isLocal: $isLocal, ')
+          ..write('futureRemoteId: $futureRemoteId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    title,
+    body,
+    type,
+    createdAt,
+    read,
+    actionRoute,
+    actionPayload,
+    isLocal,
+    futureRemoteId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NotificationTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.title == this.title &&
+          other.body == this.body &&
+          other.type == this.type &&
+          other.createdAt == this.createdAt &&
+          other.read == this.read &&
+          other.actionRoute == this.actionRoute &&
+          other.actionPayload == this.actionPayload &&
+          other.isLocal == this.isLocal &&
+          other.futureRemoteId == this.futureRemoteId);
+}
+
+class NotificationsLocalCompanion
+    extends UpdateCompanion<NotificationTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> title;
+  final Value<String> body;
+  final Value<String> type;
+  final Value<DateTime> createdAt;
+  final Value<bool> read;
+  final Value<String?> actionRoute;
+  final Value<String?> actionPayload;
+  final Value<bool> isLocal;
+  final Value<String?> futureRemoteId;
+  final Value<int> rowid;
+  const NotificationsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.body = const Value.absent(),
+    this.type = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.read = const Value.absent(),
+    this.actionRoute = const Value.absent(),
+    this.actionPayload = const Value.absent(),
+    this.isLocal = const Value.absent(),
+    this.futureRemoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NotificationsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String title,
+    required String body,
+    required String type,
+    required DateTime createdAt,
+    this.read = const Value.absent(),
+    this.actionRoute = const Value.absent(),
+    this.actionPayload = const Value.absent(),
+    this.isLocal = const Value.absent(),
+    this.futureRemoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       title = Value(title),
+       body = Value(body),
+       type = Value(type),
+       createdAt = Value(createdAt);
+  static Insertable<NotificationTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? title,
+    Expression<String>? body,
+    Expression<String>? type,
+    Expression<DateTime>? createdAt,
+    Expression<bool>? read,
+    Expression<String>? actionRoute,
+    Expression<String>? actionPayload,
+    Expression<bool>? isLocal,
+    Expression<String>? futureRemoteId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (title != null) 'title': title,
+      if (body != null) 'body': body,
+      if (type != null) 'type': type,
+      if (createdAt != null) 'created_at': createdAt,
+      if (read != null) 'read': read,
+      if (actionRoute != null) 'action_route': actionRoute,
+      if (actionPayload != null) 'action_payload': actionPayload,
+      if (isLocal != null) 'is_local': isLocal,
+      if (futureRemoteId != null) 'future_remote_id': futureRemoteId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NotificationsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? title,
+    Value<String>? body,
+    Value<String>? type,
+    Value<DateTime>? createdAt,
+    Value<bool>? read,
+    Value<String?>? actionRoute,
+    Value<String?>? actionPayload,
+    Value<bool>? isLocal,
+    Value<String?>? futureRemoteId,
+    Value<int>? rowid,
+  }) {
+    return NotificationsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      type: type ?? this.type,
+      createdAt: createdAt ?? this.createdAt,
+      read: read ?? this.read,
+      actionRoute: actionRoute ?? this.actionRoute,
+      actionPayload: actionPayload ?? this.actionPayload,
+      isLocal: isLocal ?? this.isLocal,
+      futureRemoteId: futureRemoteId ?? this.futureRemoteId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (read.present) {
+      map['read'] = Variable<bool>(read.value);
+    }
+    if (actionRoute.present) {
+      map['action_route'] = Variable<String>(actionRoute.value);
+    }
+    if (actionPayload.present) {
+      map['action_payload'] = Variable<String>(actionPayload.value);
+    }
+    if (isLocal.present) {
+      map['is_local'] = Variable<bool>(isLocal.value);
+    }
+    if (futureRemoteId.present) {
+      map['future_remote_id'] = Variable<String>(futureRemoteId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('read: $read, ')
+          ..write('actionRoute: $actionRoute, ')
+          ..write('actionPayload: $actionPayload, ')
+          ..write('isLocal: $isLocal, ')
+          ..write('futureRemoteId: $futureRemoteId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -28258,6 +28934,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExpensesLocalTable expensesLocal = $ExpensesLocalTable(this);
   late final $GatewayPaymentSessionsLocalTable gatewayPaymentSessionsLocal =
       $GatewayPaymentSessionsLocalTable(this);
+  late final $NotificationsLocalTable notificationsLocal =
+      $NotificationsLocalTable(this);
   late final Index idxSyncQueueStatus = Index(
     'idx_sync_queue_status',
     'CREATE INDEX idx_sync_queue_status ON sync_queue (status)',
@@ -28331,6 +29009,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     expenseCategoriesLocal,
     expensesLocal,
     gatewayPaymentSessionsLocal,
+    notificationsLocal,
     idxSyncQueueStatus,
     idxSyncQueueBusinessId,
     idxSyncQueueStatusBusinessId,
@@ -41833,6 +42512,341 @@ typedef $$GatewayPaymentSessionsLocalTableProcessedTableManager =
       GatewayPaymentSessionsLocalData,
       PrefetchHooks Function()
     >;
+typedef $$NotificationsLocalTableCreateCompanionBuilder =
+    NotificationsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String title,
+      required String body,
+      required String type,
+      required DateTime createdAt,
+      Value<bool> read,
+      Value<String?> actionRoute,
+      Value<String?> actionPayload,
+      Value<bool> isLocal,
+      Value<String?> futureRemoteId,
+      Value<int> rowid,
+    });
+typedef $$NotificationsLocalTableUpdateCompanionBuilder =
+    NotificationsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> title,
+      Value<String> body,
+      Value<String> type,
+      Value<DateTime> createdAt,
+      Value<bool> read,
+      Value<String?> actionRoute,
+      Value<String?> actionPayload,
+      Value<bool> isLocal,
+      Value<String?> futureRemoteId,
+      Value<int> rowid,
+    });
+
+class $$NotificationsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $NotificationsLocalTable> {
+  $$NotificationsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get read => $composableBuilder(
+    column: $table.read,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get actionRoute => $composableBuilder(
+    column: $table.actionRoute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get actionPayload => $composableBuilder(
+    column: $table.actionPayload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isLocal => $composableBuilder(
+    column: $table.isLocal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get futureRemoteId => $composableBuilder(
+    column: $table.futureRemoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NotificationsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $NotificationsLocalTable> {
+  $$NotificationsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get read => $composableBuilder(
+    column: $table.read,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get actionRoute => $composableBuilder(
+    column: $table.actionRoute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get actionPayload => $composableBuilder(
+    column: $table.actionPayload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isLocal => $composableBuilder(
+    column: $table.isLocal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get futureRemoteId => $composableBuilder(
+    column: $table.futureRemoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NotificationsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NotificationsLocalTable> {
+  $$NotificationsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get read =>
+      $composableBuilder(column: $table.read, builder: (column) => column);
+
+  GeneratedColumn<String> get actionRoute => $composableBuilder(
+    column: $table.actionRoute,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get actionPayload => $composableBuilder(
+    column: $table.actionPayload,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isLocal =>
+      $composableBuilder(column: $table.isLocal, builder: (column) => column);
+
+  GeneratedColumn<String> get futureRemoteId => $composableBuilder(
+    column: $table.futureRemoteId,
+    builder: (column) => column,
+  );
+}
+
+class $$NotificationsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NotificationsLocalTable,
+          NotificationTableData,
+          $$NotificationsLocalTableFilterComposer,
+          $$NotificationsLocalTableOrderingComposer,
+          $$NotificationsLocalTableAnnotationComposer,
+          $$NotificationsLocalTableCreateCompanionBuilder,
+          $$NotificationsLocalTableUpdateCompanionBuilder,
+          (
+            NotificationTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $NotificationsLocalTable,
+              NotificationTableData
+            >,
+          ),
+          NotificationTableData,
+          PrefetchHooks Function()
+        > {
+  $$NotificationsLocalTableTableManager(
+    _$AppDatabase db,
+    $NotificationsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NotificationsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NotificationsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NotificationsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> read = const Value.absent(),
+                Value<String?> actionRoute = const Value.absent(),
+                Value<String?> actionPayload = const Value.absent(),
+                Value<bool> isLocal = const Value.absent(),
+                Value<String?> futureRemoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NotificationsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                title: title,
+                body: body,
+                type: type,
+                createdAt: createdAt,
+                read: read,
+                actionRoute: actionRoute,
+                actionPayload: actionPayload,
+                isLocal: isLocal,
+                futureRemoteId: futureRemoteId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String title,
+                required String body,
+                required String type,
+                required DateTime createdAt,
+                Value<bool> read = const Value.absent(),
+                Value<String?> actionRoute = const Value.absent(),
+                Value<String?> actionPayload = const Value.absent(),
+                Value<bool> isLocal = const Value.absent(),
+                Value<String?> futureRemoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NotificationsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                title: title,
+                body: body,
+                type: type,
+                createdAt: createdAt,
+                read: read,
+                actionRoute: actionRoute,
+                actionPayload: actionPayload,
+                isLocal: isLocal,
+                futureRemoteId: futureRemoteId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NotificationsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NotificationsLocalTable,
+      NotificationTableData,
+      $$NotificationsLocalTableFilterComposer,
+      $$NotificationsLocalTableOrderingComposer,
+      $$NotificationsLocalTableAnnotationComposer,
+      $$NotificationsLocalTableCreateCompanionBuilder,
+      $$NotificationsLocalTableUpdateCompanionBuilder,
+      (
+        NotificationTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $NotificationsLocalTable,
+          NotificationTableData
+        >,
+      ),
+      NotificationTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -41921,4 +42935,6 @@ class $AppDatabaseManager {
         _db,
         _db.gatewayPaymentSessionsLocal,
       );
+  $$NotificationsLocalTableTableManager get notificationsLocal =>
+      $$NotificationsLocalTableTableManager(_db, _db.notificationsLocal);
 }

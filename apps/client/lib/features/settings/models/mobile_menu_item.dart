@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 /// Top-level grouping shown in the mobile Menu hub.
 enum MobileMenuSection {
-  business('Business'),
+  business('Business', useNavCards: true),
   utilities('Utilities', useNavCards: true),
   settings('Settings', showHeader: false),
   support('Support', showHeader: false),

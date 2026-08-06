@@ -16,6 +16,7 @@ import 'package:billing_baba/core/database/tables/item_suppliers_table.dart';
 import 'package:billing_baba/core/database/tables/item_tier_prices_table.dart';
 import 'package:billing_baba/core/database/tables/items_table.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
+import 'package:billing_baba/core/database/tables/notifications_table.dart';
 import 'package:billing_baba/core/database/tables/parties_table.dart';
 import 'package:billing_baba/core/database/tables/pos_sales_tables.dart';
 import 'package:billing_baba/core/database/tables/purchase_document_tables.dart';
@@ -63,13 +64,14 @@ part 'database.g.dart';
     ExpenseCategoriesLocal,
     ExpensesLocal,
     GatewayPaymentSessionsLocal,
+    NotificationsLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Drift schema version — keep in sync with [schemaVersion].
-  static const currentSchemaVersion = 25;
+  static const currentSchemaVersion = 26;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -252,6 +254,15 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 25) {
         await m.createTable(gatewayPaymentSessionsLocal);
+      }
+      if (from < 26) {
+        await m.createTable(notificationsLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_notifications_local_business_id ON notifications_local (business_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_notifications_local_business_read ON notifications_local (business_id, read)',
+        );
       }
     },
   );

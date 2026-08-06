@@ -147,6 +147,7 @@ class _MobileMenuFlatAccordionChildren extends ConsumerWidget {
           MobileMenuLeafTile(
             item: visible[i],
             dense: true,
+            showSubtitle: false,
             onTap: () =>
                 MobileMenuNavigation.onItemTap(context, ref, visible[i]),
           ),
@@ -181,6 +182,7 @@ class _MobileMenuAccordionChildren extends ConsumerWidget {
             MobileMenuLeafTile(
               item: visible[i],
               dense: true,
+              showSubtitle: false,
               onTap: () =>
                   MobileMenuNavigation.onItemTap(context, ref, visible[i]),
             ),

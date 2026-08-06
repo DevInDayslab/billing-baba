@@ -35,6 +35,7 @@ import 'package:billing_baba/features/inventory/presentation/item_details_screen
 import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
 import 'package:billing_baba/features/inventory/presentation/units_screen.dart';
+import 'package:billing_baba/features/notifications/presentation/mobile/notification_settings_screen.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
@@ -691,6 +692,11 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.settingsBackup,
             builder: (context, state) => const BackupRestorePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsNotifications,
+            builder: (context, state) =>
+                const MobileNotificationSettingsScreen(),
           ),
           GoRoute(
             path: AppRoutes.settingsReports,

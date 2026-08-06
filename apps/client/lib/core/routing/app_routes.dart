@@ -113,6 +113,7 @@ abstract final class AppRoutes {
   static const settingsPrint = '/settings/print';
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
+  static const settingsNotifications = '/settings/notifications';
   static const settingsReports = '/settings/reports';
 
   static String settingsReportGroup(String groupId) =>

@@ -6,6 +6,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
+import 'package:billing_baba/features/notifications/application/notification_providers.dart';
+import 'package:billing_baba/features/notifications/presentation/mobile/widgets/notification_icon_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,6 +34,7 @@ class MobileAppHeader extends ConsumerWidget {
     final firstName = userName.split(' ').first;
     final sync = ref.watch(syncUiStateProvider);
     final manualState = ref.watch(manualSyncVisualStateProvider);
+    final unreadCount = ref.watch(notificationUnreadCountProvider).value ?? 0;
     final nowLabel = DateFormat('hh:mm a, d MMM yyyy').format(DateTime.now());
 
     return Padding(
@@ -101,16 +104,9 @@ class MobileAppHeader extends ConsumerWidget {
                 ),
               ),
               if (AppConfig.showMobileNotifications)
-                IconButton(
-                  onPressed: onNotificationTap,
-                  icon: const Icon(Icons.notifications_none_rounded),
-                  color: AppColors.textPrimary,
-                  iconSize: 22,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
+                NotificationIconButton(
+                  onTap: onNotificationTap,
+                  unreadCount: unreadCount,
                 ),
               IconButton(
                 onPressed: onSettingsTap,

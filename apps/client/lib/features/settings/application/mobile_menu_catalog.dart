@@ -7,7 +7,11 @@ import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
-import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
+import 'package:billing_baba/features/reports/models/expense_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/report_nav_group.dart';
+import 'package:billing_baba/features/reports/models/report_nav_group_extensions.dart';
+import 'package:billing_baba/features/reports/models/reports_nav_intent.dart';
+import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/features/search/application/search_registry_visibility.dart';
 import 'package:billing_baba/features/settings/models/mobile_menu_item.dart';
 import 'package:billing_baba/features/settings/models/settings_tab.dart';
@@ -100,18 +104,39 @@ abstract final class MobileMenuCatalog {
     };
   }
 
-  static const List<MobileMenuItem> _businessItems = [
-    _salesAccordion,
-    _purchasesAccordion,
+  static final List<MobileMenuItem> _businessItems = [
     MobileMenuItem(
-      id: 'expenses',
-      title: 'Expenses',
-      subtitle: 'Track and manage business expenses',
-      icon: Icons.payments_outlined,
-      route: AppRoutes.purchaseExpenses,
+      id: 'sales',
+      title: 'Sales',
+      subtitle: 'Sale report and transaction summary',
+      icon: Icons.point_of_sale_outlined,
+      action: MobileMenuAction.openReport,
+      reportIntent: ReportsNavIntent.transaction(
+        TransactionReportSubSection.sale,
+      ),
       section: MobileMenuSection.business,
     ),
     MobileMenuItem(
+      id: 'purchases',
+      title: 'Purchases',
+      subtitle: 'Purchase report and transaction summary',
+      icon: Icons.shopping_cart_outlined,
+      action: MobileMenuAction.openReport,
+      reportIntent: ReportsNavIntent.transaction(
+        TransactionReportSubSection.purchase,
+      ),
+      section: MobileMenuSection.business,
+    ),
+    MobileMenuItem(
+      id: 'expenses',
+      title: 'Expenses',
+      subtitle: 'Expense report and category breakdowns',
+      icon: Icons.payments_outlined,
+      action: MobileMenuAction.openReport,
+      reportIntent: ReportsNavIntent.expense(ExpenseReportSubSection.expense),
+      section: MobileMenuSection.business,
+    ),
+    const MobileMenuItem(
       id: 'reports-hub',
       title: 'Reports',
       subtitle: 'Transaction, party, GST, stock, and more',
@@ -122,85 +147,12 @@ abstract final class MobileMenuCatalog {
     _inventoryAccordion,
   ];
 
-  static const _salesAccordion = MobileMenuItem(
-    id: 'sales',
-    title: 'Sales',
-    subtitle: 'Invoices, returns, quotations, and orders',
-    icon: Icons.point_of_sale_outlined,
-    isAccordion: true,
-    useFlatExpandable: true,
-    section: MobileMenuSection.business,
-    children: [
-      MobileMenuItem(
-        id: 'sales-invoices',
-        title: 'Sales',
-        subtitle: 'Sale invoices and documents',
-        route: AppRoutes.saleInvoices,
-      ),
-      MobileMenuItem(
-        id: 'sale-return',
-        title: 'Sale Return',
-        subtitle: 'Credit notes and sale returns',
-        route: AppRoutes.saleReturnCreditNote,
-      ),
-      MobileMenuItem(
-        id: 'quotations',
-        title: 'Quotations',
-        subtitle: 'Estimates and quotations',
-        route: AppRoutes.saleEstimateQuotation,
-      ),
-      MobileMenuItem(
-        id: 'sale-orders',
-        title: 'Orders',
-        subtitle: 'Sale orders',
-        route: AppRoutes.saleOrder,
-      ),
-    ],
-  );
-
-  static const _purchasesAccordion = MobileMenuItem(
-    id: 'purchases',
-    title: 'Purchases',
-    subtitle: 'Bills, returns, payment out, and orders',
-    icon: Icons.shopping_cart_outlined,
-    isAccordion: true,
-    useFlatExpandable: true,
-    section: MobileMenuSection.business,
-    children: [
-      MobileMenuItem(
-        id: 'purchase-bills',
-        title: 'Purchase Bills',
-        subtitle: 'Supplier purchase bills',
-        route: AppRoutes.purchaseBills,
-      ),
-      MobileMenuItem(
-        id: 'purchase-payment-out',
-        title: 'Payment Out',
-        subtitle: 'Payments to suppliers',
-        route: AppRoutes.purchasePaymentOut,
-      ),
-      MobileMenuItem(
-        id: 'purchase-return',
-        title: 'Purchase Return',
-        subtitle: 'Debit notes and purchase returns',
-        route: AppRoutes.purchaseReturnDebitNote,
-      ),
-      MobileMenuItem(
-        id: 'purchase-orders',
-        title: 'Purchase Orders',
-        subtitle: 'Purchase orders',
-        route: AppRoutes.purchaseOrder,
-      ),
-    ],
-  );
-
   static const _inventoryAccordion = MobileMenuItem(
     id: 'inventory',
     title: 'Inventory',
     subtitle: 'Items, categories, units, godowns, and stock',
     icon: Icons.inventory_2_outlined,
     isAccordion: true,
-    useFlatExpandable: true,
     section: MobileMenuSection.business,
     children: [
       MobileMenuItem(
@@ -316,6 +268,13 @@ abstract final class MobileMenuCatalog {
         icon: Icons.sms_outlined,
         route: AppRoutes.settingsTransactionMessages,
       ),
+      MobileMenuItem(
+        id: 'settings-notifications',
+        title: 'Notifications',
+        subtitle: 'Reminders, sync, backup, and alert preferences',
+        icon: Icons.notifications_outlined,
+        route: AppRoutes.settingsNotifications,
+      ),
     ],
   );
 
@@ -394,9 +353,8 @@ abstract final class MobileMenuNavigation {
       case MobileMenuAction.openReport:
         final intent = item.reportIntent;
         if (intent == null) return;
-        ref.read(reportsNavIntentProvider.notifier).setIntent(intent);
         if (context.mounted) {
-          await context.push(AppRoutes.reports);
+          await context.push(_routeForReportIntent(intent));
         }
       case MobileMenuAction.versionInfo:
         return;
@@ -433,5 +391,25 @@ abstract final class MobileMenuNavigation {
 
     await ref.read(authProvider.notifier).logout();
     if (context.mounted) context.go(AppRoutes.login);
+  }
+
+  static String _routeForReportIntent(ReportsNavIntent intent) {
+    final subsection = switch (intent.group) {
+      ReportNavGroup.transaction => intent.transactionSub?.name,
+      ReportNavGroup.party => intent.partySub?.name,
+      ReportNavGroup.gst => intent.gstSub?.name,
+      ReportNavGroup.itemStock => intent.itemStockSub?.name,
+      ReportNavGroup.businessStatus => intent.businessStatusSub?.name,
+      ReportNavGroup.taxes => intent.taxesSub?.name,
+      ReportNavGroup.expenseReport => intent.expenseSub?.name,
+      ReportNavGroup.salePurchaseOrderReport =>
+        intent.salePurchaseOrderSub?.name,
+      ReportNavGroup.otherIncomeReport => intent.otherIncomeSub?.name,
+      ReportNavGroup.loanAccounts => intent.loanAccountsSub?.name,
+    };
+
+    if (subsection == null) return AppRoutes.settingsReports;
+
+    return AppRoutes.settingsReportSubsection(intent.group.id, subsection);
   }
 }

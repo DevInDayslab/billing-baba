@@ -44,6 +44,15 @@ abstract final class StorageKeys {
   static const collaborationMembers = 'collaboration_members';
   static const collaborationInvitations = 'collaboration_invitations';
   static const mobileMenuExpandedSection = 'mobile_menu_expanded_section';
+  static const notificationFilter = 'notification_filter';
+  static const notificationPermissionAsked = 'notification_permission_asked';
+  static const notificationPermissionDenied = 'notification_permission_denied';
+
+  static String notificationPreferencesFor(String businessId) =>
+      'notification_preferences_$businessId';
+
+  static String scheduledRemindersFor(String businessId) =>
+      'scheduled_reminders_$businessId';
 
   /// Stable install-lifetime sync device id (UUID).
   static const syncDeviceId = 'sync_device_id';
