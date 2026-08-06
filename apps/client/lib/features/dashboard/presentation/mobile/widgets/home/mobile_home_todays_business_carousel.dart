@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_trend_chart.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +25,6 @@ class _MobileHomeTodaysBusinessCarouselState
     extends ConsumerState<MobileHomeTodaysBusinessCarousel> {
   late final PageController _pageController;
   int _currentPage = 0;
-  DashboardPeriod _period = DashboardPeriod.today;
 
   static final _currency = NumberFormat.currency(
     locale: 'en_IN',
@@ -50,60 +51,49 @@ class _MobileHomeTodaysBusinessCarouselState
   }
 
   Future<void> _pickPeriod() async {
+    final current = ref.read(dashboardPeriodFilterProvider);
     final selected = await showMobileOptionSheet<DashboardPeriod>(
       context: context,
       title: 'Period',
-      selected: _period,
+      selected: current,
       options: [
         for (final period in _periodOptions)
           MobileOption(value: period, label: period.label),
       ],
     );
     if (selected == null || !mounted) return;
-    setState(() => _period = selected);
+    await ref.read(dashboardProvider.notifier).setPeriod(selected);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      overrides: [
-        dashboardPeriodFilterProvider.overrideWith(
-          () => _CarouselPeriodFilter(_period),
+    final period = ref.watch(dashboardPeriodFilterProvider);
+    final dashboardAsync = ref.watch(dashboardProvider);
+
+    return dashboardAsync.when(
+      loading: () => const _CarouselShell(
+        child: SizedBox(
+          height: 120,
+          child: Center(child: CircularProgressIndicator()),
         ),
-      ],
-      child: Consumer(
-        builder: (context, ref, _) {
-          final dashboardAsync = ref.watch(dashboardProvider);
-          return dashboardAsync.when(
-            loading: () => const _CarouselShell(
-              child: SizedBox(
-                height: 120,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ),
-            error: (_, _) => const SizedBox.shrink(),
-            data: (state) => _CarouselContent(
-              dashboard: state.dashboard,
-              pageController: _pageController,
-              currentPage: _currentPage,
-              period: _period,
-              onPageChanged: (index) => setState(() => _currentPage = index),
-              onPickPeriod: _pickPeriod,
-            ),
-          );
-        },
+      ),
+      error: (error, _) => _CarouselShell(
+        child: AppError(
+          message: OfflineUiMessages.messageFor(error),
+          onRetry: () =>
+              unawaited(ref.read(dashboardProvider.notifier).refresh()),
+        ),
+      ),
+      data: (state) => _CarouselContent(
+        dashboard: state.dashboard,
+        pageController: _pageController,
+        currentPage: _currentPage,
+        period: period,
+        onPageChanged: (index) => setState(() => _currentPage = index),
+        onPickPeriod: _pickPeriod,
       ),
     );
   }
-}
-
-class _CarouselPeriodFilter extends DashboardPeriodFilter {
-  _CarouselPeriodFilter(this.period);
-
-  final DashboardPeriod period;
-
-  @override
-  DashboardPeriod build() => period;
 }
 
 class _CarouselShell extends StatelessWidget {
@@ -156,9 +146,27 @@ class _CarouselContent extends StatelessWidget {
       dashboard.purchases.totalAmount -
       dashboard.finance.expenses;
 
+  String get _sectionTitle => switch (period) {
+    DashboardPeriod.today => "Today's Business",
+    DashboardPeriod.thisWeek => "This Week's Business",
+    DashboardPeriod.thisMonth => "This Month's Business",
+    _ => '${period.label} Business',
+  };
+
+  String get _comparisonLabel => switch (period) {
+    DashboardPeriod.today => 'vs yesterday',
+    DashboardPeriod.thisWeek => 'vs last week',
+    DashboardPeriod.thisMonth => 'vs last month',
+    _ => 'vs previous period',
+  };
+
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final profitTrend = _profitTrendPoints(
+      dashboard.sales.trendPoints,
+      dashboard.purchases.trendPoints,
+    );
     final pages = [
       _CarouselPageData(
         title: 'Total Sales',
@@ -175,7 +183,7 @@ class _CarouselContent extends StatelessWidget {
       _CarouselPageData(
         title: 'Total Profit',
         amount: _profit,
-        trendPoints: dashboard.sales.trendPoints,
+        trendPoints: profitTrend,
         icon: Icons.trending_up_rounded,
       ),
     ];
@@ -207,7 +215,7 @@ class _CarouselContent extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    "Today's Business",
+                    _sectionTitle,
                     style: AppTypography.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -313,7 +321,7 @@ class _CarouselContent extends StatelessWidget {
                             if (growth != null) ...[
                               const SizedBox(height: 2),
                               Text(
-                                '${growth >= 0 ? '▲' : '▼'} ${growth.abs().toStringAsFixed(1)}% vs yesterday',
+                                '${growth >= 0 ? '▲' : '▼'} ${growth.abs().toStringAsFixed(1)}% $_comparisonLabel',
                                 style: AppTypography.inter(
                                   fontSize: 10.5,
                                   color: growth >= 0
@@ -367,6 +375,27 @@ class _CarouselContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static List<DashboardTrendPointModel> _profitTrendPoints(
+    List<DashboardTrendPointModel> sales,
+    List<DashboardTrendPointModel> purchases,
+  ) {
+    if (sales.isEmpty) return const [];
+    if (purchases.isEmpty) return sales;
+
+    final purchaseByDate = {
+      for (final point in purchases) point.date: point.amount,
+    };
+
+    return sales
+        .map(
+          (point) => DashboardTrendPointModel(
+            date: point.date,
+            amount: point.amount - (purchaseByDate[point.date] ?? 0),
+          ),
+        )
+        .toList();
   }
 
   static double? _growthPercent(List<DashboardTrendPointModel> points) {

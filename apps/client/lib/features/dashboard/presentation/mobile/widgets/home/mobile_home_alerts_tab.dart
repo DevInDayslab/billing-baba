@@ -2,15 +2,18 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_todo_filters.dart';
+import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_todo_status_tabs.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_todo_task_tile.dart';
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
+import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_editor_dialog.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 /// Todo tab — mobile home reminders and tasks.
 class MobileHomeAlertsTab extends ConsumerStatefulWidget {
@@ -36,6 +39,23 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
       notifier: ref.read(tasksProvider.notifier),
       editTask: editTask,
     );
+  }
+
+  static final _reminderDateFormat = DateFormat('dd MMM yyyy h:mm a');
+
+  bool _taskMatchesSearch(TaskModel task, String query) {
+    if (query.isEmpty) return true;
+    final category = TaskCategoryResolver.resolve(task).label;
+    final reminderText = task.reminderAt != null
+        ? _reminderDateFormat.format(task.reminderAt!)
+        : '';
+    final haystack = '${task.title} $category $reminderText'.toLowerCase();
+    return haystack.contains(query);
+  }
+
+  Future<void> _refreshTasks() async {
+    ref.invalidate(tasksProvider);
+    await ref.read(tasksProvider.future);
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
@@ -65,6 +85,8 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
   Widget build(BuildContext context) {
     super.build(context);
     final primary = Theme.of(context).colorScheme.primary;
+    final homeState = ref.watch(mobileHomeControllerProvider);
+    final searchQuery = homeState.searchQuery.trim().toLowerCase();
     final tasksAsync = ref.watch(tasksProvider);
     final allTasks = tasksAsync.value ?? const <TaskModel>[];
     final scopedTasks = DashboardTodoFilterLogic.applyScope(
@@ -74,7 +96,7 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
     final tasks = DashboardTodoFilterLogic.applyStatusChip(
       scopedTasks,
       chip: _statusChip,
-    );
+    ).where((task) => _taskMatchesSearch(task, searchQuery)).toList();
     final summary = DashboardTodoFilterLogic.summaryCounts(allTasks);
     final overdueCount = DashboardTodoFilterLogic.overdueBadgeCount(allTasks);
 
@@ -162,59 +184,86 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
         ),
         const SizedBox(height: AppSpacing.sm),
         Expanded(
-          child: tasksAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => Center(
-              child: TextButton(
-                onPressed: () => ref.invalidate(tasksProvider),
-                child: const Text('Retry'),
-              ),
-            ),
-            data: (_) {
-              if (tasks.isEmpty) {
-                if (_statusChip == DashboardTodoStatusChip.pending) {
-                  return TaskEmptyState(
-                    onAdd: () => unawaited(_openEditor()),
-                  );
-                }
-                return Center(
-                  child: Text(
-                    switch (_statusChip) {
-                      DashboardTodoStatusChip.all => 'No tasks yet',
-                      DashboardTodoStatusChip.today => 'Nothing due today',
-                      DashboardTodoStatusChip.overdue => 'No overdue tasks',
-                      DashboardTodoStatusChip.pending =>
-                        "You're all caught up!",
-                    },
-                    style: AppTypography.inter(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+          child: RefreshIndicator(
+            onRefresh: _refreshTasks,
+            child: tasksAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, _) => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  const SizedBox(height: 80),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => ref.invalidate(tasksProvider),
+                      child: const Text('Retry'),
                     ),
                   ),
-                );
-              }
-
-              return ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.xs,
-                  AppSpacing.lg,
-                  MobileBottomNavigation.contentBottomPadding(context),
-                ),
-                itemCount: tasks.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  return MobileHomeTodoTaskTile(
-                    key: ValueKey(task.id),
-                    task: task,
-                    onToggleComplete: () => unawaited(_toggleComplete(task)),
-                    onOpen: () => unawaited(_openEditor(editTask: task)),
+                ],
+              ),
+              data: (_) {
+                if (tasks.isEmpty) {
+                  if (_statusChip == DashboardTodoStatusChip.pending &&
+                      searchQuery.isEmpty) {
+                    return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        TaskEmptyState(
+                          onAdd: () => unawaited(_openEditor()),
+                        ),
+                      ],
+                    );
+                  }
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 80),
+                      Center(
+                        child: Text(
+                          searchQuery.isNotEmpty
+                              ? 'No tasks match your search'
+                              : switch (_statusChip) {
+                                  DashboardTodoStatusChip.all =>
+                                    'No tasks yet',
+                                  DashboardTodoStatusChip.today =>
+                                    'Nothing due today',
+                                  DashboardTodoStatusChip.overdue =>
+                                    'No overdue tasks',
+                                  DashboardTodoStatusChip.pending =>
+                                    "You're all caught up!",
+                                },
+                          style: AppTypography.inter(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                   );
-                },
-              );
-            },
+                }
+
+                return ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.xs,
+                    AppSpacing.lg,
+                    MobileBottomNavigation.contentBottomPadding(context),
+                  ),
+                  itemCount: tasks.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return MobileHomeTodoTaskTile(
+                      key: ValueKey(task.id),
+                      task: task,
+                      onToggleComplete: () => unawaited(_toggleComplete(task)),
+                      onOpen: () => unawaited(_openEditor(editTask: task)),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
       ],

@@ -169,7 +169,8 @@ class _MoneyCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const Spacer(),
+              // const Spacer(),
+              const SizedBox(height: 10),
               Text(
                 amount,
                 style: AppTypography.inter(

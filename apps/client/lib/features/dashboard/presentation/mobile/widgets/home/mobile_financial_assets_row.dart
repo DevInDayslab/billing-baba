@@ -1,12 +1,15 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
+import 'package:billing_baba/features/dashboard/models/dashboard_side_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 /// Horizontal scrolling financial asset cards.
-class MobileFinancialAssetsRow extends StatelessWidget {
+class MobileFinancialAssetsRow extends ConsumerWidget {
   const MobileFinancialAssetsRow({
     required this.dashboard,
     super.key,
@@ -20,50 +23,65 @@ class MobileFinancialAssetsRow extends StatelessWidget {
     decimalDigits: 0,
   );
 
-  String? _trendLabel(List<DashboardTrendPointModel> points, String period) {
+  String? _trendLabel(
+    List<DashboardTrendPointModel> points,
+    String periodLabel,
+  ) {
     if (points.length < 2) return null;
     final sorted = [...points]..sort((a, b) => a.date.compareTo(b.date));
     final delta = sorted.last.amount - sorted[sorted.length - 2].amount;
     if (delta == 0) return null;
     final arrow = delta > 0 ? '▲' : '▼';
-    return '$arrow ${_currency.format(delta.abs())} $period';
+    return '$arrow ${_currency.format(delta.abs())} $periodLabel';
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final primary = Theme.of(context).colorScheme.primary;
-    final salesTrend = _trendLabel(
-      dashboard.sales.trendPoints,
-      'this month',
-    );
+    final periodLabel = dashboard.period.label.toLowerCase();
+    final cashInTrend = _trendLabel(dashboard.sales.trendPoints, periodLabel);
+    final cashOutTrend =
+        _trendLabel(dashboard.purchases.trendPoints, periodLabel);
 
     final items = [
       _AssetItem(
         title: 'Stock Value',
         amount: _currency.format(dashboard.inventory.totalStockValue),
-        trend: salesTrend,
+        trend: _trendLabel(dashboard.sales.trendPoints, periodLabel),
         icon: Icons.view_in_ar_outlined,
         color: primary,
         cardColor: const Color(0xFFF5F1FF),
-        onTap: () => context.push(AppRoutes.items),
+        onTap: () => DashboardNavigation.openSideWidget(
+          context,
+          ref,
+          DashboardSideWidget.stockValue,
+        ),
       ),
       _AssetItem(
         title: 'Cash in Hand',
         amount: _currency.format(dashboard.finance.cashIn),
-        trend: _trendLabel(dashboard.sales.trendPoints, 'today'),
+        trend: cashInTrend,
         icon: Icons.payments_outlined,
         color: AppColors.success,
         cardColor: const Color(0xFFEEF7EF),
-        onTap: () => context.push(AppRoutes.reports),
+        onTap: () => DashboardNavigation.openSideWidget(
+          context,
+          ref,
+          DashboardSideWidget.cashInHand,
+        ),
       ),
       _AssetItem(
         title: 'Bank / UPI Payments',
         amount: _currency.format(dashboard.finance.cashOut),
-        trend: salesTrend,
+        trend: cashOutTrend,
         icon: Icons.account_balance_outlined,
         color: const Color(0xFF1976D2),
         cardColor: const Color(0xFFEEF4FB),
-        onTap: () => context.push(AppRoutes.reports),
+        onTap: () => DashboardNavigation.openSideWidget(
+          context,
+          ref,
+          DashboardSideWidget.bankBalance,
+        ),
       ),
     ];
 
@@ -174,7 +192,6 @@ class _AssetCard extends StatelessWidget {
                 ),
                 child: Icon(item.icon, size: 36, color: item.color),
               ),
-              // const Spacer(),
               const SizedBox(height: 10),
               Text(
                 item.title,

@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/core/routing/mobile_document_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
@@ -322,27 +323,18 @@ abstract final class MobileTransactionMapper {
   static MobileHomeTransactionItem homeFromSaleInvoice(
     SaleInvoiceModel invoice,
   ) {
-    final isEstimate = invoice.documentSeries == SalesConstants.estimateSeries;
-    final filterType = isEstimate
-        ? MobileHomeTransactionFilterType.estimate
-        : MobileHomeTransactionFilterType.sale;
-    final prefix = isEstimate ? 'EST' : 'SALE';
+    final meta = _homeSaleDocumentMeta(invoice);
     final statusLabel = invoice.isDraft
-        ? '$prefix : DRAFT'
-        : '$prefix : ${_saleInvoiceStatusLabel(invoice.status).toUpperCase()}';
-    final statusType = isEstimate
-        ? MobileHomeTransactionStatusType.estimateOpen
-        : invoice.status == SaleInvoiceStatus.paid
-        ? MobileHomeTransactionStatusType.salePaid
-        : MobileHomeTransactionStatusType.estimateOpen;
+        ? '${meta.prefix} : DRAFT'
+        : '${meta.prefix} : ${_saleInvoiceStatusLabel(invoice.status).toUpperCase()}';
     return MobileHomeTransactionItem(
       id: invoice.id,
       partyName: invoice.partyName,
       documentNumber: invoice.invoiceNo,
-      title: isEstimate ? 'Estimate' : 'Cash Sale',
+      title: meta.title,
       statusLabel: statusLabel,
-      statusType: statusType,
-      filterType: filterType,
+      statusType: meta.statusType,
+      filterType: meta.filterType,
       dateLabel: _homeDateFormat.format(invoice.date),
       timeLabel: _homeTimeFormat.format(invoice.date),
       transactionDate: invoice.date,
@@ -353,10 +345,237 @@ abstract final class MobileTransactionMapper {
       balanceLabel: 'Balance',
       balanceValueLabel: formatHomeAmount(invoice.balance),
       paymentMethod: invoice.paymentType,
-      ledgerTransaction: _ledgerFromSaleInvoice(
+      ledgerTransaction: _ledgerFromSaleDocument(
         invoice,
-        isEstimate: isEstimate,
+        sourceType: meta.sourceType,
       ),
+    );
+  }
+
+  static MobileHomeTransactionItem homeFromPaymentOut(PaymentOutModel payment) {
+    final statusLabel = switch (payment.status) {
+      PaymentOutStatus.paid => 'PAYOUT : RECORDED',
+      PaymentOutStatus.pending => 'PAYOUT : PENDING',
+      PaymentOutStatus.cancelled => 'PAYOUT : CANCELLED',
+    };
+    return MobileHomeTransactionItem(
+      id: payment.id,
+      partyName: payment.partyName,
+      documentNumber: payment.receiptNo,
+      title: 'Payment Out to ${payment.partyName}',
+      statusLabel: statusLabel,
+      statusType: MobileHomeTransactionStatusType.paymentOut,
+      filterType: MobileHomeTransactionFilterType.paymentOut,
+      dateLabel: _homeDateFormat.format(payment.date),
+      timeLabel: _homeTimeFormat.format(payment.date),
+      transactionDate: payment.date,
+      totalLabel: formatHomeAmount(payment.paidAmount),
+      balanceLabel: 'Total',
+      balanceValueLabel: formatHomeAmount(payment.totalAmount),
+      paymentMethod: payment.paymentType,
+      ledgerTransaction: _ledgerFromPaymentOut(payment),
+    );
+  }
+
+  static MobileHomeTransactionItem homeFromPurchaseOrder(
+    PurchaseOrderModel order,
+  ) {
+    return MobileHomeTransactionItem(
+      id: order.id,
+      partyName: order.partyName,
+      documentNumber: order.orderNo,
+      title: 'Purchase Order',
+      statusLabel: 'PO : ${order.status.name.toUpperCase()}',
+      statusType: MobileHomeTransactionStatusType.purchase,
+      filterType: MobileHomeTransactionFilterType.purchaseOrder,
+      dateLabel: _homeDateFormat.format(order.date),
+      timeLabel: _homeTimeFormat.format(order.date),
+      transactionDate: order.date,
+      totalLabel: formatHomeAmount(order.amount),
+      balanceLabel: 'Balance',
+      balanceValueLabel: formatHomeAmount(order.balanceDue),
+      ledgerTransaction: _ledgerFromPurchaseOrder(order),
+    );
+  }
+
+  static MobileHomeTransactionItem homeFromPurchaseReturn(
+    PurchaseReturnModel returnDoc,
+  ) {
+    return MobileHomeTransactionItem(
+      id: returnDoc.id,
+      partyName: returnDoc.partyName,
+      documentNumber: returnDoc.debitNoteNo,
+      title: 'Purchase Return',
+      statusLabel:
+          'DR NOTE : ${_purchaseBillStatusLabel(returnDoc.status).toUpperCase()}',
+      statusType: MobileHomeTransactionStatusType.purchase,
+      filterType: MobileHomeTransactionFilterType.debitNote,
+      dateLabel: _homeDateFormat.format(returnDoc.date),
+      timeLabel: _homeTimeFormat.format(returnDoc.date),
+      transactionDate: returnDoc.date,
+      totalLabel: formatHomeAmount(returnDoc.total),
+      balanceLabel: 'Balance',
+      balanceValueLabel: formatHomeAmount(returnDoc.balance),
+      paymentMethod: returnDoc.paymentType,
+      ledgerTransaction: _ledgerFromPurchaseReturn(returnDoc),
+    );
+  }
+
+  static MobileHomeTransactionItem homeFromSaleFa(SaleFaModel fa) {
+    return MobileHomeTransactionItem(
+      id: fa.id,
+      partyName: fa.partyName,
+      documentNumber: fa.invoiceNo,
+      title: 'Sale Assets',
+      statusLabel:
+          'SALE FA : ${_saleFaStatus(fa.status).$1.toUpperCase()}',
+      statusType: MobileHomeTransactionStatusType.salePaid,
+      filterType: MobileHomeTransactionFilterType.sale,
+      dateLabel: _homeDateFormat.format(fa.date),
+      timeLabel: _homeTimeFormat.format(fa.date),
+      transactionDate: fa.date,
+      dueDateLabel: 'Due : ${_homeDateFormat.format(fa.dueDate)}',
+      totalLabel: formatHomeAmount(fa.amount),
+      balanceLabel: 'Balance',
+      balanceValueLabel: formatHomeAmount(fa.balanceDue),
+      paymentMethod: fa.paymentType,
+      ledgerTransaction: _ledgerFromSaleFa(fa),
+    );
+  }
+
+  static MobileHomeTransactionItem homeFromPurchaseFa(PurchaseFaModel fa) {
+    return MobileHomeTransactionItem(
+      id: fa.id,
+      partyName: fa.partyName,
+      documentNumber: fa.invoiceNo,
+      title: 'Purchase Assets',
+      statusLabel:
+          'PURCHASE FA : ${_purchaseFaStatus(fa.status).$1.toUpperCase()}',
+      statusType: MobileHomeTransactionStatusType.purchase,
+      filterType: MobileHomeTransactionFilterType.purchase,
+      dateLabel: _homeDateFormat.format(fa.date),
+      timeLabel: _homeTimeFormat.format(fa.date),
+      transactionDate: fa.date,
+      dueDateLabel: 'Due : ${_homeDateFormat.format(fa.dueDate)}',
+      totalLabel: formatHomeAmount(fa.amount),
+      balanceLabel: 'Balance',
+      balanceValueLabel: formatHomeAmount(fa.balanceDue),
+      paymentMethod: fa.paymentType,
+      ledgerTransaction: _ledgerFromPurchaseFa(fa),
+    );
+  }
+
+  static MobileHomeTransactionItem homeFromJobWorkOrder(
+    JobWorkOrderListItem order,
+  ) {
+    final date = order.invoiceDate ?? order.deliveryDate ?? DateTime.now();
+    return MobileHomeTransactionItem(
+      id: order.id,
+      partyName: order.party,
+      documentNumber: order.jobId,
+      title: 'Job Work',
+      statusLabel: 'JOB : ${order.status.name.toUpperCase()}',
+      statusType: MobileHomeTransactionStatusType.salePaid,
+      filterType: MobileHomeTransactionFilterType.sale,
+      dateLabel: _homeDateFormat.format(date),
+      timeLabel: _homeTimeFormat.format(date),
+      transactionDate: date,
+      totalLabel: formatHomeAmount(order.grandTotal),
+      balanceLabel: 'Total',
+      balanceValueLabel: formatHomeAmount(order.grandTotal),
+      ledgerTransaction: _ledgerFromJobWorkOrder(order, date),
+    );
+  }
+
+  static String? homeDetailRouteFor(MobileHomeTransactionItem item) {
+    return switch (item.filterType) {
+      MobileHomeTransactionFilterType.sale =>
+        '${AppRoutes.editSale}/${item.id}',
+      MobileHomeTransactionFilterType.saleOrder =>
+        '${AppRoutes.editSaleOrder}/${item.id}',
+      MobileHomeTransactionFilterType.creditNote =>
+        '${AppRoutes.editCreditNote}/${item.id}',
+      MobileHomeTransactionFilterType.estimate =>
+        '${AppRoutes.editEstimate}/${item.id}',
+      MobileHomeTransactionFilterType.purchase =>
+        '${AppRoutes.editPurchase}/${item.id}',
+      MobileHomeTransactionFilterType.purchaseOrder =>
+        '${AppRoutes.editPurchaseOrder}/${item.id}',
+      MobileHomeTransactionFilterType.debitNote =>
+        '${AppRoutes.editDebitNote}/${item.id}',
+      MobileHomeTransactionFilterType.paymentIn =>
+        MobileDocumentRoutes.addPaymentIn(paymentId: item.id),
+      MobileHomeTransactionFilterType.paymentOut =>
+        MobileDocumentRoutes.addPaymentOut(paymentId: item.id),
+      MobileHomeTransactionFilterType.expense =>
+        '${AppRoutes.editExpense}/${item.id}',
+    };
+  }
+
+  static ({
+    MobileHomeTransactionFilterType filterType,
+    String title,
+    String prefix,
+    String sourceType,
+    MobileHomeTransactionStatusType statusType,
+  })
+  _homeSaleDocumentMeta(SaleInvoiceModel invoice) {
+    final series = invoice.documentSeries;
+    final paidStatus = invoice.status == SaleInvoiceStatus.paid
+        ? MobileHomeTransactionStatusType.salePaid
+        : MobileHomeTransactionStatusType.estimateOpen;
+
+    if (series == SalesConstants.estimateSeries) {
+      return (
+        filterType: MobileHomeTransactionFilterType.estimate,
+        title: 'Estimate',
+        prefix: 'EST',
+        sourceType: 'estimate',
+        statusType: MobileHomeTransactionStatusType.estimateOpen,
+      );
+    }
+    if (series == SalesConstants.proformaSeries) {
+      return (
+        filterType: MobileHomeTransactionFilterType.estimate,
+        title: 'Proforma Invoice',
+        prefix: 'PI',
+        sourceType: 'proforma',
+        statusType: MobileHomeTransactionStatusType.estimateOpen,
+      );
+    }
+    if (series == SalesConstants.saleOrderSeries) {
+      return (
+        filterType: MobileHomeTransactionFilterType.saleOrder,
+        title: 'Sale Order',
+        prefix: 'SO',
+        sourceType: 'sale_order',
+        statusType: paidStatus,
+      );
+    }
+    if (series == SalesConstants.creditNoteSeries) {
+      return (
+        filterType: MobileHomeTransactionFilterType.creditNote,
+        title: 'Sale Return',
+        prefix: 'CN',
+        sourceType: 'sales_return',
+        statusType: paidStatus,
+      );
+    }
+    if (series == SalesConstants.challanSeries) {
+      return (
+        filterType: MobileHomeTransactionFilterType.sale,
+        title: 'Delivery Challan',
+        prefix: 'DC',
+        sourceType: 'delivery_challan',
+        statusType: paidStatus,
+      );
+    }
+    return (
+      filterType: MobileHomeTransactionFilterType.sale,
+      title: 'Cash Sale',
+      prefix: 'SALE',
+      sourceType: 'tax_invoice',
+      statusType: paidStatus,
     );
   }
 
@@ -477,10 +696,12 @@ abstract final class MobileTransactionMapper {
     };
   }
 
-  static PartyLedgerTransactionModel _ledgerFromSaleInvoice(
+  static PartyLedgerTransactionModel _ledgerFromSaleDocument(
     SaleInvoiceModel invoice, {
-    required bool isEstimate,
+    required String sourceType,
   }) {
+    final isEstimate =
+        sourceType == 'estimate' || sourceType == 'proforma';
     return PartyLedgerTransactionModel(
       id: invoice.id,
       date: invoice.date,
@@ -488,7 +709,7 @@ abstract final class MobileTransactionMapper {
       type: isEstimate ? 'Estimate' : 'Sale',
       entryType: 'debit',
       source: 'sales_documents',
-      sourceType: isEstimate ? 'estimate' : 'tax_invoice',
+      sourceType: sourceType,
       referenceId: invoice.id,
       referenceNumber: invoice.invoiceNo,
       documentDate: invoice.date,
@@ -499,6 +720,144 @@ abstract final class MobileTransactionMapper {
       debit: invoice.amount,
       credit: 0,
       balanceAfter: invoice.balance,
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromPaymentOut(
+    PaymentOutModel payment,
+  ) {
+    return PartyLedgerTransactionModel(
+      id: payment.id,
+      date: payment.date,
+      createdAt: payment.date,
+      type: 'Payment-Out',
+      entryType: 'debit',
+      source: 'payments',
+      sourceType: 'payment_out',
+      referenceId: payment.id,
+      referenceNumber: payment.receiptNo,
+      documentDate: payment.date,
+      total: payment.paidAmount,
+      balance: 0,
+      status: payment.status.name,
+      debit: payment.paidAmount,
+      credit: 0,
+      balanceAfter: 0,
+      direction: 'paid',
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromPurchaseOrder(
+    PurchaseOrderModel order,
+  ) {
+    return PartyLedgerTransactionModel(
+      id: order.id,
+      date: order.date,
+      createdAt: order.date,
+      type: 'Purchase Order',
+      entryType: 'credit',
+      source: 'purchase_documents',
+      sourceType: 'purchase_order',
+      referenceId: order.id,
+      referenceNumber: order.orderNo,
+      documentDate: order.date,
+      total: order.amount,
+      balance: order.balanceDue,
+      status: order.status.name,
+      debit: 0,
+      credit: order.amount,
+      balanceAfter: order.balanceDue,
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromPurchaseReturn(
+    PurchaseReturnModel returnDoc,
+  ) {
+    return PartyLedgerTransactionModel(
+      id: returnDoc.id,
+      date: returnDoc.date,
+      createdAt: returnDoc.date,
+      type: 'Purchase Return',
+      entryType: 'debit',
+      source: 'purchase_documents',
+      sourceType: 'purchase_return',
+      referenceId: returnDoc.id,
+      referenceNumber: returnDoc.debitNoteNo,
+      documentDate: returnDoc.date,
+      total: returnDoc.total,
+      balance: returnDoc.balance,
+      status: returnDoc.status.name,
+      debit: returnDoc.total,
+      credit: 0,
+      balanceAfter: returnDoc.balance,
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromSaleFa(SaleFaModel fa) {
+    return PartyLedgerTransactionModel(
+      id: fa.id,
+      date: fa.date,
+      createdAt: fa.createdAt,
+      type: 'Sale Assets',
+      entryType: 'debit',
+      source: 'sale_fa_batches',
+      sourceType: 'sale_fa',
+      referenceId: fa.id,
+      referenceNumber: fa.invoiceNo,
+      documentDate: fa.date,
+      dueDate: fa.dueDate,
+      total: fa.amount,
+      balance: fa.balanceDue,
+      status: fa.status.name,
+      debit: fa.amount,
+      credit: 0,
+      balanceAfter: fa.balanceDue,
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromPurchaseFa(PurchaseFaModel fa) {
+    return PartyLedgerTransactionModel(
+      id: fa.id,
+      date: fa.date,
+      createdAt: fa.date,
+      type: 'Purchase Assets',
+      entryType: 'credit',
+      source: 'purchase_fa_batches',
+      sourceType: 'purchase_fa',
+      referenceId: fa.id,
+      referenceNumber: fa.invoiceNo,
+      documentDate: fa.date,
+      dueDate: fa.dueDate,
+      total: fa.amount,
+      balance: fa.balanceDue,
+      status: fa.status.name,
+      debit: 0,
+      credit: fa.amount,
+      balanceAfter: fa.balanceDue,
+    );
+  }
+
+  static PartyLedgerTransactionModel _ledgerFromJobWorkOrder(
+    JobWorkOrderListItem order,
+    DateTime date,
+  ) {
+    return PartyLedgerTransactionModel(
+      id: order.id,
+      date: date,
+      createdAt: date,
+      type: 'Job Work',
+      entryType: 'debit',
+      source: 'job_work_orders',
+      sourceType: 'job_work',
+      referenceId: order.id,
+      referenceNumber: order.jobId,
+      documentDate: date,
+      total: order.grandTotal,
+      balance: 0,
+      status: order.status.name,
+      debit: order.grandTotal,
+      credit: 0,
+      balanceAfter: 0,
     );
   }
 

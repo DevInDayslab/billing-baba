@@ -29,8 +29,8 @@ import 'package:billing_baba/features/developer/presentation/table_filters_playg
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/brands_screen.dart';
-import 'package:billing_baba/features/inventory/presentation/godowns_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/categories_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/godowns_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_details_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
@@ -376,6 +376,8 @@ GoRouter createAppRouter({
             name: 'addPaymentIn',
             builder: (context, state) => AddPaymentInPage(
               paymentId: state.uri.queryParameters['paymentId'],
+              initialPartyId: state.uri.queryParameters['partyId'],
+              initialPartyName: state.uri.queryParameters['partyName'],
             ),
           ),
           GoRoute(
@@ -484,6 +486,8 @@ GoRouter createAppRouter({
             name: 'addPaymentOut',
             builder: (context, state) => AddPaymentOutPage(
               paymentId: state.uri.queryParameters['paymentId'],
+              initialPartyId: state.uri.queryParameters['partyId'],
+              initialPartyName: state.uri.queryParameters['partyName'],
             ),
           ),
           GoRoute(

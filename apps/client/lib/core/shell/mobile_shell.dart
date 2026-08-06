@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/platform/mobile_platform_scope.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
+import 'package:billing_baba/core/routing/mobile_document_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
@@ -74,7 +75,9 @@ class _MobileShellState extends ConsumerState<MobileShell> {
   Widget build(BuildContext context) {
     final location = GoRouter.of(context).state.uri.path;
     final currentTab = MobileNavDestinations.tabForLocation(location);
-    final hideBottomNav = location == AppRoutes.pos;
+    final hideBottomNav =
+        location == AppRoutes.pos ||
+        MobileDocumentRoutes.hidesBottomNavigation(location);
 
     return MobilePlatformScope(
       child: AnnotatedRegion<SystemUiOverlayStyle>(

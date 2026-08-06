@@ -20,9 +20,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MobileAddPaymentInPage extends ConsumerStatefulWidget {
-  const MobileAddPaymentInPage({super.key, this.paymentId});
+  const MobileAddPaymentInPage({
+    super.key,
+    this.paymentId,
+    this.initialPartyId,
+    this.initialPartyName,
+  });
 
   final String? paymentId;
+  final String? initialPartyId;
+  final String? initialPartyName;
 
   @override
   ConsumerState<MobileAddPaymentInPage> createState() =>
@@ -55,6 +62,15 @@ class _MobileAddPaymentInPageState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(paymentInFormProvider.notifier);
       notifier.reset();
+      final partyId = widget.initialPartyId?.trim();
+      final partyName = widget.initialPartyName?.trim();
+      if (partyId != null &&
+          partyId.isNotEmpty &&
+          partyName != null &&
+          partyName.isNotEmpty) {
+        notifier.updateParty(partyName, partyId: partyId);
+        unawaited(notifier.refreshBalanceDue());
+      }
       final form = ref.read(paymentInFormProvider);
       _receiptController.text = form.receiptNo;
       _descriptionController.text = form.description;

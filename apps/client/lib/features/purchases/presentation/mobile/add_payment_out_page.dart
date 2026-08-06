@@ -16,9 +16,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MobileAddPaymentOutPage extends ConsumerStatefulWidget {
-  const MobileAddPaymentOutPage({super.key, this.paymentId});
+  const MobileAddPaymentOutPage({
+    super.key,
+    this.paymentId,
+    this.initialPartyId,
+    this.initialPartyName,
+  });
 
   final String? paymentId;
+  final String? initialPartyId;
+  final String? initialPartyName;
 
   @override
   ConsumerState<MobileAddPaymentOutPage> createState() =>
@@ -49,6 +56,14 @@ class _MobileAddPaymentOutPageState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(paymentOutFormProvider.notifier);
       notifier.reset();
+      final partyId = widget.initialPartyId?.trim();
+      final partyName = widget.initialPartyName?.trim();
+      if (partyId != null &&
+          partyId.isNotEmpty &&
+          partyName != null &&
+          partyName.isNotEmpty) {
+        unawaited(notifier.updateParty(partyName, partyId: partyId));
+      }
       final form = ref.read(paymentOutFormProvider);
       _descriptionController.text = form.description;
       if (form.discount > 0) {

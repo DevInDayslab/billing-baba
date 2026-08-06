@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/payment_out_dialog.dart';
@@ -20,9 +21,17 @@ void executeQuickCreate(
     case QuickCreateActionType.routeGo:
       context.go(action.route!);
     case QuickCreateActionType.paymentInDialog:
-      showPaymentInDialog(context);
+      if (AppPlatform.current.isMobile) {
+        context.push(AppRoutes.addPaymentIn);
+      } else {
+        showPaymentInDialog(context);
+      }
     case QuickCreateActionType.paymentOutDialog:
-      showPaymentOutDialog(context);
+      if (AppPlatform.current.isMobile) {
+        context.push(AppRoutes.addPaymentOut);
+      } else {
+        showPaymentOutDialog(context);
+      }
     case QuickCreateActionType.proformaForm:
       context.go(AppRoutes.saleProformaInvoice);
       WidgetsBinding.instance.addPostFrameCallback((_) {

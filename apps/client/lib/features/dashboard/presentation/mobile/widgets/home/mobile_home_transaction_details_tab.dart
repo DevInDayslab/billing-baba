@@ -8,6 +8,7 @@ import 'package:billing_baba/features/dashboard/presentation/mobile/application/
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_transaction_date_filters.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_transaction_type_tabs.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_transaction_card.dart';
+import 'package:billing_baba/features/dashboard/presentation/utils/navigate_to_home_transaction.dart';
 import 'package:billing_baba/features/parties/presentation/utils/party_ledger_transaction_table_actions.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
@@ -176,9 +177,9 @@ class _MobileHomeTransactionDetailsTabState
               IconButton(
                 onPressed: () {
                   final data = transactionsAsync.value ?? const [];
-                  final filtered = resolveMobileHomeDisplayTransactions(
-                    source: data,
-                    query: homeState.searchQuery,
+                  final filtered = filterHomeTransactions(
+                    data,
+                    homeState.searchQuery,
                     typeFilters: homeState.transactionTypeFilters,
                     dateRange: _dateRange,
                   );
@@ -218,9 +219,9 @@ class _MobileHomeTransactionDetailsTabState
                 onRetry: () => unawaited(refreshMobileHomeTransactions(ref)),
               ),
               data: (allTransactions) {
-                final transactions = resolveMobileHomeDisplayTransactions(
-                  source: allTransactions,
-                  query: homeState.searchQuery,
+                final transactions = filterHomeTransactions(
+                  allTransactions,
+                  homeState.searchQuery,
                   typeFilters: homeState.transactionTypeFilters,
                   dateRange: _dateRange,
                 );
@@ -254,6 +255,7 @@ class _MobileHomeTransactionDetailsTabState
                     final item = transactions[index];
                     return MobileHomeTransactionCard(
                       item: item,
+                      onTap: () => navigateToHomeTransaction(context, item),
                       onPrint: () => _handlePrint(item),
                       onShare: () => _handleShare(item),
                     );
