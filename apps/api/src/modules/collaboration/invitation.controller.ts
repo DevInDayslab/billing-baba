@@ -68,8 +68,13 @@ export function createInvitationController(config: AppConfig) {
       request: FastifyRequest,
       reply: FastifyReply,
     ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      if (!accountId) {
+        throw new AppError('UNAUTHORIZED', 'Authentication required', 401);
+      }
+
       const { token } = invitationTokenParamsSchema.parse(request.params);
-      const data = await service.acceptInvitation(token);
+      const data = await service.acceptInvitation(token, accountId);
       return sendData(reply, data);
     },
 
@@ -77,8 +82,13 @@ export function createInvitationController(config: AppConfig) {
       request: FastifyRequest,
       reply: FastifyReply,
     ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      if (!accountId) {
+        throw new AppError('UNAUTHORIZED', 'Authentication required', 401);
+      }
+
       const { token } = invitationTokenParamsSchema.parse(request.params);
-      const data = await service.rejectInvitation(token);
+      const data = await service.rejectInvitation(token, accountId);
       return sendData(reply, data);
     },
 

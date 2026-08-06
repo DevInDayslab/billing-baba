@@ -19,6 +19,7 @@ import type {
   InvitationPublicDto,
   InvitationRow,
 } from './collaboration.types';
+import { accountMatchesInvitationContact } from '../../shared/permissions/invitation-account-match';
 import {
   addDays,
   isExpired,
@@ -189,7 +190,10 @@ export class InvitationService {
     return toInvitationPublicDto(resolved, owner, this.config);
   }
 
-  async acceptInvitation(token: string): Promise<AcceptInvitationResult> {
+  async acceptInvitation(
+    token: string,
+    accountId: string,
+  ): Promise<AcceptInvitationResult> {
     const invitation = await this.repository.findInvitationByToken(token);
     if (!invitation) {
       throw new AppError('INVITATION_NOT_FOUND', 'Invitation not found', 404);
@@ -197,11 +201,23 @@ export class InvitationService {
 
     const resolved = await this.ensureActionableInvitation(invitation);
 
-    const account = await this.repository.findOrCreateAccount({
-      phone: resolved.phone,
-      email: resolved.email,
-      name: resolved.inviteeName,
-    });
+    const account = await this.repository.getAccountById(accountId);
+    if (!account) {
+      throw new AppError('UNAUTHORIZED', 'Account not found', 401);
+    }
+
+    if (
+      !this.accountMatchesInvitation(
+        { phone: account.phone, email: account.email },
+        resolved,
+      )
+    ) {
+      throw new AppError(
+        'FORBIDDEN',
+        'This invitation was sent to a different phone or email',
+        403,
+      );
+    }
 
     const existingMember = await this.repository.findActiveMemberByContact(
       resolved.companyId,
@@ -232,6 +248,14 @@ export class InvitationService {
       joinedAt: new Date(),
     });
 
+    await this.repository.provisionCollaboratorUser({
+      businessId: resolved.companyId,
+      accountId: account.id,
+      name: resolved.inviteeName,
+      phone: resolved.phone,
+      email: resolved.email,
+    });
+
     const owner = await this.repository.getBusinessOwnerInfo(
       resolved.companyId,
     );
@@ -245,10 +269,31 @@ export class InvitationService {
     };
   }
 
-  async rejectInvitation(token: string): Promise<InvitationPublicDto> {
+  async rejectInvitation(
+    token: string,
+    accountId: string,
+  ): Promise<InvitationPublicDto> {
     const invitation = await this.repository.findInvitationByToken(token);
     if (!invitation) {
       throw new AppError('INVITATION_NOT_FOUND', 'Invitation not found', 404);
+    }
+
+    const account = await this.repository.getAccountById(accountId);
+    if (!account) {
+      throw new AppError('UNAUTHORIZED', 'Account not found', 401);
+    }
+
+    if (
+      !this.accountMatchesInvitation(
+        { phone: account.phone, email: account.email },
+        invitation,
+      )
+    ) {
+      throw new AppError(
+        'FORBIDDEN',
+        'This invitation was sent to a different phone or email',
+        403,
+      );
     }
 
     await this.ensureActionableInvitation(invitation);
@@ -521,5 +566,12 @@ export class InvitationService {
     }
 
     return invitation;
+  }
+
+  private accountMatchesInvitation(
+    account: { phone: string; email: string | null },
+    invitation: { phone: string | null; email: string | null },
+  ): boolean {
+    return accountMatchesInvitationContact(account, invitation);
   }
 }

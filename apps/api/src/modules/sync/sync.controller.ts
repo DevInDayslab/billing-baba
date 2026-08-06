@@ -1,6 +1,8 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import { getDb } from '../../db/client';
 import { sendData } from '../../shared/http/response';
+import { BusinessAccessService } from '../../shared/permissions/business-access.service';
 import { BootstrapService } from './bootstrap.service';
 import { DeviceService } from './device.service';
 import { MediaService } from './media.service';
@@ -33,6 +35,24 @@ export function createSyncController() {
   const bootstrapService = new BootstrapService();
   const pushService = new PushService();
   const pullService = new PullService();
+
+  async function resolveAccess(request: FastifyRequest) {
+    const accountId = request.accountId;
+    const businessId = request.businessId;
+    if (!accountId || !businessId) {
+      return undefined;
+    }
+    const db = getDb();
+    if (!db) {
+      return undefined;
+    }
+    return new BusinessAccessService(db).resolve(
+      accountId,
+      businessId,
+      request.role,
+    );
+  }
+
   const mediaService = new MediaService();
 
   return {
@@ -108,7 +128,12 @@ export function createSyncController() {
           businessId,
           body.device_id,
         );
-        const data = await pushService.process(businessId, body, userId);
+        const data = await pushService.process(
+          businessId,
+          body,
+          userId,
+          await resolveAccess(request),
+        );
         return sendData(reply, data);
       } catch (error) {
         throw mapZod(error);
@@ -125,7 +150,11 @@ export function createSyncController() {
           headers[SYNC_HEADER_DEVICE_ID],
         );
         const query = pullQuerySchema.parse(request.query);
-        const data = await pullService.pull(businessId, query);
+        const data = await pullService.pull(
+          businessId,
+          query,
+          await resolveAccess(request),
+        );
         return sendData(reply, data);
       } catch (error) {
         throw mapZod(error);
