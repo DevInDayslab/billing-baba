@@ -351,6 +351,19 @@ class AppDatabase extends _$AppDatabase {
   }
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: kDriftDatabaseName);
+    return driftDatabase(
+      name: kDriftDatabaseName,
+      native: DriftNativeOptions(
+        // Prefer LocalAppData/Application Support over Documents — Documents
+        // is frequently blocked on Windows (Controlled Folder Access → CANTOPEN).
+        // Path must be resolved on the UI isolate via
+        // [DriftDatabasePaths.ensureInitialized] before first open.
+        databasePath: () async {
+          final cached = DriftDatabasePaths.cachedPath;
+          if (cached != null) return cached;
+          return DriftDatabasePaths.ensureInitialized();
+        },
+      ),
+    );
   }
 }

@@ -12,8 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _popoverWidth = 920.0;
-const _popoverMinHeight = 380.0;
+const _popoverWidth = 760.0;
+const _popoverEstimateHeight = 520.0;
 const _footerColor = Color(0xFFFFF9C4);
 const _triggerColor = Color(0xFFF0F0F0);
 const _itemHoverColor = Color(0xFFE3F2FD);
@@ -165,7 +165,7 @@ class _QuickCreatePopover extends StatelessWidget {
           )
         : FilterPopoverPositioner.resolveFollower(
             triggerRect: triggerRect,
-            popoverSize: Size(popoverWidth, _popoverMinHeight),
+            popoverSize: Size(popoverWidth, _popoverEstimateHeight),
             viewportSize: viewport,
           );
 
@@ -202,10 +202,10 @@ class _QuickCreatePopover extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
                       AppSpacing.lg,
-                      AppSpacing.xl,
-                      AppSpacing.md,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                      AppSpacing.lg + 4,
                     ),
                     child: IntrinsicHeight(
                       child: Row(
@@ -267,7 +267,7 @@ class _ColumnDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: VerticalDivider(
         width: 1,
         thickness: 1,
@@ -306,7 +306,7 @@ class _QuickCreateColumn extends StatelessWidget {
             letterSpacing: 0.8,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.lg),
         for (final action in actions)
           _QuickCreateMenuItem(
             action: action,
@@ -355,7 +355,7 @@ class _QuickCreateMenuItemState extends State<_QuickCreateMenuItem> {
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
-              vertical: AppSpacing.sm,
+              vertical: AppSpacing.md + 2,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,7 +423,7 @@ class _QuickCreateFooter extends StatelessWidget {
       color: _footerColor,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xl,
-        vertical: AppSpacing.md,
+        vertical: AppSpacing.md + 4,
       ),
       child: Row(
         children: [

@@ -875,6 +875,7 @@ Phase 1 authentication uses phone OTP via MSG91 on the Flutter client. The backe
 3. Public login endpoint is `POST /auth/login` with `{ access_token }` (MSG91 widget token). MSG91 verification is internal to `AuthService`.
 4. Access JWT lifetime 15 minutes; opaque refresh tokens (30 days) stored as SHA-256 hashes in `refresh_tokens` with `account_id`.
 5. Business scoping: single membership auto-scopes JWT; multiple memberships use account-level JWT until client calls `POST /auth/refresh` with `business_id`.
+6. **Device trust (Remember for 30 days):** Optional login checkbox issues a separate opaque `device_trust_token` (30-day absolute TTL, SHA-256 hash in server-only `device_trust_tokens`). Trust survives `POST /auth/logout` (refresh revocation only). `POST /auth/login-with-device-trust` re-issues a session without MSG91 OTP when phone + device id + trust token match. Unchecked OTP login revokes trust for that device.
 
 ### Consequences
 

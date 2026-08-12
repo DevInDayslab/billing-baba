@@ -17,7 +17,6 @@ import 'package:billing_baba/features/dashboard/application/quick_create_menu_pr
 import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/app_top_bar.dart';
-import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/customer_support_strip.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
 import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
@@ -362,8 +361,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     );
   }
 
-  /// Collapses the drawer/rail after navigation so provider listeners on the
+  /// Closes the overlay drawer after navigation so provider listeners on the
   /// shell subtree are not notified while the tap handler is still unwinding.
+  /// Persistent desktop sidebars are left as-is (manual collapse only).
   void _scheduleSidebarCloseAfterNavigation({
     required ShellSidebar sidebarNotifier,
     required bool overlayLayout,
@@ -422,10 +422,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 color: AppColors.background,
                 child: Column(
                   children: [
-                    if (showTopBar) ...[
-                      const CustomerSupportStrip(),
+                    if (showTopBar)
                       AppTopBar(showMenuButton: useOverlaySidebar),
-                    ],
                     Expanded(child: widget.child),
                   ],
                 ),
@@ -946,10 +944,10 @@ class _SidebarExpandableNavTile extends StatelessWidget {
                       ),
                     ),
                     AnimatedRotation(
-                      turns: isExpanded ? 0.25 : 0,
+                      turns: isExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
                       child: Icon(
-                        Icons.chevron_right,
+                        Icons.expand_more,
                         color: isActive ? _sidebarTextActive : _sidebarText,
                         size: 20,
                       ),
@@ -1261,7 +1259,7 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
                         turns: _menuOpen ? 0.5 : 0,
                         duration: const Duration(milliseconds: 200),
                         child: const Icon(
-                          Icons.chevron_right,
+                          Icons.expand_more,
                           color: _sidebarText,
                           size: 20,
                         ),

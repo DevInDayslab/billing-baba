@@ -6,9 +6,11 @@ import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
+import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
+import 'package:billing_baba/features/auth/models/device_trust_credential.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
@@ -90,6 +92,8 @@ class AuthService {
         refreshToken.isEmpty) {
       return null;
     }
+
+    await _storage.write(StorageKeys.hasLoggedInBefore, 'true');
 
     // Offline developer / mock sessions — restore locally, never hit the API.
     if (isOfflineDevToken(accessToken)) {
@@ -267,19 +271,129 @@ class AuthService {
   Future<AuthSession> loginWithMsg91Token({
     required String msg91AccessToken,
     required String phone,
+    bool rememberFor30Days = false,
   }) async {
     AuthDebugLogger.log(
       'AuthService.loginWithMsg91Token entered '
-      'phone=${AuthDebugLogger.maskPhone(phone)}',
+      'phone=${AuthDebugLogger.maskPhone(phone)} '
+      'remember=$rememberFor30Days',
     );
+    final deviceId = await ensureAuthDeviceId();
     final session = await _repository.login(
       msg91AccessToken: msg91AccessToken,
       phone: phone,
+      rememberFor30Days: rememberFor30Days,
+      deviceId: deviceId,
+    );
+    AuthDebugLogger.backendLoginSuccess();
+    AuthDebugLogger.jwtIssued(session.accessToken);
+    await persistSession(session);
+    await _syncDeviceTrustFromLogin(session, rememberFor30Days: rememberFor30Days);
+    return session;
+  }
+
+  Future<AuthSession> loginWithDeviceTrust({required String phone}) async {
+    final trust = await loadDeviceTrust();
+    if (trust == null) {
+      throw StateError('No valid device trust stored');
+    }
+
+    final normalizedPhone = _normalizePhoneForTrust(phone);
+    if (trust.phone != normalizedPhone) {
+      throw StateError('Phone does not match trusted device');
+    }
+
+    AuthDebugLogger.log(
+      'AuthService.loginWithDeviceTrust entered '
+      'phone=${AuthDebugLogger.maskPhone(phone)}',
+    );
+
+    final deviceId = await ensureAuthDeviceId();
+    final session = await _repository.loginWithDeviceTrust(
+      phone: phone,
+      deviceId: deviceId,
+      deviceTrustToken: trust.token,
     );
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
     await persistSession(session);
     return session;
+  }
+
+  /// Returns install-lifetime device id (same as sync transport).
+  Future<String> ensureAuthDeviceId() async {
+    return SyncDeviceIdentity(_storage).deviceId();
+  }
+
+  Future<DeviceTrustCredential?> loadDeviceTrust() async {
+    final token = await _storage.readSecure(StorageKeys.deviceTrustToken);
+    final phone = await _storage.readSecure(StorageKeys.deviceTrustPhone);
+    final expiresAtRaw = await _storage.readSecure(
+      StorageKeys.deviceTrustExpiresAt,
+    );
+    if (token == null ||
+        token.isEmpty ||
+        phone == null ||
+        phone.isEmpty ||
+        expiresAtRaw == null ||
+        expiresAtRaw.isEmpty) {
+      return null;
+    }
+
+    final expiresAt = DateTime.tryParse(expiresAtRaw);
+    if (expiresAt == null || !expiresAt.isAfter(DateTime.now())) {
+      await clearDeviceTrust();
+      return null;
+    }
+
+    return DeviceTrustCredential(token: token, phone: phone, expiresAt: expiresAt);
+  }
+
+  bool isDeviceTrustValidForPhone(DeviceTrustCredential trust, String phone) {
+    return trust.phone == _normalizePhoneForTrust(phone);
+  }
+
+  Future<void> clearDeviceTrust() async {
+    await _storage.deleteSecure(StorageKeys.deviceTrustToken);
+    await _storage.deleteSecure(StorageKeys.deviceTrustPhone);
+    await _storage.deleteSecure(StorageKeys.deviceTrustExpiresAt);
+  }
+
+  Future<void> _syncDeviceTrustFromLogin(
+    AuthSession session, {
+    required bool rememberFor30Days,
+  }) async {
+    if (rememberFor30Days &&
+        session.deviceTrustToken != null &&
+        session.deviceTrustToken!.isNotEmpty &&
+        session.deviceTrustExpiresAt != null &&
+        session.deviceTrustExpiresAt!.isNotEmpty) {
+      await _storage.writeSecure(
+        StorageKeys.deviceTrustToken,
+        session.deviceTrustToken!,
+      );
+      await _storage.writeSecure(
+        StorageKeys.deviceTrustPhone,
+        _normalizePhoneForTrust(session.user.phone),
+      );
+      await _storage.writeSecure(
+        StorageKeys.deviceTrustExpiresAt,
+        session.deviceTrustExpiresAt!,
+      );
+      return;
+    }
+
+    if (!rememberFor30Days) {
+      await clearDeviceTrust();
+    }
+  }
+
+  String _normalizePhoneForTrust(String phone) {
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.length == 12 && digits.startsWith('91')) {
+      return digits.substring(2);
+    }
+    return digits;
   }
 
   Future<AuthSession> devLogin() async {
@@ -381,6 +495,7 @@ class AuthService {
     await _storage.writeSecure(StorageKeys.accessToken, session.accessToken);
     await _storage.writeSecure(StorageKeys.refreshToken, session.refreshToken);
     await _storage.write(StorageKeys.accountPhone, session.user.phone);
+    await _storage.write(StorageKeys.hasLoggedInBefore, 'true');
 
     final selectedId = _businessIdForSession(
       session,

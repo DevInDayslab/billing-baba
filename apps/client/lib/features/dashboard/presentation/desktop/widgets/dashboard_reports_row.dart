@@ -72,6 +72,8 @@ class _ReportsChips extends StatelessWidget {
   final double gap;
   final WidgetRef ref;
 
+  static const _minChipWidth = 180.0;
+
   @override
   Widget build(BuildContext context) {
     if (reports.isEmpty) {
@@ -84,15 +86,29 @@ class _ReportsChips extends StatelessWidget {
       );
     }
 
-    return Row(
-      children: [
-        for (var i = 0; i < reports.length; i++) ...[
-          if (i > 0) SizedBox(width: gap * 2),
-          Expanded(
-            child: _ReportChip(report: reports[i], ref: ref),
-          ),
-        ],
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final separatorWidth = gap * 2;
+        final totalGaps = separatorWidth * (reports.length - 1);
+        final equalWidth =
+            (constraints.maxWidth - totalGaps) / reports.length;
+        final chipWidth =
+            equalWidth >= _minChipWidth ? equalWidth : _minChipWidth;
+
+        return ListView.separated(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: reports.length,
+          separatorBuilder: (_, __) => SizedBox(width: separatorWidth),
+          itemBuilder: (context, index) {
+            return SizedBox(
+              width: chipWidth,
+              height: constraints.maxHeight,
+              child: _ReportChip(report: reports[index], ref: ref),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -116,6 +132,8 @@ class _ReportChip extends StatelessWidget {
         borderRadius: DashboardDecor.cardRadius,
         hoverColor: AppColors.background,
         child: Ink(
+          width: double.infinity,
+          height: double.infinity,
           decoration: BoxDecoration(
             border: Border.all(color: DashboardMetricCard.borderColor),
             borderRadius: DashboardDecor.cardRadius,
@@ -123,7 +141,7 @@ class _ReportChip extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm + 4,
-              vertical: AppSpacing.lg,
+              vertical: AppSpacing.md,
             ),
             child: Row(
               children: [
@@ -134,14 +152,15 @@ class _ReportChip extends StatelessWidget {
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: AppSpacing.sm),
                 const Icon(
                   Icons.arrow_forward_ios,
                   color: AppColors.primary,
-                  size: 20,
+                  size: 16,
                 ),
               ],
             ),
