@@ -46,6 +46,15 @@ abstract final class GstinValidator {
       );
     }
 
+    return const GstinValidationResult(isValid: true);
+  }
+
+  /// Full validation including mod-36 checksum (optional; not used on save).
+  static GstinValidationResult validateStrict(String gstin) {
+    final structural = validate(gstin);
+    if (!structural.isValid) return structural;
+
+    final normalized = normalize(gstin);
     if (!validateChecksum(normalized)) {
       return const GstinValidationResult(
         isValid: false,
@@ -55,6 +64,8 @@ abstract final class GstinValidator {
 
     return const GstinValidationResult(isValid: true);
   }
+
+  static bool isStrictlyValid(String gstin) => validateStrict(gstin).isValid;
 
   static bool validatePattern(String gstin) => _pattern.hasMatch(gstin);
 

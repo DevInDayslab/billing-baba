@@ -1,4 +1,5 @@
 import 'package:billing_baba/shared/utils/gstin_validator.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -51,12 +52,24 @@ void main() {
       );
     });
 
-    test('invalid checksum', () {
-      expect(GstinValidator.isValid('27AABCU9603R1Z8'), isFalse);
+    test('invalid checksum still passes structural validation', () {
+      expect(GstinValidator.isValid('27AABCU9603R1Z8'), isTrue);
+      expect(GstinValidator.isStrictlyValid('27AABCU9603R1Z8'), isFalse);
       expect(
         GstinValidator.validationError('27AABCU9603R1Z8'),
-        'Invalid GSTIN checksum',
+        isNull,
       );
+    });
+
+    test('Vyapar-style GSTIN with non-checksum digit passes save validation', () {
+      const gstin = '29ARGDE1234F1Z5';
+      expect(GstinValidator.isValid(gstin), isTrue);
+      expect(Validators.gstin(gstin), isNull);
+      expect(GstinValidator.isStrictlyValid(gstin), isFalse);
+    });
+
+    test('invalid checksum strict validation', () {
+      expect(GstinValidator.isStrictlyValid('27AABCU9603R1Z8'), isFalse);
     });
 
     test('lowercase input normalizes to valid', () {

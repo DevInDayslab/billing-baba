@@ -6,6 +6,18 @@ import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:intl/intl.dart';
 
+/// Direction of a party's opening balance.
+/// Stored as a signed amount: positive = receive, negative = pay.
+enum OpeningBalanceDirection {
+  toReceive,
+  toPay;
+
+  String get label => switch (this) {
+    OpeningBalanceDirection.toReceive => 'To Receive',
+    OpeningBalanceDirection.toPay => 'To Pay',
+  };
+}
+
 class PartyModel {
   const PartyModel({
     required this.id,
@@ -281,8 +293,34 @@ class PartyModel {
     return formatCurrency(parsed);
   }
 
-  /// Two-decimal string for numeric form fields.
-  static String formatDecimalInput(double value) => value.toStringAsFixed(2);
+  /// Two-decimal string for numeric form fields (magnitude only).
+  static String formatDecimalInput(double value) => value.abs().toStringAsFixed(2);
+
+  static OpeningBalanceDirection openingBalanceDirection(double signedBalance) {
+    if (signedBalance < 0) return OpeningBalanceDirection.toPay;
+    return OpeningBalanceDirection.toReceive;
+  }
+
+  /// Combines a non-negative magnitude with direction into a signed storage value.
+  static String signedOpeningBalanceString({
+    required String magnitude,
+    required OpeningBalanceDirection direction,
+  }) {
+    final normalized = Validators.normalizeDecimalString(magnitude);
+    if (normalized == null) return '0';
+    final parsed = double.tryParse(normalized) ?? 0;
+    if (parsed == 0) return '0';
+    final signed = direction == OpeningBalanceDirection.toPay
+        ? -parsed.abs()
+        : parsed.abs();
+    return Validators.normalizeDecimalString(signed.toStringAsFixed(2)) ?? '0';
+  }
+
+  static String displayOpeningBalance(double signedBalance) {
+    if (signedBalance == 0) return displayCurrency(0);
+    return '${openingBalanceDirection(signedBalance).label}: '
+        '${displayOutstanding(signedBalance)}';
+  }
 
   static String displayDate(DateTime? value) {
     if (value == null) return '—';
@@ -465,21 +503,25 @@ class PartyModel {
   }) {
     return UpdatePartyRequest(
       name: result.partyName.trim(),
-      legalName: result.legalName.trim(),
-      alias: result.alias.trim(),
+      legalName: result.legalName.trim().isEmpty
+          ? null
+          : result.legalName.trim(),
+      alias: result.alias.trim().isEmpty ? null : result.alias.trim(),
       mobile: normalizePhone(result.phone),
       additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),
       email: result.email.trim().isEmpty ? null : result.email.trim(),
       gstin: _optionalNormalizedGstin(result.gstin),
       partyType: result.partyType,
-      partyGroup: result.partyGroup.trim(),
-      areaCode: result.areaCode.trim(),
+      partyGroup: result.partyGroup.trim().isEmpty
+          ? null
+          : result.partyGroup.trim(),
+      areaCode: result.areaCode.trim().isEmpty ? null : result.areaCode.trim(),
       state: result.state.trim().isEmpty ? null : result.state.trim(),
+      pricingTier: PriceTier.toApiTier(result.defaultPriceTier),
       creditLimit: result.hasCustomCreditLimit
-          ? Validators.normalizeDecimalString(result.creditLimit) ?? '0'
-          : '0',
-      openingBalance:
-          Validators.normalizeDecimalString(result.openingBalance) ?? '0',
+          ? Validators.normalizeDecimalString(result.creditLimit)
+          : null,
+      openingBalance: Validators.normalizeDecimalString(result.openingBalance),
       isActive: isActive,
     );
   }

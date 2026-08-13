@@ -61,6 +61,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required to scan item barcodes and capture item photos.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Contacts access lets you import party details from your phone contacts.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photo library access is required to select item images.</string>
 	<key>UIBackgroundModes</key>

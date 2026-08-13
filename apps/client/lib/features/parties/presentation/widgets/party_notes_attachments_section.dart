@@ -180,7 +180,8 @@ class _PartyNotesAttachmentsSectionState
             children: [
               TextField(
                 controller: _notesController,
-                maxLines: 5,
+                minLines: 2,
+                maxLines: 4,
                 enabled: canEdit && !_savingNotes,
                 decoration: const InputDecoration(
                   hintText: 'Add private notes about this party',

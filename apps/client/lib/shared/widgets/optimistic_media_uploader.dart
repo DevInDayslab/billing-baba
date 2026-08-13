@@ -3,11 +3,12 @@ import 'dart:typed_data';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum OptimisticMediaShape { circle, roundedRect }
 
 /// Reusable media preview with optimistic local bytes and edit menu.
-class OptimisticMediaUploader extends StatelessWidget {
+class OptimisticMediaUploader extends ConsumerWidget {
   const OptimisticMediaUploader({
     required this.label,
     required this.onReplace,
@@ -16,6 +17,7 @@ class OptimisticMediaUploader extends StatelessWidget {
     this.height,
     this.size = 120,
     this.imageUrl,
+    this.sourceMediaAssetId,
     this.optimisticBytes,
     this.onRemove,
     this.placeholder,
@@ -39,6 +41,7 @@ class OptimisticMediaUploader extends StatelessWidget {
   final VoidCallback onReplace;
   final VoidCallback? onRemove;
   final String? imageUrl;
+  final String? sourceMediaAssetId;
   final Uint8List? optimisticBytes;
   final Widget? placeholder;
   final OptimisticMediaShape shape;
@@ -53,12 +56,17 @@ class OptimisticMediaUploader extends StatelessWidget {
   bool get _hasOptimistic =>
       optimisticBytes != null && optimisticBytes!.isNotEmpty;
 
-  bool get _hasRemote => imageUrl != null && imageUrl!.trim().isNotEmpty;
+  bool get _hasRemote {
+    final url = imageUrl?.trim();
+    final mediaId = sourceMediaAssetId?.trim();
+    return (url != null && url.isNotEmpty) ||
+        (mediaId != null && mediaId.isNotEmpty);
+  }
 
   bool get _hasImage => _hasOptimistic || _hasRemote;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final borderRadius = shape == OptimisticMediaShape.circle
         ? BorderRadius.circular(_w / 2)
         : AppRadius.smBorder;
@@ -175,7 +183,8 @@ class OptimisticMediaUploader extends StatelessWidget {
 
     if (_hasRemote) {
       return AppNetworkImage(
-        imageUrl: imageUrl!,
+        imageUrl: imageUrl?.trim() ?? '',
+        sourceMediaAssetId: sourceMediaAssetId?.trim(),
         width: _w,
         height: _h,
         fit: fit,

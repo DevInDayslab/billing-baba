@@ -6,6 +6,8 @@ import 'package:billing_baba/features/parties/data/party_repository.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/parties/models/party_list_query.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -29,13 +31,21 @@ class PartyMasterRepository {
 
   PartyLocalSource get local => _local;
 
-  String _requireBusinessId() {
-    final id = _businessIdReader().trim();
-    if (id.isEmpty) {
-      throw StateError('No business selected for party operations');
+  String _resolveBusinessId({String? rowBusinessId}) {
+    final scoped = _businessIdReader().trim();
+    final rowId = rowBusinessId?.trim() ?? '';
+    if (rowId.isNotEmpty) {
+      if (scoped.isNotEmpty && scoped != rowId) {
+        throw StateError('Party belongs to a different business');
+      }
+      return rowId;
     }
-    return id;
+    if (scoped.isNotEmpty) return scoped;
+    throw StateError('No business selected for party operations');
   }
+
+  String _requireBusinessId({String? rowBusinessId}) =>
+      _resolveBusinessId(rowBusinessId: rowBusinessId);
 
   Future<List<PartyDto>> listActive({String? searchQuery}) async {
     final businessId = _requireBusinessId();
@@ -98,12 +108,45 @@ class PartyMasterRepository {
     return _local.getActiveDto(id).then((dto) => dto!);
   }
 
+  /// Seeds the local parties table when the UI has a party the SQLite mirror lacks.
+  Future<void> ensureLocalFromModel(String businessId, PartyModel party) async {
+    final existing = await _local.getById(party.id);
+    if (existing != null && !existing.isDeleted) return;
+
+    final now = DateTime.now().toUtc();
+    final mobile = PartyModel.normalizePhone(party.phone);
+    await _local.upsertRow(
+      id: party.id,
+      businessId: businessId,
+      name: party.name,
+      legalName: _emptyToNull(party.legalName),
+      alias: _emptyToNull(party.alias),
+      mobile: mobile.isEmpty ? null : mobile,
+      email: _emptyToNull(party.email),
+      partyGroup: _emptyToNull(party.partyGroup),
+      areaCode: _emptyToNull(party.areaCode),
+      partyType: party.partyType,
+      pricingTier: PriceTier.toApiTier(party.defaultPriceTier),
+      gstin: _emptyToNull(party.gstin),
+      creditLimit: party.creditLimit.isEmpty ? '0' : party.creditLimit,
+      openingBalance: party.openingBalance.toStringAsFixed(2),
+      profileImageUrl: party.profileImageUrl,
+      profileMediaAssetId: party.profileMediaAssetId,
+      notes: _emptyToNull(party.notes),
+      isActive: party.isActive,
+      syncVersion: existing?.syncVersion ?? 1,
+      createdAt: existing?.createdAt ?? party.createdAt ?? now,
+      updatedAt: now,
+      isDeleted: false,
+    );
+  }
+
   Future<PartyDto> update(String id, UpdatePartyRequest request) async {
-    final businessId = _requireBusinessId();
     final existing = await _local.getById(id);
     if (existing == null || existing.isDeleted) {
       throw StateError('Party not found locally');
     }
+    final businessId = _requireBusinessId(rowBusinessId: existing.businessId);
     final now = DateTime.now().toUtc();
     final baseVersion = existing.syncVersion;
     final merged = _mergeUpdate(existing, request);
@@ -150,9 +193,9 @@ class PartyMasterRepository {
   }
 
   Future<void> softDelete(String id) async {
-    final businessId = _requireBusinessId();
     final existing = await _local.getById(id);
     if (existing == null || existing.isDeleted) return;
+    final businessId = _requireBusinessId(rowBusinessId: existing.businessId);
     final now = DateTime.now().toUtc();
     await _local.softDelete(id: id, deletedAt: now);
     await _syncQueue.enqueueRowMutation(
@@ -216,17 +259,17 @@ class PartyMasterRepository {
   ) {
     return _PartyFields(
       name: request.name?.trim() ?? existing.name,
-      legalName: request.legalName ?? existing.legalName,
-      alias: request.alias ?? existing.alias,
+      legalName: _coalesceNullable(request.legalName, existing.legalName),
+      alias: _coalesceNullable(request.alias, existing.alias),
       mobile: request.mobile ?? existing.mobile,
-      email: request.email ?? existing.email,
-      partyGroup: request.partyGroup ?? existing.partyGroup,
-      areaCode: request.areaCode ?? existing.areaCode,
+      email: _coalesceNullable(request.email, existing.email),
+      partyGroup: _coalesceNullable(request.partyGroup, existing.partyGroup),
+      areaCode: _coalesceNullable(request.areaCode, existing.areaCode),
       partyType: request.partyType ?? existing.partyType,
       partyCategory: request.partyCategory ?? existing.partyCategory,
       pricingTier: request.pricingTier ?? existing.pricingTier,
-      gstin: request.gstin ?? existing.gstin,
-      stateCode: request.stateCode ?? existing.stateCode,
+      gstin: _coalesceNullable(request.gstin, existing.gstin),
+      stateCode: _coalesceNullable(request.stateCode, existing.stateCode),
       areaId: request.areaId ?? existing.areaId,
       creditLimit: request.creditLimit ?? existing.creditLimit,
       openingBalance: request.openingBalance ?? existing.openingBalance,
@@ -269,6 +312,11 @@ class PartyMasterRepository {
     if (value == null) return null;
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  static String? _coalesceNullable(String? incoming, String? existing) {
+    if (incoming == null) return existing;
+    return _emptyToNull(incoming);
   }
 }
 

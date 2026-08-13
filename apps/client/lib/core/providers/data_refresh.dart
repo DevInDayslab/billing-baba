@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -293,9 +294,19 @@ Future<void> refreshAfterPurchaseReturn(
 }
 
 /// After party create/edit.
-void refreshAfterPartyMutation(Ref ref, {bool refreshList = true}) {
+void refreshAfterPartyMutation(
+  Ref ref, {
+  bool refreshList = true,
+  String? partyId,
+}) {
+  invalidatePartyOutstandingIndex(ref);
+  final id = partyId?.trim();
+  if (id != null && id.isNotEmpty) {
+    invalidatePartyTimeline(ref, id);
+    ref.invalidate(partyLoyaltyBalanceProvider(id));
+  }
   if (refreshList) {
-    invalidatePartyBalances(ref);
+    ref.invalidate(partyListProvider);
   }
   invalidateDashboard(ref);
 }

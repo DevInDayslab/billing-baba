@@ -6,8 +6,6 @@ import 'package:billing_baba/features/collaboration/application/permission_servi
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_transaction_card.dart';
-import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_history_section.dart';
-import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_summary_tile.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -61,8 +59,8 @@ class MobilePartyDetailScreen extends ConsumerWidget {
           showSettings: false,
         ),
         body: _PartyDetailError(
-          message: PartyErrorMapper.messageFor(error),
-          onRetry: () => ref.invalidate(partyDetailProvider(partyId)),
+        message: PartyErrorMapper.messageFor(error),
+        onRetry: () => ref.invalidate(partyDetailProvider(partyId)),
         ),
       ),
       data: (party) => _PartyDetailBody(
@@ -218,7 +216,6 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
     final ledgerAsync = ref.watch(partyTimelineProvider(party.id));
     final permissions = ref.watch(permissionServiceProvider);
     final canEditParty = permissions.canEdit(PermissionModule.party);
-    final canViewHiddenLedger = permissions.canViewHiddenLedger;
     final canShareMessaging =
         permissions.canShare(PermissionModule.party) ||
         permissions.canShare(PermissionModule.sale);
@@ -268,24 +265,24 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
         showSettings: false,
         backgroundColor: const Color(0xFFEAF4FF),
         actions: [
-          MobileIconActionButton(
-            icon: Icons.edit_outlined,
-            tooltip: 'Edit party',
+              MobileIconActionButton(
+                icon: Icons.edit_outlined,
+                tooltip: 'Edit party',
             onPressed: canEditParty
                 ? () => PartyActions.edit(context, ref, party)
                 : null,
-          ),
-          MobileIconActionButton(
-            icon: Icons.more_horiz_rounded,
-            tooltip: 'More actions',
-            onPressed: () => showPartyMoreActionsSheet(
-              context: context,
-              ref: ref,
-              party: party,
-              outstanding: outstanding,
-            ),
-          ),
-        ],
+              ),
+              MobileIconActionButton(
+                icon: Icons.more_horiz_rounded,
+                tooltip: 'More actions',
+                onPressed: () => showPartyMoreActionsSheet(
+                  context: context,
+                  ref: ref,
+                  party: party,
+                  outstanding: outstanding,
+                ),
+              ),
+            ],
       ),
       bottomNavigationBar: Material(
         type: MaterialType.transparency,
@@ -344,33 +341,33 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
+            onRefresh: () async {
           final detail = partyDetailProvider(party.id);
           ref
             ..invalidate(detail)
             ..invalidate(partyTimelineProvider(party.id));
-          await ref.read(partyDetailProvider(party.id).future);
+              await ref.read(partyDetailProvider(party.id).future);
           if (mounted) setState(_resetPagination);
-        },
-        child: ListView(
+            },
+            child: ListView(
           controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
             AppSpacing.sm,
             AppSpacing.md,
             120,
           ),
-          children: [
+              children: [
             _MinimalPartySummaryCard(
-              party: party,
-              outstandingLabel: outstandingLabel,
-              creditLimitLabel: creditLimitLabel,
+                  party: party,
+                  outstandingLabel: outstandingLabel,
+                  creditLimitLabel: creditLimitLabel,
               onAvatarTap: canEditParty
                   ? () => PartyActions.edit(context, ref, party)
                   : null,
-            ),
-            const SizedBox(height: AppSpacing.md),
+                ),
+                const SizedBox(height: AppSpacing.md),
             _MinimalActionRow(
               onReminderTap: canShareMessaging
                   ? () => PartyWhatsAppActions.sendPaymentReminderNow(
@@ -388,11 +385,6 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
                 ),
               ),
             ),
-            if (canViewHiddenLedger) ...[
-              const SizedBox(height: AppSpacing.md),
-              HiddenLedgerSummaryTile(partyId: party.id),
-              HiddenLedgerHistorySection(partyId: party.id),
-            ],
             const SizedBox(height: AppSpacing.md),
             _TransactionSearchBar(
               controller: _searchController,
@@ -577,7 +569,7 @@ class _PartyTransactionsSection extends ConsumerWidget {
           );
         }
         return Column(
-          children: [
+                  children: [
             for (final tx in visibleTransactions)
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -807,7 +799,7 @@ class _MinimalPartySummaryCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
-                    ),
+                      ),
                   ],
                 ),
               ),
@@ -872,9 +864,9 @@ class _MinimalActionRow extends StatelessWidget {
               onPressed: onStatementTap,
               icon: const Icon(Icons.receipt_long_outlined),
               label: const Text('Send Statement'),
-            ),
           ),
-        ],
+        ),
+      ],
       ),
     );
   }
@@ -910,8 +902,8 @@ class _OpeningBalanceCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Total',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -939,20 +931,20 @@ class _PartyDetailError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton(
-              onPressed: onRetry,
-              child: const Text('Try again'),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(message, textAlign: TextAlign.center),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton(
+                    onPressed: onRetry,
+                    child: const Text('Try again'),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

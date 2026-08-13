@@ -13,6 +13,7 @@ import 'package:billing_baba/features/parties/application/party_list_image_warmu
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
@@ -60,7 +61,7 @@ class _PartyListSortState {
 }
 
 /// Fixed width for the Amount column in the Parties left list header.
-const partyListAmountHeaderWidth = 88.0;
+const partyListAmountHeaderWidth = 72.0;
 
 const _partyListFilterConfig = ColumnFilter(
   id: 'party_status',
@@ -216,10 +217,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
             InventoryListColumn(
               label: 'AMOUNT',
               fixedWidth: partyListAmountHeaderWidth,
-              sortable: true,
-              isSorted: _sort.isSorted(PartyListSortColumn.amount),
-              sortAscending: _sort.isAscending(PartyListSortColumn.amount),
-              onSort: () => _toggleSort(PartyListSortColumn.amount),
+              alignEnd: true,
             ),
           ],
         ),
@@ -256,6 +254,8 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                         );
                         await service.rememberSelectedParty(party.id);
                       },
+                      onDoubleTap: () =>
+                          PartyActions.edit(context, ref, party),
                     );
                   },
                 ),
@@ -290,6 +290,7 @@ class _PartyListTile extends StatelessWidget {
     required this.isSelected,
     required this.searchQuery,
     required this.onTap,
+    required this.onDoubleTap,
   });
 
   final PartyModel party;
@@ -298,6 +299,7 @@ class _PartyListTile extends StatelessWidget {
   final bool isSelected;
   final String searchQuery;
   final VoidCallback onTap;
+  final VoidCallback onDoubleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -312,6 +314,7 @@ class _PartyListTile extends StatelessWidget {
       index: index,
       isSelected: isSelected,
       onTap: onTap,
+      onDoubleTap: onDoubleTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
