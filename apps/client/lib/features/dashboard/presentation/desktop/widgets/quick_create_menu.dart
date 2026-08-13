@@ -34,6 +34,7 @@ class _QuickCreateMenuButtonState extends ConsumerState<QuickCreateMenuButton> {
   OverlayEntry? _overlayEntry;
   QuickCreateMenuController? _menuController;
   var _isOpen = false;
+  var _hovered = false;
   var _focusedIndex = 0;
 
   @override
@@ -101,26 +102,69 @@ class _QuickCreateMenuButtonState extends ConsumerState<QuickCreateMenuButton> {
 
   @override
   Widget build(BuildContext context) {
+    final expanded = _hovered || _isOpen;
+    final radius = expanded ? AppRadius.button : AppRadius.sm;
+
     return CompositedTransformTarget(
       key: _triggerKey,
       link: _layerLink,
-      child: Tooltip(
-        message: 'Quick create',
-        child: InkWell(
-          onTap: _toggleMenu,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          child: Ink(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: _triggerColor,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              border: Border.all(color: DashboardColors.border),
-            ),
-            child: const Icon(
-              Icons.add,
-              size: 20,
-              color: AppColors.primary,
+      child: MouseRegion(
+        onEnter: (_) {
+          if (!_hovered) setState(() => _hovered = true);
+        },
+        onExit: (_) {
+          if (_hovered) setState(() => _hovered = false);
+        },
+        cursor: SystemMouseCursors.click,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _toggleMenu,
+            borderRadius: BorderRadius.circular(radius),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              height: 34,
+              constraints: const BoxConstraints(minWidth: 34),
+              padding: EdgeInsets.symmetric(
+                horizontal: expanded ? AppSpacing.md : 7,
+              ),
+              decoration: BoxDecoration(
+                color: expanded ? AppColors.tabActiveTint : _triggerColor,
+                borderRadius: BorderRadius.circular(radius),
+                border: Border.all(color: DashboardColors.border),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.add,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    if (expanded) ...[
+                      const SizedBox(width: AppSpacing.xs),
+                      const Text(
+                        'Quick create',
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.clip,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),

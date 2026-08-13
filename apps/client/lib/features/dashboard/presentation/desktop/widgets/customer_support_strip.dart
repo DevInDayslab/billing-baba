@@ -1,6 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Customer support contact line for the desktop chrome.
 ///
@@ -15,38 +18,70 @@ class CustomerSupportStrip extends StatelessWidget {
   /// When true, content-sized only (no full-width border). For MenuBar row.
   final bool compact;
 
-  static const supportPhones = '9333911911 / 080-68195500';
+  static const supportPhone = '9584558455';
+  static const _whatsAppUrl = 'https://wa.me/919584558455';
+  static const _telUrl = 'tel:9584558455';
+  static const _iconSize = 12.0;
+
+  Future<void> _openUrl(String url) async {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
 
   Widget get _content => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'Customer Support :',
+            'Contact Support',
             style: DashboardTypography.supportStrip,
           ),
           const SizedBox(width: AppSpacing.xs),
-          Icon(
-            Icons.phone_outlined,
-            size: AppIconSize.sm,
-            color: AppColors.primary.withValues(alpha: 0.85),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          const Text(
-            supportPhones,
-            style: DashboardTypography.supportStripLink,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => _openUrl(_telUrl),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.phone,
+                    size: _iconSize,
+                    color: AppColors.primary,
+                  ),
+                  Text(
+                    ' : ',
+                    style: DashboardTypography.supportStrip,
+                  ),
+                  Text(
+                    supportPhone,
+                    style: DashboardTypography.supportStripLink,
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           const Text('|', style: DashboardTypography.supportStrip),
           const SizedBox(width: AppSpacing.sm),
-          Icon(
-            Icons.support_agent_outlined,
-            size: AppIconSize.sm,
-            color: AppColors.primary.withValues(alpha: 0.85),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          const Text(
-            'Get Instant Online Support',
-            style: DashboardTypography.supportStripLink,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => _openUrl(_whatsAppUrl),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FaIcon(
+                    FontAwesomeIcons.whatsapp,
+                    size: _iconSize,
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Get instant support',
+                    style: DashboardTypography.supportStripLink,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       );
@@ -56,7 +91,10 @@ class CustomerSupportStrip extends StatelessWidget {
     if (compact) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        child: _content,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: _content,
+        ),
       );
     }
 
@@ -68,7 +106,10 @@ class CustomerSupportStrip extends StatelessWidget {
         border: Border(bottom: BorderSide(color: DashboardColors.border)),
       ),
       alignment: Alignment.center,
-      child: _content,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: _content,
+      ),
     );
   }
 }

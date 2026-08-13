@@ -94,29 +94,36 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
               child: Row(
                 children: [
                   Expanded(
-                    child: MenuBar(
-                      style: const MenuStyle(
-                        backgroundColor: WidgetStatePropertyAll(
-                          Colors.transparent,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: MenuBar(
+                        style: const MenuStyle(
+                          backgroundColor: WidgetStatePropertyAll(
+                            Colors.transparent,
+                          ),
+                          elevation: WidgetStatePropertyAll(0),
+                          padding: WidgetStatePropertyAll(
+                            EdgeInsets.symmetric(horizontal: 2),
+                          ),
+                          minimumSize: WidgetStatePropertyAll(
+                            Size(0, DashboardSpacing.menuBarHeight),
+                          ),
+                          maximumSize: WidgetStatePropertyAll(
+                            Size(
+                              double.infinity,
+                              DashboardSpacing.menuBarHeight,
+                            ),
+                          ),
                         ),
-                        elevation: WidgetStatePropertyAll(0),
-                        padding: WidgetStatePropertyAll(
-                          EdgeInsets.symmetric(horizontal: 2),
+                        children: _materialMenus(
+                          canBusiness: host.canBusiness,
+                          canLogout: host.canLogout,
                         ),
-                        minimumSize: WidgetStatePropertyAll(
-                          Size(0, DashboardSpacing.menuBarHeight),
-                        ),
-                        maximumSize: WidgetStatePropertyAll(
-                          Size(double.infinity, DashboardSpacing.menuBarHeight),
-                        ),
-                      ),
-                      children: _materialMenus(
-                        canBusiness: host.canBusiness,
-                        canLogout: host.canLogout,
                       ),
                     ),
                   ),
                   const CustomerSupportStrip(compact: true),
+                  const Expanded(child: SizedBox.shrink()),
                 ],
               ),
             ),

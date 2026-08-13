@@ -207,6 +207,7 @@ export class DashboardRepository {
       countLowAndNegativeStock(this.db, businessId),
       listStockItemAggregates(this.db, businessId, {
         lowStockOnly: true,
+        orderBy: 'quantity',
         page: 1,
         limit: 5,
       }),

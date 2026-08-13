@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -32,6 +33,48 @@ import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+/// Visual tokens for the desktop sidebar chrome.
+abstract final class _SidebarTokens {
+  static const background = Color(0xFF1C2333);
+  static const text = Color(0xFFE2E8F0);
+  static const textActive = Color(0xFFFFFFFF);
+  static const textMuted = Color(0xFF94A3B8);
+  static const searchField = Color(0xFF141B27);
+  static const hover = Color(0x0FFFFFFF);
+  static const divider = Color(0xFF2A3447);
+
+  static const home = Color(0xFF818CF8);
+  static const parties = Color(0xFF34D399);
+  static const crm = Color(0xFF38BDF8);
+  static const items = Color(0xFFA78BFA);
+  static const sale = Color(0xFFF472B6);
+  static const pos = Color(0xFFFB923C);
+  static const purchase = Color(0xFF2DD4BF);
+  static const reports = Color(0xFF3B82F6);
+  static const sync = Color(0xFFA78BFA);
+  static const utilities = Color(0xFFFBBF24);
+  static const developer = Color(0xFFC4B5FD);
+  static const settings = Color(0xFF94A3B8);
+  static const plans = Color(0xFFF472B6);
+
+  static const activeGradient = LinearGradient(
+    colors: [Color(0xFF6338E0), Color(0xFF5B4FCF)],
+  );
+
+  static const activeGlow = [
+    BoxShadow(
+      color: Color(0x406338E0),
+      blurRadius: 8,
+      offset: Offset(0, 2),
+    ),
+  ];
+}
+
+String _searchShortcutBadge() {
+  return AppPlatform.current.isMacOS ? '⌘F' : 'Ctrl+F';
+}
 
 /// Desktop app shell with collapsible sidebar and top action bar.
 class DesktopShell extends ConsumerStatefulWidget {
@@ -44,7 +87,7 @@ class DesktopShell extends ConsumerStatefulWidget {
 }
 
 class _DesktopShellState extends ConsumerState<DesktopShell> {
-  static const _sidebarExpandedWidth = 220.0;
+  static const _sidebarExpandedWidth = 264.0;
   static const _sidebarCollapsedWidth = 60.0;
   static const _sidebarCompactLayoutMaxWidth = 140.0;
   static const _overlayBreakpoint = 800.0;
@@ -55,9 +98,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     return collapsed || width < _sidebarCompactLayoutMaxWidth;
   }
 
-  static const _sidebarColor = Color(0xFF1C2333);
-  static const _sidebarText = Color(0xFFB0BEC5);
-  static const _sidebarTextActive = Color(0xFFFFFFFF);
+  static const Color _sidebarColor = _SidebarTokens.background;
+  static const Color _sidebarText = _SidebarTokens.textMuted;
 
   bool _isSaleExpanded = false;
   bool _isPurchaseExpanded = false;
@@ -110,10 +152,15 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   }
 
   void _registerSearchDialog() {
+    var isOpen = false;
     ref
         .read(searchDialogProvider.notifier)
         .register(
-          open: (context) => showSearchDialog(context, ref),
+          open: (context) {
+            if (isOpen) return;
+            isOpen = true;
+            showSearchDialog(context, ref).whenComplete(() => isOpen = false);
+          },
         );
   }
 
@@ -214,18 +261,21 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   List<_NavItem> get _allNavItems => [
     const _NavItem(
       route: AppRoutes.home,
-      icon: Icons.home_outlined,
+      icon: LucideIcons.house,
+      iconColor: _SidebarTokens.home,
       label: 'Home',
     ),
     _NavItem(
       route: AppRoutes.parties,
-      icon: Icons.people_outlined,
+      icon: LucideIcons.users,
+      iconColor: _SidebarTokens.parties,
       label: 'Parties',
       isExpandable: true,
       subItems: _partiesSubItems,
     ),
     _NavItem(
-      icon: Icons.handshake_outlined,
+      icon: LucideIcons.heartHandshake,
+      iconColor: _SidebarTokens.crm,
       label: 'CRM',
       isExpandable: true,
       routePrefix: AppRoutes.crm,
@@ -233,11 +283,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     ),
     const _NavItem(
       route: AppRoutes.items,
-      icon: Icons.inventory_2_outlined,
+      icon: LucideIcons.package,
+      iconColor: _SidebarTokens.items,
       label: 'Items',
     ),
     _NavItem(
-      icon: Icons.receipt_outlined,
+      icon: LucideIcons.receipt,
+      iconColor: _SidebarTokens.sale,
       label: 'Sale',
       isExpandable: true,
       routePrefix: AppRoutes.sale,
@@ -246,11 +298,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (!ShellSidebarVisibility.hidePos)
       const _NavItem(
         route: AppRoutes.pos,
-        icon: Icons.point_of_sale_outlined,
+        icon: LucideIcons.store,
+        iconColor: _SidebarTokens.pos,
         label: 'POS',
       ),
     _NavItem(
-      icon: Icons.shopping_cart_outlined,
+      icon: LucideIcons.shoppingCart,
+      iconColor: _SidebarTokens.purchase,
       label: 'Purchase & Expense',
       isExpandable: true,
       routePrefix: AppRoutes.purchase,
@@ -258,12 +312,14 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     ),
     const _NavItem(
       route: AppRoutes.reports,
-      icon: Icons.bar_chart_outlined,
+      icon: LucideIcons.chartColumn,
+      iconColor: _SidebarTokens.reports,
       label: 'Reports',
     ),
     if (!ShellSidebarVisibility.hideCollaboration)
       _NavItem(
-        icon: Icons.sync_outlined,
+        icon: LucideIcons.refreshCw,
+        iconColor: _SidebarTokens.sync,
         label: 'Sync & Share',
         isExpandable: true,
         routePrefix: AppRoutes.collaboration,
@@ -271,7 +327,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       ),
     if (!ShellSidebarVisibility.hideUtilities)
       _NavItem(
-        icon: Icons.build_outlined,
+        icon: LucideIcons.wrench,
+        iconColor: _SidebarTokens.utilities,
         label: 'Utilities',
         isExpandable: true,
         routePrefix: AppRoutes.utilities,
@@ -279,7 +336,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       ),
     if (!ShellSidebarVisibility.hideDeveloper)
       _NavItem(
-        icon: Icons.code_outlined,
+        icon: LucideIcons.code,
+        iconColor: _SidebarTokens.developer,
         label: 'Developer',
         isExpandable: true,
         routePrefix: AppRoutes.developer,
@@ -288,12 +346,14 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (!ShellSidebarVisibility.hideSettings)
       const _NavItem(
         route: AppRoutes.settings,
-        icon: Icons.settings_outlined,
+        icon: LucideIcons.settings,
+        iconColor: _SidebarTokens.settings,
         label: 'Settings',
       ),
     const _NavItem(
       route: AppRoutes.plansPricing,
-      icon: Icons.workspace_premium_outlined,
+      icon: LucideIcons.award,
+      iconColor: _SidebarTokens.plans,
       label: 'Plans & Pricing',
     ),
   ];
@@ -330,6 +390,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
     return _NavItem(
       icon: item.icon,
+      iconColor: item.iconColor,
       label: item.label,
       route: item.route,
       routePrefix: item.routePrefix,
@@ -343,13 +404,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final sidebarNotifier = ref.read(shellSidebarProvider.notifier);
 
     setState(() {
-      _isSaleExpanded = false;
-      _isPurchaseExpanded = false;
-      _isPartiesExpanded = false;
-      _isCrmExpanded = false;
-      _isUtilitiesExpanded = false;
-      _isCollaborationExpanded = false;
-      _isDeveloperExpanded = false;
+      _isSaleExpanded = route.startsWith(AppRoutes.sale);
+      _isPurchaseExpanded = route.startsWith(AppRoutes.purchase);
+      _isPartiesExpanded = route.startsWith(AppRoutes.parties);
+      _isCrmExpanded = route.startsWith(AppRoutes.crm);
+      _isUtilitiesExpanded = route.startsWith(AppRoutes.utilities);
+      _isCollaborationExpanded = route.startsWith(AppRoutes.collaboration);
+      _isDeveloperExpanded = route.startsWith(AppRoutes.developer);
     });
     if (route == AppRoutes.partyDetails) {
       ref.read(selectedPartyIdProvider.notifier).selected = null;
@@ -556,12 +617,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       child: collapsed
           ? InkWell(
               onTap: sidebarNotifier.expand,
+              borderRadius: AppRadius.mdBorder,
               child: const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 child: Icon(
-                  Icons.last_page,
+                  LucideIcons.panelLeftOpen,
                   color: _sidebarText,
-                  size: 20,
+                  size: AppIconSize.md,
                 ),
               ),
             )
@@ -570,55 +632,92 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 if (showCloseButton)
                   IconButton(
                     icon: const Icon(
-                      Icons.close,
+                      LucideIcons.x,
                       color: _sidebarText,
-                      size: 20,
+                      size: AppIconSize.md,
                     ),
                     onPressed: sidebarNotifier.closeDrawer,
                     tooltip: 'Close menu',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 Expanded(
-                  child: TextField(
-                    readOnly: true,
-                    onTap: () =>
-                        ref.read(searchDialogProvider.notifier).open(context),
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      hintStyle: const TextStyle(
-                        color: _sidebarText,
-                        fontSize: 13,
+                  child: Material(
+                    color: _SidebarTokens.searchField,
+                    borderRadius: AppRadius.searchBorder,
+                    child: InkWell(
+                      onTap: () =>
+                          ref.read(searchDialogProvider.notifier).open(context),
+                      borderRadius: AppRadius.searchBorder,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              LucideIcons.search,
+                              color: _SidebarTokens.textMuted,
+                              size: AppIconSize.sm,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            const Expanded(
+                              child: Text(
+                                'Search',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: _SidebarTokens.textMuted,
+                                  fontSize: 13,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                _searchShortcutBadge(),
+                                style: const TextStyle(
+                                  color: _SidebarTokens.textMuted,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: _sidebarText,
-                        size: 20,
-                      ),
-                      filled: true,
-                      fillColor: const Color(0xFF141B27),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.sm,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: AppRadius.mdBorder,
-                        borderSide: BorderSide.none,
-                      ),
-                      isDense: true,
-                    ),
-                    style: const TextStyle(
-                      color: _sidebarTextActive,
-                      fontSize: 13,
                     ),
                   ),
                 ),
                 if (!showCloseButton)
                   IconButton(
                     icon: const Icon(
-                      Icons.first_page,
+                      LucideIcons.panelLeftClose,
                       color: _sidebarText,
-                      size: 20,
+                      size: AppIconSize.md,
                     ),
                     onPressed: sidebarNotifier.toggleCollapsed,
                     tooltip: 'Collapse sidebar',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
               ],
             ),
@@ -844,6 +943,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 class _NavItem {
   const _NavItem({
     required this.icon,
+    required this.iconColor,
     required this.label,
     this.route,
     this.routePrefix,
@@ -852,6 +952,7 @@ class _NavItem {
   });
 
   final IconData icon;
+  final Color iconColor;
   final String label;
   final String? route;
   final String? routePrefix;
@@ -864,6 +965,64 @@ class _NavSubItem {
 
   final String route;
   final String label;
+}
+
+class _SidebarTileSurface extends StatelessWidget {
+  const _SidebarTileSurface({
+    required this.isActive,
+    required this.child,
+    this.onTap,
+    this.horizontalPadding,
+    this.verticalPadding,
+  });
+
+  final bool isActive;
+  final Widget child;
+  final VoidCallback? onTap;
+  final double? horizontalPadding;
+  final double? verticalPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.mdBorder,
+          boxShadow: isActive ? _SidebarTokens.activeGlow : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: AppRadius.mdBorder,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: AppRadius.mdBorder,
+            hoverColor: isActive ? Colors.transparent : _SidebarTokens.hover,
+            splashColor: isActive
+                ? Colors.white.withValues(alpha: 0.08)
+                : _SidebarTokens.hover,
+            highlightColor: Colors.transparent,
+            child: Ink(
+              decoration: BoxDecoration(
+                gradient: isActive ? _SidebarTokens.activeGradient : null,
+                borderRadius: AppRadius.mdBorder,
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding ?? AppSpacing.md,
+                  vertical: verticalPadding ?? AppSpacing.sm + 2,
+                ),
+                child: child,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _SidebarExpandableNavTile extends StatelessWidget {
@@ -883,79 +1042,62 @@ class _SidebarExpandableNavTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback? onCollapsedTap;
 
-  static const _sidebarActiveBg = Color(0xFF2A3447);
-  static const _sidebarText = Color(0xFFB0BEC5);
-  static const _sidebarTextActive = Color(0xFFFFFFFF);
-
   @override
   Widget build(BuildContext context) {
-    final accentColor = Theme.of(context).colorScheme.primary;
+    final iconColor = isActive ? _SidebarTokens.textActive : item.iconColor;
+    final labelColor = isActive
+        ? _SidebarTokens.textActive
+        : _SidebarTokens.text;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: collapsed ? onCollapsedTap : onToggle,
-        child: Container(
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 2,
-          ),
-          decoration: BoxDecoration(
-            color: isActive ? _sidebarActiveBg : Colors.transparent,
-            borderRadius: AppRadius.smBorder,
-            border: isActive && !collapsed
-                ? Border(left: BorderSide(color: accentColor, width: 3))
-                : null,
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? 4 : AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
-          child: collapsed
-              ? Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Icon(
-                      item.icon,
-                      color: isActive ? _sidebarTextActive : _sidebarText,
-                      size: 20,
-                    ),
-                  ),
-                )
-              : Row(
-                  children: [
-                    Icon(
-                      item.icon,
-                      color: isActive ? _sidebarTextActive : _sidebarText,
-                      size: 22,
-                    ),
-                    const SizedBox(width: AppSpacing.sm + 4),
-                    Expanded(
-                      child: Text(
-                        item.label,
-                        style: TextStyle(
-                          color: isActive ? _sidebarTextActive : _sidebarText,
-                          fontSize: 13,
-                          fontWeight: isActive
-                              ? FontWeight.w500
-                              : FontWeight.normal,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    AnimatedRotation(
-                      turns: isExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        Icons.expand_more,
-                        color: isActive ? _sidebarTextActive : _sidebarText,
-                        size: 20,
-                      ),
-                    ),
-                  ],
+    return _SidebarTileSurface(
+      isActive: isActive,
+      onTap: collapsed ? onCollapsedTap : onToggle,
+      horizontalPadding: collapsed ? 4 : AppSpacing.md,
+      child: collapsed
+          ? Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Icon(
+                  item.icon,
+                  color: iconColor,
+                  size: AppIconSize.md,
                 ),
-        ),
-      ),
+              ),
+            )
+          : Row(
+              children: [
+                Icon(
+                  item.icon,
+                  color: iconColor,
+                  size: AppIconSize.md,
+                ),
+                const SizedBox(width: AppSpacing.sm + 4),
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: TextStyle(
+                      color: labelColor,
+                      fontSize: 13,
+                      fontWeight: isActive
+                          ? FontWeight.w500
+                          : FontWeight.normal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    LucideIcons.chevronDown,
+                    color: isActive
+                        ? _SidebarTokens.textActive
+                        : _SidebarTokens.textMuted,
+                    size: AppIconSize.md,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -971,45 +1113,22 @@ class _SidebarNavSubTile extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
 
-  static const _sidebarActiveBg = Color(0xFF2A3447);
-  static const _sidebarText = Color(0xFFCFD8DC);
-  static const _sidebarTextActive = Color(0xFFFFFFFF);
-
   @override
   Widget build(BuildContext context) {
-    final accentColor = Theme.of(context).colorScheme.primary;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 2,
+    return _SidebarTileSurface(
+      isActive: isActive,
+      onTap: onTap,
+      verticalPadding: AppSpacing.sm,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? _SidebarTokens.textActive : _SidebarTokens.text,
+            fontSize: 13,
+            fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
           ),
-          decoration: BoxDecoration(
-            color: isActive ? _sidebarActiveBg : Colors.transparent,
-            borderRadius: AppRadius.smBorder,
-            border: isActive
-                ? Border(left: BorderSide(color: accentColor, width: 3))
-                : null,
-          ),
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md + 20,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.sm,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isActive ? _sidebarTextActive : _sidebarText,
-              fontSize: 13,
-              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
@@ -1029,70 +1148,51 @@ class _SidebarNavTile extends StatelessWidget {
   final bool isActive;
   final VoidCallback? onTap;
 
-  static const _sidebarActiveBg = Color(0xFF2A3447);
-  static const _sidebarText = Color(0xFFB0BEC5);
-  static const _sidebarTextActive = Color(0xFFFFFFFF);
-
   @override
   Widget build(BuildContext context) {
-    final accentColor = Theme.of(context).colorScheme.primary;
+    final iconColor = isActive ? _SidebarTokens.textActive : item.iconColor;
+    final labelColor = isActive
+        ? _SidebarTokens.textActive
+        : _SidebarTokens.text;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 2,
-          ),
-          decoration: BoxDecoration(
-            color: isActive ? _sidebarActiveBg : Colors.transparent,
-            borderRadius: AppRadius.smBorder,
-            border: isActive && !collapsed
-                ? Border(left: BorderSide(color: accentColor, width: 3))
-                : null,
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? 4 : AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
-          child: collapsed
-              ? Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Icon(
-                      item.icon,
-                      color: isActive ? _sidebarTextActive : _sidebarText,
-                      size: 20,
-                    ),
-                  ),
-                )
-              : Row(
-                  children: [
-                    Icon(
-                      item.icon,
-                      color: isActive ? _sidebarTextActive : _sidebarText,
-                      size: 22,
-                    ),
-                    const SizedBox(width: AppSpacing.sm + 4),
-                    Expanded(
-                      child: Text(
-                        item.label,
-                        style: TextStyle(
-                          color: isActive ? _sidebarTextActive : _sidebarText,
-                          fontSize: 13,
-                          fontWeight: isActive
-                              ? FontWeight.w500
-                              : FontWeight.normal,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+    return _SidebarTileSurface(
+      isActive: isActive,
+      onTap: onTap,
+      horizontalPadding: collapsed ? 4 : AppSpacing.md,
+      child: collapsed
+          ? Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Icon(
+                  item.icon,
+                  color: iconColor,
+                  size: AppIconSize.md,
                 ),
-        ),
-      ),
+              ),
+            )
+          : Row(
+              children: [
+                Icon(
+                  item.icon,
+                  color: iconColor,
+                  size: AppIconSize.md,
+                ),
+                const SizedBox(width: AppSpacing.sm + 4),
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: TextStyle(
+                      color: labelColor,
+                      fontSize: 13,
+                      fontWeight: isActive
+                          ? FontWeight.w500
+                          : FontWeight.normal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -1123,9 +1223,9 @@ class _SidebarProfileFooter extends StatefulWidget {
 }
 
 class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
-  static const _sidebarColor = Color(0xFF1C2333);
-  static const _sidebarText = Color(0xFFB0BEC5);
-  static const _sidebarTextActive = Color(0xFFFFFFFF);
+  static const Color _sidebarColor = _SidebarTokens.background;
+  static const Color _sidebarText = _SidebarTokens.textMuted;
+  static const Color _sidebarTextActive = _SidebarTokens.textActive;
 
   final _layerLink = LayerLink();
   OverlayEntry? _menuOverlay;
@@ -1206,7 +1306,7 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
               vertical: AppSpacing.md,
             ),
             decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Color(0xFF2A3447))),
+              border: Border(top: BorderSide(color: _SidebarTokens.divider)),
             ),
             child: widget.collapsed
                 ? Center(
@@ -1259,9 +1359,9 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
                         turns: _menuOpen ? 0.5 : 0,
                         duration: const Duration(milliseconds: 200),
                         child: const Icon(
-                          Icons.expand_more,
+                          LucideIcons.chevronDown,
                           color: _sidebarText,
-                          size: 20,
+                          size: AppIconSize.md,
                         ),
                       ),
                     ],
@@ -1475,7 +1575,6 @@ class _ShellShortcutScope extends ConsumerWidget {
           ),
           OpenSearchDialogIntent: CallbackAction<OpenSearchDialogIntent>(
             onInvoke: (_) {
-              if (shouldSuppressSearchShortcuts()) return null;
               ref.read(searchDialogProvider.notifier).open(context);
               return null;
             },

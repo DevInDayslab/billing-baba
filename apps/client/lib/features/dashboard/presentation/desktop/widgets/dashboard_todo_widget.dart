@@ -27,7 +27,7 @@ class DashboardTodoWidget extends ConsumerStatefulWidget {
 }
 
 class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
-  DashboardTodoStatusChip _statusChip = DashboardTodoStatusChip.pending;
+  DashboardTodoStatusChip _statusChip = DashboardTodoStatusChip.all;
 
   Future<void> _openEditor({TaskModel? editTask}) async {
     final result = await showTaskEditorDialog(

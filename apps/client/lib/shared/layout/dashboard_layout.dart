@@ -31,8 +31,8 @@ abstract final class DashboardLayout {
   static const reportsRowFlex = 20;
 
   // Chart row column split.
-  static const chartRatio = 0.64;
-  static const todoRatio = 0.36;
+  static const chartRatio = 0.55;
+  static const todoRatio = 0.45;
 
   // In-card chart area (remaining whitespace below header/value).
   static const chartAreaHeightRatio = 0.60;
@@ -70,8 +70,8 @@ abstract final class DashboardLayout {
   static const sideWidgetLowStockMaxVisibleRows = 3;
 
   // Flex integers for [Expanded] / [Flexible].
-  static const chartColumnFlex = 70;
-  static const todoColumnFlex = 30;
+  static const chartColumnFlex = 55;
+  static const todoColumnFlex = 45;
 
   static DashboardMetrics metricsFrom(BoxConstraints constraints) {
     final width = constraints.maxWidth;

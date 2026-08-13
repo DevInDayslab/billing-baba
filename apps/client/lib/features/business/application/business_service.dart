@@ -178,6 +178,7 @@ class BusinessService {
           email: item['email'] as String?,
           gstin: item['gstin'] as String?,
           businessType: item['business_type'] as String?,
+          businessCategory: item['business_category'] as String?,
           state: item['state'] as String?,
           currency: item['currency'] as String?,
           address: item['address'] as String?,
