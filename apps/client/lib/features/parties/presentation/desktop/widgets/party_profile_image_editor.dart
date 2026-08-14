@@ -120,14 +120,14 @@ class PartyProfileImageEditorState
     }
   }
 
-  void _patchProviders({
+  Future<void> _patchProviders({
     required String partyId,
     required String? imageUrl,
     required String? mediaAssetId,
     bool clear = false,
-  }) {
+  }) async {
     try {
-      ref
+      await ref
           .read(partyListProvider.notifier)
           .patchProfileImage(
             partyId,
@@ -225,7 +225,7 @@ class PartyProfileImageEditorState
       _mediaAssetId = newMediaId;
       _uploading = false;
       _notifyChanged();
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: newUrl,
         mediaAssetId: newMediaId,
@@ -257,7 +257,7 @@ class PartyProfileImageEditorState
       _uploading = false;
       _setSharedOptimistic(partyId, null);
       _notifyChanged();
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: previousUrl,
         mediaAssetId: previousMediaId,
@@ -302,7 +302,7 @@ class PartyProfileImageEditorState
     _mediaAssetId = newMediaId;
     _uploading = false;
     _notifyChanged();
-    _patchProviders(
+    await _patchProviders(
       partyId: partyId,
       imageUrl: newUrl,
       mediaAssetId: newMediaId,
@@ -346,7 +346,7 @@ class PartyProfileImageEditorState
     _setSharedOptimistic(partyId, null);
     _notifyChanged();
     if (partyId != null && partyId.isNotEmpty) {
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: null,
         mediaAssetId: null,
@@ -387,7 +387,7 @@ class PartyProfileImageEditorState
       _mediaAssetId = previousMediaId;
       _uploading = false;
       _notifyChanged();
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: previousUrl,
         mediaAssetId: previousMediaId,
@@ -414,6 +414,7 @@ class PartyProfileImageEditorState
       label: 'Photo',
       size: widget.size,
       imageUrl: _imageUrl,
+      sourceMediaAssetId: _mediaAssetId,
       optimisticBytes: _optimisticBytes,
       isUploading: _uploading,
       replaceLabel: 'Edit Photo',
@@ -428,6 +429,7 @@ class PartyProfileImageEditorState
       onReplace: _onReplace,
       onRemove:
           (_imageUrl != null && _imageUrl!.trim().isNotEmpty) ||
+              (_mediaAssetId != null && _mediaAssetId!.trim().isNotEmpty) ||
               (_optimisticBytes != null && _optimisticBytes!.isNotEmpty)
           ? _onRemove
           : null,

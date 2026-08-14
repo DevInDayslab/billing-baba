@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _compactBreakpoint = 800.0;
+const _partyListPanelWidth = 280.0;
 
 Future<void> _openAddGroupDialog(BuildContext context, WidgetRef ref) async {
   final name = await showTextInputDialog(
@@ -99,7 +100,12 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -107,7 +113,7 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
                 currentRoute: AppRoutes.partyGroups,
                 onAddGroup: () => _openAddGroupDialog(context, ref),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -128,7 +134,7 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
                     }
 
                     return InventorySplitLayout(
-                      listWidth: 360,
+                      listWidth: _partyListPanelWidth,
                       listPanel: const PartyGroupListPanel(),
                       detailPanel: selectedGroup == null
                           ? const InventoryDetailPlaceholder(

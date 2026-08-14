@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
+import 'package:billing_baba/features/parties/utils/party_group_names.dart';
 
 /// Local-only UI fields not yet stored on the API.
 class PartyLocalExtension {
@@ -308,7 +309,9 @@ class PartyCache {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
-      return decoded.map((item) => item.toString()).toList();
+      return mergePartyGroupNames(
+        decoded.map((item) => item.toString()),
+      );
     } on Object catch (_) {
       return [];
     }

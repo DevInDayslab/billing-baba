@@ -287,15 +287,12 @@ class AppDatabase extends _$AppDatabase {
   }
 
   static Future<void> _createBusinessIdIndexes(Migrator m) async {
+    // Only tables that exist by schema v19. Tables introduced later (item_*,
+    // todos_local, …) get their business_id indexes in their own upgrade steps.
     const tables = [
       'sync_queue',
       'parties_local',
       'items_local',
-      'item_alternatives_local',
-      'item_suppliers_local',
-      'item_bom_materials_local',
-      'item_bom_costs_local',
-      'item_tier_prices_local',
       'categories_local',
       'brands_local',
       'sales_documents_local',
@@ -305,9 +302,18 @@ class AppDatabase extends _$AppDatabase {
       'leads',
       'contacts',
       'deals',
-      'todos_local',
     ];
     for (final table in tables) {
+      final exists = await m.database
+          .customSelect(
+            'SELECT 1 AS ok FROM sqlite_master WHERE type = ? AND name = ?',
+            variables: [
+              const Variable<String>('table'),
+              Variable<String>(table),
+            ],
+          )
+          .getSingleOrNull();
+      if (exists == null) continue;
       await m.database.customStatement(
         'CREATE INDEX IF NOT EXISTS idx_${table}_business_id ON $table (business_id)',
       );

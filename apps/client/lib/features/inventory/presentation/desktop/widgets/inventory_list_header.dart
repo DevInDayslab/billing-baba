@@ -216,6 +216,7 @@ class _HeaderCell extends StatelessWidget {
               alignEnd: column.alignEnd,
             ),
           ),
+          const SizedBox(width: 4),
           column.trailing!,
         ],
       );
@@ -261,8 +262,8 @@ class _SortableHeaderContent extends StatelessWidget {
       column.label,
       textAlign: alignEnd ? TextAlign.right : TextAlign.left,
       style: InventoryStyles.listHeaderStyle,
-      softWrap: false,
-      overflow: TextOverflow.visible,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
 
     if (!column.sortable || column.onSort == null) {
@@ -288,7 +289,7 @@ class _SortableHeaderContent extends StatelessWidget {
           sortIcon,
           const SizedBox(width: 4),
         ],
-        label,
+        Flexible(child: label),
         if (!alignEnd && sortIcon != null) ...[
           const SizedBox(width: 4),
           sortIcon,

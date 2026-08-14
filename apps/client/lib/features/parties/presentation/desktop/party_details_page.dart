@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _compactBreakpoint = 800.0;
+/// Narrower list column so transaction detail has more horizontal room.
+const _partyListPanelWidth = 280.0;
 
 Future<void> _openAddPartyDialog(BuildContext context, WidgetRef ref) async {
   await showAddPartyDialog(context);
@@ -37,7 +39,10 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
   }
 
   Future<void> _initializePage() async {
-    await ref.read(partyListProvider.notifier).refresh();
+    final partiesAsync = ref.read(partyListProvider);
+    if (!partiesAsync.hasValue) {
+      await ref.read(partyListProvider.notifier).refresh();
+    }
     if (!mounted) return;
     await _restorePreferences();
   }
@@ -69,7 +74,12 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -77,7 +87,7 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
                 currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => _openAddPartyDialog(context, ref),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -98,7 +108,7 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
                     }
 
                     return InventorySplitLayout(
-                      listWidth: 360,
+                      listWidth: _partyListPanelWidth,
                       listPanel: const PartyListPanel(),
                       detailPanel: selectedId == null
                           ? const InventoryDetailPlaceholder(

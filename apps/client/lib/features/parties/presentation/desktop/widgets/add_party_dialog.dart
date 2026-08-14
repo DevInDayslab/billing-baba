@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
@@ -5,8 +7,10 @@ import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
+import 'package:billing_baba/features/parties/application/device_contact_import_service.dart';
 import 'package:billing_baba/features/parties/application/gstin_verification_service.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
@@ -15,6 +19,7 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_additional_phones_field.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_editor.dart';
+import 'package:billing_baba/features/parties/presentation/mobile/widgets/device_contact_picker_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/gstin_verification_dialogs.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
@@ -22,15 +27,20 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/shared/utils/clear_zero_decimal_on_focus.dart';
 import 'package:billing_baba/shared/utils/gstin_validator.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
 import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 export 'package:billing_baba/features/parties/models/add_party_result.dart';
 
@@ -100,15 +110,118 @@ Future<AddPartyResult?> _showPartyFormMobileRoute(
   );
 }
 
+/// Entry point for adding a party — on mobile offers manual entry or contact import.
+Future<AddPartyResult?> showAddPartyEntry(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  if (!AppPlatform.current.isMobile) {
+    return showAddPartyDialog(context);
+  }
+
+  await showMobileAddOptionsSheet(
+    context: context,
+    title: 'Add Party',
+    options: [
+      MobileAddOption(
+        label: 'Add manually',
+        subtitle: 'Enter party details yourself',
+        icon: Icons.person_add_outlined,
+        onTap: () => showAddPartyDialog(context),
+      ),
+      MobileAddOption(
+        label: 'Import from contacts',
+        subtitle: 'Pick a contact from your phone',
+        icon: Icons.contacts_outlined,
+        iconColor: AppColors.primary,
+        onTap: () => _openAddPartyFromContactImport(context, ref),
+      ),
+    ],
+  );
+  return null;
+}
+
+Future<AddPartyResult?> _openAddPartyFromContactImport(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final service = ref.read(deviceContactImportServiceProvider);
+  if (!service.isSupported) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contact import is only available on mobile devices.'),
+        ),
+      );
+    }
+    return showAddPartyDialog(context);
+  }
+
+  final permission = await service.requestAccess();
+  if (!context.mounted) return null;
+
+  switch (permission) {
+    case DeviceContactPermissionResult.denied:
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Contacts permission denied. You can still add the party manually.',
+          ),
+        ),
+      );
+      return showAddPartyDialog(context);
+    case DeviceContactPermissionResult.permanentlyDenied:
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Contacts permission required'),
+          content: const Text(
+            'Enable contacts access in system settings to import party details '
+            'from your phone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                unawaited(openAppSettings());
+              },
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      );
+      return showAddPartyDialog(context);
+    case DeviceContactPermissionResult.unavailable:
+      return showAddPartyDialog(context);
+    case DeviceContactPermissionResult.granted:
+      break;
+  }
+
+  final selected = await showDeviceContactPickerSheet(context);
+  if (!context.mounted) return null;
+  if (selected == null) return null;
+
+  return _showPartyFormMobileRoute(
+    context,
+    child: AddPartyDialog(contactPrefill: selected.toPrefill()),
+  );
+}
+
 class AddPartyDialog extends ConsumerStatefulWidget {
   const AddPartyDialog({
     this.partyToEdit,
     this.duplicateFrom,
+    this.contactPrefill,
     super.key,
   });
 
   final PartyModel? partyToEdit;
   final PartyModel? duplicateFrom;
+  final DeviceContactPrefill? contactPrefill;
 
   @override
   ConsumerState<AddPartyDialog> createState() => _AddPartyDialogState();
@@ -151,6 +264,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   final _openingBalanceController = TextEditingController();
   final _loyaltyPointsOpeningBalanceController = TextEditingController();
   final _creditLimitController = TextEditingController();
+  final _openingBalanceFocusNode = FocusNode();
+  final _loyaltyPointsFocusNode = FocusNode();
+  final _creditLimitFocusNode = FocusNode();
   final _additionalField1Controller = TextEditingController();
   final _additionalField2Controller = TextEditingController();
   final List<TextEditingController> _additionalPhoneControllers = [];
@@ -159,6 +275,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       GlobalKey<SaleSingleDatePickerAnchorState>();
 
   DateTime _openingBalanceAsOfDate = DateTime.now();
+  OpeningBalanceDirection _openingBalanceDirection =
+      OpeningBalanceDirection.toReceive;
   bool _useCustomCreditLimit = false;
   bool _additionalField1Enabled = false;
   bool _additionalField2Enabled = false;
@@ -228,6 +346,24 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         (_) => _applyCreateDefaults(),
       );
     }
+
+    ClearZeroDecimalOnFocus.bind(
+      controller: _openingBalanceController,
+      focusNode: _openingBalanceFocusNode,
+    );
+    ClearZeroDecimalOnFocus.bind(
+      controller: _loyaltyPointsOpeningBalanceController,
+      focusNode: _loyaltyPointsFocusNode,
+    );
+    ClearZeroDecimalOnFocus.bind(
+      controller: _creditLimitController,
+      focusNode: _creditLimitFocusNode,
+    );
+
+    final prefill = widget.contactPrefill;
+    if (prefill != null) {
+      _applyContactPrefill(prefill);
+    }
   }
 
   void _applyCreateDefaults() {
@@ -276,6 +412,90 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return _defaultState;
   }
 
+  void _applyContactPrefill(DeviceContactPrefill prefill) {
+    if (prefill.displayName.trim().isNotEmpty) {
+      _partyNameController.text = prefill.displayName.trim();
+    }
+    if (prefill.phones.isNotEmpty) {
+      _phoneController.text = prefill.phones.first;
+      if (prefill.phones.length > 1) {
+        _setAdditionalPhones(prefill.phones.sublist(1));
+      }
+    }
+    final email = prefill.email?.trim();
+    if (email != null && email.isNotEmpty) {
+      _emailController.text = email;
+    }
+    final address = prefill.address?.trim();
+    if (address != null && address.isNotEmpty) {
+      _billingAddressController.text = address;
+    }
+  }
+
+  Future<void> _importContactIntoForm() async {
+    final service = ref.read(deviceContactImportServiceProvider);
+    if (!service.isSupported) return;
+
+    final permission = await service.requestAccess();
+    if (!mounted) return;
+
+    switch (permission) {
+      case DeviceContactPermissionResult.denied:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Contacts permission denied. Enter details manually.',
+            ),
+          ),
+        );
+        return;
+      case DeviceContactPermissionResult.permanentlyDenied:
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Contacts permission required'),
+            content: const Text(
+              'Enable contacts access in system settings to import details.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  unawaited(openAppSettings());
+                },
+                child: const Text('Open Settings'),
+              ),
+            ],
+          ),
+        );
+        return;
+      case DeviceContactPermissionResult.unavailable:
+        return;
+      case DeviceContactPermissionResult.granted:
+        break;
+    }
+
+    final selected = await showDeviceContactPickerSheet(context);
+    if (!mounted || selected == null) return;
+    setState(() => _applyContactPrefill(selected.toPrefill()));
+  }
+
+  void _setAdditionalPhones(List<String> phones) {
+    for (final controller in _additionalPhoneControllers) {
+      controller.dispose();
+    }
+    _additionalPhoneControllers.clear();
+    _additionalPhoneErrors.clear();
+    for (final phone in phones.take(kMaxPartyAdditionalPhones)) {
+      _additionalPhoneControllers.add(TextEditingController(text: phone));
+      _additionalPhoneErrors.add(null);
+    }
+  }
+
   void _populateFromParty(PartyModel party, {String? duplicateNameSuffix}) {
     _partyNameController.text = duplicateNameSuffix == null
         ? party.name
@@ -284,7 +504,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _aliasController.text = party.alias;
     _areaCodeController.text = party.areaCode;
     _partyType = party.partyType;
-    _gstinController.text = party.gstin;
+    _gstinController.text = party.gstin.trim().isEmpty
+        ? ''
+        : GstinValidator.normalize(party.gstin);
     if (party.phone != '+91 00000 00000') {
       final normalizedPhone = PartyModel.normalizePhone(party.phone);
       if (normalizedPhone.isNotEmpty) {
@@ -343,6 +565,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         party.shippingAddress.isNotEmpty ||
         party.shippingAddressLine.isNotEmpty;
 
+    _openingBalanceDirection = PartyModel.openingBalanceDirection(
+      party.openingBalance,
+    );
     _openingBalanceController.text = PartyModel.formatDecimalInput(
       party.openingBalance,
     );
@@ -365,18 +590,6 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _additionalField2Enabled = party.additionalField2.isNotEmpty;
     _additionalField2Controller.text = party.additionalField2;
     _defaultPriceTier = party.defaultPriceTier;
-  }
-
-  void _setAdditionalPhones(List<String> phones) {
-    for (final controller in _additionalPhoneControllers) {
-      controller.dispose();
-    }
-    _additionalPhoneControllers.clear();
-    _additionalPhoneErrors.clear();
-    for (final phone in phones.take(kMaxPartyAdditionalPhones)) {
-      _additionalPhoneControllers.add(TextEditingController(text: phone));
-      _additionalPhoneErrors.add(null);
-    }
   }
 
   void _addAdditionalPhoneField() {
@@ -428,6 +641,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _openingBalanceController.dispose();
     _loyaltyPointsOpeningBalanceController.dispose();
     _creditLimitController.dispose();
+    _openingBalanceFocusNode.dispose();
+    _loyaltyPointsFocusNode.dispose();
+    _creditLimitFocusNode.dispose();
     _additionalField1Controller.dispose();
     _additionalField2Controller.dispose();
     for (final controller in _additionalPhoneControllers) {
@@ -442,7 +658,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       legalName: _legalNameController.text.trim(),
       alias: _aliasController.text.trim(),
       partyType: _partyType,
-      gstin: _gstinController.text.trim(),
+      gstin: _gstinController.text.trim().isEmpty
+          ? ''
+          : GstinValidator.normalize(_gstinController.text),
       phone: _phoneController.text.trim(),
       additionalPhones: _collectAdditionalPhones(),
       gstType: _gstType,
@@ -462,7 +680,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       shippingCity: _savedShippingCity,
       shippingPincode: _savedShippingPincode,
       shippingCountry: _savedShippingCountry,
-      openingBalance: _normalizedDecimal(_openingBalanceController.text),
+      openingBalance: PartyModel.signedOpeningBalanceString(
+        magnitude: _normalizedDecimal(_openingBalanceController.text),
+        direction: _openingBalanceDirection,
+      ),
       openingBalanceAsOfDate: _openingBalanceAsOfDate,
       loyaltyPointsOpeningBalance: _normalizedDecimal(
         _loyaltyPointsOpeningBalanceController.text,
@@ -981,9 +1202,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       final editor = _profileImageEditorKey.currentState;
       if (editor != null) {
         await editor.waitForIdle();
+        if (!mounted) return;
         _profileImageUrl = editor.imageUrl ?? _profileImageUrl;
         _profileMediaAssetId = editor.mediaAssetId ?? _profileMediaAssetId;
       }
+
+      if (!mounted) return;
 
       final updated = await ref
           .read(partyListProvider.notifier)
@@ -991,21 +1215,28 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             party.id,
             result,
             isActive: party.isActive,
+            seedParty: party,
           );
+
+      if (!mounted) return;
 
       // If Update raced ahead of bind on the server, keep the uploaded image.
       final imageUrl = _profileImageUrl ?? updated.profileImageUrl;
       final mediaId = _profileMediaAssetId ?? updated.profileMediaAssetId;
       if (imageUrl != updated.profileImageUrl ||
           mediaId != updated.profileMediaAssetId) {
-        ref
-            .read(partyListProvider.notifier)
-            .patchProfileImage(
-              party.id,
-              profileImageUrl: imageUrl,
-              profileMediaAssetId: mediaId,
-              clear: imageUrl == null && mediaId == null,
-            );
+        try {
+          await ref
+              .read(partyListProvider.notifier)
+              .patchProfileImage(
+                party.id,
+                profileImageUrl: imageUrl,
+                profileMediaAssetId: mediaId,
+                clear: imageUrl == null && mediaId == null,
+              );
+        } on Object {
+          // Profile image is optional; do not fail the whole save.
+        }
       }
 
       if (!mounted) return;
@@ -1036,10 +1267,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         message: 'Business not selected. Please select a business first.',
         isError: true,
       );
-    } on Object catch (_) {
+    } on Object catch (error) {
       if (!mounted) return;
       _showSaveFeedback(
-        message: 'Failed to update party. Please try again.',
+        message: PartyErrorMapper.messageFor(error),
         isError: true,
       );
     } finally {
@@ -1069,7 +1300,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       if (editor != null && editor.hasPendingUpload) {
         try {
           await editor.flushPendingUpload(created.id);
-          ref
+          await ref
               .read(partyListProvider.notifier)
               .patchProfileImage(
                 created.id,
@@ -1167,6 +1398,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _billingCountry = 'India';
       _shippingCountry = 'India';
       _openingBalanceAsOfDate = DateTime.now();
+      _openingBalanceDirection = OpeningBalanceDirection.toReceive;
       _useCustomCreditLimit = false;
       _additionalField1Enabled = false;
       _additionalField2Enabled = false;
@@ -1389,6 +1621,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       hint: _requiresGstin ? 'GSTIN *' : 'GSTIN',
       hasError: _gstinError != null,
       errorText: _gstinError,
+      maxLength: 15,
+      inputFormatters: gstinInputFormatters,
       onChanged: _handleGstinChanged,
       suffixIcon: _buildGstinSuffixIcon(),
     );
@@ -1404,6 +1638,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       ],
       hasError: _phoneError != null,
       errorText: _phoneError,
+      suffixIcon: AppPlatform.current.isMobile
+          ? IconButton(
+              icon: const Icon(Icons.contacts_outlined, size: 20),
+              tooltip: 'Import from contacts',
+              onPressed: _importContactIntoForm,
+            )
+          : null,
       onChanged: (_) {
         if (_phoneError != null) setState(() => _phoneError = null);
       },
@@ -1428,36 +1669,41 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: PartyProfileImageEditor(
-            key: _profileImageEditorKey,
-            partyId: widget.partyToEdit?.id,
-            partyName: _partyNameController.text,
-            seed: seed.isEmpty ? 'party' : seed,
-            initialImageUrl: _profileImageUrl,
-            initialMediaAssetId: _profileMediaAssetId,
-            onChanged: ({required imageUrl, required mediaAssetId}) {
-              _profileImageUrl = imageUrl;
-              _profileMediaAssetId = mediaAssetId;
-              final partyId = widget.partyToEdit?.id;
-              if (partyId != null) {
-                ref
-                    .read(partyListProvider.notifier)
-                    .patchProfileImage(
-                      partyId,
-                      profileImageUrl: imageUrl,
-                      profileMediaAssetId: mediaAssetId,
-                      clear: imageUrl == null && mediaAssetId == null,
-                    );
-              }
-            },
-          ),
-        ),
-        const SizedBox(height: FormSpacing.section),
-        FormGrid(
-          rowGap: FormSpacing.section,
-          cells: rowOneCells,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PartyProfileImageEditor(
+              key: _profileImageEditorKey,
+              partyId: widget.partyToEdit?.id,
+              partyName: _partyNameController.text,
+              seed: seed.isEmpty ? 'party' : seed,
+              initialImageUrl: _profileImageUrl,
+              initialMediaAssetId: _profileMediaAssetId,
+              size: 88,
+              onChanged: ({required imageUrl, required mediaAssetId}) {
+                _profileImageUrl = imageUrl;
+                _profileMediaAssetId = mediaAssetId;
+                final partyId = widget.partyToEdit?.id;
+                if (partyId != null) {
+                  ref
+                      .read(partyListProvider.notifier)
+                      .patchProfileImage(
+                        partyId,
+                        profileImageUrl: imageUrl,
+                        profileMediaAssetId: mediaAssetId,
+                        clear: imageUrl == null && mediaAssetId == null,
+                      );
+                }
+              },
+            ),
+            const SizedBox(width: FormSpacing.section),
+            Expanded(
+              child: FormGrid(
+                rowGap: FormSpacing.section,
+                cells: rowOneCells,
+              ),
+            ),
+          ],
         ),
         if (_additionalPhoneControllers.isNotEmpty) ...[
           const SizedBox(height: FormSpacing.section),
@@ -2116,12 +2362,31 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         ),
         const SizedBox(height: FormSpacing.section),
         _LabeledField(
+          label: 'Opening Balance Type',
+          child: SegmentedButton<OpeningBalanceDirection>(
+            segments: [
+              for (final direction in OpeningBalanceDirection.values)
+                ButtonSegment(
+                  value: direction,
+                  label: Text(direction.label),
+                ),
+            ],
+            selected: {_openingBalanceDirection},
+            onSelectionChanged: (selection) {
+              if (selection.isEmpty) return;
+              setState(() => _openingBalanceDirection = selection.first);
+            },
+          ),
+        ),
+        const SizedBox(height: FormSpacing.section),
+        _LabeledField(
           label: 'Loyalty Points Opening Balance',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SaleTextField(
                 controller: _loyaltyPointsOpeningBalanceController,
+                focusNode: _loyaltyPointsFocusNode,
                 hint: _defaultDecimal,
                 hasError: _loyaltyBalanceError != null,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -2200,6 +2465,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             children: [
               SaleTextField(
                 controller: amountController,
+                focusNode: amountLabel == 'Opening Balance'
+                    ? _openingBalanceFocusNode
+                    : null,
                 hint: _defaultDecimal,
                 hasError: amountError != null,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -2261,6 +2529,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               children: [
                 SaleTextField(
                   controller: _creditLimitController,
+                  focusNode: _creditLimitFocusNode,
                   hint: _defaultDecimal,
                   hasError: _creditLimitError != null,
                   prefix: const Text('₹ ', style: saleFieldTextStyle),

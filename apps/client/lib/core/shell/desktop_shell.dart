@@ -19,8 +19,6 @@ import 'package:billing_baba/features/dashboard/application/shell_sidebar_provid
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/app_top_bar.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
-import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
-import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/pos/application/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
@@ -104,8 +102,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _isSaleExpanded = false;
   bool _isPurchaseExpanded = false;
   bool _expandInitialized = false;
-  bool _isPartiesExpanded = false;
-  bool _partiesExpandInitialized = false;
   bool _isCrmExpanded = false;
   bool _crmExpandInitialized = false;
   bool _isUtilitiesExpanded = false;
@@ -177,13 +173,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         _isPurchaseExpanded = true;
       }
     }
-    if (!_partiesExpandInitialized) {
-      _partiesExpandInitialized = true;
-      final location = GoRouterState.of(context).uri.path;
-      if (location.startsWith(AppRoutes.parties)) {
-        _isPartiesExpanded = true;
-      }
-    }
     if (!_crmExpandInitialized) {
       _crmExpandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
@@ -213,10 +202,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       }
     }
   }
-
-  static final List<_NavSubItem> _partiesSubItems = PartySubRoutes.items
-      .map((item) => _NavSubItem(route: item.route, label: item.label))
-      .toList();
 
   static final List<_NavSubItem> _crmSubItems = CrmSubRoutes.items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
@@ -270,8 +255,16 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       icon: LucideIcons.users,
       iconColor: _SidebarTokens.parties,
       label: 'Parties',
-      isExpandable: true,
-      subItems: _partiesSubItems,
+    ),
+    const _NavItem(
+      route: AppRoutes.partyGroups,
+      icon: Icons.folder_outlined,
+      label: 'Groups',
+    ),
+    const _NavItem(
+      route: AppRoutes.partyHiddenLedger,
+      icon: Icons.visibility_off_outlined,
+      label: 'Hidden Ledger',
     ),
     _NavItem(
       icon: LucideIcons.heartHandshake,
@@ -412,9 +405,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       _isCollaborationExpanded = route.startsWith(AppRoutes.collaboration);
       _isDeveloperExpanded = route.startsWith(AppRoutes.developer);
     });
-    if (route == AppRoutes.partyDetails) {
-      ref.read(selectedPartyIdProvider.notifier).selected = null;
-    }
     context.go(route);
     _scheduleSidebarCloseAfterNavigation(
       sidebarNotifier: sidebarNotifier,
@@ -751,7 +741,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (item.isExpandable) {
       final isSale = item.routePrefix == AppRoutes.sale;
       final isPurchase = item.routePrefix == AppRoutes.purchase;
-      final isParties = item.route == AppRoutes.parties;
       final isCrm = item.routePrefix == AppRoutes.crm;
       final isUtilities = item.routePrefix == AppRoutes.utilities;
       final isCollaboration = item.routePrefix == AppRoutes.collaboration;
@@ -762,8 +751,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ? currentLocation.startsWith(AppRoutes.sale)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
-          : isParties
-          ? currentLocation.startsWith(AppRoutes.parties)
           : isCrm
           ? currentLocation.startsWith(AppRoutes.crm)
           : isUtilities
@@ -776,8 +763,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ? _isSaleExpanded
           : isPurchase
           ? _isPurchaseExpanded
-          : isParties
-          ? _isPartiesExpanded
           : isCrm
           ? _isCrmExpanded
           : isUtilities
@@ -800,8 +785,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 _isSaleExpanded = !_isSaleExpanded;
               } else if (isPurchase) {
                 _isPurchaseExpanded = !_isPurchaseExpanded;
-              } else if (isParties) {
-                _isPartiesExpanded = !_isPartiesExpanded;
               } else if (isCrm) {
                 _isCrmExpanded = !_isCrmExpanded;
               } else if (isUtilities) {
@@ -819,8 +802,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                   _isSaleExpanded = true;
                 } else if (isPurchase) {
                   _isPurchaseExpanded = true;
-                } else if (isParties) {
-                  _isPartiesExpanded = true;
                 } else if (isCrm) {
                   _isCrmExpanded = true;
                 } else if (isUtilities) {

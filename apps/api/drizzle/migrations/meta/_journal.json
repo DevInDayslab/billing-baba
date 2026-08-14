@@ -367,6 +367,13 @@
       "breakpoints": true
     },
     {
+      "idx": 52,
+      "version": "7",
+      "when": 1787800000000,
+      "tag": "0052_document_attachment_party",
+      "breakpoints": true
+    },
+    {
       "idx": 53,
       "version": "7",
       "when": 1787900000000,
@@ -377,6 +384,7 @@
       "idx": 54,
       "version": "7",
       "when": 1788000000000,
+      "tag": "0054_todos_sync_fields",
       "tag": "0055_device_trust_tokens",
       "breakpoints": true
     }

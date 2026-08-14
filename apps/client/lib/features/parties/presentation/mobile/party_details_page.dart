@@ -167,7 +167,7 @@ class _MobilePartyDetailsPageState
           MobileIconActionButton(
             icon: Icons.person_add_alt_1_outlined,
             tooltip: 'Add party',
-            onPressed: () => showAddPartyDialog(context),
+            onPressed: () => showAddPartyEntry(context, ref),
           ),
         ],
       ),
@@ -178,7 +178,7 @@ class _MobilePartyDetailsPageState
         onSelectParty: _selectParty,
         resolveParties: _resolveParties,
         onFilterSelected: _onFilterSelected,
-        onAddParty: () => showAddPartyDialog(context),
+        onAddParty: () => showAddPartyEntry(context, ref),
       ),
     );
   }

@@ -151,6 +151,10 @@ abstract final class Validators {
 
   static String? gstin(String? value) {
     if (value == null || value.trim().isEmpty) return null;
+    final trimmed = value.trim();
+    if (!RegExp(r'^[A-Za-z0-9]+$').hasMatch(trimmed)) {
+      return 'GSTIN must contain only letters and numbers';
+    }
     final error = GstinValidator.validationError(value);
     if (error == null) return null;
     if (error == 'GSTIN must contain exactly 15 characters') {

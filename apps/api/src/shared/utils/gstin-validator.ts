@@ -49,11 +49,26 @@ export function validate(gstin: string): GstinValidationResult {
     return { valid: false, error: ERROR_STATE_CODE };
   }
 
+  return { valid: true };
+}
+
+/** Full validation including mod-36 checksum (optional; not used on save). */
+export function validateStrict(gstin: string): GstinValidationResult {
+  const structural = validate(gstin);
+  if (!structural.valid) {
+    return structural;
+  }
+
+  const normalized = normalize(gstin);
   if (!validateChecksum(normalized)) {
     return { valid: false, error: ERROR_CHECKSUM };
   }
 
   return { valid: true };
+}
+
+export function isStrictlyValid(gstin: string): boolean {
+  return validateStrict(gstin).valid;
 }
 
 export function validatePattern(gstin: string): boolean {

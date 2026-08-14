@@ -99,10 +99,22 @@ abstract final class PartyErrorMapper {
       return 'Party ledger is not available yet. Sync this business once while online.';
     }
     if (error is StateError &&
+        error.message.contains('Party not found locally')) {
+      return 'Party not found. Refresh the list and try again.';
+    }
+    if (error is StateError &&
+        error.message.contains('different business')) {
+      return 'This party belongs to another business.';
+    }
+    if (error is StateError &&
         error.message.contains('Business must be selected')) {
       return 'Business not selected. Please select a business first.';
     }
-    return 'Unable to load parties. Please try again.';
+    if (error is StateError &&
+        error.message.contains('No business selected')) {
+      return 'Business not selected. Please select a business first.';
+    }
+    return 'Unable to complete the request. Please try again.';
   }
 
   static bool _isOffline(DioException error) =>
