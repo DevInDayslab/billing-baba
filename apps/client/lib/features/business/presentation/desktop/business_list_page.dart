@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
@@ -187,6 +188,9 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
     final messenger = ScaffoldMessenger.maybeOf(context);
 
     try {
+      // Same as mobile: clear a stuck connectivity block so Open can re-scope
+      // the JWT after logout / a prior failed attempt.
+      BusinessSelectionRetryGuard.reset();
       BusinessOpenDebugLog.step('ui', 'calling openCompany');
       final sessionService = await container.read(
         companySessionServiceProvider.future,

@@ -391,6 +391,7 @@ flowchart TB
 |--------|------|------|-------------|
 | POST | `/auth/register` | None | Register business + owner account |
 | POST | `/auth/login` | None | Login; returns tokens + user + business |
+| POST | `/auth/login-with-device-trust` | None | Trusted-device login (no OTP) |
 | POST | `/auth/refresh` | Refresh token | Issue new access token |
 | POST | `/auth/logout` | Bearer | Revoke refresh token |
 | GET | `/auth/me` | Bearer | Current user profile |
@@ -399,14 +400,35 @@ flowchart TB
 
 ### `POST /auth/login`
 
+**Request (OTP via MSG91):**
+
+```json
+{
+  "access_token": "<msg91-widget-token>",
+  "phone": "9876543210",
+  "remember_for_30_days": true,
+  "device_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+- `remember_for_30_days` (optional, default `false`): when `true`, `device_id` is required; response may include `device_trust_token` and `device_trust_expires_at`.
+- When `remember_for_30_days` is `false` and `device_id` is sent, any existing trust for that account+device is revoked.
+
+### `POST /auth/login-with-device-trust`
+
 **Request:**
 
 ```json
 {
-  "email": "owner@shop.com",
-  "password": "..."
+  "phone": "9876543210",
+  "device_id": "550e8400-e29b-41d4-a716-446655440000",
+  "device_trust_token": "<opaque-trust-token>"
 }
 ```
+
+**Response `200`:** Same session shape as `POST /auth/login` (without new trust fields).
+
+**Request (legacy email/password — deprecated):**
 
 **Response `200`:**
 

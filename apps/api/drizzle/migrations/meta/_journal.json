@@ -385,6 +385,7 @@
       "version": "7",
       "when": 1788000000000,
       "tag": "0054_todos_sync_fields",
+      "tag": "0055_device_trust_tokens",
       "breakpoints": true
     }
   ]

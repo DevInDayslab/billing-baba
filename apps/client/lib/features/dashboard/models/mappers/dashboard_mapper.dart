@@ -62,16 +62,15 @@ abstract final class DashboardMapper {
         totalStockValue: _money(dto.inventory.totalStockValue),
         lowStockCount: dto.inventory.lowStockCount,
         negativeStockCount: dto.inventory.negativeStockCount,
-        lowStockItems: dto.inventory.lowStockItems
-            .map(
-              (item) => DashboardLowStockItemModel(
-                itemId: item.itemId,
-                itemName: item.itemName,
-                quantity: _money(item.quantity),
-                reorderLevel: _money(item.reorderLevel),
-              ),
-            )
-            .toList(),
+        lowStockItems: [
+          for (final item in dto.inventory.lowStockItems)
+            DashboardLowStockItemModel(
+              itemId: item.itemId,
+              itemName: item.itemName,
+              quantity: _money(item.quantity),
+              reorderLevel: _money(item.reorderLevel),
+            ),
+        ]..sort((a, b) => a.quantity.compareTo(b.quantity)),
       ),
       recentTransactions: dto.recentTransactions
           .map(

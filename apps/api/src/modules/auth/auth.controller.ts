@@ -5,6 +5,7 @@ import { AppError } from '../../shared/errors/app-error';
 import { sendData } from '../../shared/http/response';
 import type { ApiDataResponse } from '../../shared/types';
 import {
+  deviceTrustLoginBodySchema,
   loginBodySchema,
   logoutBodySchema,
   refreshBodySchema,
@@ -35,7 +36,37 @@ export function createAuthController(config: AppConfig) {
       try {
         const body = loginBodySchema.parse(request.body);
         const service = new AuthService(request.server, config);
-        const data = await service.login(body.access_token, body.phone);
+        const data = await service.login(body.access_token, {
+          phoneHint: body.phone,
+          rememberFor30Days: body.remember_for_30_days,
+          deviceId: body.device_id,
+        });
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    loginWithDeviceTrust: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<ApiDataResponse<AuthSessionResponse>> => {
+      try {
+        const body = deviceTrustLoginBodySchema.parse(request.body);
+        const service = new AuthService(request.server, config);
+        const data = await service.loginWithDeviceTrust({
+          phone: body.phone,
+          deviceId: body.device_id,
+          deviceTrustToken: body.device_trust_token,
+        });
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthSession {
 
-@JsonKey(name: 'access_token') String get accessToken;@JsonKey(name: 'refresh_token') String get refreshToken;@JsonKey(name: 'expires_in') int get expiresIn; AuthUser get user; List<BusinessSummary> get businesses;
+@JsonKey(name: 'access_token') String get accessToken;@JsonKey(name: 'refresh_token') String get refreshToken;@JsonKey(name: 'expires_in') int get expiresIn; AuthUser get user; List<BusinessSummary> get businesses;@JsonKey(name: 'device_trust_token') String? get deviceTrustToken;@JsonKey(name: 'device_trust_expires_at') String? get deviceTrustExpiresAt;
 /// Create a copy of AuthSession
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AuthSessionCopyWith<AuthSession> get copyWith => _$AuthSessionCopyWithImpl<Auth
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthSession&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.expiresIn, expiresIn) || other.expiresIn == expiresIn)&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other.businesses, businesses));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthSession&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.expiresIn, expiresIn) || other.expiresIn == expiresIn)&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other.businesses, businesses)&&(identical(other.deviceTrustToken, deviceTrustToken) || other.deviceTrustToken == deviceTrustToken)&&(identical(other.deviceTrustExpiresAt, deviceTrustExpiresAt) || other.deviceTrustExpiresAt == deviceTrustExpiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,expiresIn,user,const DeepCollectionEquality().hash(businesses));
+int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,expiresIn,user,const DeepCollectionEquality().hash(businesses),deviceTrustToken,deviceTrustExpiresAt);
 
 @override
 String toString() {
-  return 'AuthSession(accessToken: $accessToken, refreshToken: $refreshToken, expiresIn: $expiresIn, user: $user, businesses: $businesses)';
+  return 'AuthSession(accessToken: $accessToken, refreshToken: $refreshToken, expiresIn: $expiresIn, user: $user, businesses: $businesses, deviceTrustToken: $deviceTrustToken, deviceTrustExpiresAt: $deviceTrustExpiresAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AuthSessionCopyWith<$Res>  {
   factory $AuthSessionCopyWith(AuthSession value, $Res Function(AuthSession) _then) = _$AuthSessionCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'access_token') String accessToken,@JsonKey(name: 'refresh_token') String refreshToken,@JsonKey(name: 'expires_in') int expiresIn, AuthUser user, List<BusinessSummary> businesses
+@JsonKey(name: 'access_token') String accessToken,@JsonKey(name: 'refresh_token') String refreshToken,@JsonKey(name: 'expires_in') int expiresIn, AuthUser user, List<BusinessSummary> businesses,@JsonKey(name: 'device_trust_token') String? deviceTrustToken,@JsonKey(name: 'device_trust_expires_at') String? deviceTrustExpiresAt
 });
 
 
@@ -65,14 +65,16 @@ class _$AuthSessionCopyWithImpl<$Res>
 
 /// Create a copy of AuthSession
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? accessToken = null,Object? refreshToken = null,Object? expiresIn = null,Object? user = null,Object? businesses = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? accessToken = null,Object? refreshToken = null,Object? expiresIn = null,Object? user = null,Object? businesses = null,Object? deviceTrustToken = freezed,Object? deviceTrustExpiresAt = freezed,}) {
   return _then(_self.copyWith(
 accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
 as String,refreshToken: null == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
 as String,expiresIn: null == expiresIn ? _self.expiresIn : expiresIn // ignore: cast_nullable_to_non_nullable
 as int,user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthUser,businesses: null == businesses ? _self.businesses : businesses // ignore: cast_nullable_to_non_nullable
-as List<BusinessSummary>,
+as List<BusinessSummary>,deviceTrustToken: freezed == deviceTrustToken ? _self.deviceTrustToken : deviceTrustToken // ignore: cast_nullable_to_non_nullable
+as String?,deviceTrustExpiresAt: freezed == deviceTrustExpiresAt ? _self.deviceTrustExpiresAt : deviceTrustExpiresAt // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 /// Create a copy of AuthSession
@@ -166,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'access_token')  String accessToken, @JsonKey(name: 'refresh_token')  String refreshToken, @JsonKey(name: 'expires_in')  int expiresIn,  AuthUser user,  List<BusinessSummary> businesses)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'access_token')  String accessToken, @JsonKey(name: 'refresh_token')  String refreshToken, @JsonKey(name: 'expires_in')  int expiresIn,  AuthUser user,  List<BusinessSummary> businesses, @JsonKey(name: 'device_trust_token')  String? deviceTrustToken, @JsonKey(name: 'device_trust_expires_at')  String? deviceTrustExpiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthSession() when $default != null:
-return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,_that.businesses);case _:
+return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,_that.businesses,_that.deviceTrustToken,_that.deviceTrustExpiresAt);case _:
   return orElse();
 
 }
@@ -187,10 +189,10 @@ return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'access_token')  String accessToken, @JsonKey(name: 'refresh_token')  String refreshToken, @JsonKey(name: 'expires_in')  int expiresIn,  AuthUser user,  List<BusinessSummary> businesses)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'access_token')  String accessToken, @JsonKey(name: 'refresh_token')  String refreshToken, @JsonKey(name: 'expires_in')  int expiresIn,  AuthUser user,  List<BusinessSummary> businesses, @JsonKey(name: 'device_trust_token')  String? deviceTrustToken, @JsonKey(name: 'device_trust_expires_at')  String? deviceTrustExpiresAt)  $default,) {final _that = this;
 switch (_that) {
 case _AuthSession():
-return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,_that.businesses);case _:
+return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,_that.businesses,_that.deviceTrustToken,_that.deviceTrustExpiresAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +209,10 @@ return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'access_token')  String accessToken, @JsonKey(name: 'refresh_token')  String refreshToken, @JsonKey(name: 'expires_in')  int expiresIn,  AuthUser user,  List<BusinessSummary> businesses)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'access_token')  String accessToken, @JsonKey(name: 'refresh_token')  String refreshToken, @JsonKey(name: 'expires_in')  int expiresIn,  AuthUser user,  List<BusinessSummary> businesses, @JsonKey(name: 'device_trust_token')  String? deviceTrustToken, @JsonKey(name: 'device_trust_expires_at')  String? deviceTrustExpiresAt)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthSession() when $default != null:
-return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,_that.businesses);case _:
+return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,_that.businesses,_that.deviceTrustToken,_that.deviceTrustExpiresAt);case _:
   return null;
 
 }
@@ -222,7 +224,7 @@ return $default(_that.accessToken,_that.refreshToken,_that.expiresIn,_that.user,
 @JsonSerializable()
 
 class _AuthSession implements AuthSession {
-  const _AuthSession({@JsonKey(name: 'access_token') required this.accessToken, @JsonKey(name: 'refresh_token') required this.refreshToken, @JsonKey(name: 'expires_in') required this.expiresIn, required this.user, required final  List<BusinessSummary> businesses}): _businesses = businesses;
+  const _AuthSession({@JsonKey(name: 'access_token') required this.accessToken, @JsonKey(name: 'refresh_token') required this.refreshToken, @JsonKey(name: 'expires_in') required this.expiresIn, required this.user, required final  List<BusinessSummary> businesses, @JsonKey(name: 'device_trust_token') this.deviceTrustToken, @JsonKey(name: 'device_trust_expires_at') this.deviceTrustExpiresAt}): _businesses = businesses;
   factory _AuthSession.fromJson(Map<String, dynamic> json) => _$AuthSessionFromJson(json);
 
 @override@JsonKey(name: 'access_token') final  String accessToken;
@@ -236,6 +238,8 @@ class _AuthSession implements AuthSession {
   return EqualUnmodifiableListView(_businesses);
 }
 
+@override@JsonKey(name: 'device_trust_token') final  String? deviceTrustToken;
+@override@JsonKey(name: 'device_trust_expires_at') final  String? deviceTrustExpiresAt;
 
 /// Create a copy of AuthSession
 /// with the given fields replaced by the non-null parameter values.
@@ -250,16 +254,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthSession&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.expiresIn, expiresIn) || other.expiresIn == expiresIn)&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other._businesses, _businesses));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthSession&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.expiresIn, expiresIn) || other.expiresIn == expiresIn)&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other._businesses, _businesses)&&(identical(other.deviceTrustToken, deviceTrustToken) || other.deviceTrustToken == deviceTrustToken)&&(identical(other.deviceTrustExpiresAt, deviceTrustExpiresAt) || other.deviceTrustExpiresAt == deviceTrustExpiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,expiresIn,user,const DeepCollectionEquality().hash(_businesses));
+int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,expiresIn,user,const DeepCollectionEquality().hash(_businesses),deviceTrustToken,deviceTrustExpiresAt);
 
 @override
 String toString() {
-  return 'AuthSession(accessToken: $accessToken, refreshToken: $refreshToken, expiresIn: $expiresIn, user: $user, businesses: $businesses)';
+  return 'AuthSession(accessToken: $accessToken, refreshToken: $refreshToken, expiresIn: $expiresIn, user: $user, businesses: $businesses, deviceTrustToken: $deviceTrustToken, deviceTrustExpiresAt: $deviceTrustExpiresAt)';
 }
 
 
@@ -270,7 +274,7 @@ abstract mixin class _$AuthSessionCopyWith<$Res> implements $AuthSessionCopyWith
   factory _$AuthSessionCopyWith(_AuthSession value, $Res Function(_AuthSession) _then) = __$AuthSessionCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'access_token') String accessToken,@JsonKey(name: 'refresh_token') String refreshToken,@JsonKey(name: 'expires_in') int expiresIn, AuthUser user, List<BusinessSummary> businesses
+@JsonKey(name: 'access_token') String accessToken,@JsonKey(name: 'refresh_token') String refreshToken,@JsonKey(name: 'expires_in') int expiresIn, AuthUser user, List<BusinessSummary> businesses,@JsonKey(name: 'device_trust_token') String? deviceTrustToken,@JsonKey(name: 'device_trust_expires_at') String? deviceTrustExpiresAt
 });
 
 
@@ -287,14 +291,16 @@ class __$AuthSessionCopyWithImpl<$Res>
 
 /// Create a copy of AuthSession
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? accessToken = null,Object? refreshToken = null,Object? expiresIn = null,Object? user = null,Object? businesses = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? accessToken = null,Object? refreshToken = null,Object? expiresIn = null,Object? user = null,Object? businesses = null,Object? deviceTrustToken = freezed,Object? deviceTrustExpiresAt = freezed,}) {
   return _then(_AuthSession(
 accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
 as String,refreshToken: null == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
 as String,expiresIn: null == expiresIn ? _self.expiresIn : expiresIn // ignore: cast_nullable_to_non_nullable
 as int,user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthUser,businesses: null == businesses ? _self._businesses : businesses // ignore: cast_nullable_to_non_nullable
-as List<BusinessSummary>,
+as List<BusinessSummary>,deviceTrustToken: freezed == deviceTrustToken ? _self.deviceTrustToken : deviceTrustToken // ignore: cast_nullable_to_non_nullable
+as String?,deviceTrustExpiresAt: freezed == deviceTrustExpiresAt ? _self.deviceTrustExpiresAt : deviceTrustExpiresAt // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

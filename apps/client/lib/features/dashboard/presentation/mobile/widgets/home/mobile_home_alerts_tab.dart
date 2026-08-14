@@ -26,7 +26,7 @@ class MobileHomeAlertsTab extends ConsumerStatefulWidget {
 
 class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
     with AutomaticKeepAliveClientMixin {
-  DashboardTodoStatusChip _statusChip = DashboardTodoStatusChip.pending;
+  DashboardTodoStatusChip _statusChip = DashboardTodoStatusChip.all;
 
   @override
   bool get wantKeepAlive => true;

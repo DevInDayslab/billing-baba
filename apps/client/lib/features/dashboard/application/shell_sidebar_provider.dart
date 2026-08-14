@@ -61,14 +61,13 @@ class ShellSidebar extends _$ShellSidebar {
 
   /// Dismisses sidebar chrome after the user picks a destination.
   ///
-  /// Overlay layouts close the slide-out drawer; persistent desktop layouts
-  /// collapse back to the icon rail.
+  /// Overlay layouts close the slide-out drawer. Persistent desktop layouts
+  /// stay expanded/collapsed as the user left them — only the collapse
+  /// control may minimize the rail.
   void closeOnNavigation({required bool overlayLayout}) {
     if (overlayLayout) {
       closeDrawer();
-      return;
     }
-    setCollapsed(true);
   }
 }
 

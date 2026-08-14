@@ -52,11 +52,14 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
   ];
 
   static const _businessCategories = [
-    'General Store',
+    'Apparels',
+    'Medical',
+    'Fruits',
+    'Restaurant',
+    'Hardware',
     'Electronics',
-    'Clothing',
-    'Food',
-    'Pharmacy',
+    'Salon',
+    'Gym',
     'Other',
   ];
 

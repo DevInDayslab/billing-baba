@@ -21,6 +21,7 @@ import { AccountAvatarService } from '../business/business-branding.service';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const DEVICE_TRUST_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 import {
   DEV_ACCOUNT_NAME,
@@ -146,11 +147,56 @@ export class AuthService {
     });
   }
 
+  private normalizePhoneForTrust(phone: string): string {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) {
+      return digits.slice(2);
+    }
+    return digits;
+  }
+
+  private phonesMatchForTrust(accountPhone: string, inputPhone: string): boolean {
+    const normalizedAccount = this.normalizePhoneForTrust(accountPhone);
+    const normalizedInput = this.normalizePhoneForTrust(inputPhone);
+    if (normalizedAccount === normalizedInput) {
+      return true;
+    }
+    const variants = phoneLookupVariants(inputPhone);
+    return variants.includes(accountPhone) || variants.includes(normalizedAccount);
+  }
+
+  private async issueDeviceTrust(
+    account: { id: string; phone: string },
+    deviceId: string,
+  ): Promise<{ device_trust_token: string; device_trust_expires_at: string }> {
+    const trustToken = generateRefreshToken();
+    const trustTokenHash = hashToken(trustToken);
+    const expiresAt = new Date(Date.now() + DEVICE_TRUST_TTL_MS);
+
+    await this.repository.revokeDeviceTrustForDevice(account.id, deviceId);
+    await this.repository.createDeviceTrustToken({
+      accountId: account.id,
+      phone: this.normalizePhoneForTrust(account.phone),
+      deviceId,
+      tokenHash: trustTokenHash,
+      expiresAt,
+    });
+
+    return {
+      device_trust_token: trustToken,
+      device_trust_expires_at: expiresAt.toISOString(),
+    };
+  }
+
   private async issueSession(
     account: { id: string; phone: string; name: string | null },
     memberships: Awaited<
       ReturnType<AuthRepository['findMembershipsByAccountId']>
     >,
+    deviceTrust?: {
+      device_trust_token: string;
+      device_trust_expires_at: string;
+    },
   ): Promise<AuthSessionResponse> {
     const businesses = toBusinessSummaries(memberships);
     const refreshToken = generateRefreshToken();
@@ -200,13 +246,21 @@ export class AuthService {
       expires_in: ACCESS_TOKEN_TTL_SECONDS,
       user: userResponse,
       businesses,
+      ...(deviceTrust ?? {}),
     };
   }
 
   async login(
     accessToken: string,
-    phoneHint?: string,
+    options?: {
+      phoneHint?: string;
+      rememberFor30Days?: boolean;
+      deviceId?: string;
+    },
   ): Promise<AuthSessionResponse> {
+    const phoneHint = options?.phoneHint;
+    const rememberFor30Days = options?.rememberFor30Days ?? false;
+    const deviceId = options?.deviceId;
     if (this.config.environment === 'development') {
       const maskedHint = phoneHint
         ? `***${phoneHint.slice(-4)}`
@@ -233,7 +287,57 @@ export class AuthService {
       account.id,
     );
 
+    if (rememberFor30Days && deviceId) {
+      const deviceTrust = await this.issueDeviceTrust(account, deviceId);
+      return this.issueSession(account, memberships, deviceTrust);
+    }
+
+    if (deviceId) {
+      await this.repository.revokeDeviceTrustForDevice(account.id, deviceId);
+    }
+
     return this.issueSession(account, memberships);
+  }
+
+  async loginWithDeviceTrust(input: {
+    phone: string;
+    deviceId: string;
+    deviceTrustToken: string;
+  }): Promise<AuthSessionResponse> {
+    this.ensureJwtSecrets();
+
+    const tokenHash = hashToken(input.deviceTrustToken);
+    const stored = await this.repository.findValidDeviceTrustToken({
+      tokenHash,
+      deviceId: input.deviceId,
+    });
+
+    if (!stored) {
+      throw new AppError(
+        'INVALID_TOKEN',
+        'Invalid or expired device trust token',
+        401,
+      );
+    }
+
+    const accountRow = await this.repository.findAccountById(stored.accountId);
+    if (!accountRow) {
+      throw new AppError('INVALID_TOKEN', 'Account not found', 401);
+    }
+
+    if (!this.phonesMatchForTrust(accountRow.phone, input.phone)) {
+      throw new AppError(
+        'INVALID_TOKEN',
+        'Phone number does not match trusted device',
+        401,
+      );
+    }
+
+    const memberships = await this.repository.findMembershipsByAccountId(
+      accountRow.id,
+    );
+
+    return this.issueSession(accountRow, memberships);
   }
 
   async devLogin(): Promise<AuthSessionResponse> {

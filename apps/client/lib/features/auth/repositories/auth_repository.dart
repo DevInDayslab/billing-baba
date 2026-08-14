@@ -75,13 +75,19 @@ class AuthRepository {
   Future<AuthSession> login({
     required String msg91AccessToken,
     required String phone,
+    bool rememberFor30Days = false,
+    String? deviceId,
   }) async {
     const path = '${ApiEndpoints.auth}/login';
     final normalizedPhone = _normalizePhoneForApi(phone);
-    final body = {
+    final body = <String, dynamic>{
       'access_token': msg91AccessToken,
       'phone': normalizedPhone,
+      'remember_for_30_days': rememberFor30Days,
     };
+    if (deviceId != null && deviceId.isNotEmpty) {
+      body['device_id'] = deviceId;
+    }
 
     AuthDebugLogger.log('login → POST ${AppConfig.apiBaseUrl}$path');
     AuthDebugLogger.log(
@@ -113,6 +119,38 @@ class AuthRepository {
       return digits.substring(2);
     }
     return digits;
+  }
+
+  Future<AuthSession> loginWithDeviceTrust({
+    required String phone,
+    required String deviceId,
+    required String deviceTrustToken,
+  }) async {
+    const path = '${ApiEndpoints.auth}/login-with-device-trust';
+    final normalizedPhone = _normalizePhoneForApi(phone);
+    final body = {
+      'phone': normalizedPhone,
+      'device_id': deviceId,
+      'device_trust_token': deviceTrustToken,
+    };
+
+    AuthDebugLogger.log(
+      'loginWithDeviceTrust → POST ${AppConfig.apiBaseUrl}$path',
+    );
+
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(path, data: body);
+      return _parseSession(response.data);
+    } on DioException catch (e, st) {
+      AuthDebugLogger.log(
+        'loginWithDeviceTrust ✗ ${e.type} status=${e.response?.statusCode} '
+        'message=${e.message}',
+      );
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] loginWithDeviceTrust stackTrace:\n$st');
+      }
+      rethrow;
+    }
   }
 
   Future<AuthSession> devLogin() async {

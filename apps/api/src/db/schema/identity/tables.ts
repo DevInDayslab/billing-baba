@@ -100,6 +100,20 @@ export const refreshTokens = pgTable('refresh_tokens', {
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
 
+/** Server-only device trust for "Remember for 30 days" (survives logout). */
+export const deviceTrustTokens = pgTable('device_trust_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id')
+    .notNull()
+    .references(() => accounts.id),
+  phone: text('phone').notNull(),
+  deviceId: uuid('device_id').notNull(),
+  tokenHash: text('token_hash').notNull(),
+  expiresAt: timestamptz('expires_at').notNull(),
+  revokedAt: timestamptz('revoked_at'),
+  createdAt: timestamptz('created_at').notNull().defaultNow(),
+});
+
 export const attendanceRecords = pgTable('attendance_records', {
   ...syncedBusinessColumns,
   businessId: businessId(),

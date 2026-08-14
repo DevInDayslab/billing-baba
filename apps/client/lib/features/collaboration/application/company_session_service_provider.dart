@@ -7,9 +7,10 @@ final companySessionServiceProvider = FutureProvider<CompanySessionService>((
   ref,
 ) async {
   final businessService = await ref.watch(businessServiceProvider.future);
-  final collaborationRepository = ref.watch(
-    collaborationRepositoryProvider,
-  );
+  // Prefer read over watch: collaborationRepository rebuilds on every auth /
+  // companySession change, which disposed this provider mid-openCompany and
+  // aborted warm-up with a disposed Ref.
+  final collaborationRepository = ref.read(collaborationRepositoryProvider);
   return CompanySessionService(
     ref: ref,
     businessService: businessService,

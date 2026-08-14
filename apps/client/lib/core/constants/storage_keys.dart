@@ -4,6 +4,9 @@ abstract final class StorageKeys {
   static const refreshToken = 'refresh_token';
   static const selectedBusinessId = 'selected_business_id';
   static const accountPhone = 'account_phone';
+
+  /// Survives logout — used for login greeting ("Welcome" vs "Welcome Back").
+  static const hasLoggedInBefore = 'has_logged_in_before';
   static const cachedBusinesses = 'cached_businesses';
   static const cachedBusinessesAccountId = 'cached_businesses_account_id';
   static const cachedProfile = 'cached_profile';
@@ -61,6 +64,11 @@ abstract final class StorageKeys {
 
   /// Stable install-lifetime sync device id (UUID).
   static const syncDeviceId = 'sync_device_id';
+
+  /// Device trust for "Remember for 30 days" — survives logout.
+  static const deviceTrustToken = 'device_trust_token';
+  static const deviceTrustPhone = 'device_trust_phone';
+  static const deviceTrustExpiresAt = 'device_trust_expires_at';
 
   /// Legacy global keys — migrated to per-business keys on first read.
   static const syncPullCursor = 'sync_pull_cursor';

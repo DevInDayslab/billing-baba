@@ -45,6 +45,18 @@ class PaymentRecoveryService {
   Future<void> recoverPending() async {
     if (!AppConfig.paymentRecoveryEnabled) return;
 
+    try {
+      await _recoverPendingBody();
+    } on Object catch (e, st) {
+      // Never crash startup/resume when local DB isn't ready yet.
+      assert(() {
+        debugPrint('PaymentRecoveryService.recoverPending failed: $e\n$st');
+        return true;
+      }());
+    }
+  }
+
+  Future<void> _recoverPendingBody() async {
     final repo = await _ref.read(paymentRepositoryProvider.future);
     final sessions = await repo.listPendingSessions();
     if (sessions.isEmpty) {

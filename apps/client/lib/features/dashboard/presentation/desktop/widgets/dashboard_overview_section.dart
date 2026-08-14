@@ -94,6 +94,7 @@ class _OverviewMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final verticalPadding = padding.top * 0.5;
+    const iconReserve = AppIconSize.lg + 4;
 
     return DashboardMetricCard(
       padding: EdgeInsets.fromLTRB(
@@ -104,60 +105,55 @@ class _OverviewMetricCard extends StatelessWidget {
       ),
       onTap: onTap,
       child: SizedBox.expand(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            const iconSize = AppIconSize.lg;
-            const itemGap = AppSpacing.xs;
-
-            return Stack(
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        top: AppSpacing.xs,
-                        right: iconSize + 4,
-                      ),
-                      child: Text(
-                        title,
-                        style: DashboardTypography.supportingLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: itemGap),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: AppEllipsisText(
-                          currencyFormat.format(amount),
-                          style: DashboardTypography.kpiValue,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      subtitle,
-                      style: DashboardTypography.supportingLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                  ],
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: _KpiDirectionIcon(
-                    icon: icon,
-                    color: iconColor,
-                    background: iconBackground,
+                Padding(
+                  padding: const EdgeInsets.only(right: iconReserve),
+                  child: Text(
+                    title,
+                    style: DashboardTypography.supportingLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.xs),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    // Scale down in short KPI rows so the value never overflows.
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: AppEllipsisText(
+                        currencyFormat.format(amount),
+                        style: DashboardTypography.kpiValue,
+                        softWrap: false,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  subtitle,
+                  style: DashboardTypography.supportingLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
-            );
-          },
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: _KpiDirectionIcon(
+                icon: icon,
+                color: iconColor,
+                background: iconBackground,
+              ),
+            ),
+          ],
         ),
       ),
     );

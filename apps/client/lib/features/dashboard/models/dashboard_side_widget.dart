@@ -33,6 +33,18 @@ enum DashboardSideWidget {
   static List<DashboardSideWidget> fromIdsOrdered(Iterable<String> ids) {
     return ids.map(fromId).whereType<DashboardSideWidget>().toList();
   }
+
+  /// Pins Low Stocks first so alerts are visible without changing saved order.
+  static List<DashboardSideWidget> pinLowStockFirst(
+    List<DashboardSideWidget> widgets, {
+    required bool hasLowStock,
+  }) {
+    if (!hasLowStock) return widgets;
+    const target = DashboardSideWidget.lowStock;
+    final index = widgets.indexOf(target);
+    if (index <= 0) return widgets;
+    return [target, ...widgets.where((widget) => widget != target)];
+  }
 }
 
 /// Top-level tabs on the home/dashboard screen.
@@ -46,6 +58,6 @@ enum DashboardHomeTab {
     DashboardHomeTab.dashboard => 'Dashboard',
     DashboardHomeTab.searchProductOnline => 'Search Product Online',
     DashboardHomeTab.myOnlineStore => 'My Online Store',
-    DashboardHomeTab.messages => 'MESSAGES',
+    DashboardHomeTab.messages => 'Messages',
   };
 }
