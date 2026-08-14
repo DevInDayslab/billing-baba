@@ -3,6 +3,7 @@ import { businesses } from '../business/tables';
 import {
   accounts,
   attendanceRecords,
+  deviceTrustTokens,
   devices,
   refreshTokens,
   users,
@@ -11,6 +12,7 @@ import {
 export const accountsRelations = relations(accounts, ({ many }) => ({
   users: many(users),
   refreshTokens: many(refreshTokens),
+  deviceTrustTokens: many(deviceTrustTokens),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -48,6 +50,16 @@ export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const deviceTrustTokensRelations = relations(
+  deviceTrustTokens,
+  ({ one }) => ({
+    account: one(accounts, {
+      fields: [deviceTrustTokens.accountId],
+      references: [accounts.id],
+    }),
+  }),
+);
 
 export const attendanceRecordsRelations = relations(
   attendanceRecords,

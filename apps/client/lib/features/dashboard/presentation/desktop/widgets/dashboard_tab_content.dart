@@ -112,51 +112,79 @@ class _DashboardGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final metrics = DashboardLayoutScope.of(context);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: metrics.mainWidth,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: metrics.kpiRowFlex,
-                child: DashboardOverviewSection(
-                  overview: dashboard.overview,
-                  onReceivableTap: onReceivableTap,
-                  onPayableTap: onPayableTap,
+    final kpiHeight = metrics.kpiRowHeight < DashboardLayout.kpiRowMinHeight
+        ? DashboardLayout.kpiRowMinHeight
+        : metrics.kpiRowHeight;
+    final chartHeight =
+        metrics.chartRowHeight < DashboardLayout.chartCardMinHeight
+        ? DashboardLayout.chartCardMinHeight
+        : metrics.chartRowHeight;
+    final reportsHeight =
+        metrics.reportsRowHeight < DashboardLayout.reportsRowMinHeight
+        ? DashboardLayout.reportsRowMinHeight
+        : metrics.reportsRowHeight;
+    final gridHeight =
+        kpiHeight + metrics.gap + chartHeight + metrics.gap + reportsHeight;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bodyHeight = gridHeight > constraints.maxHeight
+            ? gridHeight
+            : constraints.maxHeight;
+
+        return SingleChildScrollView(
+          child: SizedBox(
+            height: bodyHeight,
+            width: constraints.maxWidth,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: metrics.mainWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: kpiHeight,
+                        child: DashboardOverviewSection(
+                          overview: dashboard.overview,
+                          onReceivableTap: onReceivableTap,
+                          onPayableTap: onPayableTap,
+                        ),
+                      ),
+                      SizedBox(height: metrics.gap),
+                      SizedBox(
+                        height: chartHeight,
+                        child: DashboardChartTodoRow(
+                          dashboard: dashboard,
+                          period: period,
+                          onPeriodChanged: onPeriodChanged,
+                          onSaleTap: onSaleTap,
+                        ),
+                      ),
+                      SizedBox(height: metrics.gap),
+                      SizedBox(
+                        height: reportsHeight,
+                        child: DashboardReportsRow(
+                          reports: dashboard.quickReports,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: metrics.gap),
-              Expanded(
-                flex: metrics.chartRowFlex,
-                child: DashboardChartTodoRow(
-                  dashboard: dashboard,
-                  period: period,
-                  onPeriodChanged: onPeriodChanged,
-                  onSaleTap: onSaleTap,
+                SizedBox(width: metrics.gap),
+                SizedBox(
+                  width: metrics.sideWidth,
+                  child: DashboardSideWidgetColumn(
+                    dashboard: dashboard,
+                    period: period,
+                  ),
                 ),
-              ),
-              SizedBox(height: metrics.gap),
-              Expanded(
-                flex: metrics.reportsRowFlex,
-                child: DashboardReportsRow(
-                  reports: dashboard.quickReports,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        SizedBox(width: metrics.gap),
-        SizedBox(
-          width: metrics.sideWidth,
-          child: DashboardSideWidgetColumn(
-            dashboard: dashboard,
-            period: period,
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

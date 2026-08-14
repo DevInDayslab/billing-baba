@@ -80,6 +80,7 @@ class AuthState {
     this.resendAvailableAt,
     this.otpSessionVersion = 0,
     this.backendLoginCompleted = false,
+    this.rememberFor30Days = false,
   });
 
   final AuthStatus status;
@@ -93,6 +94,7 @@ class AuthState {
   final DateTime? resendAvailableAt;
   final int otpSessionVersion;
   final bool backendLoginCompleted;
+  final bool rememberFor30Days;
 
   bool get isOtpBusy => otpPhase.isBusy;
 
@@ -150,6 +152,7 @@ class AuthState {
     DateTime? resendAvailableAt,
     int? otpSessionVersion,
     bool? backendLoginCompleted,
+    bool? rememberFor30Days,
     bool clearError = false,
     bool clearNetworkError = false,
     bool clearSession = false,
@@ -176,6 +179,7 @@ class AuthState {
       otpSessionVersion: otpSessionVersion ?? this.otpSessionVersion,
       backendLoginCompleted:
           backendLoginCompleted ?? this.backendLoginCompleted,
+      rememberFor30Days: rememberFor30Days ?? this.rememberFor30Days,
     );
   }
 
@@ -193,7 +197,8 @@ class AuthState {
         other.session == session &&
         other.resendAvailableAt == resendAvailableAt &&
         other.otpSessionVersion == otpSessionVersion &&
-        other.backendLoginCompleted == backendLoginCompleted;
+        other.backendLoginCompleted == backendLoginCompleted &&
+        other.rememberFor30Days == rememberFor30Days;
   }
 
   @override
@@ -213,6 +218,7 @@ class AuthState {
     resendAvailableAt,
     otpSessionVersion,
     backendLoginCompleted,
+    rememberFor30Days,
   );
 }
 
@@ -471,6 +477,7 @@ class Auth extends _$Auth {
       final session = await service.loginWithMsg91Token(
         msg91AccessToken: token,
         phone: state.phone,
+        rememberFor30Days: state.rememberFor30Days,
       );
 
       if (generation != _verifyGeneration) return;
@@ -598,7 +605,6 @@ class Auth extends _$Auth {
     );
 
     _sendInFlight = true;
-    _setOtpPhase(OtpPhase.sendingOtp);
     state = state.copyWith(
       phone: phone,
       clearError: true,
@@ -607,6 +613,32 @@ class Auth extends _$Auth {
       clearResendTimer: true,
       backendLoginCompleted: false,
     );
+
+    try {
+      final service = await _service();
+      final trust = await service.loadDeviceTrust();
+      if (trust != null && service.isDeviceTrustValidForPhone(trust, phone)) {
+        AuthDebugLogger.log('sendOtp: valid device trust — skipping OTP');
+        await _attemptDeviceTrustLogin(phone);
+        return;
+      }
+
+      if (trust != null && !service.isDeviceTrustValidForPhone(trust, phone)) {
+        await service.clearDeviceTrust();
+      }
+
+      await _sendOtpAfterTrustCheck(phone);
+    } finally {
+      _sendInFlight = false;
+    }
+  }
+
+  void setRememberFor30Days({required bool value}) {
+    state = state.copyWith(rememberFor30Days: value);
+  }
+
+  Future<void> _sendOtpAfterTrustCheck(String phone) async {
+    _setOtpPhase(OtpPhase.sendingOtp);
 
     final stopwatch = Stopwatch()..start();
 
@@ -661,8 +693,67 @@ class Auth extends _$Auth {
         phone: phone,
         duration: stopwatch.elapsed,
       );
-    } finally {
-      _sendInFlight = false;
+    }
+  }
+
+  Future<void> _attemptDeviceTrustLogin(String phone) async {
+    _setOtpPhase(OtpPhase.backendLogin);
+    state = state.copyWith(clearError: true, clearNetworkError: true);
+
+    try {
+      AuthDebugLogger.log('_attemptDeviceTrustLogin: running health check');
+      final healthy = await ref.read(authRepositoryProvider).checkHealth();
+      if (!healthy) {
+        AuthDebugLogger.log(
+          '_attemptDeviceTrustLogin aborted: health check failed',
+        );
+        _setOtpPhase(OtpPhase.idle);
+        state = state.copyWith(
+          error: 'Billing Baba server is currently unavailable.',
+        );
+        return;
+      }
+
+      final service = await _service();
+      final session = await service.loginWithDeviceTrust(phone: phone);
+      AuthDebugLogger.log('_attemptDeviceTrustLogin: login succeeded');
+      _completeOtpLogin(session);
+    } on DioException catch (e, st) {
+      AuthDebugLogger.log('_attemptDeviceTrustLogin DioException: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] _attemptDeviceTrustLogin stackTrace:\n$st');
+      }
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 401 || statusCode == 403) {
+        final service = await _service();
+        await service.clearDeviceTrust();
+        AuthDebugLogger.log(
+          '_attemptDeviceTrustLogin: trust invalid — falling back to OTP',
+        );
+        await _sendOtpAfterTrustCheck(phone);
+        return;
+      }
+      _setOtpPhase(OtpPhase.idle);
+      state = state.copyWith(
+        error: _backendLoginErrorMessage(e),
+        networkError: NetworkExceptionClassifier.classify(
+          e,
+          host: NetworkExceptionClassifier.hostFromApiUrl(),
+        ),
+      );
+    } on Object catch (e, st) {
+      AuthDebugLogger.log('_attemptDeviceTrustLogin exception: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] _attemptDeviceTrustLogin stackTrace:\n$st');
+      }
+      _setOtpPhase(OtpPhase.idle);
+      state = state.copyWith(
+        error: _backendLoginErrorMessage(e),
+        networkError: NetworkExceptionClassifier.classify(
+          e,
+          host: NetworkExceptionClassifier.hostFromApiUrl(),
+        ),
+      );
     }
   }
 
@@ -990,6 +1081,13 @@ class Auth extends _$Auth {
   }
 
   Future<void> selectBusiness(String businessId) {
+    // If a prior connectivity failure blocked selection but we are still on the
+    // company picker (unscoped), clear the guard so Open can scope the JWT.
+    if (BusinessSelectionRetryGuard.isBlocked(businessId) &&
+        state.status != AuthStatus.authenticated) {
+      BusinessSelectionRetryGuard.reset();
+    }
+
     if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
       BusinessSelectionRetryGuard.logBlockedOnce('selectBusiness', businessId);
       return Future<void>.value();
@@ -1304,6 +1402,7 @@ class Auth extends _$Auth {
       });
     } finally {
       ref.read(companySessionProvider.notifier).clear();
+      BusinessSelectionRetryGuard.reset();
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }

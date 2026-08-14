@@ -31,7 +31,10 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final metrics = DashboardLayoutScope.of(context);
-    final visible = ref.watch(dashboardWidgetPreferencesProvider);
+    final visible = DashboardSideWidget.pinLowStockFirst(
+      ref.watch(dashboardWidgetPreferencesProvider),
+      hasLowStock: dashboard.inventory.lowStockItems.isNotEmpty,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -65,7 +68,7 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
           ),
         ),
         SizedBox(height: metrics.gap),
-        const DashboardWidgetPicker(dashed: true),
+        DashboardWidgetPicker(dashboard: dashboard, dashed: true),
       ],
     );
   }

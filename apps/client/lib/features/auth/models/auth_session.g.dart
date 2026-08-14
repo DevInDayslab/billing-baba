@@ -14,6 +14,8 @@ _AuthSession _$AuthSessionFromJson(Map<String, dynamic> json) => _AuthSession(
   businesses: (json['businesses'] as List<dynamic>)
       .map((e) => BusinessSummary.fromJson(e as Map<String, dynamic>))
       .toList(),
+  deviceTrustToken: json['device_trust_token'] as String?,
+  deviceTrustExpiresAt: json['device_trust_expires_at'] as String?,
 );
 
 Map<String, dynamic> _$AuthSessionToJson(_AuthSession instance) =>
@@ -23,6 +25,8 @@ Map<String, dynamic> _$AuthSessionToJson(_AuthSession instance) =>
       'expires_in': instance.expiresIn,
       'user': instance.user,
       'businesses': instance.businesses,
+      'device_trust_token': instance.deviceTrustToken,
+      'device_trust_expires_at': instance.deviceTrustExpiresAt,
     };
 
 _MeResponse _$MeResponseFromJson(Map<String, dynamic> json) => _MeResponse(

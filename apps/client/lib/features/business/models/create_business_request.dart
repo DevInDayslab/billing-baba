@@ -6,6 +6,7 @@ class CreateBusinessRequest {
     this.email,
     this.gstin,
     this.businessType,
+    this.businessCategory,
     this.state,
     this.currency,
     this.address,
@@ -17,6 +18,7 @@ class CreateBusinessRequest {
   final String? email;
   final String? gstin;
   final String? businessType;
+  final String? businessCategory;
   final String? state;
   final String? currency;
   final String? address;
@@ -29,6 +31,8 @@ class CreateBusinessRequest {
     if (gstin != null && gstin!.isNotEmpty) 'gstin': gstin,
     if (businessType != null && businessType!.isNotEmpty)
       'business_type': businessType,
+    if (businessCategory != null && businessCategory!.isNotEmpty)
+      'business_category': businessCategory,
     if (state != null && state!.isNotEmpty) 'state': state,
     if (currency != null && currency!.isNotEmpty) 'currency': currency,
     if (address != null && address!.isNotEmpty) 'address': address,

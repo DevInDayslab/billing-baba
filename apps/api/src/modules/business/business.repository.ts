@@ -558,6 +558,7 @@ export class BusinessRepository {
           phone: input.phone?.trim() || null,
           email: input.email?.trim() || null,
           businessType: input.business_type?.trim() || null,
+          businessCategory: input.business_category?.trim() || null,
           currency: input.currency?.trim() || 'INR',
           valuationMethod: 'average',
         })

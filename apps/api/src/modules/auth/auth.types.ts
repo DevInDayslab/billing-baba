@@ -60,6 +60,10 @@ export type AuthSessionResponse = {
   expires_in: number;
   user: AuthUserResponse;
   businesses: BusinessSummaryResponse[];
+  /** Present only when remember_for_30_days was true on OTP login. */
+  device_trust_token?: string;
+  /** ISO 8601 absolute expiry for device trust (30 days from issuance). */
+  device_trust_expires_at?: string;
 };
 
 export type MeResponse = {

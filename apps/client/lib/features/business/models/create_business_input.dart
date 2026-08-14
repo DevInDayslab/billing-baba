@@ -11,6 +11,7 @@ class CreateBusinessInput {
     this.email = '',
     this.gstin = '',
     this.address = '',
+    this.businessCategory = '',
   });
 
   final String name;
@@ -22,6 +23,7 @@ class CreateBusinessInput {
   final String state;
   final String currency;
   final String address;
+  final String businessCategory;
 
   CreateBusinessRequest toRequest() {
     return CreateBusinessRequest(
@@ -31,6 +33,7 @@ class CreateBusinessInput {
       email: email.trim(),
       gstin: gstin.trim().toUpperCase(),
       businessType: businessType,
+      businessCategory: businessCategory,
       state: state,
       currency: currency,
       address: address.trim(),

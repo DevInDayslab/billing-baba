@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/presentation/desktop/widgets/network_error_banner.dart';
@@ -38,12 +40,19 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final storage = ref.watch(storageServiceProvider).asData?.value;
+    final isReturningUser =
+        storage?.read(StorageKeys.hasLoggedInBefore) == 'true';
     final isDevLoginLoading =
         auth.isBackendLogin && auth.status == AuthStatus.unauthenticated;
-    final isOtpFlowLoading =
-        auth.isSendingOtp ||
-        (auth.isBackendLogin && auth.status == AuthStatus.otpSent);
-    final canSend = auth.canSendOtp && !isOtpFlowLoading && !isDevLoginLoading;
+    final isContinueLoading = auth.isSendingOtp || auth.isBackendLogin;
+    final isOtpFlowLoading = isContinueLoading;
+    final continueButtonLabel = auth.isSendingOtp
+        ? 'Sending OTP...'
+        : auth.isBackendLogin
+        ? 'Signing in...'
+        : 'Continue';
+    final canSend = auth.canSendOtp && !isContinueLoading;
     final showDevLogin = AppConfig.enableDevLogin;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
@@ -89,7 +98,7 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
                             const _BrandHeader(),
                             const SizedBox(height: AppSpacing.xxl),
                             Text(
-                              'Welcome',
+                              isReturningUser ? 'Welcome Back' : 'Welcome',
                               style: AppTypography.inter(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w700,
@@ -123,6 +132,26 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
                               enabled: !isOtpFlowLoading && !isDevLoginLoading,
                               onSubmitted: (_) => _submit(),
                             ),
+                            const SizedBox(height: AppSpacing.sm),
+                            CheckboxListTile(
+                              value: auth.rememberFor30Days,
+                              onChanged: isOtpFlowLoading || isDevLoginLoading
+                                  ? null
+                                  : (value) => ref
+                                        .read(authProvider.notifier)
+                                        .setRememberFor30Days(value: value ?? false),
+                              contentPadding: EdgeInsets.zero,
+                              controlAffinity: ListTileControlAffinity.leading,
+                              activeColor: AppColors.primary,
+                              title: Text(
+                                'Remember for 30 days',
+                                style: AppTypography.inter(
+                                  fontSize: AppTypography.bodySize,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                             if (auth.error != null ||
                                 auth.networkError != null) ...[
                               const SizedBox(height: AppSpacing.md),
@@ -134,6 +163,7 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
                             const SizedBox(height: AppSpacing.xl),
                             _ContinueButton(
                               loading: isOtpFlowLoading,
+                              label: continueButtonLabel,
                               enabled: canSend,
                               onPressed: _submit,
                             ),
@@ -309,11 +339,13 @@ class _PhoneField extends StatelessWidget {
 class _ContinueButton extends StatelessWidget {
   const _ContinueButton({
     required this.loading,
+    required this.label,
     required this.enabled,
     required this.onPressed,
   });
 
   final bool loading;
+  final String label;
   final bool enabled;
   final VoidCallback onPressed;
 
@@ -346,7 +378,7 @@ class _ContinueButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Continue',
+                    label,
                     style: AppTypography.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

@@ -31,13 +31,15 @@ abstract final class DashboardLayout {
   static const reportsRowFlex = 20;
 
   // Chart row column split.
-  static const chartRatio = 0.64;
-  static const todoRatio = 0.36;
+  static const chartRatio = 0.55;
+  static const todoRatio = 0.45;
 
   // In-card chart area (remaining whitespace below header/value).
   static const chartAreaHeightRatio = 0.60;
 
   // Fixed chrome heights.
+  /// Compact Windows/Linux MenuBar row (Billing Baba / Help / Versions…).
+  static const menuBarHeight = 28.0;
   static const supportStripHeight = 30.0;
   static const topBarHeight = 52.0;
   static const tabBarHeight = 40.0;
@@ -52,9 +54,11 @@ abstract final class DashboardLayout {
   static const cardShadowOpacity = 0.08;
 
   // Card height constraints (layout only).
+  static const kpiRowMinHeight = 88.0;
   static const chartCardMinHeight = 320.0;
   static const chartCardPreferredHeight = 380.0;
   static const chartCardMaxHeight = 520.0;
+  static const reportsRowMinHeight = 112.0;
   static const todoMinWidth = 320.0;
 
   // Side-column widget content heights (padding added separately).
@@ -66,8 +70,8 @@ abstract final class DashboardLayout {
   static const sideWidgetLowStockMaxVisibleRows = 3;
 
   // Flex integers for [Expanded] / [Flexible].
-  static const chartColumnFlex = 70;
-  static const todoColumnFlex = 30;
+  static const chartColumnFlex = 55;
+  static const todoColumnFlex = 45;
 
   static DashboardMetrics metricsFrom(BoxConstraints constraints) {
     final width = constraints.maxWidth;

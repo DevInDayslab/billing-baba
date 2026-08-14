@@ -168,17 +168,29 @@ class CompanySessionService {
 
     await _businessService.rememberLastOpened(businessId);
 
+    // Never skip JWT scoping while still on the company picker — that left
+    // auth as needsBusinessSelection, set a company session anyway, and the
+    // UI then showed a generic "Could not open company" error.
     if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
       BusinessSelectionRetryGuard.logBlockedOnce(
         'scopeCompany',
         businessId,
       );
-      seedBusinessProfilePreview(_ref, entry: entry);
-      BusinessOpenDebugLog.step(
-        'scopeCompany',
-        'offline — seeded preview, skip JWT refresh',
-      );
-      return;
+      final auth = _ref.read(authProvider);
+      if (auth.status != AuthStatus.authenticated) {
+        BusinessSelectionRetryGuard.reset();
+        BusinessOpenDebugLog.step(
+          'scopeCompany',
+          'cleared stuck retry guard — will scope JWT',
+        );
+      } else {
+        seedBusinessProfilePreview(_ref, entry: entry);
+        BusinessOpenDebugLog.step(
+          'scopeCompany',
+          'offline — seeded preview, skip JWT refresh',
+        );
+        return;
+      }
     }
 
     await _ref.read(authProvider.notifier).selectBusiness(businessId);

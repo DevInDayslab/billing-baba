@@ -92,6 +92,7 @@ export async function listStockItemAggregates(
     q?: string;
     inStockOnly?: boolean;
     lowStockOnly?: boolean;
+    orderBy?: 'name' | 'quantity';
     page?: number;
     limit?: number;
   } = {},
@@ -132,6 +133,10 @@ export async function listStockItemAggregates(
   const total = Number(countRow?.total ?? 0);
 
   const offset = (page - 1) * limit;
+  const orderBy =
+    options.orderBy === 'quantity'
+      ? sql`${itemAgg.totalQty}::numeric ASC`
+      : itemAgg.itemName;
   const rowsQuery = db
     .select({
       itemId: itemAgg.itemId,
@@ -147,10 +152,10 @@ export async function listStockItemAggregates(
   const rows = whereClause
     ? await rowsQuery
         .where(whereClause)
-        .orderBy(itemAgg.itemName)
+        .orderBy(orderBy)
         .limit(limit)
         .offset(offset)
-    : await rowsQuery.orderBy(itemAgg.itemName).limit(limit).offset(offset);
+    : await rowsQuery.orderBy(orderBy).limit(limit).offset(offset);
 
   return {
     rows: rows.map((row) => ({

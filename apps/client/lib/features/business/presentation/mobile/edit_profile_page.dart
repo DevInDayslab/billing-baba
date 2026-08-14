@@ -37,12 +37,14 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
   ];
 
   static const _businessCategories = [
-    'General Store',
+    'Apparels',
+    'Medical',
+    'Fruits',
+    'Restaurant',
+    'Hardware',
     'Electronics',
-    'Clothing',
-    'Food',
-    'Pharmacy',
-    'Hardware Store',
+    'Salon',
+    'Gym',
     'Other',
   ];
 

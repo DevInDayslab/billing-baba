@@ -13,6 +13,7 @@ export const createBusinessBodySchema = z.object({
     .pipe(z.string().optional()),
   gstin: z.string().trim().max(15).optional(),
   business_type: z.string().trim().max(100).optional(),
+  business_category: z.string().trim().max(100).optional(),
   state: z.string().trim().max(100).optional(),
   state_code: z.string().trim().max(4).optional(),
   currency: z.string().trim().max(10).optional(),

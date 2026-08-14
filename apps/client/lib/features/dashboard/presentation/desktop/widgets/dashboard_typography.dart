@@ -115,5 +115,6 @@ abstract final class DashboardSpacing {
   static const double widgetGap = AppSpacing.sm;
   static const double topBarHeight = DashboardLayout.topBarHeight;
   static const double tabBarHeight = DashboardLayout.tabBarHeight;
+  static const double menuBarHeight = DashboardLayout.menuBarHeight;
   static const double supportStripHeight = DashboardLayout.supportStripHeight;
 }
