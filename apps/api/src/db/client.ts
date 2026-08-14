@@ -189,12 +189,19 @@ function createQueryClient(connectionString: string): postgres.Sql {
       }
 
       if (prop === 'unsafe') {
-        return (...args: unknown[]) =>
-          wrapPostgresQuery(Reflect.apply(value, target, args));
+        return (...args: unknown[]) => {
+          const result = Reflect.apply(value, target, args);
+          if (result && typeof result === 'object') {
+            return wrapPostgresQuery(result);
+          }
+          return result;
+        };
       }
 
       return (...args: unknown[]) =>
-        withDatabaseRetry(() => Reflect.apply(value, target, args));
+        withDatabaseRetry(
+          () => Reflect.apply(value, target, args) as Promise<unknown>,
+        );
     },
   }) as postgres.Sql;
 }
