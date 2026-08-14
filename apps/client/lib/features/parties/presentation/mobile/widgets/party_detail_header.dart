@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 
 /// Party identity header for the mobile detail screen.
@@ -55,14 +56,15 @@ class MobilePartyDetailHeader extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        party.name,
+                      child: AppEllipsisText(
+                        PartyModel.displayNameWithLegal(party),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: party.isActive
                               ? AppColors.textPrimary
                               : AppColors.textSecondary,
                         ),
+                        maxLines: 2,
                       ),
                     ),
                     if (!party.isActive)

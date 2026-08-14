@@ -85,7 +85,7 @@ class DesktopShell extends ConsumerStatefulWidget {
 }
 
 class _DesktopShellState extends ConsumerState<DesktopShell> {
-  static const _sidebarExpandedWidth = 264.0;
+  static const _sidebarExpandedWidth = 220.0;
   static const _sidebarCollapsedWidth = 60.0;
   static const _sidebarCompactLayoutMaxWidth = 140.0;
   static const _overlayBreakpoint = 800.0;
@@ -259,11 +259,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     const _NavItem(
       route: AppRoutes.partyGroups,
       icon: Icons.folder_outlined,
+      iconColor: _SidebarTokens.parties,
       label: 'Groups',
     ),
     const _NavItem(
       route: AppRoutes.partyHiddenLedger,
       icon: Icons.visibility_off_outlined,
+      iconColor: _SidebarTokens.parties,
       label: 'Hidden Ledger',
     ),
     _NavItem(
@@ -399,7 +401,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     setState(() {
       _isSaleExpanded = route.startsWith(AppRoutes.sale);
       _isPurchaseExpanded = route.startsWith(AppRoutes.purchase);
-      _isPartiesExpanded = route.startsWith(AppRoutes.parties);
       _isCrmExpanded = route.startsWith(AppRoutes.crm);
       _isUtilitiesExpanded = route.startsWith(AppRoutes.utilities);
       _isCollaborationExpanded = route.startsWith(AppRoutes.collaboration);

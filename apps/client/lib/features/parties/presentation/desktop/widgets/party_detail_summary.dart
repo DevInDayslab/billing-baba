@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -38,11 +37,14 @@ class PartyDetailPrimaryFields extends ConsumerWidget {
         _SummaryLine('Address', billingAddress.trim()),
       if (party.email.trim().isNotEmpty)
         _SummaryLine('Email', party.email.trim()),
-      if (showLoyalty && loyaltyAsync != null)
-        _SummaryLine(
-          'Loyalty Points',
-          _loyaltyDisplayValue(loyaltyAsync!, cached: loyaltyCache),
-        ),
+      if (_loyaltyLine(
+            party,
+            showLoyalty: showLoyalty,
+            loyaltyAsync: loyaltyAsync,
+            loyaltyCache: loyaltyCache,
+          )
+          case final loyalty?)
+        _SummaryLine('Loyalty Points', loyalty),
     ];
 
     if (lines.isEmpty) return const SizedBox.shrink();
@@ -64,49 +66,58 @@ class PartyDetailPrimaryFields extends ConsumerWidget {
     if (phones.isEmpty) return null;
     return phones.join(', ');
   }
+
+  /// Prefer the locally saved opening balance so edits appear immediately.
+  /// Hide zero/empty values instead of showing a fake "0 earned" default.
+  static String? _loyaltyLine(
+    PartyModel party, {
+    required bool showLoyalty,
+    AsyncValue<PartyLoyaltyBalanceDto>? loyaltyAsync,
+    PartyLoyaltyBalanceDto? loyaltyCache,
+  }) {
+    final opening = double.tryParse(
+          party.loyaltyPointsOpeningBalance.replaceAll(',', ''),
+        ) ??
+        0;
+    if (opening != 0) {
+      return _formatLoyaltyPoints(opening);
+    }
+    if (!showLoyalty || loyaltyAsync == null) return null;
+    return loyaltyAsync.maybeWhen(
+      data: (balance) {
+        if (balance.earnedPointsValue == 0 && balance.availablePoints == 0) {
+          return null;
+        }
+        return _loyaltyBalanceSummary(balance);
+      },
+      orElse: () {
+        if (loyaltyCache == null) return null;
+        if (loyaltyCache.earnedPointsValue == 0 &&
+            loyaltyCache.availablePoints == 0) {
+          return null;
+        }
+        return _loyaltyBalanceSummary(loyaltyCache);
+      },
+    );
+  }
 }
 
 class PartyDetailNameBlock extends StatelessWidget {
   const PartyDetailNameBlock({
     required this.party,
     required this.nameStyle,
-    this.legalNameStyle,
     super.key,
   });
 
   final PartyModel party;
   final TextStyle nameStyle;
-  final TextStyle? legalNameStyle;
-
-  static bool shouldShowLegalName(PartyModel party) {
-    final legal = party.legalName.trim();
-    if (legal.isEmpty) return false;
-    return legal.toLowerCase() != party.name.trim().toLowerCase();
-  }
 
   @override
   Widget build(BuildContext context) {
-    final showLegal = shouldShowLegalName(party);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppTruncatedText(party.name, style: nameStyle),
-        if (showLegal) ...[
-          const SizedBox(height: 2),
-          AppTruncatedText(
-            party.legalName.trim(),
-            style:
-                legalNameStyle ??
-                nameStyle.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-          ),
-        ],
-      ],
+    return AppEllipsisText(
+      PartyModel.displayNameWithLegal(party),
+      style: nameStyle,
+      maxLines: 1,
     );
   }
 }
@@ -124,8 +135,6 @@ String _formatLoyaltyPoints(double value) {
       : value.toStringAsFixed(0);
 }
 
-const _loyaltyZeroLabel = '0 earned';
-
 String _loyaltyBalanceSummary(PartyLoyaltyBalanceDto balance) {
   final earnedLabel = _formatLoyaltyPoints(balance.earnedPointsValue);
   final availableLabel = _formatLoyaltyPoints(balance.availablePoints);
@@ -133,15 +142,4 @@ String _loyaltyBalanceSummary(PartyLoyaltyBalanceDto balance) {
     return '$earnedLabel earned · $availableLabel available';
   }
   return '$earnedLabel earned';
-}
-
-String _loyaltyDisplayValue(
-  AsyncValue<PartyLoyaltyBalanceDto> balanceAsync, {
-  PartyLoyaltyBalanceDto? cached,
-}) {
-  return balanceAsync.maybeWhen(
-    data: _loyaltyBalanceSummary,
-    orElse: () =>
-        cached != null ? _loyaltyBalanceSummary(cached) : _loyaltyZeroLabel,
-  );
 }

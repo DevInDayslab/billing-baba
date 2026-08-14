@@ -74,8 +74,13 @@ abstract final class PartyErrorMapper {
       throw const PartyOfflineException();
     }
 
-    throw const PartyException(
-      'Unable to complete the request. Please try again.',
+    final status = error.response?.statusCode;
+    final body = error.response?.data;
+    throw PartyException(
+      'Unable to complete the request. '
+      '${status != null ? 'HTTP $status. ' : ''}'
+      '${error.message ?? error.type.name}'
+      '${body != null ? ' $body' : ''}',
     );
   }
 
@@ -114,6 +119,8 @@ abstract final class PartyErrorMapper {
         error.message.contains('No business selected')) {
       return 'Business not selected. Please select a business first.';
     }
+    final detail = error.toString().trim();
+    if (detail.isNotEmpty) return detail;
     return 'Unable to complete the request. Please try again.';
   }
 

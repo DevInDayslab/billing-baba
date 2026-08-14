@@ -27,9 +27,13 @@ final partyGroupSummariesProvider = Provider<List<PartyGroupSummary>>((ref) {
   final parties = _allPartiesOrEmpty(ref.watch(allPartiesListProvider));
   final search = ref.watch(partyGroupSearchQueryProvider).trim().toLowerCase();
 
-  final summaries = groups
-      .map((group) => PartyGroupSummary.fromGroup(group, parties))
-      .toList();
+  final summaries = <PartyGroupSummary>[];
+  final seen = <String>{};
+  for (final group in groups) {
+    final key = group.trim().toLowerCase();
+    if (key.isEmpty || !seen.add(key)) continue;
+    summaries.add(PartyGroupSummary.fromGroup(group, parties));
+  }
 
   if (search.isEmpty) return summaries;
 

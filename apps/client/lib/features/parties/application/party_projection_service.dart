@@ -40,7 +40,11 @@ class PartyProjectionService {
       _outstandingIndexCache.clear();
       return;
     }
-    _cache.removeWhere((key, _) => key.endsWith(':$partyId'));
+    // Keys are `$businessId:$partyId:$filter`, so they never end with partyId.
+    _cache.removeWhere((key, _) {
+      final parts = key.split(':');
+      return parts.length >= 2 && parts[1] == partyId;
+    });
     _outstandingIndexCache.clear();
   }
 

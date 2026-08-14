@@ -181,6 +181,7 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
     this.alignment = Alignment.centerLeft,
     this.headerStyle,
     this.iconOnly = false,
+    this.iconColor,
     super.key,
   });
 
@@ -192,6 +193,7 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
   final Alignment alignment;
   final TextStyle? headerStyle;
   final bool iconOnly;
+  final Color? iconColor;
 
   Widget _buildIconButton() {
     return CompositedTransformTarget(
@@ -208,8 +210,9 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
             height: 22,
             child: Center(
               child: AppFilterIcon(
-                size: 14,
-                color: isActive ? AppColors.error : AppColors.textSecondary,
+                color:
+                    iconColor ??
+                    (isActive ? AppColors.error : AppColors.textSecondary),
               ),
             ),
           ),

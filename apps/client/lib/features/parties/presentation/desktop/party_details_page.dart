@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _compactBreakpoint = 800.0;
+
 /// Narrower list column so transaction detail has more horizontal room.
 const _partyListPanelWidth = 280.0;
 
@@ -50,9 +51,11 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
   Future<void> _restorePreferences() async {
     final service = await ref.read(partyServiceProvider.future);
     final filter = service.readRememberedListFilter();
-    if (filter != null && mounted) {
-      ref.read(partyListFilterProvider.notifier).filter = filter;
-    }
+    if (filter == null || !mounted) return;
+    final current = ref.read(partyListFilterProvider);
+    if (filter == current) return;
+    ref.read(partyListFilterProvider.notifier).filter = filter;
+    await ref.read(partyListProvider.notifier).refresh(filter: filter);
   }
 
   void _clearSelection() {

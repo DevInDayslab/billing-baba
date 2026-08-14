@@ -16,6 +16,7 @@ class TableColumnFilterTrigger extends StatefulWidget {
     this.alignment = Alignment.centerLeft,
     this.headerStyle,
     this.iconOnly = false,
+    this.iconColor,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class TableColumnFilterTrigger extends StatefulWidget {
   final Alignment alignment;
   final TextStyle? headerStyle;
   final bool iconOnly;
+  final Color? iconColor;
 
   @override
   State<TableColumnFilterTrigger> createState() =>
@@ -78,6 +80,7 @@ class _TableColumnFilterTriggerState extends State<TableColumnFilterTrigger> {
       alignment: widget.alignment,
       headerStyle: widget.headerStyle,
       iconOnly: widget.iconOnly,
+      iconColor: widget.iconColor,
     );
   }
 }

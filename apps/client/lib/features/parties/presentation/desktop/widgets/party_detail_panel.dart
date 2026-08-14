@@ -48,21 +48,15 @@ class PartyDetailPanel extends ConsumerWidget {
         onRetry: () => ref.invalidate(partyDetailProvider(partyId)),
       ),
       data: (party) {
-        // Prefer the list row's profile image when it is newer (instant upload).
+        // The list is patched immediately on save; prefer it so the header
+        // reflects edits without waiting for a detail refetch.
         final listParty = ref
             .watch(partyListProvider)
             .asData
             ?.value
             .where((item) => item.id == party.id)
             .firstOrNull;
-        final imageUrl = listParty?.profileImageUrl ?? party.profileImageUrl;
-        final mediaId =
-            listParty?.profileMediaAssetId ?? party.profileMediaAssetId;
-        final displayParty = party.copyWith(
-          profileImageUrl: imageUrl,
-          profileMediaAssetId: mediaId,
-          clearProfileImage: imageUrl == null && mediaId == null,
-        );
+        final displayParty = listParty ?? party;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -230,11 +224,9 @@ class _PartyDetailHeader extends ConsumerWidget {
         : null;
     final billingAddress = _billingAddress();
     final nameStyle = TextStyle(
-      fontSize: PartyDetailNameBlock.shouldShowLegalName(party) ? 14 : 15,
+      fontSize: 15,
       fontWeight: FontWeight.w700,
-      color: party.isActive
-          ? AppColors.textPrimary
-          : AppColors.textSecondary,
+      color: party.isActive ? AppColors.textPrimary : AppColors.textSecondary,
     );
 
     return Padding(

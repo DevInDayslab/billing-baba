@@ -34,12 +34,8 @@ final partyNamesProvider = Provider<List<String>>((ref) {
 });
 
 final partiesListProvider = Provider<List<PartyModel>>((ref) {
-  return ref
-      .watch(partyListProvider)
-      .maybeWhen(
-        data: (items) => items,
-        orElse: () => const <PartyModel>[],
-      );
+  final async = ref.watch(partyListProvider);
+  return async.asData?.value ?? const <PartyModel>[];
 });
 
 /// Projected outstanding balances keyed by party id (local Drift ledger).

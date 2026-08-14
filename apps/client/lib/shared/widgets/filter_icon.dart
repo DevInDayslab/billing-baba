@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-const filterIconAsset = 'assets/icons/filter.png';
-
-/// Filter icon from `assets/icons/filter.png`, tinted via [color].
+/// Conical/funnel filter icon (Vyapar-style), tinted via [color].
 class AppFilterIcon extends StatelessWidget {
   const AppFilterIcon({
     required this.color,
@@ -15,14 +13,10 @@ class AppFilterIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColorFiltered(
-      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-      child: Image.asset(
-        filterIconAsset,
-        width: size,
-        height: size,
-        fit: BoxFit.contain,
-      ),
+    return Icon(
+      Icons.filter_alt,
+      size: size,
+      color: color,
     );
   }
 }
