@@ -48,6 +48,17 @@ void main() {
       );
     });
 
+    test('displayOpeningBalance includes direction for non-zero amounts', () {
+      expect(
+        PartyModel.displayOpeningBalance(250),
+        contains('To Receive'),
+      );
+      expect(
+        PartyModel.displayOpeningBalance(-250),
+        contains('To Pay'),
+      );
+    });
+
     test('formatDecimalInput always shows magnitude', () {
       expect(PartyModel.formatDecimalInput(-750), '750.00');
       expect(PartyModel.formatDecimalInput(750), '750.00');

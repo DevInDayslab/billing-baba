@@ -76,10 +76,10 @@ class PartyModel {
       legalName: dto.legalName ?? '',
       alias: dto.alias ?? '',
       phone: _formatPhone(dto.mobile),
-      additionalPhones: dto.additionalPhones
-          .map(_formatPhone)
-          .where((phone) => phone.isNotEmpty)
-          .toList(),
+      additionalPhones: _phonesFrom(
+        dto.additionalPhones,
+        extension.additionalPhones,
+      ),
       partyType: dto.partyType,
       balance: balance,
       unrecoveredAmount: dto.unrecoveredAmount,
@@ -294,7 +294,8 @@ class PartyModel {
   }
 
   /// Two-decimal string for numeric form fields (magnitude only).
-  static String formatDecimalInput(double value) => value.abs().toStringAsFixed(2);
+  static String formatDecimalInput(double value) =>
+      value.abs().toStringAsFixed(2);
 
   static OpeningBalanceDirection openingBalanceDirection(double signedBalance) {
     if (signedBalance < 0) return OpeningBalanceDirection.toPay;
@@ -334,6 +335,22 @@ class PartyModel {
     ];
     if (phones.isEmpty) return '—';
     return phones.join(', ');
+  }
+
+  /// True when legal name is present and differs from the display/party name.
+  static bool hasDistinctLegalName(PartyModel party) {
+    final legal = party.legalName.trim();
+    if (legal.isEmpty) return false;
+    return legal.toLowerCase() != party.name.trim().toLowerCase();
+  }
+
+  /// `Acme`, `Acme Pvt Ltd`, or `Acme (Acme Pvt Ltd)` when both differ.
+  static String displayNameWithLegal(PartyModel party) {
+    final name = party.name.trim();
+    final legal = party.legalName.trim();
+    if (name.isEmpty) return legal;
+    if (!hasDistinctLegalName(party)) return name;
+    return '$name ($legal)';
   }
 
   PartyModel copyWith({
@@ -430,6 +447,14 @@ class PartyModel {
     );
   }
 
+  static List<String> _phonesFrom(
+    List<String> dtoPhones,
+    List<String> extensionPhones,
+  ) {
+    final source = dtoPhones.isNotEmpty ? dtoPhones : extensionPhones;
+    return source.map(_formatPhone).where((phone) => phone.isNotEmpty).toList();
+  }
+
   static String _formatPhone(String? mobile) {
     if (mobile == null || mobile.isEmpty) return '';
     final digits = mobile.replaceAll(RegExp(r'\D'), '');
@@ -503,25 +528,24 @@ class PartyModel {
   }) {
     return UpdatePartyRequest(
       name: result.partyName.trim(),
-      legalName: result.legalName.trim().isEmpty
-          ? null
-          : result.legalName.trim(),
-      alias: result.alias.trim().isEmpty ? null : result.alias.trim(),
+      legalName: result.legalName.trim(),
+      alias: result.alias.trim(),
       mobile: normalizePhone(result.phone),
       additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),
-      email: result.email.trim().isEmpty ? null : result.email.trim(),
-      gstin: _optionalNormalizedGstin(result.gstin),
+      email: result.email.trim(),
+      gstin: result.gstin.trim().isEmpty
+          ? ''
+          : result.gstin.trim().toUpperCase(),
       partyType: result.partyType,
-      partyGroup: result.partyGroup.trim().isEmpty
-          ? null
-          : result.partyGroup.trim(),
-      areaCode: result.areaCode.trim().isEmpty ? null : result.areaCode.trim(),
-      state: result.state.trim().isEmpty ? null : result.state.trim(),
+      partyGroup: result.partyGroup.trim(),
+      areaCode: result.areaCode.trim(),
+      state: result.state.trim(),
       pricingTier: PriceTier.toApiTier(result.defaultPriceTier),
       creditLimit: result.hasCustomCreditLimit
           ? Validators.normalizeDecimalString(result.creditLimit)
-          : null,
-      openingBalance: Validators.normalizeDecimalString(result.openingBalance),
+          : '0',
+      openingBalance:
+          Validators.normalizeDecimalString(result.openingBalance) ?? '0',
       isActive: isActive,
     );
   }

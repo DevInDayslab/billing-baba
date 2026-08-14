@@ -8,7 +8,6 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
-import 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
 import 'package:billing_baba/features/parties/application/party_list_image_warmup.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
@@ -156,7 +155,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
     final partiesAsync = ref.watch(partyListProvider);
     final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
     final parties = _sortedParties(
-      ref.watch(partiesListProvider),
+      partiesAsync.asData?.value ?? ref.watch(partiesListProvider),
       outstandingIndex,
     );
     final selectedId = ref.watch(selectedPartyIdProvider);
@@ -205,6 +204,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
               trailing: TableColumnFilterTrigger(
                 config: _partyListFilterConfig,
                 iconOnly: true,
+                iconColor: AppColors.error,
                 initialValue: _toSelectFilter(activeFilter),
                 onApply: (result) =>
                     _onFilterSelected(_fromSelectFilter(result)),
@@ -214,7 +214,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
               sortAscending: _sort.isAscending(PartyListSortColumn.name),
               onSort: () => _toggleSort(PartyListSortColumn.name),
             ),
-            InventoryListColumn(
+            const InventoryListColumn(
               label: 'AMOUNT',
               fixedWidth: partyListAmountHeaderWidth,
               alignEnd: true,
@@ -254,8 +254,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                         );
                         await service.rememberSelectedParty(party.id);
                       },
-                      onDoubleTap: () =>
-                          PartyActions.edit(context, ref, party),
+                      onDoubleTap: () => PartyActions.edit(context, ref, party),
                     );
                   },
                 ),
@@ -337,7 +336,7 @@ class _PartyListTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: InventoryHighlightedText(
-                      text: party.name,
+                      text: PartyModel.displayNameWithLegal(party),
                       query: searchQuery,
                       style: InventoryStyles.listCellStyle.copyWith(
                         fontWeight: isSelected

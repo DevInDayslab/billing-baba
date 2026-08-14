@@ -68,6 +68,10 @@ class PartyGroups extends Notifier<List<String>> {
       businessProfileProvider.select((profile) => profile.asData?.value.id),
     );
     if (businessId == null || businessId.isEmpty) return;
+    if (_synced && _activeBusinessId == businessId) {
+      await _mergeFromDiscoverySource();
+      return;
+    }
     await _sync(businessId);
   }
 
@@ -183,14 +187,11 @@ class PartyGroups extends Notifier<List<String>> {
     if (!ref.mounted) return;
     try {
       final service = await ref.read(partyServiceProvider.future);
-      final stored = await service.readPartyGroupNames();
-      if (!ref.mounted) return;
-
-      final merged = mergePartyGroupNames([...stored, ...state]);
-      if (!partyGroupNamesEqual(merged, state)) {
-        state = merged;
+      final names = mergePartyGroupNames(state);
+      if (!partyGroupNamesEqual(names, state)) {
+        state = names;
       }
-      await service.savePartyGroupNames(merged);
+      await service.savePartyGroupNames(names);
     } on Object {
       // Ignore persistence errors; groups remain in memory.
     }

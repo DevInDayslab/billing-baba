@@ -20,6 +20,7 @@ import 'package:billing_baba/features/sales/application/sale_invoices_provider.d
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void invalidateDashboard(Ref ref) {
@@ -27,8 +28,12 @@ void invalidateDashboard(Ref ref) {
 }
 
 void invalidatePartyOutstandingIndex(Ref ref) {
-  final service = ref.read(partyLedgerServiceProvider).asData?.value;
-  service?.invalidateCache();
+  try {
+    final service = ref.read(partyLedgerServiceProvider).asData?.value;
+    service?.invalidateCache();
+  } on Object catch (error, stack) {
+    debugPrint('[PartyRefresh] outstanding cache: $error\n$stack');
+  }
   ref.invalidate(partyOutstandingIndexProvider);
 }
 
@@ -38,8 +43,12 @@ void invalidatePartyBalances(Ref ref) {
 }
 
 void invalidatePartyTimeline(Ref ref, String partyId) {
-  final service = ref.read(partyLedgerServiceProvider).asData?.value;
-  service?.invalidateCache(partyId: partyId);
+  try {
+    final service = ref.read(partyLedgerServiceProvider).asData?.value;
+    service?.invalidateCache(partyId: partyId);
+  } on Object catch (error, stack) {
+    debugPrint('[PartyRefresh] timeline cache: $error\n$stack');
+  }
 
   ref
     ..invalidate(partyTimelineProvider(partyId))
@@ -299,16 +308,20 @@ void refreshAfterPartyMutation(
   bool refreshList = true,
   String? partyId,
 }) {
-  invalidatePartyOutstandingIndex(ref);
-  final id = partyId?.trim();
-  if (id != null && id.isNotEmpty) {
-    invalidatePartyTimeline(ref, id);
-    ref.invalidate(partyLoyaltyBalanceProvider(id));
+  try {
+    invalidatePartyOutstandingIndex(ref);
+    final id = partyId?.trim();
+    if (id != null && id.isNotEmpty) {
+      invalidatePartyTimeline(ref, id);
+      ref.invalidate(partyLoyaltyBalanceProvider(id));
+    }
+    if (refreshList) {
+      ref.invalidate(partyListProvider);
+    }
+    invalidateDashboard(ref);
+  } on Object catch (error, stack) {
+    debugPrint('[PartyRefresh] after mutation: $error\n$stack');
   }
-  if (refreshList) {
-    ref.invalidate(partyListProvider);
-  }
-  invalidateDashboard(ref);
 }
 
 /// After sale fixed-asset create/edit/delete.

@@ -908,7 +908,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
     if (isVerified) {
       return IconButton(
-        onPressed: _isVerifyingGstin ? null : _showStoredGstinVerificationDetails,
+        onPressed: _isVerifyingGstin
+            ? null
+            : _showStoredGstinVerificationDetails,
         icon: const Icon(Icons.check_circle, size: 18, color: verifiedColor),
         color: verifiedColor,
         tooltip: 'View GST details',
@@ -1196,12 +1198,20 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     setState(() => _isSaving = true);
 
     try {
+      debugPrint(
+        '[PartyUpdate] dialog save partyId=${party.id} '
+        'name="${result.partyName}" phone="${result.phone}"',
+      );
       // Finish any in-flight photo upload before PATCHing / closing the dialog.
       // Otherwise Update overwrites list/detail with a party that still has no
       // profile image, and a disposed editor never patches the final URL.
       final editor = _profileImageEditorKey.currentState;
       if (editor != null) {
-        await editor.waitForIdle();
+        try {
+          await editor.waitForIdle();
+        } on Object catch (error, stackTrace) {
+          debugPrint('[PartyUpdate] waitForIdle: $error\n$stackTrace');
+        }
         if (!mounted) return;
         _profileImageUrl = editor.imageUrl ?? _profileImageUrl;
         _profileMediaAssetId = editor.mediaAssetId ?? _profileMediaAssetId;
@@ -1258,7 +1268,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       if (!mounted) return;
       _applyApiValidationErrors(e);
       _showSaveFeedback(message: e.message, isError: true);
-    } on PartyException catch (e) {
+    } on PartyException catch (e, stackTrace) {
+      debugPrint('[PartyUpdate] PartyException: ${e.message}\n$stackTrace');
       if (!mounted) return;
       _showSaveFeedback(message: e.message, isError: true);
     } on PartyBusinessNotSelectedException {
@@ -1267,7 +1278,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         message: 'Business not selected. Please select a business first.',
         isError: true,
       );
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
+      debugPrint('[PartyUpdate] dialog catch: $error\n$stackTrace');
       if (!mounted) return;
       _showSaveFeedback(
         message: PartyErrorMapper.messageFor(error),
@@ -1442,7 +1454,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   @override
   Widget build(BuildContext context) {
     final isMobile = AppPlatform.current.isMobile;
-    final content = _buildDialogContent(showHeader: !isMobile, rounded: !isMobile);
+    final content = _buildDialogContent(
+      showHeader: !isMobile,
+      rounded: !isMobile,
+    );
 
     if (isMobile) {
       final title = _isEditMode ? 'Edit Party' : 'Add Party';
@@ -1481,7 +1496,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return content;
   }
 
-  Widget _buildDialogContent({required bool showHeader, required bool rounded}) {
+  Widget _buildDialogContent({
+    required bool showHeader,
+    required bool rounded,
+  }) {
     return Material(
       color: AppColors.surface,
       borderRadius: rounded ? AppRadius.lgBorder : BorderRadius.zero,
@@ -1650,12 +1668,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       },
     );
 
-    final rowOneCells = <FormGridCell>[
-      FormGridCell(span: 4, child: partyNameField),
-      FormGridCell(span: 4, child: legalNameField),
+    final identityCells = <FormGridCell>[
+      FormGridCell(span: 6, child: partyNameField),
+      FormGridCell(span: 6, child: legalNameField),
+      FormGridCell(span: 6, child: phoneField),
+      FormGridCell(span: 6, child: gstinField),
+    ];
+
+    final secondaryCells = <FormGridCell>[
       FormGridCell(span: 4, child: aliasField),
-      FormGridCell(span: 4, child: gstinField),
-      FormGridCell(span: 4, child: phoneField),
       FormGridCell(span: 4, child: _buildPartyGroupControls()),
       FormGridCell(span: 4, child: areaCodeField),
       FormGridCell(span: 4, child: _buildDefaultPriceTierField()),
@@ -1679,20 +1700,19 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               seed: seed.isEmpty ? 'party' : seed,
               initialImageUrl: _profileImageUrl,
               initialMediaAssetId: _profileMediaAssetId,
-              size: 88,
               onChanged: ({required imageUrl, required mediaAssetId}) {
                 _profileImageUrl = imageUrl;
                 _profileMediaAssetId = mediaAssetId;
                 final partyId = widget.partyToEdit?.id;
                 if (partyId != null) {
-                  ref
-                      .read(partyListProvider.notifier)
-                      .patchProfileImage(
-                        partyId,
-                        profileImageUrl: imageUrl,
-                        profileMediaAssetId: mediaAssetId,
-                        clear: imageUrl == null && mediaAssetId == null,
-                      );
+                  unawaited(
+                    ref.read(partyListProvider.notifier).patchProfileImage(
+                      partyId,
+                      profileImageUrl: imageUrl,
+                      profileMediaAssetId: mediaAssetId,
+                      clear: imageUrl == null && mediaAssetId == null,
+                    ),
+                  );
                 }
               },
             ),
@@ -1700,10 +1720,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             Expanded(
               child: FormGrid(
                 rowGap: FormSpacing.section,
-                cells: rowOneCells,
+                cells: identityCells,
               ),
             ),
           ],
+        ),
+        const SizedBox(height: FormSpacing.section),
+        FormGrid(
+          rowGap: FormSpacing.section,
+          cells: secondaryCells,
         ),
         if (_additionalPhoneControllers.isNotEmpty) ...[
           const SizedBox(height: FormSpacing.section),
@@ -2849,7 +2874,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 onPressed: _isSaving ? null : () => _save(saveAndNew: true),
                 style: TextButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.mdBorder,
+                  ),
                 ),
                 child: Text(
                   'Save & New',
@@ -2868,7 +2895,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                   backgroundColor: _saveBlue,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.mdBorder,
+                  ),
                 ),
                 child: _isSaving
                     ? const SizedBox(

@@ -22,7 +22,7 @@ class PartyLedgerSummaryCards extends StatelessWidget {
     final cards = <Widget>[
       _SummaryCard(
         label: 'Opening Balance',
-        value: PartyModel.displayCurrency(summary.openingBalance),
+        value: PartyModel.displayOpeningBalance(summary.openingBalance),
       ),
       _SummaryCard(
         label: 'Outstanding',

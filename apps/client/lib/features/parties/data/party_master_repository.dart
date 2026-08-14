@@ -8,6 +8,7 @@ import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/parties/models/party_list_query.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -35,7 +36,7 @@ class PartyMasterRepository {
     final scoped = _businessIdReader().trim();
     final rowId = rowBusinessId?.trim() ?? '';
     if (rowId.isNotEmpty) {
-      if (scoped.isNotEmpty && scoped != rowId) {
+      if (scoped.isNotEmpty && scoped.toLowerCase() != rowId.toLowerCase()) {
         throw StateError('Party belongs to a different business');
       }
       return rowId;
@@ -179,6 +180,10 @@ class PartyMasterRepository {
       notes: merged.notes,
       isActive: merged.isActive,
     );
+    debugPrint(
+      '[PartyUpdate] enqueue update id=$id businessId=$businessId '
+      'baseVersion=$baseVersion name=${merged.name}',
+    );
     await _syncQueue.enqueueRowMutation(
       businessId: businessId,
       deviceId: _deviceIdReader?.call(),
@@ -189,7 +194,11 @@ class PartyMasterRepository {
       baseSyncVersion: baseVersion,
       clientUpdatedAt: now,
     );
-    return (await _local.getActiveDto(id))!;
+    final dto = await _local.getActiveDto(id);
+    if (dto == null) {
+      throw StateError('Party not found locally');
+    }
+    return dto;
   }
 
   Future<void> softDelete(String id) async {
@@ -261,7 +270,7 @@ class PartyMasterRepository {
       name: request.name?.trim() ?? existing.name,
       legalName: _coalesceNullable(request.legalName, existing.legalName),
       alias: _coalesceNullable(request.alias, existing.alias),
-      mobile: request.mobile ?? existing.mobile,
+      mobile: _coalesceNullable(request.mobile, existing.mobile),
       email: _coalesceNullable(request.email, existing.email),
       partyGroup: _coalesceNullable(request.partyGroup, existing.partyGroup),
       areaCode: _coalesceNullable(request.areaCode, existing.areaCode),
