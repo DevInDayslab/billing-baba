@@ -1,26 +1,54 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/create_business_controller.dart';
+import 'package:billing_baba/features/business/data/business_branding_repository.dart';
 import 'package:billing_baba/features/business/models/create_business_input.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_form_fields.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/shared/media/pick_media_image.dart';
 import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+const double _compactBreakpoint = 860;
+const double _dialogWideWidth = 1080;
+const _cardBorder = Color(0xFFE0E0E0);
+const double _logoSize = 120;
+const double _mediaColumnWidth = 180;
+
+const Map<String, String> _currencyLabels = {
+  'INR': 'INR (₹)',
+  'USD': r'USD ($)',
+  'EUR': 'EUR (€)',
+  'GBP': 'GBP (£)',
+  'AED': 'AED',
+};
 
 Future<bool?> showCreateBusinessModal(BuildContext context) {
   final width = MediaQuery.sizeOf(context).width;
   if (width >= 600) {
-    final maxWidth = width >= 720 ? 740.0 : 560.0;
+    final maxWidth = width >= 860
+        ? _dialogWideWidth
+        : width >= 720
+        ? 740.0
+        : 560.0;
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         child: _CreateBusinessSheet(
           isDialog: true,
           maxWidth: maxWidth,
@@ -40,7 +68,7 @@ Future<bool?> showCreateBusinessModal(BuildContext context) {
 class _CreateBusinessSheet extends ConsumerStatefulWidget {
   const _CreateBusinessSheet({
     required this.isDialog,
-    this.maxWidth = 740,
+    this.maxWidth = _dialogWideWidth,
   });
 
   final bool isDialog;
@@ -68,22 +96,35 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     'Other',
   ];
 
-  static const _states = [
-    'Delhi',
-    'Maharashtra',
-    'Karnataka',
-    'Tamil Nadu',
-    'Uttar Pradesh',
-    'Gujarat',
-    'Rajasthan',
-    'West Bengal',
+  static const _businessCategories = [
+    'Apparels',
+    'Medical',
+    'Fruits',
+    'Restaurant',
+    'Hardware',
+    'Electronics',
+    'Salon',
+    'Gym',
+    'Other',
   ];
 
+  static const _currencies = ['INR', 'USD', 'EUR', 'GBP', 'AED'];
+
   String? _businessType;
+  String? _businessCategory;
   String? _state;
   String _currency = 'INR';
+  Uint8List? _logoBytes;
+  Uint8List? _logoPreviewBytes;
+  String? _logoMimeType;
   var _prefilled = false;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _businessNameController.addListener(() => setState(() {}));
+  }
 
   @override
   void didChangeDependencies() {
@@ -94,10 +135,6 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     final phone = auth.session?.user.phone ?? auth.phone;
     if (phone.length >= 10) {
       _phoneController.text = phone.substring(phone.length - 10);
-    }
-    final name = auth.session?.user.name;
-    if (name != null && name.isNotEmpty) {
-      _ownerNameController.text = name;
     }
   }
 
@@ -120,10 +157,40 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       email: _emailController.text,
       gstin: _gstinController.text,
       businessType: _businessType ?? '',
+      businessCategory: _businessCategory ?? '',
       state: _state ?? '',
       currency: _currency,
       address: _addressController.text,
     );
+  }
+
+  Future<void> _pickLogo() async {
+    final picked = await pickAndPrepareMediaImage(context: context);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _logoBytes = picked.bytes;
+      _logoPreviewBytes = picked.previewBytes;
+      _logoMimeType = picked.mimeType;
+    });
+  }
+
+  Future<void> _uploadLogoIfPicked() async {
+    final bytes = _logoBytes;
+    final mime = _logoMimeType;
+    if (bytes == null || mime == null) return;
+
+    try {
+      final api = await ref.read(apiClientProvider.future);
+      if (!mounted) return;
+      await BusinessBrandingRepository(api.dio).uploadLogo(
+        bytes: bytes,
+        mimeType: mime,
+      );
+      if (!mounted) return;
+      await ref.read(businessListProvider.notifier).refresh();
+    } on Object {
+      // Create already succeeded; logo can be added later in profile.
+    }
   }
 
   Future<void> _submit() async {
@@ -143,6 +210,8 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     if (!mounted) return;
 
     if (created != null) {
+      await _uploadLogoIfPicked();
+      if (!mounted) return;
       ref.invalidate(createBusinessFormProvider);
       Navigator.of(context).pop(true);
       return;
@@ -173,6 +242,79 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     );
   }
 
+  Widget _buildLogoColumn() {
+    final displayName = _businessNameController.text.trim().isNotEmpty
+        ? _businessNameController.text
+        : 'Business';
+
+    final avatar = _logoPreviewBytes != null
+        ? ClipOval(
+            child: Image.memory(
+              _logoPreviewBytes!,
+              width: _logoSize,
+              height: _logoSize,
+              fit: BoxFit.cover,
+            ),
+          )
+        : BusinessAvatar(
+            name: displayName,
+            seed: 'new-business',
+            diameter: _logoSize,
+          );
+
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Logo',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(width: AppSpacing.xs),
+            Tooltip(
+              message: 'JPG, PNG or SVG. Max 2MB',
+              child: Icon(
+                Icons.info_outline,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        avatar,
+        const SizedBox(height: AppSpacing.md),
+        OutlinedButton.icon(
+          onPressed: _pickLogo,
+          icon: const Icon(LucideIcons.upload, size: 16),
+          label: const Text('Upload Logo'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: const BorderSide(color: AppColors.primary),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text(
+          'JPG, PNG or SVG. Max 2MB',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final formState = ref.watch(createBusinessFormProvider);
@@ -194,6 +336,7 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       formKey: _formKey,
       autovalidateMode: _autovalidateMode,
       formState: formState,
+      logoColumn: _buildLogoColumn(),
       businessNameController: _businessNameController,
       ownerNameController: _ownerNameController,
       phoneController: _phoneController,
@@ -201,11 +344,16 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       gstinController: _gstinController,
       addressController: _addressController,
       businessType: _businessType,
+      businessCategory: _businessCategory,
       state: _state,
       currency: _currency,
       businessTypes: _businessTypes,
-      states: _states,
+      businessCategories: _businessCategories,
+      states: SaleDropdownOptions.indianStates,
+      currencies: _currencies,
       onBusinessTypeChanged: (value) => setState(() => _businessType = value),
+      onBusinessCategoryChanged: (value) =>
+          setState(() => _businessCategory = value),
       onStateChanged: (value) => setState(() => _state = value),
       onCurrencyChanged: (value) {
         if (value != null) setState(() => _currency = value);
@@ -218,13 +366,20 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
 
     if (widget.isDialog) {
       return Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        clipBehavior: Clip.antiAlias,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: widget.maxWidth),
+        color: Colors.transparent,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: widget.maxWidth,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: AppShadows.elevated,
+          ),
+          clipBehavior: Clip.antiAlias,
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: SingleChildScrollView(child: content),
           ),
         ),
@@ -252,6 +407,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
     required this.formKey,
     required this.autovalidateMode,
     required this.formState,
+    required this.logoColumn,
     required this.businessNameController,
     required this.ownerNameController,
     required this.phoneController,
@@ -259,11 +415,15 @@ class _CreateBusinessFormContent extends StatelessWidget {
     required this.gstinController,
     required this.addressController,
     required this.businessType,
+    required this.businessCategory,
     required this.state,
     required this.currency,
     required this.businessTypes,
+    required this.businessCategories,
     required this.states,
+    required this.currencies,
     required this.onBusinessTypeChanged,
+    required this.onBusinessCategoryChanged,
     required this.onStateChanged,
     required this.onCurrencyChanged,
     required this.onCancel,
@@ -273,6 +433,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final AutovalidateMode autovalidateMode;
   final CreateBusinessFormState formState;
+  final Widget logoColumn;
   final TextEditingController businessNameController;
   final TextEditingController ownerNameController;
   final TextEditingController phoneController;
@@ -280,11 +441,15 @@ class _CreateBusinessFormContent extends StatelessWidget {
   final TextEditingController gstinController;
   final TextEditingController addressController;
   final String? businessType;
+  final String? businessCategory;
   final String? state;
   final String currency;
   final List<String> businessTypes;
+  final List<String> businessCategories;
   final List<String> states;
+  final List<String> currencies;
   final ValueChanged<String?> onBusinessTypeChanged;
+  final ValueChanged<String?> onBusinessCategoryChanged;
   final ValueChanged<String?> onStateChanged;
   final ValueChanged<String?> onCurrencyChanged;
   final VoidCallback? onCancel;
@@ -298,72 +463,218 @@ class _CreateBusinessFormContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const Text(
+            'Create Business',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            "Let's set up your first business.",
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.storefront_outlined,
-                  color: AppColors.primary,
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final stacked = constraints.maxWidth < _compactBreakpoint;
+                  final details = _buildBusinessDetailsColumn();
+                  final more = _buildMoreDetailsColumn();
+                  final address = _buildAddressColumn();
+
+                  if (stacked) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(child: logoColumn),
+                        const SizedBox(height: AppSpacing.lg),
+                        details,
+                        const SizedBox(height: AppSpacing.lg),
+                        more,
+                        const SizedBox(height: AppSpacing.lg),
+                        address,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: _mediaColumnWidth,
+                        child: logoColumn,
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: details),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: more),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: address),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Create Business',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+              if (formState.generalError != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.08),
+                    borderRadius: AppRadius.smBorder,
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.2),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      "Let's set up your first business.",
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.cloud_off_outlined,
+                        size: 18,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          formState.generalError!,
+                          style: const TextStyle(
+                            color: AppColors.error,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              const Divider(color: _cardBorder),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: onCancel,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm + 4,
                       ),
                     ),
-                  ],
-                ),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: AppSpacing.sm + 4),
+                  FilledButton(
+                    onPressed: formState.isSubmitting ? null : onSubmit,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.primary.withValues(
+                        alpha: 0.5,
+                      ),
+                      disabledForegroundColor: Colors.white.withValues(
+                        alpha: 0.8,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm + 4,
+                      ),
+                    ),
+                    child: formState.isSubmitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Create Business'),
+                              SizedBox(width: AppSpacing.sm),
+                              Icon(Icons.arrow_forward, size: 16),
+                            ],
+                          ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
-          const BusinessFormSectionHeader(
-            title: 'Business Details',
-            icon: Icons.business_outlined,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormField(
-            icon: Icons.store_outlined,
-            label: 'Business Name *',
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBusinessDetailsColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const BusinessProfileSectionHeader(
+          title: 'Business Details',
+          icon: LucideIcons.store,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Business Name',
+          required: true,
+          child: BusinessOutlinedField(
             controller: businessNameController,
+            hintText: 'Business Name',
             textCapitalization: TextCapitalization.words,
+            suffixIcon: const Icon(
+              LucideIcons.idCard,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
             serverError: formState.errorFor('name'),
             inputFormatters: [
-              LengthLimitingTextInputFormatter(Validators.businessNameMaxLength),
+              LengthLimitingTextInputFormatter(
+                Validators.businessNameMaxLength,
+              ),
               FilteringTextInputFormatter.allow(
                 Validators.businessNameInputPattern,
               ),
             ],
             validator: Validators.businessName,
           ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormField(
-            icon: Icons.receipt_long_outlined,
-            label: 'GSTIN',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Phone',
+          required: true,
+          child: BusinessOutlinedField(
+            controller: phoneController,
+            hintText: 'Phone Number',
+            keyboardType: TextInputType.phone,
+            suffixIcon: const Icon(
+              LucideIcons.phone,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+            serverError: formState.errorFor('phone'),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
+            validator: Validators.requiredPhone,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'GSTIN',
+          child: BusinessOutlinedField(
             controller: gstinController,
-            hint: '15-character GSTIN',
+            hintText: '15-character GSTIN',
             serverError: formState.errorFor('gstin'),
             inputFormatters: [
               const UpperCaseTextFormatter(),
@@ -372,17 +683,52 @@ class _CreateBusinessFormContent extends StatelessWidget {
             ],
             validator: Validators.gstin,
           ),
-          const SizedBox(height: AppSpacing.xl),
-          const BusinessFormSectionHeader(
-            title: 'Owner Details',
-            icon: Icons.person_outline,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Email',
+          child: BusinessOutlinedField(
+            controller: emailController,
+            hintText: 'Email ID',
+            keyboardType: TextInputType.emailAddress,
+            suffixIcon: const Icon(
+              LucideIcons.mail,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+            serverError: formState.errorFor('email'),
+            validator: (value) {
+              final trimmed = value?.trim() ?? '';
+              if (trimmed.isEmpty) return null;
+              return Validators.email(trimmed);
+            },
           ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormField(
-            icon: Icons.badge_outlined,
-            label: 'Owner Name *',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMoreDetailsColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const BusinessProfileSectionHeader(
+          title: 'More Details',
+          icon: LucideIcons.user,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Owner Name',
+          required: true,
+          child: BusinessOutlinedField(
             controller: ownerNameController,
+            hintText: 'Owner Name',
             textCapitalization: TextCapitalization.words,
+            suffixIcon: const Icon(
+              LucideIcons.user,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
             serverError: formState.errorFor('owner_name'),
             inputFormatters: [
               LengthLimitingTextInputFormatter(Validators.ownerNameMaxLength),
@@ -392,195 +738,95 @@ class _CreateBusinessFormContent extends StatelessWidget {
             ],
             validator: Validators.ownerName,
           ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormField(
-            icon: Icons.phone_outlined,
-            label: 'Phone *',
-            controller: phoneController,
-            keyboardType: TextInputType.phone,
-            serverError: formState.errorFor('phone'),
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10),
-            ],
-            validator: Validators.requiredPhone,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormField(
-            icon: Icons.email_outlined,
-            label: 'Email',
-            controller: emailController,
-            keyboardType: TextInputType.emailAddress,
-            serverError: formState.errorFor('email'),
-            validator: (value) {
-              final trimmed = value?.trim() ?? '';
-              if (trimmed.isEmpty) return null;
-              return Validators.email(trimmed);
-            },
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          const BusinessFormSectionHeader(
-            title: 'Business Information',
-            icon: Icons.info_outline,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormDropdown(
-            icon: Icons.category_outlined,
-            label: 'Business Type *',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Business Type',
+          required: true,
+          child: BusinessSearchableDropdown(
             value: businessType,
-            serverError: formState.errorFor('business_type'),
+            hintText: 'Business Type',
             items: businessTypes,
+            serverError: formState.errorFor('business_type'),
             onChanged: onBusinessTypeChanged,
             validator: (value) => Validators.requiredSelection(
               value,
               fieldName: 'Business type',
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormDropdown(
-            icon: Icons.map_outlined,
-            label: 'State *',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Business Category',
+          child: BusinessSearchableDropdown(
+            value: businessCategory,
+            hintText: 'Business Category',
+            items: businessCategories,
+            serverError: formState.errorFor('business_category'),
+            onChanged: onBusinessCategoryChanged,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'State',
+          required: true,
+          child: BusinessSearchableDropdown(
             value: state,
-            serverError: formState.errorFor('state'),
+            hintText: 'State',
             items: states,
+            serverError: formState.errorFor('state'),
             onChanged: onStateChanged,
             validator: (value) =>
                 Validators.requiredSelection(value, fieldName: 'State'),
           ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormDropdown(
-            icon: Icons.currency_rupee,
-            label: 'Currency *',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Currency',
+          required: true,
+          child: BusinessSearchableDropdown(
             value: currency,
+            hintText: 'Currency',
+            items: currencies,
+            itemLabel: (code) => _currencyLabels[code] ?? code,
             serverError: formState.errorFor('currency'),
-            items: const ['INR'],
             onChanged: onCurrencyChanged,
             validator: (value) =>
                 Validators.requiredSelection(value, fieldName: 'Currency'),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          const BusinessFormSectionHeader(
-            title: 'Address',
-            icon: Icons.location_on_outlined,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          BusinessFormField(
-            icon: Icons.home_outlined,
-            label: 'Address',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddressColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const BusinessProfileSectionHeader(
+          title: 'Address',
+          icon: LucideIcons.mapPin,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Address',
+          child: BusinessOutlinedField(
             controller: addressController,
-            maxLines: 3,
-            serverError: formState.errorFor('address'),
-          ),
-          if (formState.generalError != null) ...[
-            const SizedBox(height: AppSpacing.lg),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.08),
-                borderRadius: AppRadius.mdBorder,
-                border: Border.all(
-                  color: AppColors.error.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.cloud_off_outlined,
-                    size: 18,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      formState.generalError!,
-                      style: const TextStyle(
-                        color: AppColors.error,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
+            hintText: 'Business Address',
+            minLines: 4,
+            maxLines: 8,
+            suffixIcon: const Padding(
+              padding: EdgeInsets.only(top: AppSpacing.sm),
+              child: Icon(
+                LucideIcons.mapPin,
+                size: 18,
+                color: AppColors.textSecondary,
               ),
             ),
-          ],
-          const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onCancel,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    minimumSize: const Size(0, 48),
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                flex: 2,
-                child: FilledButton(
-                  onPressed: formState.isSubmitting ? null : onSubmit,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.primary.withValues(
-                      alpha: 0.5,
-                    ),
-                    disabledForegroundColor: Colors.white.withValues(
-                      alpha: 0.8,
-                    ),
-                    minimumSize: const Size(0, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: formState.isSubmitting
-                      ? const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(width: AppSpacing.sm),
-                            Text(
-                              'Creating Business...',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        )
-                      : const Text(
-                          'Create Business',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                ),
-              ),
-            ],
+            serverError: formState.errorFor('address'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

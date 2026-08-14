@@ -158,68 +158,69 @@ class _Gstr1ReportContentState extends ConsumerState<Gstr1ReportContent> {
                         Expanded(
                           child: ReportTableArea(
                             child: rows.isEmpty
-                              ? const Center(
-                                  child: Text(
-                                    'No data to display for the selected period.',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textSecondary,
+                                ? const Center(
+                                    child: Text(
+                                      'No data to display for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
-                                  ),
-                                )
-                              : LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final tableWidth =
-                                        constraints.maxWidth.isFinite
-                                        ? math.max(
-                                            constraints.maxWidth,
-                                            _Gstr1ColumnLayout.minWidth,
-                                          )
-                                        : _Gstr1ColumnLayout.minWidth;
+                                  )
+                                : LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final tableWidth =
+                                          constraints.maxWidth.isFinite
+                                          ? math.max(
+                                              constraints.maxWidth,
+                                              _Gstr1ColumnLayout.minWidth,
+                                            )
+                                          : _Gstr1ColumnLayout.minWidth;
 
-                                    return ClipRect(
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: SizedBox(
-                                          width: tableWidth,
-                                          height: constraints.maxHeight,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              const _Gstr1TableHeader(
-                                                headerStyle: _headerStyle,
-                                              ),
-                                              Expanded(
-                                                child: SingleChildScrollView(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .stretch,
-                                                    children: [
-                                                      for (
-                                                        var i = 0;
-                                                        i < rows.length;
-                                                        i++
-                                                      )
-                                                        ReportAlignedRowStrip(
-                                                          index: i,
-                                                          child: _Gstr1DataRow(
-                                                            index: i + 1,
-                                                            row: rows[i],
+                                      return ClipRect(
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: SizedBox(
+                                            width: tableWidth,
+                                            height: constraints.maxHeight,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                const _Gstr1TableHeader(
+                                                  headerStyle: _headerStyle,
+                                                ),
+                                                Expanded(
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .stretch,
+                                                      children: [
+                                                        for (
+                                                          var i = 0;
+                                                          i < rows.length;
+                                                          i++
+                                                        )
+                                                          ReportAlignedRowStrip(
+                                                            index: i,
+                                                            child:
+                                                                _Gstr1DataRow(
+                                                                  index: i + 1,
+                                                                  row: rows[i],
+                                                                ),
                                                           ),
-                                                        ),
-                                                    ],
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                                      );
+                                    },
+                                  ),
                           ),
                         ),
                       ],

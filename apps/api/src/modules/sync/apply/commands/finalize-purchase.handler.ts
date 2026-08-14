@@ -201,10 +201,7 @@ function mapFinalizeError(
   error: unknown,
 ): CommandApplyOutcome {
   if (error instanceof AppError) {
-    if (
-      error.code === 'DOCUMENT_NOT_EDITABLE' ||
-      error.statusCode === 409
-    ) {
+    if (error.code === 'DOCUMENT_NOT_EDITABLE' || error.statusCode === 409) {
       return documentAlreadyFinalized(input);
     }
     return {

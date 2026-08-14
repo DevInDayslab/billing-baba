@@ -60,7 +60,8 @@ class SyncScheduler with WidgetsBindingObserver {
   }
 
   void onConnectivityChanged(SyncConnectivityStatus status) {
-    final wasOffline = _lastConnectivity == SyncConnectivityStatus.offline ||
+    final wasOffline =
+        _lastConnectivity == SyncConnectivityStatus.offline ||
         _lastConnectivity == SyncConnectivityStatus.unknown;
     _lastConnectivity = status;
     if (status == SyncConnectivityStatus.online && wasOffline) {

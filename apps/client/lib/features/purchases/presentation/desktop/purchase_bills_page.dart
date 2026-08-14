@@ -15,7 +15,8 @@ class DesktopPurchaseBillsPage extends ConsumerStatefulWidget {
   const DesktopPurchaseBillsPage({super.key});
 
   @override
-  ConsumerState<DesktopPurchaseBillsPage> createState() => _PurchaseBillsPageState();
+  ConsumerState<DesktopPurchaseBillsPage> createState() =>
+      _PurchaseBillsPageState();
 }
 
 class _PurchaseBillsPageState extends ConsumerState<DesktopPurchaseBillsPage> {

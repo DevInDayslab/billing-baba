@@ -220,8 +220,9 @@ class SalesDocumentsTableRows {
         SalesDocumentMenuAction.delete => permissions.canDelete(module),
         SalesDocumentMenuAction.convertToSaleOrder ||
         SalesDocumentMenuAction.convertToDeliveryChallan ||
-        SalesDocumentMenuAction.convertToInvoice =>
-          permissions.canCreate(module),
+        SalesDocumentMenuAction.convertToInvoice => permissions.canCreate(
+          module,
+        ),
       };
     }).toList();
 
@@ -295,7 +296,9 @@ class _SalesDocumentsTableColumns {
     required List<String> statusOptions,
   }) {
     final filters = ref.watch(salesDocumentFiltersProvider(scope));
-    final filtersNotifier = ref.read(salesDocumentFiltersProvider(scope).notifier);
+    final filtersNotifier = ref.read(
+      salesDocumentFiltersProvider(scope).notifier,
+    );
 
     return [
       ResizableDataColumn(
@@ -633,7 +636,10 @@ class _DataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }

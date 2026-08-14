@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/platform/app_platform.dart';
-import 'package:billing_baba/shared/widgets/adaptive_page.dart' show AdaptivePage;
+import 'package:billing_baba/shared/widgets/adaptive_page.dart'
+    show AdaptivePage;
 import 'package:flutter/widgets.dart';
 
 /// Guards mobile-only UI from being mounted on desktop platforms.

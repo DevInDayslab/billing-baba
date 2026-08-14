@@ -14,6 +14,8 @@ abstract class AuthSession with _$AuthSession {
     @JsonKey(name: 'expires_in') required int expiresIn,
     required AuthUser user,
     required List<BusinessSummary> businesses,
+    @JsonKey(name: 'device_trust_token') String? deviceTrustToken,
+    @JsonKey(name: 'device_trust_expires_at') String? deviceTrustExpiresAt,
   }) = _AuthSession;
 
   factory AuthSession.fromJson(Map<String, dynamic> json) =>

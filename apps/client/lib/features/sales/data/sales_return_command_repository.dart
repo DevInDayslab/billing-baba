@@ -56,7 +56,8 @@ class SalesReturnCommandRepository {
         ? <String>{}
         : existing.lines.map((line) => line.id).toSet();
 
-    final documentNumber = existing?.documentNumber ??
+    final documentNumber =
+        existing?.documentNumber ??
         await _numbering.allocate(
           businessId: businessId,
           documentSeries: input.documentSeries,

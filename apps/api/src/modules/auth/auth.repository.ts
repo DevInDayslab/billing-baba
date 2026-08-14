@@ -1,8 +1,9 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, gt, isNull } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { businesses } from '../../db/schema/business/tables';
 import {
   accounts,
+  deviceTrustTokens,
   refreshTokens,
   users,
 } from '../../db/schema/identity/tables';
@@ -354,6 +355,58 @@ export class AuthRepository {
       .update(refreshTokens)
       .set({ revokedAt: new Date() })
       .where(eq(refreshTokens.id, id));
+  }
+
+  async createDeviceTrustToken(input: {
+    accountId: string;
+    phone: string;
+    deviceId: string;
+    tokenHash: string;
+    expiresAt: Date;
+  }): Promise<void> {
+    await this.db.insert(deviceTrustTokens).values({
+      accountId: input.accountId,
+      phone: input.phone,
+      deviceId: input.deviceId,
+      tokenHash: input.tokenHash,
+      expiresAt: input.expiresAt,
+    });
+  }
+
+  async findValidDeviceTrustToken(input: {
+    tokenHash: string;
+    deviceId: string;
+  }) {
+    const [row] = await this.db
+      .select()
+      .from(deviceTrustTokens)
+      .where(
+        and(
+          eq(deviceTrustTokens.tokenHash, input.tokenHash),
+          eq(deviceTrustTokens.deviceId, input.deviceId),
+          isNull(deviceTrustTokens.revokedAt),
+          gt(deviceTrustTokens.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  async revokeDeviceTrustForDevice(
+    accountId: string,
+    deviceId: string,
+  ): Promise<void> {
+    await this.db
+      .update(deviceTrustTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(deviceTrustTokens.accountId, accountId),
+          eq(deviceTrustTokens.deviceId, deviceId),
+          isNull(deviceTrustTokens.revokedAt),
+        ),
+      );
   }
 
   async getAvatarMediaAssetId(accountId: string): Promise<string | null> {

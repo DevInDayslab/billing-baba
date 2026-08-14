@@ -54,7 +54,8 @@ class AlternativesSection extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => ref.invalidate(itemAlternativesProvider(itemId!)),
+              onPressed: () =>
+                  ref.invalidate(itemAlternativesProvider(itemId!)),
               child: const Text('Retry'),
             ),
           ],
@@ -140,7 +141,8 @@ class AlternativesSection extends ConsumerWidget {
     final categoryName = altItem.categoryName as String?;
     final salePrice = altItem.salePrice as double;
     final stockQuantity = altItem.stockQuantity as double;
-    final alternativeItemId = (alternative as dynamic).alternativeItemId as String;
+    final alternativeItemId =
+        (alternative as dynamic).alternativeItemId as String;
 
     final subtitle = [
       ?brandName,
@@ -201,7 +203,9 @@ class AlternativesSection extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: stockQuantity > 0 ? _chipGreen.withValues(alpha: 0.1) : _chipRed.withValues(alpha: 0.1),
+                  color: stockQuantity > 0
+                      ? _chipGreen.withValues(alpha: 0.1)
+                      : _chipRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -226,7 +230,8 @@ class AlternativesSection extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () => _confirmDelete(context, ref, alternativeItemId, name),
+            onPressed: () =>
+                _confirmDelete(context, ref, alternativeItemId, name),
             icon: Icon(
               LucideIcons.trash2,
               size: 16,
@@ -273,7 +278,9 @@ class AlternativesSection extends ConsumerWidget {
     } on InventoryOfflineException {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network unavailable. Please check your connection.')),
+        const SnackBar(
+          content: Text('Network unavailable. Please check your connection.'),
+        ),
       );
     } on InventoryException catch (e) {
       if (!context.mounted) return;
@@ -283,7 +290,11 @@ class AlternativesSection extends ConsumerWidget {
     }
   }
 
-  Widget _buildAddButton(BuildContext context, WidgetRef ref, List<dynamic> alternatives) {
+  Widget _buildAddButton(
+    BuildContext context,
+    WidgetRef ref,
+    List<dynamic> alternatives,
+  ) {
     return Align(
       alignment: Alignment.centerLeft,
       child: OutlinedButton.icon(
@@ -319,7 +330,7 @@ class AlternativesSection extends ConsumerWidget {
         existingAlternatives: alternatives,
       ),
     );
-    
+
     ref.invalidate(itemAlternativesProvider(itemId!));
   }
 }
@@ -334,7 +345,8 @@ class _AddAlternativeSheet extends ConsumerStatefulWidget {
   final List<dynamic> existingAlternatives;
 
   @override
-  ConsumerState<_AddAlternativeSheet> createState() => _AddAlternativeSheetState();
+  ConsumerState<_AddAlternativeSheet> createState() =>
+      _AddAlternativeSheetState();
 }
 
 class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
@@ -351,7 +363,7 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final bottomPadding = mediaQuery.viewInsets.bottom;
-    
+
     return Padding(
       padding: EdgeInsets.only(bottom: bottomPadding),
       child: Container(
@@ -418,7 +430,10 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
             borderRadius: BorderRadius.circular(6),
             borderSide: const BorderSide(color: AppColors.primary),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
         ),
         style: const TextStyle(fontSize: 13),
         onChanged: (value) => setState(() => _searchQuery = value),
@@ -441,19 +456,26 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
         final existingIds = widget.existingAlternatives
             .map((alt) => (alt as dynamic).alternativeItemId as String)
             .toSet();
-        
+
         var filteredItems = items
-            .where((item) => 
-                item.type == ItemType.product &&
-                item.id != widget.itemId &&
-                !existingIds.contains(item.id))
+            .where(
+              (item) =>
+                  item.type == ItemType.product &&
+                  item.id != widget.itemId &&
+                  !existingIds.contains(item.id),
+            )
             .toList();
 
         if (_searchQuery.trim().isNotEmpty) {
           final searchEngine = InventorySearchEngine.build(
-            items: filteredItems.map(InventorySearchableFields.fromInventoryItem),
+            items: filteredItems.map(
+              InventorySearchableFields.fromInventoryItem,
+            ),
           );
-          filteredItems = searchEngine.searchItems(filteredItems, query: _searchQuery.trim());
+          filteredItems = searchEngine.searchItems(
+            filteredItems,
+            query: _searchQuery.trim(),
+          );
         }
 
         if (filteredItems.isEmpty) {
@@ -487,13 +509,15 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
   Widget _buildItemTile(InventoryItem item) {
     final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
     final brands = ref.watch(inventoryBrandsProvider).value ?? [];
-    
+
     final categoryById = {for (final c in categories) c.id: c.name};
     final brandById = {for (final b in brands) b.id: b.name};
-    
+
     final brandName = item.brandId != null ? brandById[item.brandId] : null;
-    final categoryName = item.categoryId != null ? categoryById[item.categoryId] : null;
-    
+    final categoryName = item.categoryId != null
+        ? categoryById[item.categoryId]
+        : null;
+
     final subtitle = [
       ?brandName,
       ?categoryName,
@@ -569,13 +593,15 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
       await ref
           .read(itemAlternativesProvider(widget.itemId).notifier)
           .addAlternative(item.id);
-      
+
       if (!mounted) return;
       Navigator.of(context).pop();
     } on InventoryOfflineException {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network unavailable. Please check your connection.')),
+        const SnackBar(
+          content: Text('Network unavailable. Please check your connection.'),
+        ),
       );
     } on InventoryException catch (e) {
       if (!mounted) return;

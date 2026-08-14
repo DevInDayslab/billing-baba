@@ -89,9 +89,8 @@ class PartyGroupListPanel extends ConsumerWidget {
                       isSelected: summary.name == selectedGroup,
                       searchQuery: searchQuery,
                       onTap: () {
-                        ref
-                            .read(selectedPartyGroupProvider.notifier)
-                            .selected = summary.name;
+                        ref.read(selectedPartyGroupProvider.notifier).selected =
+                            summary.name;
                       },
                     );
                   },

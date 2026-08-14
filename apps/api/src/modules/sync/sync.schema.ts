@@ -8,10 +8,7 @@ import {
   SYNC_PULL_LIMIT_DEFAULT,
   SYNC_PULL_LIMIT_MAX,
 } from './sync.constants';
-import {
-  SUPPORTED_ROW_ENTITY_TYPES,
-  SYNC_PLATFORMS,
-} from './sync.types';
+import { SUPPORTED_ROW_ENTITY_TYPES, SYNC_PLATFORMS } from './sync.types';
 
 const uuidSchema = z.uuid('Invalid UUID');
 

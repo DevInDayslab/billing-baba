@@ -21,7 +21,9 @@ class PlansPricingMapper {
     required List<SubscriptionPlan> plans,
     required CurrentSubscription current,
   }) {
-    final pricingPlans = plans.map((plan) => _toPricingPlan(plan, current)).toList();
+    final pricingPlans = plans
+        .map((plan) => _toPricingPlan(plan, current))
+        .toList();
 
     return PlansPricingViewData(
       plans: pricingPlans,
@@ -67,14 +69,14 @@ class PlansPricingMapper {
     required CurrentSubscription current,
   }) {
     return switch (planType) {
-      SubscriptionPlanType.gold => current.isActiveGold
-          ? 'Renew Gold'
-          : 'Get Vyapar Gold',
-      SubscriptionPlanType.platinum => current.isActivePlatinum
-          ? 'Renew Platinum'
-          : current.isActiveGold
-          ? 'Upgrade to Platinum'
-          : 'Get Vyapar Platinum',
+      SubscriptionPlanType.gold =>
+        current.isActiveGold ? 'Renew Gold' : 'Get Vyapar Gold',
+      SubscriptionPlanType.platinum =>
+        current.isActivePlatinum
+            ? 'Renew Platinum'
+            : current.isActiveGold
+            ? 'Upgrade to Platinum'
+            : 'Get Vyapar Platinum',
       SubscriptionPlanType.none => 'Buy Now',
     };
   }

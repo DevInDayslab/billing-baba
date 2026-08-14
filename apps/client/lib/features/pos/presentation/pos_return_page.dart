@@ -6,7 +6,8 @@ import 'package:flutter/widgets.dart';
 
 class PosReturnPage extends StatelessWidget {
   const PosReturnPage({
-    required this.originalSale, super.key,
+    required this.originalSale,
+    super.key,
   });
 
   final PosSale originalSale;

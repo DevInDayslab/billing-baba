@@ -108,9 +108,9 @@ class _InMemoryRowServer {
 
       _seq += 1;
       final syncVersion = currentVersion + 1;
-      final updatedAt = DateTime.utc(2026)
-          .add(Duration(seconds: _seq))
-          .toIso8601String();
+      final updatedAt = DateTime.utc(
+        2026,
+      ).add(Duration(seconds: _seq)).toIso8601String();
       final isDelete = operation == 'delete';
       _rows[key] = {
         'entity_type': entityType,
@@ -147,21 +147,24 @@ class _InMemoryRowServer {
     required String cursor,
     String? entityTypes,
   }) {
-    final allowed = entityTypes
+    final allowed =
+        entityTypes
             ?.split(',')
             .map((e) => e.trim())
             .where((e) => e.isNotEmpty)
             .toSet() ??
         {'categories', 'parties', 'items'};
     final afterSeq = int.tryParse(cursor.replaceFirst('c-', '')) ?? 0;
-    final changes = _rows.values
-        .where((r) => allowed.contains(r['entity_type']))
-        .where((r) => ((r['_seq'] as num?)?.toInt() ?? 0) > afterSeq)
-        .toList()
-      ..sort(
-        (a, b) =>
-            ((a['_seq'] as num).toInt()).compareTo((b['_seq'] as num).toInt()),
-      );
+    final changes =
+        _rows.values
+            .where((r) => allowed.contains(r['entity_type']))
+            .where((r) => ((r['_seq'] as num?)?.toInt() ?? 0) > afterSeq)
+            .toList()
+          ..sort(
+            (a, b) => ((a['_seq'] as num).toInt()).compareTo(
+              (b['_seq'] as num).toInt(),
+            ),
+          );
 
     final nextSeq = changes.isEmpty
         ? afterSeq
@@ -204,23 +207,20 @@ class _ServerBackedSyncApi extends SyncApi {
     required String platform,
     required String appVersion,
     required String deviceName,
-  }) async =>
-      {'device_id': deviceId};
+  }) async => {'device_id': deviceId};
 
   @override
   Future<Map<String, dynamic>> status({
     required String deviceId,
     required String appVersion,
-  }) async =>
-      const {'schema_version': 1, 'protocol_version': 1};
+  }) async => const {'schema_version': 1, 'protocol_version': 1};
 
   @override
   Future<Map<String, dynamic>> push({
     required String deviceId,
     required String appVersion,
     required Map<String, dynamic> body,
-  }) async =>
-      _server.push(deviceId: deviceId, body: body);
+  }) async => _server.push(deviceId: deviceId, body: body);
 
   @override
   Future<Map<String, dynamic>> pull({
@@ -390,163 +390,170 @@ void main() {
     server = _InMemoryRowServer();
   });
 
-  test('PART1 fresh bootstrap downloads categories+parties+items into Drift',
-      () async {
-    // Seed server as if another device already pushed masters.
-    server.push(
-      deviceId: 'seed-device',
-      body: {
-        'mutations': [
-          {
-            'mutation_id': const Uuid().v4(),
-            'entity_type': 'categories',
-            'entity_id': '11111111-1111-1111-1111-111111111111',
-            'operation': 'create',
-            'base_sync_version': 0,
-            'payload': {'name': 'Retail'},
-          },
-          {
-            'mutation_id': const Uuid().v4(),
-            'entity_type': 'parties',
-            'entity_id': '22222222-2222-2222-2222-222222222222',
-            'operation': 'create',
-            'base_sync_version': 0,
-            'payload': {
-              'name': 'Acme',
-              'mobile': '9000000001',
-              'party_type': 'customer',
+  test(
+    'PART1 fresh bootstrap downloads categories+parties+items into Drift',
+    () async {
+      // Seed server as if another device already pushed masters.
+      server.push(
+        deviceId: 'seed-device',
+        body: {
+          'mutations': [
+            {
+              'mutation_id': const Uuid().v4(),
+              'entity_type': 'categories',
+              'entity_id': '11111111-1111-1111-1111-111111111111',
+              'operation': 'create',
+              'base_sync_version': 0,
+              'payload': {'name': 'Retail'},
             },
-          },
-          {
-            'mutation_id': const Uuid().v4(),
-            'entity_type': 'items',
-            'entity_id': '33333333-3333-3333-3333-333333333333',
-            'operation': 'create',
-            'base_sync_version': 0,
-            'payload': {
-              'name': 'Widget',
-              'base_unit': 'piece',
-              'item_type': 'product',
-              'has_stock_tracking': true,
-              'sale_price': '10',
-              'purchase_price': '8',
-              'is_mrp_only': false,
+            {
+              'mutation_id': const Uuid().v4(),
+              'entity_type': 'parties',
+              'entity_id': '22222222-2222-2222-2222-222222222222',
+              'operation': 'create',
+              'base_sync_version': 0,
+              'payload': {
+                'name': 'Acme',
+                'mobile': '9000000001',
+                'party_type': 'customer',
+              },
             },
-          },
-        ],
-      },
-    );
+            {
+              'mutation_id': const Uuid().v4(),
+              'entity_type': 'items',
+              'entity_id': '33333333-3333-3333-3333-333333333333',
+              'operation': 'create',
+              'base_sync_version': 0,
+              'payload': {
+                'name': 'Widget',
+                'base_unit': 'piece',
+                'item_type': 'product',
+                'has_stock_tracking': true,
+                'sale_price': '10',
+                'purchase_price': '8',
+                'is_mrp_only': false,
+              },
+            },
+          ],
+        },
+      );
 
-    final android = await _openDevice(
-      label: 'android',
-      deviceId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-      server: server,
-    );
-    addTearDown(android.dispose);
+      final android = await _openDevice(
+        label: 'android',
+        deviceId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+        server: server,
+      );
+      addTearDown(android.dispose);
 
-    expect(android.metadata.bootstrappedAt, isNull);
-    expect(android.metadata.pullCursor, isNull);
+      expect(android.metadata.bootstrappedAt, isNull);
+      expect(android.metadata.pullCursor, isNull);
 
-    final state = await android.sync();
+      final state = await android.sync();
 
-    expect(state.lifecycle, SyncLifecycleState.idle);
-    expect(android.metadata.bootstrappedAt, isNotNull);
-    expect(android.metadata.pullCursor, isNotNull);
-    expect(android.api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines');
+      expect(state.lifecycle, SyncLifecycleState.idle);
+      expect(android.metadata.bootstrappedAt, isNotNull);
+      expect(android.metadata.pullCursor, isNotNull);
+      expect(
+        android.api.lastPullEntityTypes,
+        'categories,brands,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines,leads,lead_activities,contacts,contact_activities,deals,expenses,expense_categories,stock_levels',
+      );
 
-    final cats = await android.categories.listActive('biz-1');
-    final parties = await android.parties.listActive('biz-1');
-    final items = await android.items.listActive('biz-1');
-    expect(cats.map((c) => c.name), ['Retail']);
-    expect(parties.map((p) => p.name), ['Acme']);
-    expect(items.map((i) => i.name), ['Widget']);
-    expect(state.lastResultMessage, contains('pull='));
-  });
+      final cats = await android.categories.listActive('biz-1');
+      final parties = await android.parties.listActive('biz-1');
+      final items = await android.items.listActive('biz-1');
+      expect(cats.map((c) => c.name), ['Retail']);
+      expect(parties.map((p) => p.name), ['Acme']);
+      expect(items.map((i) => i.name), ['Widget']);
+      expect(state.lastResultMessage, contains('pull='));
+    },
+  );
 
-  test('PART2 multi-device create → pull → edit → pull → soft-delete',
-      () async {
-    final desktop = await _openDevice(
-      label: 'macos',
-      deviceId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-      server: server,
-    );
-    final android = await _openDevice(
-      label: 'android',
-      deviceId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-      server: server,
-    );
-    addTearDown(desktop.dispose);
-    addTearDown(android.dispose);
+  test(
+    'PART2 multi-device create → pull → edit → pull → soft-delete',
+    () async {
+      final desktop = await _openDevice(
+        label: 'macos',
+        deviceId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+        server: server,
+      );
+      final android = await _openDevice(
+        label: 'android',
+        deviceId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+        server: server,
+      );
+      addTearDown(desktop.dispose);
+      addTearDown(android.dispose);
 
-    // Desktop creates masters offline-first.
-    final cat = await desktop.categoryRepo.createCategory(
-      const CreateCategoryRequest(name: 'Electronics'),
-    );
-    final party = await desktop.partyRepo.create(
-      const CreatePartyRequest(name: 'Vendor Co', mobile: '9111111111'),
-    );
-    final item = await desktop.itemRepo.create(
-      const CreateItemRequest(name: 'Cable', baseUnit: 'piece'),
-    );
-    expect(await desktop.queue.pendingCount(), 3);
+      // Desktop creates masters offline-first.
+      final cat = await desktop.categoryRepo.createCategory(
+        const CreateCategoryRequest(name: 'Electronics'),
+      );
+      final party = await desktop.partyRepo.create(
+        const CreatePartyRequest(name: 'Vendor Co', mobile: '9111111111'),
+      );
+      final item = await desktop.itemRepo.create(
+        const CreateItemRequest(name: 'Cable', baseUnit: 'piece'),
+      );
+      expect(await desktop.queue.pendingCount(), 3);
 
-    final desktopPush = await desktop.sync();
-    expect(await desktop.queue.pendingCount(), 0);
-    expect(desktopPush.lastResultMessage, contains('push=3'));
-    expect(desktop.metadata.bootstrappedAt, isNotNull);
+      final desktopPush = await desktop.sync();
+      expect(await desktop.queue.pendingCount(), 0);
+      expect(desktopPush.lastResultMessage, contains('push=3'));
+      expect(desktop.metadata.bootstrappedAt, isNotNull);
 
-    // Android bootstraps and receives all three.
-    final androidBoot = await android.sync();
-    expect(androidBoot.lifecycle, SyncLifecycleState.idle);
-    expect(
-      (await android.categories.listActive('biz-1')).map((c) => c.name),
-      ['Electronics'],
-    );
-    expect(
-      (await android.parties.listActive('biz-1')).map((p) => p.name),
-      ['Vendor Co'],
-    );
-    expect(
-      (await android.items.listActive('biz-1')).map((i) => i.name),
-      ['Cable'],
-    );
+      // Android bootstraps and receives all three.
+      final androidBoot = await android.sync();
+      expect(androidBoot.lifecycle, SyncLifecycleState.idle);
+      expect(
+        (await android.categories.listActive('biz-1')).map((c) => c.name),
+        ['Electronics'],
+      );
+      expect(
+        (await android.parties.listActive('biz-1')).map((p) => p.name),
+        ['Vendor Co'],
+      );
+      expect(
+        (await android.items.listActive('biz-1')).map((i) => i.name),
+        ['Cable'],
+      );
 
-    // Android edits all three.
-    await android.categoryRepo.updateCategory(
-      cat.id,
-      const UpdateCategoryRequest(name: 'Electronics++'),
-    );
-    await android.partyRepo.update(
-      party.id,
-      const UpdatePartyRequest(name: 'Vendor Co Pvt'),
-    );
-    await android.itemRepo.update(
-      item.id,
-      const UpdateItemRequest(name: 'Cable XL'),
-    );
-    await android.sync();
-    expect(await android.queue.pendingCount(), 0);
+      // Android edits all three.
+      await android.categoryRepo.updateCategory(
+        cat.id,
+        const UpdateCategoryRequest(name: 'Electronics++'),
+      );
+      await android.partyRepo.update(
+        party.id,
+        const UpdatePartyRequest(name: 'Vendor Co Pvt'),
+      );
+      await android.itemRepo.update(
+        item.id,
+        const UpdateItemRequest(name: 'Cable XL'),
+      );
+      await android.sync();
+      expect(await android.queue.pendingCount(), 0);
 
-    // Desktop pulls edits.
-    await desktop.sync();
-    expect((await desktop.categories.getById(cat.id))!.name, 'Electronics++');
-    expect((await desktop.parties.getById(party.id))!.name, 'Vendor Co Pvt');
-    expect((await desktop.items.getById(item.id))!.name, 'Cable XL');
+      // Desktop pulls edits.
+      await desktop.sync();
+      expect((await desktop.categories.getById(cat.id))!.name, 'Electronics++');
+      expect((await desktop.parties.getById(party.id))!.name, 'Vendor Co Pvt');
+      expect((await desktop.items.getById(item.id))!.name, 'Cable XL');
 
-    // Desktop soft-deletes; Android pulls soft deletes.
-    await desktop.categoryRepo.deleteCategory(cat.id);
-    await desktop.partyRepo.softDelete(party.id);
-    await desktop.itemRepo.softDelete(item.id);
-    await desktop.sync();
-    await android.sync();
+      // Desktop soft-deletes; Android pulls soft deletes.
+      await desktop.categoryRepo.deleteCategory(cat.id);
+      await desktop.partyRepo.softDelete(party.id);
+      await desktop.itemRepo.softDelete(item.id);
+      await desktop.sync();
+      await android.sync();
 
-    expect((await android.categories.getById(cat.id))!.isDeleted, isTrue);
-    expect((await android.parties.getById(party.id))!.isDeleted, isTrue);
-    expect((await android.items.getById(item.id))!.isDeleted, isTrue);
-    expect(await android.categories.listActive('biz-1'), isEmpty);
-    expect(await android.parties.listActive('biz-1'), isEmpty);
-    expect(await android.items.listActive('biz-1'), isEmpty);
-  });
+      expect((await android.categories.getById(cat.id))!.isDeleted, isTrue);
+      expect((await android.parties.getById(party.id))!.isDeleted, isTrue);
+      expect((await android.items.getById(item.id))!.isDeleted, isTrue);
+      expect(await android.categories.listActive('biz-1'), isEmpty);
+      expect(await android.parties.listActive('biz-1'), isEmpty);
+      expect(await android.items.listActive('biz-1'), isEmpty);
+    },
+  );
 
   test('PART3 conflict keeps local Drift and marks queue conflict', () async {
     final desktop = await _openDevice(
@@ -586,131 +593,139 @@ void main() {
 
     expect((await android.items.getById(item.id))!.name, 'AndroidEdit');
     expect((await android.items.getById(item.id))!.syncVersion, 1);
-    final jobs = await (android.db.select(android.db.syncQueue)
-          ..where((t) => t.entityId.equals(item.id)))
-        .get();
+    final jobs = await (android.db.select(
+      android.db.syncQueue,
+    )..where((t) => t.entityId.equals(item.id))).get();
     expect(jobs, isNotEmpty);
     expect(jobs.any((j) => j.status == SyncQueueStatus.conflict.wire), isTrue);
     expect(androidState.lastResultMessage, contains('conflicts=1'));
-    final conflictJob =
-        jobs.firstWhere((j) => j.status == SyncQueueStatus.conflict.wire);
+    final conflictJob = jobs.firstWhere(
+      (j) => j.status == SyncQueueStatus.conflict.wire,
+    );
     expect(conflictJob.lastError, contains('VERSION_CONFLICT'));
     expect(conflictJob.lastError, contains('server_payload'));
     expect(conflictJob.lastError, contains('DesktopEdit'));
   });
 
-  test('PART4 duplicate mutation replay completes without duplicating rows',
-      () async {
-    final device = await _openDevice(
-      label: 'macos',
-      deviceId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
-      server: server,
-    );
-    addTearDown(device.dispose);
+  test(
+    'PART4 duplicate mutation replay completes without duplicating rows',
+    () async {
+      final device = await _openDevice(
+        label: 'macos',
+        deviceId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+        server: server,
+      );
+      addTearDown(device.dispose);
 
-    final created = await device.itemRepo.create(
-      const CreateItemRequest(name: 'ReplayMe', baseUnit: 'piece'),
-    );
-    final job = (await device.queue.listPending()).single;
-    await device.sync();
-    expect(await device.queue.pendingCount(), 0);
+      final created = await device.itemRepo.create(
+        const CreateItemRequest(name: 'ReplayMe', baseUnit: 'piece'),
+      );
+      final job = (await device.queue.listPending()).single;
+      await device.sync();
+      expect(await device.queue.pendingCount(), 0);
 
-    // Re-queue the same mutation_id (simulates duplicate delivery).
-    await (device.db.update(device.db.syncQueue)
-          ..where((t) => t.id.equals(job.id)))
-        .write(
-          const SyncQueueCompanion(
-            status: Value('pending'),
-            lastError: Value(null),
-          ),
-        );
+      // Re-queue the same mutation_id (simulates duplicate delivery).
+      await (device.db.update(
+        device.db.syncQueue,
+      )..where((t) => t.id.equals(job.id))).write(
+        const SyncQueueCompanion(
+          status: Value('pending'),
+          lastError: Value(null),
+        ),
+      );
 
-    await device.sync();
-    expect(await device.queue.pendingCount(), 0);
-    final listed = await device.items.listActive('biz-1');
-    expect(listed, hasLength(1));
-    expect(listed.single.name, 'ReplayMe');
-    expect(listed.single.id, created.id);
-  });
+      await device.sync();
+      expect(await device.queue.pendingCount(), 0);
+      final listed = await device.items.listActive('biz-1');
+      expect(listed, hasLength(1));
+      expect(listed.single.name, 'ReplayMe');
+      expect(listed.single.id, created.id);
+    },
+  );
 
-  test('PART5 offline create all masters then reconnect drains queue',
-      () async {
-    final device = await _openDevice(
-      label: 'macos',
-      deviceId: '12121212-1212-1212-1212-121212121212',
-      server: server,
-    );
-    addTearDown(device.dispose);
+  test(
+    'PART5 offline create all masters then reconnect drains queue',
+    () async {
+      final device = await _openDevice(
+        label: 'macos',
+        deviceId: '12121212-1212-1212-1212-121212121212',
+        server: server,
+      );
+      addTearDown(device.dispose);
 
-    // Mark bootstrapped so reconnect only pushes/pulls (steady state).
-    await device.metadata.setPullCursor('c-0');
-    await device.metadata.setBootstrappedAt(DateTime.utc(2026));
-    await device.metadata.setLastServerSchemaVersion(1);
+      // Mark bootstrapped so reconnect only pushes/pulls (steady state).
+      await device.metadata.setPullCursor('c-0');
+      await device.metadata.setBootstrappedAt(DateTime.utc(2026));
+      await device.metadata.setLastServerSchemaVersion(1);
 
-    await device.categoryRepo.createCategory(
-      const CreateCategoryRequest(name: 'OfflineCat'),
-    );
-    await device.partyRepo.create(
-      const CreatePartyRequest(name: 'OfflineParty', mobile: '9222222222'),
-    );
-    await device.itemRepo.create(
-      const CreateItemRequest(name: 'OfflineItem', baseUnit: 'box'),
-    );
+      await device.categoryRepo.createCategory(
+        const CreateCategoryRequest(name: 'OfflineCat'),
+      );
+      await device.partyRepo.create(
+        const CreatePartyRequest(name: 'OfflineParty', mobile: '9222222222'),
+      );
+      await device.itemRepo.create(
+        const CreateItemRequest(name: 'OfflineItem', baseUnit: 'box'),
+      );
 
-    expect(await device.categories.listActive('biz-1'), hasLength(1));
-    expect(await device.parties.listActive('biz-1'), hasLength(1));
-    expect(await device.items.listActive('biz-1'), hasLength(1));
-    expect(await device.queue.pendingCount(), 3);
+      expect(await device.categories.listActive('biz-1'), hasLength(1));
+      expect(await device.parties.listActive('biz-1'), hasLength(1));
+      expect(await device.items.listActive('biz-1'), hasLength(1));
+      expect(await device.queue.pendingCount(), 3);
 
-    // Offline short-circuit leaves queue intact.
-    var offlineState =
-        const SyncState(connectivity: SyncConnectivityStatus.offline);
-    await device.coordinator.orchestrate(
-      currentState: offlineState,
-      emit: (update) => offlineState = update(offlineState),
-    );
-    expect(offlineState.lifecycle, SyncLifecycleState.offline);
-    expect(await device.queue.pendingCount(), 3);
+      // Offline short-circuit leaves queue intact.
+      var offlineState = const SyncState(
+        connectivity: SyncConnectivityStatus.offline,
+      );
+      await device.coordinator.orchestrate(
+        currentState: offlineState,
+        emit: (update) => offlineState = update(offlineState),
+      );
+      expect(offlineState.lifecycle, SyncLifecycleState.offline);
+      expect(await device.queue.pendingCount(), 3);
 
-    // Reconnect drains.
-    final online = await device.sync();
-    expect(await device.queue.pendingCount(), 0);
-    expect(online.lastResultMessage, contains('push=3'));
-    expect(online.lifecycle, SyncLifecycleState.idle);
-  });
+      // Reconnect drains.
+      final online = await device.sync();
+      expect(await device.queue.pendingCount(), 0);
+      expect(online.lastResultMessage, contains('push=3'));
+      expect(online.lifecycle, SyncLifecycleState.idle);
+    },
+  );
 
-  test('PART6 cursor advances across pulls and soft-delete is in pull stream',
-      () async {
-    final desktop = await _openDevice(
-      label: 'macos',
-      deviceId: '34343434-3434-3434-3434-343434343434',
-      server: server,
-    );
-    final android = await _openDevice(
-      label: 'android',
-      deviceId: '56565656-5656-5656-5656-565656565656',
-      server: server,
-    );
-    addTearDown(desktop.dispose);
-    addTearDown(android.dispose);
+  test(
+    'PART6 cursor advances across pulls and soft-delete is in pull stream',
+    () async {
+      final desktop = await _openDevice(
+        label: 'macos',
+        deviceId: '34343434-3434-3434-3434-343434343434',
+        server: server,
+      );
+      final android = await _openDevice(
+        label: 'android',
+        deviceId: '56565656-5656-5656-5656-565656565656',
+        server: server,
+      );
+      addTearDown(desktop.dispose);
+      addTearDown(android.dispose);
 
-    final cat = await desktop.categoryRepo.createCategory(
-      const CreateCategoryRequest(name: 'CursorCat'),
-    );
-    await desktop.sync();
-    final cursorAfterCreate = desktop.metadata.pullCursor;
-    expect(cursorAfterCreate, isNotNull);
+      final cat = await desktop.categoryRepo.createCategory(
+        const CreateCategoryRequest(name: 'CursorCat'),
+      );
+      await desktop.sync();
+      final cursorAfterCreate = desktop.metadata.pullCursor;
+      expect(cursorAfterCreate, isNotNull);
 
-    await android.sync();
-    final androidCursor = android.metadata.pullCursor;
-    expect(androidCursor, isNotNull);
+      await android.sync();
+      final androidCursor = android.metadata.pullCursor;
+      expect(androidCursor, isNotNull);
 
-    await desktop.categoryRepo.deleteCategory(cat.id);
-    await desktop.sync();
-    expect(desktop.metadata.pullCursor, isNot(cursorAfterCreate));
+      await desktop.categoryRepo.deleteCategory(cat.id);
+      await desktop.sync();
+      expect(desktop.metadata.pullCursor, isNot(cursorAfterCreate));
 
-    await android.sync();
-    expect((await android.categories.getById(cat.id))!.isDeleted, isTrue);
-    expect(android.metadata.pullCursor, isNot(androidCursor));
-  });
+      await android.sync();
+      expect((await android.categories.getById(cat.id))!.isDeleted, isTrue);
+      expect(android.metadata.pullCursor, isNot(androidCursor));
+    },
+  );
 }

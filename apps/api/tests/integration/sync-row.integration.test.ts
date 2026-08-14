@@ -420,7 +420,10 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       });
       expect(conflictPush.statusCode).toBe(200);
       const conflictBody = conflictPush.json() as {
-        data: { conflicts: Array<{ mutation_id: string }>; accepted: unknown[] };
+        data: {
+          conflicts: Array<{ mutation_id: string }>;
+          accepted: unknown[];
+        };
       };
       expect(conflictBody.data.accepted).toEqual([]);
       expect(conflictBody.data.conflicts).toHaveLength(1);
@@ -570,7 +573,10 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       });
       expect(conflictPush.statusCode).toBe(200);
       const conflictBody = conflictPush.json() as {
-        data: { conflicts: Array<{ mutation_id: string }>; accepted: unknown[] };
+        data: {
+          conflicts: Array<{ mutation_id: string }>;
+          accepted: unknown[];
+        };
       };
       expect(conflictBody.data.accepted).toEqual([]);
       expect(conflictBody.data.conflicts).toHaveLength(1);
@@ -1165,6 +1171,66 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
         error: { code: string };
       };
       expect(body.error.code).toBe('BATCH_TOO_LARGE');
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
+
+  test(
+    'todos create → pull round-trip',
+    async () => {
+      const todoId = randomUUID();
+      const mutationCreate = randomUUID();
+
+      const createPush = await app.inject({
+        method: 'POST',
+        url: `${syncPrefix}/push`,
+        headers: syncHeaders(token, deviceId),
+        payload: {
+          device_id: deviceId,
+          client_batch_id: randomUUID(),
+          mutations: [
+            {
+              mutation_id: mutationCreate,
+              kind: 'row',
+              entity_type: 'todos',
+              entity_id: todoId,
+              operation: 'create',
+              base_sync_version: 0,
+              payload: {
+                title: `Sync Todo ${suffix}`,
+                priority: 'medium',
+                is_completed: false,
+                is_pinned: false,
+                attachment_ids: [],
+              },
+              client_updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      expect(createPush.statusCode).toBe(200);
+
+      const pullCursor = encodeCursor({
+        t: new Date(Date.now() - 60_000).toISOString(),
+        i: ZERO_UUID,
+      });
+      const pull = await app.inject({
+        method: 'GET',
+        url: `${syncPrefix}/pull?cursor=${encodeURIComponent(pullCursor)}&entity_types=todos&limit=200`,
+        headers: syncHeaders(token, deviceId),
+      });
+      expect(pull.statusCode).toBe(200);
+      const pullBody = pull.json() as {
+        data: {
+          changes: Array<{
+            entity_id: string;
+            payload: Record<string, unknown> | null;
+          }>;
+        };
+      };
+      const change = pullBody.data.changes.find((c) => c.entity_id === todoId);
+      expect(change).toBeTruthy();
+      expect(change?.payload?.title).toBe(`Sync Todo ${suffix}`);
     },
     INTEGRATION_TIMEOUT_MS,
   );

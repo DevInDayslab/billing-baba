@@ -48,8 +48,9 @@ class HiddenLedgerEntryDetailSheet extends ConsumerWidget {
                   Text('Failed to load entry: $error'),
                   const SizedBox(height: AppSpacing.sm),
                   FilledButton(
-                    onPressed: () =>
-                        ref.invalidate(hiddenLedgerEntryDetailProvider(entryId)),
+                    onPressed: () => ref.invalidate(
+                      hiddenLedgerEntryDetailProvider(entryId),
+                    ),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -77,7 +78,10 @@ class HiddenLedgerEntryDetailSheet extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _DetailRow(label: 'Party', value: entry.partyName ?? entry.partyId),
+                _DetailRow(
+                  label: 'Party',
+                  value: entry.partyName ?? entry.partyId,
+                ),
                 _DetailRow(
                   label: 'Invoice',
                   value: entry.invoiceNumber ?? '—',

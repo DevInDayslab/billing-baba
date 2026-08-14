@@ -32,9 +32,50 @@ SaleLineItem applyCatalogItemToLine(
   );
 }
 
+/// Preserves catalog-linked fields when a widget passes a stale line snapshot
+/// (e.g. qty blur after async [selectCatalogItem]).
+SaleLineItem preserveCatalogFieldsOnStaleLineUpdate(
+  SaleLineItem current,
+  SaleLineItem incoming,
+) {
+  final sameItemName =
+      incoming.itemName.trim().isNotEmpty &&
+      incoming.itemName.trim() == current.itemName.trim();
+
+  if (current.itemId == null || incoming.itemId != null || !sameItemName) {
+    return incoming;
+  }
+
+  final preservePrice = !incoming.priceManuallyOverridden &&
+      (current.priceManuallyOverridden || incoming.pricePerUnit == 0);
+
+  return incoming.copyWith(
+    itemId: current.itemId,
+    catalogUnitPrice: current.catalogUnitPrice,
+    pricePerUnit: preservePrice ? current.pricePerUnit : incoming.pricePerUnit,
+    priceManuallyOverridden: incoming.priceManuallyOverridden ||
+        current.priceManuallyOverridden,
+    unit: incoming.unit == 'NONE' && current.unit != 'NONE'
+        ? current.unit
+        : incoming.unit,
+    taxPercent: incoming.taxPercent == 0 && current.taxPercent > 0
+        ? current.taxPercent
+        : incoming.taxPercent,
+  );
+}
+
+/// Re-applies user edits that may have happened while catalog defaults load.
+SaleLineItem mergeUserEditsIntoCatalogLine(
+  SaleLineItem applied,
+  SaleLineItem current,
+) {
+  return applied.copyWith(
+    qty: current.qty > 0 ? current.qty : applied.qty,
+  );
+}
+
 bool isEmptySaleLineDraft(SaleLineItem line) =>
-    line.qty <= 0 &&
-    (line.itemName.trim().isEmpty || line.itemId == null);
+    line.qty <= 0 && (line.itemName.trim().isEmpty || line.itemId == null);
 
 int? resolveSaleLineIndex(
   List<SaleLineItem> items, {

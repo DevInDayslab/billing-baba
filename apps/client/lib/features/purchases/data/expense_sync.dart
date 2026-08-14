@@ -17,9 +17,9 @@ class ExpenseCategorySync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.expenseCategoriesLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.expenseCategoriesLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -29,7 +29,9 @@ class ExpenseCategorySync {
       return;
     }
 
-    await _db.into(_db.expenseCategoriesLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.expenseCategoriesLocal)
+        .insertOnConflictUpdate(
           ExpenseCategoriesLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -46,7 +48,9 @@ class ExpenseCategorySync {
             isDeleted: Value(isDeleted),
             createdAt: existing?.createdAt ?? updatedAt.toUtc(),
             updatedAt: updatedAt.toUtc(),
-            deletedAt: Value(isDeleted ? (deletedAt ?? updatedAt).toUtc() : null),
+            deletedAt: Value(
+              isDeleted ? (deletedAt ?? updatedAt).toUtc() : null,
+            ),
             deviceId: Value(deviceId ?? existing?.deviceId),
           ),
         );
@@ -58,9 +62,9 @@ class ExpenseCategorySync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.expenseCategoriesLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.expenseCategoriesLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       ExpenseCategoriesLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),
@@ -85,9 +89,9 @@ class ExpenseSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.expensesLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.expensesLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -97,7 +101,9 @@ class ExpenseSync {
       return;
     }
 
-    await _db.into(_db.expensesLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.expensesLocal)
+        .insertOnConflictUpdate(
           ExpensesLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -118,7 +124,8 @@ class ExpenseSync {
             referenceNumber: Value(
               _str(payload, 'reference_number') ?? existing?.referenceNumber,
             ),
-            expenseDate: _str(payload, 'expense_date') ??
+            expenseDate:
+                _str(payload, 'expense_date') ??
                 existing?.expenseDate ??
                 updatedAt.toUtc().toIso8601String().substring(0, 10),
             paymentMode: Value(
@@ -128,7 +135,9 @@ class ExpenseSync {
             isDeleted: Value(isDeleted),
             createdAt: existing?.createdAt ?? updatedAt.toUtc(),
             updatedAt: updatedAt.toUtc(),
-            deletedAt: Value(isDeleted ? (deletedAt ?? updatedAt).toUtc() : null),
+            deletedAt: Value(
+              isDeleted ? (deletedAt ?? updatedAt).toUtc() : null,
+            ),
             deviceId: Value(deviceId ?? existing?.deviceId),
           ),
         );
@@ -140,8 +149,9 @@ class ExpenseSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.expensesLocal)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.expensesLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       ExpensesLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

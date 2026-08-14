@@ -9,7 +9,13 @@ String money(double value) => value.toStringAsFixed(2);
 Map<String, dynamic> buildSalesDocumentRowPayload({
   required String documentType,
   required String documentSeries,
-  required bool isGstFormal, required String documentDate, required String subtotal, required String discountTotal, required String taxAmount, required String totalAmount, String? partyId,
+  required bool isGstFormal,
+  required String documentDate,
+  required String subtotal,
+  required String discountTotal,
+  required String taxAmount,
+  required String totalAmount,
+  String? partyId,
   String? documentNumber,
   String? convertedFromId,
   String? notes,
@@ -55,7 +61,9 @@ Map<String, dynamic> buildSalesLineRowPayload({
     'unit': item.unit,
     'unit_price': money(item.pricePerUnit),
     if (item.mrp > 0) 'market_price': money(item.mrp),
-    'discount_amount': money(item.qty * item.pricePerUnit * item.discountPercent / 100),
+    'discount_amount': money(
+      item.qty * item.pricePerUnit * item.discountPercent / 100,
+    ),
     'tax_type': taxType,
     'tax_rate': money(taxPercent),
     'cgst_amount': halfTax,
@@ -67,12 +75,14 @@ Map<String, dynamic> buildSalesLineRowPayload({
 }
 
 ({String subtotal, String discountTotal, String taxAmount, String totalAmount})
-    computeSalesTotals({
+computeSalesTotals({
   required List<SaleLineItem> items,
   required String taxOption,
 }) {
-  final subtotalValue =
-      items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
+  final subtotalValue = items.fold<double>(
+    0,
+    (sum, item) => sum + item.lineSubtotal,
+  );
   final taxValue = resolveSaleTotalTax(
     taxOption: taxOption,
     subtotal: subtotalValue,

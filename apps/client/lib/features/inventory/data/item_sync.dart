@@ -18,9 +18,9 @@ class ItemSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.itemsLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.itemsLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -31,7 +31,9 @@ class ItemSync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.itemsLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.itemsLocal)
+          .insertOnConflictUpdate(
             ItemsLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -67,21 +69,25 @@ class ItemSync {
     }
 
     final name = _str(payload, 'name');
-    await _db.into(_db.itemsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.itemsLocal)
+        .insertOnConflictUpdate(
           ItemsLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
             name: (name != null && name.isNotEmpty)
                 ? name
                 : (existing?.name ?? ''),
-            shortName:
-                Value(_str(payload, 'short_name') ?? existing?.shortName),
+            shortName: Value(
+              _str(payload, 'short_name') ?? existing?.shortName,
+            ),
             alias: Value(_str(payload, 'alias') ?? existing?.alias),
             searchKeywords: Value(
               _keywords(payload) ?? existing?.searchKeywords,
             ),
-            description:
-                Value(_str(payload, 'description') ?? existing?.description),
+            description: Value(
+              _str(payload, 'description') ?? existing?.description,
+            ),
             itemType: Value(
               _str(payload, 'item_type') ?? existing?.itemType ?? 'product',
             ),
@@ -90,8 +96,9 @@ class ItemSync {
                   existing?.hasStockTracking ??
                   true,
             ),
-            categoryId:
-                Value(_str(payload, 'category_id') ?? existing?.categoryId),
+            categoryId: Value(
+              _str(payload, 'category_id') ?? existing?.categoryId,
+            ),
             brandId: Value(_str(payload, 'brand_id') ?? existing?.brandId),
             hsnCode: Value(_str(payload, 'hsn_code') ?? existing?.hsnCode),
             barcode: Value(_str(payload, 'barcode') ?? existing?.barcode),
@@ -102,16 +109,18 @@ class ItemSync {
             isMrpOnly: Value(
               _bool(payload, 'is_mrp_only') ?? existing?.isMrpOnly ?? false,
             ),
-            marketPrice:
-                Value(_str(payload, 'market_price') ?? existing?.marketPrice),
+            marketPrice: Value(
+              _str(payload, 'market_price') ?? existing?.marketPrice,
+            ),
             salePrice: Value(
               _str(payload, 'sale_price') ?? existing?.salePrice ?? '0',
             ),
             purchasePrice: Value(
               _str(payload, 'purchase_price') ?? existing?.purchasePrice ?? '0',
             ),
-            reorderLevel:
-                Value(_str(payload, 'reorder_level') ?? existing?.reorderLevel),
+            reorderLevel: Value(
+              _str(payload, 'reorder_level') ?? existing?.reorderLevel,
+            ),
             defaultTaxRate: Value(
               _str(payload, 'default_tax_rate') ?? existing?.defaultTaxRate,
             ),
@@ -134,8 +143,9 @@ class ItemSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.itemsLocal)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.itemsLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       ItemsLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),
@@ -154,7 +164,10 @@ class ItemSync {
     final value = payload?['search_keywords'];
     if (value == null) return null;
     if (value is List) {
-      return value.map((e) => e.toString()).where((s) => s.isNotEmpty).join(' ');
+      return value
+          .map((e) => e.toString())
+          .where((s) => s.isNotEmpty)
+          .join(' ');
     }
     return value.toString();
   }

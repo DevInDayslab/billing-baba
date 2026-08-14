@@ -287,7 +287,9 @@ class CollaborationService {
     }
 
     final digits = contact.replaceAll(RegExp(r'\D'), '');
-    final localDigits = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
+    final localDigits = digits.length > 10
+        ? digits.substring(digits.length - 10)
+        : digits;
     if (localDigits.length != 10) {
       throw const CollaborationValidationException(
         'Enter a valid 10-digit phone number or email address',

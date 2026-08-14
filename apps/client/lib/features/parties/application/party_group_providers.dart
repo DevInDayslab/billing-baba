@@ -27,9 +27,13 @@ final partyGroupSummariesProvider = Provider<List<PartyGroupSummary>>((ref) {
   final parties = _allPartiesOrEmpty(ref.watch(allPartiesListProvider));
   final search = ref.watch(partyGroupSearchQueryProvider).trim().toLowerCase();
 
-  final summaries = groups
-      .map((group) => PartyGroupSummary.fromGroup(group, parties))
-      .toList();
+  final summaries = <PartyGroupSummary>[];
+  final seen = <String>{};
+  for (final group in groups) {
+    final key = group.trim().toLowerCase();
+    if (key.isEmpty || !seen.add(key)) continue;
+    summaries.add(PartyGroupSummary.fromGroup(group, parties));
+  }
 
   if (search.isEmpty) return summaries;
 
@@ -43,10 +47,11 @@ final partiesInSelectedGroupProvider = Provider<List<PartyModel>>((ref) {
   if (selectedGroup == null) return const [];
 
   final parties = _allPartiesOrEmpty(ref.watch(allPartiesListProvider));
-  final members = parties
-      .where((party) => party.partyGroup.trim() == selectedGroup)
-      .toList()
-    ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  final members =
+      parties
+          .where((party) => party.partyGroup.trim() == selectedGroup)
+          .toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   return members;
 });
 

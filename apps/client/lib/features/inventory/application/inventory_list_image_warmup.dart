@@ -27,12 +27,27 @@ class InventoryListImageWarmup {
       _ref.read(itemImagesProvider(item.id).notifier).seed([
         seedItemImageFromUrl(item.id, primary),
       ]);
-      unawaited(
-        _ref.read(imageServiceProvider).prefetchUrl(
-              primary,
-              cacheKey: buildImageCacheKey(fallbackUrl: primary),
-            ),
-      );
+      final mediaAssetId = extractMediaAssetIdFromUrl(primary);
+      if (mediaAssetId != null) {
+        unawaited(
+          _ref
+              .read(imageServiceProvider)
+              .prefetchResolved(
+                sourceMediaAssetId: mediaAssetId,
+                context: ImageDisplayContext.list,
+                fallbackUrl: primary,
+              ),
+        );
+      } else {
+        unawaited(
+          _ref
+              .read(imageServiceProvider)
+              .prefetchUrl(
+                primary,
+                cacheKey: buildImageCacheKey(fallbackUrl: primary),
+              ),
+        );
+      }
       return;
     }
 

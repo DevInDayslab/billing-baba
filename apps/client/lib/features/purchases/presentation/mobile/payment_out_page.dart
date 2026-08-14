@@ -7,6 +7,8 @@ class MobilePaymentOutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MobileScopedTransactionPage(route: AppRoutes.purchasePaymentOut);
+    return const MobileScopedTransactionPage(
+      route: AppRoutes.purchasePaymentOut,
+    );
   }
 }

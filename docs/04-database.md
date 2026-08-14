@@ -618,6 +618,23 @@ Standard column block omitted in tables below when **Common Columns** apply. Lis
 
 ---
 
+#### `device_trust_tokens` (server-only)
+
+**Purpose:** Opaque device trust for "Remember for 30 days" OTP-less re-login after logout. Not synced.
+
+| Field | Type | Nullable | Default | Description |
+|-------|------|----------|---------|-------------|
+| `id` | `UUID` | No | `gen_random_uuid()` | PK |
+| `account_id` | `UUID` | No | — | FK → `accounts.id` |
+| `phone` | `TEXT` | No | — | Normalized phone bound to trust |
+| `device_id` | `UUID` | No | — | Client install device id |
+| `token_hash` | `TEXT` | No | — | SHA-256 hash of trust token |
+| `expires_at` | `TIMESTAMPTZ` | No | — | Absolute expiry (30 days from issue) |
+| `revoked_at` | `TIMESTAMPTZ` | Yes | — | Revocation time |
+| `created_at` | `TIMESTAMPTZ` | No | `now()` | — |
+
+---
+
 #### `attendance_records`
 
 **Purpose:** PRD clock-in/out and shift tracking.

@@ -12,16 +12,18 @@ class LocalDocumentNumberService {
     required String documentSeries,
   }) {
     return _db.transaction(() async {
-      final existing = await (_db.select(_db.localDocumentCounters)
-            ..where(
-              (t) =>
-                  t.businessId.equals(businessId) &
-                  t.documentSeries.equals(documentSeries),
-            ))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.localDocumentCounters)..where(
+                (t) =>
+                    t.businessId.equals(businessId) &
+                    t.documentSeries.equals(documentSeries),
+              ))
+              .getSingleOrNull();
 
       final next = existing?.nextNumber ?? 1;
-      await _db.into(_db.localDocumentCounters).insertOnConflictUpdate(
+      await _db
+          .into(_db.localDocumentCounters)
+          .insertOnConflictUpdate(
             LocalDocumentCountersCompanion.insert(
               businessId: businessId,
               documentSeries: documentSeries,

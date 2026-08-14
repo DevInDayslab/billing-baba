@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../../db/client';
 import { salesDocuments } from '../../../../db/schema/sales/tables';
 import { AppError } from '../../../../shared/errors/app-error';
+import { ensureWalkInParty, walkInPartyIdForBusiness } from '../../../../shared/parties/walk-in-party';
 import { SalesDocumentRepository } from '../../../sales/sales-document.repository';
 import { finalizeSalesDocument } from '../../../sales/sales-finalize.service';
 import type { FinalizeSalePaymentInput } from '../../../sales/sales-finalize-payment.service';
@@ -79,7 +80,10 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
     return notFoundError(input, 'Sales document not found');
   }
 
-  if (document.documentType !== 'tax_invoice' && document.documentType !== 'pos') {
+  if (
+    document.documentType !== 'tax_invoice' &&
+    document.documentType !== 'pos'
+  ) {
     return validationError(
       input,
       'finalize_sale only supports tax_invoice and pos documents',
@@ -88,6 +92,15 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
 
   if (document.status !== 'draft') {
     return documentAlreadyFinalized(input);
+  }
+
+  await ensureWalkInParty(
+    db,
+    input.businessId,
+    walkInPartyIdForBusiness(input.businessId),
+  );
+  if (document.partyId) {
+    await ensureWalkInParty(db, input.businessId, document.partyId);
   }
 
   const localNumber =
@@ -201,10 +214,7 @@ function mapFinalizeError(
   error: unknown,
 ): CommandApplyOutcome {
   if (error instanceof AppError) {
-    if (
-      error.code === 'DOCUMENT_NOT_EDITABLE' ||
-      error.statusCode === 409
-    ) {
+    if (error.code === 'DOCUMENT_NOT_EDITABLE' || error.statusCode === 409) {
       return documentAlreadyFinalized(input);
     }
     return {

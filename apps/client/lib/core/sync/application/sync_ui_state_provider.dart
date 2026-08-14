@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/sync/application/sync_activity_log.dart';
 import 'package:billing_baba/core/sync/application/sync_ui_state.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
@@ -12,8 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final manualSyncVisualStateProvider =
     NotifierProvider<ManualSyncVisualStateNotifier, ManualSyncVisualState>(
-  ManualSyncVisualStateNotifier.new,
-);
+      ManualSyncVisualStateNotifier.new,
+    );
 
 class ManualSyncVisualStateNotifier extends Notifier<ManualSyncVisualState> {
   Timer? _resetTimer;
@@ -86,8 +87,8 @@ class ManualSyncVisualStateNotifier extends Notifier<ManualSyncVisualState> {
 
 final _lastSyncDurationNotifierProvider =
     NotifierProvider<_LastSyncDurationNotifier, Duration?>(
-  _LastSyncDurationNotifier.new,
-);
+      _LastSyncDurationNotifier.new,
+    );
 
 class _LastSyncDurationNotifier extends Notifier<Duration?> {
   @override
@@ -128,6 +129,8 @@ final syncActivityWatcherProvider = Provider<void>((ref) {
             }
             if (message.contains('Sync complete')) {
               log.add('Queue empty', kind: SyncActivityKind.success);
+              invalidatePartyOutstandingIndex(ref);
+              invalidateInventoryLists(ref);
             }
           }
         case SyncLifecycleState.paused:
@@ -223,7 +226,8 @@ final syncUiStateProvider = Provider<SyncUiSnapshot>((ref) {
     pendingCommands: pending.pendingCommands,
     queueSize: pending.queueSize,
     currentOperation: currentOperation,
-    progress: syncState.connectivity == SyncConnectivityStatus.offline &&
+    progress:
+        syncState.connectivity == SyncConnectivityStatus.offline &&
             pending.queueSize > 0
         ? OfflineUiMessages.syncWhenOnline
         : syncState.lastResultMessage,

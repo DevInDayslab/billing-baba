@@ -34,7 +34,9 @@ abstract final class CategoryMapper {
 
     return [
       uncategorized(itemCount: countsByCategory[uncategorizedCategoryId] ?? 0),
-      for (final category in categories.where((entry) => !entry.isUncategorized))
+      for (final category in categories.where(
+        (entry) => !entry.isUncategorized,
+      ))
         InventoryCategory(
           id: category.id,
           name: category.name,

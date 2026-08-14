@@ -17,8 +17,11 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fi
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
+import 'package:billing_baba/shared/widgets/document_barcode_keyboard_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addPurchaseRed = Color(0xFFD32F2F);
@@ -32,7 +35,20 @@ class DesktopAddPurchasePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseFormProvider(billId: billId));
 
-    return Stack(
+    return DocumentBarcodeKeyboardHost(
+      onCatalogItem: (catalog) async {
+        final current = ref.read(addPurchaseFormProvider(billId: billId));
+        final notifier =
+            ref.read(addPurchaseFormProvider(billId: billId).notifier);
+        var index = current.items.lastIndexWhere(isEmptyPurchaseLineDraft);
+        if (index < 0) {
+          notifier.addLineItem();
+          index =
+              ref.read(addPurchaseFormProvider(billId: billId)).items.length - 1;
+        }
+        notifier.selectCatalogItem(index, catalog);
+      },
+      child: Stack(
       children: [
         ColoredBox(
           color: AppColors.background,
@@ -109,6 +125,7 @@ class DesktopAddPurchasePage extends ConsumerWidget {
           ),
         ),
       ],
+    ),
     );
   }
 }

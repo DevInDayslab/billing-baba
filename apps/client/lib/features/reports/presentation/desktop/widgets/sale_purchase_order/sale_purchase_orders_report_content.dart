@@ -26,7 +26,10 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
           ref.read(salePurchaseOrdersReportProvider.notifier).refresh(),
       data: (report) {
         final rows = filterSalePurchaseOrderRows(report.rows, filters);
-        final totalAmount = rows.fold<double>(0, (sum, row) => sum + row.amount);
+        final totalAmount = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.amount,
+        );
         const exportHeaders = [
           'Date',
           'Order No.',
@@ -96,69 +99,69 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
                         Expanded(
                           child: ReportTableArea(
                             child: rows.isEmpty
-                              ? const Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ReportSyncScrollTable(
-                                      headerChildren: [
-                                        ReportAlignedHeaderCell(
-                                          label: 'DATE',
-                                          width: 100,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'ORDER NO.',
-                                          width: 110,
-                                        ),
-                                        Expanded(
-                                          child: ReportAlignedHeaderCell(
-                                            label: 'NAME',
+                                ? const Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ReportSyncScrollTable(
+                                        headerChildren: [
+                                          ReportAlignedHeaderCell(
+                                            label: 'DATE',
+                                            width: 100,
                                           ),
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'DUE DATE',
-                                          width: 100,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'STATUS',
-                                          width: 90,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'TYPE',
-                                          width: 100,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'TOTAL',
-                                          width: 100,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'ADVANCE',
-                                          width: 100,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                        ReportAlignedHeaderCell(
-                                          label: 'BALANCE',
-                                          width: 100,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ],
-                                      rows: [],
-                                    ),
-                                    Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          'No orders found for the selected period.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
+                                          ReportAlignedHeaderCell(
+                                            label: 'ORDER NO.',
+                                            width: 110,
+                                          ),
+                                          Expanded(
+                                            child: ReportAlignedHeaderCell(
+                                              label: 'NAME',
+                                            ),
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'DUE DATE',
+                                            width: 100,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'STATUS',
+                                            width: 90,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'TYPE',
+                                            width: 100,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'TOTAL',
+                                            width: 100,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'ADVANCE',
+                                            width: 100,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                          ReportAlignedHeaderCell(
+                                            label: 'BALANCE',
+                                            width: 100,
+                                            alignment: Alignment.centerRight,
+                                          ),
+                                        ],
+                                        rows: [],
+                                      ),
+                                      Expanded(
+                                        child: Center(
+                                          child: Text(
+                                            'No orders found for the selected period.',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : ReportSyncScrollTable(
+                                    ],
+                                  )
+                                : ReportSyncScrollTable(
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
                                         label: 'DATE',
@@ -265,9 +268,8 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
                                         ),
                                     ],
                                   ),
-                                ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

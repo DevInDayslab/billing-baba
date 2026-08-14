@@ -1,17 +1,23 @@
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/data/item_alternative_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_alternatives_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/models/item_alternative_dto.dart';
 import 'package:billing_baba/features/inventory/data/models/item_recommendations_dto.dart';
 import 'package:dio/dio.dart';
 
 class ItemAlternativesRepository {
-  ItemAlternativesRepository({required this._remote});
+  ItemAlternativesRepository({
+    required ItemAlternativeMasterRepository master,
+    required ItemAlternativesRemoteDataSource remote,
+  }) : _master = master,
+       _remote = remote;
 
+  final ItemAlternativeMasterRepository _master;
   final ItemAlternativesRemoteDataSource _remote;
 
   Future<List<ItemAlternativeDto>> listAlternatives(String itemId) async {
     try {
-      return await _remote.listAlternatives(itemId);
+      return await _master.listForItem(itemId);
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -22,7 +28,7 @@ class ItemAlternativesRepository {
     String alternativeItemId,
   ) async {
     try {
-      return await _remote.addAlternative(itemId, alternativeItemId);
+      return await _master.addAlternative(itemId, alternativeItemId);
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -33,7 +39,7 @@ class ItemAlternativesRepository {
     String alternativeItemId,
   ) async {
     try {
-      await _remote.removeAlternative(itemId, alternativeItemId);
+      await _master.removeAlternative(itemId, alternativeItemId);
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -44,7 +50,26 @@ class ItemAlternativesRepository {
     List<String> orderedIds,
   ) async {
     try {
-      await _remote.reorderAlternatives(itemId, orderedIds);
+      await _master.reorderAlternatives(itemId, orderedIds);
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> replaceForItem(
+    String itemId,
+    List<String> alternativeItemIds,
+  ) async {
+    try {
+      await _master.replaceForItem(itemId, alternativeItemIds);
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<Map<String, List<String>>> groupedAlternativeItemIds() async {
+    try {
+      return await _master.groupedAlternativeItemIds();
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }

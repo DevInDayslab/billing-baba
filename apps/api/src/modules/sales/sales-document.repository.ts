@@ -699,7 +699,12 @@ export class SalesDocumentRepository {
   async findItem(
     businessId: string,
     itemId: string,
-  ): Promise<{ id: string; baseUnit: string; brandId: string | null; salePrice: string } | null> {
+  ): Promise<{
+    id: string;
+    baseUnit: string;
+    brandId: string | null;
+    salePrice: string;
+  } | null> {
     const [row] = await this.db
       .select({
         id: items.id,

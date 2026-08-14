@@ -19,7 +19,9 @@ class PartyReminderScheduleMap extends _$PartyReminderScheduleMap {
   @override
   Future<Map<String, PartyReminderSchedule>> build() async {
     ref.watch(currentBusinessProvider);
-    final repo = await ref.watch(partyReminderScheduleRepositoryProvider.future);
+    final repo = await ref.watch(
+      partyReminderScheduleRepositoryProvider.future,
+    );
     return repo.loadAll();
   }
 

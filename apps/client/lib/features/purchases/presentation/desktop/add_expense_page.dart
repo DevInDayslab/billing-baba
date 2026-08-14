@@ -24,6 +24,7 @@ import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dar
 import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addExpenseRed = Color(0xFFD32F2F);
@@ -362,9 +363,7 @@ class _BottomActionBar extends ConsumerWidget {
         children: [
           if (expenseId != null)
             TextButton.icon(
-              onPressed: isSaving
-                  ? null
-                  : () => _handleDelete(context, ref),
+              onPressed: isSaving ? null : () => _handleDelete(context, ref),
               icon: const Icon(Icons.delete_outline, size: 16),
               label: const Text('Delete', style: TextStyle(fontSize: 13)),
               style: TextButton.styleFrom(foregroundColor: AppColors.error),

@@ -1,0 +1,314 @@
+import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
+import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
+
+/// Single inventory item card for the mobile items list.
+///
+/// Layout mirrors common POS item rows: thumbnail + name/category on top,
+/// then a full-width 3-column metric row (sale / purchase / in stock).
+class ItemListCard extends StatelessWidget {
+  const ItemListCard({
+    required this.item,
+    super.key,
+    this.categoryName,
+    this.onTap,
+    this.onLongPress,
+  });
+
+  final InventoryItem item;
+  final String? categoryName;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+
+  static final _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹ ',
+    decimalDigits: 2,
+  );
+
+  static const _thumbSize = 52.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final stockQty = item.quantity;
+    final reservedQty = item.reservedQuantity;
+    final showReserved = reservedQty != null && reservedQty != 0;
+    final hasCategory =
+        categoryName != null && categoryName!.trim().isNotEmpty;
+
+    return MobileCard(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              _ItemThumb(imageUrl: item.primaryImageUrl),
+              const Gap(AppSpacing.md),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              item.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                                height: 1.2,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (item.alternativeItemIds.isNotEmpty) ...[
+                            const Gap(AppSpacing.xs),
+                            const Icon(
+                              Icons.inventory_2_outlined,
+                              size: AppIconSize.sm,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (hasCategory) ...[
+                      const Gap(AppSpacing.sm),
+                      _CategoryBadge(label: categoryName!),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Gap(AppSpacing.md),
+          _MetricRow(
+            children: [
+              _MetricCell(
+                label: 'Sale Price',
+                value: _formatMoney(item.salePrice),
+              ),
+              _MetricCell(
+                label: 'Purchase Price',
+                value: _formatMoney(item.purchasePrice),
+              ),
+              _MetricCell(
+                label: 'In Stock',
+                value: stockQty == null
+                    ? inventoryEmDash
+                    : formatQuantityValue(stockQty),
+                valueColor: stockQty == null
+                    ? AppColors.textSecondary
+                    : _inStockColor(stockQty),
+                alignEnd: true,
+              ),
+            ],
+          ),
+          if (showReserved) ...[
+            const Gap(AppSpacing.sm),
+            _MetricRow(
+              children: [
+                _MetricCell(
+                  label: 'Reserved Qty',
+                  value: formatQuantityValue(reservedQty),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static Color _inStockColor(double? quantity) {
+    if (quantity == null || quantity <= 0) {
+      return inventoryNegativeColor;
+    }
+    return Colors.green.shade600;
+  }
+
+  static String _formatMoney(double? value) {
+    if (value == null) return inventoryEmDash;
+    return _currencyFormat.format(value);
+  }
+}
+
+class _ItemThumb extends StatelessWidget {
+  const _ItemThumb({this.imageUrl});
+
+  final String? imageUrl;
+
+  static const double _size = ItemListCard._thumbSize;
+  static final BorderRadius _radius = BorderRadius.circular(10);
+
+  @override
+  Widget build(BuildContext context) {
+    final url = normalizeImageUrl(imageUrl);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: _radius,
+        border: Border.all(color: const Color(0xFFE8EAED)),
+        color: const Color(0xFFF7F8FA),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: SizedBox(
+          width: _size,
+          height: _size,
+          child: url == null
+              ? const ColoredBox(
+                  color: Color(0xFFF7F8FA),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 22,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : AppNetworkImage(
+                  imageUrl: url,
+                  displayContext: ImageDisplayContext.galleryThumb,
+                  width: _size,
+                  height: _size,
+                  memCacheWidth: (_size * 2).round(),
+                  loadWhenVisible: false,
+                  placeholder: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  errorWidget: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryBadge extends StatelessWidget {
+  const _CategoryBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 110),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F3F5),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+          letterSpacing: 0.3,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+class _MetricRow extends StatelessWidget {
+  const _MetricRow({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const Gap(AppSpacing.sm),
+          Expanded(child: children[i]),
+        ],
+      ],
+    );
+  }
+}
+
+class _MetricCell extends StatelessWidget {
+  const _MetricCell({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.alignEnd = false,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final align = alignEnd ? TextAlign.end : TextAlign.start;
+
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+            height: 1.2,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: align,
+        ),
+        const Gap(2),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: valueColor ?? AppColors.textPrimary,
+            fontSize: 14,
+            height: 1.2,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: align,
+        ),
+      ],
+    );
+  }
+}

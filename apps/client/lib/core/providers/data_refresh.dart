@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -19,21 +20,35 @@ import 'package:billing_baba/features/sales/application/sale_invoices_provider.d
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void invalidateDashboard(Ref ref) {
   ref.invalidate(dashboardProvider);
 }
 
+void invalidatePartyOutstandingIndex(Ref ref) {
+  try {
+    final service = ref.read(partyLedgerServiceProvider).asData?.value;
+    service?.invalidateCache();
+  } on Object catch (error, stack) {
+    debugPrint('[PartyRefresh] outstanding cache: $error\n$stack');
+  }
+  ref.invalidate(partyOutstandingIndexProvider);
+}
+
 void invalidatePartyBalances(Ref ref) {
-  ref
-    ..invalidate(partyListProvider)
-    ..invalidate(partyOutstandingIndexProvider);
+  invalidatePartyOutstandingIndex(ref);
+  ref.invalidate(partyListProvider);
 }
 
 void invalidatePartyTimeline(Ref ref, String partyId) {
-  final service = ref.read(partyLedgerServiceProvider).asData?.value;
-  service?.invalidateCache(partyId: partyId);
+  try {
+    final service = ref.read(partyLedgerServiceProvider).asData?.value;
+    service?.invalidateCache(partyId: partyId);
+  } on Object catch (error, stack) {
+    debugPrint('[PartyRefresh] timeline cache: $error\n$stack');
+  }
 
   ref
     ..invalidate(partyTimelineProvider(partyId))
@@ -121,16 +136,17 @@ void invalidateJobWorkLists(Ref ref) {
 }
 
 void invalidateSaleLists(Ref ref) {
-  ref..invalidate(saleInvoicesProvider)
-  ..invalidate(saleOrdersProvider)
-  ..invalidate(saleReturnsProvider)
-  ..invalidate(estimateQuotationsProvider)
-  ..invalidate(deliveryChallansProvider)
-  ..invalidate(salesDocumentsListProvider(saleOrderListScope()))
-  ..invalidate(salesDocumentsListProvider(deliveryChallanListScope()))
-  ..invalidate(salesDocumentsListProvider(salesReturnListScope()))
-  ..invalidate(salesDocumentsListProvider(estimateListScope()))
-  ..invalidate(salesDocumentsListProvider(proformaListScope()));
+  ref
+    ..invalidate(saleInvoicesProvider)
+    ..invalidate(saleOrdersProvider)
+    ..invalidate(saleReturnsProvider)
+    ..invalidate(estimateQuotationsProvider)
+    ..invalidate(deliveryChallansProvider)
+    ..invalidate(salesDocumentsListProvider(saleOrderListScope()))
+    ..invalidate(salesDocumentsListProvider(deliveryChallanListScope()))
+    ..invalidate(salesDocumentsListProvider(salesReturnListScope()))
+    ..invalidate(salesDocumentsListProvider(estimateListScope()))
+    ..invalidate(salesDocumentsListProvider(proformaListScope()));
 }
 
 void invalidateSaleFaLists(Ref ref) {
@@ -150,8 +166,9 @@ void invalidatePaymentOutLists(Ref ref) {
 }
 
 void invalidateExpenseLists(Ref ref) {
-  ref..invalidate(expenseCategoriesProvider)
-  ..invalidate(expenseTransactionsProvider);
+  ref
+    ..invalidate(expenseCategoriesProvider)
+    ..invalidate(expenseTransactionsProvider);
 }
 
 void invalidateInventoryLists(Ref ref) {
@@ -286,11 +303,25 @@ Future<void> refreshAfterPurchaseReturn(
 }
 
 /// After party create/edit.
-void refreshAfterPartyMutation(Ref ref, {bool refreshList = true}) {
-  if (refreshList) {
-    invalidatePartyBalances(ref);
+void refreshAfterPartyMutation(
+  Ref ref, {
+  bool refreshList = true,
+  String? partyId,
+}) {
+  try {
+    invalidatePartyOutstandingIndex(ref);
+    final id = partyId?.trim();
+    if (id != null && id.isNotEmpty) {
+      invalidatePartyTimeline(ref, id);
+      ref.invalidate(partyLoyaltyBalanceProvider(id));
+    }
+    if (refreshList) {
+      ref.invalidate(partyListProvider);
+    }
+    invalidateDashboard(ref);
+  } on Object catch (error, stack) {
+    debugPrint('[PartyRefresh] after mutation: $error\n$stack');
   }
-  invalidateDashboard(ref);
 }
 
 /// After sale fixed-asset create/edit/delete.

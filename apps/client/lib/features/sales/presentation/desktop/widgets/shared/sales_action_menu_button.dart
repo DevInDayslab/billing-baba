@@ -124,7 +124,8 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       splashFactory: NoSplash.splashFactory,
       backgroundColor: WidgetStateProperty.resolveWith((states) {
-        final isHovered = states.contains(WidgetState.hovered) ||
+        final isHovered =
+            states.contains(WidgetState.hovered) ||
             states.contains(WidgetState.focused);
         if (!isHovered) return Colors.transparent;
         return isDestructive
@@ -132,7 +133,8 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
             : _menuHoverBackground;
       }),
       foregroundColor: WidgetStateProperty.resolveWith((states) {
-        final isHovered = states.contains(WidgetState.hovered) ||
+        final isHovered =
+            states.contains(WidgetState.hovered) ||
             states.contains(WidgetState.focused);
         if (!isHovered) {
           return isDestructive ? AppColors.error : AppColors.textPrimary;

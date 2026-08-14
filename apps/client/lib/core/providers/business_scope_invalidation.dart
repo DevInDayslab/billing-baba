@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
@@ -13,16 +16,23 @@ import 'package:billing_baba/features/crm/application/contacts_provider.dart';
 import 'package:billing_baba/features/crm/application/deals_provider.dart';
 import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
+import 'package:billing_baba/features/dashboard/application/dashboard_service.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
+import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
-import 'package:billing_baba/features/inventory/application/local_item_suppliers_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_service.dart';
+import 'package:billing_baba/features/inventory/application/item_alternatives_index_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_bom_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_suppliers_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_optimistic_profile_images_provider.dart';
 import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
-import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
@@ -46,6 +56,7 @@ import 'package:billing_baba/features/subscription/application/plans_pricing_vie
 import 'package:billing_baba/features/subscription/application/purchase_history_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_plans_provider.dart';
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
+import 'package:billing_baba/features/tasks/data/task_repository.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,6 +170,7 @@ void invalidateAllBusinessScopedProvidersOn(
   container
     ..invalidate(commerceSettingsProvider)
     ..invalidate(partyListProvider)
+    ..invalidate(partyLedgerBusinessIdProvider)
     ..invalidate(partyServiceProvider)
     ..invalidate(partyGroupsProvider)
     ..invalidate(partyGroupsStorageReadyProvider)
@@ -176,8 +188,10 @@ void invalidateAllBusinessScopedProvidersOn(
     ..invalidate(partyReminderScheduleRepositoryProvider)
     ..invalidate(dashboardWidgetPreferencesProvider)
     ..invalidate(saleLineItemColumnVisibilityStateProvider)
-    ..invalidate(localItemTierPricesProvider)
-    ..invalidate(localItemSuppliersProvider)
+    ..invalidate(itemTierPricesProvider)
+    ..invalidate(itemSuppliersProvider)
+    ..invalidate(itemBomProvider)
+    ..invalidate(itemAlternativesIndexProvider)
     ..invalidate(posCartProvider)
     ..invalidate(posSalesListProvider)
     ..invalidate(dashboardProvider)
@@ -239,6 +253,56 @@ void seedBusinessProfilePreview(Ref ref, {required CompanyListEntry entry}) {
       );
 }
 
+/// Fast path for company open — cache/local reads only; blocks the overlay.
+Future<void> warmBusinessScopedProvidersCritical(
+  Ref ref, {
+  required String businessId,
+}) async {
+  _ensureRefMounted(ref, 'warm-critical');
+
+  BusinessOpenDebugLog.step('warm-critical', 'resolve BusinessService');
+  final service = await ref.read(businessServiceProvider.future);
+  _ensureRefMounted(ref, 'warm-critical after service resolve');
+
+  BusinessOpenDebugLog.step(
+    'warm-critical',
+    'parallel (profile cache, dashboard cache, tasks)',
+  );
+  await Future.wait<void>([
+    _warmBusinessProfileCache(ref, service, businessId),
+    _warmDashboardCache(ref),
+    _warmTasks(ref, businessId),
+  ]);
+  _ensureRefMounted(ref, 'warm-critical after parallel fetch');
+
+  ref.read(dashboardWidgetPreferencesProvider);
+  BusinessOpenDebugLog.step('warm-critical', 'complete');
+}
+
+/// Network refresh and catalog hydration — runs after the overlay dismisses.
+Future<void> warmBusinessScopedProvidersDeferred(
+  Ref ref, {
+  required String businessId,
+}) async {
+  _ensureRefMounted(ref, 'warm-deferred');
+
+  BusinessOpenDebugLog.step('warm-deferred', 'resolve BusinessService');
+  final service = await ref.read(businessServiceProvider.future);
+  _ensureRefMounted(ref, 'warm-deferred after service resolve');
+
+  BusinessOpenDebugLog.step(
+    'warm-deferred',
+    'parallel (profile network, dashboard, inventory if empty)',
+  );
+  await Future.wait<void>([
+    _warmBusinessProfileNetwork(ref, service, businessId),
+    _warmDashboard(ref),
+    _warmInventoryCatalogIfEmpty(ref, businessId),
+  ]);
+  _ensureRefMounted(ref, 'warm-deferred after parallel fetch');
+  BusinessOpenDebugLog.step('warm-deferred', 'complete');
+}
+
 /// Loads core business-scoped data for the dashboard shell after a switch.
 ///
 /// Uses direct service/repository calls and seeds provider state instead of
@@ -247,47 +311,73 @@ Future<void> warmBusinessScopedProviders(
   Ref ref, {
   required String businessId,
 }) async {
-  _ensureRefMounted(ref, 'warm');
-
-  BusinessOpenDebugLog.step('warm', 'resolve BusinessService');
-  final service = await ref.read(businessServiceProvider.future);
-  _ensureRefMounted(ref, 'warm after service resolve');
-
-  BusinessOpenDebugLog.step(
-    'warm',
-    'parallel fetch (profile, dashboard, tasks)',
-  );
-  await Future.wait<void>([
-    _warmBusinessProfile(ref, service, businessId),
-    _warmDashboard(ref),
-    _warmTasks(ref, businessId),
-  ]);
-  _ensureRefMounted(ref, 'warm after parallel fetch');
-
-  ref.read(dashboardWidgetPreferencesProvider);
-  BusinessOpenDebugLog.step('warm', 'complete');
+  await warmBusinessScopedProvidersCritical(ref, businessId: businessId);
+  await warmBusinessScopedProvidersDeferred(ref, businessId: businessId);
 }
 
-Future<void> _warmBusinessProfile(
+/// Pulls the item catalog into local SQLite when empty (e.g. first API login).
+Future<void> _warmInventoryCatalog(Ref ref) async {
+  BusinessOpenDebugLog.step('warm', 'inventory');
+  try {
+    final inventory = await ref.read(inventoryServiceProvider.future);
+    _ensureRefMounted(ref, 'warm after inventory service');
+    await inventory.fetchItemsPage();
+    BusinessOpenDebugLog.step('warm', 'inventory ok');
+  } on Object catch (error) {
+    BusinessOpenDebugLog.step('warm', 'inventory skipped ($error)');
+  }
+}
+
+Future<void> _warmInventoryCatalogIfEmpty(
+  Ref ref,
+  String businessId,
+) async {
+  final db = ref.read(appDatabaseProvider);
+  final count = await ItemLocalSource(db).countActive(businessId);
+  if (count > 0) {
+    BusinessOpenDebugLog.step(
+      'warm',
+      'inventory skipped — $count local items',
+    );
+    return;
+  }
+  await _warmInventoryCatalog(ref);
+}
+
+Future<void> _warmBusinessProfileCache(
+  Ref ref,
+  BusinessService service,
+  String businessId,
+) async {
+  BusinessOpenDebugLog.step('warm', 'profile cache');
+  final cached = await service.readCachedBusinessProfile();
+  if (cached != null && cached.id == businessId && ref.mounted) {
+    ref.read(businessProfileProvider.notifier).replaceWith(cached);
+    BusinessOpenDebugLog.step(
+      'warm',
+      'profile cache ok (${cached.name})',
+    );
+    return;
+  }
+  BusinessOpenDebugLog.step('warm', 'profile cache miss');
+}
+
+Future<void> _warmBusinessProfileNetwork(
   Ref ref,
   BusinessService service,
   String businessId,
 ) async {
   if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
-    final cached = await service.readCachedBusinessProfile();
-    if (cached != null && ref.mounted) {
-      ref.read(businessProfileProvider.notifier).replaceWith(cached);
-      BusinessOpenDebugLog.step('warm', 'profile ok from cache (${cached.name})');
-    } else {
-      BusinessOpenDebugLog.step('warm', 'profile skipped — backend unreachable');
-    }
+    BusinessOpenDebugLog.step(
+      'warm',
+      'profile network skipped — backend unreachable',
+    );
     return;
   }
 
-  // One network refresh owned by warm. Callers must not also invalidate
-  // [businessProfileProvider] right before this (see includeBusinessProfile).
-  BusinessOpenDebugLog.step('warm', 'profile fetch');
-  final profile = await service.fetchBusinessProfile(forceRefresh: true);
+  // Cache-first; network only when cache is missing or stale.
+  BusinessOpenDebugLog.step('warm', 'profile network fetch');
+  final profile = await service.fetchBusinessProfile();
   _ensureRefMounted(ref, 'warm after profile fetch');
 
   if (profile.id != businessId) {
@@ -297,7 +387,20 @@ Future<void> _warmBusinessProfile(
   }
   await service.persistSavedProfile(profile);
   ref.read(businessProfileProvider.notifier).replaceWith(profile);
-  BusinessOpenDebugLog.step('warm', 'profile ok (${profile.name})');
+  BusinessOpenDebugLog.step('warm', 'profile network ok (${profile.name})');
+}
+
+Future<void> _warmDashboardCache(Ref ref) async {
+  BusinessOpenDebugLog.step('warm', 'dashboard cache');
+  final service = await ref.read(dashboardServiceProvider.future);
+  final period = ref.read(dashboardPeriodFilterProvider);
+  final cached = service.readCachedViewState(DashboardQuery(period: period));
+  if (cached != null && ref.mounted) {
+    ref.read(dashboardProvider.notifier).seedCached(cached);
+    BusinessOpenDebugLog.step('warm', 'dashboard cache ok');
+    return;
+  }
+  BusinessOpenDebugLog.step('warm', 'dashboard cache miss');
 }
 
 Future<void> _warmDashboard(Ref ref) async {

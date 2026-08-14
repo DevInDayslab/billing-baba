@@ -2,6 +2,7 @@ import type { StoragePurpose } from '../storage/storage.constants';
 import type { StorageValidationPolicy } from '../storage/storage.types';
 
 export const DOCUMENT_ATTACHMENT_ENTITY_TYPES = [
+  'party',
   'sale',
   'purchase',
   'estimate',
@@ -21,7 +22,17 @@ export const MAX_DOCUMENT_ATTACHMENTS = 30;
 
 export const DOCUMENT_ATTACHMENT_POLICY: StorageValidationPolicy = {
   maxBytes: 10 * 1024 * 1024,
-  allowedMimes: ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'],
+  allowedMimes: [
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'application/pdf',
+    'text/plain',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ],
 };
 
 const SALE_DOCUMENT_TYPES = {
@@ -61,6 +72,8 @@ export function storagePurposeForEntity(
       return 'payments';
     case 'job_work':
       return 'job_work';
+    case 'party':
+      return 'documents';
     default:
       return 'documents';
   }

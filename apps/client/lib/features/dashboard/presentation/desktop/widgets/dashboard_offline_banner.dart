@@ -78,7 +78,8 @@ class DashboardOfflineBanner extends StatelessWidget {
     if (diff.inMinutes < 1) return 'just now';
     if (diff.inHours < 1) return '${diff.inMinutes} min ago';
     if (diff.inDays < 1) return '${diff.inHours} hr ago';
-    if (diff.inDays < 7) return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
+    if (diff.inDays < 7)
+      return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
     return DateFormat('d MMM, h:mm a').format(time);
   }
 }

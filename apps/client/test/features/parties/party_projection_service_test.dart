@@ -125,4 +125,40 @@ void main() {
       expect(projection.transactions.first.source, 'purchase_documents');
     },
   );
+
+  test(
+    'buildProjection includes payable opening balance',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const businessId = 'biz-party-3';
+      const partyId = 'supplier-2';
+
+      await db
+          .into(db.partiesLocal)
+          .insert(
+            PartiesLocalCompanion.insert(
+              id: partyId,
+              businessId: businessId,
+              name: 'Payable Supplier',
+              openingBalance: const Value('-300'),
+              partyType: const Value('supplier'),
+              syncVersion: const Value(1),
+              createdAt: DateTime.utc(2026),
+              updatedAt: DateTime.utc(2026),
+            ),
+          );
+
+      final service = PartyProjectionService(PartyLedgerLocalDataSource(db));
+      final projection = await service.buildProjection(
+        businessId: businessId,
+        partyId: partyId,
+      );
+
+      expect(projection.outstanding, -300);
+      expect(projection.payable, 300);
+      expect(projection.receivable, 0);
+    },
+  );
 }

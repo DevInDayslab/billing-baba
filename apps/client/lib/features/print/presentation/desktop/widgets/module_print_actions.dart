@@ -41,7 +41,10 @@ abstract final class ModulePrintActions {
     );
   }
 
-  static Future<void> printDeliveryChallans(BuildContext context, WidgetRef ref) {
+  static Future<void> printDeliveryChallans(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     return _printSheet(
       context,
       title: 'Delivery Challans',

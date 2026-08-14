@@ -192,20 +192,23 @@ class StockSummaryReportContent extends ConsumerWidget {
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportStockSummaryRow>(
-                              reportScope: stockSummaryReportScope,
-                              columns: stockSummaryColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No stock items to display.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportStockSummaryRow
+                                >(
+                                  reportScope: stockSummaryReportScope,
+                                  columns: stockSummaryColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No stock items to display.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

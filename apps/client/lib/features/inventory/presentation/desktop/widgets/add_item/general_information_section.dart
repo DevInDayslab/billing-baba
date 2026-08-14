@@ -25,6 +25,7 @@ class GeneralInformationSection extends StatelessWidget {
     required this.itemCodeController,
     required this.descriptionController,
     required this.itemNameError,
+    required this.baseUnitError,
     required this.onItemNameChanged,
     required this.onShortNameChanged,
     required this.onAliasChanged,
@@ -58,6 +59,7 @@ class GeneralInformationSection extends StatelessWidget {
   final TextEditingController itemCodeController;
   final TextEditingController descriptionController;
   final bool itemNameError;
+  final bool baseUnitError;
   final ValueChanged<String> onItemNameChanged;
   final ValueChanged<String> onShortNameChanged;
   final ValueChanged<String> onAliasChanged;
@@ -177,12 +179,18 @@ class GeneralInformationSection extends StatelessWidget {
               span: 3,
               child: AppFormField(
                 label: 'Select Unit',
+                hasError: baseUnitError,
+                errorText: 'Please select a base unit.',
                 child: OutlinedButton(
                   onPressed: onSelectUnit,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
+                    foregroundColor: baseUnitError
+                        ? AppColors.error
+                        : AppColors.primary,
                     backgroundColor: const Color(0xFFE3F2FD),
-                    side: BorderSide.none,
+                    side: baseUnitError
+                        ? const BorderSide(color: AppColors.error, width: 1.5)
+                        : BorderSide.none,
                     minimumSize: const Size.fromHeight(FormSpacing.inputHeight),
                     maximumSize: const Size.fromHeight(FormSpacing.inputHeight),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -219,7 +227,9 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: aliasController,
                   style: saleFieldTextStyle,
-                  decoration: buildFormControlDecoration(hint: 'Alternate name'),
+                  decoration: buildFormControlDecoration(
+                    hint: 'Alternate name',
+                  ),
                   onChanged: onAliasChanged,
                 ),
               ),

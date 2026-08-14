@@ -16,7 +16,13 @@ import 'package:billing_baba/features/crm/data/crm_sync.dart';
 import 'package:billing_baba/features/inventory/data/brand_sync.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
 import 'package:billing_baba/features/inventory/data/godown_sync.dart';
+import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
+import 'package:billing_baba/features/inventory/data/item_alternative_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_bom_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_supplier_sync.dart';
+import 'package:billing_baba/features/inventory/data/item_tier_price_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
+import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:billing_baba/features/purchases/data/expense_sync.dart';
@@ -24,6 +30,7 @@ import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart
 import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
 import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
+import 'package:billing_baba/features/tasks/data/todo_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final connectivityMonitorProvider = Provider<ConnectivityMonitor>((ref) {
@@ -73,14 +80,16 @@ final syncApiProvider = FutureProvider<SyncApi>((ref) async {
   return SyncApi(apiClient.dio);
 });
 
-final syncDeviceIdentityProvider =
-    FutureProvider<SyncDeviceIdentity>((ref) async {
+final syncDeviceIdentityProvider = FutureProvider<SyncDeviceIdentity>((
+  ref,
+) async {
   final storage = await ref.watch(storageServiceProvider.future);
   return SyncDeviceIdentity(storage);
 });
 
-final syncMetadataStoreProvider =
-    FutureProvider<SyncMetadataStore>((ref) async {
+final syncMetadataStoreProvider = FutureProvider<SyncMetadataStore>((
+  ref,
+) async {
   final storage = await ref.watch(storageServiceProvider.future);
   return SyncMetadataStore(storage);
 });
@@ -101,6 +110,11 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     brandSync: BrandSync(db),
     partySync: PartySync(db),
     itemSync: ItemSync(db),
+    itemSupplierSync: ItemSupplierSync(db),
+    itemBomMaterialSync: ItemBomMaterialSync(db),
+    itemBomCostSync: ItemBomCostSync(db),
+    itemAlternativeSync: ItemAlternativeSync(db),
+    itemTierPriceSync: ItemTierPriceSync(db),
     unitSync: UnitSync(db),
     taxRateSync: TaxRateSync(db),
     godownSync: GodownSync(db),
@@ -114,6 +128,11 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     dealSync: DealSync(db),
     expenseSync: ExpenseSync(db),
     expenseCategorySync: ExpenseCategorySync(db),
+    stockLevelSync: StockLevelSync(
+      InventoryStockLocalDataSource(db),
+      metadata,
+    ),
+    todoSync: TodoSync(db),
   );
 });
 
@@ -136,8 +155,9 @@ final syncStateProvider = StreamProvider<SyncState>((ref) async* {
   yield* engine.stateChanges;
 });
 
-final connectivityStatusProvider =
-    StreamProvider<SyncConnectivityStatus>((ref) async* {
+final connectivityStatusProvider = StreamProvider<SyncConnectivityStatus>((
+  ref,
+) async* {
   final monitor = ref.watch(connectivityMonitorProvider);
   yield monitor.status;
   yield* monitor.onStatusChanged;

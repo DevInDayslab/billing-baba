@@ -172,6 +172,28 @@ export class GodownRepository {
     return row?.id ?? null;
   }
 
+  async clearDefaultFlags(
+    businessId: string,
+    exceptGodownId?: string,
+  ): Promise<void> {
+    const conditions = [
+      eq(godowns.businessId, businessId),
+      eq(godowns.isDeleted, false),
+      eq(godowns.isDefault, true),
+    ];
+    if (exceptGodownId) {
+      conditions.push(ne(godowns.id, exceptGodownId));
+    }
+    await this.db
+      .update(godowns)
+      .set({
+        isDefault: false,
+        updatedAt: new Date(),
+        syncVersion: sql`${godowns.syncVersion} + 1`,
+      })
+      .where(and(...conditions));
+  }
+
   async create(values: GodownInsertValues): Promise<GodownRecord> {
     const [row] = await this.db
       .insert(godowns)
@@ -209,6 +231,9 @@ export class GodownRepository {
       .set({
         ...(values.name !== undefined ? { name: values.name } : {}),
         ...(values.address !== undefined ? { address: values.address } : {}),
+        ...(values.isDefault !== undefined
+          ? { isDefault: values.isDefault }
+          : {}),
         ...(values.updatedBy !== undefined
           ? { updatedBy: values.updatedBy }
           : {}),

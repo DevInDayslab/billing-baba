@@ -50,7 +50,7 @@ final class ItemImagesProvider
   }
 }
 
-String _$itemImagesHash() => r'e577260013d2b8edd52078ff98f4b492b6789576';
+String _$itemImagesHash() => r'b255ab0e5243e63bdb103fec78c2fff29f063637';
 
 final class ItemImagesFamily extends $Family
     with

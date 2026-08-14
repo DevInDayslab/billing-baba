@@ -25,13 +25,16 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_pa
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_tabs_bar.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
+import 'package:billing_baba/shared/widgets/document_barcode_keyboard_host.dart';
 import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addressFieldLines = 3;
@@ -43,6 +46,8 @@ class DesktopAddSalePage extends ConsumerStatefulWidget {
     this.invoiceId,
     this.duplicateFromId,
     this.attachOrderIds,
+    this.initialPartyId,
+    this.initialPartyName,
     this.readOnly = false,
     super.key,
   });
@@ -50,6 +55,8 @@ class DesktopAddSalePage extends ConsumerStatefulWidget {
   final String? invoiceId;
   final String? duplicateFromId;
   final List<String>? attachOrderIds;
+  final String? initialPartyId;
+  final String? initialPartyName;
   final bool readOnly;
 
   @override
@@ -75,6 +82,8 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
     }
     if (widget.duplicateFromId != null) return _duplicateSessionKey;
     if (widget.invoiceId != null) return widget.invoiceId!;
+    final partyId = widget.initialPartyId?.trim();
+    if (partyId != null && partyId.isNotEmpty) return 'party_$partyId';
     if (_supportsTabs) {
       return ref.read(saleTabsProvider()).activeTab.sessionKey;
     }
@@ -101,6 +110,18 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initializeForm());
     } else {
       _initialized = true;
+      final partyId = widget.initialPartyId?.trim();
+      final partyName = widget.initialPartyName?.trim();
+      if (partyId != null &&
+          partyId.isNotEmpty &&
+          partyName != null &&
+          partyName.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref
+              .read(addSaleFormProvider(sessionKey: _sessionKey).notifier)
+              .updateParty(partyId: partyId, partyName: partyName);
+        });
+      }
     }
   }
 
@@ -206,7 +227,25 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
       );
     }
 
-    return PopScope(
+    return DocumentBarcodeKeyboardHost(
+      enabled: !widget.readOnly,
+      onCatalogItem: (catalog) async {
+        final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
+        final notifier = ref.read(
+          addSaleFormProvider(sessionKey: sessionKey).notifier,
+        );
+        var index = form.items.lastIndexWhere(isEmptySaleLineDraft);
+        if (index < 0) {
+          notifier.addLineItem();
+          index = ref
+                  .read(addSaleFormProvider(sessionKey: sessionKey))
+                  .items
+                  .length -
+              1;
+        }
+        await notifier.selectCatalogItem(index, catalog);
+      },
+      child: PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
@@ -317,6 +356,7 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -648,8 +688,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
     final notifier = ref.read(
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
-    final canViewHiddenLedger =
-        ref.watch(permissionServiceProvider).canViewHiddenLedger;
+    final canViewHiddenLedger = ref
+        .watch(permissionServiceProvider)
+        .canViewHiddenLedger;
     final partyId = form.partyId;
     final showHiddenLedgerBanner =
         canViewHiddenLedger && partyId != null && partyId.isNotEmpty;
@@ -842,9 +883,7 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
           final isNarrow = constraints.maxWidth < _narrowBreakpoint;
           final printButton = !isCash
               ? OutlinedButton.icon(
-                  onPressed: isBusy
-                      ? null
-                      : () => _handlePrintPreview(context),
+                  onPressed: isBusy ? null : () => _handlePrintPreview(context),
                   icon: const Icon(Icons.print_outlined, size: 16),
                   label: const Text(
                     'Print / Preview',
@@ -967,8 +1006,9 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
     }
 
     final paidAmount = form.displayReceivedAmount;
-    final allowHiddenLedger =
-        ref.read(permissionServiceProvider).canViewHiddenLedger;
+    final allowHiddenLedger = ref
+        .read(permissionServiceProvider)
+        .canViewHiddenLedger;
 
     final handling = await showShortPaymentHandlingDialog(
       context,
@@ -1014,8 +1054,11 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
 
     final shortPayment = await _resolveShortPaymentHandling(context);
     if (!context.mounted) return;
-    final latestForm = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
-    if (latestForm.hasShortPayment && shortPayment.shortPaymentHandling == null) {
+    final latestForm = ref.read(
+      addSaleFormProvider(sessionKey: widget.sessionKey),
+    );
+    if (latestForm.hasShortPayment &&
+        shortPayment.shortPaymentHandling == null) {
       return;
     }
 
@@ -1065,8 +1108,11 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
   ) async {
     final shortPayment = await _resolveShortPaymentHandling(context);
     if (!context.mounted) return;
-    final latestForm = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
-    if (latestForm.hasShortPayment && shortPayment.shortPaymentHandling == null) {
+    final latestForm = ref.read(
+      addSaleFormProvider(sessionKey: widget.sessionKey),
+    );
+    if (latestForm.hasShortPayment &&
+        shortPayment.shortPaymentHandling == null) {
       return;
     }
 
@@ -1324,15 +1370,16 @@ class _SaleTextFieldState extends State<_SaleTextField> {
       style: saleFieldTextStyle.copyWith(
         fontSize: widget.compact ? 13 : 14,
       ),
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        filled: widget.filled,
-        compact: widget.compact,
-        hasError: widget.hasError,
-        fixedHeight: false,
-      ).copyWith(
-        errorText: widget.hasError ? widget.errorText : null,
-      ),
+      decoration:
+          buildSaleFieldDecoration(
+            hint: widget.hintText,
+            filled: widget.filled,
+            compact: widget.compact,
+            hasError: widget.hasError,
+            fixedHeight: false,
+          ).copyWith(
+            errorText: widget.hasError ? widget.errorText : null,
+          ),
       keyboardType: widget.keyboardType,
       inputFormatters: widget.inputFormatters,
       minLines: widget.minLines,

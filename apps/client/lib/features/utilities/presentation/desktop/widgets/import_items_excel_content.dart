@@ -125,79 +125,83 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
                       _buildHeader(),
                       const SizedBox(height: AppSpacing.lg),
                       DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.lgBorder,
-                    border: Border.all(color: _cardBorder),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0F000000),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.lgBorder,
+                          border: Border.all(color: _cardBorder),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x0F000000),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final useColumn = constraints.maxWidth < 720;
+                              final stepsPanel = _StepsPanel(
+                                onDownloadSample: _downloadSample,
+                              );
+                              final uploadPanel = _UploadPanel(
+                                fileName: state.isParsing
+                                    ? null
+                                    : state.fileName,
+                                onBrowse: state.isParsing
+                                    ? null
+                                    : () => _pickFile(ref),
+                                minHeight: useColumn ? 280 : null,
+                              );
+
+                              if (useColumn) {
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    stepsPanel,
+                                    const SizedBox(height: AppSpacing.xl),
+                                    uploadPanel,
+                                  ],
+                                );
+                              }
+
+                              return IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(child: stepsPanel),
+                                    const SizedBox(width: AppSpacing.xl),
+                                    Expanded(child: uploadPanel),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
+                      if (state.rows.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        KeyedSubtree(
+                          key: _previewSectionKey,
+                          child: _PreviewSection(
+                            state: state,
+                            onToggleRow: (id, selected) => ref
+                                .read(importItemsExcelProvider.notifier)
+                                .toggleRowSelection(id, selected: selected),
+                            onSelectAllValid: (selected) => ref
+                                .read(importItemsExcelProvider.notifier)
+                                .selectAllValid(selected: selected),
+                            onImport: () => _confirmImport(context, ref),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final useColumn = constraints.maxWidth < 720;
-                        final stepsPanel = _StepsPanel(
-                          onDownloadSample: _downloadSample,
-                        );
-                        final uploadPanel = _UploadPanel(
-                          fileName: state.isParsing ? null : state.fileName,
-                          onBrowse: state.isParsing
-                              ? null
-                              : () => _pickFile(ref),
-                          minHeight: useColumn ? 280 : null,
-                        );
-
-                        if (useColumn) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              stepsPanel,
-                              const SizedBox(height: AppSpacing.xl),
-                              uploadPanel,
-                            ],
-                          );
-                        }
-
-                        return IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: stepsPanel),
-                              const SizedBox(width: AppSpacing.xl),
-                              Expanded(child: uploadPanel),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
                 ),
-                if (state.rows.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xl),
-                  KeyedSubtree(
-                    key: _previewSectionKey,
-                    child: _PreviewSection(
-                      state: state,
-                      onToggleRow: (id, selected) => ref
-                          .read(importItemsExcelProvider.notifier)
-                          .toggleRowSelection(id, selected: selected),
-                      onSelectAllValid: (selected) => ref
-                          .read(importItemsExcelProvider.notifier)
-                          .selectAllValid(selected: selected),
-                      onImport: () => _confirmImport(context, ref),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
+              ),
             ),
           ),
         ],

@@ -14,10 +14,12 @@ class DesktopPurchaseReturnPage extends ConsumerStatefulWidget {
   const DesktopPurchaseReturnPage({super.key});
 
   @override
-  ConsumerState<DesktopPurchaseReturnPage> createState() => _PurchaseReturnPageState();
+  ConsumerState<DesktopPurchaseReturnPage> createState() =>
+      _PurchaseReturnPageState();
 }
 
-class _PurchaseReturnPageState extends ConsumerState<DesktopPurchaseReturnPage> {
+class _PurchaseReturnPageState
+    extends ConsumerState<DesktopPurchaseReturnPage> {
   @override
   void initState() {
     super.initState();

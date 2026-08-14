@@ -62,9 +62,12 @@ class ItemRecommendationsDto {
   final List<RecommendedItemDto> sameCategory;
 
   Map<String, dynamic> toJson() => {
-    'manually_configured': manuallyConfigured.map((item) => item.toJson()).toList(),
-    'same_brand_category':
-        sameBrandCategory.map((item) => item.toJson()).toList(),
+    'manually_configured': manuallyConfigured
+        .map((item) => item.toJson())
+        .toList(),
+    'same_brand_category': sameBrandCategory
+        .map((item) => item.toJson())
+        .toList(),
     'same_category': sameCategory.map((item) => item.toJson()).toList(),
   };
 }

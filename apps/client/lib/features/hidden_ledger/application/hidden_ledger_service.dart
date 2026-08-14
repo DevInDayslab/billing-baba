@@ -77,7 +77,9 @@ class HiddenLedgerList extends _$HiddenLedgerList {
 
   Future<void> goToPage(int page) async {
     final filters = ref.read(hiddenLedgerFiltersStateProvider);
-    ref.read(hiddenLedgerFiltersStateProvider.notifier).update(
+    ref
+        .read(hiddenLedgerFiltersStateProvider.notifier)
+        .update(
           filters.copyWith(page: page),
         );
     ref.invalidateSelf();

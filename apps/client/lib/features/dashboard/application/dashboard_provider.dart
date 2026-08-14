@@ -40,7 +40,9 @@ class Dashboard extends _$Dashboard {
   }) async {
     try {
       final service = await ref.read(dashboardServiceProvider.future);
-      final fresh = await service.fetchDashboard(DashboardQuery(period: period));
+      final fresh = await service.fetchDashboard(
+        DashboardQuery(period: period),
+      );
       if (!ref.mounted) return;
       state = AsyncData(
         hadCache ? fresh.copyWith(isRefreshing: false) : fresh,
@@ -85,5 +87,9 @@ class Dashboard extends _$Dashboard {
   Future<DashboardViewState> _loadFresh(DashboardPeriod period) async {
     final service = await ref.read(dashboardServiceProvider.future);
     return service.fetchDashboard(DashboardQuery(period: period));
+  }
+
+  void seedCached(DashboardViewState cached) {
+    state = AsyncData(cached);
   }
 }

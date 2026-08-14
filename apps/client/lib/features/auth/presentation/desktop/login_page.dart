@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/network_error_details.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/presentation/desktop/widgets/network_error_banner.dart';
@@ -30,18 +32,26 @@ class _LoginPageState extends ConsumerState<DesktopLoginPage> {
   }
 
   Future<void> _devLogin() async {
+    debugPrint('[LOGIN] Developer Login button tapped');
     await ref.read(authProvider.notifier).devLogin();
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final storage = ref.watch(storageServiceProvider).asData?.value;
+    final isReturningUser =
+        storage?.read(StorageKeys.hasLoggedInBefore) == 'true';
     final isDevLoginLoading =
         auth.isBackendLogin && auth.status == AuthStatus.unauthenticated;
-    final isOtpFlowLoading =
-        auth.isSendingOtp ||
-        (auth.isBackendLogin && auth.status == AuthStatus.otpSent);
-    final canSend = auth.canSendOtp && !isOtpFlowLoading && !isDevLoginLoading;
+    final isContinueLoading = auth.isSendingOtp || auth.isBackendLogin;
+    final isOtpFlowLoading = isContinueLoading;
+    final continueButtonLabel = auth.isSendingOtp
+        ? 'Sending OTP...'
+        : auth.isBackendLogin
+        ? 'Signing in...'
+        : 'Continue';
+    final canSend = auth.canSendOtp && !isContinueLoading;
     final showDevLogin = AppConfig.enableDevLogin;
 
     return Scaffold(
@@ -110,11 +120,17 @@ class _LoginPageState extends ConsumerState<DesktopLoginPage> {
                               formKey: _formKey,
                               phoneController: _phoneController,
                               isOtpFlowLoading: isOtpFlowLoading,
+                              continueButtonLabel: continueButtonLabel,
                               isDevLoginLoading: isDevLoginLoading,
                               canSend: canSend,
                               errorMessage: auth.error,
                               networkError: auth.networkError,
                               showDevLogin: showDevLogin,
+                              isReturningUser: isReturningUser,
+                              rememberFor30Days: auth.rememberFor30Days,
+                              onRememberChanged: (value) => ref
+                                  .read(authProvider.notifier)
+                                  .setRememberFor30Days(value: value),
                               onSubmit: _submit,
                               onDevLogin: _devLogin,
                             )
@@ -122,11 +138,17 @@ class _LoginPageState extends ConsumerState<DesktopLoginPage> {
                               formKey: _formKey,
                               phoneController: _phoneController,
                               isOtpFlowLoading: isOtpFlowLoading,
+                              continueButtonLabel: continueButtonLabel,
                               isDevLoginLoading: isDevLoginLoading,
                               canSend: canSend,
                               errorMessage: auth.error,
                               networkError: auth.networkError,
                               showDevLogin: showDevLogin,
+                              isReturningUser: isReturningUser,
+                              rememberFor30Days: auth.rememberFor30Days,
+                              onRememberChanged: (value) => ref
+                                  .read(authProvider.notifier)
+                                  .setRememberFor30Days(value: value),
                               onSubmit: _submit,
                               onDevLogin: _devLogin,
                             ),
@@ -150,9 +172,13 @@ class _DesktopCard extends StatelessWidget {
     required this.formKey,
     required this.phoneController,
     required this.isOtpFlowLoading,
+    required this.continueButtonLabel,
     required this.isDevLoginLoading,
     required this.canSend,
     required this.onSubmit,
+    required this.isReturningUser,
+    required this.rememberFor30Days,
+    required this.onRememberChanged,
     this.errorMessage,
     this.networkError,
     this.showDevLogin = false,
@@ -162,11 +188,15 @@ class _DesktopCard extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isOtpFlowLoading;
+  final String continueButtonLabel;
   final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
   final NetworkErrorDetails? networkError;
   final bool showDevLogin;
+  final bool isReturningUser;
+  final bool rememberFor30Days;
+  final ValueChanged<bool> onRememberChanged;
   final VoidCallback onSubmit;
   final VoidCallback? onDevLogin;
 
@@ -226,11 +256,15 @@ class _DesktopCard extends StatelessWidget {
                   formKey: formKey,
                   phoneController: phoneController,
                   isOtpFlowLoading: isOtpFlowLoading,
+                  continueButtonLabel: continueButtonLabel,
                   isDevLoginLoading: isDevLoginLoading,
                   canSend: canSend,
                   errorMessage: errorMessage,
                   networkError: networkError,
                   showDevLogin: showDevLogin,
+                  isReturningUser: isReturningUser,
+                  rememberFor30Days: rememberFor30Days,
+                  onRememberChanged: onRememberChanged,
                   onSubmit: onSubmit,
                   onDevLogin: onDevLogin,
                 ),
@@ -251,9 +285,13 @@ class _MobileCard extends StatelessWidget {
     required this.formKey,
     required this.phoneController,
     required this.isOtpFlowLoading,
+    required this.continueButtonLabel,
     required this.isDevLoginLoading,
     required this.canSend,
     required this.onSubmit,
+    required this.isReturningUser,
+    required this.rememberFor30Days,
+    required this.onRememberChanged,
     this.errorMessage,
     this.networkError,
     this.showDevLogin = false,
@@ -263,11 +301,15 @@ class _MobileCard extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isOtpFlowLoading;
+  final String continueButtonLabel;
   final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
   final NetworkErrorDetails? networkError;
   final bool showDevLogin;
+  final bool isReturningUser;
+  final bool rememberFor30Days;
+  final ValueChanged<bool> onRememberChanged;
   final VoidCallback onSubmit;
   final VoidCallback? onDevLogin;
 
@@ -290,11 +332,15 @@ class _MobileCard extends StatelessWidget {
         formKey: formKey,
         phoneController: phoneController,
         isOtpFlowLoading: isOtpFlowLoading,
+        continueButtonLabel: continueButtonLabel,
         isDevLoginLoading: isDevLoginLoading,
         canSend: canSend,
         errorMessage: errorMessage,
         networkError: networkError,
         showDevLogin: showDevLogin,
+        isReturningUser: isReturningUser,
+        rememberFor30Days: rememberFor30Days,
+        onRememberChanged: onRememberChanged,
         onSubmit: onSubmit,
         onDevLogin: onDevLogin,
       ),
@@ -310,9 +356,13 @@ class _LoginForm extends StatelessWidget {
     required this.formKey,
     required this.phoneController,
     required this.isOtpFlowLoading,
+    required this.continueButtonLabel,
     required this.isDevLoginLoading,
     required this.canSend,
     required this.onSubmit,
+    required this.isReturningUser,
+    required this.rememberFor30Days,
+    required this.onRememberChanged,
     this.errorMessage,
     this.networkError,
     this.showDevLogin = false,
@@ -322,11 +372,15 @@ class _LoginForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isOtpFlowLoading;
+  final String continueButtonLabel;
   final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
   final NetworkErrorDetails? networkError;
   final bool showDevLogin;
+  final bool isReturningUser;
+  final bool rememberFor30Days;
+  final ValueChanged<bool> onRememberChanged;
   final VoidCallback onSubmit;
   final VoidCallback? onDevLogin;
 
@@ -338,10 +392,9 @@ class _LoginForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Welcome Back heading
-          const Text(
-            'Welcome Back',
-            style: TextStyle(
+          Text(
+            isReturningUser ? 'Welcome Back' : 'Welcome',
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -457,7 +510,30 @@ class _LoginForm extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
+
+          SizedBox(
+            height: 40,
+            child: CheckboxListTile(
+              value: rememberFor30Days,
+              onChanged: isOtpFlowLoading || isDevLoginLoading
+                  ? null
+                  : (value) => onRememberChanged(value ?? false),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: AppColors.primary,
+              title: const Text(
+                'Remember for 30 days',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
 
           // Continue button
           SizedBox(
@@ -490,7 +566,7 @@ class _LoginForm extends StatelessWidget {
                       size: 20,
                     ),
               label: Text(
-                isOtpFlowLoading ? 'Sending OTP...' : 'Continue',
+                continueButtonLabel,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

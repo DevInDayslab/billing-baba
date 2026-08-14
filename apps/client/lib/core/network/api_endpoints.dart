@@ -10,11 +10,13 @@ abstract final class ApiEndpoints {
   static const businessStamp = '/api/v1/business/stamp';
   static const businessUpiQr = '/api/v1/business/upi-qr';
   static const authAvatar = '/api/v1/auth/me/avatar';
+  static const gstinVerify = '/api/v1/gstin/verify';
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
   static String partyDeleteStatus(String id) =>
       '/api/v1/parties/$id/delete-status';
   static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
+  static String partyNotes(String id) => '/api/v1/parties/$id/notes';
   static String partyLoyalty(String id) => '/api/v1/parties/$id/loyalty';
   static String partyProfileImage(String id) =>
       '/api/v1/parties/$id/profile-image';
@@ -32,6 +34,8 @@ abstract final class ApiEndpoints {
       '/api/v1/crm/contacts/$id/activities';
   static const crmDeals = '/api/v1/crm/deals';
   static String crmDeal(String id) => '/api/v1/crm/deals/$id';
+  static const todos = '/api/v1/todos';
+  static String todo(String id) => '/api/v1/todos/$id';
   static const sync = '/api/v1/sync';
   static const syncDevices = '$sync/devices';
   static const syncStatus = '$sync/status';
@@ -66,6 +70,9 @@ abstract final class ApiEndpoints {
   static const inventoryItemsAlternativesIndex =
       '$inventoryItems/alternatives-index';
   static String inventoryItem(String id) => '$inventoryItems/$id';
+  static String inventoryItemSuppliers(String itemId) =>
+      '${inventoryItem(itemId)}/suppliers';
+  static String inventoryItemBom(String itemId) => '${inventoryItem(itemId)}/bom';
   static String inventoryItemImages(String itemId) =>
       '${inventoryItem(itemId)}/images';
   static String inventoryItemImage(String itemId, String imageId) =>
@@ -87,6 +94,8 @@ abstract final class ApiEndpoints {
       '$storageImages/$sourceAssetId/variants';
   static String storageImageVariantUrl(String sourceAssetId, String variant) =>
       '$storageImages/$sourceAssetId/variants/$variant/url';
+  static String storageFileUrl(String assetId) =>
+      '/api/v1/storage/files/$assetId/url';
 
   static String inventoryItemTierPrices(String itemId) =>
       '${inventoryItem(itemId)}/tier-prices';
@@ -296,4 +305,11 @@ abstract final class ApiEndpoints {
   static const subscriptionCreateOrder = '$subscription/create-order';
   static const subscriptionVerify = '$subscription/verify';
   static const subscriptionRefresh = '$subscription/refresh';
+
+  static const paymentGateway = '/api/v1/payments';
+  static const paymentGatewayCreateOrder = '$paymentGateway/create-order';
+  static const paymentGatewayVerify = '$paymentGateway/verify';
+  static String paymentGatewayStatus(String id) => '$paymentGateway/status/$id';
+  static String paymentGatewayCheckoutOpen(String id) =>
+      '$paymentGateway/checkout-open/$id';
 }

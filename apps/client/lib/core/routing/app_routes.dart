@@ -15,16 +15,20 @@ abstract final class AppRoutes {
   static const crmContacts = '/crm/contacts';
   static const crmDeals = '/crm/deals';
   static const items = '/items';
+  static const itemsDetail = '/items/details';
   static const itemsCategories = '/items/categories';
+  static const itemsBrands = '/items/brands';
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
   static const itemsStockTransfer = '/items/stock-transfer';
+  static const itemsSettings = '/items/settings';
   static const pos = '/pos';
   static const sale = '/sale';
   static const saleInvoices = '/sale/invoices';
   static const saleEstimateQuotation = '/sale/estimate-quotation';
   static const saleProformaInvoice = '/sale/proforma-invoice';
   static const salePaymentIn = '/sale/payment-in';
+  static const addPaymentIn = '/sale/add-payment-in';
   static const saleOrder = '/sale/order';
   static const addSaleOrder = '/sale/add-order';
   static const editSaleOrder = '/sale/edit-order';
@@ -32,6 +36,8 @@ abstract final class AppRoutes {
   static const addDeliveryChallan = '/sale/add-delivery-challan';
   static const editDeliveryChallan = '/sale/edit-delivery-challan';
   static const saleJobWorkOut = '/sale/job-work-out';
+  static const addJobWork = '/sale/add-job-work';
+  static const editJobWork = '/sale/edit-job-work';
   static const saleReturnCreditNote = '/sale/return-credit-note';
   static const saleFa = '/sale/fa';
   static const addSaleFa = '/sale/add-fa';
@@ -40,14 +46,18 @@ abstract final class AppRoutes {
   static const editCreditNote = '/sale/edit-credit-note';
   static const duplicateSale = '/sale/add/duplicate';
   static const addSale = '/sale/add';
+  static const saleInvoiceMoreSettings = '/sale/more-settings';
   static const editSale = '/sale/edit';
   static const viewSale = '/sale/view';
   static const addEstimate = '/sale/add-estimate';
   static const duplicateEstimate = '/sale/add-estimate/duplicate';
   static const editEstimate = '/sale/edit-estimate';
+  static const addProforma = '/sale/add-proforma';
+  static const editProforma = '/sale/edit-proforma';
   static const purchase = '/purchase';
   static const purchaseBills = '/purchase/bills';
   static const purchasePaymentOut = '/purchase/payment-out';
+  static const addPaymentOut = '/purchase/add-payment-out';
   static const purchaseExpenses = '/purchase/expenses';
   static const purchaseOrder = '/purchase/order';
   static const purchaseReturnDebitNote = '/purchase/return-debit-note';
@@ -67,6 +77,8 @@ abstract final class AppRoutes {
   static const reportsSales = '/reports/sales';
   static const reportsPurchase = '/reports/purchase';
   static const reportsStock = '/reports/stock';
+  static const reportsStockSummary = '/reports/stock-summary';
+  static const reportsItemDetail = '/reports/item-detail';
   static const reportsParty = '/reports/party';
   static const reportsGst = '/reports/gst';
   static const collaboration = '/collaboration';
@@ -101,12 +113,24 @@ abstract final class AppRoutes {
   static const settingsPrint = '/settings/print';
   static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
+  static const settingsNotifications = '/settings/notifications';
+  static const settingsReports = '/settings/reports';
+
+  static String settingsReportGroup(String groupId) =>
+      '$settingsReports/$groupId';
+
+  static String settingsReportSubsection(String groupId, String subsectionId) =>
+      '${settingsReportGroup(groupId)}/$subsectionId';
 
   /// Settings hub deep-link with tab query (`general`, `print`, …).
-  static String settingsTab(String tabId) =>
-      '$settingsPreferences?tab=$tabId';
+  static String settingsTab(String tabId) => '$settingsPreferences?tab=$tabId';
 
   static const plansPricing = '/plans-pricing';
+  static const subscriptionReview = '/plans-pricing/review';
+  static const subscriptionPaymentProcessing =
+      '/plans-pricing/payment-processing';
+  static const subscriptionPaymentSuccess = '/plans-pricing/payment-success';
+  static const plansPricingLicenseInfo = '/plans-pricing/license-info';
   static const editProfile = '/edit-profile';
   static const userProfile = '/my-profile';
   static const accessDenied = '/access-denied';

@@ -15,6 +15,7 @@ class CategoriesLocal extends Table {
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
   TextColumn get deviceId => text().nullable()();
+
   /// Denormalized; not pushed to server.
   IntColumn get itemCount => integer().withDefault(const Constant(0))();
 

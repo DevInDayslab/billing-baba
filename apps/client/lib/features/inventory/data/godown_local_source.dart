@@ -9,12 +9,12 @@ class GodownLocalSource {
   final AppDatabase _db;
 
   Future<int> countActive(String businessId) async {
-    final rows = await (_db.select(_db.godownsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.godownsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            ))
+            .get();
     return rows.length;
   }
 
@@ -36,14 +36,30 @@ class GodownLocalSource {
   }
 
   Future<GodownTableData?> getById(String id) {
-    return (_db.select(_db.godownsLocal)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.godownsLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<GodownDto?> getActiveDto(String id) async {
     final row = await getById(id);
     if (row == null || row.isDeleted) return null;
     return _toDto(row);
+  }
+
+  /// Returns the active default godown id for [businessId], or null if none.
+  Future<String?> getDefaultGodownId(String businessId) async {
+    final rows = await (_db.select(_db.godownsLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.isDeleted.equals(false) &
+                t.isDefault.equals(true),
+          )
+          ..limit(1))
+        .get();
+    if (rows.isEmpty) return null;
+    return rows.first.id;
   }
 
   Future<void> upsertRow({
@@ -59,7 +75,9 @@ class GodownLocalSource {
     bool isDeleted = false,
     String? deviceId,
   }) {
-    return _db.into(_db.godownsLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.godownsLocal)
+        .insertOnConflictUpdate(
           GodownsLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -79,8 +97,7 @@ class GodownLocalSource {
   Future<void> upsertFromDto(String businessId, GodownDto dto) {
     final created =
         DateTime.tryParse(dto.createdAt)?.toUtc() ?? DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
     return upsertRow(
       id: dto.id,
       businessId: businessId,

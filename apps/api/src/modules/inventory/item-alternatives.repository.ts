@@ -31,46 +31,34 @@ export class ItemAlternativesRepository {
     businessId: string,
     itemId: string,
   ): Promise<AlternativeRecord[]> {
-    let rows;
-    try {
-      rows = await this.db
-        .select({
-          id: itemAlternatives.id,
-          itemId: itemAlternatives.itemId,
-          alternativeItemId: itemAlternatives.alternativeItemId,
-          sortOrder: itemAlternatives.sortOrder,
-          alternativeItemName: items.name,
-          alternativeItemBarcode: items.barcode,
-          alternativeItemSalePrice: items.salePrice,
-          brandId: items.brandId,
-          categoryId: items.categoryId,
-        })
-        .from(itemAlternatives)
-        .innerJoin(
-          items,
-          and(
-            eq(itemAlternatives.alternativeItemId, items.id),
-            eq(items.isDeleted, false),
-          ),
-        )
-        .where(
-          and(
-            eq(itemAlternatives.businessId, businessId),
-            eq(itemAlternatives.itemId, itemId),
-            eq(itemAlternatives.isDeleted, false),
-          ),
-        )
-        .orderBy(asc(itemAlternatives.sortOrder));
-    } catch (error: any) {
-      console.error('RAW DB ERROR:', {
-        message: error.message,
-        cause: error.cause,
-        detail: error.detail,
-        code: error.code,
-        hint: error.hint,
-      });
-      throw error;
-    }
+    const rows = await this.db
+      .select({
+        id: itemAlternatives.id,
+        itemId: itemAlternatives.itemId,
+        alternativeItemId: itemAlternatives.alternativeItemId,
+        sortOrder: itemAlternatives.sortOrder,
+        alternativeItemName: items.name,
+        alternativeItemBarcode: items.barcode,
+        alternativeItemSalePrice: items.salePrice,
+        brandId: items.brandId,
+        categoryId: items.categoryId,
+      })
+      .from(itemAlternatives)
+      .innerJoin(
+        items,
+        and(
+          eq(itemAlternatives.alternativeItemId, items.id),
+          eq(items.isDeleted, false),
+        ),
+      )
+      .where(
+        and(
+          eq(itemAlternatives.businessId, businessId),
+          eq(itemAlternatives.itemId, itemId),
+          eq(itemAlternatives.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(itemAlternatives.sortOrder));
 
     const results = await Promise.all(
       rows.map(async (row) => {
@@ -92,7 +80,9 @@ export class ItemAlternativesRepository {
             ? this.db
                 .select({ name: brands.name })
                 .from(brands)
-                .where(and(eq(brands.id, row.brandId), eq(brands.isDeleted, false)))
+                .where(
+                  and(eq(brands.id, row.brandId), eq(brands.isDeleted, false)),
+                )
                 .limit(1)
                 .then((result) => result[0])
             : Promise.resolve(undefined),
@@ -101,7 +91,10 @@ export class ItemAlternativesRepository {
                 .select({ name: categories.name })
                 .from(categories)
                 .where(
-                  and(eq(categories.id, row.categoryId), eq(categories.isDeleted, false)),
+                  and(
+                    eq(categories.id, row.categoryId),
+                    eq(categories.isDeleted, false),
+                  ),
                 )
                 .limit(1)
                 .then((result) => result[0])

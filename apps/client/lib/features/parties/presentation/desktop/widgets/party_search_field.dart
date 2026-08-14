@@ -5,6 +5,7 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/features/parties/utils/party_search_match.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
@@ -104,30 +105,24 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
     if (_searchQuery.isEmpty) return filtered;
 
-    final query = _searchQuery.trim().toLowerCase();
-    return filtered.where((party) => _partyMatchesQuery(party, query)).toList();
-  }
-
-  bool _partyMatchesQuery(PartyModel party, String query) {
-    // Split query into words so "Delhi ABC" matches "ABC Traders Delhi"
-    final queryWords = query
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
+    final queryWords = PartySearchMatch.queryWords(_searchQuery);
+    return filtered
+        .where(
+          (party) => PartySearchMatch.matchesFields(
+            queryWords: queryWords,
+            fields: [
+              party.name,
+              party.legalName,
+              party.alias,
+              party.additionalField1,
+              party.phone,
+              ...party.additionalPhones,
+              party.gstin,
+              party.email,
+            ],
+          ),
+        )
         .toList();
-
-    if (queryWords.isEmpty) return true;
-
-    // Combine all searchable fields into one string
-    final searchableText = [
-      party.name,
-      party.additionalField1,
-      party.phone,
-      party.gstin,
-      party.email,
-    ].join(' ').toLowerCase();
-
-    // Every query word must be found somewhere in the combined text
-    return queryWords.every(searchableText.contains);
   }
 
   Future<void> _openAddPartyDialog() async {
@@ -217,9 +212,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     if (match == null) {
       try {
         final pickerParties = await ref.read(partyPickerListProvider.future);
-        match = pickerParties
-            .where((item) => item.id == party.id)
-            .firstOrNull;
+        match = pickerParties.where((item) => item.id == party.id).firstOrNull;
       } on Object {
         // Picker refresh is best-effort after edit.
       }

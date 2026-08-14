@@ -279,6 +279,58 @@ export function buildInventoryPaths() {
         },
       }),
     },
+    '/inventory/items/{itemId}/suppliers': {
+      get: securedOperation({
+        tags: ['Inventory'],
+        summary: 'List Item Suppliers',
+        description:
+          'Returns supplier party links for an item. Exactly one may be default when the list is non-empty.',
+        operationId: 'listItemSuppliers',
+        parameters: [idParam],
+        responses: {
+          200: { description: 'Item suppliers' },
+          ...standardErrorResponses,
+        },
+      }),
+      put: securedOperation({
+        tags: ['Inventory'],
+        summary: 'Replace Item Suppliers',
+        description:
+          'Replaces the supplier set for an item. Requires exactly one default when suppliers are present.',
+        operationId: 'replaceItemSuppliers',
+        parameters: [idParam],
+        responses: {
+          200: { description: 'Suppliers replaced' },
+          ...standardErrorResponses,
+        },
+      }),
+    },
+    '/inventory/items/{itemId}/bom': {
+      get: securedOperation({
+        tags: ['Inventory'],
+        summary: 'Get Item BOM',
+        description:
+          'Returns manufacturing bill of materials and additional costs for a finished good.',
+        operationId: 'getItemBom',
+        parameters: [idParam],
+        responses: {
+          200: { description: 'Item BOM' },
+          ...standardErrorResponses,
+        },
+      }),
+      put: securedOperation({
+        tags: ['Inventory'],
+        summary: 'Replace Item BOM',
+        description:
+          'Replaces BOM materials and costs. Quantities must be positive; circular BOMs are rejected.',
+        operationId: 'replaceItemBom',
+        parameters: [idParam],
+        responses: {
+          200: { description: 'BOM replaced' },
+          ...standardErrorResponses,
+        },
+      }),
+    },
   };
 
   const stock = {

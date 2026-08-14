@@ -70,7 +70,8 @@ class SaleFormAttachment {
   bool get isPdf => mimeType == 'application/pdf';
 
   bool get canPreview =>
-      isImage && (localBytes != null || (fileUrl != null && fileUrl!.isNotEmpty));
+      isImage &&
+      (localBytes != null || (fileUrl != null && fileUrl!.isNotEmpty));
 
   SaleFormAttachment copyWith({
     String? name,

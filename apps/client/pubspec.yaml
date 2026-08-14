@@ -42,6 +42,9 @@ dependencies:
   flutter_secure_storage: ^10.3.1
   package_info_plus: ^10.2.0
   device_info_plus: ^13.2.0
+  flutter_local_notifications: ^19.0.0
+  timezone: ^0.10.0
+  flutter_timezone: ^4.1.0
 
   # UI
   google_fonts: ^8.1.0
@@ -69,15 +72,23 @@ dependencies:
   file_picker: ^12.0.0-beta.7
   justkawal_excel_updated: ^5.0.0
   tabler_icons_plus: ^3.44.0
+  mobile_scanner: ^7.4.0
+  image_picker: ^1.2.0
+  crop_your_image: ^2.0.0
+  image: ^4.5.4
   flutter_launcher_icons: ^0.14.4
   font_awesome_flutter: ^11.0.0
   window_manager: ^0.5.2
+  screen_retriever: ^0.2.2
   open_filex: ^4.7.0
 
   # Desktop Razorpay checkout (InAppWebView host + netbanking popups).
   flutter_inappwebview: ^6.1.5
+  razorpay_flutter: ^1.4.5
   win32: ^6.3.0
   ffi: ^2.2.0
+  flutter_contacts: ^2.3.1
+  permission_handler: ^13.0.1
 
 dev_dependencies:
   flutter_test:

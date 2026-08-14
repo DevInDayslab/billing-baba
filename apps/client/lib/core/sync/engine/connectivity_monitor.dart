@@ -7,7 +7,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 /// Wraps [Connectivity] for the sync runtime.
 class ConnectivityMonitor {
   ConnectivityMonitor({Connectivity? connectivity})
-      : _connectivity = connectivity ?? Connectivity();
+    : _connectivity = connectivity ?? Connectivity();
 
   final Connectivity _connectivity;
   final _controller = StreamController<SyncConnectivityStatus>.broadcast();
@@ -45,8 +45,7 @@ class ConnectivityMonitor {
   }
 
   void _apply(List<ConnectivityResult> results) {
-    if (results.isEmpty ||
-        results.every((r) => r == ConnectivityResult.none)) {
+    if (results.isEmpty || results.every((r) => r == ConnectivityResult.none)) {
       _set(SyncConnectivityStatus.offline);
       return;
     }

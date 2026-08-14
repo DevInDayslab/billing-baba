@@ -1,21 +1,13 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:flutter/material.dart';
 
-/// Mobile-only bottom-nav visibility flags.
-///
-/// Kept separate from desktop shell sidebar visibility so mobile navigation
-/// does not depend on desktop shell configuration.
-abstract final class MobileNavVisibility {
-  static const hideMenu = false;
-}
-
 /// Primary bottom-navigation destinations for the mobile shell.
 enum MobileNavTab {
   home,
-  dashboard,
-  pos,
   items,
-  menu,
+  pos,
+  parties,
+  reports,
 }
 
 /// Route and icon metadata for a [MobileNavTab].
@@ -40,21 +32,23 @@ class MobileNavDestination {
 }
 
 /// Default mobile bottom-nav configuration aligned with [AppRoutes].
+///
+/// Layout: Home | Items | [POS] | Parties | Reports
 abstract final class MobileNavDestinations {
   static const List<MobileNavDestination> all = [
     MobileNavDestination(
       tab: MobileNavTab.home,
-      label: 'HOME',
+      label: 'Home',
       route: AppRoutes.home,
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
     ),
     MobileNavDestination(
-      tab: MobileNavTab.dashboard,
-      label: 'DASHBOARD',
-      route: AppRoutes.reports,
-      icon: Icons.show_chart_outlined,
-      selectedIcon: Icons.show_chart_rounded,
+      tab: MobileNavTab.items,
+      label: 'Items',
+      route: AppRoutes.items,
+      icon: Icons.inventory_2_outlined,
+      selectedIcon: Icons.inventory_2_rounded,
     ),
     MobileNavDestination(
       tab: MobileNavTab.pos,
@@ -65,30 +59,23 @@ abstract final class MobileNavDestinations {
       isCenterAction: true,
     ),
     MobileNavDestination(
-      tab: MobileNavTab.items,
-      label: 'ITEMS',
-      route: AppRoutes.items,
-      icon: Icons.inventory_2_outlined,
-      selectedIcon: Icons.inventory_2_rounded,
+      tab: MobileNavTab.parties,
+      label: 'Parties',
+      route: AppRoutes.parties,
+      icon: Icons.people_outline_rounded,
+      selectedIcon: Icons.people_rounded,
     ),
     MobileNavDestination(
-      tab: MobileNavTab.menu,
-      label: 'MENU',
-      route: AppRoutes.settings,
-      icon: Icons.menu_rounded,
-      selectedIcon: Icons.menu_open_rounded,
+      tab: MobileNavTab.reports,
+      label: 'Reports',
+      route: AppRoutes.reports,
+      icon: Icons.bar_chart_outlined,
+      selectedIcon: Icons.bar_chart_rounded,
     ),
   ];
 
   /// Destinations visible in the bottom bar.
-  static List<MobileNavDestination> visible() {
-    return all.where((destination) {
-      return switch (destination.tab) {
-        MobileNavTab.menu => !MobileNavVisibility.hideMenu,
-        _ => true,
-      };
-    }).toList();
-  }
+  static List<MobileNavDestination> visible() => all;
 
   static MobileNavDestination? centerAction(
     List<MobileNavDestination> destinations,
@@ -108,9 +95,9 @@ abstract final class MobileNavDestinations {
   /// Resolves the active tab from the current GoRouter location.
   static MobileNavTab tabForLocation(String location) {
     if (location.startsWith(AppRoutes.pos)) return MobileNavTab.pos;
+    if (location.startsWith(AppRoutes.parties)) return MobileNavTab.parties;
+    if (location.startsWith(AppRoutes.reports)) return MobileNavTab.reports;
     if (location.startsWith(AppRoutes.items)) return MobileNavTab.items;
-    if (location.startsWith(AppRoutes.settings)) return MobileNavTab.menu;
-    if (location.startsWith(AppRoutes.reports)) return MobileNavTab.dashboard;
     if (location.startsWith(AppRoutes.home)) return MobileNavTab.home;
     return MobileNavTab.home;
   }

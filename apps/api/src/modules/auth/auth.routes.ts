@@ -10,6 +10,7 @@ export function createAuthRoutes(config: AppConfig): FastifyPluginAsync {
 
   return async (app) => {
     app.post('/login', controller.login);
+    app.post('/login-with-device-trust', controller.loginWithDeviceTrust);
     app.post('/refresh', controller.refresh);
     app.post('/logout', { preHandler: authenticate }, controller.logout);
     app.get('/me', { preHandler: authenticate }, controller.me);

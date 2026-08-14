@@ -43,13 +43,10 @@ abstract final class DesktopMenuActions {
     final parts = <String>[
       if (subject != null && subject.isNotEmpty)
         'subject=${Uri.encodeComponent(subject)}',
-      if (body != null && body.isNotEmpty)
-        'body=${Uri.encodeComponent(body)}',
+      if (body != null && body.isNotEmpty) 'body=${Uri.encodeComponent(body)}',
     ];
     final uri = Uri.parse(
-      parts.isEmpty
-          ? 'mailto:$email'
-          : 'mailto:$email?${parts.join('&')}',
+      parts.isEmpty ? 'mailto:$email' : 'mailto:$email?${parts.join('&')}',
     );
     final launched = await launchUrl(uri);
     if (!launched) {
@@ -105,9 +102,9 @@ abstract final class DesktopMenuActions {
       openExternalUrl(AppConfig.contactSupportUrl);
 
   static Future<void> reportIssue() => openMailto(
-        email: AppConfig.supportEmail,
-        subject: 'Billing Baba — Issue Report',
-      );
+    email: AppConfig.supportEmail,
+    subject: 'Billing Baba — Issue Report',
+  );
 
   static Future<void> openPrivacyPolicy() =>
       openExternalUrl(AppConfig.privacyPolicyUrl);

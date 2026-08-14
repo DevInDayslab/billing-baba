@@ -147,29 +147,29 @@ class _SaleSummaryByHsnReportContentState
                         Expanded(
                           child: ReportTableArea(
                             child: rows.isEmpty
-                              ? const Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'No data available for Sale Summary by HSN.',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.textSecondary,
+                                ? const Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'No data available for Sale Summary by HSN.',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(height: AppSpacing.sm),
-                                      Text(
-                                        'Create sale invoices with items that have HSN codes assigned.',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.textSecondary,
+                                        SizedBox(height: AppSpacing.sm),
+                                        Text(
+                                          'Create sale invoices with items that have HSN codes assigned.',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : ReportSyncScrollTable(
+                                      ],
+                                    ),
+                                  )
+                                : ReportSyncScrollTable(
                                     minWidth: 800,
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
@@ -288,9 +288,8 @@ class _SaleSummaryByHsnReportContentState
                                         ),
                                     ],
                                   ),
-                                ),
-                        
                           ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

@@ -18,6 +18,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_si
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 

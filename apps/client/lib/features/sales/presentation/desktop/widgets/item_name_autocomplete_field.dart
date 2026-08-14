@@ -8,8 +8,7 @@ import 'package:billing_baba/features/inventory/application/item_alternatives_in
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
-import 'package:billing_baba/features/pricing/application/item_api_tier_prices_provider.dart';
-import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:collection/collection.dart';
@@ -117,17 +116,20 @@ class ItemNameAutocompleteFieldState
     final created = await showAddItemDialog(context);
     if (!mounted || created == null) return;
 
-    await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+    await ref.read(itemTierPricesProvider.notifier).ensureInitialized();
     if (!mounted) return;
 
     final resolved =
-        ref.read(inventoryItemListProvider).firstWhereOrNull(
-          (item) => item.id == created.id,
-        ) ??
+        ref
+            .read(inventoryItemListProvider)
+            .firstWhereOrNull(
+              (item) => item.id == created.id,
+            ) ??
         created;
     final catalogItem = saleItemOptionFromInventory(
       resolved,
-      tierPrices: ref.read(localItemTierPricesProvider)[resolved.id] ?? const {},
+      tierPrices:
+          ref.read(itemTierPricesProvider).value?[resolved.id] ?? const {},
     );
     _controller.text = catalogItem.name;
     widget.onChanged(catalogItem.name);
@@ -211,8 +213,7 @@ class ItemNameAutocompleteFieldState
 
     final rankedList = rankedItems.take(_maxDropdownItems).toList();
     final options = [
-      for (final item in rankedList)
-        saleItemOptionFromInventory(item),
+      for (final item in rankedList) saleItemOptionFromInventory(item),
     ];
 
     if (query.isEmpty) return options;
@@ -297,258 +298,239 @@ class ItemNameAutocompleteFieldState
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                          const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    'ITEM',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    'SALE PRICE',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    'PURCHASE',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    'MFG COST',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    'STOCK',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 200),
-                            child: items.isEmpty
-                                ? const Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: Text('No items found'),
-                                  )
-                                : ListView.builder(
-                                    shrinkWrap: true,
-                                    padding: EdgeInsets.zero,
-                                    itemCount: items.length,
-                                    itemBuilder: (context, index) {
-                                      final item = items[index];
-                                      final isSelected =
-                                          item.name == widget.value;
-                                      return InkWell(
-                                        onTap: () async {
-                                          await ref
-                                              .read(
-                                                itemApiTierPricesProvider
-                                                    .notifier,
-                                              )
-                                              .preloadForItemIds([item.id]);
-                                          await ref
-                                              .read(
-                                                localItemTierPricesProvider
-                                                    .notifier,
-                                              )
-                                              .ensureInitialized();
-                                          if (!mounted) return;
-
-                                          final localStore = ref.read(
-                                            localItemTierPricesProvider,
-                                          );
-                                          final apiStore = ref.read(
-                                            itemApiTierPricesProvider,
-                                          );
-                                          final resolved =
-                                              saleItemOptionFromInventory(
-                                                inventory.firstWhere(
-                                                  (entry) =>
-                                                      entry.id == item.id,
-                                                  orElse: () => InventoryItem(
-                                                    id: item.id,
-                                                    name: item.name,
-                                                    type: ItemType.product,
-                                                    salePrice: item.salePrice,
-                                                    purchasePrice:
-                                                        item.purchasePrice,
-                                                    defaultTaxRate:
-                                                        item.defaultTaxPercent,
-                                                  ),
-                                                ),
-                                                tierPrices:
-                                                    mergedTierPricesForItem(
-                                                      apiStore: apiStore,
-                                                      localStore: localStore,
-                                                      itemId: item.id,
-                                                    ),
-                                                isAlternativeSuggestion:
-                                                    item.isAlternativeSuggestion,
-                                              );
-                                          _controller.text = resolved.name;
-                                          widget.onChanged(resolved.name);
-                                          widget.onItemSelected(resolved);
-                                          _removeOverlay();
-                                          _focusNode.unfocus();
-                                        },
-                                        hoverColor: const Color(0xFFF5F5F5),
-                                        child: Container(
-                                          color: isSelected
-                                              ? const Color(
-                                                  0xFFD32F2F,
-                                                ).withValues(alpha: 0.06)
-                                              : null,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                flex: 3,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      item.name,
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        fontWeight: isSelected
-                                                            ? FontWeight.w600
-                                                            : FontWeight.normal,
-                                                        color: isSelected
-                                                            ? const Color(
-                                                                0xFFD32F2F,
-                                                              )
-                                                            : AppColors
-                                                                .textPrimary,
-                                                      ),
-                                                    ),
-                                                    if (item
-                                                        .isAlternativeSuggestion)
-                                                      const Text(
-                                                        'Alternative',
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                          color: AppColors
-                                                              .textSecondary,
-                                                        ),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  _priceFormat.format(
-                                                    item.salePrice,
-                                                  ),
-                                                  textAlign: TextAlign.right,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  _priceFormat.format(
-                                                    item.purchasePrice,
-                                                  ),
-                                                  textAlign: TextAlign.right,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  _priceFormat.format(
-                                                    item.mfgCost,
-                                                  ),
-                                                  textAlign: TextAlign.right,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  '${item.stock.toInt()}',
-                                                  textAlign: TextAlign.right,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                          const Divider(height: 1),
-                          ListTile(
-                            dense: true,
-                            visualDensity: VisualDensity.compact,
-                            leading: const Icon(
-                              Icons.add,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                            title: const Text(
-                              '+ Add Item',
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'ITEM',
                               style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.primary,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
                               ),
                             ),
-                            onTap: _openAddItemDialog,
+                          ),
+                          Expanded(
+                            child: Text(
+                              'SALE PRICE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'PURCHASE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'MFG COST',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'STOCK',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
                           ),
                         ],
                       ),
+                    ),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      child: items.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Text('No items found'),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: items.length,
+                              itemBuilder: (context, index) {
+                                final item = items[index];
+                                final isSelected = item.name == widget.value;
+                                return InkWell(
+                                  onTap: () async {
+                                    await ref
+                                        .read(
+                                          itemTierPricesProvider.notifier,
+                                        )
+                                        .ensureInitialized();
+                                    if (!mounted) return;
+
+                                    final tierStore =
+                                        ref.read(itemTierPricesProvider).value ??
+                                        const {};
+                                    final resolved =
+                                        saleItemOptionFromInventory(
+                                          inventory.firstWhere(
+                                            (entry) => entry.id == item.id,
+                                            orElse: () => InventoryItem(
+                                              id: item.id,
+                                              name: item.name,
+                                              type: ItemType.product,
+                                              salePrice: item.salePrice,
+                                              purchasePrice: item.purchasePrice,
+                                              defaultTaxRate:
+                                                  item.defaultTaxPercent,
+                                            ),
+                                          ),
+                                          tierPrices:
+                                              tierStore[item.id] ?? const {},
+                                          isAlternativeSuggestion:
+                                              item.isAlternativeSuggestion,
+                                        );
+                                    _controller.text = resolved.name;
+                                    widget.onChanged(resolved.name);
+                                    widget.onItemSelected(resolved);
+                                    _removeOverlay();
+                                    _focusNode.unfocus();
+                                  },
+                                  hoverColor: const Color(0xFFF5F5F5),
+                                  child: Container(
+                                    color: isSelected
+                                        ? const Color(
+                                            0xFFD32F2F,
+                                          ).withValues(alpha: 0.06)
+                                        : null,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 3,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item.name,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.w600
+                                                      : FontWeight.normal,
+                                                  color: isSelected
+                                                      ? const Color(
+                                                          0xFFD32F2F,
+                                                        )
+                                                      : AppColors.textPrimary,
+                                                ),
+                                              ),
+                                              if (item.isAlternativeSuggestion)
+                                                const Text(
+                                                  'Alternative',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            _priceFormat.format(
+                                              item.salePrice,
+                                            ),
+                                            textAlign: TextAlign.right,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            _priceFormat.format(
+                                              item.purchasePrice,
+                                            ),
+                                            textAlign: TextAlign.right,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            _priceFormat.format(
+                                              item.mfgCost,
+                                            ),
+                                            textAlign: TextAlign.right,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            '${item.stock.toInt()}',
+                                            textAlign: TextAlign.right,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      dense: true,
+                      visualDensity: VisualDensity.compact,
+                      leading: const Icon(
+                        Icons.add,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      title: const Text(
+                        '+ Add Item',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onTap: _openAddItemDialog,
+                    ),
+                  ],
                 ),
-              );
+              ),
+            );
           },
         );
       },

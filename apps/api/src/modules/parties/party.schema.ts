@@ -172,3 +172,14 @@ export const partyIdParamSchema = z.object({
 });
 
 export type PartyIdParam = z.infer<typeof partyIdParamSchema>;
+
+export const upsertPartyNotesBodySchema = z.object({
+  notes: z
+    .string()
+    .trim()
+    .max(2000)
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
+});
+
+export type UpsertPartyNotesBody = z.infer<typeof upsertPartyNotesBodySchema>;

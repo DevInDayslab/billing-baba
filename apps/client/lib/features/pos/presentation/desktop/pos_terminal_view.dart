@@ -17,8 +17,16 @@ import 'package:billing_baba/features/pos/presentation/desktop/widgets/payment_p
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/receipt_view_widget.dart';
+import 'package:billing_baba/features/inventory/application/barcode_scan_handler.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
+import 'package:billing_baba/features/pos/application/pos_catalog.dart';
 import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/shared/utils/output_error_mapper.dart';
+import 'package:billing_baba/shared/widgets/barcode_keyboard_listener.dart';
+import 'package:billing_baba/shared/widgets/barcode_scan_feedback.dart';
+import 'package:billing_baba/shared/widgets/document_barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +36,8 @@ class DesktopPosTerminalView extends ConsumerStatefulWidget {
   const DesktopPosTerminalView({super.key});
 
   @override
-  ConsumerState<DesktopPosTerminalView> createState() => _PosTerminalViewState();
+  ConsumerState<DesktopPosTerminalView> createState() =>
+      _PosTerminalViewState();
 }
 
 class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
@@ -36,6 +45,10 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   final _searchDebouncer = Debouncer();
+  final _hidController = BarcodeKeyboardController();
+  final _hidHandler = BarcodeScanHandler(
+    debounce: BarcodeScanHandler.hidDebounce,
+  );
   int _mobileTabIndex = 0;
   bool _showShortcutHints = true;
 
@@ -43,6 +56,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hidController.requestFocus();
       _focusNode.requestFocus();
     });
   }
@@ -211,6 +225,34 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
     await ref.read(posSessionProvider.notifier).closeTerminal();
   }
 
+  Future<void> _onHidBarcode(String barcode) async {
+    await handleBarcodeScan(
+      barcode,
+      handler: _hidHandler,
+      engine: ref.read(inventorySearchEngineProvider),
+      items: ref.read(inventoryItemListProvider),
+      onItemFound: (item, _) async {
+        final categories =
+            ref.read(inventoryCategoriesProvider).value ?? const [];
+        final categoryName =
+            categoryNamesById(categories)[item.categoryId] ?? 'Uncategorized';
+        final posItem = mapInventoryItemToPosItem(
+          item,
+          categoryName: categoryName,
+        );
+        ref.read(posCartProvider.notifier).addItem(posItem);
+        if (!mounted) return;
+        showBarcodeAddedSnackBar(context, item.name);
+        _hidController.requestFocus();
+      },
+      onNotFound: (code) {
+        if (!mounted) return;
+        showBarcodeNotFoundSnackBar(context, code);
+        _hidController.requestFocus();
+      },
+    );
+  }
+
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
@@ -275,7 +317,15 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
       );
     }
 
-    return Focus(
+    final scanningEnabled = isBarcodeScanningEnabled(ref);
+
+    return BarcodeKeyboardListener(
+      enabled: scanningEnabled,
+      autofocus: scanningEnabled,
+      controller: _hidController,
+      ignoreWhenEditableFocused: true,
+      onBarcode: (code) => unawaited(_onHidBarcode(code)),
+      child: Focus(
       focusNode: _focusNode,
       autofocus: true,
       onKeyEvent: _onKeyEvent,
@@ -387,6 +437,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -761,7 +812,9 @@ class _ShortcutHintsBar extends StatelessWidget {
                       showHints ? Icons.keyboard_hide : Icons.keyboard,
                       size: 16,
                     ),
-                    label: Text(showHints ? 'Hide shortcuts' : 'Show shortcuts'),
+                    label: Text(
+                      showHints ? 'Hide shortcuts' : 'Show shortcuts',
+                    ),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.textSecondary,
                       textStyle: PosStyles.shortcutHintStyle,

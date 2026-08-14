@@ -199,21 +199,24 @@ class _ItemWiseProfitLossReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportItemWiseProfitLossRow>(
-                              reportScope: itemWiseProfitLossReportScope,
-                              minWidth: 1320,
-                              columns: itemWiseProfitLossColumns(),
-                              rows: tableRows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No data for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportItemWiseProfitLossRow
+                                >(
+                                  reportScope: itemWiseProfitLossReportScope,
+                                  minWidth: 1320,
+                                  columns: itemWiseProfitLossColumns(),
+                                  rows: tableRows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No data for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

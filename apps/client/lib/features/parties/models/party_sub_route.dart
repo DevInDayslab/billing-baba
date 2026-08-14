@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 
-/// A parties sub-section route with display label.
+/// A parties page tab route with display label.
 class PartySubRoute {
   const PartySubRoute({
     required this.route,
@@ -11,7 +11,7 @@ class PartySubRoute {
   final String label;
 }
 
-/// Parties sub-pages shown in the page title switcher.
+/// Party-area routes with display labels (sidebar + search).
 abstract final class PartySubRoutes {
   static const items = [
     PartySubRoute(route: AppRoutes.partyDetails, label: 'Parties'),

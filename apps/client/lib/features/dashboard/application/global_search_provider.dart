@@ -24,7 +24,11 @@ Future<List<GlobalSearchResult>> globalSearchResults(Ref ref) async {
 
   final engine = ref.watch(inventorySearchEngineProvider);
   final items = ref.watch(inventoryItemListProvider);
-  final matchedItems = searchInventoryItems(engine, items, query: query).take(8);
+  final matchedItems = searchInventoryItems(
+    engine,
+    items,
+    query: query,
+  ).take(8);
 
   final itemResults = matchedItems
       .map(

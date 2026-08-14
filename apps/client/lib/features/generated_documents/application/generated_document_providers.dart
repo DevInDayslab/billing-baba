@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final generatedDocumentServiceProvider =
     FutureProvider<GeneratedDocumentService>((ref) async {
-  final api = await ref.watch(apiClientProvider.future);
-  final remote = GeneratedDocumentsRemoteDataSource(api.dio);
-  return GeneratedDocumentService(GeneratedDocumentsRepository(remote));
-});
+      final api = await ref.watch(apiClientProvider.future);
+      final remote = GeneratedDocumentsRemoteDataSource(api.dio);
+      return GeneratedDocumentService(GeneratedDocumentsRepository(remote));
+    });

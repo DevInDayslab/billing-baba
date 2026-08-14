@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_expanded_panel.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_metric_card.dart';
@@ -13,6 +14,8 @@ import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_em
 import 'package:billing_baba/shared/layout/dashboard_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DashboardTodoWidget extends ConsumerStatefulWidget {
@@ -24,8 +27,7 @@ class DashboardTodoWidget extends ConsumerStatefulWidget {
 }
 
 class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
-  DashboardTodoScopeFilter _scopeFilter = DashboardTodoScopeFilter.today;
-  DashboardTodoStatusChip _statusChip = DashboardTodoStatusChip.pending;
+  DashboardTodoStatusChip _statusChip = DashboardTodoStatusChip.all;
 
   Future<void> _openEditor({TaskModel? editTask}) async {
     final result = await showTaskEditorDialog(
@@ -42,9 +44,11 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
-    final previous = await ref.read(tasksProvider.notifier).toggleComplete(
-      task.id,
-    );
+    final previous = await ref
+        .read(tasksProvider.notifier)
+        .toggleComplete(
+          task.id,
+        );
     if (previous == null || !mounted) return;
 
     final wasCompleting = !previous.isCompleted;
@@ -68,10 +72,14 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
     unawaited(
       showDashboardExpandedPanel(
         context,
-        initialScope: _scopeFilter,
+        initialScope: DashboardTodoScopeFilter.all,
         initialStatusChip: _statusChip,
       ),
     );
+  }
+
+  void _openWhatsAppSettings() {
+    context.push(AppRoutes.settingsTransactionMessages);
   }
 
   Widget _emptyStateForChip() {
@@ -104,7 +112,7 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
     final allTasks = tasksAsync.value ?? const <TaskModel>[];
     final scopedTasks = DashboardTodoFilterLogic.applyScope(
       allTasks,
-      scope: _scopeFilter,
+      scope: DashboardTodoScopeFilter.all,
     );
     final tasks = DashboardTodoFilterLogic.applyStatusChip(
       scopedTasks,
@@ -124,7 +132,7 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
                 children: [
                   const Flexible(
                     child: Text(
-                      'To-Do',
+                      'To-Do Tasks',
                       style: DashboardTypography.cardTitle,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -136,9 +144,17 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
                 ],
               ),
             ),
-            DashboardTodoScopeButton(
-              scope: _scopeFilter,
-              onChanged: (value) => setState(() => _scopeFilter = value),
+            IconButton(
+              tooltip: 'WhatsApp',
+              onPressed: _openWhatsAppSettings,
+              icon: const FaIcon(
+                FontAwesomeIcons.whatsapp,
+                size: 16,
+                color: Color(0xFF25D366),
+              ),
+              padding: const EdgeInsets.all(AppSpacing.xs),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              visualDensity: VisualDensity.compact,
             ),
             IconButton(
               tooltip: 'Expand',

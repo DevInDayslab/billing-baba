@@ -95,8 +95,8 @@ class WindowsCertInjector {
   }
 
   static Pointer<Void> Function(Pointer<Void>, Pointer<Utf16>)
-  get _certOpenSystemStore => _crypt32!
-      .lookupFunction<
+  get _certOpenSystemStore =>
+      _crypt32!.lookupFunction<
         Pointer<Void> Function(Pointer<Void>, Pointer<Utf16>),
         Pointer<Void> Function(Pointer<Void>, Pointer<Utf16>)
       >('CertOpenSystemStoreW');
@@ -108,8 +108,8 @@ class WindowsCertInjector {
     int,
     Pointer<Utf16>,
   )
-  get _certOpenStore => _crypt32!
-      .lookupFunction<
+  get _certOpenStore =>
+      _crypt32!.lookupFunction<
         Pointer<Void> Function(
           Pointer<Void>,
           Uint32,
@@ -127,14 +127,14 @@ class WindowsCertInjector {
       >('CertOpenStore');
 
   static Pointer<Void> Function(Pointer<Void>, Pointer<Void>)
-  get _certEnumCertificatesInStore => _crypt32!
-      .lookupFunction<
+  get _certEnumCertificatesInStore =>
+      _crypt32!.lookupFunction<
         Pointer<Void> Function(Pointer<Void>, Pointer<Void>),
         Pointer<Void> Function(Pointer<Void>, Pointer<Void>)
       >('CertEnumCertificatesInStore');
 
-  static int Function(Pointer<Void>, int) get _certCloseStore => _crypt32!
-      .lookupFunction<
+  static int Function(Pointer<Void>, int) get _certCloseStore =>
+      _crypt32!.lookupFunction<
         Int32 Function(Pointer<Void>, Uint32),
         int Function(Pointer<Void>, int)
       >('CertCloseStore');

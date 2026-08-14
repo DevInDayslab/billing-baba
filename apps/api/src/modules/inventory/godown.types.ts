@@ -30,6 +30,7 @@ export type GodownInsertValues = {
 export type GodownUpdateValues = {
   name?: string;
   address?: string | null;
+  isDefault?: boolean;
   updatedBy?: string | null;
 };
 

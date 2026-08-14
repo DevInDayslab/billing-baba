@@ -80,6 +80,7 @@ class AuthState {
     this.resendAvailableAt,
     this.otpSessionVersion = 0,
     this.backendLoginCompleted = false,
+    this.rememberFor30Days = false,
   });
 
   final AuthStatus status;
@@ -93,6 +94,7 @@ class AuthState {
   final DateTime? resendAvailableAt;
   final int otpSessionVersion;
   final bool backendLoginCompleted;
+  final bool rememberFor30Days;
 
   bool get isOtpBusy => otpPhase.isBusy;
 
@@ -150,6 +152,7 @@ class AuthState {
     DateTime? resendAvailableAt,
     int? otpSessionVersion,
     bool? backendLoginCompleted,
+    bool? rememberFor30Days,
     bool clearError = false,
     bool clearNetworkError = false,
     bool clearSession = false,
@@ -166,8 +169,9 @@ class AuthState {
           ? null
           : msg91AccessToken ?? this.msg91AccessToken,
       error: clearError ? null : error ?? this.error,
-      networkError:
-          clearNetworkError ? null : networkError ?? this.networkError,
+      networkError: clearNetworkError
+          ? null
+          : networkError ?? this.networkError,
       session: clearSession ? null : session ?? this.session,
       resendAvailableAt: clearResendTimer
           ? null
@@ -175,6 +179,7 @@ class AuthState {
       otpSessionVersion: otpSessionVersion ?? this.otpSessionVersion,
       backendLoginCompleted:
           backendLoginCompleted ?? this.backendLoginCompleted,
+      rememberFor30Days: rememberFor30Days ?? this.rememberFor30Days,
     );
   }
 
@@ -192,7 +197,8 @@ class AuthState {
         other.session == session &&
         other.resendAvailableAt == resendAvailableAt &&
         other.otpSessionVersion == otpSessionVersion &&
-        other.backendLoginCompleted == backendLoginCompleted;
+        other.backendLoginCompleted == backendLoginCompleted &&
+        other.rememberFor30Days == rememberFor30Days;
   }
 
   @override
@@ -212,6 +218,7 @@ class AuthState {
     resendAvailableAt,
     otpSessionVersion,
     backendLoginCompleted,
+    rememberFor30Days,
   );
 }
 
@@ -470,6 +477,7 @@ class Auth extends _$Auth {
       final session = await service.loginWithMsg91Token(
         msg91AccessToken: token,
         phone: state.phone,
+        rememberFor30Days: state.rememberFor30Days,
       );
 
       if (generation != _verifyGeneration) return;
@@ -519,7 +527,7 @@ class Auth extends _$Auth {
 
   Future<void> tryAutoLogin() async {
     _setAuthStatus(AuthStatus.initializing);
-    state = state.copyWith(clearError: true);
+    state = state.copyWith(clearError: true, backendLoginCompleted: false);
 
     // Keep branded splash visible for the full animation on all platforms.
     final splashWait = Future<void>.delayed(_splashMinDuration);
@@ -536,7 +544,11 @@ class Auth extends _$Auth {
       final session = results[1] as AuthSession?;
       if (session == null) {
         _setAuthStatus(AuthStatus.unauthenticated);
-        state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
+        state = state.copyWith(
+          clearSession: true,
+          otpPhase: OtpPhase.idle,
+          backendLoginCompleted: false,
+        );
         return;
       }
 
@@ -549,18 +561,33 @@ class Auth extends _$Auth {
         backendLoginCompleted: true,
       );
       if (AuthService.isOfflineDevSession(session)) {
-        await _bootstrapOfflineDevSession(session);
+        // Bootstrap must not wipe a restored session — failures are best-effort.
+        try {
+          await _bootstrapOfflineDevSession(session);
+        } on Object catch (e, st) {
+          LoggingService.instance.error(
+            'Offline dev session bootstrap failed during auto-login',
+            e,
+            st,
+          );
+        }
       }
     } on TimeoutException {
-      await splashWait;
-      _setAuthStatus(AuthStatus.unauthenticated);
-      state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
-    } on Object catch (e) {
       await splashWait;
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
         clearSession: true,
         otpPhase: OtpPhase.idle,
+        backendLoginCompleted: false,
+      );
+    } on Object catch (e, st) {
+      await splashWait;
+      LoggingService.instance.error('tryAutoLogin failed', e, st);
+      _setAuthStatus(AuthStatus.unauthenticated);
+      state = state.copyWith(
+        clearSession: true,
+        otpPhase: OtpPhase.idle,
+        backendLoginCompleted: false,
         error: _messageFromError(e),
       );
     }
@@ -578,7 +605,6 @@ class Auth extends _$Auth {
     );
 
     _sendInFlight = true;
-    _setOtpPhase(OtpPhase.sendingOtp);
     state = state.copyWith(
       phone: phone,
       clearError: true,
@@ -587,6 +613,32 @@ class Auth extends _$Auth {
       clearResendTimer: true,
       backendLoginCompleted: false,
     );
+
+    try {
+      final service = await _service();
+      final trust = await service.loadDeviceTrust();
+      if (trust != null && service.isDeviceTrustValidForPhone(trust, phone)) {
+        AuthDebugLogger.log('sendOtp: valid device trust — skipping OTP');
+        await _attemptDeviceTrustLogin(phone);
+        return;
+      }
+
+      if (trust != null && !service.isDeviceTrustValidForPhone(trust, phone)) {
+        await service.clearDeviceTrust();
+      }
+
+      await _sendOtpAfterTrustCheck(phone);
+    } finally {
+      _sendInFlight = false;
+    }
+  }
+
+  void setRememberFor30Days({required bool value}) {
+    state = state.copyWith(rememberFor30Days: value);
+  }
+
+  Future<void> _sendOtpAfterTrustCheck(String phone) async {
+    _setOtpPhase(OtpPhase.sendingOtp);
 
     final stopwatch = Stopwatch()..start();
 
@@ -641,8 +693,67 @@ class Auth extends _$Auth {
         phone: phone,
         duration: stopwatch.elapsed,
       );
-    } finally {
-      _sendInFlight = false;
+    }
+  }
+
+  Future<void> _attemptDeviceTrustLogin(String phone) async {
+    _setOtpPhase(OtpPhase.backendLogin);
+    state = state.copyWith(clearError: true, clearNetworkError: true);
+
+    try {
+      AuthDebugLogger.log('_attemptDeviceTrustLogin: running health check');
+      final healthy = await ref.read(authRepositoryProvider).checkHealth();
+      if (!healthy) {
+        AuthDebugLogger.log(
+          '_attemptDeviceTrustLogin aborted: health check failed',
+        );
+        _setOtpPhase(OtpPhase.idle);
+        state = state.copyWith(
+          error: 'Billing Baba server is currently unavailable.',
+        );
+        return;
+      }
+
+      final service = await _service();
+      final session = await service.loginWithDeviceTrust(phone: phone);
+      AuthDebugLogger.log('_attemptDeviceTrustLogin: login succeeded');
+      _completeOtpLogin(session);
+    } on DioException catch (e, st) {
+      AuthDebugLogger.log('_attemptDeviceTrustLogin DioException: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] _attemptDeviceTrustLogin stackTrace:\n$st');
+      }
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 401 || statusCode == 403) {
+        final service = await _service();
+        await service.clearDeviceTrust();
+        AuthDebugLogger.log(
+          '_attemptDeviceTrustLogin: trust invalid — falling back to OTP',
+        );
+        await _sendOtpAfterTrustCheck(phone);
+        return;
+      }
+      _setOtpPhase(OtpPhase.idle);
+      state = state.copyWith(
+        error: _backendLoginErrorMessage(e),
+        networkError: NetworkExceptionClassifier.classify(
+          e,
+          host: NetworkExceptionClassifier.hostFromApiUrl(),
+        ),
+      );
+    } on Object catch (e, st) {
+      AuthDebugLogger.log('_attemptDeviceTrustLogin exception: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] _attemptDeviceTrustLogin stackTrace:\n$st');
+      }
+      _setOtpPhase(OtpPhase.idle);
+      state = state.copyWith(
+        error: _backendLoginErrorMessage(e),
+        networkError: NetworkExceptionClassifier.classify(
+          e,
+          host: NetworkExceptionClassifier.hostFromApiUrl(),
+        ),
+      );
     }
   }
 
@@ -682,6 +793,7 @@ class Auth extends _$Auth {
       clearReqId: true,
       error: details.title,
       networkError: details,
+      backendLoginCompleted: false,
     );
   }
 
@@ -792,25 +904,72 @@ class Auth extends _$Auth {
   }
 
   Future<void> devLogin() async {
-    if (_devLoginInFlight || state.backendLoginCompleted) return;
+    LoggingService.instance.info(
+      'Developer Login pressed '
+      '(inFlight=$_devLoginInFlight completed=${state.backendLoginCompleted} '
+      'status=${state.status.name})',
+    );
+
+    // Login screen: recover from a stuck in-flight flag (hung prior attempt /
+    // hot reload) or a leftover backendLoginCompleted after a failed auto-login.
+    if (state.status == AuthStatus.unauthenticated) {
+      _devLoginInFlight = false;
+      state = state.copyWith(backendLoginCompleted: false);
+    }
+
+    if (_devLoginInFlight) {
+      LoggingService.instance.warn('Developer Login ignored: already in flight');
+      return;
+    }
+    if (state.status == AuthStatus.authenticated ||
+        state.status == AuthStatus.needsBusinessSelection ||
+        state.status == AuthStatus.needsBusinessCreation) {
+      LoggingService.instance.info(
+        'Developer Login ignored: already signed in (${state.status.name})',
+      );
+      return;
+    }
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: POST /auth/dev-login');
-    state = state.copyWith(clearError: true);
+    AuthDebugLogger.log('devLogin: API /auth/dev-login (offline fallback if unreachable)');
+    state = state.copyWith(clearError: true, backendLoginCompleted: false);
     _setOtpPhase(OtpPhase.backendLogin);
 
     try {
       final service = await _service();
       final session = await service.devLogin();
       AuthDebugLogger.log('devLogin: login successful');
+      LoggingService.instance.info('Developer Login succeeded');
       _completeOtpLogin(session);
+      try {
+        if (AuthService.isOfflineDevSession(session)) {
+          await _bootstrapOfflineDevSession(session);
+        } else if (session.businesses.length == 1 &&
+            _statusForSession(session) == AuthStatus.authenticated) {
+          // Same path as opening a company after OTP — hydrate profile, masters,
+          // and start sync so mobile/desktop share API data.
+          await ref
+              .read(businessListProvider.notifier)
+              .openBusiness(session.businesses.first.id);
+        }
+      } on Object catch (e, st) {
+        LoggingService.instance.error(
+          'Post-login bootstrap failed after Developer Login',
+          e,
+          st,
+        );
+      }
     } on Object catch (e, st) {
       AuthDebugLogger.log('devLogin failed: $e');
+      LoggingService.instance.error('Developer Login failed', e, st);
       if (AppConfig.authDebugLogging) {
         debugPrint('[AUTH] devLogin stackTrace:\n$st');
       }
       _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(error: _devLoginErrorMessage(e));
+      state = state.copyWith(
+        error: _devLoginErrorMessage(e),
+        backendLoginCompleted: false,
+      );
     } finally {
       _devLoginInFlight = false;
     }
@@ -879,13 +1038,15 @@ class Auth extends _$Auth {
   }
 
   void resetToLogin() {
+    _devLoginInFlight = false;
     _resetOtpFlow();
     _setAuthStatus(AuthStatus.unauthenticated);
-    state = state.copyWith(phone: '');
+    state = state.copyWith(phone: '', backendLoginCompleted: false);
   }
 
   Future<void> _bootstrapOfflineDevSession(AuthSession session) async {
-    if (!AuthService.isOfflineDevSession(session) || session.businesses.isEmpty) {
+    if (!AuthService.isOfflineDevSession(session) ||
+        session.businesses.isEmpty) {
       return;
     }
 
@@ -896,27 +1057,37 @@ class Auth extends _$Auth {
     await businessService.seedOfflineDevSession(session);
 
     final profile = AuthService.offlineDevBusinessProfile(session);
-    ref.read(businessProfileProvider.notifier).replaceWith(profile);
-
-    ref.read(companySessionProvider.notifier).setSession(
-      CompanySession.owner(
-        entry: CompanyListEntry(
-          id: businessSummary.id,
-          name: businessSummary.name,
-          relationship: CompanyRelationship.owner,
-          syncStatus: business.SyncStatus.on,
-          source: CompanyListSource.apiOwned,
-          ownerName: user.name,
-          phone: user.phone,
-        ),
-        userId: user.id,
-        userName: user.name ?? 'Developer',
-        userPhone: user.phone,
+    final companySession = CompanySession.owner(
+      entry: CompanyListEntry(
+        id: businessSummary.id,
+        name: businessSummary.name,
+        relationship: CompanyRelationship.owner,
+        syncStatus: business.SyncStatus.on,
+        source: CompanyListSource.apiOwned,
+        ownerName: user.name,
+        phone: user.phone,
       ),
+      userId: user.id,
+      userName: user.name ?? 'Developer',
+      userPhone: user.phone,
     );
+
+    // Defer writes — businessProfileProvider watches authProvider, so updating
+    // it synchronously inside Auth.devLogin trips a circular dependency.
+    await Future<void>.delayed(Duration.zero);
+    if (!ref.mounted) return;
+    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+    ref.read(companySessionProvider.notifier).setSession(companySession);
   }
 
   Future<void> selectBusiness(String businessId) {
+    // If a prior connectivity failure blocked selection but we are still on the
+    // company picker (unscoped), clear the guard so Open can scope the JWT.
+    if (BusinessSelectionRetryGuard.isBlocked(businessId) &&
+        state.status != AuthStatus.authenticated) {
+      BusinessSelectionRetryGuard.reset();
+    }
+
     if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
       BusinessSelectionRetryGuard.logBlockedOnce('selectBusiness', businessId);
       return Future<void>.value();
@@ -937,13 +1108,18 @@ class Auth extends _$Auth {
     BusinessOpenDebugLog.step('selectBusiness', 'begin id=$businessId');
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) {
-      throw const BusinessSelectionFailed('Session expired. Please sign in again.');
+      throw const BusinessSelectionFailed(
+        'Session expired. Please sign in again.',
+      );
     }
 
     final storage = await ref.read(storageServiceProvider.future);
     final accessToken = await storage.readSecure(StorageKeys.accessToken);
     if (accessToken != null && AuthService.isOfflineDevToken(accessToken)) {
-      BusinessOpenDebugLog.step('selectBusiness', 'offline dev — local scope only');
+      BusinessOpenDebugLog.step(
+        'selectBusiness',
+        'offline dev — local scope only',
+      );
       final service = await _service();
       await service.persistSession(state.session!, businessId: businessId);
       _setAuthStatus(AuthStatus.authenticated);
@@ -951,7 +1127,10 @@ class Auth extends _$Auth {
     }
 
     if (await _isJwtScopedToBusiness(businessId)) {
-      BusinessOpenDebugLog.step('selectBusiness', 'JWT already scoped — skip refresh');
+      BusinessOpenDebugLog.step(
+        'selectBusiness',
+        'JWT already scoped — skip refresh',
+      );
       await _syncSessionRoleFromJwt();
       BusinessSelectionRetryGuard.recordSuccess(businessId);
       if (state.status != AuthStatus.authenticated) {
@@ -986,7 +1165,10 @@ class Auth extends _$Auth {
       BusinessSelectionRetryGuard.recordSuccess(businessId);
       BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh done');
     } on BusinessSelectionFailed {
-      BusinessOpenDebugLog.step('selectBusiness', 'failed (BusinessSelectionFailed)');
+      BusinessOpenDebugLog.step(
+        'selectBusiness',
+        'failed (BusinessSelectionFailed)',
+      );
       rethrow;
     } on Object catch (e) {
       if (NetworkExceptionClassifier.isConnectivityError(e)) {
@@ -1152,13 +1334,55 @@ class Auth extends _$Auth {
         businessId: businessId,
       );
       if (session != null) {
-        _setAuthStatus(_statusForSession(session));
-        state = state.copyWith(session: session);
+        final current = state.session;
+        // Coalesced peer-refresh may return JWT-only session without businesses.
+        final merged = session.businesses.isEmpty && current != null
+            ? session.copyWith(
+                businesses: current.businesses,
+                user: session.user.copyWith(
+                  name: session.user.name ?? current.user.name,
+                  role: session.user.role ?? current.user.role,
+                ),
+              )
+            : session;
+        _setAuthStatus(_statusForSession(merged));
+        state = state.copyWith(session: merged);
+        return merged;
       }
-      return session;
+
+      // refreshStoredSession clears secure storage on 401/403 but previously
+      // left in-memory auth state authenticated. Detect credential loss and
+      // force a full logout so routing returns to /login.
+      final storage = await ref.read(storageServiceProvider.future);
+      final storedRefreshToken =
+          await storage.readSecure(StorageKeys.refreshToken);
+      final credentialsCleared =
+          storedRefreshToken == null || storedRefreshToken.isEmpty;
+      if (credentialsCleared &&
+          state.status != AuthStatus.unauthenticated &&
+          state.status != AuthStatus.initializing) {
+        await _transitionToUnauthenticatedAfterCredentialLoss();
+      }
+      return null;
     } on Object catch (_) {
       return null;
     }
+  }
+
+  /// Clears app session state when secure credentials were wiped (e.g. expired
+  /// refresh token). Skips the logout API call because tokens are already gone.
+  Future<void> _transitionToUnauthenticatedAfterCredentialLoss() async {
+    ref.read(companySessionProvider.notifier).clear();
+    Future.microtask(() {
+      if (ref.mounted) {
+        invalidateAllBusinessScopedProviders(
+          ref,
+          includeBusinessList: true,
+        );
+      }
+    });
+    AuthFlowLogger.reset();
+    state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
   Future<void> logout() async {
@@ -1178,6 +1402,7 @@ class Auth extends _$Auth {
       });
     } finally {
       ref.read(companySessionProvider.notifier).clear();
+      BusinessSelectionRetryGuard.reset();
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }
@@ -1226,16 +1451,15 @@ class Auth extends _$Auth {
       final responseBody = error.response?.data;
       switch (statusCode) {
         case 404:
-          return 'Developer Login is disabled.';
+          return 'Developer Login is disabled. Set ENABLE_DEV_LOGIN=true on the API.';
         case 401:
           return 'Developer Login is not available.';
         case 500:
           return 'Unable to sign in using Developer Login.';
       }
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout ||
-          error.type == DioExceptionType.connectionError) {
-        return 'Please check your internet connection.';
+      if (NetworkExceptionClassifier.isConnectivityError(error)) {
+        return 'Cannot reach the API. Start the API and set API_BASE_URL '
+            '(use your PC LAN IP on a physical phone, not localhost).';
       }
       if (responseBody != null) {
         return 'Developer Login failed ($statusCode): $responseBody';

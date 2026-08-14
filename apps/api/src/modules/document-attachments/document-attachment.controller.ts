@@ -27,6 +27,7 @@ export function createDocumentAttachmentController(config: AppConfig) {
         const data = await service.listAttachments(
           businessId,
           accountId,
+          request.role,
           query.entity_type,
           query.entity_id,
         );
@@ -54,6 +55,7 @@ export function createDocumentAttachmentController(config: AppConfig) {
           const intent = await service.createUploadIntent(
             businessId,
             accountId,
+            request.role,
             query.entity_type,
             query.entity_id,
             body.mime_type,
@@ -67,6 +69,7 @@ export function createDocumentAttachmentController(config: AppConfig) {
           businessId,
           accountId,
           userId,
+          request.role,
           query.entity_type,
           query.entity_id,
           body.intent_id,
@@ -95,7 +98,12 @@ export function createDocumentAttachmentController(config: AppConfig) {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = documentAttachmentIdParamSchema.parse(request.params);
-        const data = await service.getDownloadUrl(businessId, accountId, id);
+        const data = await service.getDownloadUrl(
+          businessId,
+          accountId,
+          request.role,
+          id,
+        );
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
@@ -119,6 +127,7 @@ export function createDocumentAttachmentController(config: AppConfig) {
           businessId,
           accountId,
           userId,
+          request.role,
           id,
           body,
         );
@@ -140,7 +149,13 @@ export function createDocumentAttachmentController(config: AppConfig) {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = documentAttachmentIdParamSchema.parse(request.params);
-        await service.deleteAttachment(businessId, accountId, userId, id);
+        await service.deleteAttachment(
+          businessId,
+          accountId,
+          userId,
+          request.role,
+          id,
+        );
         return reply.status(204).send();
       } catch (error) {
         if (error instanceof ZodError) {

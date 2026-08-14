@@ -5,8 +5,11 @@ import 'package:flutter/foundation.dart';
 /// Resolves [API_BASE_URL] for the current platform and device type.
 ///
 /// - Android emulator: `127.0.0.1` / `localhost` → `10.0.2.2` (host loopback).
+/// - Physical Android over USB: keep `127.0.0.1` and run
+///   `adb reverse tcp:3000 tcp:3000` so the phone tunnels to the host API.
 /// - iOS simulator / desktop: `127.0.0.1` / `localhost` unchanged.
-/// - Physical devices: use your machine's LAN IP in `.env` (e.g. `http://192.168.1.5:3000`).
+/// - Physical devices on Wi‑Fi: use your machine's LAN IP in `.env`
+///   (e.g. `http://192.168.1.5:3000`).
 abstract final class ApiBaseUrlResolver {
   static const _androidEmulatorHost = '10.0.2.2';
   static const _loopbackHosts = {'localhost', '127.0.0.1', '0.0.0.0'};
@@ -45,7 +48,8 @@ abstract final class ApiBaseUrlResolver {
       }
       _cachedResolvedUrl = configuredUrl;
       _cachedRewriteNote =
-          'loopback on physical Android — set API_BASE_URL to your host LAN IP';
+          'loopback on physical Android — use adb reverse tcp:3000 tcp:3000 '
+          'or set API_BASE_URL to your host LAN IP';
       return configuredUrl;
     }
 

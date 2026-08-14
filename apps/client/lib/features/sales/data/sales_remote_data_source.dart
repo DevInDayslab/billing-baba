@@ -205,10 +205,12 @@ class SalesRemoteDataSource {
       ApiEndpoints.salesDocumentCloneWithAlternatives(id),
       data: {
         'replacements': replacements
-            .map((r) => {
-                  'original_item_id': r.originalItemId,
-                  'replacement_item_id': r.replacementItemId,
-                })
+            .map(
+              (r) => {
+                'original_item_id': r.originalItemId,
+                'replacement_item_id': r.replacementItemId,
+              },
+            )
             .toList(),
       },
     );

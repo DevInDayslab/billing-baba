@@ -457,7 +457,10 @@ class _DataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }

@@ -6,7 +6,6 @@ part 'current_subscription.freezed.dart';
 
 @freezed
 abstract class CurrentSubscription with _$CurrentSubscription {
-
   const factory CurrentSubscription({
     required SubscriptionPlanType planType,
     required String planName,

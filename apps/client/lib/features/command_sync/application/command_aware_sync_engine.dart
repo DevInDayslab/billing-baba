@@ -26,8 +26,7 @@ class CommandAwareSyncEngine {
   Future<void> stop() => _engine.stop();
   void schedule([
     SyncScheduleTrigger trigger = SyncScheduleTrigger.manualRefresh,
-  ]) =>
-      _engine.schedule(trigger);
+  ]) => _engine.schedule(trigger);
   Future<void> dispose() => _engine.dispose();
 
   Future<SyncResult> syncNow() async {

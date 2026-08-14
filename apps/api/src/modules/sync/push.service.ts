@@ -1,12 +1,20 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import type { BusinessAccessContext } from '../../shared/permissions/collaboration-permission.types';
+import {
+  canSyncCommand,
+  canSyncRowMutation,
+} from '../../shared/permissions/sync-permission.guard';
 import {
   CommandAckRepository,
   hashCommandRequest,
 } from './apply/command-ack.repository';
 import { CommandApplier } from './apply/commands/command-applier';
 import { MutationAckRepository } from './apply/mutation-ack.repository';
-import { isRegisteredRowEntity } from './apply/row-entities';
+import {
+  isPullOnlyRowEntity,
+  isRegisteredRowEntity,
+} from './apply/row-entities';
 import { RowApplier } from './apply/row-applier';
 import { SYNC_MAX_PUSH_MUTATIONS } from './sync.constants';
 import { syncBatchTooLarge } from './sync.errors';
@@ -67,6 +75,7 @@ export class PushService {
     businessId: string,
     body: PushBody,
     userId?: string,
+    access?: BusinessAccessContext,
   ): Promise<PushProcessResult> {
     if (body.mutations.length > SYNC_MAX_PUSH_MUTATIONS) {
       throw syncBatchTooLarge(
@@ -82,6 +91,16 @@ export class PushService {
 
     for (const mutation of body.mutations) {
       if (mutation.kind === 'command') {
+        if (access && !canSyncCommand(access, mutation.command)) {
+          errors.push({
+            mutation_id: mutation.mutation_id,
+            command_id: mutation.command_id,
+            code: 'FORBIDDEN',
+            message: 'Your role does not allow this command',
+          });
+          continue;
+        }
+
         const requestHash = hashCommandRequest(
           mutation.command,
           mutation.payload,
@@ -140,11 +159,36 @@ export class PushService {
         continue;
       }
 
+      if (isPullOnlyRowEntity(mutation.entity_type)) {
+        errors.push({
+          mutation_id: mutation.mutation_id,
+          code: 'PULL_ONLY_ENTITY',
+          message: `Row entity_type '${mutation.entity_type}' is a server-derived projection and cannot be pushed; pull to receive updates`,
+        });
+        continue;
+      }
+
       if (!isRegisteredRowEntity(mutation.entity_type)) {
         errors.push({
           mutation_id: mutation.mutation_id,
           code: 'NOT_IMPLEMENTED',
           message: `Row entity_type '${mutation.entity_type}' is not registered for sync`,
+        });
+        continue;
+      }
+
+      if (
+        access &&
+        !canSyncRowMutation(
+          access,
+          mutation.entity_type,
+          mutation.operation,
+        )
+      ) {
+        errors.push({
+          mutation_id: mutation.mutation_id,
+          code: 'FORBIDDEN',
+          message: 'Your role does not allow this sync mutation',
         });
         continue;
       }

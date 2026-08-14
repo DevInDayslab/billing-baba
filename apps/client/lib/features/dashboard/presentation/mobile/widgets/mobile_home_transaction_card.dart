@@ -2,126 +2,125 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:flutter/material.dart';
 
-/// Vyapar-style transaction card for the mobile home feed.
+/// Compact transaction card for the home feed.
 class MobileHomeTransactionCard extends StatelessWidget {
   const MobileHomeTransactionCard({
     required this.item,
     super.key,
     this.onPrint,
     this.onShare,
-    this.onMore,
     this.onTap,
   });
 
   final MobileHomeTransactionItem item;
   final VoidCallback? onPrint;
   final VoidCallback? onShare;
-  final VoidCallback? onMore;
   final VoidCallback? onTap;
-
-  static const borderColor = Color(0xFFE3E8EF);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = item.statusType.colors;
+    final iconData = _iconForFilter(item.filterType);
 
     return Material(
-      color: AppColors.surface,
-      borderRadius: AppRadius.lgBorder,
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppRadius.lgBorder,
-        child: Container(
+        borderRadius: AppRadius.cardBorder,
+        child: Ink(
           decoration: BoxDecoration(
-            borderRadius: AppRadius.lgBorder,
-            border: Border.all(color: borderColor),
+            color: AppColors.surface,
+            borderRadius: AppRadius.cardBorder,
+            border: Border.all(color: AppColors.chipBorder),
+            boxShadow: AppShadows.subtle,
           ),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 12,
+          ),
+          child: Row(
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: colors.bg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(iconData, color: colors.fg, size: 22),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          item.partyName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                        Flexible(
+                          child: Text(
+                            item.title ?? item.partyName,
+                            style: AppTypography.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                        _StatusBadge(item: item),
+                        if (item.paymentMethod != null &&
+                            item.paymentMethod!.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          _PaymentPill(
+                            label: item.paymentMethod!,
+                            colors: colors,
+                          ),
+                        ],
                       ],
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.documentNumber,
+                      style: AppTypography.inter(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.timeLabel ?? item.dateLabel,
+                      style: AppTypography.inter(
+                        fontSize: 10.5,
+                        color: AppColors.textSecondary.withValues(alpha: 0.85),
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ActionButton(
+                    icon: Icons.print_outlined,
+                    onTap: onPrint,
+                    semanticLabel: 'Print ${item.documentNumber}',
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        item.documentNumber,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        item.dateLabel,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      if (item.dueDateLabel != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          item.dueDateLabel!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ],
+                  _ActionButton(
+                    icon: Icons.share_outlined,
+                    onTap: onShare,
+                    semanticLabel: 'Share ${item.documentNumber}',
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: [
-                  Expanded(
-                    child: _AmountColumn(
-                      label: 'TOTAL',
-                      value: item.totalLabel,
-                    ),
-                  ),
-                  Expanded(
-                    child: _AmountColumn(
-                      label: item.balanceLabel.toUpperCase(),
-                      value: item.balanceValueLabel,
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _ActionIcon(
-                        icon: Icons.print_outlined,
-                        onTap: onPrint,
-                      ),
-                      _ActionIcon(
-                        icon: Icons.share_outlined,
-                        onTap: onShare,
-                      ),
-                      _ActionIcon(
-                        icon: Icons.more_vert_rounded,
-                        onTap: onMore,
-                      ),
-                    ],
-                  ),
-                ],
+              const SizedBox(width: AppSpacing.xs),
+              _AmountBadge(
+                amount: item.totalLabel,
+                colors: colors,
               ),
             ],
           ),
@@ -129,83 +128,116 @@ class MobileHomeTransactionCard extends StatelessWidget {
       ),
     );
   }
+
+  static IconData _iconForFilter(MobileHomeTransactionFilterType type) {
+    return switch (type) {
+      MobileHomeTransactionFilterType.sale => Icons.shopping_cart_outlined,
+      MobileHomeTransactionFilterType.purchase => Icons.shopping_bag_outlined,
+      MobileHomeTransactionFilterType.paymentIn => Icons.arrow_upward_rounded,
+      MobileHomeTransactionFilterType.paymentOut => Icons.arrow_downward_rounded,
+      MobileHomeTransactionFilterType.expense =>
+        Icons.account_balance_wallet_outlined,
+      _ => Icons.receipt_long_outlined,
+    };
+  }
 }
 
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.item});
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.semanticLabel,
+    this.onTap,
+  });
 
-  final MobileHomeTransactionItem item;
+  final IconData icon;
+  final VoidCallback? onTap;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(5),
+          child: Icon(
+            icon,
+            size: 18,
+            color: AppColors.textSecondary.withValues(alpha: 0.65),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentPill extends StatelessWidget {
+  const _PaymentPill({
+    required this.label,
+    required this.colors,
+  });
+
+  final String label;
+  final ColorPair colors;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: item.statusType.backgroundColor,
-        borderRadius: AppRadius.smBorder,
+        color: colors.bg,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colors.fg.withValues(alpha: 0.2)),
       ),
       child: Text(
-        item.statusLabel,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: item.statusType.textColor,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.2,
+        label,
+        style: AppTypography.inter(
+          fontSize: 9,
+          color: colors.fg,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
         ),
       ),
     );
   }
 }
 
-class _AmountColumn extends StatelessWidget {
-  const _AmountColumn({required this.label, required this.value});
+class _AmountBadge extends StatelessWidget {
+  const _AmountBadge({
+    required this.amount,
+    required this.colors,
+  });
 
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.4,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionIcon extends StatelessWidget {
-  const _ActionIcon({required this.icon, this.onTap});
-
-  final IconData icon;
-  final VoidCallback? onTap;
+  final String amount;
+  final ColorPair colors;
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      icon: Icon(icon, size: AppIconSize.lg),
-      color: AppColors.textSecondary.withValues(alpha: 0.75),
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    return Container(
+      constraints: const BoxConstraints(minWidth: 68, maxWidth: 88),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: colors.bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        amount,
+        style: AppTypography.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: colors.fg,
+          height: 1.1,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.right,
+      ),
     );
   }
 }

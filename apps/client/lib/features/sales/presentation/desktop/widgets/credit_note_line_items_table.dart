@@ -172,12 +172,14 @@ class _CreditNoteLineItemsTableState
     String lineId,
     SaleItemOption catalogItem,
   ) async {
-    final notifier = ref.read(creditNoteFormProvider(sessionKey: widget.sessionKey).notifier);
-    
+    final notifier = ref.read(
+      creditNoteFormProvider(sessionKey: widget.sessionKey).notifier,
+    );
+
     // Check if item is out of stock
     if (catalogItem.stock == 0) {
       if (!mounted) return;
-      
+
       await showDialog<void>(
         context: context,
         builder: (context) => OutOfStockDialog(

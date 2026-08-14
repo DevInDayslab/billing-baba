@@ -12,7 +12,7 @@ class MobileBusinessProfileSignatureSection extends StatelessWidget {
   final VoidCallback? onCreate;
   final VoidCallback? onUpload;
 
-  static const _actionBlue = Color(0xFF42A5F5);
+  static const _actionBlue = AppColors.primary;
 
   @override
   Widget build(BuildContext context) {
@@ -92,8 +92,9 @@ class _ActionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: MobileBusinessProfileSignatureSection._actionBlue
-          .withValues(alpha: 0.12),
+      color: MobileBusinessProfileSignatureSection._actionBlue.withValues(
+        alpha: 0.12,
+      ),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,

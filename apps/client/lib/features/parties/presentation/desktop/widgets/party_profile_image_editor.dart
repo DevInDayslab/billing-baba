@@ -41,7 +41,8 @@ class PartyProfileImageEditor extends ConsumerStatefulWidget {
   final void Function({
     required String? imageUrl,
     required String? mediaAssetId,
-  })? onChanged;
+  })?
+  onChanged;
 
   @override
   ConsumerState<PartyProfileImageEditor> createState() =>
@@ -119,14 +120,16 @@ class PartyProfileImageEditorState
     }
   }
 
-  void _patchProviders({
+  Future<void> _patchProviders({
     required String partyId,
     required String? imageUrl,
     required String? mediaAssetId,
     bool clear = false,
-  }) {
+  }) async {
     try {
-      ref.read(partyListProvider.notifier).patchProfileImage(
+      await ref
+          .read(partyListProvider.notifier)
+          .patchProfileImage(
             partyId,
             profileImageUrl: imageUrl,
             profileMediaAssetId: mediaAssetId,
@@ -222,7 +225,7 @@ class PartyProfileImageEditorState
       _mediaAssetId = newMediaId;
       _uploading = false;
       _notifyChanged();
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: newUrl,
         mediaAssetId: newMediaId,
@@ -230,7 +233,9 @@ class PartyProfileImageEditorState
       if (mounted) setState(() {});
 
       unawaited(
-        ref.read(imageServiceProvider).replaceImage(
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
               oldUrl: previousUrl,
               newUrl: newUrl,
               oldCacheKey: buildImageCacheKey(
@@ -252,7 +257,7 @@ class PartyProfileImageEditorState
       _uploading = false;
       _setSharedOptimistic(partyId, null);
       _notifyChanged();
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: previousUrl,
         mediaAssetId: previousMediaId,
@@ -297,7 +302,7 @@ class PartyProfileImageEditorState
     _mediaAssetId = newMediaId;
     _uploading = false;
     _notifyChanged();
-    _patchProviders(
+    await _patchProviders(
       partyId: partyId,
       imageUrl: newUrl,
       mediaAssetId: newMediaId,
@@ -305,7 +310,9 @@ class PartyProfileImageEditorState
     if (mounted) setState(() {});
 
     unawaited(
-      ref.read(imageServiceProvider).replaceImage(
+      ref
+          .read(imageServiceProvider)
+          .replaceImage(
             oldUrl: previousUrl,
             newUrl: newUrl,
             oldCacheKey: buildImageCacheKey(
@@ -339,7 +346,7 @@ class PartyProfileImageEditorState
     _setSharedOptimistic(partyId, null);
     _notifyChanged();
     if (partyId != null && partyId.isNotEmpty) {
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: null,
         mediaAssetId: null,
@@ -363,7 +370,9 @@ class PartyProfileImageEditorState
       _uploading = false;
       if (mounted) setState(() {});
       unawaited(
-        ref.read(imageServiceProvider).invalidateImage(
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
               url: previousUrl,
               cacheKey: buildImageCacheKey(
                 mediaAssetId: previousMediaId,
@@ -378,7 +387,7 @@ class PartyProfileImageEditorState
       _mediaAssetId = previousMediaId;
       _uploading = false;
       _notifyChanged();
-      _patchProviders(
+      await _patchProviders(
         partyId: partyId,
         imageUrl: previousUrl,
         mediaAssetId: previousMediaId,
@@ -405,6 +414,7 @@ class PartyProfileImageEditorState
       label: 'Photo',
       size: widget.size,
       imageUrl: _imageUrl,
+      sourceMediaAssetId: _mediaAssetId,
       optimisticBytes: _optimisticBytes,
       isUploading: _uploading,
       replaceLabel: 'Edit Photo',
@@ -417,7 +427,9 @@ class PartyProfileImageEditorState
         partyId: widget.partyId,
       ),
       onReplace: _onReplace,
-      onRemove: (_imageUrl != null && _imageUrl!.trim().isNotEmpty) ||
+      onRemove:
+          (_imageUrl != null && _imageUrl!.trim().isNotEmpty) ||
+              (_mediaAssetId != null && _mediaAssetId!.trim().isNotEmpty) ||
               (_optimisticBytes != null && _optimisticBytes!.isNotEmpty)
           ? _onRemove
           : null,

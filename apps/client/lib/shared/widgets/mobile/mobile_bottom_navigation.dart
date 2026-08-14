@@ -1,12 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_nav_destinations.dart';
 import 'package:flutter/material.dart';
 
 /// Reusable mobile bottom navigation with a raised center POS action.
 ///
-/// Layout: HOME | DASHBOARD | [POS] | ITEMS | MENU
+/// Layout: Home | Items | [POS] | Parties | Reports
 class MobileBottomNavigation extends StatelessWidget {
   const MobileBottomNavigation({
     required this.currentTab,
@@ -19,12 +17,47 @@ class MobileBottomNavigation extends StatelessWidget {
   final ValueChanged<MobileNavTab> onTabSelected;
   final List<MobileNavDestination>? destinations;
 
-  static const activeColor = Color(0xFF5D5FEF);
-  static const inactiveColor = Color(0xFF9E9E9E);
-  static const barHeight = 60.0;
-  static const centerButtonSize = 56.0;
-  static const centerButtonProtrusion = 28.0;
-  static const centerButtonLowerOffset = 14.0;
+  static Color activeColor(BuildContext context) =>
+      Theme.of(context).colorScheme.primary;
+
+  static const Color inactiveColor = AppColors.navInactive;
+  static const barHeight = 58.0;
+  static const centerButtonSize = 52.0;
+  static const centerButtonProtrusion = 24.0;
+  static const centerButtonLowerOffset = 12.0;
+
+  /// Bottom inset for floating actions so they sit above the raised POS button.
+  static double get fabBottomInset =>
+      barHeight +
+      centerButtonProtrusion +
+      centerButtonLowerOffset +
+      AppSpacing.lg;
+
+  /// Bottom offset for floating actions sitting above the shell nav bar.
+  static double floatingActionBottomOffset(BuildContext context) {
+    return barHeight + MediaQuery.paddingOf(context).bottom + AppSpacing.sm;
+  }
+
+  /// Bottom scroll padding so the last list item clears the floating nav bar
+  /// (shell uses [Scaffold.extendBody]).
+  static double contentBottomPadding(BuildContext context) {
+    return barHeight + MediaQuery.paddingOf(context).bottom + AppSpacing.xl;
+  }
+
+  /// Extra scroll padding so list content clears a bottom floating action.
+  static double scrollBottomPadding(
+    BuildContext context, {
+    double floatingActionHeight = 40,
+  }) {
+    return floatingActionBottomOffset(context) +
+        floatingActionHeight +
+        AppSpacing.lg;
+  }
+
+  /// Scroll padding for screens that float a FAB above the raised POS button.
+  static double fabScrollPadding({double floatingActionHeight = 52}) {
+    return fabBottomInset + floatingActionHeight + AppSpacing.lg;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +68,14 @@ class MobileBottomNavigation extends StatelessWidget {
     final rightItems = sides.length > 2
         ? sides.sublist(2)
         : <MobileNavDestination>[];
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return SafeArea(
-      top: false,
+    // Paint the solid bar through the home-indicator inset; keep icons in the
+    // safe content band so they are not obscured by the system gesture area.
+    return ColoredBox(
+      color: AppColors.surface,
       child: SizedBox(
-        height: barHeight,
+        height: barHeight + bottomInset,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.bottomCenter,
@@ -52,37 +88,34 @@ class MobileBottomNavigation extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
+                  border: const Border(top: BorderSide(color: AppColors.divider)),
+                  boxShadow: AppShadows.navBar,
                 ),
-                child: SizedBox(
-                  height: barHeight,
-                  child: Row(
-                    children: [
-                      for (final destination in leftItems)
-                        Expanded(
-                          child: _SideNavItem(
-                            destination: destination,
-                            isSelected: destination.tab == currentTab,
-                            onTap: () => onTabSelected(destination.tab),
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomInset),
+                  child: SizedBox(
+                    height: barHeight,
+                    child: Row(
+                      children: [
+                        for (final destination in leftItems)
+                          Expanded(
+                            child: _SideNavItem(
+                              destination: destination,
+                              isSelected: destination.tab == currentTab,
+                              onTap: () => onTabSelected(destination.tab),
+                            ),
                           ),
-                        ),
-                      const Expanded(child: SizedBox.shrink()),
-                      for (final destination in rightItems)
-                        Expanded(
-                          child: _SideNavItem(
-                            destination: destination,
-                            isSelected: destination.tab == currentTab,
-                            onTap: () => onTabSelected(destination.tab),
+                        const Expanded(child: SizedBox.shrink()),
+                        for (final destination in rightItems)
+                          Expanded(
+                            child: _SideNavItem(
+                              destination: destination,
+                              isSelected: destination.tab == currentTab,
+                              onTap: () => onTabSelected(destination.tab),
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -121,7 +154,7 @@ class _SideNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected
-        ? MobileBottomNavigation.activeColor
+        ? MobileBottomNavigation.activeColor(context)
         : MobileBottomNavigation.inactiveColor;
 
     return Material(
@@ -129,26 +162,35 @@ class _SideNavItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 isSelected ? destination.selectedIcon : destination.icon,
                 color: color,
-                size: AppIconSize.lg,
+                size: 22,
               ),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: 2),
               Text(
                 destination.label,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                style: AppTypography.inter(
                   color: color,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   fontSize: 10,
-                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(height: 3),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: isSelected ? 18 : 0,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: isSelected ? color : Colors.transparent,
+                  borderRadius: BorderRadius.circular(1),
                 ),
               ),
             ],
@@ -172,7 +214,7 @@ class _CenterPosButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const color = MobileBottomNavigation.activeColor;
+    final color = MobileBottomNavigation.activeColor(context);
 
     return Material(
       color: Colors.transparent,
@@ -181,49 +223,36 @@ class _CenterPosButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         child: SizedBox(
           width: MobileBottomNavigation.centerButtonSize + 8,
-          height: MobileBottomNavigation.centerButtonSize + 20,
+          height: MobileBottomNavigation.centerButtonSize + 18,
           child: Column(
             children: [
-              Transform.rotate(
-                angle: math.pi / 4,
-                child: Container(
-                  width: MobileBottomNavigation.centerButtonSize,
-                  height: MobileBottomNavigation.centerButtonSize,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Transform.rotate(
-                    angle: -math.pi / 4,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          destination.selectedIcon,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          destination.label,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 9,
-                                letterSpacing: 0.4,
-                              ),
-                        ),
-                      ],
+              Container(
+                width: MobileBottomNavigation.centerButtonSize,
+                height: MobileBottomNavigation.centerButtonSize,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-                  ),
+                  ],
+                ),
+                child: Icon(
+                  destination.selectedIcon,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                destination.label,
+                style: AppTypography.inter(
+                  color: isSelected ? color : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 9,
                 ),
               ),
             ],

@@ -239,7 +239,8 @@ class BarcodeGridRow extends StatelessWidget {
       BarcodeRowStatus.manualEntry => _ManualEntryField(
         fieldKey: '${row.index}_itemName',
         value: row.itemName,
-        onChanged: (value) => onFieldChanged?.call(row.index, 'itemName', value),
+        onChanged: (value) =>
+            onFieldChanged?.call(row.index, 'itemName', value),
       ),
       BarcodeRowStatus.empty when isActive => const Text(
         'E.g. India Gate Basmati Rice, 10kg',
@@ -264,7 +265,8 @@ class BarcodeGridRow extends StatelessWidget {
     if (!_isEditableRow) return const SizedBox.shrink();
     return _TaxDropdownCell(
       value: row.taxPercent,
-      onChanged: (value) => onFieldChanged?.call(row.index, 'taxPercent', value),
+      onChanged: (value) =>
+          onFieldChanged?.call(row.index, 'taxPercent', value),
     );
   }
 
@@ -321,7 +323,8 @@ class BarcodeGridRow extends StatelessWidget {
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: VisualDensity.compact,
       ),
-      BarcodeRowStatus.empty || BarcodeRowStatus.loading => const SizedBox.shrink(),
+      BarcodeRowStatus.empty ||
+      BarcodeRowStatus.loading => const SizedBox.shrink(),
     };
   }
 
@@ -438,7 +441,9 @@ class _TaxDropdownCell extends StatelessWidget {
       child: DropdownButton<String>(
         isExpanded: true,
         isDense: true,
-        value: selected != null && _options.contains(selected) ? selected : null,
+        value: selected != null && _options.contains(selected)
+            ? selected
+            : null,
         hint: const SizedBox.shrink(),
         style: BarcodeGridRow._cellTextStyle,
         items: _options
@@ -490,7 +495,9 @@ class _BaseUnitDropdownCell extends StatelessWidget {
       child: DropdownButton<String>(
         isExpanded: true,
         isDense: true,
-        value: selected != null && _options.contains(selected) ? selected : null,
+        value: selected != null && _options.contains(selected)
+            ? selected
+            : null,
         hint: const SizedBox.shrink(),
         style: BarcodeGridRow._cellTextStyle,
         items: _options

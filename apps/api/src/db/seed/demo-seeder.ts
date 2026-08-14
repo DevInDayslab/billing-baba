@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { PaymentService } from '../../modules/accounting/payment.service';
 import { AuthRepository } from '../../modules/auth/auth.repository';
 import { BusinessService } from '../../modules/business/business.service';
@@ -21,11 +21,11 @@ import {
   DEV_LOGIN_PHONE,
 } from '../../shared/dev-demo.constants';
 import type { Database } from '../client';
+import { parties } from '../schema/crm/tables';
 import { businesses } from '../schema/business/tables';
 import { users } from '../schema/identity/tables';
-import { godowns } from '../schema/inventory/tables';
+import { godowns, items } from '../schema/inventory/tables';
 import { expenseCategories } from '../schema/purchases/tables';
-import { SYSTEM_EXPENSE_CATEGORIES } from '../../modules/purchases/expense-category.constants';
 import { ensureSystemExpenseCategories } from '../../modules/purchases/expense-sync.service';
 import {
   businessSettings,
@@ -802,14 +802,107 @@ export async function seedDemoData(db: Database): Promise<SeedContext> {
   await seedUnits(ctx);
   const categoryMap = await seedCategories(ctx);
   const { customers, suppliers } = await seedParties(ctx);
-  const items = await seedProducts(ctx, categoryMap, godownId);
+  const seededItems = await seedProducts(ctx, categoryMap, godownId);
 
   console.log('Seeding transactions...');
-  const purchases = await seedPurchases(ctx, suppliers, items);
-  const invoices = await seedSales(ctx, customers, items);
+  const purchases = await seedPurchases(ctx, suppliers, seededItems);
+  const invoices = await seedSales(ctx, customers, seededItems);
   await seedPayments(ctx, customers, suppliers, invoices, purchases);
   await seedExpenses(ctx, db);
 
   console.log('Demo seed complete for business:', businessId);
   return ctx;
+}
+
+/**
+ * On developer login, populate demo items/parties when the business catalog is empty.
+ * Does not reset existing data — only fills masters when item count is zero.
+ */
+export async function ensureDemoCatalogIfEmpty(
+  db: Database,
+  ctx: SeedContext,
+): Promise<void> {
+  const [itemCountRow] = await db
+    .select({ value: count() })
+    .from(items)
+    .where(
+      and(eq(items.businessId, ctx.businessId), eq(items.isDeleted, false)),
+    );
+  if ((itemCountRow?.value ?? 0) > 0) return;
+
+  console.log(
+    `[dev-login] Empty item catalog — seeding demo masters for ${ctx.businessId}`,
+  );
+
+  const godownId = await bootstrapBusinessEssentials(db, ctx.businessId);
+  await seedUnitsIfNeeded(ctx);
+  const categoryMap = await seedCategoriesIfNeeded(ctx);
+
+  const [partyCountRow] = await db
+    .select({ value: count() })
+    .from(parties)
+    .where(
+      and(eq(parties.businessId, ctx.businessId), eq(parties.isDeleted, false)),
+    );
+  if ((partyCountRow?.value ?? 0) === 0) {
+    await seedParties(ctx);
+  }
+
+  await seedProducts(ctx, categoryMap, godownId);
+  console.log('[dev-login] Demo catalog seed complete');
+}
+
+async function seedUnitsIfNeeded(ctx: SeedContext): Promise<void> {
+  const unitService = new UnitService();
+  const existing = await unitService.listUnits(ctx.businessId, ctx.accountId, {
+    page: 1,
+    limit: 100,
+    q: undefined,
+    is_active: true,
+    sort: 'name',
+    order: 'asc',
+  });
+  const existingShortNames = new Set(
+    existing.data.map((unit) => unit.short_name.toLowerCase()),
+  );
+
+  for (const unit of DEMO_UNITS) {
+    if (existingShortNames.has(unit.shortName.toLowerCase())) continue;
+    await unitService.createUnit(ctx.businessId, ctx.accountId, ctx.userId, {
+      name: unit.name,
+      short_name: unit.shortName,
+      symbol: undefined,
+      decimal_places: 0,
+      is_system: false,
+      is_active: true,
+    });
+  }
+}
+
+async function seedCategoriesIfNeeded(
+  ctx: SeedContext,
+): Promise<Map<string, string>> {
+  const categoryService = new CategoryService();
+  const existing = await categoryService.listCategories(
+    ctx.businessId,
+    ctx.accountId,
+    { page: 1, limit: 100, q: undefined, sort: 'name', order: 'asc' },
+  );
+  const categoryMap = new Map<string, string>();
+  for (const category of existing.data) {
+    categoryMap.set(category.name, category.id);
+  }
+
+  for (const name of DEMO_CATEGORIES) {
+    if (categoryMap.has(name)) continue;
+    const created = await categoryService.createCategory(
+      ctx.businessId,
+      ctx.accountId,
+      ctx.userId,
+      { name },
+    );
+    categoryMap.set(name, created.id);
+  }
+
+  return categoryMap;
 }

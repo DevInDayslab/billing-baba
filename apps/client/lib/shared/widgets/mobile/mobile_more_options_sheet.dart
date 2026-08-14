@@ -35,9 +35,11 @@ Future<void> showMobileMoreOptionsSheet({
     MobileMoreOptionsScope.party => mobilePartyMoreOptionsItems(
       onPushRoute: onPushRoute,
       onOpenReport: onOpenReport,
-      onImportParty: onImportParty ??
+      onImportParty:
+          onImportParty ??
           () => _showComingSoonSnackBar(context, 'Import party'),
-      onInviteParty: onInviteParty ??
+      onInviteParty:
+          onInviteParty ??
           () => _showComingSoonSnackBar(context, 'Invite party'),
     ),
   };
@@ -90,7 +92,8 @@ List<MobileMenuGridItem> mobileTransactionMoreOptionsItems({
     MobileMenuGridItem(
       label: 'Profit & Loss',
       icon: Icons.swap_vert_rounded,
-      onTap: () => openTransactionReport(TransactionReportSubSection.profitLoss),
+      onTap: () =>
+          openTransactionReport(TransactionReportSubSection.profitLoss),
     ),
     MobileMenuGridItem(
       label: 'Balance Sheet',

@@ -22,6 +22,7 @@ import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
@@ -34,7 +35,8 @@ class DesktopAddSaleOrderPage extends ConsumerStatefulWidget {
   final String? orderId;
 
   @override
-  ConsumerState<DesktopAddSaleOrderPage> createState() => _AddSaleOrderPageState();
+  ConsumerState<DesktopAddSaleOrderPage> createState() =>
+      _AddSaleOrderPageState();
 }
 
 class _AddSaleOrderPageState extends ConsumerState<DesktopAddSaleOrderPage> {
@@ -731,13 +733,14 @@ class _SaleTextFieldState extends State<_SaleTextField> {
       style: saleFieldTextStyle.copyWith(
         fontSize: widget.compact ? 13 : 14,
       ),
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        compact: widget.compact,
-        hasError: widget.hasError,
-      ).copyWith(
-        errorText: widget.hasError ? widget.errorText : null,
-      ),
+      decoration:
+          buildSaleFieldDecoration(
+            hint: widget.hintText,
+            compact: widget.compact,
+            hasError: widget.hasError,
+          ).copyWith(
+            errorText: widget.hasError ? widget.errorText : null,
+          ),
       keyboardType: widget.keyboardType,
       inputFormatters: widget.inputFormatters,
       onChanged: widget.onChanged,

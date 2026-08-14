@@ -24,8 +24,9 @@ class DashboardViewState {
     return DashboardViewState(
       dashboard: dashboard ?? this.dashboard,
       isCachedSnapshot: isCachedSnapshot ?? this.isCachedSnapshot,
-      snapshotSavedAt:
-          clearSnapshotSavedAt ? null : (snapshotSavedAt ?? this.snapshotSavedAt),
+      snapshotSavedAt: clearSnapshotSavedAt
+          ? null
+          : (snapshotSavedAt ?? this.snapshotSavedAt),
       isRefreshing: isRefreshing ?? this.isRefreshing,
     );
   }

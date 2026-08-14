@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
+import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
+import 'package:billing_baba/core/sync/engine/sync_pause_gate.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
@@ -13,6 +15,9 @@ import 'package:billing_baba/features/collaboration/data/collaboration_repositor
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
+import 'package:billing_baba/features/collaboration/domain/models/role.dart';
+import 'package:billing_baba/features/collaboration/domain/role_permission_registry.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,41 +58,63 @@ class CompanySessionService {
     final userName = user?.name ?? 'User';
     final userPhone = user?.phone ?? '';
 
-    CompanySession session;
-
-    final ownedApiCompany = entry.relationship.isOwner &&
+    final ownedApiCompany =
+        entry.relationship.isOwner &&
         entry.source == CompanyListSource.apiOwned;
 
-    if (ownedApiCompany) {
-      _ref.read(businessSessionLoadingProvider.notifier).start(entry.id);
-      try {
-        await _scopeOwnedApiCompany(entry);
-        session = CompanySession.owner(
-          entry: entry,
-          userId: userId,
-          userName: userName,
-          userPhone: userPhone,
-        );
-        _applySession(session, skipScopedInvalidation: true);
-        unawaited(_warmOwnedApiCompanyInBackground(entry.id));
-      } on Object {
-        _ref.read(businessSessionLoadingProvider.notifier).clear();
-        rethrow;
-      }
-    } else {
-      session = await _collaborationRepository.switchCompany(
-        companyId: entry.id,
-        userId: userId,
-        userName: userName,
-      );
-      invalidateAllBusinessScopedProviders(
+    _ref.read(businessSessionLoadingProvider.notifier).start(entry.id);
+    CompanySession session;
+    SyncPauseGate.instance.pause();
+    try {
+      await _scopeCompany(entry);
+
+      session = ownedApiCompany
+          ? CompanySession.owner(
+              entry: entry,
+              userId: userId,
+              userName: userName,
+              userPhone: userPhone,
+            )
+          : _buildSharedSession(
+              entry: entry,
+              userId: userId,
+              userName: userName,
+              userPhone: userPhone,
+            );
+
+      _applySession(session, skipScopedInvalidation: true);
+      await warmBusinessScopedProvidersCritical(
         _ref,
-        includeBusinessList: true,
+        businessId: entry.id,
       );
-      _applySession(session);
+    } on Object {
+      _ref.read(businessSessionLoadingProvider.notifier).clear();
+      rethrow;
+    } finally {
+      SyncPauseGate.instance.resume();
     }
 
+    _ref.read(businessSessionLoadingProvider.notifier).clear();
+    unawaited(_warmCompanyDeferred(entry.id));
+    await ensureSyncEngineStarted(_ref, runInitialSync: false);
+    unawaited(_triggerInitialSync());
     return session;
+  }
+
+  CompanySession _buildSharedSession({
+    required CompanyListEntry entry,
+    required String userId,
+    required String userName,
+    required String userPhone,
+  }) {
+    final role = entry.role ?? Role.biller;
+    return CompanySession.shared(
+      entry: entry,
+      userId: userId,
+      userName: userName,
+      userPhone: userPhone,
+      preset: RolePermissionRegistry.presetFor(role),
+    );
   }
 
   Future<CompanyListEntry> acceptInvite(String invitationId) async {
@@ -122,15 +149,15 @@ class CompanySessionService {
     await _ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
   }
 
-  Future<void> _scopeOwnedApiCompany(CompanyListEntry entry) async {
+  Future<void> _scopeCompany(CompanyListEntry entry) async {
     final businessId = entry.id;
-    BusinessOpenDebugLog.step('scopeOwnedApiCompany', 'start id=$businessId');
+    BusinessOpenDebugLog.step('scopeCompany', 'start id=$businessId');
 
     final previousId = await _businessService.readActiveBusinessId();
     final isSwitch =
         previousId != null && previousId.isNotEmpty && previousId != businessId;
     BusinessOpenDebugLog.step(
-      'scopeOwnedApiCompany',
+      'scopeCompany',
       'previousId=${previousId ?? '(none)'} isSwitch=$isSwitch',
     );
 
@@ -141,17 +168,29 @@ class CompanySessionService {
 
     await _businessService.rememberLastOpened(businessId);
 
+    // Never skip JWT scoping while still on the company picker — that left
+    // auth as needsBusinessSelection, set a company session anyway, and the
+    // UI then showed a generic "Could not open company" error.
     if (BusinessSelectionRetryGuard.isBlocked(businessId)) {
       BusinessSelectionRetryGuard.logBlockedOnce(
-        'scopeOwnedApiCompany',
+        'scopeCompany',
         businessId,
       );
-      seedBusinessProfilePreview(_ref, entry: entry);
-      BusinessOpenDebugLog.step(
-        'scopeOwnedApiCompany',
-        'offline — seeded preview, skip JWT refresh',
-      );
-      return;
+      final auth = _ref.read(authProvider);
+      if (auth.status != AuthStatus.authenticated) {
+        BusinessSelectionRetryGuard.reset();
+        BusinessOpenDebugLog.step(
+          'scopeCompany',
+          'cleared stuck retry guard — will scope JWT',
+        );
+      } else {
+        seedBusinessProfilePreview(_ref, entry: entry);
+        BusinessOpenDebugLog.step(
+          'scopeCompany',
+          'offline — seeded preview, skip JWT refresh',
+        );
+        return;
+      }
     }
 
     await _ref.read(authProvider.notifier).selectBusiness(businessId);
@@ -177,18 +216,28 @@ class CompanySessionService {
       includeBusinessProfile: false,
     );
     seedBusinessProfilePreview(_ref, entry: entry);
-    BusinessOpenDebugLog.step('scopeOwnedApiCompany', 'complete');
+    BusinessOpenDebugLog.step('scopeCompany', 'complete');
   }
 
-  Future<void> _warmOwnedApiCompanyInBackground(String businessId) async {
+  Future<void> _warmCompanyDeferred(String businessId) async {
     try {
-      await warmBusinessScopedProviders(_ref, businessId: businessId);
+      await warmBusinessScopedProvidersDeferred(
+        _ref,
+        businessId: businessId,
+      );
     } on Object catch (error) {
-      BusinessOpenDebugLog.step('warm', 'background failed: $error');
-    } finally {
-      if (_ref.mounted) {
-        _ref.read(businessSessionLoadingProvider.notifier).clear();
+      BusinessOpenDebugLog.step('warm-deferred', 'failed: $error');
+    }
+  }
+
+  Future<void> _triggerInitialSync() async {
+    try {
+      final engine = await _ref.read(commandAwareSyncEngineProvider.future);
+      if (engine.isRunning) {
+        unawaited(engine.syncNow());
       }
+    } on Object catch (error) {
+      BusinessOpenDebugLog.step('sync', 'deferred sync skipped: $error');
     }
   }
 

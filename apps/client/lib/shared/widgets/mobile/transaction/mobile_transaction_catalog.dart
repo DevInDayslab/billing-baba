@@ -41,7 +41,7 @@ class MobileTransactionScopeDefinition {
   final String? emptyMessage;
   final IconData? leadingIcon;
 
-  /// Party-to-party payment lists (Payment-In / Payment-Out).
+  /// Party payment lists (Payment-In / Payment-Out).
   final bool isP2P;
 
   MobileTransactionPageConfig config(
@@ -107,10 +107,12 @@ abstract final class MobileTransactionCatalog {
   ) {
     final status = (item.statusLabel ?? '').toLowerCase();
     return switch (filterKey) {
-      'paid' => status.contains('paid'),
-      'unpaid' => status.contains('unpaid'),
+      // Exact match for "paid" so it does not also match "unpaid".
+      'paid' => status == 'paid',
+      'unpaid' =>
+        status == 'unpaid' || status == 'pending' || status == 'unused',
       'partial' => status.contains('partial'),
-      'open' => status.contains('open'),
+      'open' => status == 'open' || status == 'draft',
       _ => true,
     };
   }
@@ -149,7 +151,7 @@ abstract final class MobileTransactionCatalog {
       ),
   ];
 
-  /// Non sale/purchase list routes (excludes P2P payment lists).
+  /// Non sale/purchase list routes (excludes payment-in/out lists).
   static final List<MobileTransactionScopeDefinition> _otherDefinitions = [
     // Reserved for future "other" transaction modules (stock transfer, etc.).
   ];
@@ -164,9 +166,9 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleDeliveryChallan => AppRoutes.addDeliveryChallan,
     AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
     AppRoutes.saleFa => AppRoutes.addSaleFa,
-    AppRoutes.salePaymentIn => null,
-    AppRoutes.saleProformaInvoice => null,
-    AppRoutes.saleJobWorkOut => null,
+      AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
+      AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
+      AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
     _ => null,
   };
 
@@ -199,7 +201,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.purchaseOrder => AppRoutes.addPurchaseOrder,
     AppRoutes.purchaseReturnDebitNote => AppRoutes.addDebitNote,
     AppRoutes.purchaseFa => AppRoutes.addPurchaseFa,
-    AppRoutes.purchasePaymentOut => null,
+    AppRoutes.purchasePaymentOut => AppRoutes.addPaymentOut,
     _ => null,
   };
 

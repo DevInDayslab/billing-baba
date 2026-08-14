@@ -36,7 +36,7 @@ enum PartyLedgerFilter {
     PartyLedgerFilter.payments => transaction.source == 'payments',
     PartyLedgerFilter.returns =>
       transaction.sourceType == 'sales_return' ||
-      transaction.sourceType == 'purchase_return',
+          transaction.sourceType == 'purchase_return',
   };
 }
 

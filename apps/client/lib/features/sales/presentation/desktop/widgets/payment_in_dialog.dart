@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/short_payment_handling_dialog.dart';
+import 'package:billing_baba/features/payments/presentation/shared/payment_flow_launcher.dart';
+import 'package:billing_baba/features/payments/presentation/shared/payment_intent_builder.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
@@ -115,8 +119,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
 
     final shortfall = form.hasShortPayment
         ? (form.balanceDue - form.receivedAmount - form.discount)
-            .clamp(0, double.infinity)
-            .toDouble()
+              .clamp(0, double.infinity)
+              .toDouble()
         : 0.0;
 
     final result = await notifier.savePayment(
@@ -172,8 +176,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
       if (!mounted || handling == null) return;
       final shortfall = form.hasShortPayment
           ? (form.balanceDue - form.receivedAmount - form.discount)
-              .clamp(0, double.infinity)
-              .toDouble()
+                .clamp(0, double.infinity)
+                .toDouble()
           : 0.0;
       final result = await notifier.savePayment(
         shortPaymentHandling: handling.apiValue,
@@ -204,6 +208,20 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     );
   }
 
+  Future<void> _startOnlinePayment() async {
+    final form = ref.read(paymentInFormProvider);
+    final intent = paymentIntentFromPaymentInForm(form);
+    if (intent == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Select a party and enter a received amount first'),
+        ),
+      );
+      return;
+    }
+    await PaymentFlowLauncher.start(context, ref, intent: intent);
+  }
+
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(paymentInFormProvider);
@@ -228,6 +246,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
             if (_showUpiBanner)
               _UpiBanner(
                 onDismiss: () => setState(() => _showUpiBanner = false),
+                onPayOnline: () => unawaited(_startOnlinePayment()),
               ),
             Flexible(
               child: SingleChildScrollView(
@@ -331,7 +350,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                     context: context,
                                     ref: ref,
                                     entityType: DocumentAttachmentEntityType
-                                        .paymentIn.apiValue,
+                                        .paymentIn
+                                        .apiValue,
                                     entityId: _savedPaymentId,
                                     onAdded: notifier.addImage,
                                   ),
@@ -357,7 +377,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                     context: context,
                                     ref: ref,
                                     entityType: DocumentAttachmentEntityType
-                                        .paymentIn.apiValue,
+                                        .paymentIn
+                                        .apiValue,
                                     entityId: _savedPaymentId,
                                     onAdded: notifier.addDocument,
                                   ),
@@ -395,12 +416,12 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 ),
                                 onRename: (id, name) =>
                                     transactionRenameAttachment(
-                                  ref: ref,
-                                  attachments: form.attachedImages,
-                                  id: id,
-                                  name: name,
-                                  onRenamed: notifier.updateImage,
-                                ),
+                                      ref: ref,
+                                      attachments: form.attachedImages,
+                                      id: id,
+                                      name: name,
+                                      onRenamed: notifier.updateImage,
+                                    ),
                               ),
                             if (form.attachedDocuments.isNotEmpty)
                               SaleFormAttachmentChipList(
@@ -416,12 +437,12 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 ),
                                 onRename: (id, name) =>
                                     transactionRenameAttachment(
-                                  ref: ref,
-                                  attachments: form.attachedDocuments,
-                                  id: id,
-                                  name: name,
-                                  onRenamed: notifier.updateDocument,
-                                ),
+                                      ref: ref,
+                                      attachments: form.attachedDocuments,
+                                      id: id,
+                                      name: name,
+                                      onRenamed: notifier.updateDocument,
+                                    ),
                               ),
                           ],
                         ],
@@ -588,9 +609,13 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
 }
 
 class _UpiBanner extends StatelessWidget {
-  const _UpiBanner({required this.onDismiss});
+  const _UpiBanner({
+    required this.onDismiss,
+    required this.onPayOnline,
+  });
 
   final VoidCallback onDismiss;
+  final VoidCallback onPayOnline;
 
   @override
   Widget build(BuildContext context) {
@@ -622,7 +647,7 @@ class _UpiBanner extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: () {},
+            onPressed: onPayOnline,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -2,6 +2,12 @@ import { categories, items, parties } from '../../../db/schema';
 import {
   brands,
   godowns,
+  itemAlternatives,
+  itemBomCosts,
+  itemBomMaterials,
+  itemSuppliers,
+  itemTierPrices,
+  stockLevels,
   unitDefinitions,
 } from '../../../db/schema/inventory/tables';
 import {
@@ -17,14 +23,12 @@ import {
   purchaseDocumentLines,
   purchaseDocuments,
 } from '../../../db/schema/purchases/tables';
+import { todos } from '../../../db/schema/notifications/tables';
 import {
   salesDocumentLines,
   salesDocuments,
 } from '../../../db/schema/sales/tables';
-import {
-  businessSettings,
-  taxRates,
-} from '../../../db/schema/settings/tables';
+import { businessSettings, taxRates } from '../../../db/schema/settings/tables';
 import { guardDraftDocumentRow } from './document-row-guards';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
@@ -61,6 +65,8 @@ export type RowEntityDef = {
     input: RowMutationInput,
     existing: SyncedRowBase | null,
   ) => ApplyOutcome | null;
+  /** Server-derived rows: included in pull, rejected on push. */
+  pullOnly?: boolean;
 };
 
 function defineEntity(input: {
@@ -183,6 +189,38 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
     table: brands,
     allowedColumns: ['name'],
   }),
+  item_suppliers: defineEntity({
+    entityType: 'item_suppliers',
+    table: itemSuppliers,
+    allowedColumns: ['itemId', 'partyId', 'isDefault', 'sortOrder'],
+  }),
+  item_bom_materials: defineEntity({
+    entityType: 'item_bom_materials',
+    table: itemBomMaterials,
+    allowedColumns: [
+      'itemId',
+      'rawItemId',
+      'qty',
+      'unitId',
+      'purchasePrice',
+      'sortOrder',
+    ],
+  }),
+  item_bom_costs: defineEntity({
+    entityType: 'item_bom_costs',
+    table: itemBomCosts,
+    allowedColumns: ['itemId', 'description', 'amount', 'sortOrder'],
+  }),
+  item_alternatives: defineEntity({
+    entityType: 'item_alternatives',
+    table: itemAlternatives,
+    allowedColumns: ['itemId', 'alternativeItemId', 'sortOrder'],
+  }),
+  item_tier_prices: defineEntity({
+    entityType: 'item_tier_prices',
+    table: itemTierPrices,
+    allowedColumns: ['itemId', 'pricingTier', 'price'],
+  }),
   leads: defineEntity({
     entityType: 'leads',
     table: leads,
@@ -234,6 +272,26 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'amount',
       'expectedCloseDate',
       'description',
+    ],
+  }),
+  todos: defineEntity({
+    entityType: 'todos',
+    table: todos,
+    allowedColumns: [
+      'title',
+      'description',
+      'priority',
+      'category',
+      'partyId',
+      'dueDate',
+      'reminderAt',
+      'isCompleted',
+      'completedAt',
+      'isPinned',
+      'linkedInvoiceId',
+      'linkedPurchaseId',
+      'linkedProductId',
+      'attachmentIds',
     ],
   }),
   expense_categories: defineEntity({
@@ -291,7 +349,7 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
         'notes',
       ],
     }),
-    beforeApply: guardDraftDocumentRow(['tax_invoice', 'sales_return']),
+    beforeApply: guardDraftDocumentRow(['tax_invoice', 'sales_return', 'pos']),
   },
   sales_document_lines: defineEntity({
     entityType: 'sales_document_lines',
@@ -357,11 +415,26 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'sortOrder',
     ],
   }),
+  stock_levels: {
+    ...defineEntity({
+      entityType: 'stock_levels',
+      table: stockLevels,
+      allowedColumns: [
+        'itemId',
+        'godownId',
+        'quantity',
+        'averageCost',
+        'reorderLevel',
+      ],
+    }),
+    pullOnly: true,
+  },
 };
 
-export const REGISTERED_ROW_ENTITY_TYPES = Object.keys(
-  ROW_ENTITIES,
-) as [string, ...string[]];
+export const REGISTERED_ROW_ENTITY_TYPES = Object.keys(ROW_ENTITIES) as [
+  string,
+  ...string[],
+];
 
 export function getRowEntity(entityType: string): RowEntityDef | undefined {
   return ROW_ENTITIES[entityType];
@@ -369,6 +442,10 @@ export function getRowEntity(entityType: string): RowEntityDef | undefined {
 
 export function isRegisteredRowEntity(entityType: string): boolean {
   return entityType in ROW_ENTITIES;
+}
+
+export function isPullOnlyRowEntity(entityType: string): boolean {
+  return ROW_ENTITIES[entityType]?.pullOnly === true;
 }
 
 export function listRowEntities(): RowEntityDef[] {

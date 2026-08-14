@@ -55,7 +55,9 @@ class _PartyStatementReportContentState
     final partyId = ref.watch(reportFiltersProvider.select((s) => s.partyId));
     final parties = ref.watch(partiesListProvider);
     final partyListAsync = ref.watch(partyListProvider);
-    final selectedParty = parties.where((party) => party.id == partyId).firstOrNull;
+    final selectedParty = parties
+        .where((party) => party.id == partyId)
+        .firstOrNull;
     final partyNames = parties.map((party) => party.name).toList();
     final statementAsync = ref.watch(partyStatementReportProvider);
 
@@ -128,8 +130,9 @@ class _PartyStatementReportContentState
                       selected: selectedParty?.name ?? partyNames.first,
                       showSearchField: true,
                       onSelected: (name) {
-                        final party =
-                            parties.where((p) => p.name == name).firstOrNull;
+                        final party = parties
+                            .where((p) => p.name == name)
+                            .firstOrNull;
                         if (party != null) {
                           ref
                               .read(reportFiltersProvider.notifier)

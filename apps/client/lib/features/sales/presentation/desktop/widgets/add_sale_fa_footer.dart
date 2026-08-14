@@ -443,7 +443,10 @@ class _DescriptionFieldState extends State<_DescriptionField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(hint: 'Write your description here', fixedHeight: false),
+      decoration: buildSaleFieldDecoration(
+        hint: 'Write your description here',
+        fixedHeight: false,
+      ),
       minLines: 3,
       maxLines: 4,
       onChanged: widget.onChanged,

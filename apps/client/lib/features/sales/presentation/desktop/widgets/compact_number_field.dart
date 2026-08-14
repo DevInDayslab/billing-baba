@@ -38,10 +38,12 @@ class CompactNumberFieldState extends State<CompactNumberField> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
   bool _ownsFocusNode = false;
+  double? _lastNotifiedValue;
 
   @override
   void initState() {
     super.initState();
+    _lastNotifiedValue = widget.value;
     _controller = TextEditingController(text: _formatValue(widget.value));
     if (widget.focusNode != null) {
       _focusNode = widget.focusNode!;
@@ -56,6 +58,7 @@ class CompactNumberFieldState extends State<CompactNumberField> {
   void didUpdateWidget(CompactNumberField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.value != oldWidget.value && !_focusNode.hasFocus) {
+      _lastNotifiedValue = widget.value;
       final formatted = _formatValue(widget.value);
       if (_controller.text != formatted) {
         _controller.text = formatted;
@@ -107,7 +110,8 @@ class CompactNumberFieldState extends State<CompactNumberField> {
     if (_controller.text != formatted) {
       _controller.text = formatted;
     }
-    if (parsed != widget.value) {
+    if (parsed != _lastNotifiedValue) {
+      _lastNotifiedValue = parsed;
       widget.onChanged(parsed);
     }
   }
@@ -132,10 +136,14 @@ class CompactNumberFieldState extends State<CompactNumberField> {
   void _handleChanged(String text) {
     final parsed = _parseText(text);
     if (parsed != null) {
-      widget.onChanged(parsed);
+      if (parsed != _lastNotifiedValue) {
+        _lastNotifiedValue = parsed;
+        widget.onChanged(parsed);
+      }
       return;
     }
-    if (text.trim().isEmpty) {
+    if (text.trim().isEmpty && _lastNotifiedValue != 0) {
+      _lastNotifiedValue = 0;
       widget.onChanged(0);
     }
   }

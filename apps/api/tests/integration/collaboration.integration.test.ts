@@ -9,6 +9,7 @@ import {
   login,
   uniqueIndianMobile,
 } from '../helpers/app';
+import { ensureAccount, issueTestSession } from '../helpers/auth-session';
 import { canRunDbTests, INTEGRATION_TIMEOUT_MS } from '../helpers/env';
 
 describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
@@ -74,9 +75,14 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
       });
       expect(secondGet.statusCode).toBe(200);
 
+      const inviteeAccountId = await ensureAccount(inviteePhone, 'Invitee User');
+      const inviteeSession = await issueTestSession(app, inviteeAccountId);
+
       const accepted = await app.inject({
         method: 'POST',
         url: `${prefix}/invitations/${token}/accept`,
+        headers: jsonAuthHeaders(inviteeSession.access_token),
+        payload: {},
       });
       expect(accepted.statusCode).toBe(200);
       const acceptBody = accepted.json() as {
@@ -87,6 +93,8 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
       const doubleAccept = await app.inject({
         method: 'POST',
         url: `${prefix}/invitations/${token}/accept`,
+        headers: jsonAuthHeaders(inviteeSession.access_token),
+        payload: {},
       });
       expect(doubleAccept.statusCode).toBe(409);
     },
@@ -119,9 +127,14 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
         url: `${prefix}/invitations/${token}`,
       });
 
+      const rejectAccountId = await ensureAccount(rejectPhone, 'Reject User');
+      const rejectSession = await issueTestSession(app, rejectAccountId);
+
       const rejected = await app.inject({
         method: 'POST',
         url: `${prefix}/invitations/${token}/reject`,
+        headers: jsonAuthHeaders(rejectSession.access_token),
+        payload: {},
       });
       expect(rejected.statusCode).toBe(200);
       const status = (rejected.json() as { data: { status: string } }).data
@@ -154,9 +167,14 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
         }
       ).data;
 
+      const reinviteAccountId = await ensureAccount(reinvitePhone, 'Reinvite User');
+      const reinviteSession = await issueTestSession(app, reinviteAccountId);
+
       await app.inject({
         method: 'POST',
         url: `${prefix}/invitations/${first.invite_code}/reject`,
+        headers: jsonAuthHeaders(reinviteSession.access_token),
+        payload: {},
       });
 
       const reinvited = await app.inject({
@@ -299,9 +317,14 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
         url: `${prefix}/invitations/${invite.invite_code}`,
       });
 
+      const memberAccountId = await ensureAccount(memberPhone, 'Member Mgmt User');
+      const memberSession = await issueTestSession(app, memberAccountId);
+
       const accepted = await app.inject({
         method: 'POST',
         url: `${prefix}/invitations/${invite.invite_code}/accept`,
+        headers: jsonAuthHeaders(memberSession.access_token),
+        payload: {},
       });
       expect(accepted.statusCode).toBe(200);
 

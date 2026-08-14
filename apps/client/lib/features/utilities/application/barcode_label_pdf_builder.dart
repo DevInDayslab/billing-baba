@@ -48,7 +48,11 @@ class BarcodeLabelPdfBuilder {
       final widgets = <pw.Widget>[];
 
       for (var row = 0; row < sheet.rows && index < expanded.length; row++) {
-        for (var col = 0; col < sheet.columns && index < expanded.length; col++) {
+        for (
+          var col = 0;
+          col < sheet.columns && index < expanded.length;
+          col++
+        ) {
           final entry = expanded[index];
           widgets.add(
             pw.Positioned(

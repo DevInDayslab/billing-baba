@@ -46,7 +46,7 @@ final class PartyServiceProvider
   }
 }
 
-String _$partyServiceHash() => r'88372bab6091519cdf6f44eb8b0570178228cc20';
+String _$partyServiceHash() => r'f45b88e4f51b555688e36026754730b60ae0245f';
 
 @ProviderFor(PartyList)
 final partyListProvider = PartyListProvider._();
@@ -72,7 +72,7 @@ final class PartyListProvider
   PartyList create() => PartyList();
 }
 
-String _$partyListHash() => r'b240ee5047d3ce5f553a5a6e66292feac590da9c';
+String _$partyListHash() => r'fc2b07bab542b51c5a421d902cff668f829a68e1';
 
 abstract class _$PartyList extends $AsyncNotifier<List<PartyModel>> {
   FutureOr<List<PartyModel>> build();

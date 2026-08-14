@@ -201,10 +201,11 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
                             group: ReportNavGroup.expenseReport,
                             expenseSub: sub,
                           ),
-                          onSalePurchaseOrderSubSelected: (sub) => _selectReport(
-                            group: ReportNavGroup.salePurchaseOrderReport,
-                            salePurchaseOrderSub: sub,
-                          ),
+                          onSalePurchaseOrderSubSelected: (sub) =>
+                              _selectReport(
+                                group: ReportNavGroup.salePurchaseOrderReport,
+                                salePurchaseOrderSub: sub,
+                              ),
                           onOtherIncomeSubSelected: (sub) => _selectReport(
                             group: ReportNavGroup.otherIncomeReport,
                             otherIncomeSub: sub,

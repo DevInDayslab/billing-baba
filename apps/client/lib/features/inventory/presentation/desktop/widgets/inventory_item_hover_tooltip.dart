@@ -13,10 +13,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _tooltipWait = Duration(milliseconds: 200);
-const _previewSize = 64.0;
-const _bubbleMaxWidth = 152.0;
+const _previewSize = 48.0;
+const _bubbleWidth = 104.0;
 
-/// Compact row-hover preview — Material tooltip style; excludes stock & menu zones.
+/// Compact row-hover preview — appears below the item name in the list.
 class InventoryItemRowPreviewTooltip extends ConsumerStatefulWidget {
   const InventoryItemRowPreviewTooltip({
     required this.item,
@@ -59,24 +59,24 @@ class _InventoryItemRowPreviewTooltipState
 
   void _showTooltip() {
     if (_overlayEntry != null) return;
-    final item = widget.item;
+
+    final container = ProviderScope.containerOf(context, listen: false);
+
     _overlayEntry = OverlayEntry(
-      builder: (context) => IgnorePointer(
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            CompositedTransformFollower(
-              link: _layerLink,
-              targetAnchor: Alignment.bottomCenter,
-              followerAnchor: Alignment.topCenter,
-              offset: const Offset(0, 6),
-              showWhenUnlinked: false,
-              child: UnconstrainedBox(
-                alignment: Alignment.topCenter,
-                child: _MiniPreviewBubble(item: item),
-              ),
+      builder: (overlayContext) => UncontrolledProviderScope(
+        container: container,
+        child: IgnorePointer(
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            targetAnchor: Alignment.bottomCenter,
+            followerAnchor: Alignment.topCenter,
+            offset: const Offset(0, 6),
+            showWhenUnlinked: false,
+            child: UnconstrainedBox(
+              alignment: Alignment.topCenter,
+              child: _MiniPreviewBubble(item: widget.item),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -91,15 +91,18 @@ class _InventoryItemRowPreviewTooltipState
 
   @override
   Widget build(BuildContext context) {
+    if (isServerBackedInventoryItemId(widget.item.id)) {
+      ref.listen(itemImagesProvider(widget.item.id), (_, _) {
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
+
     return CompositedTransformTarget(
       link: _layerLink,
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        child: MouseRegion(
-          onEnter: (_) => _onHoverEnter(),
-          onExit: (_) => _hideTooltip(),
-          child: widget.child,
-        ),
+      child: MouseRegion(
+        onEnter: (_) => _onHoverEnter(),
+        onExit: (_) => _hideTooltip(),
+        child: widget.child,
       ),
     );
   }
@@ -112,42 +115,44 @@ class _MiniPreviewBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tooltipTheme = TooltipTheme.of(context);
-    final decoration =
-        tooltipTheme.decoration ??
-        BoxDecoration(
-          color: Colors.grey.shade800,
-          borderRadius: BorderRadius.circular(4),
-        );
-    final textStyle =
-        tooltipTheme.textStyle ??
-        const TextStyle(color: Colors.white, fontSize: 12);
-
     return Material(
       color: Colors.transparent,
-      elevation: tooltipTheme.decoration == null ? 4 : 0,
+      elevation: 3,
       shadowColor: Colors.black26,
-      child: Container(
-        width: _bubbleMaxWidth,
-        decoration: decoration,
-        padding: const EdgeInsets.all(6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: _previewSize,
-              height: _previewSize,
-              child: _PreviewImage(item: item),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.black26),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: SizedBox(
+            width: _bubbleWidth,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    height: 1.15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: _previewSize,
+                  height: _previewSize,
+                  child: _PreviewImage(item: item),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              item.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: textStyle.copyWith(fontSize: 11, height: 1.2),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -161,43 +166,52 @@ class _PreviewImage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final directUrl = _resolvePreviewUrl(ref);
-    if (directUrl != null) {
-      return _WarmPreviewImage(
-        item: item,
-        imageUrl: directUrl,
-      );
-    }
+    final primaryUrl = normalizeImageUrl(item.primaryImageUrl);
 
     if (!isServerBackedInventoryItemId(item.id)) {
-      return _PreviewPlaceholder(item: item);
+      if (primaryUrl != null) {
+        return _WarmPreviewImage(item: item, imageUrl: primaryUrl);
+      }
+      return _ImageSlotPlaceholder(item: item);
     }
 
     final imagesAsync = ref.watch(itemImagesProvider(item.id));
     return imagesAsync.when(
-      loading: () => _PreviewPlaceholder(item: item),
-      error: (_, _) => _PreviewPlaceholder(item: item),
-      data: (images) {
-        final image = _resolvePrimaryOrFirst(images);
-        final url = image == null ? null : normalizeImageUrl(image.urlForGrid());
-        if (url == null) return _PreviewPlaceholder(item: item);
-        return _WarmPreviewImage(
-          item: item,
-          imageUrl: url,
-          mediaAssetId: image!.mediaAssetId,
-        );
-      },
+      loading: () => _resolveWarmPreview(
+        item: item,
+        primaryUrl: primaryUrl,
+        images: ref.read(itemImagesProvider(item.id)).asData?.value,
+      ),
+      error: (_, _) => _resolveWarmPreview(
+        item: item,
+        primaryUrl: primaryUrl,
+        images: ref.read(itemImagesProvider(item.id)).asData?.value,
+      ),
+      data: (images) => _resolveWarmPreview(
+        item: item,
+        primaryUrl: primaryUrl,
+        images: images,
+      ),
     );
   }
 
-  String? _resolvePreviewUrl(WidgetRef ref) {
-    final primary = normalizeImageUrl(item.primaryImageUrl);
-    if (primary != null) return primary;
-
-    final images = ref.read(itemImagesProvider(item.id)).asData?.value;
-    if (images == null || images.isEmpty) return null;
-    final image = _resolvePrimaryOrFirst(images);
-    return image == null ? null : normalizeImageUrl(image.urlForGrid());
+  Widget _resolveWarmPreview({
+    required InventoryItem item,
+    required String? primaryUrl,
+    required List<ItemImageModel>? images,
+  }) {
+    final image = images == null ? null : _resolvePrimaryOrFirst(images);
+    final url = image != null
+        ? normalizeImageUrl(image.urlForGrid())
+        : primaryUrl;
+    if (url == null) {
+      return _ImageSlotPlaceholder(item: item);
+    }
+    return _WarmPreviewImage(
+      item: item,
+      imageUrl: url,
+      mediaAssetId: image?.mediaAssetId,
+    );
   }
 
   ItemImageModel? _resolvePrimaryOrFirst(List<ItemImageModel> images) {
@@ -207,7 +221,7 @@ class _PreviewImage extends ConsumerWidget {
   }
 }
 
-/// Warm preview via shared image stack — disk cache first, no fade delay.
+/// Matches gallery thumbs — grey slot, visible loading/error, no white-on-white flash.
 class _WarmPreviewImage extends StatelessWidget {
   const _WarmPreviewImage({
     required this.item,
@@ -221,50 +235,55 @@ class _WarmPreviewImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = _PreviewPlaceholder(item: item);
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(3),
-      child: ColoredBox(
-        color: Colors.white,
-        child: AppNetworkImage(
-          imageUrl: imageUrl,
-          sourceMediaAssetId: mediaAssetId,
-          fit: BoxFit.contain,
-          width: _previewSize,
-          height: _previewSize,
-          displayContext: ImageDisplayContext.galleryThumb,
-          memCacheWidth: (_previewSize * 2).round(),
-          loadWhenVisible: false,
-          fadeInDuration: Duration.zero,
-          placeholder: placeholder,
-          errorWidget: placeholder,
-        ),
+      child: AppNetworkImage(
+        imageUrl: imageUrl,
+        sourceMediaAssetId: mediaAssetId,
+        width: _previewSize,
+        height: _previewSize,
+        displayContext: ImageDisplayContext.galleryThumb,
+        memCacheWidth: (_previewSize * 2).round(),
+        loadWhenVisible: false,
+        fadeInDuration: Duration.zero,
+        placeholder: _ImageSlotPlaceholder(item: item, loading: true),
+        errorWidget: _ImageSlotPlaceholder(item: item, failed: true),
       ),
     );
   }
 }
 
-class _PreviewPlaceholder extends StatelessWidget {
-  const _PreviewPlaceholder({required this.item});
+class _ImageSlotPlaceholder extends StatelessWidget {
+  const _ImageSlotPlaceholder({
+    required this.item,
+    this.loading = false,
+    this.failed = false,
+  });
 
   final InventoryItem item;
+  final bool loading;
+  final bool failed;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(3),
-      ),
+    return ColoredBox(
+      color: Colors.grey.shade100,
       child: Center(
-        child: Icon(
-          item.type == ItemType.product
-              ? Icons.inventory_2_outlined
-              : Icons.handyman_outlined,
-          size: 22,
-          color: Colors.white.withValues(alpha: 0.85),
-        ),
+        child: loading
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(
+                failed
+                    ? Icons.broken_image_outlined
+                    : item.type == ItemType.product
+                    ? Icons.inventory_2_outlined
+                    : Icons.handyman_outlined,
+                size: 18,
+                color: Colors.grey.shade500,
+              ),
       ),
     );
   }

@@ -298,20 +298,24 @@ class _StockSummaryReportByItemCategoryReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                                                        child: ReportFilterableSyncTable<ReportCategoryAmountRow>(
-                              reportScope: stockSummaryByCategoryReportScope,
-                              columns: stockSummaryByCategoryColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No stock data found for the selected filters.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportCategoryAmountRow
+                                >(
+                                  reportScope:
+                                      stockSummaryByCategoryReportScope,
+                                  columns: stockSummaryByCategoryColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No stock data found for the selected filters.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         Container(

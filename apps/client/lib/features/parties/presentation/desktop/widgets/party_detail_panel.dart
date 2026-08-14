@@ -3,11 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
-import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_history_section.dart';
-import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_summary_tile.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
-import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
@@ -17,12 +13,14 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions_menu_button.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_detail_summary.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_ledger_transactions_section.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_more_details_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_preview_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_whatsapp_actions.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_notes_attachments_section.dart';
 import 'package:billing_baba/features/parties/repositories/party_reminder_schedule_repository.dart';
 import 'package:billing_baba/shared/media/image_display_context.dart';
-import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -50,21 +48,15 @@ class PartyDetailPanel extends ConsumerWidget {
         onRetry: () => ref.invalidate(partyDetailProvider(partyId)),
       ),
       data: (party) {
-        // Prefer the list row's profile image when it is newer (instant upload).
+        // The list is patched immediately on save; prefer it so the header
+        // reflects edits without waiting for a detail refetch.
         final listParty = ref
             .watch(partyListProvider)
             .asData
             ?.value
             .where((item) => item.id == party.id)
             .firstOrNull;
-        final imageUrl = listParty?.profileImageUrl ?? party.profileImageUrl;
-        final mediaId =
-            listParty?.profileMediaAssetId ?? party.profileMediaAssetId;
-        final displayParty = party.copyWith(
-          profileImageUrl: imageUrl,
-          profileMediaAssetId: mediaId,
-          clearProfileImage: imageUrl == null && mediaId == null,
-        );
+        final displayParty = listParty ?? party;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -105,8 +97,6 @@ class _PartyDetailContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ledgerAsync = ref.watch(partyTimelineProvider(party.id));
     final businessName = ref.watch(sidebarBusinessProvider).name;
-    final canViewHiddenLedger =
-        ref.watch(permissionServiceProvider).canViewHiddenLedger;
     final transactionsAsync = ledgerAsync.whenData(
       (ledger) => ledger.transactions,
     );
@@ -119,23 +109,26 @@ class _PartyDetailContent extends ConsumerWidget {
       key: ValueKey(party.id),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _PartyDetailHeader(
-          party: party,
-          ledgerAsync: ledgerAsync,
-          businessName: businessName,
-          onBack: onBack,
-        ),
-        if (canViewHiddenLedger)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.sm,
-              AppSpacing.md,
-              0,
+        // Header / notes can exceed short viewports; scroll them instead of
+        // overflowing under the transactions pane.
+        Flexible(
+          fit: FlexFit.loose,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PartyDetailHeader(
+                  party: party,
+                  ledgerAsync: ledgerAsync,
+                  businessName: businessName,
+                  onBack: onBack,
+                ),
+                PartyNotesAttachmentsSection(party: party),
+              ],
             ),
-            child: HiddenLedgerSummaryTile(partyId: party.id),
           ),
-        if (canViewHiddenLedger) HiddenLedgerHistorySection(partyId: party.id),
+        ),
         const Divider(height: 1, thickness: 1),
         Expanded(
           child: ledgerAsync.when(
@@ -185,30 +178,26 @@ class _PartyDetailHeader extends ConsumerWidget {
     return parts.join(', ');
   }
 
-  String _outstandingBalance() {
-    return ledgerAsync.maybeWhen(
-      data: (ledger) =>
-          PartyModel.displayOutstanding(ledger.summary.outstanding),
-      orElse: () => PartyModel.displayOutstanding(party.balance),
-    );
-  }
-
-  String _creditLimit() {
+  String? _creditLimit() {
     return ledgerAsync.maybeWhen(
       data: (ledger) {
         final limit = ledger.summary.creditLimit;
-        if (limit != null) {
+        if (limit != null && limit > 0) {
           return PartyModel.formatCurrency(limit);
         }
+        if (!party.hasCustomCreditLimit) return null;
         return PartyModel.displayCreditLimit(
           hasCustomCreditLimit: party.hasCustomCreditLimit,
           creditLimit: party.creditLimit,
         );
       },
-      orElse: () => PartyModel.displayCreditLimit(
-        hasCustomCreditLimit: party.hasCustomCreditLimit,
-        creditLimit: party.creditLimit,
-      ),
+      orElse: () {
+        if (!party.hasCustomCreditLimit) return null;
+        return PartyModel.displayCreditLimit(
+          hasCustomCreditLimit: party.hasCustomCreditLimit,
+          creditLimit: party.creditLimit,
+        );
+      },
     );
   }
 
@@ -233,63 +222,12 @@ class _PartyDetailHeader extends ConsumerWidget {
     final loyaltyAsync = showLoyalty
         ? ref.watch(partyLoyaltyBalanceProvider(party.id))
         : null;
-
-    final leftLines = [
-      _MetaLine(
-        label: 'Phone Number',
-        value: PartyModel.displayPhones(party),
-      ),
-      if (party.legalName.trim().isNotEmpty)
-        _MetaLine(
-          label: 'Legal Name',
-          value: PartyModel.displayOrDash(party.legalName),
-        ),
-      if (party.alias.trim().isNotEmpty)
-        _MetaLine(
-          label: 'Alias',
-          value: PartyModel.displayOrDash(party.alias),
-        ),
-      _MetaLine(
-        label: 'Email',
-        value: PartyModel.displayOrDash(party.email),
-      ),
-      _MetaLine(
-        label: 'GSTIN',
-        value: PartyModel.displayOrDash(party.gstin),
-      ),
-      _MetaLine(
-        label: 'Billing Address',
-        value: PartyModel.displayOrDash(_billingAddress()),
-      ),
-    ];
-
-    final rightLines = [
-      _MetaLine(label: 'Party Type', value: party.partyTypeLabel),
-      if (party.partyGroup.trim().isNotEmpty)
-        _MetaLine(
-          label: 'Party Group',
-          value: PartyModel.displayOrDash(party.partyGroup),
-        ),
-      if (party.areaCode.trim().isNotEmpty)
-        _MetaLine(
-          label: 'Area Code',
-          value: PartyModel.displayOrDash(party.areaCode),
-        ),
-      _MetaLine(
-        label: 'Business Name',
-        value: PartyModel.displayOrDash(businessName),
-      ),
-      _MetaLine(label: 'Credit Limit', value: _creditLimit()),
-      _MetaLine(label: 'Outstanding Balance', value: _outstandingBalance()),
-      if (showLoyalty && loyaltyAsync != null)
-        _MetaLine(
-          label: 'Loyalty Points',
-          value: _loyaltyDisplayValue(
-            loyaltyAsync,
-            cached: loyaltyCache?[party.id],
-          ),
-        ),
-    ];
+    final billingAddress = _billingAddress();
+    final nameStyle = TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      color: party.isActive ? AppColors.textPrimary : AppColors.textSecondary,
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -354,61 +292,66 @@ class _PartyDetailHeader extends ConsumerWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
-                        Flexible(
-                          child: Row(
-                            children: [
-                              Flexible(
-                                child: AppTruncatedText(
-                                  party.name,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: party.isActive
-                                        ? AppColors.textPrimary
-                                        : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                              if (canEditParty)
-                                _PartyHeaderActionIcon(
-                                  icon: Icons.edit_outlined,
-                                  tooltip: 'Edit party',
-                                  onPressed: () =>
-                                      PartyActions.edit(context, ref, party),
-                                ),
-                              if (!party.isActive) ...[
-                                const SizedBox(width: AppSpacing.sm),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    'Inactive',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
+                        Expanded(
+                          child: PartyDetailNameBlock(
+                            party: party,
+                            nameStyle: nameStyle,
                           ),
                         ),
+                        if (canEditParty)
+                          _PartyHeaderActionIcon(
+                            icon: Icons.edit_outlined,
+                            tooltip: 'Edit party',
+                            onPressed: () =>
+                                PartyActions.edit(context, ref, party),
+                          ),
+                        if (!party.isActive) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Inactive',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                    if (showLoyalty) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      _PartyLoyaltyPointsBadge(party: party),
-                    ],
+                    const SizedBox(height: AppSpacing.xs),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () => showPartyMoreDetailsDialog(
+                          context,
+                          ref,
+                          party: party,
+                          businessName: businessName,
+                          ledgerAsync: ledgerAsync,
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 28),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: const Text('More Details'),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -505,51 +448,19 @@ class _PartyDetailHeader extends ConsumerWidget {
             thickness: 1,
             color: Color.fromARGB(98, 117, 117, 117),
           ),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final line in leftLines)
-                      InventoryDetailMetaLine(
-                        label: line.label,
-                        value: line.value,
-                      ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final line in rightLines)
-                      InventoryDetailMetaLine(
-                        label: line.label,
-                        value: line.value,
-                      ),
-                  ],
-                ),
-              ),
-            ],
+          PartyDetailPrimaryFields(
+            party: party,
+            billingAddress: billingAddress,
+            creditLimitLabel: _creditLimit(),
+            showLoyalty: showLoyalty,
+            loyaltyAsync: loyaltyAsync,
+            loyaltyCache: loyaltyCache?[party.id],
           ),
         ],
       ),
     );
   }
 }
-
-class _MetaLine {
-  const _MetaLine({required this.label, required this.value});
-
-  final String label;
-  final String value;
-}
-
-const _partyHeaderNameMaxLength = 20;
 
 class _PartyHeaderActionIcon extends StatelessWidget {
   const _PartyHeaderActionIcon({
@@ -578,134 +489,6 @@ class _PartyHeaderActionIcon extends StatelessWidget {
       constraints: const BoxConstraints(
         minWidth: kMinInteractiveDimension,
         minHeight: kMinInteractiveDimension,
-      ),
-    );
-  }
-}
-
-String _formatLoyaltyPoints(double value) {
-  return value == value.roundToDouble()
-      ? '${value.toInt()}'
-      : value.toStringAsFixed(0);
-}
-
-const _loyaltyZeroLabel = '0 earned';
-
-String _loyaltyBalanceSummary(PartyLoyaltyBalanceDto balance) {
-  final earnedLabel = _formatLoyaltyPoints(balance.earnedPointsValue);
-  final availableLabel = _formatLoyaltyPoints(balance.availablePoints);
-  if (balance.availablePoints != balance.earnedPointsValue) {
-    return '$earnedLabel earned · $availableLabel available';
-  }
-  return '$earnedLabel earned';
-}
-
-String _loyaltyDisplayValue(
-  AsyncValue<PartyLoyaltyBalanceDto> balanceAsync, {
-  PartyLoyaltyBalanceDto? cached,
-}) {
-  return balanceAsync.maybeWhen(
-    data: _loyaltyBalanceSummary,
-    orElse: () =>
-        cached != null ? _loyaltyBalanceSummary(cached) : _loyaltyZeroLabel,
-  );
-}
-
-class _PartyLoyaltyPointsBadge extends ConsumerStatefulWidget {
-  const _PartyLoyaltyPointsBadge({required this.party});
-
-  final PartyModel party;
-
-  static const _badgeBackground = Color(0xFFFFF8E7);
-  static const _badgeBorder = Color(0xFFFFE082);
-
-  @override
-  ConsumerState<_PartyLoyaltyPointsBadge> createState() =>
-      _PartyLoyaltyPointsBadgeState();
-}
-
-class _PartyLoyaltyPointsBadgeState
-    extends ConsumerState<_PartyLoyaltyPointsBadge> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref.invalidate(partyLoyaltyBalanceProvider(widget.party.id));
-    });
-  }
-
-  Widget _badgeShell({required Widget child}) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: _PartyLoyaltyPointsBadge._badgeBackground,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _PartyLoyaltyPointsBadge._badgeBorder.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: child,
-      ),
-    );
-  }
-
-  Widget _badgeText(String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '⭐',
-          style: AppTypography.inter(fontSize: 12, height: 1.2),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          'Loyalty Points',
-          style: AppTypography.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-            height: 1.2,
-            letterSpacing: 0.15,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text(
-            '·',
-            style: AppTypography.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-              height: 1.2,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: AppTypography.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            height: 1.2,
-            letterSpacing: -0.2,
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final balanceAsync = ref.watch(
-      partyLoyaltyBalanceProvider(widget.party.id),
-    );
-    final cached = ref.watch(partyLoyaltyBalanceCacheProvider)[widget.party.id];
-
-    return _badgeShell(
-      child: _badgeText(
-        _loyaltyDisplayValue(balanceAsync, cached: cached),
       ),
     );
   }

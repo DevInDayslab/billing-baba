@@ -6,16 +6,24 @@ import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
 import 'package:billing_baba/core/database/tables/expenses_tables.dart';
+import 'package:billing_baba/core/database/tables/gateway_payment_sessions_table.dart';
 import 'package:billing_baba/core/database/tables/godowns_table.dart';
 import 'package:billing_baba/core/database/tables/inventory_stock_tables.dart';
+import 'package:billing_baba/core/database/tables/item_alternatives_table.dart';
+import 'package:billing_baba/core/database/tables/item_bom_costs_table.dart';
+import 'package:billing_baba/core/database/tables/item_bom_materials_table.dart';
+import 'package:billing_baba/core/database/tables/item_suppliers_table.dart';
+import 'package:billing_baba/core/database/tables/item_tier_prices_table.dart';
 import 'package:billing_baba/core/database/tables/items_table.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
+import 'package:billing_baba/core/database/tables/notifications_table.dart';
 import 'package:billing_baba/core/database/tables/parties_table.dart';
 import 'package:billing_baba/core/database/tables/pos_sales_tables.dart';
 import 'package:billing_baba/core/database/tables/purchase_document_tables.dart';
 import 'package:billing_baba/core/database/tables/sales_document_tables.dart';
 import 'package:billing_baba/core/database/tables/sync_queue_table.dart';
 import 'package:billing_baba/core/database/tables/tax_rates_table.dart';
+import 'package:billing_baba/core/database/tables/todos_table.dart';
 import 'package:billing_baba/core/database/tables/unit_definitions_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
@@ -38,6 +46,11 @@ part 'database.g.dart';
     BrandsLocal,
     PartiesLocal,
     ItemsLocal,
+    ItemAlternativesLocal,
+    ItemSuppliersLocal,
+    ItemBomMaterialsLocal,
+    ItemBomCostsLocal,
+    ItemTierPricesLocal,
     UnitDefinitionsLocal,
     TaxRatesLocal,
     GodownsLocal,
@@ -51,13 +64,16 @@ part 'database.g.dart';
     StockLevelsLocal,
     ExpenseCategoriesLocal,
     ExpensesLocal,
+    GatewayPaymentSessionsLocal,
+    NotificationsLocal,
+    TodosLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Drift schema version — keep in sync with [schemaVersion].
-  static const currentSchemaVersion = 20;
+  static const currentSchemaVersion = 27;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -152,8 +168,16 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(localDocumentCounters);
       }
       if (from < 15) {
-        await _addColumnIfMissing(m, salesDocumentsLocal, salesDocumentsLocal.paidAmount);
-        await _addColumnIfMissing(m, salesDocumentsLocal, salesDocumentsLocal.paymentMode);
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.paidAmount,
+        );
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.paymentMode,
+        );
       }
       if (from < 16) {
         await _addColumnIfMissing(
@@ -182,6 +206,72 @@ class AppDatabase extends _$AppDatabase {
       if (from < 20) {
         await _createSyncQueueIndexes(m);
       }
+      if (from < 21) {
+        await m.createTable(itemSuppliersLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_suppliers_local_business_id ON item_suppliers_local (business_id)',
+        );
+      }
+      if (from < 22) {
+        await m.createTable(itemAlternativesLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_alternatives_local_business_id ON item_alternatives_local (business_id)',
+        );
+      }
+      if (from < 22) {
+        await m.createTable(itemTierPricesLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_tier_prices_local_business_id ON item_tier_prices_local (business_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_tier_prices_local_item_id ON item_tier_prices_local (item_id)',
+        );
+      }
+      if (from < 23) {
+        await m.createTable(itemBomMaterialsLocal);
+        await m.createTable(itemBomCostsLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_materials_local_business_id ON item_bom_materials_local (business_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_costs_local_business_id ON item_bom_costs_local (business_id)',
+        );
+      }
+      if (from < 24) {
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_suppliers_local_item_id ON item_suppliers_local (item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_alternatives_local_item_id ON item_alternatives_local (item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_alternatives_local_alternative_item_id ON item_alternatives_local (alternative_item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_materials_local_item_id ON item_bom_materials_local (item_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_item_bom_costs_local_item_id ON item_bom_costs_local (item_id)',
+        );
+      }
+      if (from < 25) {
+        await m.createTable(gatewayPaymentSessionsLocal);
+      }
+      if (from < 26) {
+        await m.createTable(notificationsLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_notifications_local_business_id ON notifications_local (business_id)',
+        );
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_notifications_local_business_read ON notifications_local (business_id, read)',
+        );
+      }
+      if (from < 27) {
+        await m.createTable(todosLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_todos_local_business_id ON todos_local (business_id)',
+        );
+      }
     },
   );
 
@@ -197,6 +287,8 @@ class AppDatabase extends _$AppDatabase {
   }
 
   static Future<void> _createBusinessIdIndexes(Migrator m) async {
+    // Only tables that exist by schema v19. Tables introduced later (item_*,
+    // todos_local, …) get their business_id indexes in their own upgrade steps.
     const tables = [
       'sync_queue',
       'parties_local',
@@ -212,6 +304,16 @@ class AppDatabase extends _$AppDatabase {
       'deals',
     ];
     for (final table in tables) {
+      final exists = await m.database
+          .customSelect(
+            'SELECT 1 AS ok FROM sqlite_master WHERE type = ? AND name = ?',
+            variables: [
+              const Variable<String>('table'),
+              Variable<String>(table),
+            ],
+          )
+          .getSingleOrNull();
+      if (exists == null) continue;
       await m.database.customStatement(
         'CREATE INDEX IF NOT EXISTS idx_${table}_business_id ON $table (business_id)',
       );
@@ -255,6 +357,19 @@ class AppDatabase extends _$AppDatabase {
   }
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: kDriftDatabaseName);
+    return driftDatabase(
+      name: kDriftDatabaseName,
+      native: DriftNativeOptions(
+        // Prefer LocalAppData/Application Support over Documents — Documents
+        // is frequently blocked on Windows (Controlled Folder Access → CANTOPEN).
+        // Path must be resolved on the UI isolate via
+        // [DriftDatabasePaths.ensureInitialized] before first open.
+        databasePath: () async {
+          final cached = DriftDatabasePaths.cachedPath;
+          if (cached != null) return cached;
+          return DriftDatabasePaths.ensureInitialized();
+        },
+      ),
+    );
   }
 }

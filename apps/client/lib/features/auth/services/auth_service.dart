@@ -1,12 +1,16 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/network_exception_classifier.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
+import 'package:billing_baba/core/sync/engine/device_identity.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
+import 'package:billing_baba/features/auth/models/device_trust_credential.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
@@ -23,6 +27,10 @@ class AuthService {
 
   /// Serializes every `/auth/refresh` call across Dio clients and business selection.
   static Future<void> _refreshMutexChain = Future<void>.value();
+
+  /// Coalesces concurrent [refreshStoredSession] callers onto one in-flight refresh
+  /// so rotated refresh tokens are not reused (which would clear the session).
+  static Future<AuthSession?>? _inflightRefreshStoredSession;
 
   static Future<T> _withRefreshLock<T>(Future<T> Function() action) {
     final operation = _refreshMutexChain.then((_) => action());
@@ -84,6 +92,8 @@ class AuthService {
         refreshToken.isEmpty) {
       return null;
     }
+
+    await _storage.write(StorageKeys.hasLoggedInBefore, 'true');
 
     // Offline developer / mock sessions — restore locally, never hit the API.
     if (isOfflineDevToken(accessToken)) {
@@ -190,10 +200,42 @@ class AuthService {
             ? storedBusinessId
             : null);
 
-    return _withRefreshLock(() async {
+    final inflight = _inflightRefreshStoredSession;
+    if (inflight != null) {
+      return inflight;
+    }
+
+    late final Future<AuthSession?> operation;
+    operation = _withRefreshLock(() async {
+      // Another refresh may have completed (e.g. selectBusiness) while we waited.
+      final latestAccess = await _storage.readSecure(StorageKeys.accessToken);
+      final latestRefresh = await _storage.readSecure(StorageKeys.refreshToken);
+      if (latestAccess != null &&
+          latestAccess.isNotEmpty &&
+          latestAccess != accessToken &&
+          latestRefresh != null &&
+          latestRefresh.isNotEmpty) {
+        return AuthSession(
+          accessToken: latestAccess,
+          refreshToken: latestRefresh,
+          expiresIn: 0,
+          user: AuthUser(
+            id: JwtUtils.sessionUserId(latestAccess) ?? 'unknown',
+            phone: JwtUtils.phone(latestAccess) ??
+                _storage.read(StorageKeys.accountPhone) ??
+                '',
+            role: JwtUtils.role(latestAccess),
+          ),
+          businesses: const [],
+        );
+      }
+
+      final tokenToUse = latestRefresh ?? token;
+      if (tokenToUse.isEmpty) return null;
+
       try {
         final session = await _repository.refresh(
-          refreshToken: token,
+          refreshToken: tokenToUse,
           businessId: effectiveBusinessId,
         );
         final persistBusinessId = _businessIdForSession(
@@ -216,20 +258,61 @@ class AuthService {
         }
         return null;
       }
+    }).whenComplete(() {
+      if (identical(_inflightRefreshStoredSession, operation)) {
+        _inflightRefreshStoredSession = null;
+      }
     });
+
+    _inflightRefreshStoredSession = operation;
+    return operation;
   }
 
   Future<AuthSession> loginWithMsg91Token({
     required String msg91AccessToken,
     required String phone,
+    bool rememberFor30Days = false,
   }) async {
     AuthDebugLogger.log(
       'AuthService.loginWithMsg91Token entered '
-      'phone=${AuthDebugLogger.maskPhone(phone)}',
+      'phone=${AuthDebugLogger.maskPhone(phone)} '
+      'remember=$rememberFor30Days',
     );
+    final deviceId = await ensureAuthDeviceId();
     final session = await _repository.login(
       msg91AccessToken: msg91AccessToken,
       phone: phone,
+      rememberFor30Days: rememberFor30Days,
+      deviceId: deviceId,
+    );
+    AuthDebugLogger.backendLoginSuccess();
+    AuthDebugLogger.jwtIssued(session.accessToken);
+    await persistSession(session);
+    await _syncDeviceTrustFromLogin(session, rememberFor30Days: rememberFor30Days);
+    return session;
+  }
+
+  Future<AuthSession> loginWithDeviceTrust({required String phone}) async {
+    final trust = await loadDeviceTrust();
+    if (trust == null) {
+      throw StateError('No valid device trust stored');
+    }
+
+    final normalizedPhone = _normalizePhoneForTrust(phone);
+    if (trust.phone != normalizedPhone) {
+      throw StateError('Phone does not match trusted device');
+    }
+
+    AuthDebugLogger.log(
+      'AuthService.loginWithDeviceTrust entered '
+      'phone=${AuthDebugLogger.maskPhone(phone)}',
+    );
+
+    final deviceId = await ensureAuthDeviceId();
+    final session = await _repository.loginWithDeviceTrust(
+      phone: phone,
+      deviceId: deviceId,
+      deviceTrustToken: trust.token,
     );
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
@@ -237,13 +320,131 @@ class AuthService {
     return session;
   }
 
+  /// Returns install-lifetime device id (same as sync transport).
+  Future<String> ensureAuthDeviceId() async {
+    return SyncDeviceIdentity(_storage).deviceId();
+  }
+
+  Future<DeviceTrustCredential?> loadDeviceTrust() async {
+    final token = await _storage.readSecure(StorageKeys.deviceTrustToken);
+    final phone = await _storage.readSecure(StorageKeys.deviceTrustPhone);
+    final expiresAtRaw = await _storage.readSecure(
+      StorageKeys.deviceTrustExpiresAt,
+    );
+    if (token == null ||
+        token.isEmpty ||
+        phone == null ||
+        phone.isEmpty ||
+        expiresAtRaw == null ||
+        expiresAtRaw.isEmpty) {
+      return null;
+    }
+
+    final expiresAt = DateTime.tryParse(expiresAtRaw);
+    if (expiresAt == null || !expiresAt.isAfter(DateTime.now())) {
+      await clearDeviceTrust();
+      return null;
+    }
+
+    return DeviceTrustCredential(token: token, phone: phone, expiresAt: expiresAt);
+  }
+
+  bool isDeviceTrustValidForPhone(DeviceTrustCredential trust, String phone) {
+    return trust.phone == _normalizePhoneForTrust(phone);
+  }
+
+  Future<void> clearDeviceTrust() async {
+    await _storage.deleteSecure(StorageKeys.deviceTrustToken);
+    await _storage.deleteSecure(StorageKeys.deviceTrustPhone);
+    await _storage.deleteSecure(StorageKeys.deviceTrustExpiresAt);
+  }
+
+  Future<void> _syncDeviceTrustFromLogin(
+    AuthSession session, {
+    required bool rememberFor30Days,
+  }) async {
+    if (rememberFor30Days &&
+        session.deviceTrustToken != null &&
+        session.deviceTrustToken!.isNotEmpty &&
+        session.deviceTrustExpiresAt != null &&
+        session.deviceTrustExpiresAt!.isNotEmpty) {
+      await _storage.writeSecure(
+        StorageKeys.deviceTrustToken,
+        session.deviceTrustToken!,
+      );
+      await _storage.writeSecure(
+        StorageKeys.deviceTrustPhone,
+        _normalizePhoneForTrust(session.user.phone),
+      );
+      await _storage.writeSecure(
+        StorageKeys.deviceTrustExpiresAt,
+        session.deviceTrustExpiresAt!,
+      );
+      return;
+    }
+
+    if (!rememberFor30Days) {
+      await clearDeviceTrust();
+    }
+  }
+
+  String _normalizePhoneForTrust(String phone) {
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.length == 12 && digits.startsWith('91')) {
+      return digits.substring(2);
+    }
+    return digits;
+  }
+
   Future<AuthSession> devLogin() async {
-    AuthDebugLogger.log('AuthService.devLogin: POST /auth/dev-login');
-    final session = await _repository.devLogin();
-    AuthDebugLogger.backendLoginSuccess();
-    AuthDebugLogger.jwtIssued(session.accessToken);
-    await persistSession(session);
-    return session;
+    // Prefer the real API so desktop and mobile share the same cloud account,
+    // business, parties, items, and documents. Fall back to a local-only
+    // session only on mobile when the API host is unreachable (e.g. loopback).
+    AuthDebugLogger.log(
+      'AuthService.devLogin: POST /auth/dev-login',
+    );
+    try {
+      final session = await _repository.devLogin();
+      await persistSession(session);
+      AuthDebugLogger.backendLoginSuccess();
+      AuthDebugLogger.jwtIssued(session.accessToken);
+      return session;
+    } on DioException catch (error) {
+      if (!NetworkExceptionClassifier.isConnectivityError(error)) {
+        rethrow;
+      }
+      // Desktop expects a running local API — offline fallback hides empty catalog.
+      if (AppPlatform.current.isDesktop) {
+        AuthDebugLogger.log(
+          'AuthService.devLogin: API unreachable on desktop — not using offline fallback',
+        );
+        rethrow;
+      }
+      final rawHost = Uri.tryParse(AppConfig.apiBaseUrl)?.host ?? '';
+      final isLoopback =
+          rawHost == '127.0.0.1' ||
+          rawHost == 'localhost' ||
+          rawHost == '0.0.0.0';
+      if (AppPlatform.current.isAndroid &&
+          AppPlatform.current.isMobile &&
+          isLoopback) {
+        AuthDebugLogger.log(
+          'AuthService.devLogin: cannot reach $rawHost from Android. '
+          'For USB devices run: adb reverse tcp:3000 tcp:3000 '
+          '(or set API_BASE_URL to your PC LAN IP on the same Wi‑Fi). '
+          'Using offline local fallback.',
+        );
+      }
+      AuthDebugLogger.log(
+        'AuthService.devLogin: API unreachable — offline local fallback '
+        '(${error.type})',
+      );
+      final session = AuthService.offlineDevSession();
+      await persistSession(session);
+      AuthDebugLogger.backendLoginSuccess();
+      AuthDebugLogger.jwtIssued(session.accessToken);
+      return session;
+    }
   }
 
   Future<AuthSession> selectBusiness({
@@ -251,8 +452,12 @@ class AuthService {
     required String refreshToken,
   }) async {
     return _withRefreshLock(() async {
+      // Prefer the latest stored refresh token — a concurrent access-token
+      // refresh may have already rotated the one passed by the caller.
+      final latestRefresh =
+          await _storage.readSecure(StorageKeys.refreshToken) ?? refreshToken;
       final session = await _repository.refresh(
-        refreshToken: refreshToken,
+        refreshToken: latestRefresh,
         businessId: businessId,
       );
       await persistSession(session, businessId: businessId);
@@ -290,6 +495,7 @@ class AuthService {
     await _storage.writeSecure(StorageKeys.accessToken, session.accessToken);
     await _storage.writeSecure(StorageKeys.refreshToken, session.refreshToken);
     await _storage.write(StorageKeys.accountPhone, session.user.phone);
+    await _storage.write(StorageKeys.hasLoggedInBefore, 'true');
 
     final selectedId = _businessIdForSession(
       session,

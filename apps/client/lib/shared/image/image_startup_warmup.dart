@@ -7,6 +7,7 @@ import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/shared/image/image_debug_log.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Background image warm-up after a business session is ready.
@@ -33,13 +34,20 @@ class ImageStartupWarmup {
       if (profile == null) return;
 
       final imageService = _ref.read(imageServiceProvider);
-      await imageService.prefetchUrl(
-        profile.logoUrl,
-        cacheKey: buildImageCacheKey(fallbackUrl: profile.logoUrl),
+      await _prefetchBusinessImage(
+        imageService: imageService,
+        url: profile.logoUrl,
+        context: ImageDisplayContext.list,
       );
-      await imageService.prefetchUrl(
-        profile.signatureUrl,
-        cacheKey: buildImageCacheKey(fallbackUrl: profile.signatureUrl),
+      await _prefetchBusinessImage(
+        imageService: imageService,
+        url: profile.signatureUrl,
+        context: ImageDisplayContext.detail,
+      );
+      await _prefetchBusinessImage(
+        imageService: imageService,
+        url: profile.stampUrl,
+        context: ImageDisplayContext.detail,
       );
     } on Object {
       // Best-effort warm-up.
@@ -49,7 +57,9 @@ class ImageStartupWarmup {
   Future<void> _warmInventoryItems() async {
     try {
       final items = _ref.read(inventoryItemListProvider);
-      _ref.read(inventoryListImageWarmupProvider).warmItems(
+      _ref
+          .read(inventoryListImageWarmupProvider)
+          .warmItems(
             items.take(30),
             limit: 30,
           );
@@ -67,14 +77,39 @@ class ImageStartupWarmup {
       );
       final imageService = _ref.read(imageServiceProvider);
       for (final item in items.take(24)) {
-        await imageService.prefetchUrl(
-          item.imageUrl,
-          cacheKey: buildImageCacheKey(fallbackUrl: item.imageUrl),
+        await _prefetchBusinessImage(
+          imageService: imageService,
+          url: item.imageUrl,
+          context: ImageDisplayContext.grid,
         );
       }
     } on Object {
       // Best-effort warm-up.
     }
+  }
+
+  Future<void> _prefetchBusinessImage({
+    required ImageService imageService,
+    required String? url,
+    required ImageDisplayContext context,
+  }) async {
+    final normalized = normalizeImageUrl(url);
+    if (normalized == null) return;
+
+    final mediaAssetId = extractMediaAssetIdFromUrl(normalized);
+    if (mediaAssetId != null && mediaAssetId.isNotEmpty) {
+      await imageService.prefetchResolved(
+        sourceMediaAssetId: mediaAssetId,
+        context: context,
+        fallbackUrl: normalized,
+      );
+      return;
+    }
+
+    await imageService.prefetchUrl(
+      normalized,
+      cacheKey: buildImageCacheKey(fallbackUrl: normalized),
+    );
   }
 }
 

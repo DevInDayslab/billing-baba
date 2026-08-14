@@ -1,4 +1,9 @@
 /** Normalize Indian mobile numbers to 10-digit storage format. */
+import {
+  isValid as isSharedGstinValid,
+  normalize as normalizeSharedGstin,
+} from '../../shared/utils/gstin-validator';
+
 export function normalizeMobile(
   mobile: string | undefined | null,
 ): string | null {
@@ -36,9 +41,7 @@ export function validateGstin(gstin: string | undefined | null): boolean {
     return true;
   }
 
-  return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(
-    gstin.trim().toUpperCase(),
-  );
+  return isSharedGstinValid(gstin);
 }
 
 export function normalizeGstin(
@@ -48,7 +51,7 @@ export function normalizeGstin(
     return null;
   }
 
-  return gstin.trim().toUpperCase();
+  return normalizeSharedGstin(gstin);
 }
 
 export function normalizeMoney(value: string | undefined): string {

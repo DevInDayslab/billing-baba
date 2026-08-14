@@ -15,6 +15,22 @@ abstract final class PlatformFileOutput {
 
   static bool get isMobile => !kIsWeb && AppPlatform.current.isMobile;
 
+  /// Native save dialog (desktop) or system save UI (mobile). Returns path or null.
+  ///
+  /// Pass [extension] (e.g. `pdf`, `biba`) so the saved file has the correct type.
+  static Future<String?> saveToDevice({
+    required String filename,
+    required Uint8List bytes,
+    String? extension,
+  }) async {
+    if (kIsWeb) return null;
+    return _saveWithPicker(
+      filename: filename,
+      bytes: bytes,
+      extension: extension,
+    );
+  }
+
   /// Desktop: native save dialog. Returns path or null if cancelled.
   ///
   /// Pass [extension] (e.g. `pdf`, `png`) so Windows shows the correct
@@ -25,7 +41,18 @@ abstract final class PlatformFileOutput {
     String? extension,
   }) async {
     if (!isDesktop) return null;
+    return _saveWithPicker(
+      filename: filename,
+      bytes: bytes,
+      extension: extension,
+    );
+  }
 
+  static Future<String?> _saveWithPicker({
+    required String filename,
+    required Uint8List bytes,
+    String? extension,
+  }) async {
     final normalizedExt = _normalizeExtension(extension);
     final safeName = _ensureExtension(_basename(filename), normalizedExt);
 
@@ -131,6 +158,7 @@ abstract final class PlatformFileOutput {
 
   static String? _extensionFromMimeType(String mimeType) => switch (mimeType) {
     'application/pdf' => 'pdf',
+    'application/zip' => 'zip',
     'image/png' => 'png',
     'image/jpeg' => 'jpg',
     _ => null,

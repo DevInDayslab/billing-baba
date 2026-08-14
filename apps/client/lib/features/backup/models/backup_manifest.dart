@@ -33,7 +33,8 @@ class BillingBabaBackupManifest {
               (key, value) => MapEntry('$key', '$value'),
             )
           : const {},
-      tablesIncluded: (json['tables_included'] as List<dynamic>?)
+      tablesIncluded:
+          (json['tables_included'] as List<dynamic>?)
               ?.map((e) => '$e')
               .toList() ??
           kBibaTablesIncluded,
@@ -49,15 +50,15 @@ class BillingBabaBackupManifest {
   final List<String> tablesIncluded;
 
   Map<String, dynamic> toJson() => {
-        'format': 'BillingBabaBackup',
-        'version': version,
-        'created_at': createdAt,
-        'schema_version': schemaVersion,
-        'business_id': businessId,
-        'app_version': appVersion,
-        'checksums': checksums,
-        'tables_included': tablesIncluded,
-      };
+    'format': 'BillingBabaBackup',
+    'version': version,
+    'created_at': createdAt,
+    'schema_version': schemaVersion,
+    'business_id': businessId,
+    'app_version': appVersion,
+    'checksums': checksums,
+    'tables_included': tablesIncluded,
+  };
 
   static BillingBabaBackupManifest parse(String source) {
     final decoded = jsonDecode(source);
@@ -91,11 +92,10 @@ class BackupSyncMetadata {
   final int? lastServerSchemaVersion;
 
   Map<String, dynamic> toJson() => {
-        if (pullCursor != null) 'pull_cursor': pullCursor,
-        if (bootstrappedAt != null) 'bootstrapped_at': bootstrappedAt,
-        if (localSchemaVersion != null)
-          'local_schema_version': localSchemaVersion,
-        if (lastServerSchemaVersion != null)
-          'last_server_schema_version': lastServerSchemaVersion,
-      };
+    if (pullCursor != null) 'pull_cursor': pullCursor,
+    if (bootstrappedAt != null) 'bootstrapped_at': bootstrappedAt,
+    if (localSchemaVersion != null) 'local_schema_version': localSchemaVersion,
+    if (lastServerSchemaVersion != null)
+      'last_server_schema_version': lastServerSchemaVersion,
+  };
 }

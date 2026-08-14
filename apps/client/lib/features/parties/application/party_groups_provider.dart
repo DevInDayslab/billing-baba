@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/utils/party_group_names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final partyGroupsProvider = NotifierProvider<PartyGroups, List<String>>(
@@ -12,8 +13,8 @@ final partyGroupsProvider = NotifierProvider<PartyGroups, List<String>>(
 /// Set to `true` after party group names finish their first sync.
 final partyGroupsStorageReadyProvider =
     NotifierProvider<PartyGroupsStorageReady, bool>(
-  PartyGroupsStorageReady.new,
-);
+      PartyGroupsStorageReady.new,
+    );
 
 class PartyGroupsStorageReady extends Notifier<bool> {
   @override
@@ -67,6 +68,10 @@ class PartyGroups extends Notifier<List<String>> {
       businessProfileProvider.select((profile) => profile.asData?.value.id),
     );
     if (businessId == null || businessId.isEmpty) return;
+    if (_synced && _activeBusinessId == businessId) {
+      await _mergeFromDiscoverySource();
+      return;
+    }
     await _sync(businessId);
   }
 
@@ -132,8 +137,8 @@ class PartyGroups extends Notifier<List<String>> {
   }
 
   void _applyMergedNames(Iterable<String> names) {
-    final next = _sortedUnique(names);
-    if (_listsEqual(next, state)) return;
+    final next = mergePartyGroupNames(names);
+    if (partyGroupNamesEqual(next, state)) return;
     state = next;
     if (_synced) {
       unawaited(_persist());
@@ -143,11 +148,8 @@ class PartyGroups extends Notifier<List<String>> {
   bool addGroup(String name) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return false;
-    final exists = state.any(
-      (group) => group.toLowerCase() == trimmed.toLowerCase(),
-    );
-    if (exists) return false;
-    state = _sortedUnique([...state, trimmed]);
+    if (partyGroupNameExists(state, trimmed)) return false;
+    state = mergePartyGroupNames([...state, trimmed]);
     unawaited(_persist());
     return true;
   }
@@ -155,11 +157,15 @@ class PartyGroups extends Notifier<List<String>> {
   bool renameGroup(String oldName, String newName) {
     final trimmed = newName.trim();
     if (trimmed.isEmpty || trimmed == oldName) return false;
-    final exists = state.any(
-      (group) =>
-          group.toLowerCase() == trimmed.toLowerCase() && group != oldName,
-    );
-    if (exists) return false;
+    if (partyGroupNameExists(
+      [
+        for (final group in state)
+          if (group != oldName) group,
+      ],
+      trimmed,
+    )) {
+      return false;
+    }
 
     state = [
       for (final group in state) group == oldName ? trimmed : group,
@@ -181,34 +187,13 @@ class PartyGroups extends Notifier<List<String>> {
     if (!ref.mounted) return;
     try {
       final service = await ref.read(partyServiceProvider.future);
-      final stored = await service.readPartyGroupNames();
-      if (!ref.mounted) return;
-
-      final merged = _sortedUnique([...stored, ...state]);
-      if (!_listsEqual(merged, state)) {
-        state = merged;
+      final names = mergePartyGroupNames(state);
+      if (!partyGroupNamesEqual(names, state)) {
+        state = names;
       }
-      await service.savePartyGroupNames(merged);
+      await service.savePartyGroupNames(names);
     } on Object {
       // Ignore persistence errors; groups remain in memory.
     }
-  }
-
-  List<String> _sortedUnique(Iterable<String> names) {
-    final unique = <String>{};
-    for (final name in names) {
-      final trimmed = name.trim();
-      if (trimmed.isNotEmpty) unique.add(trimmed);
-    }
-    return unique.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-  }
-
-  bool _listsEqual(List<String> a, List<String> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
-    }
-    return true;
   }
 }

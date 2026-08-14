@@ -1,5 +1,6 @@
 import { and, eq, or } from 'drizzle-orm';
 import type { Database } from '../../db/client';
+import { parties } from '../../db/schema';
 import { payments } from '../../db/schema/accounting/tables';
 import { expenses } from '../../db/schema/purchases/tables';
 import { jobWorkOrders } from '../../db/schema/job-work/tables';
@@ -106,6 +107,21 @@ async function entityExists(
           eq(jobWorkOrders.businessId, businessId),
           eq(jobWorkOrders.id, entityId),
           eq(jobWorkOrders.isDeleted, false),
+        ),
+      )
+      .limit(1);
+    return Boolean(row);
+  }
+
+  if (entityType === 'party') {
+    const [row] = await db
+      .select({ id: parties.id })
+      .from(parties)
+      .where(
+        and(
+          eq(parties.businessId, businessId),
+          eq(parties.id, entityId),
+          eq(parties.isDeleted, false),
         ),
       )
       .limit(1);

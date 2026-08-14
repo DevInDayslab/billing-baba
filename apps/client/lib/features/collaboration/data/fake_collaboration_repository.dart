@@ -144,8 +144,8 @@ class FakeCollaborationRepository implements CollaborationRepository {
         final remoteStatus = await api.fetchInvitationStatus(
           invitation.inviteCode,
         );
-        changed = _applyRemoteInvitationStatus(invitation, remoteStatus) ||
-            changed;
+        changed =
+            _applyRemoteInvitationStatus(invitation, remoteStatus) || changed;
       } on DioException catch (error) {
         final statusCode = error.response?.statusCode;
         if (statusCode == 404 ||
@@ -163,7 +163,9 @@ class FakeCollaborationRepository implements CollaborationRepository {
     Invitation invitation,
     String remoteStatus,
   ) {
-    final inviteIndex = _invitations.indexWhere((item) => item.id == invitation.id);
+    final inviteIndex = _invitations.indexWhere(
+      (item) => item.id == invitation.id,
+    );
     if (inviteIndex == -1) return false;
 
     final memberIndex = _members.indexWhere(
@@ -189,21 +191,24 @@ class FakeCollaborationRepository implements CollaborationRepository {
           changed = true;
         }
       case 'rejected':
-        changed = _closeInvitation(
+        changed =
+            _closeInvitation(
               inviteIndex,
               memberIndex,
               InvitationStatus.rejected,
             ) ||
             changed;
       case 'cancelled':
-        changed = _closeInvitation(
+        changed =
+            _closeInvitation(
               inviteIndex,
               memberIndex,
               InvitationStatus.cancelled,
             ) ||
             changed;
       case 'expired':
-        changed = _closeInvitation(
+        changed =
+            _closeInvitation(
               inviteIndex,
               memberIndex,
               InvitationStatus.expired,
@@ -764,7 +769,8 @@ class FakeCollaborationRepository implements CollaborationRepository {
         throw const CollaborationNotFoundException('Member not found');
       }
 
-      final existingInvitation = _invitationById(invitationId) ??
+      final existingInvitation =
+          _invitationById(invitationId) ??
           _activeInvitationForContact(member.phoneOrEmail);
 
       final newInvitation = await _invitationApi.resendInvitation(
@@ -828,7 +834,9 @@ class FakeCollaborationRepository implements CollaborationRepository {
     );
     _invitations.add(newInvitation);
 
-    final memberIndex = _members.indexWhere((member) => member.id == old.memberId);
+    final memberIndex = _members.indexWhere(
+      (member) => member.id == old.memberId,
+    );
     if (memberIndex != -1) {
       _members[memberIndex] = _members[memberIndex].copyWith(
         invitationId: newInvitationId,

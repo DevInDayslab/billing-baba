@@ -106,7 +106,9 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
       setState(() => _photoUrl = url);
       widget.onPhotoChanged?.call(url);
       unawaited(
-        ref.read(imageServiceProvider).replaceImage(
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
               oldUrl: previousUrl,
               newUrl: url,
               oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
@@ -141,7 +143,9 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
       setState(() => _photoUrl = null);
       widget.onPhotoChanged?.call(null);
       unawaited(
-        ref.read(imageServiceProvider).invalidateImage(
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
               url: previousUrl,
               cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
             ),

@@ -122,15 +122,17 @@ class _AlternativeSuggestionBannerState
             _buildSection(
               'Configured Alternatives',
               recommendations.manuallyConfigured
-                  .map((alt) => _RecommendedItem(
-                        id: alt.alternativeItem.id,
-                        name: alt.alternativeItem.name,
-                        barcode: alt.alternativeItem.barcode,
-                        brandName: alt.alternativeItem.brandName,
-                        categoryName: alt.alternativeItem.categoryName,
-                        salePrice: alt.alternativeItem.salePrice,
-                        stockQuantity: alt.alternativeItem.stockQuantity,
-                      ))
+                  .map(
+                    (alt) => _RecommendedItem(
+                      id: alt.alternativeItem.id,
+                      name: alt.alternativeItem.name,
+                      barcode: alt.alternativeItem.barcode,
+                      brandName: alt.alternativeItem.brandName,
+                      categoryName: alt.alternativeItem.categoryName,
+                      salePrice: alt.alternativeItem.salePrice,
+                      stockQuantity: alt.alternativeItem.stockQuantity,
+                    ),
+                  )
                   .toList(),
             ),
             const SizedBox(height: 8),
@@ -139,15 +141,17 @@ class _AlternativeSuggestionBannerState
             _buildSection(
               'Same Brand & Category',
               recommendations.sameBrandCategory
-                  .map((item) => _RecommendedItem(
-                        id: item.id,
-                        name: item.name,
-                        barcode: item.barcode,
-                        brandName: item.brandName,
-                        categoryName: item.categoryName,
-                        salePrice: item.salePrice,
-                        stockQuantity: item.stockQuantity,
-                      ))
+                  .map(
+                    (item) => _RecommendedItem(
+                      id: item.id,
+                      name: item.name,
+                      barcode: item.barcode,
+                      brandName: item.brandName,
+                      categoryName: item.categoryName,
+                      salePrice: item.salePrice,
+                      stockQuantity: item.stockQuantity,
+                    ),
+                  )
                   .toList(),
             ),
             const SizedBox(height: 8),
@@ -156,15 +160,17 @@ class _AlternativeSuggestionBannerState
             _buildSection(
               'Same Category',
               recommendations.sameCategory
-                  .map((item) => _RecommendedItem(
-                        id: item.id,
-                        name: item.name,
-                        barcode: item.barcode,
-                        brandName: item.brandName,
-                        categoryName: item.categoryName,
-                        salePrice: item.salePrice,
-                        stockQuantity: item.stockQuantity,
-                      ))
+                  .map(
+                    (item) => _RecommendedItem(
+                      id: item.id,
+                      name: item.name,
+                      barcode: item.barcode,
+                      brandName: item.brandName,
+                      categoryName: item.categoryName,
+                      salePrice: item.salePrice,
+                      stockQuantity: item.stockQuantity,
+                    ),
+                  )
                   .toList(),
             ),
         ],
@@ -213,13 +219,9 @@ class _AlternativeSuggestionBannerState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: hasStock
-              ? const Color(0xFFE8F5E9)
-              : const Color(0xFFFFEBEE),
+          color: hasStock ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
           border: Border.all(
-            color: hasStock
-                ? const Color(0xFF66BB6A)
-                : const Color(0xFFEF5350),
+            color: hasStock ? const Color(0xFF66BB6A) : const Color(0xFFEF5350),
           ),
           borderRadius: BorderRadius.circular(16),
         ),

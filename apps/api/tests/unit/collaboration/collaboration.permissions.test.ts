@@ -4,8 +4,12 @@ import { assertCollaborationAction } from '../../../src/modules/collaboration/co
 
 describe('collaboration permissions', () => {
   test('allows owners for member management actions', () => {
-    expect(() => assertCollaborationAction(true, 'members:update')).not.toThrow();
-    expect(() => assertCollaborationAction(true, 'members:delete')).not.toThrow();
+    expect(() =>
+      assertCollaborationAction(true, 'members:update'),
+    ).not.toThrow();
+    expect(() =>
+      assertCollaborationAction(true, 'members:delete'),
+    ).not.toThrow();
     expect(() => assertCollaborationAction(true, 'members:read')).not.toThrow();
   });
 

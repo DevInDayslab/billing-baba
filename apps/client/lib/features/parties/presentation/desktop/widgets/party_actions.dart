@@ -38,7 +38,7 @@ abstract final class PartyActions {
   }) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
 
-  deleteFlow:
+    deleteFlow:
     while (context.mounted) {
       try {
         final deleteStatusService = await ref.read(

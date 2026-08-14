@@ -221,7 +221,9 @@ PaginatedSaleFaRecords _allSaleFaPage(List<SaleFaModel> records) {
   );
 }
 
-List<SaleFaModel> _allSaleFaFromAsync(AsyncValue<PaginatedSaleFaRecords> faAsync) {
+List<SaleFaModel> _allSaleFaFromAsync(
+  AsyncValue<PaginatedSaleFaRecords> faAsync,
+) {
   return faAsync.when(
     data: (page) => page.items,
     loading: () => const [],

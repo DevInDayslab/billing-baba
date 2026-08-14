@@ -71,8 +71,8 @@ describe.skipIf(!canRunDbTests)('Purchase sync integration', () => {
         short_name: `PS${suffix.slice(0, 4)}`,
       },
     });
-    unitShortName = (unitRes.json() as { data: { short_name: string } })
-      .data.short_name;
+    unitShortName = (unitRes.json() as { data: { short_name: string } }).data
+      .short_name;
 
     const itemRes = await app.inject({
       method: 'POST',
@@ -219,8 +219,9 @@ describe.skipIf(!canRunDbTests)('Purchase sync integration', () => {
         headers: jsonAuthHeaders(token),
       });
       expect(detail.statusCode).toBe(200);
-      const doc = (detail.json() as { data: { paid_amount: string; status: string } })
-        .data;
+      const doc = (
+        detail.json() as { data: { paid_amount: string; status: string } }
+      ).data;
       expect(doc.status).toBe('finalized');
       expect(doc.paid_amount).toBe('50.0000');
     },

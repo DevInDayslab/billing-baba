@@ -73,7 +73,8 @@ class ReportsNavPanel extends StatelessWidget {
     return ColoredBox(
       color: _navBackground,
       child: ListView(
-        padding: const EdgeInsets.only(bottom: 16),
+        // Extra space so the last section (Loan Accounts) is fully visible.
+        padding: const EdgeInsets.only(bottom: 48),
         children: [
           const _SectionHeader(label: 'Transaction report'),
           for (final sub in TransactionReportSubSection.values)

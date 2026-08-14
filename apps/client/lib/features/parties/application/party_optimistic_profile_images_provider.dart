@@ -3,8 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// In-memory party profile previews for instant list/detail updates while upload runs.
-class PartyOptimisticProfileImages
-    extends Notifier<Map<String, Uint8List>> {
+class PartyOptimisticProfileImages extends Notifier<Map<String, Uint8List>> {
   @override
   Map<String, Uint8List> build() => const {};
 
@@ -21,5 +20,5 @@ class PartyOptimisticProfileImages
 
 final partyOptimisticProfileImagesProvider =
     NotifierProvider<PartyOptimisticProfileImages, Map<String, Uint8List>>(
-  PartyOptimisticProfileImages.new,
-);
+      PartyOptimisticProfileImages.new,
+    );

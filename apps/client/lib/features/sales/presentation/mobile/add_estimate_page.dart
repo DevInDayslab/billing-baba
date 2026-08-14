@@ -1,3 +1,6 @@
+import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/features/sales/models/sale_document_model.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/mobile_add_sale_document_page.dart';
 import 'package:flutter/material.dart';
 
 class MobileAddEstimatePage extends StatelessWidget {
@@ -12,10 +15,11 @@ class MobileAddEstimatePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Add Estimate — Mobile UI coming soon'),
-      ),
+    return MobileAddSaleDocumentPage(
+      documentType: SaleDocumentType.estimate,
+      listRoute: AppRoutes.saleEstimateQuotation,
+      documentId: estimateId,
+      duplicateFromId: duplicateFromId,
     );
   }
 }

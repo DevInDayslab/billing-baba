@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
+import 'package:billing_baba/features/parties/utils/party_group_names.dart';
 
 /// Local-only UI fields not yet stored on the API.
 class PartyLocalExtension {
@@ -26,6 +27,7 @@ class PartyLocalExtension {
     this.additionalField1 = '',
     this.additionalField2 = '',
     this.defaultPriceTier = '',
+    this.additionalPhones = const [],
   });
 
   factory PartyLocalExtension.fromJson(Map<String, dynamic> json) {
@@ -54,6 +56,11 @@ class PartyLocalExtension {
       additionalField1: json['additional_field_1'] as String? ?? '',
       additionalField2: json['additional_field_2'] as String? ?? '',
       defaultPriceTier: json['default_price_tier'] as String? ?? '',
+      additionalPhones: json['additional_phones'] is List
+          ? (json['additional_phones'] as List)
+                .map((phone) => phone.toString())
+                .toList()
+          : const [],
     );
   }
 
@@ -84,6 +91,7 @@ class PartyLocalExtension {
           ? result.additionalField2
           : '',
       defaultPriceTier: result.defaultPriceTier,
+      additionalPhones: result.additionalPhones,
     );
   }
 
@@ -106,6 +114,7 @@ class PartyLocalExtension {
   final String additionalField1;
   final String additionalField2;
   final String defaultPriceTier;
+  final List<String> additionalPhones;
 
   Map<String, dynamic> toJson() => {
     'gst_type': gstType,
@@ -129,6 +138,7 @@ class PartyLocalExtension {
     'additional_field_1': additionalField1,
     'additional_field_2': additionalField2,
     'default_price_tier': defaultPriceTier,
+    'additional_phones': additionalPhones,
   };
 }
 
@@ -308,7 +318,9 @@ class PartyCache {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
-      return decoded.map((item) => item.toString()).toList();
+      return mergePartyGroupNames(
+        decoded.map((item) => item.toString()),
+      );
     } on Object catch (_) {
       return [];
     }

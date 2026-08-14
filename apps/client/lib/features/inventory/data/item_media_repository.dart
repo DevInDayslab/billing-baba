@@ -16,16 +16,15 @@ class ItemMediaRepository {
     required String mimeType,
     bool isPrimary = false,
     String? replacesImageId,
-  }) =>
-      _uploadClient.upload(
-        endpoint: ApiEndpoints.inventoryItemImages(itemId),
-        bytes: bytes,
-        mimeType: mimeType,
-        completeExtra: {
-          if (isPrimary) 'is_primary': true,
-          'replaces_image_id': ?replacesImageId,
-        },
-      );
+  }) => _uploadClient.upload(
+    endpoint: ApiEndpoints.inventoryItemImages(itemId),
+    bytes: bytes,
+    mimeType: mimeType,
+    completeExtra: {
+      if (isPrimary) 'is_primary': true,
+      'replaces_image_id': ?replacesImageId,
+    },
+  );
 
   Future<void> deleteItemImage(String itemId, String imageId) =>
       _dio.delete<void>(ApiEndpoints.inventoryItemImage(itemId, imageId));
@@ -56,12 +55,11 @@ class ItemMediaRepository {
     required String locationId,
     required Uint8List bytes,
     required String mimeType,
-  }) =>
-      _uploadClient.upload(
-        endpoint: ApiEndpoints.inventoryItemLocationPhoto(locationId),
-        bytes: bytes,
-        mimeType: mimeType,
-      );
+  }) => _uploadClient.upload(
+    endpoint: ApiEndpoints.inventoryItemLocationPhoto(locationId),
+    bytes: bytes,
+    mimeType: mimeType,
+  );
 
   Future<void> deleteRackPhoto(String locationId) =>
       _dio.delete<void>(ApiEndpoints.inventoryItemLocationPhoto(locationId));

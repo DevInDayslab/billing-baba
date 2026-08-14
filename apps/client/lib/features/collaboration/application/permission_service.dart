@@ -4,7 +4,8 @@ import 'package:billing_baba/features/collaboration/domain/models/permission_act
 import 'package:billing_baba/features/collaboration/domain/models/permission_level.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_preset.dart';
-import 'package:billing_baba/features/collaboration/domain/models/role.dart' show Role;
+import 'package:billing_baba/features/collaboration/domain/models/role.dart'
+    show Role;
 
 /// Single authorization API — UI must never compare [Role] directly.
 class PermissionService {
@@ -20,14 +21,12 @@ class PermissionService {
   bool get canViewHiddenLedger =>
       hasFullAccess || _session?.role == Role.secondaryAdmin;
 
-  bool canView(PermissionModule module) =>
-      _can(module, PermissionAction.view);
+  bool canView(PermissionModule module) => _can(module, PermissionAction.view);
 
   bool canCreate(PermissionModule module) =>
       _can(module, PermissionAction.create);
 
-  bool canEdit(PermissionModule module) =>
-      _can(module, PermissionAction.edit);
+  bool canEdit(PermissionModule module) => _can(module, PermissionAction.edit);
 
   bool canDelete(PermissionModule module) =>
       _can(module, PermissionAction.delete);

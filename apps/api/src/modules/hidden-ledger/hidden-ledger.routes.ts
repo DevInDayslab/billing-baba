@@ -11,8 +11,16 @@ export const createHiddenLedgerRoutes = (): FastifyPluginAsync => {
 
     app.get('/entries', { preHandler }, controller.listEntries);
     app.get('/entries/:id', { preHandler }, controller.getEntry);
-    app.get('/entries/:id/recoveries', { preHandler }, controller.listRecoveries);
-    app.get('/parties/:partyId/summary', { preHandler }, controller.getPartySummary);
+    app.get(
+      '/entries/:id/recoveries',
+      { preHandler },
+      controller.listRecoveries,
+    );
+    app.get(
+      '/parties/:partyId/summary',
+      { preHandler },
+      controller.getPartySummary,
+    );
     app.post(
       '/parties/:partyId/recover-from-sale',
       { preHandler },

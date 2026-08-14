@@ -34,8 +34,7 @@ class ContactRepository {
   Stream<List<ContactActivity>> watchActivities(
     String businessId,
     String contactId,
-  ) =>
-      _local.watchActivities(businessId, contactId);
+  ) => _local.watchActivities(businessId, contactId);
 
   Future<Contact> saveContact(
     Contact contact, {

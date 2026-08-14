@@ -1,10 +1,16 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -16,11 +22,12 @@ final _decimalInputFormatter = FilteringTextInputFormatter.allow(
 );
 
 /// Manufacturing tab content for products.
-class ManufacturingSection extends StatelessWidget {
+class ManufacturingSection extends ConsumerWidget {
   const ManufacturingSection({
     required this.form,
     required this.rawControllerFor,
     required this.onUpdateRawMaterial,
+    required this.onSelectRawMaterialItem,
     required this.onRemoveRawMaterial,
     required this.onAddRawMaterial,
     required this.onAddAdditionalCost,
@@ -35,12 +42,17 @@ class ManufacturingSection extends StatelessWidget {
   rawControllerFor;
   final void Function(
     String id, {
+    String? rawItemId,
+    bool clearRawItemId,
     String? itemName,
     double? qty,
+    String? unitId,
+    bool clearUnitId,
     String? unitLabel,
     double? purchasePrice,
   })
   onUpdateRawMaterial;
+  final void Function(String id, SaleItemOption item) onSelectRawMaterialItem;
   final ValueChanged<String> onRemoveRawMaterial;
   final VoidCallback onAddRawMaterial;
   final VoidCallback onAddAdditionalCost;
@@ -50,8 +62,10 @@ class ManufacturingSection extends StatelessWidget {
   final Map<String, TextEditingController> additionalCostControllers;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
+    final units = ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
+    final unitLabels = units.map((unit) => unit.shortName).toList();
 
     return FormSection(
       padding: const EdgeInsets.all(12),
@@ -67,60 +81,78 @@ class ManufacturingSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: _cardBorder),
-              borderRadius: FormSpacing.cardBorderRadius,
-            ),
-            child: Column(
-              children: [
-                const _ManufacturingTableHeader(),
-                ...form.rawMaterials.asMap().entries.map(
-                  (entry) => _RawMaterialRow(
-                    index: entry.key + 1,
-                    row: entry.value,
-                    nameController: rawControllerFor(
-                      entry.value.id,
-                      entry.value.itemName,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tableWidth = constraints.maxWidth < 560
+                  ? 560.0
+                  : constraints.maxWidth;
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: _cardBorder),
+                      borderRadius: FormSpacing.cardBorderRadius,
                     ),
-                    onChanged: onUpdateRawMaterial,
-                    onRemove: () => onRemoveRawMaterial(entry.value.id),
-                    canRemove: form.rawMaterials.length > 1,
+                    child: Column(
+                      children: [
+                        const _ManufacturingTableHeader(),
+                        ...form.rawMaterials.asMap().entries.map(
+                          (entry) => _RawMaterialRow(
+                            index: entry.key + 1,
+                            row: entry.value,
+                            units: units,
+                            unitLabels: unitLabels,
+                            nameController: rawControllerFor(
+                              entry.value.id,
+                              entry.value.itemName,
+                            ),
+                            onChanged: onUpdateRawMaterial,
+                            onItemSelected: (item) =>
+                                onSelectRawMaterialItem(entry.value.id, item),
+                            onRemove: () => onRemoveRawMaterial(entry.value.id),
+                            canRemove: form.rawMaterials.length > 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              TextButton.icon(
+                                onPressed: onAddRawMaterial,
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text(
+                                  'Add Row',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                'TOTAL: ${currency.format(form.rawMaterialTotal)}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      TextButton.icon(
-                        onPressed: onAddRawMaterial,
-                        icon: const Icon(Icons.add, size: 16),
-                        label: const Text(
-                          'Add Row',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'TOTAL: ${currency.format(form.rawMaterialTotal)}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -264,29 +296,50 @@ class _RawMaterialRow extends StatelessWidget {
   const _RawMaterialRow({
     required this.index,
     required this.row,
+    required this.units,
+    required this.unitLabels,
     required this.nameController,
     required this.onChanged,
+    required this.onItemSelected,
     required this.onRemove,
     required this.canRemove,
   });
 
   final int index;
   final RawMaterialRow row;
+  final List<InventoryUnit> units;
+  final List<String> unitLabels;
   final TextEditingController nameController;
   final void Function(
     String id, {
+    String? rawItemId,
+    bool clearRawItemId,
     String? itemName,
     double? qty,
+    String? unitId,
+    bool clearUnitId,
     String? unitLabel,
     double? purchasePrice,
   })
   onChanged;
+  final ValueChanged<SaleItemOption> onItemSelected;
   final VoidCallback onRemove;
   final bool canRemove;
+
+  String get _unitValue {
+    if (row.unitId != null) {
+      final unit = units.firstWhereOrNull((u) => u.id == row.unitId);
+      if (unit != null) return unit.shortName;
+    }
+    return row.unitLabel;
+  }
 
   @override
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
+    final dropdownOptions = unitLabels.isEmpty
+        ? const ['None', 'PCS', 'Kg', 'Ltr']
+        : unitLabels;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -307,14 +360,28 @@ class _RawMaterialRow extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
-            child: TextField(
-              controller: nameController,
-              style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(
-                hint: 'Search item...',
-                compact: true,
+            child: ItemNameAutocompleteField(
+              value: row.itemName,
+              onChanged: (value) => onChanged(
+                row.id,
+                itemName: value,
+                clearRawItemId: value.trim().isEmpty,
               ),
-              onChanged: (v) => onChanged(row.id, itemName: v),
+              onItemSelected: (item) {
+                onItemSelected(item);
+                final unit = units.firstWhereOrNull(
+                  (u) =>
+                      u.shortName.toLowerCase() ==
+                      saleItemDefaultUnit(item).toLowerCase(),
+                );
+                if (unit != null) {
+                  onChanged(
+                    row.id,
+                    unitId: unit.id,
+                    unitLabel: unit.shortName,
+                  );
+                }
+              },
             ),
           ),
           const SizedBox(width: 8),
@@ -332,9 +399,19 @@ class _RawMaterialRow extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: SaleGenericSelectDropdown(
-              value: row.unitLabel,
-              options: const ['None', 'PCS', 'Kg', 'Ltr'],
-              onSelected: (v) => onChanged(row.id, unitLabel: v),
+              value: _unitValue,
+              options: dropdownOptions,
+              onSelected: (value) {
+                final unit = units.firstWhereOrNull(
+                  (u) => u.shortName == value,
+                );
+                onChanged(
+                  row.id,
+                  unitLabel: value,
+                  unitId: unit?.id,
+                  clearUnitId: unit == null,
+                );
+              },
               compact: true,
             ),
           ),

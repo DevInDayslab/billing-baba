@@ -17,9 +17,9 @@ class BrandSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.brandsLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.brandsLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -30,7 +30,9 @@ class BrandSync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.brandsLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.brandsLocal)
+          .insertOnConflictUpdate(
             BrandsLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -48,7 +50,9 @@ class BrandSync {
     }
 
     final name = _str(payload, 'name');
-    await _db.into(_db.brandsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.brandsLocal)
+        .insertOnConflictUpdate(
           BrandsLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -72,8 +76,9 @@ class BrandSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.brandsLocal)..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.brandsLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       BrandsLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

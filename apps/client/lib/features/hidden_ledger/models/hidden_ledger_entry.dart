@@ -152,9 +152,12 @@ class HiddenLedgerRecoveryModel {
     return HiddenLedgerRecoveryModel(
       id: json['id'] as String,
       ledgerEntryId:
-          json['ledger_entry_id'] as String? ?? json['entry_id'] as String? ?? '',
+          json['ledger_entry_id'] as String? ??
+          json['entry_id'] as String? ??
+          '',
       saleId: json['sale_id'] as String?,
-      recoveredAmount: double.tryParse(
+      recoveredAmount:
+          double.tryParse(
             json['recovered_amount']?.toString() ??
                 json['amount']?.toString() ??
                 '0',

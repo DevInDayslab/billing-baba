@@ -62,14 +62,9 @@ export class ItemAlternativesService extends InventoryServiceBase {
     await this.assertBusinessAccess(businessId, accountId);
 
     if (itemId === alternativeItemId) {
-      throw new AppError(
-        'VALIDATION_ERROR',
-        'Invalid request body',
-        400,
-        {
-          alternative_item_id: ['Item cannot be an alternative to itself'],
-        },
-      );
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        alternative_item_id: ['Item cannot be an alternative to itself'],
+      });
     }
 
     await this.assertItemExists(businessId, itemId);
@@ -147,7 +142,6 @@ export class ItemAlternativesService extends InventoryServiceBase {
     sameCategory: RecommendedItem[];
   }> {
     await this.assertBusinessAccess(businessId, accountId);
-    console.log('getRecommendations called for itemId:', itemId, 'businessId:', businessId);
 
     const [sourceItem] = await this.db
       .select({
@@ -173,7 +167,6 @@ export class ItemAlternativesService extends InventoryServiceBase {
       businessId,
       itemId,
     );
-    console.log('manually_configured count:', manuallyConfigured.length);
     const manuallyConfiguredIds = manuallyConfigured.map(
       (alt) => alt.alternativeItemId,
     );
@@ -193,10 +186,16 @@ export class ItemAlternativesService extends InventoryServiceBase {
           stockQuantity: sql<string>`COALESCE(SUM(${stockLevels.quantity}::numeric), 0)`,
         })
         .from(items)
-        .leftJoin(brands, and(eq(items.brandId, brands.id), eq(brands.isDeleted, false)))
+        .leftJoin(
+          brands,
+          and(eq(items.brandId, brands.id), eq(brands.isDeleted, false)),
+        )
         .leftJoin(
           categories,
-          and(eq(items.categoryId, categories.id), eq(categories.isDeleted, false)),
+          and(
+            eq(items.categoryId, categories.id),
+            eq(categories.isDeleted, false),
+          ),
         )
         .leftJoin(
           stockLevels,
@@ -237,7 +236,11 @@ export class ItemAlternativesService extends InventoryServiceBase {
     }
 
     const sameBrandCategoryIds = sameBrandCategory.map((item) => item.id);
-    const excludeIds = [...manuallyConfiguredIds, ...sameBrandCategoryIds, itemId];
+    const excludeIds = [
+      ...manuallyConfiguredIds,
+      ...sameBrandCategoryIds,
+      itemId,
+    ];
 
     if (sourceItem.categoryId) {
       const sameCategoryRows = await this.db
@@ -251,10 +254,16 @@ export class ItemAlternativesService extends InventoryServiceBase {
           stockQuantity: sql<string>`COALESCE(SUM(${stockLevels.quantity}::numeric), 0)`,
         })
         .from(items)
-        .leftJoin(brands, and(eq(items.brandId, brands.id), eq(brands.isDeleted, false)))
+        .leftJoin(
+          brands,
+          and(eq(items.brandId, brands.id), eq(brands.isDeleted, false)),
+        )
         .leftJoin(
           categories,
-          and(eq(items.categoryId, categories.id), eq(categories.isDeleted, false)),
+          and(
+            eq(items.categoryId, categories.id),
+            eq(categories.isDeleted, false),
+          ),
         )
         .leftJoin(
           stockLevels,

@@ -70,7 +70,8 @@ class SalesInvoiceCommandRepository {
         ? <String>{}
         : existing.lines.map((line) => line.id).toSet();
 
-    final documentNumber = existing?.documentNumber ??
+    final documentNumber =
+        existing?.documentNumber ??
         await _numbering.allocate(
           businessId: businessId,
           documentSeries: input.documentSeries,
@@ -225,6 +226,7 @@ class SalesInvoiceCommandRepository {
           taxOption: input.taxOption,
         ),
         deviceId: _deviceIdReader?.call(),
+        priority: SyncQueuePriority.high,
         clientUpdatedAt: now,
       );
     }
@@ -277,10 +279,11 @@ class SalesInvoiceCommandRepository {
     final commandPayload = <String, dynamic>{
       'document_id': documentId,
       'local_document_number': localNumber,
-      'godown_id': ?godownId,
+      if (godownId != null && godownId.isNotEmpty) 'godown_id': godownId,
     };
 
-    if (payment != null && double.tryParse(payment.amount) != null &&
+    if (payment != null &&
+        double.tryParse(payment.amount) != null &&
         double.parse(payment.amount) > 0) {
       commandPayload['payment'] = {
         'amount': payment.amount,

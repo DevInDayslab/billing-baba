@@ -9,45 +9,6 @@ part of 'tasks_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(taskRepository)
-final taskRepositoryProvider = TaskRepositoryProvider._();
-
-final class TaskRepositoryProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<TaskRepository>,
-          TaskRepository,
-          FutureOr<TaskRepository>
-        >
-    with $FutureModifier<TaskRepository>, $FutureProvider<TaskRepository> {
-  TaskRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'taskRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$taskRepositoryHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<TaskRepository> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<TaskRepository> create(Ref ref) {
-    return taskRepository(ref);
-  }
-}
-
-String _$taskRepositoryHash() => r'75b3f317676b92d242cc3a0993bf1873ce42db38';
-
 @ProviderFor(TaskFilterState)
 final taskFilterStateProvider = TaskFilterStateProvider._();
 
@@ -124,7 +85,7 @@ final class TasksProvider
   Tasks create() => Tasks();
 }
 
-String _$tasksHash() => r'1594580e2cd0369f0317781b56e8f597cee56831';
+String _$tasksHash() => r'82b069218903c90809331378c18138541b0c1aa1';
 
 abstract class _$Tasks extends $AsyncNotifier<List<TaskModel>> {
   FutureOr<List<TaskModel>> build();

@@ -5,7 +5,7 @@ import 'package:billing_baba/features/dashboard/models/requests/dashboard_reques
 
 class DashboardLocalDataSource {
   DashboardLocalDataSource(StorageService storage)
-      : _cache = DashboardSnapshotCache(storage);
+    : _cache = DashboardSnapshotCache(storage);
 
   final DashboardSnapshotCache _cache;
 

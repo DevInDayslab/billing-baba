@@ -251,26 +251,30 @@ class _ItemDetailReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportItemDetailTableRow>(
-                              reportScope: itemDetailReportScope,
-                              columns: itemDetailColumns(),
-                              rows: selectedItemId == null ||
-                                      selectedItemId.isEmpty
-                                  ? const []
-                                  : tableRows,
-                              emptyState: Center(
-                                child: Text(
-                                  selectedItemId == null ||
+                            child:
+                                ReportFilterableSyncTable<
+                                  ReportItemDetailTableRow
+                                >(
+                                  reportScope: itemDetailReportScope,
+                                  columns: itemDetailColumns(),
+                                  rows:
+                                      selectedItemId == null ||
                                           selectedItemId.isEmpty
-                                      ? 'Select an item to view the report.'
-                                      : 'No data for the selected period.',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                                      ? const []
+                                      : tableRows,
+                                  emptyState: Center(
+                                    child: Text(
+                                      selectedItemId == null ||
+                                              selectedItemId.isEmpty
+                                          ? 'Select an item to view the report.'
+                                          : 'No data for the selected period.',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                         if (report != null)

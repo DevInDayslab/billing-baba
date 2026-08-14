@@ -8,6 +8,7 @@ abstract final class InventoryCatalog {
   static const uncategorizedCategoryId = 'uncategorized';
 
   static const solventsCategoryId = 'solvents';
+  static const hardwareCategoryId = 'hardware';
   static const dairyCategoryId = 'dairy';
   static const bakeryCategoryId = 'bakery';
   static const groceryCategoryId = 'grocery';
@@ -26,10 +27,77 @@ abstract final class InventoryCatalog {
     InventoryCategory(id: 'glasses', name: 'Glasses'),
     InventoryCategory(id: 'paints', name: 'Paints'),
     InventoryCategory(id: solventsCategoryId, name: 'Solvents'),
+    InventoryCategory(id: hardwareCategoryId, name: 'Hardware'),
   ];
 
   /// Vyapar-style seed catalog used when API inventory is empty or offline.
   static const items = <InventoryItem>[
+    InventoryItem(
+      id: 'item-hw-001',
+      name: '2" A/C CI CLAMP',
+      type: ItemType.product,
+      quantity: 70,
+      salePrice: 20,
+      purchasePrice: 0,
+      stockValue: 1400,
+      categoryId: hardwareCategoryId,
+      availableForSale: 70,
+      baseUnitShortName: 'Pcs',
+      searchKeywords: ['2"', '+3', 'CLAMP'],
+    ),
+    InventoryItem(
+      id: 'item-hw-002',
+      name: '3/8" ADAPTOR',
+      type: ItemType.product,
+      quantity: 8,
+      salePrice: 10,
+      purchasePrice: 3,
+      stockValue: 24,
+      categoryId: hardwareCategoryId,
+      availableForSale: 8,
+      baseUnitShortName: 'Pcs',
+      searchKeywords: ['3/8"', 'ADAPTOR'],
+    ),
+    InventoryItem(
+      id: 'item-hw-003',
+      name: "1''ADAPTOR",
+      type: ItemType.product,
+      quantity: 14,
+      salePrice: 26,
+      purchasePrice: 21,
+      stockValue: 294,
+      categoryId: hardwareCategoryId,
+      availableForSale: 14,
+      baseUnitShortName: 'Pcs',
+      searchKeywords: ["1''", 'ADAPTOR'],
+    ),
+    InventoryItem(
+      id: 'item-hw-004',
+      name: '4" AC CI CLAMP',
+      type: ItemType.product,
+      quantity: 20,
+      salePrice: 20,
+      purchasePrice: 0,
+      stockValue: 400,
+      categoryId: hardwareCategoryId,
+      availableForSale: 20,
+      baseUnitShortName: 'Pcs',
+      searchKeywords: ['4"', 'CLAMP'],
+    ),
+    InventoryItem(
+      id: 'item-hw-005',
+      name: '6"AC CI CLAMP',
+      type: ItemType.product,
+      quantity: 13,
+      salePrice: 20,
+      purchasePrice: 0,
+      stockValue: 260,
+      categoryId: hardwareCategoryId,
+      availableForSale: 8,
+      reservedQuantity: 5,
+      baseUnitShortName: 'Pcs',
+      searchKeywords: ['6"', 'CLAMP'],
+    ),
     InventoryItem(
       id: 'item-dai-001',
       name: 'Amul Taaza Milk 1L',

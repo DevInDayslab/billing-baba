@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/app.dart';
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/database/drift_database_paths.dart';
 import 'package:billing_baba/core/logging/device_info_collector.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/pinned_api_http_client.dart';
@@ -10,6 +11,7 @@ import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/notifications/application/notification_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -29,6 +31,9 @@ Future<void> main() async {
       await dotenv.load();
       await AppConfig.initialize();
       await LoggingService.instance.initialize();
+      // Resolve SQLite path on the UI isolate before Drift's background isolate
+      // opens the DB (Documents is often blocked on Windows → CANTOPEN).
+      await DriftDatabasePaths.ensureInitialized();
 
       AppConfig.logStartupConfig();
       await _logStartupDiagnostics();
@@ -65,7 +70,10 @@ Future<void> main() async {
 
       final container = ProviderContainer();
       await container.read(storageServiceProvider.future);
-      final engine = await container.read(commandAwareSyncEngineProvider.future);
+      await container.read(notificationPlatformInitializerProvider.future);
+      final engine = await container.read(
+        commandAwareSyncEngineProvider.future,
+      );
       await engine.initialize();
 
       runApp(

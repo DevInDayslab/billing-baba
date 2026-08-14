@@ -11,13 +11,14 @@ class ExpenseLocalDataSource {
   final AppDatabase _db;
 
   Future<List<ExpenseCategoryDto>> listCategories(String businessId) async {
-    final rows = await (_db.select(_db.expenseCategoriesLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          )
-          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .get();
+    final rows =
+        await (_db.select(_db.expenseCategoriesLocal)
+              ..where(
+                (t) =>
+                    t.businessId.equals(businessId) & t.isDeleted.equals(false),
+              )
+              ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+            .get();
     return rows.map(_categoryToDto).toList();
   }
 
@@ -41,20 +42,20 @@ class ExpenseLocalDataSource {
   }
 
   Future<ExpenseDto?> getExpense(String id) async {
-    final row = await (_db.select(_db.expensesLocal)
-          ..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.expensesLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
     if (row == null || row.isDeleted) return null;
-    final category = await (_db.select(_db.expenseCategoriesLocal)
-          ..where((t) => t.id.equals(row.categoryId)))
-        .getSingleOrNull();
+    final category = await (_db.select(
+      _db.expenseCategoriesLocal,
+    )..where((t) => t.id.equals(row.categoryId))).getSingleOrNull();
     return _expenseToDto(row, category?.name);
   }
 
   Future<ExpenseCategoryDto?> getCategory(String id) async {
-    final row = await (_db.select(_db.expenseCategoriesLocal)
-          ..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.expenseCategoriesLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
     if (row == null || row.isDeleted) return null;
     return _categoryToDto(row);
   }
@@ -72,7 +73,9 @@ class ExpenseLocalDataSource {
     bool isDeleted = false,
     DateTime? deletedAt,
   }) {
-    return _db.into(_db.expenseCategoriesLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.expenseCategoriesLocal)
+        .insertOnConflictUpdate(
           ExpenseCategoriesLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -109,7 +112,9 @@ class ExpenseLocalDataSource {
     bool isDeleted = false,
     DateTime? deletedAt,
   }) {
-    return _db.into(_db.expensesLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.expensesLocal)
+        .insertOnConflictUpdate(
           ExpensesLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -133,11 +138,13 @@ class ExpenseLocalDataSource {
         );
   }
 
-  Future<void> upsertCategoryFromDto(String businessId, ExpenseCategoryDto dto) {
+  Future<void> upsertCategoryFromDto(
+    String businessId,
+    ExpenseCategoryDto dto,
+  ) {
     final created =
         DateTime.tryParse(dto.createdAt)?.toUtc() ?? DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
     return upsertCategory(
       id: dto.id,
       businessId: businessId,
@@ -153,8 +160,7 @@ class ExpenseLocalDataSource {
   Future<void> upsertExpenseFromDto(String businessId, ExpenseDto dto) {
     final created =
         DateTime.tryParse(dto.createdAt)?.toUtc() ?? DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
     return upsertExpense(
       id: dto.id,
       businessId: businessId,
@@ -185,9 +191,9 @@ class ExpenseLocalDataSource {
   }
 
   Future<void> softDeleteCategory(String id, DateTime deletedAt) async {
-    await (_db.update(_db.expenseCategoriesLocal)
-          ..where((t) => t.id.equals(id)))
-        .write(
+    await (_db.update(
+      _db.expenseCategoriesLocal,
+    )..where((t) => t.id.equals(id))).write(
       ExpenseCategoriesLocalCompanion(
         isDeleted: const Value(true),
         deletedAt: Value(deletedAt.toUtc()),

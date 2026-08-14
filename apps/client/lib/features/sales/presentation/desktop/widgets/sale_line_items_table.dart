@@ -206,12 +206,14 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
     String lineId,
     SaleItemOption catalogItem,
   ) async {
-    final notifier = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey).notifier);
-    
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
+    );
+
     // Check if item is out of stock
     if (catalogItem.stock == 0) {
       if (!mounted) return;
-      
+
       await showDialog<void>(
         context: context,
         builder: (context) => OutOfStockDialog(
@@ -251,7 +253,7 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
   }
 }
 
-class _LineItemsHeader extends StatelessWidget{
+class _LineItemsHeader extends StatelessWidget {
   const _LineItemsHeader({
     required this.widths,
     required this.visibility,
@@ -457,7 +459,10 @@ class _LineItemRow extends ConsumerWidget {
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Barcode scanner coming soon'),
+                              content: Text(
+                                'Scan with a USB/Bluetooth barcode scanner, '
+                                'or type the code and press Enter',
+                              ),
                             ),
                           );
                         },

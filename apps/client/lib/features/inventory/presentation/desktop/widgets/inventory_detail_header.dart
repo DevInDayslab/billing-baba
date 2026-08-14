@@ -137,7 +137,8 @@ class InventoryDetailHeader extends StatelessWidget {
       ];
     }
 
-    final metrics = stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
+    final metrics =
+        stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
     return [
       _MetaData(
         label: 'Sale Price',
@@ -184,7 +185,8 @@ class InventoryDetailHeader extends StatelessWidget {
     }
 
     final summary = stockSummary;
-    final metrics = stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
+    final metrics =
+        stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
     return [
       _MetaData(
         label: 'Stock Quantity',

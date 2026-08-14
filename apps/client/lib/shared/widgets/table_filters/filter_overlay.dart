@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/shared/widgets/filter_icon.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_popover_positioner.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_theme.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_types.dart';
@@ -180,6 +181,7 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
     this.alignment = Alignment.centerLeft,
     this.headerStyle,
     this.iconOnly = false,
+    this.iconColor,
     super.key,
   });
 
@@ -191,20 +193,28 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
   final Alignment alignment;
   final TextStyle? headerStyle;
   final bool iconOnly;
+  final Color? iconColor;
 
   Widget _buildIconButton() {
     return CompositedTransformTarget(
       link: layerLink,
-      child: InkWell(
-        key: triggerKey,
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Icon(
-            Icons.filter_list,
-            size: 14,
-            color: isActive ? AppColors.error : AppColors.textSecondary,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: InkWell(
+          key: triggerKey,
+          onTap: onTap,
+          mouseCursor: SystemMouseCursors.click,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: Center(
+              child: AppFilterIcon(
+                color:
+                    iconColor ??
+                    (isActive ? AppColors.error : AppColors.textSecondary),
+              ),
+            ),
           ),
         ),
       ),

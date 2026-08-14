@@ -69,15 +69,15 @@ class PartyLedgerLocalDataSource {
   Future<List<PartyDocumentSnapshot>> listAllSalesDocuments(
     String businessId,
   ) async {
-    final rows = await (_db.select(_db.salesDocumentsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.isDeleted.equals(false) &
-                t.status.isIn(['finalized', 'converted']) &
-                t.partyId.isNotNull(),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.salesDocumentsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.isDeleted.equals(false) &
+                  t.status.isIn(['finalized', 'converted']) &
+                  t.partyId.isNotNull(),
+            ))
+            .get();
     return rows.map(_salesRowToSnapshot).toList();
   }
 
@@ -103,15 +103,15 @@ class PartyLedgerLocalDataSource {
   Future<List<PartyDocumentSnapshot>> listAllPurchaseDocuments(
     String businessId,
   ) async {
-    final rows = await (_db.select(_db.purchaseDocumentsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.isDeleted.equals(false) &
-                t.status.isIn(['finalized', 'converted']) &
-                t.partyId.isNotNull(),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.purchaseDocumentsLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.isDeleted.equals(false) &
+                  t.status.isIn(['finalized', 'converted']) &
+                  t.partyId.isNotNull(),
+            ))
+            .get();
     return rows.map(_purchaseRowToSnapshot).toList();
   }
 

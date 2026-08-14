@@ -20,6 +20,7 @@ import type {
   BusinessProfile,
   CommerceSettings,
 } from './business.types';
+import { seedWalkInPartyForBusiness } from '../../shared/parties/walk-in-party';
 import {
   defaultPricingTierLabels,
   PRICING_TIER_VALUES,
@@ -557,6 +558,7 @@ export class BusinessRepository {
           phone: input.phone?.trim() || null,
           email: input.email?.trim() || null,
           businessType: input.business_type?.trim() || null,
+          businessCategory: input.business_category?.trim() || null,
           currency: input.currency?.trim() || 'INR',
           valuationMethod: 'average',
         })
@@ -628,6 +630,8 @@ export class BusinessRepository {
         { businessId: business.id, name: 'General' },
         { businessId: business.id, name: 'Services' },
       ]);
+
+      await seedWalkInPartyForBusiness(tx, business.id);
 
       return {
         id: business.id,

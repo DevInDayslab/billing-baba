@@ -51,7 +51,9 @@ abstract final class GlobalSearchNavigation {
         context.go(AppRoutes.saleInvoices);
       case GlobalSearchResultType.purchaseBill:
         ref.read(purchaseBillFiltersProvider.notifier).setTimeRange('All Time');
-        ref.read(purchaseBillSearchQueryProvider.notifier).setQuery(result.title);
+        ref
+            .read(purchaseBillSearchQueryProvider.notifier)
+            .setQuery(result.title);
         context.go(AppRoutes.purchaseBills);
       case GlobalSearchResultType.expense:
         ref.read(expenseFiltersProvider.notifier).setTimeRange('All Time');

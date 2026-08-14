@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
+import 'package:billing_baba/features/parties/utils/party_search_match.dart';
 import 'package:drift/drift.dart';
 
 /// Drift-backed local store for party masters. Does not enqueue SyncJobs.
@@ -9,12 +10,12 @@ class PartyLocalSource {
   final AppDatabase _db;
 
   Future<int> countActive(String businessId) async {
-    final rows = await (_db.select(_db.partiesLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
-          ))
-        .get();
+    final rows =
+        await (_db.select(_db.partiesLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            ))
+            .get();
     return rows.length;
   }
 
@@ -28,13 +29,22 @@ class PartyLocalSource {
       )
       ..orderBy([(t) => OrderingTerm.asc(t.name)]);
     final rows = await query.get();
-    final q = searchQuery?.trim().toLowerCase();
-    final filtered = q == null || q.isEmpty
+    final queryWords = PartySearchMatch.queryWords(searchQuery);
+    final filtered = queryWords.isEmpty
         ? rows
-        : rows.where((r) {
-            final hay = '${r.name} ${r.mobile ?? ''} ${r.email ?? ''}'
-                .toLowerCase();
-            return hay.contains(q);
+        : rows.where((row) {
+            return PartySearchMatch.matchesFields(
+              queryWords: queryWords,
+              fields: [
+                row.name,
+                row.legalName,
+                row.alias,
+                row.mobile,
+                row.email,
+                row.gstin,
+                row.partyGroup,
+              ],
+            );
           }).toList();
     return filtered.map(_toDto).toList();
   }
@@ -42,8 +52,7 @@ class PartyLocalSource {
   Stream<List<PartyDto>> watchActive(String businessId) {
     return (_db.select(_db.partiesLocal)
           ..where(
-            (t) =>
-                t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            (t) => t.businessId.equals(businessId) & t.isDeleted.equals(false),
           )
           ..orderBy([(t) => OrderingTerm.asc(t.name)]))
         .watch()
@@ -51,8 +60,9 @@ class PartyLocalSource {
   }
 
   Future<PartyTableData?> getById(String id) {
-    return (_db.select(_db.partiesLocal)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.partiesLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<PartyDto?> getActiveDto(String id) async {
@@ -92,7 +102,9 @@ class PartyLocalSource {
     bool isDeleted = false,
     String? deviceId,
   }) {
-    return _db.into(_db.partiesLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.partiesLocal)
+        .insertOnConflictUpdate(
           PartiesLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -130,8 +142,7 @@ class PartyLocalSource {
   Future<void> upsertFromDto(String businessId, PartyDto dto) {
     final created =
         DateTime.tryParse(dto.createdAt)?.toUtc() ?? DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
     return upsertRow(
       id: dto.id,
       businessId: businessId,
@@ -165,8 +176,7 @@ class PartyLocalSource {
     required String id,
     required DateTime deletedAt,
   }) {
-    return (_db.update(_db.partiesLocal)..where((t) => t.id.equals(id)))
-        .write(
+    return (_db.update(_db.partiesLocal)..where((t) => t.id.equals(id))).write(
       PartiesLocalCompanion(
         isDeleted: const Value(true),
         deletedAt: Value(deletedAt.toUtc()),

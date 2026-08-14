@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
 import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
@@ -36,10 +37,10 @@ class TaskEditorResult {
   });
 
   const TaskEditorResult.delete()
-      : title = '',
-        category = TaskCategory.general,
-        reminderAt = null,
-        deleted = true;
+    : title = '',
+      category = TaskCategory.general,
+      reminderAt = null,
+      deleted = true;
 
   final String title;
   final TaskCategory category;
@@ -67,7 +68,6 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
   bool get _isEditing => widget.editTask != null;
 
   static final _dateFormat = DateFormat('dd MMM yyyy');
-  static final _timeFormat = DateFormat('h:mm a');
 
   @override
   void initState() {
@@ -129,29 +129,8 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
         pickedDate.year,
         pickedDate.month,
         pickedDate.day,
-        existing?.hour ?? 9,
-        existing?.minute ?? 0,
-      );
-    });
-  }
-
-  Future<void> _pickTime() async {
-    final now = DateTime.now();
-    final base = _dueAt ?? DateTime(now.year, now.month, now.day, 9);
-
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: base.hour, minute: base.minute),
-    );
-    if (pickedTime == null || !mounted) return;
-
-    setState(() {
-      _dueAt = DateTime(
-        base.year,
-        base.month,
-        base.day,
-        pickedTime.hour,
-        pickedTime.minute,
+        existing?.hour ?? now.hour,
+        existing?.minute ?? now.minute,
       );
     });
   }
@@ -373,40 +352,29 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: _pickTime,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.textPrimary,
-                            side: const BorderSide(color: Color(0xFFE0E0E0)),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
-                            alignment: Alignment.centerLeft,
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 16,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: Text(
-                                  _dueAt == null
-                                      ? 'Select time'
-                                      : _timeFormat.format(_dueAt!),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: _dueAt == null
-                                        ? AppColors.textSecondary
-                                        : AppColors.textPrimary,
-                                  ),
+                        child: SaleTimeDropdown(
+                          allowTyping: true,
+                          value: _dueAt == null
+                              ? null
+                              : TimeOfDay(
+                                  hour: _dueAt!.hour,
+                                  minute: _dueAt!.minute,
                                 ),
-                              ),
-                            ],
-                          ),
+                          onSelected: (time) {
+                            setState(() {
+                              final now = DateTime.now();
+                              final base =
+                                  _dueAt ??
+                                  DateTime(now.year, now.month, now.day);
+                              _dueAt = DateTime(
+                                base.year,
+                                base.month,
+                                base.day,
+                                time.hour,
+                                time.minute,
+                              );
+                            });
+                          },
                         ),
                       ),
                       if (_dueAt != null) ...[

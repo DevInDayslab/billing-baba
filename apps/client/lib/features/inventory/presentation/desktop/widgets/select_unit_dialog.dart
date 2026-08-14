@@ -87,128 +87,127 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
       borderRadius: AppRadius.lgBorder,
       clipBehavior: Clip.antiAlias,
       child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Select Unit',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Select Unit',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.close,
-                      color: AppColors.textSecondary,
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.textSecondary,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            if (!hasUnits) ...[
+              const Text(
+                'No units available.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _createUnit,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text(
+                    'New Unit',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ] else ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _UnitField(
+                      label: 'BASE UNIT',
+                      labelColor: AppColors.primary,
+                      value: _unitLabel(units, _baseUnitId),
+                      options: [
+                        _newUnitOption,
+                        ...units.map((unit) => unit.shortName),
+                      ],
+                      onSelected: (label) => _onBaseUnitSelected(units, label),
+                      onAdd: _createUnit,
+                      addTooltip: 'New unit',
                     ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _UnitField(
+                      label: 'SECONDARY UNIT',
+                      labelColor: AppColors.textSecondary,
+                      value: _unitLabel(units, _secondaryUnitId),
+                      options: [
+                        'None',
+                        ...units.map((unit) => unit.shortName),
+                      ],
+                      onSelected: (label) {
+                        setState(() {
+                          _secondaryUnitId = _unitIdFromLabel(units, label);
+                        });
+                      },
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              if (!hasUnits) ...[
-                const Text(
-                  'No units available.',
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                onPressed: _canSave
+                    ? () => Navigator.of(context).pop(
+                        UnitSelection(
+                          baseUnitId: _baseUnitId,
+                          secondaryUnitId: _secondaryUnitId,
+                        ),
+                      )
+                    : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: const Text(
+                  'SAVE',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _createUnit,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text(
-                      'New Unit',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _UnitField(
-                        label: 'BASE UNIT',
-                        labelColor: AppColors.primary,
-                        value: _unitLabel(units, _baseUnitId),
-                        options: [
-                          _newUnitOption,
-                          ...units.map((unit) => unit.shortName),
-                        ],
-                        onSelected: (label) =>
-                            _onBaseUnitSelected(units, label),
-                        onAdd: _createUnit,
-                        addTooltip: 'New unit',
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: _UnitField(
-                        label: 'SECONDARY UNIT',
-                        labelColor: AppColors.textSecondary,
-                        value: _unitLabel(units, _secondaryUnitId),
-                        options: [
-                          'None',
-                          ...units.map((unit) => unit.shortName),
-                        ],
-                        onSelected: (label) {
-                          setState(() {
-                            _secondaryUnitId = _unitIdFromLabel(units, label);
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(
-                  onPressed: _canSave
-                      ? () => Navigator.of(context).pop(
-                          UnitSelection(
-                            baseUnitId: _baseUnitId,
-                            secondaryUnitId: _secondaryUnitId,
-                          ),
-                        )
-                      : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: const Text(
-                    'SAVE',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
     );
   }
 

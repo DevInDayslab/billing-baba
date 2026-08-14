@@ -34,8 +34,9 @@ class ItemLocalSource {
     ItemLocalFilter filter = emptyItemLocalFilter,
   }) {
     final count = _db.itemsLocal.id.count();
-    final query = _db.selectOnly(_db.itemsLocal)..addColumns([count])
-    ..where(_buildPredicate(_db.itemsLocal, filter, businessId));
+    final query = _db.selectOnly(_db.itemsLocal)
+      ..addColumns([count])
+      ..where(_buildPredicate(_db.itemsLocal, filter, businessId));
     return query.map((row) => row.read(count) ?? 0).getSingle();
   }
 
@@ -64,12 +65,13 @@ class ItemLocalSource {
     required int limit,
     int offset = 0,
   }) {
-    final query = _filteredSelect(
-      businessId: businessId,
-      filter: filter,
-    )
-      ..orderBy([(t) => OrderingTerm.asc(t.name)])
-      ..limit(limit, offset: offset);
+    final query =
+        _filteredSelect(
+            businessId: businessId,
+            filter: filter,
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.name)])
+          ..limit(limit, offset: offset);
 
     return query.watch().map((rows) => rows.map(_toListDto).toList());
   }
@@ -87,8 +89,7 @@ class ItemLocalSource {
     ItemLocalFilter filter,
     String businessId,
   ) {
-    var predicate =
-        t.businessId.equals(businessId) & t.isDeleted.equals(false);
+    var predicate = t.businessId.equals(businessId) & t.isDeleted.equals(false);
 
     if (filter.categoryId != null && filter.categoryId!.isNotEmpty) {
       predicate = predicate & t.categoryId.equals(filter.categoryId!);
@@ -102,7 +103,8 @@ class ItemLocalSource {
     final q = filter.searchQuery?.trim().toLowerCase();
     if (q != null && q.isNotEmpty) {
       final pattern = '%$q%';
-      predicate = predicate &
+      predicate =
+          predicate &
           (t.name.lower().like(pattern) |
               t.barcode.lower().like(pattern) |
               t.hsnCode.lower().like(pattern) |
@@ -112,8 +114,9 @@ class ItemLocalSource {
   }
 
   Future<ItemTableData?> getById(String id) {
-    return (_db.select(_db.itemsLocal)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.itemsLocal,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<ItemDetailDto?> getActiveDetail(String id) async {
@@ -152,7 +155,9 @@ class ItemLocalSource {
     bool isDeleted = false,
     String? deviceId,
   }) {
-    return _db.into(_db.itemsLocal).insertOnConflictUpdate(
+    return _db
+        .into(_db.itemsLocal)
+        .insertOnConflictUpdate(
           ItemsLocalCompanion.insert(
             id: id,
             businessId: businessId,
@@ -189,8 +194,7 @@ class ItemLocalSource {
   Future<void> upsertFromDetailDto(String businessId, ItemDetailDto dto) {
     final created =
         DateTime.tryParse(dto.createdAt)?.toUtc() ?? DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt)?.toUtc() ?? created;
     return upsertRow(
       id: dto.id,
       businessId: businessId,

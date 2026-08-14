@@ -195,169 +195,169 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
       borderRadius: AppRadius.lgBorder,
       clipBehavior: Clip.antiAlias,
       child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.sm,
-              ),
-              color: inventorySelectedRowColor,
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Add Conversion',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.close,
-                      color: AppColors.textSecondary,
-                      size: 20,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
             ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: _ConversionField(
-                          label: 'BASE UNIT',
-                          labelColor: AppColors.primary,
-                          child: SaleGenericSelectDropdown(
-                            value: _baseUnitSelectedLabel(units),
-                            options: _baseUnitOptions(units),
-                            onSelected: (label) =>
-                                _onBaseUnitSelected(units, label),
-                          ),
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          AppSpacing.sm,
-                          0,
-                          AppSpacing.sm,
-                          12,
-                        ),
-                        child: Text(
-                          '=',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: _ConversionField(
-                          label: 'RATE',
-                          labelColor: AppColors.textSecondary,
-                          child: TextField(
-                            controller: _rateController,
-                            focusNode: _rateFocusNode,
-                            style: saleFieldTextStyle,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d*'),
-                              ),
-                            ],
-                            onChanged: (_) => _clearError(),
-                            decoration: buildSaleFieldDecoration(
-                              hint: '0',
-                              hasError: hasError,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        flex: 3,
-                        child: _ConversionField(
-                          label: 'SECONDARY UNIT',
-                          labelColor: AppColors.textSecondary,
-                          child: SaleGenericSelectDropdown(
-                            value: _secondaryUnitSelectedLabel(units),
-                            options: _secondaryUnitOptions(units),
-                            onSelected: (label) =>
-                                _onSecondaryUnitSelected(units, label),
-                          ),
-                        ),
-                      ),
-                    ],
+            color: inventorySelectedRowColor,
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Add Conversion',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  if (hasError) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      _errorMessage!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: saleFieldErrorColor,
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _ConversionField(
+                        label: 'BASE UNIT',
+                        labelColor: AppColors.primary,
+                        child: SaleGenericSelectDropdown(
+                          value: _baseUnitSelectedLabel(units),
+                          options: _baseUnitOptions(units),
+                          onSelected: (label) =>
+                              _onBaseUnitSelected(units, label),
+                        ),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        AppSpacing.sm,
+                        0,
+                        AppSpacing.sm,
+                        12,
+                      ),
+                      child: Text(
+                        '=',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: _ConversionField(
+                        label: 'RATE',
+                        labelColor: AppColors.textSecondary,
+                        child: TextField(
+                          controller: _rateController,
+                          focusNode: _rateFocusNode,
+                          style: saleFieldTextStyle,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d*'),
+                            ),
+                          ],
+                          onChanged: (_) => _clearError(),
+                          decoration: buildSaleFieldDecoration(
+                            hint: '0',
+                            hasError: hasError,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      flex: 3,
+                      child: _ConversionField(
+                        label: 'SECONDARY UNIT',
+                        labelColor: AppColors.textSecondary,
+                        child: SaleGenericSelectDropdown(
+                          value: _secondaryUnitSelectedLabel(units),
+                          options: _secondaryUnitOptions(units),
+                          onSelected: (label) =>
+                              _onSecondaryUnitSelected(units, label),
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      FilledButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => _save(saveAndNew: false),
-                        style: buttonStyle,
-                        child: const Text(
-                          'SAVE',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      FilledButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => _save(saveAndNew: true),
-                        style: buttonStyle,
-                        child: const Text(
-                          'SAVE & NEW',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
+                ),
+                if (hasError) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: saleFieldErrorColor,
+                    ),
                   ),
                 ],
-              ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    FilledButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => _save(saveAndNew: false),
+                      style: buttonStyle,
+                      child: const Text(
+                        'SAVE',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    FilledButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => _save(saveAndNew: true),
+                      style: buttonStyle,
+                      child: const Text(
+                        'SAVE & NEW',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }

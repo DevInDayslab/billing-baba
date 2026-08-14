@@ -15,7 +15,9 @@ final inventorySearchEngineProvider = Provider<InventorySearchEngine>((ref) {
   final brands = ref.watch(inventoryBrandsProvider).value ?? const [];
   final units = ref.watch(inventoryUnitsProvider).value ?? const [];
 
-  final categoryById = {for (final category in categories) category.id: category.name};
+  final categoryById = {
+    for (final category in categories) category.id: category.name,
+  };
   final brandById = {for (final brand in brands) brand.id: brand.name};
   final unitByShortName = {
     for (final unit in units) unit.shortName.toLowerCase(): unit.fullName,
@@ -26,7 +28,8 @@ final inventorySearchEngineProvider = Provider<InventorySearchEngine>((ref) {
     final aliases = <String>[
       if (item.shortName != null && item.shortName!.trim().isNotEmpty)
         item.shortName!.trim(),
-      if (item.alias != null && item.alias!.trim().isNotEmpty) item.alias!.trim(),
+      if (item.alias != null && item.alias!.trim().isNotEmpty)
+        item.alias!.trim(),
       ...item.searchKeywords,
     ];
     return InventorySearchableFields.fromInventoryItem(

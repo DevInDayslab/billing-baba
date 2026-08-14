@@ -230,7 +230,7 @@ class _PartyInGroupTile extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: AppEllipsisText(
-                party.name,
+                PartyModel.displayNameWithLegal(party),
                 style: InventoryStyles.listCellStyle.copyWith(
                   fontWeight: FontWeight.w500,
                   color: party.isActive

@@ -27,6 +27,25 @@ mediaVariantUrlProvider = FutureProvider.family<String, MediaVariantRequest>(
   },
 );
 
+/// Fresh signed download URL for a source media asset (staging or final object).
+final FutureProviderFamily<String, String> mediaSourceUrlProvider =
+    FutureProvider.family<String, String>((ref, mediaAssetId) async {
+      final assetId = mediaAssetId.trim();
+      if (assetId.isEmpty) {
+        throw StateError('Media asset id is empty');
+      }
+      final client = await ref.watch(apiClientProvider.future);
+      final response = await client.dio.get<Map<String, dynamic>>(
+        ApiEndpoints.storageFileUrl(assetId),
+      );
+      final data = response.data?['data'] as Map<String, dynamic>?;
+      final url = data?['url'] as String?;
+      if (url == null || url.isEmpty) {
+        throw StateError('Source URL missing in response');
+      }
+      return url;
+    });
+
 /// Drops cached signed URLs so the next read fetches a fresh variant URL.
 void invalidateMediaVariantUrls(
   ProviderContainer container,
@@ -35,6 +54,7 @@ void invalidateMediaVariantUrls(
   final assetId = mediaAssetId.trim();
   if (assetId.isEmpty) return;
 
+  container.invalidate(mediaSourceUrlProvider(assetId));
   for (final variant in ImageVariant.values) {
     container.invalidate(
       mediaVariantUrlProvider((

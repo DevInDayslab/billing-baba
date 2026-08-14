@@ -1,7 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, pgTable, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  pgTable,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
 import { syncedBusinessColumns } from '../columns';
+import { syncPullIndex } from '../sync-pull-index';
 import { items } from './tables';
 
 const businessId = () =>
@@ -27,5 +34,11 @@ export const itemAlternatives = pgTable(
     index('idx_item_alternatives_item')
       .on(table.businessId, table.itemId)
       .where(sql`${table.isDeleted} = false`),
+    syncPullIndex(
+      'item_alternatives',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );

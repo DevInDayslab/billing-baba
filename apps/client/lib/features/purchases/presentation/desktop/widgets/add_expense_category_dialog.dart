@@ -124,82 +124,82 @@ class _AddExpenseCategoryDialogState
       borderRadius: AppRadius.lgBorder,
       clipBehavior: Clip.antiAlias,
       child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Add Expense Category',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, size: 20),
-                    tooltip: 'Close',
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              const Text('Expense Category', style: saleFieldLabelStyle),
-              const SizedBox(height: 4),
-              TextField(
-                controller: _nameController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(
-                  hint: 'e.g. Transport',
-                  hasError: _showError,
-                ),
-                onChanged: (_) {
-                  if (_showError) setState(() => _showError = false);
-                },
-              ),
-              if (_showError)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Expanded(
                   child: Text(
-                    'Category name is required',
-                    style: TextStyle(fontSize: 11, color: saleFieldErrorColor),
+                    'Add Expense Category',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
-              const SizedBox(height: AppSpacing.md),
-              const Text('Expense Type', style: saleFieldLabelStyle),
-              const SizedBox(height: 4),
-              SaleGenericSelectDropdown(
-                value: _expenseType,
-                options: _expenseTypes,
-                onSelected: (value) => setState(() => _expenseType = value),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close, size: 20),
+                  tooltip: 'Close',
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text('Expense Category', style: saleFieldLabelStyle),
+            const SizedBox(height: 4),
+            TextField(
+              controller: _nameController,
+              style: saleFieldTextStyle,
+              decoration: buildSaleFieldDecoration(
+                hint: 'e.g. Transport',
+                hasError: _showError,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.primary),
-                      foregroundColor: AppColors.primary,
-                    ),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  FilledButton(
-                    onPressed: _handleSave,
-                    child: const Text('Save'),
-                  ),
-                ],
+              onChanged: (_) {
+                if (_showError) setState(() => _showError = false);
+              },
+            ),
+            if (_showError)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Category name is required',
+                  style: TextStyle(fontSize: 11, color: saleFieldErrorColor),
+                ),
               ),
-            ],
-          ),
+            const SizedBox(height: AppSpacing.md),
+            const Text('Expense Type', style: saleFieldLabelStyle),
+            const SizedBox(height: 4),
+            SaleGenericSelectDropdown(
+              value: _expenseType,
+              options: _expenseTypes,
+              onSelected: (value) => setState(() => _expenseType = value),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.primary),
+                    foregroundColor: AppColors.primary,
+                  ),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                FilledButton(
+                  onPressed: _handleSave,
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
     );
   }
 }

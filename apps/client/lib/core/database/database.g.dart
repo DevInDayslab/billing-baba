@@ -11610,6 +11610,3577 @@ class ItemsLocalCompanion extends UpdateCompanion<ItemTableData> {
   }
 }
 
+class $ItemAlternativesLocalTable extends ItemAlternativesLocal
+    with TableInfo<$ItemAlternativesLocalTable, ItemAlternativeTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemAlternativesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _alternativeItemIdMeta = const VerificationMeta(
+    'alternativeItemId',
+  );
+  @override
+  late final GeneratedColumn<String> alternativeItemId =
+      GeneratedColumn<String>(
+        'alternative_item_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    itemId,
+    alternativeItemId,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_alternatives_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemAlternativeTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('alternative_item_id')) {
+      context.handle(
+        _alternativeItemIdMeta,
+        alternativeItemId.isAcceptableOrUnknown(
+          data['alternative_item_id']!,
+          _alternativeItemIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_alternativeItemIdMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemAlternativeTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemAlternativeTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      alternativeItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}alternative_item_id'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $ItemAlternativesLocalTable createAlias(String alias) {
+    return $ItemAlternativesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class ItemAlternativeTableData extends DataClass
+    implements Insertable<ItemAlternativeTableData> {
+  final String id;
+  final String businessId;
+  final String itemId;
+  final String alternativeItemId;
+  final int sortOrder;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const ItemAlternativeTableData({
+    required this.id,
+    required this.businessId,
+    required this.itemId,
+    required this.alternativeItemId,
+    required this.sortOrder,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['item_id'] = Variable<String>(itemId);
+    map['alternative_item_id'] = Variable<String>(alternativeItemId);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  ItemAlternativesLocalCompanion toCompanion(bool nullToAbsent) {
+    return ItemAlternativesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      itemId: Value(itemId),
+      alternativeItemId: Value(alternativeItemId),
+      sortOrder: Value(sortOrder),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory ItemAlternativeTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemAlternativeTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      alternativeItemId: serializer.fromJson<String>(json['alternativeItemId']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'itemId': serializer.toJson<String>(itemId),
+      'alternativeItemId': serializer.toJson<String>(alternativeItemId),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  ItemAlternativeTableData copyWith({
+    String? id,
+    String? businessId,
+    String? itemId,
+    String? alternativeItemId,
+    int? sortOrder,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => ItemAlternativeTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    itemId: itemId ?? this.itemId,
+    alternativeItemId: alternativeItemId ?? this.alternativeItemId,
+    sortOrder: sortOrder ?? this.sortOrder,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  ItemAlternativeTableData copyWithCompanion(
+    ItemAlternativesLocalCompanion data,
+  ) {
+    return ItemAlternativeTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      alternativeItemId: data.alternativeItemId.present
+          ? data.alternativeItemId.value
+          : this.alternativeItemId,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemAlternativeTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('alternativeItemId: $alternativeItemId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    itemId,
+    alternativeItemId,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemAlternativeTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.itemId == this.itemId &&
+          other.alternativeItemId == this.alternativeItemId &&
+          other.sortOrder == this.sortOrder &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class ItemAlternativesLocalCompanion
+    extends UpdateCompanion<ItemAlternativeTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> itemId;
+  final Value<String> alternativeItemId;
+  final Value<int> sortOrder;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const ItemAlternativesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.alternativeItemId = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemAlternativesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String itemId,
+    required String alternativeItemId,
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       itemId = Value(itemId),
+       alternativeItemId = Value(alternativeItemId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ItemAlternativeTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? itemId,
+    Expression<String>? alternativeItemId,
+    Expression<int>? sortOrder,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (itemId != null) 'item_id': itemId,
+      if (alternativeItemId != null) 'alternative_item_id': alternativeItemId,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemAlternativesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? itemId,
+    Value<String>? alternativeItemId,
+    Value<int>? sortOrder,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return ItemAlternativesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      itemId: itemId ?? this.itemId,
+      alternativeItemId: alternativeItemId ?? this.alternativeItemId,
+      sortOrder: sortOrder ?? this.sortOrder,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (alternativeItemId.present) {
+      map['alternative_item_id'] = Variable<String>(alternativeItemId.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemAlternativesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('alternativeItemId: $alternativeItemId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ItemSuppliersLocalTable extends ItemSuppliersLocal
+    with TableInfo<$ItemSuppliersLocalTable, ItemSupplierTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemSuppliersLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _partyIdMeta = const VerificationMeta(
+    'partyId',
+  );
+  @override
+  late final GeneratedColumn<String> partyId = GeneratedColumn<String>(
+    'party_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    itemId,
+    partyId,
+    isDefault,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_suppliers_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemSupplierTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('party_id')) {
+      context.handle(
+        _partyIdMeta,
+        partyId.isAcceptableOrUnknown(data['party_id']!, _partyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_partyIdMeta);
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemSupplierTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemSupplierTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      partyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_id'],
+      )!,
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $ItemSuppliersLocalTable createAlias(String alias) {
+    return $ItemSuppliersLocalTable(attachedDatabase, alias);
+  }
+}
+
+class ItemSupplierTableData extends DataClass
+    implements Insertable<ItemSupplierTableData> {
+  final String id;
+  final String businessId;
+  final String itemId;
+  final String partyId;
+  final bool isDefault;
+  final int sortOrder;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const ItemSupplierTableData({
+    required this.id,
+    required this.businessId,
+    required this.itemId,
+    required this.partyId,
+    required this.isDefault,
+    required this.sortOrder,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['item_id'] = Variable<String>(itemId);
+    map['party_id'] = Variable<String>(partyId);
+    map['is_default'] = Variable<bool>(isDefault);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  ItemSuppliersLocalCompanion toCompanion(bool nullToAbsent) {
+    return ItemSuppliersLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      itemId: Value(itemId),
+      partyId: Value(partyId),
+      isDefault: Value(isDefault),
+      sortOrder: Value(sortOrder),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory ItemSupplierTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemSupplierTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      partyId: serializer.fromJson<String>(json['partyId']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'itemId': serializer.toJson<String>(itemId),
+      'partyId': serializer.toJson<String>(partyId),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  ItemSupplierTableData copyWith({
+    String? id,
+    String? businessId,
+    String? itemId,
+    String? partyId,
+    bool? isDefault,
+    int? sortOrder,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => ItemSupplierTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    itemId: itemId ?? this.itemId,
+    partyId: partyId ?? this.partyId,
+    isDefault: isDefault ?? this.isDefault,
+    sortOrder: sortOrder ?? this.sortOrder,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  ItemSupplierTableData copyWithCompanion(ItemSuppliersLocalCompanion data) {
+    return ItemSupplierTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      partyId: data.partyId.present ? data.partyId.value : this.partyId,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemSupplierTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('partyId: $partyId, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    itemId,
+    partyId,
+    isDefault,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemSupplierTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.itemId == this.itemId &&
+          other.partyId == this.partyId &&
+          other.isDefault == this.isDefault &&
+          other.sortOrder == this.sortOrder &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class ItemSuppliersLocalCompanion
+    extends UpdateCompanion<ItemSupplierTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> itemId;
+  final Value<String> partyId;
+  final Value<bool> isDefault;
+  final Value<int> sortOrder;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const ItemSuppliersLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemSuppliersLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String itemId,
+    required String partyId,
+    this.isDefault = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       itemId = Value(itemId),
+       partyId = Value(partyId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ItemSupplierTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? itemId,
+    Expression<String>? partyId,
+    Expression<bool>? isDefault,
+    Expression<int>? sortOrder,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (itemId != null) 'item_id': itemId,
+      if (partyId != null) 'party_id': partyId,
+      if (isDefault != null) 'is_default': isDefault,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemSuppliersLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? itemId,
+    Value<String>? partyId,
+    Value<bool>? isDefault,
+    Value<int>? sortOrder,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return ItemSuppliersLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      itemId: itemId ?? this.itemId,
+      partyId: partyId ?? this.partyId,
+      isDefault: isDefault ?? this.isDefault,
+      sortOrder: sortOrder ?? this.sortOrder,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (partyId.present) {
+      map['party_id'] = Variable<String>(partyId.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemSuppliersLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('partyId: $partyId, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ItemBomMaterialsLocalTable extends ItemBomMaterialsLocal
+    with TableInfo<$ItemBomMaterialsLocalTable, ItemBomMaterialTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemBomMaterialsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rawItemIdMeta = const VerificationMeta(
+    'rawItemId',
+  );
+  @override
+  late final GeneratedColumn<String> rawItemId = GeneratedColumn<String>(
+    'raw_item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _qtyMeta = const VerificationMeta('qty');
+  @override
+  late final GeneratedColumn<double> qty = GeneratedColumn<double>(
+    'qty',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<String> unitId = GeneratedColumn<String>(
+    'unit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _purchasePriceMeta = const VerificationMeta(
+    'purchasePrice',
+  );
+  @override
+  late final GeneratedColumn<double> purchasePrice = GeneratedColumn<double>(
+    'purchase_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    itemId,
+    rawItemId,
+    qty,
+    unitId,
+    purchasePrice,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_bom_materials_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemBomMaterialTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('raw_item_id')) {
+      context.handle(
+        _rawItemIdMeta,
+        rawItemId.isAcceptableOrUnknown(data['raw_item_id']!, _rawItemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rawItemIdMeta);
+    }
+    if (data.containsKey('qty')) {
+      context.handle(
+        _qtyMeta,
+        qty.isAcceptableOrUnknown(data['qty']!, _qtyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_qtyMeta);
+    }
+    if (data.containsKey('unit_id')) {
+      context.handle(
+        _unitIdMeta,
+        unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitIdMeta);
+    }
+    if (data.containsKey('purchase_price')) {
+      context.handle(
+        _purchasePriceMeta,
+        purchasePrice.isAcceptableOrUnknown(
+          data['purchase_price']!,
+          _purchasePriceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemBomMaterialTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemBomMaterialTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      rawItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}raw_item_id'],
+      )!,
+      qty: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}qty'],
+      )!,
+      unitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit_id'],
+      )!,
+      purchasePrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}purchase_price'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $ItemBomMaterialsLocalTable createAlias(String alias) {
+    return $ItemBomMaterialsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class ItemBomMaterialTableData extends DataClass
+    implements Insertable<ItemBomMaterialTableData> {
+  final String id;
+  final String businessId;
+  final String itemId;
+  final String rawItemId;
+  final double qty;
+  final String unitId;
+  final double purchasePrice;
+  final int sortOrder;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const ItemBomMaterialTableData({
+    required this.id,
+    required this.businessId,
+    required this.itemId,
+    required this.rawItemId,
+    required this.qty,
+    required this.unitId,
+    required this.purchasePrice,
+    required this.sortOrder,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['item_id'] = Variable<String>(itemId);
+    map['raw_item_id'] = Variable<String>(rawItemId);
+    map['qty'] = Variable<double>(qty);
+    map['unit_id'] = Variable<String>(unitId);
+    map['purchase_price'] = Variable<double>(purchasePrice);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  ItemBomMaterialsLocalCompanion toCompanion(bool nullToAbsent) {
+    return ItemBomMaterialsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      itemId: Value(itemId),
+      rawItemId: Value(rawItemId),
+      qty: Value(qty),
+      unitId: Value(unitId),
+      purchasePrice: Value(purchasePrice),
+      sortOrder: Value(sortOrder),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory ItemBomMaterialTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemBomMaterialTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      rawItemId: serializer.fromJson<String>(json['rawItemId']),
+      qty: serializer.fromJson<double>(json['qty']),
+      unitId: serializer.fromJson<String>(json['unitId']),
+      purchasePrice: serializer.fromJson<double>(json['purchasePrice']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'itemId': serializer.toJson<String>(itemId),
+      'rawItemId': serializer.toJson<String>(rawItemId),
+      'qty': serializer.toJson<double>(qty),
+      'unitId': serializer.toJson<String>(unitId),
+      'purchasePrice': serializer.toJson<double>(purchasePrice),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  ItemBomMaterialTableData copyWith({
+    String? id,
+    String? businessId,
+    String? itemId,
+    String? rawItemId,
+    double? qty,
+    String? unitId,
+    double? purchasePrice,
+    int? sortOrder,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => ItemBomMaterialTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    itemId: itemId ?? this.itemId,
+    rawItemId: rawItemId ?? this.rawItemId,
+    qty: qty ?? this.qty,
+    unitId: unitId ?? this.unitId,
+    purchasePrice: purchasePrice ?? this.purchasePrice,
+    sortOrder: sortOrder ?? this.sortOrder,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  ItemBomMaterialTableData copyWithCompanion(
+    ItemBomMaterialsLocalCompanion data,
+  ) {
+    return ItemBomMaterialTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      rawItemId: data.rawItemId.present ? data.rawItemId.value : this.rawItemId,
+      qty: data.qty.present ? data.qty.value : this.qty,
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      purchasePrice: data.purchasePrice.present
+          ? data.purchasePrice.value
+          : this.purchasePrice,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemBomMaterialTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('rawItemId: $rawItemId, ')
+          ..write('qty: $qty, ')
+          ..write('unitId: $unitId, ')
+          ..write('purchasePrice: $purchasePrice, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    itemId,
+    rawItemId,
+    qty,
+    unitId,
+    purchasePrice,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemBomMaterialTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.itemId == this.itemId &&
+          other.rawItemId == this.rawItemId &&
+          other.qty == this.qty &&
+          other.unitId == this.unitId &&
+          other.purchasePrice == this.purchasePrice &&
+          other.sortOrder == this.sortOrder &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class ItemBomMaterialsLocalCompanion
+    extends UpdateCompanion<ItemBomMaterialTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> itemId;
+  final Value<String> rawItemId;
+  final Value<double> qty;
+  final Value<String> unitId;
+  final Value<double> purchasePrice;
+  final Value<int> sortOrder;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const ItemBomMaterialsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.rawItemId = const Value.absent(),
+    this.qty = const Value.absent(),
+    this.unitId = const Value.absent(),
+    this.purchasePrice = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemBomMaterialsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String itemId,
+    required String rawItemId,
+    required double qty,
+    required String unitId,
+    this.purchasePrice = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       itemId = Value(itemId),
+       rawItemId = Value(rawItemId),
+       qty = Value(qty),
+       unitId = Value(unitId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ItemBomMaterialTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? itemId,
+    Expression<String>? rawItemId,
+    Expression<double>? qty,
+    Expression<String>? unitId,
+    Expression<double>? purchasePrice,
+    Expression<int>? sortOrder,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (itemId != null) 'item_id': itemId,
+      if (rawItemId != null) 'raw_item_id': rawItemId,
+      if (qty != null) 'qty': qty,
+      if (unitId != null) 'unit_id': unitId,
+      if (purchasePrice != null) 'purchase_price': purchasePrice,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemBomMaterialsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? itemId,
+    Value<String>? rawItemId,
+    Value<double>? qty,
+    Value<String>? unitId,
+    Value<double>? purchasePrice,
+    Value<int>? sortOrder,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return ItemBomMaterialsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      itemId: itemId ?? this.itemId,
+      rawItemId: rawItemId ?? this.rawItemId,
+      qty: qty ?? this.qty,
+      unitId: unitId ?? this.unitId,
+      purchasePrice: purchasePrice ?? this.purchasePrice,
+      sortOrder: sortOrder ?? this.sortOrder,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (rawItemId.present) {
+      map['raw_item_id'] = Variable<String>(rawItemId.value);
+    }
+    if (qty.present) {
+      map['qty'] = Variable<double>(qty.value);
+    }
+    if (unitId.present) {
+      map['unit_id'] = Variable<String>(unitId.value);
+    }
+    if (purchasePrice.present) {
+      map['purchase_price'] = Variable<double>(purchasePrice.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemBomMaterialsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('rawItemId: $rawItemId, ')
+          ..write('qty: $qty, ')
+          ..write('unitId: $unitId, ')
+          ..write('purchasePrice: $purchasePrice, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ItemBomCostsLocalTable extends ItemBomCostsLocal
+    with TableInfo<$ItemBomCostsLocalTable, ItemBomCostTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemBomCostsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    itemId,
+    description,
+    amount,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_bom_costs_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemBomCostTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemBomCostTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemBomCostTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $ItemBomCostsLocalTable createAlias(String alias) {
+    return $ItemBomCostsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class ItemBomCostTableData extends DataClass
+    implements Insertable<ItemBomCostTableData> {
+  final String id;
+  final String businessId;
+  final String itemId;
+  final String description;
+  final double amount;
+  final int sortOrder;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const ItemBomCostTableData({
+    required this.id,
+    required this.businessId,
+    required this.itemId,
+    required this.description,
+    required this.amount,
+    required this.sortOrder,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['item_id'] = Variable<String>(itemId);
+    map['description'] = Variable<String>(description);
+    map['amount'] = Variable<double>(amount);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  ItemBomCostsLocalCompanion toCompanion(bool nullToAbsent) {
+    return ItemBomCostsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      itemId: Value(itemId),
+      description: Value(description),
+      amount: Value(amount),
+      sortOrder: Value(sortOrder),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory ItemBomCostTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemBomCostTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      description: serializer.fromJson<String>(json['description']),
+      amount: serializer.fromJson<double>(json['amount']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'itemId': serializer.toJson<String>(itemId),
+      'description': serializer.toJson<String>(description),
+      'amount': serializer.toJson<double>(amount),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  ItemBomCostTableData copyWith({
+    String? id,
+    String? businessId,
+    String? itemId,
+    String? description,
+    double? amount,
+    int? sortOrder,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => ItemBomCostTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    itemId: itemId ?? this.itemId,
+    description: description ?? this.description,
+    amount: amount ?? this.amount,
+    sortOrder: sortOrder ?? this.sortOrder,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  ItemBomCostTableData copyWithCompanion(ItemBomCostsLocalCompanion data) {
+    return ItemBomCostTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemBomCostTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('description: $description, ')
+          ..write('amount: $amount, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    itemId,
+    description,
+    amount,
+    sortOrder,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemBomCostTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.itemId == this.itemId &&
+          other.description == this.description &&
+          other.amount == this.amount &&
+          other.sortOrder == this.sortOrder &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class ItemBomCostsLocalCompanion extends UpdateCompanion<ItemBomCostTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> itemId;
+  final Value<String> description;
+  final Value<double> amount;
+  final Value<int> sortOrder;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const ItemBomCostsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.description = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemBomCostsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String itemId,
+    required String description,
+    this.amount = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       itemId = Value(itemId),
+       description = Value(description),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ItemBomCostTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? itemId,
+    Expression<String>? description,
+    Expression<double>? amount,
+    Expression<int>? sortOrder,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (itemId != null) 'item_id': itemId,
+      if (description != null) 'description': description,
+      if (amount != null) 'amount': amount,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemBomCostsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? itemId,
+    Value<String>? description,
+    Value<double>? amount,
+    Value<int>? sortOrder,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return ItemBomCostsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      itemId: itemId ?? this.itemId,
+      description: description ?? this.description,
+      amount: amount ?? this.amount,
+      sortOrder: sortOrder ?? this.sortOrder,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemBomCostsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('description: $description, ')
+          ..write('amount: $amount, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ItemTierPricesLocalTable extends ItemTierPricesLocal
+    with TableInfo<$ItemTierPricesLocalTable, ItemTierPriceTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemTierPricesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pricingTierMeta = const VerificationMeta(
+    'pricingTier',
+  );
+  @override
+  late final GeneratedColumn<String> pricingTier = GeneratedColumn<String>(
+    'pricing_tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<double> price = GeneratedColumn<double>(
+    'price',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    itemId,
+    pricingTier,
+    price,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_tier_prices_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemTierPriceTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('pricing_tier')) {
+      context.handle(
+        _pricingTierMeta,
+        pricingTier.isAcceptableOrUnknown(
+          data['pricing_tier']!,
+          _pricingTierMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pricingTierMeta);
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_priceMeta);
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemTierPriceTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemTierPriceTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      pricingTier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pricing_tier'],
+      )!,
+      price: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $ItemTierPricesLocalTable createAlias(String alias) {
+    return $ItemTierPricesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class ItemTierPriceTableData extends DataClass
+    implements Insertable<ItemTierPriceTableData> {
+  final String id;
+  final String businessId;
+  final String itemId;
+  final String pricingTier;
+  final double price;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const ItemTierPriceTableData({
+    required this.id,
+    required this.businessId,
+    required this.itemId,
+    required this.pricingTier,
+    required this.price,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['item_id'] = Variable<String>(itemId);
+    map['pricing_tier'] = Variable<String>(pricingTier);
+    map['price'] = Variable<double>(price);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  ItemTierPricesLocalCompanion toCompanion(bool nullToAbsent) {
+    return ItemTierPricesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      itemId: Value(itemId),
+      pricingTier: Value(pricingTier),
+      price: Value(price),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory ItemTierPriceTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemTierPriceTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      pricingTier: serializer.fromJson<String>(json['pricingTier']),
+      price: serializer.fromJson<double>(json['price']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'itemId': serializer.toJson<String>(itemId),
+      'pricingTier': serializer.toJson<String>(pricingTier),
+      'price': serializer.toJson<double>(price),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  ItemTierPriceTableData copyWith({
+    String? id,
+    String? businessId,
+    String? itemId,
+    String? pricingTier,
+    double? price,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => ItemTierPriceTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    itemId: itemId ?? this.itemId,
+    pricingTier: pricingTier ?? this.pricingTier,
+    price: price ?? this.price,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  ItemTierPriceTableData copyWithCompanion(ItemTierPricesLocalCompanion data) {
+    return ItemTierPriceTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      pricingTier: data.pricingTier.present
+          ? data.pricingTier.value
+          : this.pricingTier,
+      price: data.price.present ? data.price.value : this.price,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemTierPriceTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('pricingTier: $pricingTier, ')
+          ..write('price: $price, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    itemId,
+    pricingTier,
+    price,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemTierPriceTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.itemId == this.itemId &&
+          other.pricingTier == this.pricingTier &&
+          other.price == this.price &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class ItemTierPricesLocalCompanion
+    extends UpdateCompanion<ItemTierPriceTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> itemId;
+  final Value<String> pricingTier;
+  final Value<double> price;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const ItemTierPricesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.pricingTier = const Value.absent(),
+    this.price = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemTierPricesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String itemId,
+    required String pricingTier,
+    required double price,
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       itemId = Value(itemId),
+       pricingTier = Value(pricingTier),
+       price = Value(price),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ItemTierPriceTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? itemId,
+    Expression<String>? pricingTier,
+    Expression<double>? price,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (itemId != null) 'item_id': itemId,
+      if (pricingTier != null) 'pricing_tier': pricingTier,
+      if (price != null) 'price': price,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemTierPricesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? itemId,
+    Value<String>? pricingTier,
+    Value<double>? price,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return ItemTierPricesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      itemId: itemId ?? this.itemId,
+      pricingTier: pricingTier ?? this.pricingTier,
+      price: price ?? this.price,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (pricingTier.present) {
+      map['pricing_tier'] = Variable<String>(pricingTier.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<double>(price.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemTierPricesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('itemId: $itemId, ')
+          ..write('pricingTier: $pricingTier, ')
+          ..write('price: $price, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $UnitDefinitionsLocalTable extends UnitDefinitionsLocal
     with TableInfo<$UnitDefinitionsLocalTable, UnitDefinitionTableData> {
   @override
@@ -24038,6 +27609,2517 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
   }
 }
 
+class $GatewayPaymentSessionsLocalTable extends GatewayPaymentSessionsLocal
+    with
+        TableInfo<
+          $GatewayPaymentSessionsLocalTable,
+          GatewayPaymentSessionsLocalData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GatewayPaymentSessionsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _intentIdMeta = const VerificationMeta(
+    'intentId',
+  );
+  @override
+  late final GeneratedColumn<String> intentId = GeneratedColumn<String>(
+    'intent_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _razorpayOrderIdMeta = const VerificationMeta(
+    'razorpayOrderId',
+  );
+  @override
+  late final GeneratedColumn<String> razorpayOrderId = GeneratedColumn<String>(
+    'razorpay_order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentIdMeta = const VerificationMeta(
+    'paymentId',
+  );
+  @override
+  late final GeneratedColumn<String> paymentId = GeneratedColumn<String>(
+    'payment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _signatureMeta = const VerificationMeta(
+    'signature',
+  );
+  @override
+  late final GeneratedColumn<String> signature = GeneratedColumn<String>(
+    'signature',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intentPayloadJsonMeta = const VerificationMeta(
+    'intentPayloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> intentPayloadJson =
+      GeneratedColumn<String>(
+        'intent_payload_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _verifyAttemptsMeta = const VerificationMeta(
+    'verifyAttempts',
+  );
+  @override
+  late final GeneratedColumn<int> verifyAttempts = GeneratedColumn<int>(
+    'verify_attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastRetryAtMeta = const VerificationMeta(
+    'lastRetryAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastRetryAt = GeneratedColumn<DateTime>(
+    'last_retry_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    intentId,
+    razorpayOrderId,
+    paymentId,
+    signature,
+    status,
+    intentPayloadJson,
+    verifyAttempts,
+    lastRetryAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'gateway_payment_sessions_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GatewayPaymentSessionsLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('intent_id')) {
+      context.handle(
+        _intentIdMeta,
+        intentId.isAcceptableOrUnknown(data['intent_id']!, _intentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_intentIdMeta);
+    }
+    if (data.containsKey('razorpay_order_id')) {
+      context.handle(
+        _razorpayOrderIdMeta,
+        razorpayOrderId.isAcceptableOrUnknown(
+          data['razorpay_order_id']!,
+          _razorpayOrderIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_razorpayOrderIdMeta);
+    }
+    if (data.containsKey('payment_id')) {
+      context.handle(
+        _paymentIdMeta,
+        paymentId.isAcceptableOrUnknown(data['payment_id']!, _paymentIdMeta),
+      );
+    }
+    if (data.containsKey('signature')) {
+      context.handle(
+        _signatureMeta,
+        signature.isAcceptableOrUnknown(data['signature']!, _signatureMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('intent_payload_json')) {
+      context.handle(
+        _intentPayloadJsonMeta,
+        intentPayloadJson.isAcceptableOrUnknown(
+          data['intent_payload_json']!,
+          _intentPayloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_intentPayloadJsonMeta);
+    }
+    if (data.containsKey('verify_attempts')) {
+      context.handle(
+        _verifyAttemptsMeta,
+        verifyAttempts.isAcceptableOrUnknown(
+          data['verify_attempts']!,
+          _verifyAttemptsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_retry_at')) {
+      context.handle(
+        _lastRetryAtMeta,
+        lastRetryAt.isAcceptableOrUnknown(
+          data['last_retry_at']!,
+          _lastRetryAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {intentId};
+  @override
+  GatewayPaymentSessionsLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GatewayPaymentSessionsLocalData(
+      intentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}intent_id'],
+      )!,
+      razorpayOrderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}razorpay_order_id'],
+      )!,
+      paymentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_id'],
+      ),
+      signature: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signature'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      intentPayloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}intent_payload_json'],
+      )!,
+      verifyAttempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}verify_attempts'],
+      )!,
+      lastRetryAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_retry_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $GatewayPaymentSessionsLocalTable createAlias(String alias) {
+    return $GatewayPaymentSessionsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class GatewayPaymentSessionsLocalData extends DataClass
+    implements Insertable<GatewayPaymentSessionsLocalData> {
+  final String intentId;
+  final String razorpayOrderId;
+  final String? paymentId;
+  final String? signature;
+  final String status;
+  final String intentPayloadJson;
+  final int verifyAttempts;
+  final DateTime? lastRetryAt;
+  final DateTime createdAt;
+  const GatewayPaymentSessionsLocalData({
+    required this.intentId,
+    required this.razorpayOrderId,
+    this.paymentId,
+    this.signature,
+    required this.status,
+    required this.intentPayloadJson,
+    required this.verifyAttempts,
+    this.lastRetryAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['intent_id'] = Variable<String>(intentId);
+    map['razorpay_order_id'] = Variable<String>(razorpayOrderId);
+    if (!nullToAbsent || paymentId != null) {
+      map['payment_id'] = Variable<String>(paymentId);
+    }
+    if (!nullToAbsent || signature != null) {
+      map['signature'] = Variable<String>(signature);
+    }
+    map['status'] = Variable<String>(status);
+    map['intent_payload_json'] = Variable<String>(intentPayloadJson);
+    map['verify_attempts'] = Variable<int>(verifyAttempts);
+    if (!nullToAbsent || lastRetryAt != null) {
+      map['last_retry_at'] = Variable<DateTime>(lastRetryAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  GatewayPaymentSessionsLocalCompanion toCompanion(bool nullToAbsent) {
+    return GatewayPaymentSessionsLocalCompanion(
+      intentId: Value(intentId),
+      razorpayOrderId: Value(razorpayOrderId),
+      paymentId: paymentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentId),
+      signature: signature == null && nullToAbsent
+          ? const Value.absent()
+          : Value(signature),
+      status: Value(status),
+      intentPayloadJson: Value(intentPayloadJson),
+      verifyAttempts: Value(verifyAttempts),
+      lastRetryAt: lastRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastRetryAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory GatewayPaymentSessionsLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GatewayPaymentSessionsLocalData(
+      intentId: serializer.fromJson<String>(json['intentId']),
+      razorpayOrderId: serializer.fromJson<String>(json['razorpayOrderId']),
+      paymentId: serializer.fromJson<String?>(json['paymentId']),
+      signature: serializer.fromJson<String?>(json['signature']),
+      status: serializer.fromJson<String>(json['status']),
+      intentPayloadJson: serializer.fromJson<String>(json['intentPayloadJson']),
+      verifyAttempts: serializer.fromJson<int>(json['verifyAttempts']),
+      lastRetryAt: serializer.fromJson<DateTime?>(json['lastRetryAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'intentId': serializer.toJson<String>(intentId),
+      'razorpayOrderId': serializer.toJson<String>(razorpayOrderId),
+      'paymentId': serializer.toJson<String?>(paymentId),
+      'signature': serializer.toJson<String?>(signature),
+      'status': serializer.toJson<String>(status),
+      'intentPayloadJson': serializer.toJson<String>(intentPayloadJson),
+      'verifyAttempts': serializer.toJson<int>(verifyAttempts),
+      'lastRetryAt': serializer.toJson<DateTime?>(lastRetryAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  GatewayPaymentSessionsLocalData copyWith({
+    String? intentId,
+    String? razorpayOrderId,
+    Value<String?> paymentId = const Value.absent(),
+    Value<String?> signature = const Value.absent(),
+    String? status,
+    String? intentPayloadJson,
+    int? verifyAttempts,
+    Value<DateTime?> lastRetryAt = const Value.absent(),
+    DateTime? createdAt,
+  }) => GatewayPaymentSessionsLocalData(
+    intentId: intentId ?? this.intentId,
+    razorpayOrderId: razorpayOrderId ?? this.razorpayOrderId,
+    paymentId: paymentId.present ? paymentId.value : this.paymentId,
+    signature: signature.present ? signature.value : this.signature,
+    status: status ?? this.status,
+    intentPayloadJson: intentPayloadJson ?? this.intentPayloadJson,
+    verifyAttempts: verifyAttempts ?? this.verifyAttempts,
+    lastRetryAt: lastRetryAt.present ? lastRetryAt.value : this.lastRetryAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  GatewayPaymentSessionsLocalData copyWithCompanion(
+    GatewayPaymentSessionsLocalCompanion data,
+  ) {
+    return GatewayPaymentSessionsLocalData(
+      intentId: data.intentId.present ? data.intentId.value : this.intentId,
+      razorpayOrderId: data.razorpayOrderId.present
+          ? data.razorpayOrderId.value
+          : this.razorpayOrderId,
+      paymentId: data.paymentId.present ? data.paymentId.value : this.paymentId,
+      signature: data.signature.present ? data.signature.value : this.signature,
+      status: data.status.present ? data.status.value : this.status,
+      intentPayloadJson: data.intentPayloadJson.present
+          ? data.intentPayloadJson.value
+          : this.intentPayloadJson,
+      verifyAttempts: data.verifyAttempts.present
+          ? data.verifyAttempts.value
+          : this.verifyAttempts,
+      lastRetryAt: data.lastRetryAt.present
+          ? data.lastRetryAt.value
+          : this.lastRetryAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GatewayPaymentSessionsLocalData(')
+          ..write('intentId: $intentId, ')
+          ..write('razorpayOrderId: $razorpayOrderId, ')
+          ..write('paymentId: $paymentId, ')
+          ..write('signature: $signature, ')
+          ..write('status: $status, ')
+          ..write('intentPayloadJson: $intentPayloadJson, ')
+          ..write('verifyAttempts: $verifyAttempts, ')
+          ..write('lastRetryAt: $lastRetryAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    intentId,
+    razorpayOrderId,
+    paymentId,
+    signature,
+    status,
+    intentPayloadJson,
+    verifyAttempts,
+    lastRetryAt,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GatewayPaymentSessionsLocalData &&
+          other.intentId == this.intentId &&
+          other.razorpayOrderId == this.razorpayOrderId &&
+          other.paymentId == this.paymentId &&
+          other.signature == this.signature &&
+          other.status == this.status &&
+          other.intentPayloadJson == this.intentPayloadJson &&
+          other.verifyAttempts == this.verifyAttempts &&
+          other.lastRetryAt == this.lastRetryAt &&
+          other.createdAt == this.createdAt);
+}
+
+class GatewayPaymentSessionsLocalCompanion
+    extends UpdateCompanion<GatewayPaymentSessionsLocalData> {
+  final Value<String> intentId;
+  final Value<String> razorpayOrderId;
+  final Value<String?> paymentId;
+  final Value<String?> signature;
+  final Value<String> status;
+  final Value<String> intentPayloadJson;
+  final Value<int> verifyAttempts;
+  final Value<DateTime?> lastRetryAt;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const GatewayPaymentSessionsLocalCompanion({
+    this.intentId = const Value.absent(),
+    this.razorpayOrderId = const Value.absent(),
+    this.paymentId = const Value.absent(),
+    this.signature = const Value.absent(),
+    this.status = const Value.absent(),
+    this.intentPayloadJson = const Value.absent(),
+    this.verifyAttempts = const Value.absent(),
+    this.lastRetryAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GatewayPaymentSessionsLocalCompanion.insert({
+    required String intentId,
+    required String razorpayOrderId,
+    this.paymentId = const Value.absent(),
+    this.signature = const Value.absent(),
+    required String status,
+    required String intentPayloadJson,
+    this.verifyAttempts = const Value.absent(),
+    this.lastRetryAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : intentId = Value(intentId),
+       razorpayOrderId = Value(razorpayOrderId),
+       status = Value(status),
+       intentPayloadJson = Value(intentPayloadJson);
+  static Insertable<GatewayPaymentSessionsLocalData> custom({
+    Expression<String>? intentId,
+    Expression<String>? razorpayOrderId,
+    Expression<String>? paymentId,
+    Expression<String>? signature,
+    Expression<String>? status,
+    Expression<String>? intentPayloadJson,
+    Expression<int>? verifyAttempts,
+    Expression<DateTime>? lastRetryAt,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (intentId != null) 'intent_id': intentId,
+      if (razorpayOrderId != null) 'razorpay_order_id': razorpayOrderId,
+      if (paymentId != null) 'payment_id': paymentId,
+      if (signature != null) 'signature': signature,
+      if (status != null) 'status': status,
+      if (intentPayloadJson != null) 'intent_payload_json': intentPayloadJson,
+      if (verifyAttempts != null) 'verify_attempts': verifyAttempts,
+      if (lastRetryAt != null) 'last_retry_at': lastRetryAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GatewayPaymentSessionsLocalCompanion copyWith({
+    Value<String>? intentId,
+    Value<String>? razorpayOrderId,
+    Value<String?>? paymentId,
+    Value<String?>? signature,
+    Value<String>? status,
+    Value<String>? intentPayloadJson,
+    Value<int>? verifyAttempts,
+    Value<DateTime?>? lastRetryAt,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return GatewayPaymentSessionsLocalCompanion(
+      intentId: intentId ?? this.intentId,
+      razorpayOrderId: razorpayOrderId ?? this.razorpayOrderId,
+      paymentId: paymentId ?? this.paymentId,
+      signature: signature ?? this.signature,
+      status: status ?? this.status,
+      intentPayloadJson: intentPayloadJson ?? this.intentPayloadJson,
+      verifyAttempts: verifyAttempts ?? this.verifyAttempts,
+      lastRetryAt: lastRetryAt ?? this.lastRetryAt,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (intentId.present) {
+      map['intent_id'] = Variable<String>(intentId.value);
+    }
+    if (razorpayOrderId.present) {
+      map['razorpay_order_id'] = Variable<String>(razorpayOrderId.value);
+    }
+    if (paymentId.present) {
+      map['payment_id'] = Variable<String>(paymentId.value);
+    }
+    if (signature.present) {
+      map['signature'] = Variable<String>(signature.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (intentPayloadJson.present) {
+      map['intent_payload_json'] = Variable<String>(intentPayloadJson.value);
+    }
+    if (verifyAttempts.present) {
+      map['verify_attempts'] = Variable<int>(verifyAttempts.value);
+    }
+    if (lastRetryAt.present) {
+      map['last_retry_at'] = Variable<DateTime>(lastRetryAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GatewayPaymentSessionsLocalCompanion(')
+          ..write('intentId: $intentId, ')
+          ..write('razorpayOrderId: $razorpayOrderId, ')
+          ..write('paymentId: $paymentId, ')
+          ..write('signature: $signature, ')
+          ..write('status: $status, ')
+          ..write('intentPayloadJson: $intentPayloadJson, ')
+          ..write('verifyAttempts: $verifyAttempts, ')
+          ..write('lastRetryAt: $lastRetryAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $NotificationsLocalTable extends NotificationsLocal
+    with TableInfo<$NotificationsLocalTable, NotificationTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NotificationsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _readMeta = const VerificationMeta('read');
+  @override
+  late final GeneratedColumn<bool> read = GeneratedColumn<bool>(
+    'read',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("read" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _actionRouteMeta = const VerificationMeta(
+    'actionRoute',
+  );
+  @override
+  late final GeneratedColumn<String> actionRoute = GeneratedColumn<String>(
+    'action_route',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _actionPayloadMeta = const VerificationMeta(
+    'actionPayload',
+  );
+  @override
+  late final GeneratedColumn<String> actionPayload = GeneratedColumn<String>(
+    'action_payload',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isLocalMeta = const VerificationMeta(
+    'isLocal',
+  );
+  @override
+  late final GeneratedColumn<bool> isLocal = GeneratedColumn<bool>(
+    'is_local',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_local" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _futureRemoteIdMeta = const VerificationMeta(
+    'futureRemoteId',
+  );
+  @override
+  late final GeneratedColumn<String> futureRemoteId = GeneratedColumn<String>(
+    'future_remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    title,
+    body,
+    type,
+    createdAt,
+    read,
+    actionRoute,
+    actionPayload,
+    isLocal,
+    futureRemoteId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'notifications_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NotificationTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('read')) {
+      context.handle(
+        _readMeta,
+        read.isAcceptableOrUnknown(data['read']!, _readMeta),
+      );
+    }
+    if (data.containsKey('action_route')) {
+      context.handle(
+        _actionRouteMeta,
+        actionRoute.isAcceptableOrUnknown(
+          data['action_route']!,
+          _actionRouteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('action_payload')) {
+      context.handle(
+        _actionPayloadMeta,
+        actionPayload.isAcceptableOrUnknown(
+          data['action_payload']!,
+          _actionPayloadMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_local')) {
+      context.handle(
+        _isLocalMeta,
+        isLocal.isAcceptableOrUnknown(data['is_local']!, _isLocalMeta),
+      );
+    }
+    if (data.containsKey('future_remote_id')) {
+      context.handle(
+        _futureRemoteIdMeta,
+        futureRemoteId.isAcceptableOrUnknown(
+          data['future_remote_id']!,
+          _futureRemoteIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NotificationTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NotificationTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      read: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}read'],
+      )!,
+      actionRoute: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action_route'],
+      ),
+      actionPayload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action_payload'],
+      ),
+      isLocal: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_local'],
+      )!,
+      futureRemoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}future_remote_id'],
+      ),
+    );
+  }
+
+  @override
+  $NotificationsLocalTable createAlias(String alias) {
+    return $NotificationsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class NotificationTableData extends DataClass
+    implements Insertable<NotificationTableData> {
+  final String id;
+  final String businessId;
+  final String title;
+  final String body;
+  final String type;
+  final DateTime createdAt;
+  final bool read;
+  final String? actionRoute;
+  final String? actionPayload;
+  final bool isLocal;
+  final String? futureRemoteId;
+  const NotificationTableData({
+    required this.id,
+    required this.businessId,
+    required this.title,
+    required this.body,
+    required this.type,
+    required this.createdAt,
+    required this.read,
+    this.actionRoute,
+    this.actionPayload,
+    required this.isLocal,
+    this.futureRemoteId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['title'] = Variable<String>(title);
+    map['body'] = Variable<String>(body);
+    map['type'] = Variable<String>(type);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['read'] = Variable<bool>(read);
+    if (!nullToAbsent || actionRoute != null) {
+      map['action_route'] = Variable<String>(actionRoute);
+    }
+    if (!nullToAbsent || actionPayload != null) {
+      map['action_payload'] = Variable<String>(actionPayload);
+    }
+    map['is_local'] = Variable<bool>(isLocal);
+    if (!nullToAbsent || futureRemoteId != null) {
+      map['future_remote_id'] = Variable<String>(futureRemoteId);
+    }
+    return map;
+  }
+
+  NotificationsLocalCompanion toCompanion(bool nullToAbsent) {
+    return NotificationsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      title: Value(title),
+      body: Value(body),
+      type: Value(type),
+      createdAt: Value(createdAt),
+      read: Value(read),
+      actionRoute: actionRoute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actionRoute),
+      actionPayload: actionPayload == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actionPayload),
+      isLocal: Value(isLocal),
+      futureRemoteId: futureRemoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(futureRemoteId),
+    );
+  }
+
+  factory NotificationTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NotificationTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      title: serializer.fromJson<String>(json['title']),
+      body: serializer.fromJson<String>(json['body']),
+      type: serializer.fromJson<String>(json['type']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      read: serializer.fromJson<bool>(json['read']),
+      actionRoute: serializer.fromJson<String?>(json['actionRoute']),
+      actionPayload: serializer.fromJson<String?>(json['actionPayload']),
+      isLocal: serializer.fromJson<bool>(json['isLocal']),
+      futureRemoteId: serializer.fromJson<String?>(json['futureRemoteId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'title': serializer.toJson<String>(title),
+      'body': serializer.toJson<String>(body),
+      'type': serializer.toJson<String>(type),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'read': serializer.toJson<bool>(read),
+      'actionRoute': serializer.toJson<String?>(actionRoute),
+      'actionPayload': serializer.toJson<String?>(actionPayload),
+      'isLocal': serializer.toJson<bool>(isLocal),
+      'futureRemoteId': serializer.toJson<String?>(futureRemoteId),
+    };
+  }
+
+  NotificationTableData copyWith({
+    String? id,
+    String? businessId,
+    String? title,
+    String? body,
+    String? type,
+    DateTime? createdAt,
+    bool? read,
+    Value<String?> actionRoute = const Value.absent(),
+    Value<String?> actionPayload = const Value.absent(),
+    bool? isLocal,
+    Value<String?> futureRemoteId = const Value.absent(),
+  }) => NotificationTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    title: title ?? this.title,
+    body: body ?? this.body,
+    type: type ?? this.type,
+    createdAt: createdAt ?? this.createdAt,
+    read: read ?? this.read,
+    actionRoute: actionRoute.present ? actionRoute.value : this.actionRoute,
+    actionPayload: actionPayload.present
+        ? actionPayload.value
+        : this.actionPayload,
+    isLocal: isLocal ?? this.isLocal,
+    futureRemoteId: futureRemoteId.present
+        ? futureRemoteId.value
+        : this.futureRemoteId,
+  );
+  NotificationTableData copyWithCompanion(NotificationsLocalCompanion data) {
+    return NotificationTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      title: data.title.present ? data.title.value : this.title,
+      body: data.body.present ? data.body.value : this.body,
+      type: data.type.present ? data.type.value : this.type,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      read: data.read.present ? data.read.value : this.read,
+      actionRoute: data.actionRoute.present
+          ? data.actionRoute.value
+          : this.actionRoute,
+      actionPayload: data.actionPayload.present
+          ? data.actionPayload.value
+          : this.actionPayload,
+      isLocal: data.isLocal.present ? data.isLocal.value : this.isLocal,
+      futureRemoteId: data.futureRemoteId.present
+          ? data.futureRemoteId.value
+          : this.futureRemoteId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('read: $read, ')
+          ..write('actionRoute: $actionRoute, ')
+          ..write('actionPayload: $actionPayload, ')
+          ..write('isLocal: $isLocal, ')
+          ..write('futureRemoteId: $futureRemoteId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    title,
+    body,
+    type,
+    createdAt,
+    read,
+    actionRoute,
+    actionPayload,
+    isLocal,
+    futureRemoteId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NotificationTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.title == this.title &&
+          other.body == this.body &&
+          other.type == this.type &&
+          other.createdAt == this.createdAt &&
+          other.read == this.read &&
+          other.actionRoute == this.actionRoute &&
+          other.actionPayload == this.actionPayload &&
+          other.isLocal == this.isLocal &&
+          other.futureRemoteId == this.futureRemoteId);
+}
+
+class NotificationsLocalCompanion
+    extends UpdateCompanion<NotificationTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> title;
+  final Value<String> body;
+  final Value<String> type;
+  final Value<DateTime> createdAt;
+  final Value<bool> read;
+  final Value<String?> actionRoute;
+  final Value<String?> actionPayload;
+  final Value<bool> isLocal;
+  final Value<String?> futureRemoteId;
+  final Value<int> rowid;
+  const NotificationsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.body = const Value.absent(),
+    this.type = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.read = const Value.absent(),
+    this.actionRoute = const Value.absent(),
+    this.actionPayload = const Value.absent(),
+    this.isLocal = const Value.absent(),
+    this.futureRemoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NotificationsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String title,
+    required String body,
+    required String type,
+    required DateTime createdAt,
+    this.read = const Value.absent(),
+    this.actionRoute = const Value.absent(),
+    this.actionPayload = const Value.absent(),
+    this.isLocal = const Value.absent(),
+    this.futureRemoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       title = Value(title),
+       body = Value(body),
+       type = Value(type),
+       createdAt = Value(createdAt);
+  static Insertable<NotificationTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? title,
+    Expression<String>? body,
+    Expression<String>? type,
+    Expression<DateTime>? createdAt,
+    Expression<bool>? read,
+    Expression<String>? actionRoute,
+    Expression<String>? actionPayload,
+    Expression<bool>? isLocal,
+    Expression<String>? futureRemoteId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (title != null) 'title': title,
+      if (body != null) 'body': body,
+      if (type != null) 'type': type,
+      if (createdAt != null) 'created_at': createdAt,
+      if (read != null) 'read': read,
+      if (actionRoute != null) 'action_route': actionRoute,
+      if (actionPayload != null) 'action_payload': actionPayload,
+      if (isLocal != null) 'is_local': isLocal,
+      if (futureRemoteId != null) 'future_remote_id': futureRemoteId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NotificationsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? title,
+    Value<String>? body,
+    Value<String>? type,
+    Value<DateTime>? createdAt,
+    Value<bool>? read,
+    Value<String?>? actionRoute,
+    Value<String?>? actionPayload,
+    Value<bool>? isLocal,
+    Value<String?>? futureRemoteId,
+    Value<int>? rowid,
+  }) {
+    return NotificationsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      type: type ?? this.type,
+      createdAt: createdAt ?? this.createdAt,
+      read: read ?? this.read,
+      actionRoute: actionRoute ?? this.actionRoute,
+      actionPayload: actionPayload ?? this.actionPayload,
+      isLocal: isLocal ?? this.isLocal,
+      futureRemoteId: futureRemoteId ?? this.futureRemoteId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (read.present) {
+      map['read'] = Variable<bool>(read.value);
+    }
+    if (actionRoute.present) {
+      map['action_route'] = Variable<String>(actionRoute.value);
+    }
+    if (actionPayload.present) {
+      map['action_payload'] = Variable<String>(actionPayload.value);
+    }
+    if (isLocal.present) {
+      map['is_local'] = Variable<bool>(isLocal.value);
+    }
+    if (futureRemoteId.present) {
+      map['future_remote_id'] = Variable<String>(futureRemoteId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('read: $read, ')
+          ..write('actionRoute: $actionRoute, ')
+          ..write('actionPayload: $actionPayload, ')
+          ..write('isLocal: $isLocal, ')
+          ..write('futureRemoteId: $futureRemoteId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TodosLocalTable extends TodosLocal
+    with TableInfo<$TodosLocalTable, TodoTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TodosLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('medium'),
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partyIdMeta = const VerificationMeta(
+    'partyId',
+  );
+  @override
+  late final GeneratedColumn<String> partyId = GeneratedColumn<String>(
+    'party_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dueDateMeta = const VerificationMeta(
+    'dueDate',
+  );
+  @override
+  late final GeneratedColumn<String> dueDate = GeneratedColumn<String>(
+    'due_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reminderAtMeta = const VerificationMeta(
+    'reminderAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> reminderAt = GeneratedColumn<DateTime>(
+    'reminder_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isCompletedMeta = const VerificationMeta(
+    'isCompleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
+    'is_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_completed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isPinnedMeta = const VerificationMeta(
+    'isPinned',
+  );
+  @override
+  late final GeneratedColumn<bool> isPinned = GeneratedColumn<bool>(
+    'is_pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_pinned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _linkedInvoiceIdMeta = const VerificationMeta(
+    'linkedInvoiceId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedInvoiceId = GeneratedColumn<String>(
+    'linked_invoice_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _linkedPurchaseIdMeta = const VerificationMeta(
+    'linkedPurchaseId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedPurchaseId = GeneratedColumn<String>(
+    'linked_purchase_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _linkedProductIdMeta = const VerificationMeta(
+    'linkedProductId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedProductId = GeneratedColumn<String>(
+    'linked_product_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _attachmentIdsJsonMeta = const VerificationMeta(
+    'attachmentIdsJson',
+  );
+  @override
+  late final GeneratedColumn<String> attachmentIdsJson =
+      GeneratedColumn<String>(
+        'attachment_ids_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    title,
+    description,
+    priority,
+    category,
+    partyId,
+    dueDate,
+    reminderAt,
+    isCompleted,
+    completedAt,
+    isPinned,
+    linkedInvoiceId,
+    linkedPurchaseId,
+    linkedProductId,
+    attachmentIdsJson,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'todos_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TodoTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    if (data.containsKey('party_id')) {
+      context.handle(
+        _partyIdMeta,
+        partyId.isAcceptableOrUnknown(data['party_id']!, _partyIdMeta),
+      );
+    }
+    if (data.containsKey('due_date')) {
+      context.handle(
+        _dueDateMeta,
+        dueDate.isAcceptableOrUnknown(data['due_date']!, _dueDateMeta),
+      );
+    }
+    if (data.containsKey('reminder_at')) {
+      context.handle(
+        _reminderAtMeta,
+        reminderAt.isAcceptableOrUnknown(data['reminder_at']!, _reminderAtMeta),
+      );
+    }
+    if (data.containsKey('is_completed')) {
+      context.handle(
+        _isCompletedMeta,
+        isCompleted.isAcceptableOrUnknown(
+          data['is_completed']!,
+          _isCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_pinned')) {
+      context.handle(
+        _isPinnedMeta,
+        isPinned.isAcceptableOrUnknown(data['is_pinned']!, _isPinnedMeta),
+      );
+    }
+    if (data.containsKey('linked_invoice_id')) {
+      context.handle(
+        _linkedInvoiceIdMeta,
+        linkedInvoiceId.isAcceptableOrUnknown(
+          data['linked_invoice_id']!,
+          _linkedInvoiceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('linked_purchase_id')) {
+      context.handle(
+        _linkedPurchaseIdMeta,
+        linkedPurchaseId.isAcceptableOrUnknown(
+          data['linked_purchase_id']!,
+          _linkedPurchaseIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('linked_product_id')) {
+      context.handle(
+        _linkedProductIdMeta,
+        linkedProductId.isAcceptableOrUnknown(
+          data['linked_product_id']!,
+          _linkedProductIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('attachment_ids_json')) {
+      context.handle(
+        _attachmentIdsJsonMeta,
+        attachmentIdsJson.isAcceptableOrUnknown(
+          data['attachment_ids_json']!,
+          _attachmentIdsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TodoTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TodoTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
+      partyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_id'],
+      ),
+      dueDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}due_date'],
+      ),
+      reminderAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}reminder_at'],
+      ),
+      isCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_completed'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      isPinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_pinned'],
+      )!,
+      linkedInvoiceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_invoice_id'],
+      ),
+      linkedPurchaseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_purchase_id'],
+      ),
+      linkedProductId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_product_id'],
+      ),
+      attachmentIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attachment_ids_json'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $TodosLocalTable createAlias(String alias) {
+    return $TodosLocalTable(attachedDatabase, alias);
+  }
+}
+
+class TodoTableData extends DataClass implements Insertable<TodoTableData> {
+  final String id;
+  final String businessId;
+  final String title;
+  final String? description;
+  final String priority;
+  final String? category;
+  final String? partyId;
+  final String? dueDate;
+  final DateTime? reminderAt;
+  final bool isCompleted;
+  final DateTime? completedAt;
+  final bool isPinned;
+  final String? linkedInvoiceId;
+  final String? linkedPurchaseId;
+  final String? linkedProductId;
+  final String attachmentIdsJson;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const TodoTableData({
+    required this.id,
+    required this.businessId,
+    required this.title,
+    this.description,
+    required this.priority,
+    this.category,
+    this.partyId,
+    this.dueDate,
+    this.reminderAt,
+    required this.isCompleted,
+    this.completedAt,
+    required this.isPinned,
+    this.linkedInvoiceId,
+    this.linkedPurchaseId,
+    this.linkedProductId,
+    required this.attachmentIdsJson,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['priority'] = Variable<String>(priority);
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
+    if (!nullToAbsent || partyId != null) {
+      map['party_id'] = Variable<String>(partyId);
+    }
+    if (!nullToAbsent || dueDate != null) {
+      map['due_date'] = Variable<String>(dueDate);
+    }
+    if (!nullToAbsent || reminderAt != null) {
+      map['reminder_at'] = Variable<DateTime>(reminderAt);
+    }
+    map['is_completed'] = Variable<bool>(isCompleted);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['is_pinned'] = Variable<bool>(isPinned);
+    if (!nullToAbsent || linkedInvoiceId != null) {
+      map['linked_invoice_id'] = Variable<String>(linkedInvoiceId);
+    }
+    if (!nullToAbsent || linkedPurchaseId != null) {
+      map['linked_purchase_id'] = Variable<String>(linkedPurchaseId);
+    }
+    if (!nullToAbsent || linkedProductId != null) {
+      map['linked_product_id'] = Variable<String>(linkedProductId);
+    }
+    map['attachment_ids_json'] = Variable<String>(attachmentIdsJson);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  TodosLocalCompanion toCompanion(bool nullToAbsent) {
+    return TodosLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      priority: Value(priority),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
+      partyId: partyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyId),
+      dueDate: dueDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDate),
+      reminderAt: reminderAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderAt),
+      isCompleted: Value(isCompleted),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      isPinned: Value(isPinned),
+      linkedInvoiceId: linkedInvoiceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedInvoiceId),
+      linkedPurchaseId: linkedPurchaseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedPurchaseId),
+      linkedProductId: linkedProductId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedProductId),
+      attachmentIdsJson: Value(attachmentIdsJson),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory TodoTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TodoTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      priority: serializer.fromJson<String>(json['priority']),
+      category: serializer.fromJson<String?>(json['category']),
+      partyId: serializer.fromJson<String?>(json['partyId']),
+      dueDate: serializer.fromJson<String?>(json['dueDate']),
+      reminderAt: serializer.fromJson<DateTime?>(json['reminderAt']),
+      isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      isPinned: serializer.fromJson<bool>(json['isPinned']),
+      linkedInvoiceId: serializer.fromJson<String?>(json['linkedInvoiceId']),
+      linkedPurchaseId: serializer.fromJson<String?>(json['linkedPurchaseId']),
+      linkedProductId: serializer.fromJson<String?>(json['linkedProductId']),
+      attachmentIdsJson: serializer.fromJson<String>(json['attachmentIdsJson']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'priority': serializer.toJson<String>(priority),
+      'category': serializer.toJson<String?>(category),
+      'partyId': serializer.toJson<String?>(partyId),
+      'dueDate': serializer.toJson<String?>(dueDate),
+      'reminderAt': serializer.toJson<DateTime?>(reminderAt),
+      'isCompleted': serializer.toJson<bool>(isCompleted),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'isPinned': serializer.toJson<bool>(isPinned),
+      'linkedInvoiceId': serializer.toJson<String?>(linkedInvoiceId),
+      'linkedPurchaseId': serializer.toJson<String?>(linkedPurchaseId),
+      'linkedProductId': serializer.toJson<String?>(linkedProductId),
+      'attachmentIdsJson': serializer.toJson<String>(attachmentIdsJson),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  TodoTableData copyWith({
+    String? id,
+    String? businessId,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    String? priority,
+    Value<String?> category = const Value.absent(),
+    Value<String?> partyId = const Value.absent(),
+    Value<String?> dueDate = const Value.absent(),
+    Value<DateTime?> reminderAt = const Value.absent(),
+    bool? isCompleted,
+    Value<DateTime?> completedAt = const Value.absent(),
+    bool? isPinned,
+    Value<String?> linkedInvoiceId = const Value.absent(),
+    Value<String?> linkedPurchaseId = const Value.absent(),
+    Value<String?> linkedProductId = const Value.absent(),
+    String? attachmentIdsJson,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => TodoTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    priority: priority ?? this.priority,
+    category: category.present ? category.value : this.category,
+    partyId: partyId.present ? partyId.value : this.partyId,
+    dueDate: dueDate.present ? dueDate.value : this.dueDate,
+    reminderAt: reminderAt.present ? reminderAt.value : this.reminderAt,
+    isCompleted: isCompleted ?? this.isCompleted,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    isPinned: isPinned ?? this.isPinned,
+    linkedInvoiceId: linkedInvoiceId.present
+        ? linkedInvoiceId.value
+        : this.linkedInvoiceId,
+    linkedPurchaseId: linkedPurchaseId.present
+        ? linkedPurchaseId.value
+        : this.linkedPurchaseId,
+    linkedProductId: linkedProductId.present
+        ? linkedProductId.value
+        : this.linkedProductId,
+    attachmentIdsJson: attachmentIdsJson ?? this.attachmentIdsJson,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  TodoTableData copyWithCompanion(TodosLocalCompanion data) {
+    return TodoTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      category: data.category.present ? data.category.value : this.category,
+      partyId: data.partyId.present ? data.partyId.value : this.partyId,
+      dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
+      reminderAt: data.reminderAt.present
+          ? data.reminderAt.value
+          : this.reminderAt,
+      isCompleted: data.isCompleted.present
+          ? data.isCompleted.value
+          : this.isCompleted,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      isPinned: data.isPinned.present ? data.isPinned.value : this.isPinned,
+      linkedInvoiceId: data.linkedInvoiceId.present
+          ? data.linkedInvoiceId.value
+          : this.linkedInvoiceId,
+      linkedPurchaseId: data.linkedPurchaseId.present
+          ? data.linkedPurchaseId.value
+          : this.linkedPurchaseId,
+      linkedProductId: data.linkedProductId.present
+          ? data.linkedProductId.value
+          : this.linkedProductId,
+      attachmentIdsJson: data.attachmentIdsJson.present
+          ? data.attachmentIdsJson.value
+          : this.attachmentIdsJson,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TodoTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('priority: $priority, ')
+          ..write('category: $category, ')
+          ..write('partyId: $partyId, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('reminderAt: $reminderAt, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('isPinned: $isPinned, ')
+          ..write('linkedInvoiceId: $linkedInvoiceId, ')
+          ..write('linkedPurchaseId: $linkedPurchaseId, ')
+          ..write('linkedProductId: $linkedProductId, ')
+          ..write('attachmentIdsJson: $attachmentIdsJson, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    title,
+    description,
+    priority,
+    category,
+    partyId,
+    dueDate,
+    reminderAt,
+    isCompleted,
+    completedAt,
+    isPinned,
+    linkedInvoiceId,
+    linkedPurchaseId,
+    linkedProductId,
+    attachmentIdsJson,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TodoTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.priority == this.priority &&
+          other.category == this.category &&
+          other.partyId == this.partyId &&
+          other.dueDate == this.dueDate &&
+          other.reminderAt == this.reminderAt &&
+          other.isCompleted == this.isCompleted &&
+          other.completedAt == this.completedAt &&
+          other.isPinned == this.isPinned &&
+          other.linkedInvoiceId == this.linkedInvoiceId &&
+          other.linkedPurchaseId == this.linkedPurchaseId &&
+          other.linkedProductId == this.linkedProductId &&
+          other.attachmentIdsJson == this.attachmentIdsJson &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class TodosLocalCompanion extends UpdateCompanion<TodoTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<String> priority;
+  final Value<String?> category;
+  final Value<String?> partyId;
+  final Value<String?> dueDate;
+  final Value<DateTime?> reminderAt;
+  final Value<bool> isCompleted;
+  final Value<DateTime?> completedAt;
+  final Value<bool> isPinned;
+  final Value<String?> linkedInvoiceId;
+  final Value<String?> linkedPurchaseId;
+  final Value<String?> linkedProductId;
+  final Value<String> attachmentIdsJson;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const TodosLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.category = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.reminderAt = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.isPinned = const Value.absent(),
+    this.linkedInvoiceId = const Value.absent(),
+    this.linkedPurchaseId = const Value.absent(),
+    this.linkedProductId = const Value.absent(),
+    this.attachmentIdsJson = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TodosLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String title,
+    this.description = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.category = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.reminderAt = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.isPinned = const Value.absent(),
+    this.linkedInvoiceId = const Value.absent(),
+    this.linkedPurchaseId = const Value.absent(),
+    this.linkedProductId = const Value.absent(),
+    this.attachmentIdsJson = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       title = Value(title),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TodoTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? priority,
+    Expression<String>? category,
+    Expression<String>? partyId,
+    Expression<String>? dueDate,
+    Expression<DateTime>? reminderAt,
+    Expression<bool>? isCompleted,
+    Expression<DateTime>? completedAt,
+    Expression<bool>? isPinned,
+    Expression<String>? linkedInvoiceId,
+    Expression<String>? linkedPurchaseId,
+    Expression<String>? linkedProductId,
+    Expression<String>? attachmentIdsJson,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (priority != null) 'priority': priority,
+      if (category != null) 'category': category,
+      if (partyId != null) 'party_id': partyId,
+      if (dueDate != null) 'due_date': dueDate,
+      if (reminderAt != null) 'reminder_at': reminderAt,
+      if (isCompleted != null) 'is_completed': isCompleted,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (isPinned != null) 'is_pinned': isPinned,
+      if (linkedInvoiceId != null) 'linked_invoice_id': linkedInvoiceId,
+      if (linkedPurchaseId != null) 'linked_purchase_id': linkedPurchaseId,
+      if (linkedProductId != null) 'linked_product_id': linkedProductId,
+      if (attachmentIdsJson != null) 'attachment_ids_json': attachmentIdsJson,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TodosLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<String>? priority,
+    Value<String?>? category,
+    Value<String?>? partyId,
+    Value<String?>? dueDate,
+    Value<DateTime?>? reminderAt,
+    Value<bool>? isCompleted,
+    Value<DateTime?>? completedAt,
+    Value<bool>? isPinned,
+    Value<String?>? linkedInvoiceId,
+    Value<String?>? linkedPurchaseId,
+    Value<String?>? linkedProductId,
+    Value<String>? attachmentIdsJson,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return TodosLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      priority: priority ?? this.priority,
+      category: category ?? this.category,
+      partyId: partyId ?? this.partyId,
+      dueDate: dueDate ?? this.dueDate,
+      reminderAt: reminderAt ?? this.reminderAt,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
+      isPinned: isPinned ?? this.isPinned,
+      linkedInvoiceId: linkedInvoiceId ?? this.linkedInvoiceId,
+      linkedPurchaseId: linkedPurchaseId ?? this.linkedPurchaseId,
+      linkedProductId: linkedProductId ?? this.linkedProductId,
+      attachmentIdsJson: attachmentIdsJson ?? this.attachmentIdsJson,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (partyId.present) {
+      map['party_id'] = Variable<String>(partyId.value);
+    }
+    if (dueDate.present) {
+      map['due_date'] = Variable<String>(dueDate.value);
+    }
+    if (reminderAt.present) {
+      map['reminder_at'] = Variable<DateTime>(reminderAt.value);
+    }
+    if (isCompleted.present) {
+      map['is_completed'] = Variable<bool>(isCompleted.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (isPinned.present) {
+      map['is_pinned'] = Variable<bool>(isPinned.value);
+    }
+    if (linkedInvoiceId.present) {
+      map['linked_invoice_id'] = Variable<String>(linkedInvoiceId.value);
+    }
+    if (linkedPurchaseId.present) {
+      map['linked_purchase_id'] = Variable<String>(linkedPurchaseId.value);
+    }
+    if (linkedProductId.present) {
+      map['linked_product_id'] = Variable<String>(linkedProductId.value);
+    }
+    if (attachmentIdsJson.present) {
+      map['attachment_ids_json'] = Variable<String>(attachmentIdsJson.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TodosLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('priority: $priority, ')
+          ..write('category: $category, ')
+          ..write('partyId: $partyId, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('reminderAt: $reminderAt, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('isPinned: $isPinned, ')
+          ..write('linkedInvoiceId: $linkedInvoiceId, ')
+          ..write('linkedPurchaseId: $linkedPurchaseId, ')
+          ..write('linkedProductId: $linkedProductId, ')
+          ..write('attachmentIdsJson: $attachmentIdsJson, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -24057,6 +30139,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BrandsLocalTable brandsLocal = $BrandsLocalTable(this);
   late final $PartiesLocalTable partiesLocal = $PartiesLocalTable(this);
   late final $ItemsLocalTable itemsLocal = $ItemsLocalTable(this);
+  late final $ItemAlternativesLocalTable itemAlternativesLocal =
+      $ItemAlternativesLocalTable(this);
+  late final $ItemSuppliersLocalTable itemSuppliersLocal =
+      $ItemSuppliersLocalTable(this);
+  late final $ItemBomMaterialsLocalTable itemBomMaterialsLocal =
+      $ItemBomMaterialsLocalTable(this);
+  late final $ItemBomCostsLocalTable itemBomCostsLocal =
+      $ItemBomCostsLocalTable(this);
+  late final $ItemTierPricesLocalTable itemTierPricesLocal =
+      $ItemTierPricesLocalTable(this);
   late final $UnitDefinitionsLocalTable unitDefinitionsLocal =
       $UnitDefinitionsLocalTable(this);
   late final $TaxRatesLocalTable taxRatesLocal = $TaxRatesLocalTable(this);
@@ -24081,6 +30173,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExpenseCategoriesLocalTable expenseCategoriesLocal =
       $ExpenseCategoriesLocalTable(this);
   late final $ExpensesLocalTable expensesLocal = $ExpensesLocalTable(this);
+  late final $GatewayPaymentSessionsLocalTable gatewayPaymentSessionsLocal =
+      $GatewayPaymentSessionsLocalTable(this);
+  late final $NotificationsLocalTable notificationsLocal =
+      $NotificationsLocalTable(this);
+  late final $TodosLocalTable todosLocal = $TodosLocalTable(this);
   late final Index idxSyncQueueStatus = Index(
     'idx_sync_queue_status',
     'CREATE INDEX idx_sync_queue_status ON sync_queue (status)',
@@ -24135,6 +30232,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     brandsLocal,
     partiesLocal,
     itemsLocal,
+    itemAlternativesLocal,
+    itemSuppliersLocal,
+    itemBomMaterialsLocal,
+    itemBomCostsLocal,
+    itemTierPricesLocal,
     unitDefinitionsLocal,
     taxRatesLocal,
     godownsLocal,
@@ -24148,6 +30250,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stockLevelsLocal,
     expenseCategoriesLocal,
     expensesLocal,
+    gatewayPaymentSessionsLocal,
+    notificationsLocal,
+    todosLocal,
     idxSyncQueueStatus,
     idxSyncQueueBusinessId,
     idxSyncQueueStatusBusinessId,
@@ -29761,6 +35866,1779 @@ typedef $$ItemsLocalTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $ItemsLocalTable, ItemTableData>,
       ),
       ItemTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$ItemAlternativesLocalTableCreateCompanionBuilder =
+    ItemAlternativesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String itemId,
+      required String alternativeItemId,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$ItemAlternativesLocalTableUpdateCompanionBuilder =
+    ItemAlternativesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> itemId,
+      Value<String> alternativeItemId,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$ItemAlternativesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemAlternativesLocalTable> {
+  $$ItemAlternativesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get alternativeItemId => $composableBuilder(
+    column: $table.alternativeItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ItemAlternativesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemAlternativesLocalTable> {
+  $$ItemAlternativesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get alternativeItemId => $composableBuilder(
+    column: $table.alternativeItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ItemAlternativesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemAlternativesLocalTable> {
+  $$ItemAlternativesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get alternativeItemId => $composableBuilder(
+    column: $table.alternativeItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$ItemAlternativesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemAlternativesLocalTable,
+          ItemAlternativeTableData,
+          $$ItemAlternativesLocalTableFilterComposer,
+          $$ItemAlternativesLocalTableOrderingComposer,
+          $$ItemAlternativesLocalTableAnnotationComposer,
+          $$ItemAlternativesLocalTableCreateCompanionBuilder,
+          $$ItemAlternativesLocalTableUpdateCompanionBuilder,
+          (
+            ItemAlternativeTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ItemAlternativesLocalTable,
+              ItemAlternativeTableData
+            >,
+          ),
+          ItemAlternativeTableData,
+          PrefetchHooks Function()
+        > {
+  $$ItemAlternativesLocalTableTableManager(
+    _$AppDatabase db,
+    $ItemAlternativesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemAlternativesLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ItemAlternativesLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ItemAlternativesLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> alternativeItemId = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemAlternativesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                alternativeItemId: alternativeItemId,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String itemId,
+                required String alternativeItemId,
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemAlternativesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                alternativeItemId: alternativeItemId,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ItemAlternativesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemAlternativesLocalTable,
+      ItemAlternativeTableData,
+      $$ItemAlternativesLocalTableFilterComposer,
+      $$ItemAlternativesLocalTableOrderingComposer,
+      $$ItemAlternativesLocalTableAnnotationComposer,
+      $$ItemAlternativesLocalTableCreateCompanionBuilder,
+      $$ItemAlternativesLocalTableUpdateCompanionBuilder,
+      (
+        ItemAlternativeTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ItemAlternativesLocalTable,
+          ItemAlternativeTableData
+        >,
+      ),
+      ItemAlternativeTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$ItemSuppliersLocalTableCreateCompanionBuilder =
+    ItemSuppliersLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String itemId,
+      required String partyId,
+      Value<bool> isDefault,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$ItemSuppliersLocalTableUpdateCompanionBuilder =
+    ItemSuppliersLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> itemId,
+      Value<String> partyId,
+      Value<bool> isDefault,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$ItemSuppliersLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemSuppliersLocalTable> {
+  $$ItemSuppliersLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ItemSuppliersLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemSuppliersLocalTable> {
+  $$ItemSuppliersLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ItemSuppliersLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemSuppliersLocalTable> {
+  $$ItemSuppliersLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get partyId =>
+      $composableBuilder(column: $table.partyId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$ItemSuppliersLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemSuppliersLocalTable,
+          ItemSupplierTableData,
+          $$ItemSuppliersLocalTableFilterComposer,
+          $$ItemSuppliersLocalTableOrderingComposer,
+          $$ItemSuppliersLocalTableAnnotationComposer,
+          $$ItemSuppliersLocalTableCreateCompanionBuilder,
+          $$ItemSuppliersLocalTableUpdateCompanionBuilder,
+          (
+            ItemSupplierTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ItemSuppliersLocalTable,
+              ItemSupplierTableData
+            >,
+          ),
+          ItemSupplierTableData,
+          PrefetchHooks Function()
+        > {
+  $$ItemSuppliersLocalTableTableManager(
+    _$AppDatabase db,
+    $ItemSuppliersLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemSuppliersLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemSuppliersLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemSuppliersLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> partyId = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemSuppliersLocalCompanion(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                partyId: partyId,
+                isDefault: isDefault,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String itemId,
+                required String partyId,
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemSuppliersLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                partyId: partyId,
+                isDefault: isDefault,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ItemSuppliersLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemSuppliersLocalTable,
+      ItemSupplierTableData,
+      $$ItemSuppliersLocalTableFilterComposer,
+      $$ItemSuppliersLocalTableOrderingComposer,
+      $$ItemSuppliersLocalTableAnnotationComposer,
+      $$ItemSuppliersLocalTableCreateCompanionBuilder,
+      $$ItemSuppliersLocalTableUpdateCompanionBuilder,
+      (
+        ItemSupplierTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ItemSuppliersLocalTable,
+          ItemSupplierTableData
+        >,
+      ),
+      ItemSupplierTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$ItemBomMaterialsLocalTableCreateCompanionBuilder =
+    ItemBomMaterialsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String itemId,
+      required String rawItemId,
+      required double qty,
+      required String unitId,
+      Value<double> purchasePrice,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$ItemBomMaterialsLocalTableUpdateCompanionBuilder =
+    ItemBomMaterialsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> itemId,
+      Value<String> rawItemId,
+      Value<double> qty,
+      Value<String> unitId,
+      Value<double> purchasePrice,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$ItemBomMaterialsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemBomMaterialsLocalTable> {
+  $$ItemBomMaterialsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rawItemId => $composableBuilder(
+    column: $table.rawItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get qty => $composableBuilder(
+    column: $table.qty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unitId => $composableBuilder(
+    column: $table.unitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ItemBomMaterialsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemBomMaterialsLocalTable> {
+  $$ItemBomMaterialsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rawItemId => $composableBuilder(
+    column: $table.rawItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get qty => $composableBuilder(
+    column: $table.qty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unitId => $composableBuilder(
+    column: $table.unitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ItemBomMaterialsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemBomMaterialsLocalTable> {
+  $$ItemBomMaterialsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get rawItemId =>
+      $composableBuilder(column: $table.rawItemId, builder: (column) => column);
+
+  GeneratedColumn<double> get qty =>
+      $composableBuilder(column: $table.qty, builder: (column) => column);
+
+  GeneratedColumn<String> get unitId =>
+      $composableBuilder(column: $table.unitId, builder: (column) => column);
+
+  GeneratedColumn<double> get purchasePrice => $composableBuilder(
+    column: $table.purchasePrice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$ItemBomMaterialsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemBomMaterialsLocalTable,
+          ItemBomMaterialTableData,
+          $$ItemBomMaterialsLocalTableFilterComposer,
+          $$ItemBomMaterialsLocalTableOrderingComposer,
+          $$ItemBomMaterialsLocalTableAnnotationComposer,
+          $$ItemBomMaterialsLocalTableCreateCompanionBuilder,
+          $$ItemBomMaterialsLocalTableUpdateCompanionBuilder,
+          (
+            ItemBomMaterialTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ItemBomMaterialsLocalTable,
+              ItemBomMaterialTableData
+            >,
+          ),
+          ItemBomMaterialTableData,
+          PrefetchHooks Function()
+        > {
+  $$ItemBomMaterialsLocalTableTableManager(
+    _$AppDatabase db,
+    $ItemBomMaterialsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemBomMaterialsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ItemBomMaterialsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ItemBomMaterialsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> rawItemId = const Value.absent(),
+                Value<double> qty = const Value.absent(),
+                Value<String> unitId = const Value.absent(),
+                Value<double> purchasePrice = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemBomMaterialsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                rawItemId: rawItemId,
+                qty: qty,
+                unitId: unitId,
+                purchasePrice: purchasePrice,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String itemId,
+                required String rawItemId,
+                required double qty,
+                required String unitId,
+                Value<double> purchasePrice = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemBomMaterialsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                rawItemId: rawItemId,
+                qty: qty,
+                unitId: unitId,
+                purchasePrice: purchasePrice,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ItemBomMaterialsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemBomMaterialsLocalTable,
+      ItemBomMaterialTableData,
+      $$ItemBomMaterialsLocalTableFilterComposer,
+      $$ItemBomMaterialsLocalTableOrderingComposer,
+      $$ItemBomMaterialsLocalTableAnnotationComposer,
+      $$ItemBomMaterialsLocalTableCreateCompanionBuilder,
+      $$ItemBomMaterialsLocalTableUpdateCompanionBuilder,
+      (
+        ItemBomMaterialTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ItemBomMaterialsLocalTable,
+          ItemBomMaterialTableData
+        >,
+      ),
+      ItemBomMaterialTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$ItemBomCostsLocalTableCreateCompanionBuilder =
+    ItemBomCostsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String itemId,
+      required String description,
+      Value<double> amount,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$ItemBomCostsLocalTableUpdateCompanionBuilder =
+    ItemBomCostsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> itemId,
+      Value<String> description,
+      Value<double> amount,
+      Value<int> sortOrder,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$ItemBomCostsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemBomCostsLocalTable> {
+  $$ItemBomCostsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ItemBomCostsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemBomCostsLocalTable> {
+  $$ItemBomCostsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ItemBomCostsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemBomCostsLocalTable> {
+  $$ItemBomCostsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$ItemBomCostsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemBomCostsLocalTable,
+          ItemBomCostTableData,
+          $$ItemBomCostsLocalTableFilterComposer,
+          $$ItemBomCostsLocalTableOrderingComposer,
+          $$ItemBomCostsLocalTableAnnotationComposer,
+          $$ItemBomCostsLocalTableCreateCompanionBuilder,
+          $$ItemBomCostsLocalTableUpdateCompanionBuilder,
+          (
+            ItemBomCostTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ItemBomCostsLocalTable,
+              ItemBomCostTableData
+            >,
+          ),
+          ItemBomCostTableData,
+          PrefetchHooks Function()
+        > {
+  $$ItemBomCostsLocalTableTableManager(
+    _$AppDatabase db,
+    $ItemBomCostsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemBomCostsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemBomCostsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemBomCostsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemBomCostsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                description: description,
+                amount: amount,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String itemId,
+                required String description,
+                Value<double> amount = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemBomCostsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                description: description,
+                amount: amount,
+                sortOrder: sortOrder,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ItemBomCostsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemBomCostsLocalTable,
+      ItemBomCostTableData,
+      $$ItemBomCostsLocalTableFilterComposer,
+      $$ItemBomCostsLocalTableOrderingComposer,
+      $$ItemBomCostsLocalTableAnnotationComposer,
+      $$ItemBomCostsLocalTableCreateCompanionBuilder,
+      $$ItemBomCostsLocalTableUpdateCompanionBuilder,
+      (
+        ItemBomCostTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ItemBomCostsLocalTable,
+          ItemBomCostTableData
+        >,
+      ),
+      ItemBomCostTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$ItemTierPricesLocalTableCreateCompanionBuilder =
+    ItemTierPricesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String itemId,
+      required String pricingTier,
+      required double price,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$ItemTierPricesLocalTableUpdateCompanionBuilder =
+    ItemTierPricesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> itemId,
+      Value<String> pricingTier,
+      Value<double> price,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$ItemTierPricesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemTierPricesLocalTable> {
+  $$ItemTierPricesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pricingTier => $composableBuilder(
+    column: $table.pricingTier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ItemTierPricesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemTierPricesLocalTable> {
+  $$ItemTierPricesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pricingTier => $composableBuilder(
+    column: $table.pricingTier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ItemTierPricesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemTierPricesLocalTable> {
+  $$ItemTierPricesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get pricingTier => $composableBuilder(
+    column: $table.pricingTier,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$ItemTierPricesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemTierPricesLocalTable,
+          ItemTierPriceTableData,
+          $$ItemTierPricesLocalTableFilterComposer,
+          $$ItemTierPricesLocalTableOrderingComposer,
+          $$ItemTierPricesLocalTableAnnotationComposer,
+          $$ItemTierPricesLocalTableCreateCompanionBuilder,
+          $$ItemTierPricesLocalTableUpdateCompanionBuilder,
+          (
+            ItemTierPriceTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ItemTierPricesLocalTable,
+              ItemTierPriceTableData
+            >,
+          ),
+          ItemTierPriceTableData,
+          PrefetchHooks Function()
+        > {
+  $$ItemTierPricesLocalTableTableManager(
+    _$AppDatabase db,
+    $ItemTierPricesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemTierPricesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemTierPricesLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ItemTierPricesLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> pricingTier = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemTierPricesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                pricingTier: pricingTier,
+                price: price,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String itemId,
+                required String pricingTier,
+                required double price,
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemTierPricesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                itemId: itemId,
+                pricingTier: pricingTier,
+                price: price,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ItemTierPricesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemTierPricesLocalTable,
+      ItemTierPriceTableData,
+      $$ItemTierPricesLocalTableFilterComposer,
+      $$ItemTierPricesLocalTableOrderingComposer,
+      $$ItemTierPricesLocalTableAnnotationComposer,
+      $$ItemTierPricesLocalTableCreateCompanionBuilder,
+      $$ItemTierPricesLocalTableUpdateCompanionBuilder,
+      (
+        ItemTierPriceTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ItemTierPricesLocalTable,
+          ItemTierPriceTableData
+        >,
+      ),
+      ItemTierPriceTableData,
       PrefetchHooks Function()
     >;
 typedef $$UnitDefinitionsLocalTableCreateCompanionBuilder =
@@ -35574,6 +43452,1187 @@ typedef $$ExpensesLocalTableProcessedTableManager =
       ExpenseTableData,
       PrefetchHooks Function()
     >;
+typedef $$GatewayPaymentSessionsLocalTableCreateCompanionBuilder =
+    GatewayPaymentSessionsLocalCompanion Function({
+      required String intentId,
+      required String razorpayOrderId,
+      Value<String?> paymentId,
+      Value<String?> signature,
+      required String status,
+      required String intentPayloadJson,
+      Value<int> verifyAttempts,
+      Value<DateTime?> lastRetryAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$GatewayPaymentSessionsLocalTableUpdateCompanionBuilder =
+    GatewayPaymentSessionsLocalCompanion Function({
+      Value<String> intentId,
+      Value<String> razorpayOrderId,
+      Value<String?> paymentId,
+      Value<String?> signature,
+      Value<String> status,
+      Value<String> intentPayloadJson,
+      Value<int> verifyAttempts,
+      Value<DateTime?> lastRetryAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$GatewayPaymentSessionsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $GatewayPaymentSessionsLocalTable> {
+  $$GatewayPaymentSessionsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get intentId => $composableBuilder(
+    column: $table.intentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get razorpayOrderId => $composableBuilder(
+    column: $table.razorpayOrderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentId => $composableBuilder(
+    column: $table.paymentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signature => $composableBuilder(
+    column: $table.signature,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get intentPayloadJson => $composableBuilder(
+    column: $table.intentPayloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get verifyAttempts => $composableBuilder(
+    column: $table.verifyAttempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GatewayPaymentSessionsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $GatewayPaymentSessionsLocalTable> {
+  $$GatewayPaymentSessionsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get intentId => $composableBuilder(
+    column: $table.intentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get razorpayOrderId => $composableBuilder(
+    column: $table.razorpayOrderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentId => $composableBuilder(
+    column: $table.paymentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signature => $composableBuilder(
+    column: $table.signature,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get intentPayloadJson => $composableBuilder(
+    column: $table.intentPayloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get verifyAttempts => $composableBuilder(
+    column: $table.verifyAttempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GatewayPaymentSessionsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GatewayPaymentSessionsLocalTable> {
+  $$GatewayPaymentSessionsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get intentId =>
+      $composableBuilder(column: $table.intentId, builder: (column) => column);
+
+  GeneratedColumn<String> get razorpayOrderId => $composableBuilder(
+    column: $table.razorpayOrderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentId =>
+      $composableBuilder(column: $table.paymentId, builder: (column) => column);
+
+  GeneratedColumn<String> get signature =>
+      $composableBuilder(column: $table.signature, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get intentPayloadJson => $composableBuilder(
+    column: $table.intentPayloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get verifyAttempts => $composableBuilder(
+    column: $table.verifyAttempts,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$GatewayPaymentSessionsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GatewayPaymentSessionsLocalTable,
+          GatewayPaymentSessionsLocalData,
+          $$GatewayPaymentSessionsLocalTableFilterComposer,
+          $$GatewayPaymentSessionsLocalTableOrderingComposer,
+          $$GatewayPaymentSessionsLocalTableAnnotationComposer,
+          $$GatewayPaymentSessionsLocalTableCreateCompanionBuilder,
+          $$GatewayPaymentSessionsLocalTableUpdateCompanionBuilder,
+          (
+            GatewayPaymentSessionsLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $GatewayPaymentSessionsLocalTable,
+              GatewayPaymentSessionsLocalData
+            >,
+          ),
+          GatewayPaymentSessionsLocalData,
+          PrefetchHooks Function()
+        > {
+  $$GatewayPaymentSessionsLocalTableTableManager(
+    _$AppDatabase db,
+    $GatewayPaymentSessionsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GatewayPaymentSessionsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$GatewayPaymentSessionsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$GatewayPaymentSessionsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> intentId = const Value.absent(),
+                Value<String> razorpayOrderId = const Value.absent(),
+                Value<String?> paymentId = const Value.absent(),
+                Value<String?> signature = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> intentPayloadJson = const Value.absent(),
+                Value<int> verifyAttempts = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GatewayPaymentSessionsLocalCompanion(
+                intentId: intentId,
+                razorpayOrderId: razorpayOrderId,
+                paymentId: paymentId,
+                signature: signature,
+                status: status,
+                intentPayloadJson: intentPayloadJson,
+                verifyAttempts: verifyAttempts,
+                lastRetryAt: lastRetryAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String intentId,
+                required String razorpayOrderId,
+                Value<String?> paymentId = const Value.absent(),
+                Value<String?> signature = const Value.absent(),
+                required String status,
+                required String intentPayloadJson,
+                Value<int> verifyAttempts = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GatewayPaymentSessionsLocalCompanion.insert(
+                intentId: intentId,
+                razorpayOrderId: razorpayOrderId,
+                paymentId: paymentId,
+                signature: signature,
+                status: status,
+                intentPayloadJson: intentPayloadJson,
+                verifyAttempts: verifyAttempts,
+                lastRetryAt: lastRetryAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GatewayPaymentSessionsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GatewayPaymentSessionsLocalTable,
+      GatewayPaymentSessionsLocalData,
+      $$GatewayPaymentSessionsLocalTableFilterComposer,
+      $$GatewayPaymentSessionsLocalTableOrderingComposer,
+      $$GatewayPaymentSessionsLocalTableAnnotationComposer,
+      $$GatewayPaymentSessionsLocalTableCreateCompanionBuilder,
+      $$GatewayPaymentSessionsLocalTableUpdateCompanionBuilder,
+      (
+        GatewayPaymentSessionsLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $GatewayPaymentSessionsLocalTable,
+          GatewayPaymentSessionsLocalData
+        >,
+      ),
+      GatewayPaymentSessionsLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$NotificationsLocalTableCreateCompanionBuilder =
+    NotificationsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String title,
+      required String body,
+      required String type,
+      required DateTime createdAt,
+      Value<bool> read,
+      Value<String?> actionRoute,
+      Value<String?> actionPayload,
+      Value<bool> isLocal,
+      Value<String?> futureRemoteId,
+      Value<int> rowid,
+    });
+typedef $$NotificationsLocalTableUpdateCompanionBuilder =
+    NotificationsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> title,
+      Value<String> body,
+      Value<String> type,
+      Value<DateTime> createdAt,
+      Value<bool> read,
+      Value<String?> actionRoute,
+      Value<String?> actionPayload,
+      Value<bool> isLocal,
+      Value<String?> futureRemoteId,
+      Value<int> rowid,
+    });
+
+class $$NotificationsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $NotificationsLocalTable> {
+  $$NotificationsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get read => $composableBuilder(
+    column: $table.read,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get actionRoute => $composableBuilder(
+    column: $table.actionRoute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get actionPayload => $composableBuilder(
+    column: $table.actionPayload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isLocal => $composableBuilder(
+    column: $table.isLocal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get futureRemoteId => $composableBuilder(
+    column: $table.futureRemoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NotificationsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $NotificationsLocalTable> {
+  $$NotificationsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get read => $composableBuilder(
+    column: $table.read,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get actionRoute => $composableBuilder(
+    column: $table.actionRoute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get actionPayload => $composableBuilder(
+    column: $table.actionPayload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isLocal => $composableBuilder(
+    column: $table.isLocal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get futureRemoteId => $composableBuilder(
+    column: $table.futureRemoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NotificationsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NotificationsLocalTable> {
+  $$NotificationsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get read =>
+      $composableBuilder(column: $table.read, builder: (column) => column);
+
+  GeneratedColumn<String> get actionRoute => $composableBuilder(
+    column: $table.actionRoute,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get actionPayload => $composableBuilder(
+    column: $table.actionPayload,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isLocal =>
+      $composableBuilder(column: $table.isLocal, builder: (column) => column);
+
+  GeneratedColumn<String> get futureRemoteId => $composableBuilder(
+    column: $table.futureRemoteId,
+    builder: (column) => column,
+  );
+}
+
+class $$NotificationsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NotificationsLocalTable,
+          NotificationTableData,
+          $$NotificationsLocalTableFilterComposer,
+          $$NotificationsLocalTableOrderingComposer,
+          $$NotificationsLocalTableAnnotationComposer,
+          $$NotificationsLocalTableCreateCompanionBuilder,
+          $$NotificationsLocalTableUpdateCompanionBuilder,
+          (
+            NotificationTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $NotificationsLocalTable,
+              NotificationTableData
+            >,
+          ),
+          NotificationTableData,
+          PrefetchHooks Function()
+        > {
+  $$NotificationsLocalTableTableManager(
+    _$AppDatabase db,
+    $NotificationsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NotificationsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NotificationsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NotificationsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> read = const Value.absent(),
+                Value<String?> actionRoute = const Value.absent(),
+                Value<String?> actionPayload = const Value.absent(),
+                Value<bool> isLocal = const Value.absent(),
+                Value<String?> futureRemoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NotificationsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                title: title,
+                body: body,
+                type: type,
+                createdAt: createdAt,
+                read: read,
+                actionRoute: actionRoute,
+                actionPayload: actionPayload,
+                isLocal: isLocal,
+                futureRemoteId: futureRemoteId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String title,
+                required String body,
+                required String type,
+                required DateTime createdAt,
+                Value<bool> read = const Value.absent(),
+                Value<String?> actionRoute = const Value.absent(),
+                Value<String?> actionPayload = const Value.absent(),
+                Value<bool> isLocal = const Value.absent(),
+                Value<String?> futureRemoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NotificationsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                title: title,
+                body: body,
+                type: type,
+                createdAt: createdAt,
+                read: read,
+                actionRoute: actionRoute,
+                actionPayload: actionPayload,
+                isLocal: isLocal,
+                futureRemoteId: futureRemoteId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NotificationsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NotificationsLocalTable,
+      NotificationTableData,
+      $$NotificationsLocalTableFilterComposer,
+      $$NotificationsLocalTableOrderingComposer,
+      $$NotificationsLocalTableAnnotationComposer,
+      $$NotificationsLocalTableCreateCompanionBuilder,
+      $$NotificationsLocalTableUpdateCompanionBuilder,
+      (
+        NotificationTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $NotificationsLocalTable,
+          NotificationTableData
+        >,
+      ),
+      NotificationTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$TodosLocalTableCreateCompanionBuilder =
+    TodosLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String title,
+      Value<String?> description,
+      Value<String> priority,
+      Value<String?> category,
+      Value<String?> partyId,
+      Value<String?> dueDate,
+      Value<DateTime?> reminderAt,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<bool> isPinned,
+      Value<String?> linkedInvoiceId,
+      Value<String?> linkedPurchaseId,
+      Value<String?> linkedProductId,
+      Value<String> attachmentIdsJson,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$TodosLocalTableUpdateCompanionBuilder =
+    TodosLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> title,
+      Value<String?> description,
+      Value<String> priority,
+      Value<String?> category,
+      Value<String?> partyId,
+      Value<String?> dueDate,
+      Value<DateTime?> reminderAt,
+      Value<bool> isCompleted,
+      Value<DateTime?> completedAt,
+      Value<bool> isPinned,
+      Value<String?> linkedInvoiceId,
+      Value<String?> linkedPurchaseId,
+      Value<String?> linkedProductId,
+      Value<String> attachmentIdsJson,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$TodosLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $TodosLocalTable> {
+  $$TodosLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get reminderAt => $composableBuilder(
+    column: $table.reminderAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedInvoiceId => $composableBuilder(
+    column: $table.linkedInvoiceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedPurchaseId => $composableBuilder(
+    column: $table.linkedPurchaseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedProductId => $composableBuilder(
+    column: $table.linkedProductId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attachmentIdsJson => $composableBuilder(
+    column: $table.attachmentIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TodosLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $TodosLocalTable> {
+  $$TodosLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get reminderAt => $composableBuilder(
+    column: $table.reminderAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedInvoiceId => $composableBuilder(
+    column: $table.linkedInvoiceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedPurchaseId => $composableBuilder(
+    column: $table.linkedPurchaseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedProductId => $composableBuilder(
+    column: $table.linkedProductId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get attachmentIdsJson => $composableBuilder(
+    column: $table.attachmentIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TodosLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TodosLocalTable> {
+  $$TodosLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get partyId =>
+      $composableBuilder(column: $table.partyId, builder: (column) => column);
+
+  GeneratedColumn<String> get dueDate =>
+      $composableBuilder(column: $table.dueDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get reminderAt => $composableBuilder(
+    column: $table.reminderAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isPinned =>
+      $composableBuilder(column: $table.isPinned, builder: (column) => column);
+
+  GeneratedColumn<String> get linkedInvoiceId => $composableBuilder(
+    column: $table.linkedInvoiceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get linkedPurchaseId => $composableBuilder(
+    column: $table.linkedPurchaseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get linkedProductId => $composableBuilder(
+    column: $table.linkedProductId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get attachmentIdsJson => $composableBuilder(
+    column: $table.attachmentIdsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$TodosLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TodosLocalTable,
+          TodoTableData,
+          $$TodosLocalTableFilterComposer,
+          $$TodosLocalTableOrderingComposer,
+          $$TodosLocalTableAnnotationComposer,
+          $$TodosLocalTableCreateCompanionBuilder,
+          $$TodosLocalTableUpdateCompanionBuilder,
+          (
+            TodoTableData,
+            BaseReferences<_$AppDatabase, $TodosLocalTable, TodoTableData>,
+          ),
+          TodoTableData,
+          PrefetchHooks Function()
+        > {
+  $$TodosLocalTableTableManager(_$AppDatabase db, $TodosLocalTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TodosLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TodosLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TodosLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+                Value<String?> partyId = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<DateTime?> reminderAt = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
+                Value<String?> linkedInvoiceId = const Value.absent(),
+                Value<String?> linkedPurchaseId = const Value.absent(),
+                Value<String?> linkedProductId = const Value.absent(),
+                Value<String> attachmentIdsJson = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TodosLocalCompanion(
+                id: id,
+                businessId: businessId,
+                title: title,
+                description: description,
+                priority: priority,
+                category: category,
+                partyId: partyId,
+                dueDate: dueDate,
+                reminderAt: reminderAt,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                isPinned: isPinned,
+                linkedInvoiceId: linkedInvoiceId,
+                linkedPurchaseId: linkedPurchaseId,
+                linkedProductId: linkedProductId,
+                attachmentIdsJson: attachmentIdsJson,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+                Value<String?> partyId = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<DateTime?> reminderAt = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
+                Value<String?> linkedInvoiceId = const Value.absent(),
+                Value<String?> linkedPurchaseId = const Value.absent(),
+                Value<String?> linkedProductId = const Value.absent(),
+                Value<String> attachmentIdsJson = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TodosLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                title: title,
+                description: description,
+                priority: priority,
+                category: category,
+                partyId: partyId,
+                dueDate: dueDate,
+                reminderAt: reminderAt,
+                isCompleted: isCompleted,
+                completedAt: completedAt,
+                isPinned: isPinned,
+                linkedInvoiceId: linkedInvoiceId,
+                linkedPurchaseId: linkedPurchaseId,
+                linkedProductId: linkedProductId,
+                attachmentIdsJson: attachmentIdsJson,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TodosLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TodosLocalTable,
+      TodoTableData,
+      $$TodosLocalTableFilterComposer,
+      $$TodosLocalTableOrderingComposer,
+      $$TodosLocalTableAnnotationComposer,
+      $$TodosLocalTableCreateCompanionBuilder,
+      $$TodosLocalTableUpdateCompanionBuilder,
+      (
+        TodoTableData,
+        BaseReferences<_$AppDatabase, $TodosLocalTable, TodoTableData>,
+      ),
+      TodoTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -35604,6 +44663,16 @@ class $AppDatabaseManager {
       $$PartiesLocalTableTableManager(_db, _db.partiesLocal);
   $$ItemsLocalTableTableManager get itemsLocal =>
       $$ItemsLocalTableTableManager(_db, _db.itemsLocal);
+  $$ItemAlternativesLocalTableTableManager get itemAlternativesLocal =>
+      $$ItemAlternativesLocalTableTableManager(_db, _db.itemAlternativesLocal);
+  $$ItemSuppliersLocalTableTableManager get itemSuppliersLocal =>
+      $$ItemSuppliersLocalTableTableManager(_db, _db.itemSuppliersLocal);
+  $$ItemBomMaterialsLocalTableTableManager get itemBomMaterialsLocal =>
+      $$ItemBomMaterialsLocalTableTableManager(_db, _db.itemBomMaterialsLocal);
+  $$ItemBomCostsLocalTableTableManager get itemBomCostsLocal =>
+      $$ItemBomCostsLocalTableTableManager(_db, _db.itemBomCostsLocal);
+  $$ItemTierPricesLocalTableTableManager get itemTierPricesLocal =>
+      $$ItemTierPricesLocalTableTableManager(_db, _db.itemTierPricesLocal);
   $$UnitDefinitionsLocalTableTableManager get unitDefinitionsLocal =>
       $$UnitDefinitionsLocalTableTableManager(_db, _db.unitDefinitionsLocal);
   $$TaxRatesLocalTableTableManager get taxRatesLocal =>
@@ -35646,4 +44715,14 @@ class $AppDatabaseManager {
       );
   $$ExpensesLocalTableTableManager get expensesLocal =>
       $$ExpensesLocalTableTableManager(_db, _db.expensesLocal);
+  $$GatewayPaymentSessionsLocalTableTableManager
+  get gatewayPaymentSessionsLocal =>
+      $$GatewayPaymentSessionsLocalTableTableManager(
+        _db,
+        _db.gatewayPaymentSessionsLocal,
+      );
+  $$NotificationsLocalTableTableManager get notificationsLocal =>
+      $$NotificationsLocalTableTableManager(_db, _db.notificationsLocal);
+  $$TodosLocalTableTableManager get todosLocal =>
+      $$TodosLocalTableTableManager(_db, _db.todosLocal);
 }

@@ -33,8 +33,7 @@ class LeadRepository {
   Stream<List<LeadActivity>> watchActivities(
     String businessId,
     String leadId,
-  ) =>
-      _local.watchActivities(businessId, leadId);
+  ) => _local.watchActivities(businessId, leadId);
 
   Future<Lead> saveLead(Lead lead, {required String operation}) async {
     await _local.upsertLead(lead);

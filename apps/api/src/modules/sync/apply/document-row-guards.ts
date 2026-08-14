@@ -8,7 +8,9 @@ function readPayloadString(
   payload: Record<string, unknown>,
   key: string,
 ): string | undefined {
-  const value = payload[key] ?? payload[key.replace(/_([a-z])/g, (_, c) => c.toUpperCase())];
+  const value =
+    payload[key] ??
+    payload[key.replace(/_([a-z])/g, (_, c) => c.toUpperCase())];
   return typeof value === 'string' ? value : undefined;
 }
 
@@ -85,4 +87,3 @@ export function guardDraftDocumentRow(
     return null;
   };
 }
-

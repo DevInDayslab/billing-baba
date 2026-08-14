@@ -344,6 +344,49 @@
       "when": 1787400000000,
       "tag": "0048_repair_crm_leads_contacts",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1787500000000,
+      "tag": "0049_item_suppliers",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1787600000000,
+      "tag": "0050_item_bom",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1787700000000,
+      "tag": "0051_item_sync_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1787800000000,
+      "tag": "0052_document_attachment_party",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1787900000000,
+      "tag": "0053_gateway_payment_intents",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1788000000000,
+      "tag": "0054_todos_sync_fields",
+      "tag": "0055_device_trust_tokens",
+      "breakpoints": true
     }
   ]
 }

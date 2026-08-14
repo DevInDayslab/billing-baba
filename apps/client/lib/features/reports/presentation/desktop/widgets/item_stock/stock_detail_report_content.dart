@@ -173,20 +173,21 @@ class _StockDetailReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportTableArea(
-                            child: ReportFilterableSyncTable<ReportStockDetailRow>(
-                              reportScope: stockDetailReportScope,
-                              columns: stockDetailColumns(),
-                              rows: rows,
-                              emptyState: const Center(
-                                child: Text(
-                                  'No data for the selected period.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
+                            child:
+                                ReportFilterableSyncTable<ReportStockDetailRow>(
+                                  reportScope: stockDetailReportScope,
+                                  columns: stockDetailColumns(),
+                                  rows: rows,
+                                  emptyState: const Center(
+                                    child: Text(
+                                      'No data for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                       ],

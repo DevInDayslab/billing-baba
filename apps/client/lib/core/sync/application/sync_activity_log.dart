@@ -21,8 +21,8 @@ class SyncActivityEntry {
 
 final syncActivityLogProvider =
     NotifierProvider<SyncActivityLogNotifier, List<SyncActivityEntry>>(
-  SyncActivityLogNotifier.new,
-);
+      SyncActivityLogNotifier.new,
+    );
 
 class SyncActivityLogNotifier extends Notifier<List<SyncActivityEntry>> {
   static const _maxEntries = 50;
@@ -47,9 +47,7 @@ class SyncActivityLogNotifier extends Notifier<List<SyncActivityEntry>> {
       ),
       ...state,
     ];
-    state = next.length > _maxEntries
-        ? next.sublist(0, _maxEntries)
-        : next;
+    state = next.length > _maxEntries ? next.sublist(0, _maxEntries) : next;
   }
 
   void clear() => state = const [];

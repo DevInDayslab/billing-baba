@@ -26,15 +26,12 @@ Future<void> showMobileTransactionMenuSheet({
 }
 
 /// Default sale / purchase / other transaction menu sections.
+///
+/// Quick Create only launches create forms — never transaction list screens.
 List<MobileTransactionMenuSection> mobileTransactionMenuSections(
   BuildContext context,
 ) {
   void go(String route) => context.push(route);
-  void comingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon')),
-    );
-  }
 
   return [
     MobileTransactionMenuSection(
@@ -44,37 +41,37 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
           label: 'Payment-In',
           icon: Icons.call_received_rounded,
           showHighlight: true,
-          onTap: () => go(AppRoutes.salePaymentIn),
+          onTap: () => go(AppRoutes.addPaymentIn),
         ),
         MobileTransactionMenuItem(
           label: 'Sale Return',
           icon: Icons.undo_rounded,
-          onTap: () => go(AppRoutes.saleReturnCreditNote),
+          onTap: () => go(AppRoutes.addCreditNote),
         ),
         MobileTransactionMenuItem(
           label: 'Delivery Challan',
           icon: Icons.local_shipping_outlined,
-          onTap: () => go(AppRoutes.saleDeliveryChallan),
+          onTap: () => go(AppRoutes.addDeliveryChallan),
         ),
         MobileTransactionMenuItem(
           label: 'Estimate/Quotation',
           icon: Icons.calculate_outlined,
-          onTap: () => go(AppRoutes.saleEstimateQuotation),
+          onTap: () => go(AppRoutes.addEstimate),
         ),
         MobileTransactionMenuItem(
           label: 'Proforma Invoice',
           icon: Icons.article_outlined,
-          onTap: () => go(AppRoutes.saleProformaInvoice),
+          onTap: () => go(AppRoutes.addProforma),
         ),
         MobileTransactionMenuItem(
           label: 'Sale Order',
           icon: Icons.assignment_outlined,
-          onTap: () => go(AppRoutes.saleOrder),
+          onTap: () => go(AppRoutes.addSaleOrder),
         ),
         MobileTransactionMenuItem(
           label: 'Sale Invoice',
           icon: Icons.receipt_long_outlined,
-          onTap: () => go(AppRoutes.saleInvoices),
+          onTap: () => go(AppRoutes.addSale),
         ),
         MobileTransactionMenuItem(
           label: 'Mobile POS',
@@ -89,23 +86,23 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
         MobileTransactionMenuItem(
           label: 'Purchase',
           icon: Icons.shopping_cart_outlined,
-          onTap: () => go(AppRoutes.purchaseBills),
+          onTap: () => go(AppRoutes.addPurchase),
         ),
         MobileTransactionMenuItem(
           label: 'Payment-Out',
           icon: Icons.call_made_rounded,
           showHighlight: true,
-          onTap: () => go(AppRoutes.purchasePaymentOut),
+          onTap: () => go(AppRoutes.addPaymentOut),
         ),
         MobileTransactionMenuItem(
           label: 'Purchase Return',
           icon: Icons.shopping_cart_checkout_outlined,
-          onTap: () => go(AppRoutes.purchaseReturnDebitNote),
+          onTap: () => go(AppRoutes.addDebitNote),
         ),
         MobileTransactionMenuItem(
           label: 'Purchase Order',
           icon: Icons.assignment_turned_in_outlined,
-          onTap: () => go(AppRoutes.purchaseOrder),
+          onTap: () => go(AppRoutes.addPurchaseOrder),
         ),
       ],
     ),
@@ -116,12 +113,7 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
           label: 'Expenses',
           icon: Icons.account_balance_wallet_outlined,
           showHighlight: true,
-          onTap: () => go(AppRoutes.purchaseExpenses),
-        ),
-        MobileTransactionMenuItem(
-          label: 'P2P Transfer',
-          icon: Icons.swap_horiz_rounded,
-          onTap: comingSoon,
+          onTap: () => go(AppRoutes.addExpense),
         ),
       ],
     ),
@@ -333,9 +325,21 @@ class _SparkleAccent extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned(left: 0, top: 4, child: Icon(Icons.star, size: 7, color: _color)),
-          Positioned(left: 6, top: 0, child: Icon(Icons.star, size: 9, color: _color)),
-          Positioned(left: 11, top: 5, child: Icon(Icons.star, size: 6, color: _color)),
+          Positioned(
+            left: 0,
+            top: 4,
+            child: Icon(Icons.star, size: 7, color: _color),
+          ),
+          Positioned(
+            left: 6,
+            top: 0,
+            child: Icon(Icons.star, size: 9, color: _color),
+          ),
+          Positioned(
+            left: 11,
+            top: 5,
+            child: Icon(Icons.star, size: 6, color: _color),
+          ),
         ],
       ),
     );

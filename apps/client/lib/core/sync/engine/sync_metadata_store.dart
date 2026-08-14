@@ -48,6 +48,13 @@ class SyncMetadataStore {
     return DateTime.tryParse(migrated);
   }
 
+  DateTime? stockLevelsReconciledAtFor(String businessId) {
+    final raw =
+        _storage.read(StorageKeys.syncStockLevelsReconciledAtFor(businessId));
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
   int get localSchemaVersion {
     final raw = _storage.read(StorageKeys.syncLocalSchemaVersion);
     if (raw == null || raw.isEmpty) return kSyncLocalSchemaVersion;
@@ -55,8 +62,9 @@ class SyncMetadataStore {
   }
 
   int? lastServerSchemaVersionFor(String businessId) {
-    final raw =
-        _storage.read(StorageKeys.syncLastServerSchemaVersionFor(businessId));
+    final raw = _storage.read(
+      StorageKeys.syncLastServerSchemaVersionFor(businessId),
+    );
     if (raw != null && raw.isNotEmpty) return int.tryParse(raw);
     final migrated = _migrateLegacyString(
       businessId: businessId,
@@ -76,6 +84,12 @@ class SyncMetadataStore {
         at.toUtc().toIso8601String(),
       );
 
+  Future<void> setStockLevelsReconciledAtFor(String businessId, DateTime at) =>
+      _storage.write(
+        StorageKeys.syncStockLevelsReconciledAtFor(businessId),
+        at.toUtc().toIso8601String(),
+      );
+
   Future<void> setLocalSchemaVersion(int version) =>
       _storage.write(StorageKeys.syncLocalSchemaVersion, '$version');
 
@@ -88,7 +102,9 @@ class SyncMetadataStore {
   Future<void> clearBootstrapStateFor(String businessId) async {
     await _storage.remove(StorageKeys.syncPullCursorFor(businessId));
     await _storage.remove(StorageKeys.syncBootstrappedAtFor(businessId));
-    await _storage.remove(StorageKeys.syncLastServerSchemaVersionFor(businessId));
+    await _storage.remove(
+      StorageKeys.syncLastServerSchemaVersionFor(businessId),
+    );
   }
 
   /// One-time migration: copy legacy global cursor/bootstrap to the active business.

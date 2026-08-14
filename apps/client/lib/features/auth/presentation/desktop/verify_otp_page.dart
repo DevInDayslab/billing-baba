@@ -269,62 +269,73 @@ class _VerifyOtpPageState extends ConsumerState<DesktopVerifyOtpPage> {
                       ),
                     ),
                   const SizedBox(height: AppSpacing.xxl),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(_otpLength, (i) {
-                      return SizedBox(
-                        width: 48,
-                        height: 56,
-                        child: TextFormField(
-                          controller: _controllers[i],
-                          focusNode: _focusNodes[i],
-                          enabled: inputsEnabled,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          maxLength: 1,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                          decoration: InputDecoration(
-                            counterText: '',
-                            contentPadding: EdgeInsets.zero,
-                            border: OutlineInputBorder(
-                              borderRadius: AppRadius.mdBorder,
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final gap = constraints.maxWidth < 360 ? 6.0 : 8.0;
+                      return Row(
+                        children: List.generate(_otpLength, (i) {
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                left: i == 0 ? 0 : gap / 2,
+                                right: i == _otpLength - 1 ? 0 : gap / 2,
+                              ),
+                              child: SizedBox(
+                                height: 56,
+                                child: TextFormField(
+                                  controller: _controllers[i],
+                                  focusNode: _focusNodes[i],
+                                  enabled: inputsEnabled,
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  maxLength: 1,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    contentPadding: EdgeInsets.zero,
+                                    border: OutlineInputBorder(
+                                      borderRadius: AppRadius.mdBorder,
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: AppRadius.mdBorder,
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: AppRadius.mdBorder,
+                                      borderSide: const BorderSide(
+                                        color: AppColors.primary,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: AppRadius.mdBorder,
+                                      borderSide: const BorderSide(
+                                        color: AppColors.error,
+                                      ),
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF8F9FF),
+                                  ),
+                                  onChanged: (v) => _onDigitChanged(i, v),
+                                ),
                               ),
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: AppRadius.mdBorder,
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: AppRadius.mdBorder,
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: AppRadius.mdBorder,
-                              borderSide: const BorderSide(
-                                color: AppColors.error,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: const Color(0xFFF8F9FF),
-                          ),
-                          onChanged: (v) => _onDigitChanged(i, v),
-                        ),
+                          );
+                        }),
                       );
-                    }),
+                    },
                   ),
                   if (auth.error != null) ...[
                     const SizedBox(height: AppSpacing.md),

@@ -21,6 +21,17 @@ class MobileSheetAction {
   final bool showChevron;
 }
 
+/// Grouped section for [showMobileQuickActionsSheet].
+class MobileQuickActionSection {
+  const MobileQuickActionSection({
+    required this.title,
+    required this.actions,
+  });
+
+  final String title;
+  final List<MobileQuickAction> actions;
+}
+
 /// Icon grid item for [showMobileQuickActionsSheet].
 class MobileQuickAction {
   const MobileQuickAction({

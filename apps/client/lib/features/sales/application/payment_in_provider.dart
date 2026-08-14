@@ -611,8 +611,7 @@ class PaymentInForm extends _$PaymentInForm {
   }
 
   Future<void> loadPaymentAttachmentsForEdit(String paymentId) async {
-    if (state.attachedImages.isNotEmpty ||
-        state.attachedDocuments.isNotEmpty) {
+    if (state.attachedImages.isNotEmpty || state.attachedDocuments.isNotEmpty) {
       return;
     }
 
@@ -720,7 +719,9 @@ class PaymentInForm extends _$PaymentInForm {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages: state.attachedImages.where((item) => item.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((item) => item.id != id)
+          .toList(),
     );
   }
 
@@ -741,8 +742,9 @@ class PaymentInForm extends _$PaymentInForm {
 
   void removeDocument(String id) {
     state = state.copyWith(
-      attachedDocuments:
-          state.attachedDocuments.where((item) => item.id != id).toList(),
+      attachedDocuments: state.attachedDocuments
+          .where((item) => item.id != id)
+          .toList(),
     );
   }
 
@@ -808,10 +810,11 @@ class PaymentInForm extends _$PaymentInForm {
         amount: payment.receivedAmount,
       );
 
-      final balanceAfterPayment = (state.balanceDue -
-              payment.receivedAmount -
-              payment.discount)
-          .clamp(0, double.infinity);
+      final balanceAfterPayment =
+          (state.balanceDue - payment.receivedAmount - payment.discount).clamp(
+            0,
+            double.infinity,
+          );
 
       final created = await service.createPayment(
         CreatePaymentRequest(

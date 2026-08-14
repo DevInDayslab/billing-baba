@@ -3,14 +3,9 @@ import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../db/client';
 import { salesDocuments } from '../../../db/schema/sales/tables';
 import { purchaseDocuments } from '../../../db/schema/purchases/tables';
-import type {
-  ApplyOutcome,
-  RowMutationInput,
-} from './sync-apply.types';
-import type {
-  RowEntityDef,
-  SyncedRowBase,
-} from './row-entities';
+import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
+import type { RowEntityDef, SyncedRowBase } from './row-entities';
+import { ensureWalkInParty } from '../../../shared/parties/walk-in-party';
 import { getRowEntity, listRowEntities } from './row-entities';
 
 export type {
@@ -52,18 +47,43 @@ export class RowApplier {
       };
     }
 
-    const existing = await this.findRow(definition, input.businessId, input.entityId);
+    if (definition.pullOnly) {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'PULL_ONLY_ENTITY',
+          message: `Row entity_type '${input.entityType}' is a server-derived projection and cannot be pushed; pull to receive updates`,
+        },
+      };
+    }
+
+    const existing = await this.findRow(
+      definition,
+      input.businessId,
+      input.entityId,
+    );
     if (input.entityType === 'sales_document_lines') {
       const lineGuard = await this.guardSalesLineParentDraft(input, existing);
       if (lineGuard) return lineGuard;
     }
     if (input.entityType === 'purchase_document_lines') {
-      const lineGuard = await this.guardPurchaseLineParentDraft(input, existing);
+      const lineGuard = await this.guardPurchaseLineParentDraft(
+        input,
+        existing,
+      );
       if (lineGuard) return lineGuard;
     }
     if (definition.beforeApply) {
       const guardOutcome = await definition.beforeApply(input, existing);
       if (guardOutcome) return guardOutcome;
+    }
+
+    if (input.entityType === 'sales_documents') {
+      const partyId = input.payload.party_id;
+      if (typeof partyId === 'string' && partyId.length > 0) {
+        await ensureWalkInParty(this.db, input.businessId, partyId);
+      }
     }
 
     switch (input.operation) {
@@ -305,9 +325,7 @@ export class RowApplier {
         entity_id: input.entityId,
         incoming_sync_version: input.baseSyncVersion,
         server_sync_version: existing.syncVersion,
-        server_payload: existing.isDeleted
-          ? null
-          : definition.toPayload(row),
+        server_payload: existing.isDeleted ? null : definition.toPayload(row),
         server_updated_at: existing.updatedAt.toISOString(),
         suggested_resolution: 'retry_with_server_version',
         conflict_id: randomUUID(),
@@ -324,10 +342,7 @@ export class RowApplier {
       .select()
       .from(definition.table)
       .where(
-        and(
-          eq(definition.businessId, businessId),
-          eq(definition.id, entityId),
-        ),
+        and(eq(definition.businessId, businessId), eq(definition.id, entityId)),
       )
       .limit(1);
 
@@ -373,9 +388,7 @@ export class RowApplier {
         ? (existing as { salesDocumentId?: string }).salesDocumentId
         : undefined;
     const parentId =
-      typeof payloadParentId === 'string'
-        ? payloadParentId
-        : existingParentId;
+      typeof payloadParentId === 'string' ? payloadParentId : existingParentId;
 
     if (!parentId) {
       return {
@@ -416,14 +429,16 @@ export class RowApplier {
 
     if (
       parent.documentType !== 'tax_invoice' &&
-      parent.documentType !== 'sales_return'
+      parent.documentType !== 'sales_return' &&
+      parent.documentType !== 'pos'
     ) {
       return {
         status: 'error',
         result: {
           mutation_id: input.mutationId,
           code: 'VALIDATION_FAILED',
-          message: 'Only tax_invoice and sales_return line sync is supported',
+          message:
+            'Only tax_invoice, sales_return, and pos line sync is supported',
         },
       };
     }
@@ -459,9 +474,7 @@ export class RowApplier {
         ? (existing as { purchaseDocumentId?: string }).purchaseDocumentId
         : undefined;
     const parentId =
-      typeof payloadParentId === 'string'
-        ? payloadParentId
-        : existingParentId;
+      typeof payloadParentId === 'string' ? payloadParentId : existingParentId;
 
     if (!parentId) {
       return {

@@ -20,17 +20,22 @@ class SuppliersSection extends ConsumerWidget {
   const SuppliersSection({
     required this.selectedPartyIds,
     required this.onChanged,
+    this.defaultPartyId,
+    this.onDefaultChanged,
     super.key,
   });
 
   final List<String> selectedPartyIds;
   final ValueChanged<List<String>> onChanged;
+  final String? defaultPartyId;
+  final ValueChanged<String?>? onDefaultChanged;
 
   Future<void> _openPicker(BuildContext context, WidgetRef ref) async {
     final partiesAsync = ref.read(partyPickerListProvider);
     List<PartyModel> parties;
     try {
-      parties = partiesAsync.value ?? await ref.read(partyPickerListProvider.future);
+      parties =
+          partiesAsync.value ?? await ref.read(partyPickerListProvider.future);
     } on Object {
       parties = ref.read(partiesListProvider);
     }
@@ -105,18 +110,40 @@ class SuppliersSection extends ConsumerWidget {
             children: [
               for (final party in selectedParties)
                 InputChip(
-                  label: Text(party.name),
+                  label: Text(
+                    party.id == (defaultPartyId ?? selectedPartyIds.first)
+                        ? '${party.name} (Default)'
+                        : party.name,
+                  ),
                   avatar: Icon(
                     Icons.local_shipping_outlined,
                     size: 16,
                     color: Colors.grey.shade700,
                   ),
-                  onDeleted: () => onChanged(
-                    selectedPartyIds.where((id) => id != party.id).toList(),
-                  ),
+                  selected:
+                      party.id == (defaultPartyId ?? selectedPartyIds.first),
+                  onSelected: onDefaultChanged == null
+                      ? null
+                      : (_) => onDefaultChanged!(party.id),
+                  onDeleted: () {
+                    final next = selectedPartyIds
+                        .where((id) => id != party.id)
+                        .toList();
+                    onChanged(next);
+                    if (defaultPartyId == party.id) {
+                      onDefaultChanged?.call(next.isEmpty ? null : next.first);
+                    }
+                  },
                 ),
             ],
           ),
+          if (selectedParties.length > 1 && onDefaultChanged != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Tap a supplier chip to set it as the default.',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [

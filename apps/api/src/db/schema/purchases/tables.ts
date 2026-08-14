@@ -149,7 +149,12 @@ export const expenses = pgTable(
     balanceDue: money('balance_due').default('0'),
   },
   (table) => [
-    syncPullIndex('expenses', table.businessId, table.updatedAt, table.isDeleted),
+    syncPullIndex(
+      'expenses',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
   ],
 );
 

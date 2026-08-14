@@ -22,7 +22,7 @@ class CommandSyncRunner {
     this.onCommandConflict,
     this.maxPushMutations = 100,
     Uuid? uuid,
-  })  : _uuid = uuid ?? const Uuid();
+  }) : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
   final SyncQueue _queue;
@@ -35,7 +35,9 @@ class CommandSyncRunner {
 
   Future<SyncResult> runPending({int? maxPushMutations}) async {
     if (SyncPauseGate.instance.isPaused) {
-      return SyncResult.noop(message: 'Command sync paused during business switch');
+      return SyncResult.noop(
+        message: 'Command sync paused during business switch',
+      );
     }
 
     final businessId = _storage.read(StorageKeys.lastOpenedBusinessId);
@@ -72,7 +74,9 @@ class CommandSyncRunner {
 
     for (var offset = 0; offset < commandJobs.length; offset += batchLimit) {
       if (SyncPauseGate.instance.isStale(syncGeneration)) {
-        return SyncResult.noop(message: 'Command sync aborted during business switch');
+        return SyncResult.noop(
+          message: 'Command sync aborted during business switch',
+        );
       }
 
       final chunkEnd = (offset + batchLimit).clamp(0, commandJobs.length);
@@ -148,16 +152,18 @@ class CommandSyncRunner {
     final job = mutationId == null ? null : byMutation[mutationId];
     if (job == null) return;
 
-    final command = item['command']?.toString() ??
-        job.payload['command']?.toString() ??
-        '';
+    final command =
+        item['command']?.toString() ?? job.payload['command']?.toString() ?? '';
     final result = item['result'];
     final resultMap = result is Map<String, dynamic>
         ? result
-        : (result is Map ? Map<String, dynamic>.from(result) : <String, dynamic>{});
+        : (result is Map
+              ? Map<String, dynamic>.from(result)
+              : <String, dynamic>{});
 
     final syncVersion = _readInt(item['sync_version']) ?? 0;
-    final updatedAt = DateTime.tryParse(
+    final updatedAt =
+        DateTime.tryParse(
           item['server_updated_at']?.toString() ?? '',
         )?.toUtc() ??
         DateTime.now().toUtc();
@@ -215,10 +221,7 @@ class CommandSyncRunner {
 
   List<Map<String, dynamic>> _asList(Object? value) {
     if (value is! List) return const [];
-    return value
-        .whereType<Map>()
-        .map(Map<String, dynamic>.from)
-        .toList();
+    return value.whereType<Map>().map(Map<String, dynamic>.from).toList();
   }
 
   int? _readInt(Object? value) {

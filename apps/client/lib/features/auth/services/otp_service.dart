@@ -131,9 +131,7 @@ class OtpService {
       if (type != 'success') {
         final message = result['message']?.toString().trim();
         throw OtpException(
-          message == null || message.isEmpty
-              ? 'Failed to resend OTP'
-              : message,
+          message == null || message.isEmpty ? 'Failed to resend OTP' : message,
         );
       }
 

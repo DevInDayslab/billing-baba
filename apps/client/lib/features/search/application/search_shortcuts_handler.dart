@@ -19,6 +19,14 @@ Map<ShortcutActivator, Intent> buildSearchShortcuts() {
   };
 }
 
+/// Sidebar placeholder that matches [buildSearchShortcuts].
+String openAnythingShortcutHint() {
+  if (AppPlatform.current.isMacOS) {
+    return 'Open Anything (⌘ + F)';
+  }
+  return 'Open Anything (Ctrl + F)';
+}
+
 /// Returns true when the search shortcut should be ignored.
 bool shouldSuppressSearchShortcuts() {
   final focus = FocusManager.instance.primaryFocus;

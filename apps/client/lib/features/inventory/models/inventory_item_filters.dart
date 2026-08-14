@@ -25,17 +25,28 @@ extension InventoryItemFilterOptionLabel on InventoryItemFilterOption {
 class InventoryItemFiltersState {
   const InventoryItemFiltersState({
     this.selected = const {},
+    this.brandIds = const {},
+    this.categoryIds = const {},
   });
 
   final Set<InventoryItemFilterOption> selected;
+  final Set<String> brandIds;
+  final Set<String> categoryIds;
 
-  bool get hasActiveFilters => selected.isNotEmpty;
+  bool get hasActiveFilters =>
+      selected.isNotEmpty || brandIds.isNotEmpty || categoryIds.isNotEmpty;
 
   InventoryItemFiltersState copyWith({
     Set<InventoryItemFilterOption>? selected,
+    Set<String>? brandIds,
+    Set<String>? categoryIds,
     bool clear = false,
   }) {
     if (clear) return const InventoryItemFiltersState();
-    return InventoryItemFiltersState(selected: selected ?? this.selected);
+    return InventoryItemFiltersState(
+      selected: selected ?? this.selected,
+      brandIds: brandIds ?? this.brandIds,
+      categoryIds: categoryIds ?? this.categoryIds,
+    );
   }
 }

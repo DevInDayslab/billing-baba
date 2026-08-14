@@ -14,7 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> showDashboardExpandedPanel(
   BuildContext context, {
   DashboardTodoScopeFilter initialScope = DashboardTodoScopeFilter.today,
-  DashboardTodoStatusChip initialStatusChip = DashboardTodoStatusChip.pending,
+  DashboardTodoStatusChip initialStatusChip = DashboardTodoStatusChip.all,
 }) {
   return showDialog<void>(
     context: context,
@@ -36,7 +36,7 @@ Future<void> showDashboardExpandedPanel(
 class DashboardExpandedPanel extends ConsumerStatefulWidget {
   const DashboardExpandedPanel({
     this.initialScope = DashboardTodoScopeFilter.today,
-    this.initialStatusChip = DashboardTodoStatusChip.pending,
+    this.initialStatusChip = DashboardTodoStatusChip.all,
     super.key,
   });
 
@@ -48,7 +48,8 @@ class DashboardExpandedPanel extends ConsumerStatefulWidget {
       _DashboardExpandedPanelState();
 }
 
-class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel> {
+class _DashboardExpandedPanelState
+    extends ConsumerState<DashboardExpandedPanel> {
   late DashboardTodoScopeFilter _scopeFilter;
   late DashboardTodoStatusChip _statusChip;
 
@@ -74,9 +75,11 @@ class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel>
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
-    final previous = await ref.read(tasksProvider.notifier).toggleComplete(
-      task.id,
-    );
+    final previous = await ref
+        .read(tasksProvider.notifier)
+        .toggleComplete(
+          task.id,
+        );
     if (previous == null || !mounted) return;
 
     final wasCompleting = !previous.isCompleted;

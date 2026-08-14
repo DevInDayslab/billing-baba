@@ -124,7 +124,6 @@ List<String> collectImageUrls<T>(
   String? Function(T item) urlExtractor,
 ) {
   return [
-    for (final item in items)
-      ?normalizeImageUrl(urlExtractor(item)),
+    for (final item in items) ?normalizeImageUrl(urlExtractor(item)),
   ];
 }

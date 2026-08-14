@@ -125,8 +125,10 @@ Mismatch → `PROTOCOL_MISMATCH` or `SCHEMA_MISMATCH`.
 | `brands` | |
 | `unit_definitions` / `unit_conversions` | |
 | `items` | |
-| `item_units` / `item_tier_prices` | |
-| `item_alternatives` | |
+| `item_units` / `item_tier_prices` | Soft-delete + recreate uses partial unique `uq_item_tier_prices_item_tier_active` |
+| `item_alternatives` | Offline create/update/delete/reorder; client push allowed |
+| `item_suppliers` | Junction: item ↔ supplier party; **exactly one default** when suppliers non-empty |
+| `item_bom_materials` / `item_bom_costs` | Manufacturing BOM; positive qty; circular BOM rejected |
 | `godowns` | Warehouses |
 | `item_locations` | |
 | `users` | Business-scoped staff (no password hashes in sync payloads) |

@@ -2,9 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../../db/client';
 import { schemaVersion } from '../../db/schema/meta/tables';
 import type { DeviceService } from './device.service';
-import {
-  REGISTERED_ROW_ENTITY_TYPES,
-} from './apply/row-entities';
+import { REGISTERED_ROW_ENTITY_TYPES } from './apply/row-entities';
 import { SUPPORTED_SYNC_COMMAND_NAMES } from './apply/commands/command-registry';
 import {
   SYNC_BOOTSTRAP_CHUNK_MAX_BYTES,

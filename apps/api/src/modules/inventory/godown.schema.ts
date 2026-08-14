@@ -24,6 +24,7 @@ export const createGodownBodySchema = z.object({
     .trim()
     .optional()
     .transform((value) => (value === '' ? undefined : value)),
+  is_default: z.boolean().optional().default(false),
 });
 
 export type CreateGodownBody = z.infer<typeof createGodownBodySchema>;
@@ -42,6 +43,7 @@ export const updateGodownBodySchema = z
       .nullable()
       .optional()
       .transform((value) => (value === '' ? null : value)),
+    is_default: z.boolean().optional(),
   })
   .refine((body) => Object.keys(body).length > 0, {
     message: 'At least one field is required',

@@ -12,9 +12,10 @@ abstract final class SaleQuantityInput {
 
   static const TextInputType integerKeyboardType = TextInputType.number;
 
-  static const TextInputType decimalKeyboardType = TextInputType.numberWithOptions(
-    decimal: true,
-  );
+  static const TextInputType decimalKeyboardType =
+      TextInputType.numberWithOptions(
+        decimal: true,
+      );
 
   static double parse(String value) {
     final parsed = int.tryParse(value.trim());

@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/database/database.dart';
+import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/brand_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_alternative_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_bom_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_supplier_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_tier_price_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_document_stock_applier.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_movement_projector.dart';
@@ -16,6 +23,9 @@ import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/godown_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_location_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_bom_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_supplier_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_tier_price_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_summary_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/pagination_meta_dto.dart';
@@ -28,8 +38,11 @@ import 'package:billing_baba/features/inventory/models/requests/brand_requests.d
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/godown_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
+import 'package:billing_baba/features/inventory/models/requests/item_bom_requests.dart';
+import 'package:billing_baba/features/inventory/models/requests/item_supplier_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/unit_requests.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -47,8 +60,13 @@ class InventoryRepository {
     this._units,
     this._godowns,
     this._brands,
+    this._itemSuppliers,
+    this._itemBom,
+    this._itemAlternatives,
+    this._itemTierPrices,
     this._deviceIdReader,
     this._stockApplier,
+    this._metadata,
   });
 
   final InventoryRemoteDataSource _remote;
@@ -61,8 +79,13 @@ class InventoryRepository {
   final UnitMasterRepository? _units;
   final GodownMasterRepository? _godowns;
   final BrandMasterRepository? _brands;
+  final ItemSupplierMasterRepository? _itemSuppliers;
+  final ItemBomMasterRepository? _itemBom;
+  final ItemAlternativeMasterRepository? _itemAlternatives;
+  final ItemTierPriceMasterRepository? _itemTierPrices;
   final String? Function()? _deviceIdReader;
   final InventoryDocumentStockApplier? _stockApplier;
+  final SyncMetadataStore? _metadata;
 
   InventoryRemoteDataSource get remoteDataSource => _remote;
 
@@ -236,6 +259,127 @@ class InventoryRepository {
   Future<void> deleteBrand(String id) =>
       _brands?.softDelete(id) ?? _remote.deleteBrand(id);
 
+  Future<List<ItemSupplierDto>> getItemSuppliers(String itemId) =>
+      _itemSuppliers?.listForItem(itemId) ?? _remote.listItemSuppliers(itemId);
+
+  Future<Map<String, List<String>>> getItemSuppliersMap() =>
+      _itemSuppliers?.groupedPartyIds() ?? Future.value({});
+
+  Future<void> replaceItemSuppliers(
+    String itemId,
+    List<String> partyIds, {
+    String? defaultPartyId,
+  }) =>
+      _itemSuppliers?.replaceForItem(
+        itemId,
+        partyIds,
+        defaultPartyId: defaultPartyId,
+      ) ??
+      _remote.replaceItemSuppliers(
+        itemId,
+        ReplaceItemSuppliersRequest(
+          suppliers: partyIds
+              .map(
+                (partyId) => ItemSupplierInput(
+                  partyId: partyId,
+                  isDefault: partyId ==
+                      (defaultPartyId ??
+                          (partyIds.isEmpty ? null : partyIds.first)),
+                ),
+              )
+              .toList(),
+        ),
+      ).then((_) {});
+
+  Future<void> removeItemSuppliers(String itemId) =>
+      _itemSuppliers?.removeAllForItem(itemId) ??
+      _remote.replaceItemSuppliers(
+        itemId,
+        const ReplaceItemSuppliersRequest(suppliers: []),
+      ).then((_) {});
+
+  Future<void> ensureItemSuppliersMigrated() =>
+      _itemSuppliers?.migrateFromLegacyStorageIfNeeded() ?? Future.value();
+
+  Future<ItemBomDto> getItemBom(String itemId) =>
+      _itemBom?.getForItem(itemId) ?? _remote.getItemBom(itemId);
+
+  Future<void> replaceItemBom(
+    String itemId,
+    ReplaceItemBomRequest request,
+  ) =>
+      _itemBom?.replaceForItem(
+        itemId,
+        materials: request.materials
+            .map(
+              (material) => ItemBomReplaceMaterialInput(
+                rawItemId: material.rawItemId,
+                qty: double.tryParse(material.qty) ?? 0,
+                unitId: material.unitId,
+                purchasePrice: double.tryParse(material.purchasePrice) ?? 0,
+                sortOrder: material.sortOrder,
+              ),
+            )
+            .toList(),
+        costs: request.costs
+            .map(
+              (cost) => ItemBomReplaceCostInput(
+                id: cost.id,
+                description: cost.description,
+                amount: double.tryParse(cost.amount) ?? 0,
+                sortOrder: cost.sortOrder,
+              ),
+            )
+            .toList(),
+      ) ??
+      _remote.replaceItemBom(itemId, request).then((_) {});
+
+  Future<void> removeItemBom(String itemId) =>
+      _itemBom?.removeAllForItem(itemId) ??
+      _remote.replaceItemBom(
+        itemId,
+        const ReplaceItemBomRequest(materials: [], costs: []),
+      ).then((_) {});
+
+  Future<List<ItemTierPriceDto>> getItemTierPricesForItem(String itemId) =>
+      _itemTierPrices?.listForItem(itemId) ?? Future.value([]);
+
+  Future<Map<String, Map<String, double>>> getItemTierPricesMap() =>
+      _itemTierPrices?.groupedByItemId() ?? Future.value({});
+
+  Future<void> replaceItemTierPrices(
+    String itemId,
+    Map<String, double> tierPrices,
+  ) =>
+      _itemTierPrices?.replaceForItem(itemId, tierPrices) ??
+      _remote
+          .upsertItemTierPrices(
+            itemId,
+            UpsertTierPricesRequest(
+              tierPrices: tierPrices.entries
+                  .where((entry) => entry.value > 0)
+                  .map(
+                    (entry) => CreateItemTierPriceRequest(
+                      pricingTier: PriceTier.toApiTier(entry.key),
+                      price: _formatTierPrice(entry.value),
+                    ),
+                  )
+                  .toList(),
+            ),
+          )
+          .then((_) {});
+
+  Future<void> removeItemTierPrices(String itemId) =>
+      _itemTierPrices?.removeAllForItem(itemId) ??
+      Future.wait(
+        PriceTier.all
+            .map((tier) => _remote.deleteItemTierPrice(itemId, PriceTier.toApiTier(tier)))
+            .toList(),
+      ).then((_) {});
+
+  Future<void> ensureItemTierPricesMigrated() =>
+      _itemTierPrices?.migrateFromLegacyStorageIfNeeded() ?? Future.value();
+
   Future<PaginatedUnitsDto> getUnits(UnitListQuery query) =>
       _units?.list(query) ?? _remote.listUnits(query);
 
@@ -323,14 +467,92 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) =>
-      _items.watchPage(
-        limit: limit,
-        offset: offset,
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
+  }) {
+    final businessId = _requireBusinessId();
+    final itemsStream = _items.watchPage(
+      limit: limit,
+      offset: offset,
+      searchQuery: searchQuery,
+      type: type,
+      categoryId: categoryId,
+    );
+    final stockStream = _debounceStream(
+      _stockLocal.watchStockLevels(businessId: businessId),
+      const Duration(milliseconds: 75),
+    );
+    return _watchItemsPageReactingToStock(itemsStream, stockStream);
+  }
+
+  Stream<List<ItemListDto>> _watchItemsPageReactingToStock(
+    Stream<List<ItemListDto>> itemsStream,
+    Stream<void> stockStream,
+  ) {
+    final controller = StreamController<List<ItemListDto>>();
+    List<ItemListDto>? latestItems;
+    StreamSubscription<List<ItemListDto>>? itemsSub;
+    StreamSubscription<void>? stockSub;
+
+    void emitLatest() {
+      final items = latestItems;
+      if (items != null && !controller.isClosed) {
+        controller.add(items);
+      }
+    }
+
+    controller.onListen = () {
+      itemsSub = itemsStream.listen(
+        (items) {
+          latestItems = items;
+          controller.add(items);
+        },
+        onError: controller.addError,
       );
+      stockSub = stockStream.listen(
+        (_) => emitLatest(),
+        onError: controller.addError,
+      );
+    };
+
+    controller.onCancel = () async {
+      await itemsSub?.cancel();
+      await stockSub?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  /// Coalesces rapid stock-level watch events (e.g. sync batches) into one emit.
+  Stream<void> _debounceStream(Stream<void> source, Duration duration) {
+    late final StreamController<void> controller;
+    StreamSubscription<void>? sourceSub;
+    Timer? timer;
+
+    controller = StreamController<void>(
+      onListen: () {
+        sourceSub = source.listen(
+          (_) {
+            timer?.cancel();
+            timer = Timer(duration, () {
+              if (!controller.isClosed) {
+                controller.add(null);
+              }
+            });
+          },
+          onError: controller.addError,
+          onDone: () {
+            timer?.cancel();
+            controller.close();
+          },
+        );
+      },
+      onCancel: () async {
+        timer?.cancel();
+        await sourceSub?.cancel();
+      },
+    );
+
+    return controller.stream;
+  }
 
   Future<Map<String, double>> localStockQuantitiesForItems(
     Iterable<String> itemIds,
@@ -347,7 +569,22 @@ class InventoryRepository {
   }
 
   Future<Map<String, List<String>>> getAlternativesIndex() =>
+      _itemAlternatives?.groupedAlternativeItemIds() ??
       _remote.getAlternativesIndex();
+
+  Future<void> replaceItemAlternatives(
+    String itemId,
+    List<String> alternativeItemIds,
+  ) =>
+      _itemAlternatives?.replaceForItem(itemId, alternativeItemIds) ??
+      Future.value();
+
+  Future<void> removeItemAlternatives(String itemId) async {
+    final alternatives = _itemAlternatives;
+    if (alternatives == null) return;
+    await alternatives.removeAllForItem(itemId);
+    await alternatives.removeAllReferencingItem(itemId);
+  }
 
   Future<ItemDetailDto> createItem(CreateItemRequest request) =>
       _items.create(request);
@@ -355,7 +592,13 @@ class InventoryRepository {
   Future<ItemDetailDto> updateItem(String id, UpdateItemRequest request) =>
       _items.update(id, request);
 
-  Future<void> deleteItem(String id) => _items.softDelete(id);
+  Future<void> deleteItem(String id) async {
+    await _itemTierPrices?.removeAllForItem(id);
+    await _itemSuppliers?.removeAllForItem(id);
+    await _itemBom?.removeAllForItem(id);
+    await removeItemAlternatives(id);
+    await _items.softDelete(id);
+  }
 
   Future<List<ItemImageDto>> getItemImages(String itemId) =>
       _remote.listItemImages(itemId);
@@ -452,6 +695,10 @@ class InventoryRepository {
 
   Future<Map<String, double>> localStockQuantitiesByItem() async {
     final businessId = _requireBusinessId();
+    if (_metadata?.stockLevelsReconciledAtFor(businessId) != null) {
+      await _stockLocal.removeLiteralDefaultGodownRows(businessId: businessId);
+      await _stockLocal.collapseDuplicateStockTriples(businessId: businessId);
+    }
     var quantities = await _stockLocal.quantitiesByItem(businessId: businessId);
     if (quantities.isEmpty) {
       await _maybeBackfillBusinessStock(businessId);
@@ -461,6 +708,9 @@ class InventoryRepository {
   }
 
   Future<void> _maybeBackfillBusinessStock(String businessId) async {
+    if (_metadata?.stockLevelsReconciledAtFor(businessId) != null) {
+      return;
+    }
     final applier = _stockApplier;
     if (applier == null) return;
     final hasMovements = await _stockLocal.hasAnyMovements(businessId: businessId);
@@ -593,4 +843,11 @@ class InventoryRepository {
 
   Future<PriceHistoryDto> getPriceHistoryRecord(String id) =>
       _remote.getPriceHistoryRecord(id);
+
+  static String _formatTierPrice(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toStringAsFixed(2);
+  }
 }

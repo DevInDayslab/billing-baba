@@ -20,9 +20,9 @@ class BusinessSettingsSync {
     String? deviceId,
     Map<String, dynamic>? payload,
   }) async {
-    final existing = await (_db.select(_db.businessSettingsLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.businessSettingsLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
 
     if (!shouldApplyPullChange(
       incomingSyncVersion: syncVersion,
@@ -33,7 +33,9 @@ class BusinessSettingsSync {
     }
 
     if (isDeleted) {
-      await _db.into(_db.businessSettingsLocal).insertOnConflictUpdate(
+      await _db
+          .into(_db.businessSettingsLocal)
+          .insertOnConflictUpdate(
             BusinessSettingsLocalCompanion.insert(
               id: entityId,
               businessId: businessId,
@@ -67,7 +69,9 @@ class BusinessSettingsSync {
       return;
     }
 
-    await _db.into(_db.businessSettingsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.businessSettingsLocal)
+        .insertOnConflictUpdate(
           BusinessSettingsLocalCompanion.insert(
             id: entityId,
             businessId: businessId,
@@ -117,9 +121,9 @@ class BusinessSettingsSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.businessSettingsLocal)
-          ..where((t) => t.id.equals(entityId)))
-        .write(
+    return (_db.update(
+      _db.businessSettingsLocal,
+    )..where((t) => t.id.equals(entityId))).write(
       BusinessSettingsLocalCompanion(
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),

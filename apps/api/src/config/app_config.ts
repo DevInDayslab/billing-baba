@@ -33,6 +33,7 @@ const envSchema = z.object({
     z.string().min(1).optional(),
   ),
   MSG91_AUTH_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GSTVERIFY_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   RAZORPAY_KEY_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   RAZORPAY_KEY_SECRET: z.preprocess(
     emptyToUndefined,
@@ -143,6 +144,7 @@ export type AppConfig = {
   jwtSecret?: string;
   jwtRefreshSecret?: string;
   msg91AuthKey?: string;
+  gstverifyApiKey?: string;
   razorpayKeyId?: string;
   razorpayKeySecret?: string;
   razorpayWebhookSecret?: string;
@@ -252,6 +254,7 @@ export function loadAppConfig(): AppConfig {
     jwtSecret: env.JWT_SECRET,
     jwtRefreshSecret: env.JWT_REFRESH_SECRET,
     msg91AuthKey: env.MSG91_AUTH_KEY,
+    gstverifyApiKey: env.GSTVERIFY_API_KEY,
     razorpayKeyId: env.RAZORPAY_KEY_ID,
     razorpayKeySecret: env.RAZORPAY_KEY_SECRET,
     razorpayWebhookSecret: env.RAZORPAY_WEBHOOK_SECRET,

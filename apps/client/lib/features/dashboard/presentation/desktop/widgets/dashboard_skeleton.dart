@@ -67,11 +67,17 @@ class DashboardSkeleton extends StatelessWidget {
                   ),
                   child: const Column(
                     children: [
-                      Expanded(child: _SkeletonCard(compact: true, borderless: true)),
+                      Expanded(
+                        child: _SkeletonCard(compact: true, borderless: true),
+                      ),
                       Divider(height: 1, color: DashboardColors.divider),
-                      Expanded(child: _SkeletonCard(compact: true, borderless: true)),
+                      Expanded(
+                        child: _SkeletonCard(compact: true, borderless: true),
+                      ),
                       Divider(height: 1, color: DashboardColors.divider),
-                      Expanded(child: _SkeletonCard(compact: true, borderless: true)),
+                      Expanded(
+                        child: _SkeletonCard(compact: true, borderless: true),
+                      ),
                     ],
                   ),
                 ),
@@ -102,7 +108,9 @@ class _SkeletonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metrics = DashboardLayoutScope.of(context);
-    final padding = compact || picker ? metrics.padding * 0.65 : metrics.padding;
+    final padding = compact || picker
+        ? metrics.padding * 0.65
+        : metrics.padding;
 
     final content = Padding(
       padding: EdgeInsets.all(padding),

@@ -15,6 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _compactBreakpoint = 800.0;
 
+/// Narrower list column so transaction detail has more horizontal room.
+const _partyListPanelWidth = 280.0;
+
 Future<void> _openAddPartyDialog(BuildContext context, WidgetRef ref) async {
   await showAddPartyDialog(context);
 }
@@ -23,7 +26,8 @@ class DesktopPartyDetailsPage extends ConsumerStatefulWidget {
   const DesktopPartyDetailsPage({super.key});
 
   @override
-  ConsumerState<DesktopPartyDetailsPage> createState() => _PartyDetailsPageState();
+  ConsumerState<DesktopPartyDetailsPage> createState() =>
+      _PartyDetailsPageState();
 }
 
 class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
@@ -36,7 +40,10 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
   }
 
   Future<void> _initializePage() async {
-    await ref.read(partyListProvider.notifier).refresh();
+    final partiesAsync = ref.read(partyListProvider);
+    if (!partiesAsync.hasValue) {
+      await ref.read(partyListProvider.notifier).refresh();
+    }
     if (!mounted) return;
     await _restorePreferences();
   }
@@ -44,9 +51,11 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
   Future<void> _restorePreferences() async {
     final service = await ref.read(partyServiceProvider.future);
     final filter = service.readRememberedListFilter();
-    if (filter != null && mounted) {
-      ref.read(partyListFilterProvider.notifier).filter = filter;
-    }
+    if (filter == null || !mounted) return;
+    final current = ref.read(partyListFilterProvider);
+    if (filter == current) return;
+    ref.read(partyListFilterProvider.notifier).filter = filter;
+    await ref.read(partyListProvider.notifier).refresh(filter: filter);
   }
 
   void _clearSelection() {
@@ -68,7 +77,12 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -76,7 +90,7 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
                 currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => _openAddPartyDialog(context, ref),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -97,7 +111,7 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
                     }
 
                     return InventorySplitLayout(
-                      listWidth: 360,
+                      listWidth: _partyListPanelWidth,
                       listPanel: const PartyListPanel(),
                       detailPanel: selectedId == null
                           ? const InventoryDetailPlaceholder(

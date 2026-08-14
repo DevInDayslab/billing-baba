@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 
 class MobileComingSoonPage extends StatelessWidget {
   const MobileComingSoonPage({
-    required this.title, super.key,
+    required this.title,
+    super.key,
   });
 
   final String title;

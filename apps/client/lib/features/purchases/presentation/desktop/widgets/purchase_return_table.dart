@@ -266,7 +266,8 @@ class _PurchaseReturnTransactionsTable extends ConsumerWidget {
     PurchaseReturnModel item,
     int rowNumber,
     int index,
-  ) onBuildRow;
+  )
+  onBuildRow;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -488,7 +489,10 @@ class _DataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }

@@ -27,7 +27,8 @@ class DesktopEditProfilePage extends ConsumerStatefulWidget {
   final bool embedded;
 
   @override
-  ConsumerState<DesktopEditProfilePage> createState() => _EditProfilePageState();
+  ConsumerState<DesktopEditProfilePage> createState() =>
+      _EditProfilePageState();
 }
 
 class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
@@ -51,11 +52,14 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
   ];
 
   static const _businessCategories = [
-    'General Store',
+    'Apparels',
+    'Medical',
+    'Fruits',
+    'Restaurant',
+    'Hardware',
     'Electronics',
-    'Clothing',
-    'Food',
-    'Pharmacy',
+    'Salon',
+    'Gym',
     'Other',
   ];
 
@@ -233,7 +237,9 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
       });
       patchProfileMedia(newUrl);
       unawaited(
-        ref.read(imageServiceProvider).replaceImage(
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
               oldUrl: previousUrl,
               newUrl: newUrl,
               oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
@@ -282,7 +288,9 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
       if (!mounted || currentGeneration() != generation) return;
       setState(() => setUploading(false));
       unawaited(
-        ref.read(imageServiceProvider).invalidateImage(
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
               url: previousUrl,
               cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
             ),
@@ -465,7 +473,9 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             controller: _businessNameController,
             hintText: 'Business Name',
             inputFormatters: [
-              LengthLimitingTextInputFormatter(Validators.businessNameMaxLength),
+              LengthLimitingTextInputFormatter(
+                Validators.businessNameMaxLength,
+              ),
               FilteringTextInputFormatter.allow(
                 Validators.businessNameInputPattern,
               ),
@@ -510,7 +520,12 @@ class _EditProfilePageState extends ConsumerState<DesktopEditProfilePage> {
             keyboardType: TextInputType.emailAddress,
             inputFormatters: [
               LengthLimitingTextInputFormatter(200),
-              FilteringTextInputFormatter.allow(RegExp(r'[\w\-.@+'']')),
+              FilteringTextInputFormatter.allow(
+                RegExp(
+                  r'[\w\-.@+'
+                  ']',
+                ),
+              ),
             ],
           ),
         ),

@@ -73,12 +73,13 @@ class ExpenseResizableTable extends ConsumerWidget {
         notifier,
         partyOptions,
       ),
-      ExpenseCategoryVariant.paymentInDiscount => _buildPaymentInDiscountColumns(
-        filters,
-        notifier,
-        partyOptions,
-        actions,
-      ),
+      ExpenseCategoryVariant.paymentInDiscount =>
+        _buildPaymentInDiscountColumns(
+          filters,
+          notifier,
+          partyOptions,
+          actions,
+        ),
       ExpenseCategoryVariant.standard => _buildStandardColumns(
         filters,
         notifier,
@@ -98,12 +99,13 @@ class ExpenseResizableTable extends ConsumerWidget {
                 ),
           backgroundColor: i.isOdd ? _zebraRowBg : Colors.transparent,
           cells: switch (variant) {
-            ExpenseCategoryVariant.loyaltyRedeemed =>
-              _loyaltyCells(transactions[i]),
-            ExpenseCategoryVariant.paymentInDiscount =>
-              _paymentInDiscountCells(transactions[i]),
-            ExpenseCategoryVariant.standard =>
-              _standardCells(transactions[i]),
+            ExpenseCategoryVariant.loyaltyRedeemed => _loyaltyCells(
+              transactions[i],
+            ),
+            ExpenseCategoryVariant.paymentInDiscount => _paymentInDiscountCells(
+              transactions[i],
+            ),
+            ExpenseCategoryVariant.standard => _standardCells(transactions[i]),
           },
         ),
     ];
@@ -447,7 +449,10 @@ class ExpenseResizableTable extends ConsumerWidget {
         child: Text(tx.party, overflow: TextOverflow.ellipsis, maxLines: 1),
       ),
       _ExpenseDataCell(
-        child: Text('${tx.loyaltyPoints ?? 0}', overflow: TextOverflow.ellipsis),
+        child: Text(
+          '${tx.loyaltyPoints ?? 0}',
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       _ExpenseDataCell(
         child: Text(
@@ -529,7 +534,10 @@ class _ExpenseDataCell extends StatelessWidget {
           horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Align(alignment: alignment, child: wrapEllipsisTooltipChild(child)),
+        child: Align(
+          alignment: alignment,
+          child: wrapEllipsisTooltipChild(child),
+        ),
       ),
     );
   }

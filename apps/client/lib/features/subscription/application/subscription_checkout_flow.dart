@@ -116,7 +116,10 @@ class SubscriptionCheckoutFlow {
           );
         } on Object catch (error) {
           if (!context.mounted) return;
-          _showErrorSnackBar(context, SubscriptionErrorMapper.messageFor(error));
+          _showErrorSnackBar(
+            context,
+            SubscriptionErrorMapper.messageFor(error),
+          );
         }
     }
   }

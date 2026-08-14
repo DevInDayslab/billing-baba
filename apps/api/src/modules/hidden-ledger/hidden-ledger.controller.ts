@@ -71,7 +71,9 @@ export function createHiddenLedgerController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = hiddenLedgerEntryIdParamSchema.parse(request.params);
-        const query = listHiddenLedgerRecoveriesQuerySchema.parse(request.query);
+        const query = listHiddenLedgerRecoveriesQuerySchema.parse(
+          request.query,
+        );
         const result = await service.listRecoveries(
           businessId,
           accountId,
@@ -96,7 +98,9 @@ export function createHiddenLedgerController() {
     getPartySummary: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { accountId, businessId } = requireAuthContext(request);
-        const { partyId } = hiddenLedgerPartyIdParamSchema.parse(request.params);
+        const { partyId } = hiddenLedgerPartyIdParamSchema.parse(
+          request.params,
+        );
         const data = await service.getPartySummary(
           businessId,
           accountId,
@@ -120,7 +124,9 @@ export function createHiddenLedgerController() {
     recoverFromSale: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
-        const { partyId } = hiddenLedgerPartyIdParamSchema.parse(request.params);
+        const { partyId } = hiddenLedgerPartyIdParamSchema.parse(
+          request.params,
+        );
         const body = recoverFromSaleBodySchema.parse(request.body);
         const data = await service.recordSaleRecovery({
           businessId,

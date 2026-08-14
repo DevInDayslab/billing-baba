@@ -3,8 +3,8 @@ import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_item_thumbnail.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
+import 'package:billing_baba/features/pos/presentation/widgets/pos_quantity_pad_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -181,50 +181,16 @@ class CartRow extends ConsumerWidget {
   }
 
   Future<void> _showQuantityDialog(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController(text: '${cartItem.quantity}');
-
-    final result = await showDialog<int>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text('Quantity — ${cartItem.item.name}'),
-          content: SizedBox(
-            width: 280,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Quantity',
-                hintText: 'Enter quantity',
-              ),
-              autofocus: true,
-              onSubmitted: (_) {
-                final value = int.tryParse(controller.text.trim()) ?? 0;
-                Navigator.of(dialogContext).pop(value);
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final value = int.tryParse(controller.text.trim()) ?? 0;
-                Navigator.of(dialogContext).pop(value);
-              },
-              child: const Text('Apply'),
-            ),
-          ],
-        );
-      },
+    final result = await showPosQuantityPad(
+      context,
+      itemName: cartItem.item.name,
+      initialQuantity: cartItem.quantity,
+      maxQuantity: cartItem.item.stock > 0 ? cartItem.item.stock : null,
     );
-
-    controller.dispose();
     if (result != null) {
-      ref.read(posCartProvider.notifier).updateQuantity(cartItem.item.id, result);
+      ref
+          .read(posCartProvider.notifier)
+          .updateQuantity(cartItem.item.id, result);
     }
   }
 

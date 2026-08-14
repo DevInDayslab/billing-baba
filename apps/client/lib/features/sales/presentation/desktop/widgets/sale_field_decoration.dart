@@ -252,7 +252,10 @@ class SaleTextField extends StatelessWidget {
   }
 }
 
-double _verticalPaddingForHeight(double fieldHeight, {required double fontSize}) {
+double _verticalPaddingForHeight(
+  double fieldHeight, {
+  required double fontSize,
+}) {
   final textLine = fontSize * 1.2;
   return ((fieldHeight - textLine - 2) / 2).clamp(0.0, fieldHeight / 2);
 }

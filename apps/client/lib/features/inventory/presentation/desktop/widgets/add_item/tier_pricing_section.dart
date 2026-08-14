@@ -105,7 +105,10 @@ class TierPricingSection extends StatelessWidget {
           if (tierPrices.isEmpty)
             Text(
               _emptyStateMessage,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
           if (tierPrices.isNotEmpty)
             Container(

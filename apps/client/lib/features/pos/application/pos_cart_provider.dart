@@ -23,20 +23,35 @@ part 'pos_cart_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class PosCart extends _$PosCart {
-  late final PosLocalDataSource _localDataSource;
+  PosLocalDataSource get _localDataSource =>
+      PosLocalDataSource(ref.read(appDatabaseProvider));
+
+  void _scheduleLoadHeldBills() {
+    unawaited(Future(() {
+      if (!ref.mounted) return;
+      unawaited(_loadHeldBills());
+    }));
+  }
+
+  void _scheduleResetForBusinessChange() {
+    unawaited(Future(() {
+      if (!ref.mounted) return;
+      state = const PosCartState();
+      unawaited(_loadHeldBills());
+    }));
+  }
 
   @override
   PosCartState build() {
-    _localDataSource = PosLocalDataSource(ref.watch(appDatabaseProvider));
     ref.listen(currentBusinessProvider, (previous, next) {
       final previousId = previous?.id;
       final nextId = next?.id;
       if (previousId != nextId) {
-        state = const PosCartState();
-        unawaited(_loadHeldBills());
+        _scheduleResetForBusinessChange();
       }
     });
-    unawaited(_loadHeldBills());
+    // Defer so we never mutate state while the widget tree is building.
+    _scheduleLoadHeldBills();
     return const PosCartState();
   }
 
@@ -262,7 +277,7 @@ class PosCart extends _$PosCart {
     );
   }
 
-  Future<PosSale> completeSale() async {
+  Future<PosSale> completeSale({bool clearCartOnSuccess = true}) async {
     if (state.items.isEmpty) {
       throw const PosRepositoryException(message: 'Cart is empty');
     }
@@ -281,19 +296,25 @@ class PosCart extends _$PosCart {
         cart: state,
         businessId: businessId,
       );
-      clearCart();
-      await refreshAfterSaleMutation(
-        ref,
-        context: (
-          partyId: sale.partyId,
-          itemIds: itemIds,
+      if (clearCartOnSuccess) {
+        clearCart();
+      }
+      unawaited(
+        refreshAfterSaleMutation(
+          ref,
+          context: (
+            partyId: sale.partyId,
+            itemIds: itemIds,
+          ),
         ),
       );
       return sale;
     } on PosRepositoryException {
       rethrow;
     } catch (error) {
-      throw PosRepositoryException(message: OfflineUiMessages.messageFor(error));
+      throw PosRepositoryException(
+        message: OfflineUiMessages.messageFor(error),
+      );
     }
   }
 

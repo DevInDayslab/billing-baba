@@ -1,7 +1,6 @@
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
-import 'package:billing_baba/features/pos/pos_constants.dart';
 import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
@@ -21,7 +20,7 @@ SalesDocumentDraftInput mapPosCartToDraftInput({
   return SalesDocumentDraftInput(
     documentType: SalesDocumentType.pos,
     documentSeries: SalesConstants.posSeries,
-    partyId: partyId ?? PosConstants.walkInPartyId,
+    partyId: partyId,
     documentDate: DateTime.now(),
     notes: notes,
     items: mapPosCartItemsToSaleLines(cart.items, cart.billDiscountPercent),
@@ -81,7 +80,10 @@ FinalizeSalePaymentCommand? mapPosPaymentsToFinalizeCommand({
       ? payments
       : [PaymentEntry(mode: PaymentMode.cash, amount: totalPayable)];
 
-  final totalPaid = resolved.fold<double>(0, (sum, entry) => sum + entry.amount);
+  final totalPaid = resolved.fold<double>(
+    0,
+    (sum, entry) => sum + entry.amount,
+  );
   final amount = totalPaid > 0 ? totalPaid : totalPayable;
   final primaryMode = resolved.first.mode;
 

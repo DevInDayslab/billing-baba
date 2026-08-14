@@ -130,8 +130,13 @@ abstract final class NetworkExceptionClassifier {
       );
     }
 
-  if (httpStatus != null) {
-      return _fromHttpStatus(httpStatus, message, host: host, duration: duration);
+    if (httpStatus != null) {
+      return _fromHttpStatus(
+        httpStatus,
+        message,
+        host: host,
+        duration: duration,
+      );
     }
 
     return NetworkErrorDetails(
@@ -149,8 +154,7 @@ abstract final class NetworkExceptionClassifier {
     String? host,
     Duration? duration,
   }) {
-    final resolvedHost =
-        host ?? error.requestOptions.uri.host;
+    final resolvedHost = host ?? error.requestOptions.uri.host;
     final status = error.response?.statusCode;
 
     if (status != null) {

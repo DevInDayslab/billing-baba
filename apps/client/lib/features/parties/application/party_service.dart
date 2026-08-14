@@ -6,8 +6,10 @@ import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/data/party_local_source.dart';
 import 'package:billing_baba/features/parties/data/party_master_repository.dart';
@@ -19,6 +21,9 @@ import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
+import 'package:billing_baba/features/parties/utils/party_projected_balance.dart';
+import 'package:billing_baba/features/parties/utils/party_search_match.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 export 'party_error_mapper.dart'
@@ -29,7 +34,6 @@ export 'party_error_mapper.dart'
         PartyOfflineException;
 
 part 'party_service.g.dart';
-
 
 @Riverpod(keepAlive: true)
 Future<PartyService> partyService(Ref ref) async {
@@ -44,19 +48,35 @@ Future<PartyService> partyService(Ref ref) async {
   } on Object {
     deviceId = null;
   }
+  // Rebuild only when the selected business changes. Do not watch the full
+  // profile AsyncValue — loading flickers would reload parties and surface a
+  // false "Business not selected" error.
+  ref.watch(currentBusinessProvider);
+
+  String businessIdReader() {
+    final fromCurrent = ref.read(currentBusinessProvider)?.id.trim() ?? '';
+    if (fromCurrent.isNotEmpty) return fromCurrent;
+
+    final fromProfile =
+        ref.read(businessProfileProvider).asData?.value.id.trim() ?? '';
+    if (fromProfile.isNotEmpty) return fromProfile;
+
+    return storage.read(StorageKeys.lastOpenedBusinessId)?.trim() ?? '';
+  }
+
   final repository = PartyRepository(api.dio);
   final local = PartyLocalSource(db);
   final master = PartyMasterRepository(
     local: local,
     syncQueue: queue,
     remote: repository,
-    businessIdReader: () =>
-        storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+    businessIdReader: businessIdReader,
     deviceIdReader: () => deviceId,
   );
   return PartyService(
     cache: PartyCache(storage),
     master: master,
+    businessIdReader: businessIdReader,
   );
 }
 
@@ -64,15 +84,20 @@ class PartyService {
   PartyService({
     required this._cache,
     required this._master,
+    required this._businessIdReader,
   });
 
   final PartyCache _cache;
   final PartyMasterRepository _master;
+  final String Function() _businessIdReader;
 
   bool _isShowingCachedData = false;
   bool get isShowingCachedData => _isShowingCachedData;
 
-  String? get _businessId => _cache.readBusinessId();
+  String? get _businessId {
+    final businessId = _businessIdReader().trim();
+    return businessId.isEmpty ? null : businessId;
+  }
 
   Future<List<PartyModel>> fetchParties({
     String? searchQuery,
@@ -85,7 +110,7 @@ class PartyService {
     }
 
     _isShowingCachedData = false;
-    final remote = await _master.listActive(searchQuery: searchQuery);
+    final remote = await _master.listActive();
     final merged = await _mergeWithExtensions(businessId, remote);
     return _applyClientFilters(
       merged,
@@ -96,11 +121,12 @@ class PartyService {
   }
 
   Future<PartyModel> getParty(String partyId) async {
-    final businessId = _requireBusinessId();
     final dto = await _master.getActive(partyId);
     if (dto == null) {
       throw const PartyException('Party not found');
     }
+    final row = await _master.local.getById(partyId);
+    final businessId = _resolveBusinessId(row?.businessId);
     return _dtoToModel(businessId, dto);
   }
 
@@ -117,26 +143,101 @@ class PartyService {
     String partyId,
     AddPartyResult result, {
     bool? isActive,
+    PartyModel? seedParty,
   }) async {
-    final businessId = _requireBusinessId();
+    debugPrint(
+      '[PartyUpdate] start partyId=$partyId '
+      'name="${result.partyName}" phone="${result.phone}" '
+      'gstin="${result.gstin}" opening="${result.openingBalance}"',
+    );
+    await _ensureLocalPartyRow(partyId, seedParty: seedParty);
+    final existingRow = await _master.local.getById(partyId);
+    debugPrint(
+      '[PartyUpdate] localRow '
+      'found=${existingRow != null} '
+      'rowBusinessId=${existingRow?.businessId} '
+      'scoped=${_readScopedBusinessId()}',
+    );
+    final businessId = _resolveBusinessId(existingRow?.businessId);
     final request = PartyModel.updateRequestFromResult(
       result,
       isActive: isActive,
     );
+    debugPrint('[PartyUpdate] request=${request.toJson()}');
     final extension = PartyLocalExtension.fromAddPartyResult(result);
-    final updated = await _master.update(partyId, request);
+    final updated = await _updateLocalParty(partyId, request);
     await _cache.upsertLocalExtension(businessId, partyId, extension);
+    debugPrint(
+      '[PartyUpdate] saved id=${updated.id} name=${updated.name} '
+      'businessId=$businessId',
+    );
     return PartyModel.fromDto(updated, extension: extension);
+  }
+
+  Future<void> _ensureLocalPartyRow(
+    String partyId, {
+    PartyModel? seedParty,
+  }) async {
+    final existingRow = await _master.local.getById(partyId);
+    if (existingRow != null && !existingRow.isDeleted) return;
+
+    if (seedParty != null && seedParty.id == partyId) {
+      final businessId = _requireBusinessId();
+      await _master.ensureLocalFromModel(businessId, seedParty);
+      return;
+    }
+
+    final hydrated = await _master.getActive(partyId);
+    if (hydrated == null) {
+      throw const PartyException('Party not found');
+    }
+  }
+
+  Future<PartyDto> _updateLocalParty(
+    String partyId,
+    UpdatePartyRequest request,
+  ) async {
+    try {
+      return await _master.update(partyId, request);
+    } on Object catch (error, stack) {
+      debugPrint('[PartyUpdate] local persist failed: $error\n$stack');
+      throw PartyException(_localPartyPersistMessage(error));
+    }
+  }
+
+  String _localPartyPersistMessage(Object error) {
+    final message = error is StateError ? error.message : error.toString();
+    if (message.contains('Party not found locally')) {
+      return 'Party not found. Refresh the list and try again.';
+    }
+    if (message.contains('different business')) {
+      return 'This party belongs to another business.';
+    }
+    if (message.contains('No business selected')) {
+      return 'Business not selected. Please select a business first.';
+    }
+    return message;
   }
 
   Future<PartyModel> setPartyActive(
     String partyId, {
     required bool isActive,
   }) async {
-    final businessId = _requireBusinessId();
+    final existingRow = await _master.local.getById(partyId);
+    final businessId = _resolveBusinessId(existingRow?.businessId);
     final updated = await _master.update(
       partyId,
       UpdatePartyRequest(isActive: isActive),
+    );
+    return _dtoToModel(businessId, updated);
+  }
+
+  Future<PartyModel> updatePartyNotes(String partyId, String? notes) async {
+    final existingRow = await _master.local.getById(partyId);
+    final businessId = _resolveBusinessId(existingRow?.businessId);
+    final updated = await _master.update(
+      partyId,
+      UpdatePartyRequest(notes: notes),
     );
     return _dtoToModel(businessId, updated);
   }
@@ -224,7 +325,6 @@ class PartyService {
     }
   }
 
-
   /// Writes profile image fields into the local party cache so detail reloads
   /// do not flash back to a missing avatar after upload.
   Future<void> persistPartyProfileImage(
@@ -232,9 +332,6 @@ class PartyService {
     String? profileImageUrl,
     String? profileMediaAssetId,
   }) async {
-    final businessId = _businessId;
-    if (businessId == null || businessId.isEmpty) return;
-
     final row = await _master.local.getById(partyId);
     if (row == null) return;
     await _master.local.upsertRow(
@@ -276,29 +373,27 @@ class PartyService {
     PartyListFilter filter,
     PartyTypeFilter typeFilter,
   ) {
-    final query = searchQuery?.trim().toLowerCase() ?? '';
-    // Split query into individual words for order-independent matching.
-    // e.g. "Delhi ABC" matches "ABC Traders Delhi" because both words are found.
-    final queryWords = query.isEmpty
-        ? <String>[]
-        : query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final queryWords = PartySearchMatch.queryWords(searchQuery);
 
     final filtered = parties.where((party) {
       if (!typeFilter.matches(party.partyType)) return false;
 
       if (queryWords.isNotEmpty) {
-        // Build a single searchable string from all party fields
-        final searchableText = [
-          party.name,
-          party.phone,
-          party.gstin,
-        ].join(' ').toLowerCase();
-
-        // Every word must appear somewhere in the combined text
-        final allWordsMatch = queryWords.every(
-          searchableText.contains,
+        final matches = PartySearchMatch.matchesFields(
+          queryWords: queryWords,
+          fields: [
+            party.name,
+            party.legalName,
+            party.alias,
+            party.additionalField1,
+            party.phone,
+            ...party.additionalPhones,
+            party.gstin,
+            party.email,
+            party.partyGroup,
+          ],
         );
-        if (!allWordsMatch) return false;
+        if (!matches) return false;
       }
 
       return switch (filter) {
@@ -341,7 +436,6 @@ class PartyService {
     );
   }
 
-
   Future<void> _syncPendingOperations() async {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) return;
@@ -349,32 +443,72 @@ class PartyService {
     await _cache.clearPendingOperations(businessId);
   }
 
-  String _requireBusinessId() {
-    final businessId = _businessId;
-    if (businessId == null || businessId.isEmpty) {
-      throw const PartyBusinessNotSelectedException();
+  String _readScopedBusinessId() {
+    try {
+      return _businessIdReader().trim();
+    } on Object catch (error, stack) {
+      debugPrint('[PartyUpdate] businessIdReader failed: $error\n$stack');
+      return '';
     }
-    return businessId;
   }
 
+  String _resolveBusinessId([String? rowBusinessId]) {
+    final scoped = _readScopedBusinessId();
+    final rowId = rowBusinessId?.trim() ?? '';
+    if (rowId.isNotEmpty) {
+      if (scoped.isNotEmpty && scoped.toLowerCase() != rowId.toLowerCase()) {
+        throw const PartyException(
+          'This party belongs to another business.',
+        );
+      }
+      return rowId;
+    }
+    if (scoped.isNotEmpty) return scoped;
+    throw const PartyBusinessNotSelectedException();
+  }
+
+  String _requireBusinessId() => _resolveBusinessId();
 }
 
 @Riverpod(keepAlive: true)
 class PartyList extends _$PartyList {
   @override
   Future<List<PartyModel>> build() async {
-    ref
-      ..watch(partySearchQueryProvider)
-      ..watch(partyListFilterProvider)
-      ..watch(partyTypeFilterProvider)
-      ..watch(partyBackendSearchProvider);
+    ref.watch(currentBusinessProvider);
 
-    final service = await ref.watch(partyServiceProvider.future);
+    final service = await ref.read(partyServiceProvider.future);
+    final filter = ref.read(partyListFilterProvider);
+    final fetchFilter =
+        filter == PartyListFilter.toReceive || filter == PartyListFilter.toPay
+        ? PartyListFilter.all
+        : filter;
     final parties = await service.fetchParties(
       searchQuery: ref.read(partyBackendSearchProvider),
-      filter: ref.read(partyListFilterProvider),
+      filter: fetchFilter,
       typeFilter: ref.read(partyTypeFilterProvider),
     );
+
+    if (filter == PartyListFilter.toReceive ||
+        filter == PartyListFilter.toPay) {
+      final ledgerService = await ref.watch(partyLedgerServiceProvider.future);
+      final businessId = await ref.watch(partyLedgerBusinessIdProvider.future);
+      final outstandingIndex = await ledgerService.fetchOutstandingIndex(
+        businessId: businessId,
+      );
+      return parties.where((party) {
+        final balance = projectedPartyBalance(party, outstandingIndex);
+        final projected = party.copyWith(balance: balance);
+        return switch (filter) {
+          PartyListFilter.toReceive => projected.hasReceivable,
+          PartyListFilter.toPay => projected.hasPayable,
+          _ => true,
+        };
+      }).toList()..sort(
+        (a, b) => projectedPartyBalance(b, outstandingIndex).abs().compareTo(
+          projectedPartyBalance(a, outstandingIndex).abs(),
+        ),
+      );
+    }
 
     return parties;
   }
@@ -384,14 +518,46 @@ class PartyList extends _$PartyList {
     PartyListFilter? filter,
     PartyTypeFilter? typeFilter,
   }) async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final service = await ref.read(partyServiceProvider.future);
-      return service.fetchParties(
+      final activeFilter = filter ?? ref.read(partyListFilterProvider)!;
+      final fetchFilter =
+          activeFilter == PartyListFilter.toReceive ||
+              activeFilter == PartyListFilter.toPay
+          ? PartyListFilter.all
+          : activeFilter;
+      final parties = await service.fetchParties(
         searchQuery: searchQuery ?? ref.read(partyBackendSearchProvider),
-        filter: filter ?? ref.read(partyListFilterProvider),
+        filter: fetchFilter,
         typeFilter: typeFilter ?? ref.read(partyTypeFilterProvider),
       );
+
+      if (activeFilter == PartyListFilter.toReceive ||
+          activeFilter == PartyListFilter.toPay) {
+        final ledgerService = await ref.read(partyLedgerServiceProvider.future);
+        final businessId = await ref.read(partyLedgerBusinessIdProvider.future);
+        final outstandingIndex = await ledgerService.fetchOutstandingIndex(
+          businessId: businessId,
+        );
+        return parties.where((party) {
+          final balance = projectedPartyBalance(party, outstandingIndex);
+          final projected = party.copyWith(balance: balance);
+          return switch (activeFilter) {
+            PartyListFilter.toReceive => projected.hasReceivable,
+            PartyListFilter.toPay => projected.hasPayable,
+            _ => true,
+          };
+        }).toList()..sort(
+          (a, b) => projectedPartyBalance(b, outstandingIndex).abs().compareTo(
+            projectedPartyBalance(a, outstandingIndex).abs(),
+          ),
+        );
+      }
+
+      return parties;
     });
   }
 
@@ -411,7 +577,7 @@ class PartyList extends _$PartyList {
         await service.rememberSelectedParty(created.id);
       }
       ref.read(partyDetailProvider(created.id).notifier).setParty(created);
-      refreshAfterPartyMutation(ref, refreshList: false);
+      refreshAfterPartyMutation(ref, refreshList: false, partyId: created.id);
       return created;
     } on PartyOfflineException {
       await refresh();
@@ -423,6 +589,7 @@ class PartyList extends _$PartyList {
     String partyId,
     AddPartyResult result, {
     bool? isActive,
+    PartyModel? seedParty,
   }) async {
     final service = await ref.read(partyServiceProvider.future);
     try {
@@ -430,19 +597,40 @@ class PartyList extends _$PartyList {
           state.asData?.value
               .where((party) => party.id == partyId)
               .firstOrNull ??
-          ref.read(partyDetailProvider(partyId)).asData?.value;
+          ref.read(partyDetailProvider(partyId)).asData?.value ??
+          seedParty;
 
       var updated = await service.updateParty(
         partyId,
         result,
         isActive: isActive,
+        seedParty: seedParty ?? existing,
       );
 
       // Preserve a just-uploaded profile image if the PATCH response raced
       // ahead of the media bind and came back without it.
       final keepImage = existing?.profileImageUrl;
       final keepMediaId = existing?.profileMediaAssetId;
-      if ((updated.profileImageUrl == null ||
+      final memoryMediaId = keepMediaId?.trim();
+      final updatedMediaId = updated.profileMediaAssetId?.trim();
+
+      if (memoryMediaId != null &&
+          memoryMediaId.isNotEmpty &&
+          memoryMediaId != updatedMediaId) {
+        updated = updated.copyWith(
+          profileImageUrl: keepImage,
+          profileMediaAssetId: keepMediaId,
+        );
+        try {
+          await service.persistPartyProfileImage(
+            partyId,
+            profileImageUrl: keepImage,
+            profileMediaAssetId: keepMediaId,
+          );
+        } on Object {
+          // Image is already bound on the server; local persist is best-effort.
+        }
+      } else if ((updated.profileImageUrl == null ||
               updated.profileImageUrl!.trim().isEmpty) &&
           keepImage != null &&
           keepImage.trim().isNotEmpty) {
@@ -450,18 +638,28 @@ class PartyList extends _$PartyList {
           profileImageUrl: keepImage,
           profileMediaAssetId: keepMediaId,
         );
-        unawaited(
-          service.persistPartyProfileImage(
+        try {
+          await service.persistPartyProfileImage(
             partyId,
             profileImageUrl: keepImage,
             profileMediaAssetId: keepMediaId,
-          ),
-        );
+          );
+        } on Object {
+          // Image is already bound on the server; local persist is best-effort.
+        }
       }
 
-      _upsertInState(updated);
-      ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
-      refreshAfterPartyMutation(ref, refreshList: false);
+      try {
+        if (!_upsertInState(updated)) {
+          await refresh();
+          _upsertInState(updated);
+        }
+        ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+        refreshAfterPartyMutation(ref, refreshList: false, partyId: partyId);
+      } on Object catch (error, stack) {
+        // Local SQLite write and sync-queue enqueue already succeeded.
+        debugPrint('[PartyUpdate] post-save UI refresh failed: $error\n$stack');
+      }
       return updated;
     } on PartyOfflineException {
       await refresh();
@@ -514,9 +712,12 @@ class PartyList extends _$PartyList {
     final service = await ref.read(partyServiceProvider.future);
     try {
       final updated = await service.setPartyActive(partyId, isActive: true);
-      _upsertInState(updated);
+      if (!_upsertInState(updated)) {
+        await refresh();
+        _upsertInState(updated);
+      }
       ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
-      refreshAfterPartyMutation(ref, refreshList: false);
+      refreshAfterPartyMutation(ref, refreshList: false, partyId: partyId);
       return updated;
     } on PartyOfflineException {
       await refresh();
@@ -546,13 +747,22 @@ class PartyList extends _$PartyList {
     }
   }
 
+  Future<PartyModel> updatePartyNotes(String partyId, String? notes) async {
+    final service = await ref.read(partyServiceProvider.future);
+    final updated = await service.updatePartyNotes(partyId, notes);
+    _upsertInState(updated);
+    ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+    refreshAfterPartyMutation(ref, refreshList: false, partyId: partyId);
+    return updated;
+  }
+
   /// Optimistically patch profile image fields after upload/delete.
-  void patchProfileImage(
+  Future<void> patchProfileImage(
     String partyId, {
     String? profileImageUrl,
     String? profileMediaAssetId,
     bool clear = false,
-  }) {
+  }) async {
     final current = state.asData?.value;
     final existing =
         current?.where((p) => p.id == partyId).firstOrNull ??
@@ -566,17 +776,16 @@ class PartyList extends _$PartyList {
     );
     _upsertInState(updated);
     ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
-    unawaited(
-      ref
-          .read(partyServiceProvider.future)
-          .then(
-            (service) => service.persistPartyProfileImage(
-              partyId,
-              profileImageUrl: updated.profileImageUrl,
-              profileMediaAssetId: updated.profileMediaAssetId,
-            ),
-          ),
-    );
+    try {
+      final service = await ref.read(partyServiceProvider.future);
+      await service.persistPartyProfileImage(
+        partyId,
+        profileImageUrl: updated.profileImageUrl,
+        profileMediaAssetId: updated.profileMediaAssetId,
+      );
+    } on Object {
+      // Keep the in-memory image even if local persist is skipped.
+    }
   }
 
   bool _upsertInState(PartyModel party) {
@@ -634,7 +843,8 @@ class PartyList extends _$PartyList {
 class PartyDetail extends _$PartyDetail {
   @override
   Future<PartyModel> build(String partyId) async {
-    final service = await ref.watch(partyServiceProvider.future);
+    ref.watch(currentBusinessProvider);
+    final service = await ref.read(partyServiceProvider.future);
     return service.getParty(partyId);
   }
 

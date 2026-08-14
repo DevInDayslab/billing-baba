@@ -1,0 +1,154 @@
+import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/subscription/application/payment_state_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+Future<void> showPaymentFailedDialog(
+  BuildContext context, {
+  required WidgetRef ref,
+  required VoidCallback onRetryPayment,
+  required VoidCallback onChangePlan,
+  required VoidCallback onCancel,
+}) {
+  final result = ref.read(paymentStateProvider).result;
+  final message =
+      result?.failureMessage ??
+      ref.read(paymentStateProvider).errorMessage ??
+      'Payment could not be completed. Please try again.';
+
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) => PopScope(
+      canPop: false,
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Material(
+          color: AppColors.surface,
+          borderRadius: AppRadius.lgBorder,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFEBEE),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const Text(
+                  'Payment Failed',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                if (result != null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  _InfoRow(
+                    label: 'Transaction ID',
+                    value: result.transactionId,
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.xl),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      onRetryPayment();
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm + 4,
+                      ),
+                    ),
+                    child: const Text('Retry Payment'),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      onChangePlan();
+                    },
+                    child: const Text('Change Plan'),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    onCancel();
+                  },
+                  child: const Text('Cancel'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
