@@ -4,6 +4,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
+import 'package:billing_baba/features/parties/application/party_detail_pane_ratio_provider.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
@@ -21,6 +22,7 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/party
 import 'package:billing_baba/features/parties/presentation/widgets/party_notes_attachments_section.dart';
 import 'package:billing_baba/features/parties/repositories/party_reminder_schedule_repository.dart';
 import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/widgets/resizable_vertical_split.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -105,48 +107,41 @@ class _PartyDetailContent extends ConsumerWidget {
       ref.watch(partyLoyaltyBalanceProvider(party.id));
     }
 
-    return Column(
+    final upperPaneRatio = ref.watch(partyDetailPaneRatioProvider);
+
+    return ResizableVerticalSplit(
       key: ValueKey(party.id),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Header / notes can exceed short viewports; scroll them instead of
-        // overflowing under the transactions pane.
-        Flexible(
-          fit: FlexFit.loose,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _PartyDetailHeader(
-                  party: party,
-                  ledgerAsync: ledgerAsync,
-                  businessName: businessName,
-                  onBack: onBack,
-                ),
-                PartyNotesAttachmentsSection(party: party),
-              ],
+      ratio: upperPaneRatio,
+      onRatioChanged: ref.read(partyDetailPaneRatioProvider.notifier).setRatio,
+      topChild: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _PartyDetailHeader(
+              party: party,
+              ledgerAsync: ledgerAsync,
+              businessName: businessName,
+              onBack: onBack,
             ),
-          ),
+            PartyNotesAttachmentsSection(party: party),
+          ],
         ),
-        const Divider(height: 1, thickness: 1),
-        Expanded(
-          child: ledgerAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => _PartyDetailError(
-              message: PartyErrorMapper.messageFor(error),
-              onRetry: OfflineUiMessages.isOfflineError(error)
-                  ? null
-                  : () => ref.invalidate(partyTimelineProvider(party.id)),
-            ),
-            data: (_) => PartyLedgerTransactionsSection(
-              transactionsAsync: transactionsAsync,
-              onRefresh: () async =>
-                  ref.invalidate(partyTimelineProvider(party.id)),
-            ),
-          ),
+      ),
+      bottomChild: ledgerAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => _PartyDetailError(
+          message: PartyErrorMapper.messageFor(error),
+          onRetry: OfflineUiMessages.isOfflineError(error)
+              ? null
+              : () => ref.invalidate(partyTimelineProvider(party.id)),
         ),
-      ],
+        data: (_) => PartyLedgerTransactionsSection(
+          transactionsAsync: transactionsAsync,
+          onRefresh: () async =>
+              ref.invalidate(partyTimelineProvider(party.id)),
+        ),
+      ),
     );
   }
 }
@@ -302,13 +297,6 @@ class _PartyDetailHeader extends ConsumerWidget {
                             nameStyle: nameStyle,
                           ),
                         ),
-                        if (canEditParty)
-                          _PartyHeaderActionIcon(
-                            icon: Icons.edit_outlined,
-                            tooltip: 'Edit party',
-                            onPressed: () =>
-                                PartyActions.edit(context, ref, party),
-                          ),
                         if (!party.isActive) ...[
                           const SizedBox(width: AppSpacing.sm),
                           Container(
@@ -355,6 +343,12 @@ class _PartyDetailHeader extends ConsumerWidget {
                   ],
                 ),
               ),
+              if (canEditParty)
+                _PartyHeaderActionIcon(
+                  icon: Icons.edit_outlined,
+                  tooltip: 'Edit party',
+                  onPressed: () => PartyActions.edit(context, ref, party),
+                ),
               _PartyHeaderActionIcon(
                 iconWidget: FaIcon(
                   FontAwesomeIcons.commentDots,

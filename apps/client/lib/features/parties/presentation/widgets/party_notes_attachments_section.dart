@@ -172,6 +172,9 @@ class _PartyNotesAttachmentsSectionState
     final canDelete = permissions.canDelete(PermissionModule.party);
     final canShare = permissions.canShare(PermissionModule.party);
 
+    final notesMinLines = widget.useMobileCards ? 2 : 1;
+    final notesMaxLines = widget.useMobileCards ? 4 : 2;
+
     final section = Column(
       children: [
         if (widget.showNotes) ...[
@@ -180,8 +183,8 @@ class _PartyNotesAttachmentsSectionState
             children: [
               TextField(
                 controller: _notesController,
-                minLines: 2,
-                maxLines: 4,
+                minLines: notesMinLines,
+                maxLines: notesMaxLines,
                 enabled: canEdit && !_savingNotes,
                 decoration: const InputDecoration(
                   hintText: 'Add private notes about this party',
@@ -291,11 +294,11 @@ class _PartyNotesAttachmentsSectionState
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.md,
         AppSpacing.sm,
         AppSpacing.md,
-        AppSpacing.md,
+        widget.useMobileCards ? AppSpacing.md : AppSpacing.sm,
       ),
       child: section,
     );
