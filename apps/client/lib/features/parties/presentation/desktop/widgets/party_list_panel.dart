@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_async_list.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
@@ -14,6 +13,7 @@ import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_name_stack.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
@@ -335,10 +335,10 @@ class _PartyListTile extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: InventoryHighlightedText(
-                      text: PartyModel.displayNameWithLegal(party),
-                      query: searchQuery,
-                      style: InventoryStyles.listCellStyle.copyWith(
+                    child: PartyNameStack(
+                      party: party,
+                      searchQuery: searchQuery,
+                      nameStyle: InventoryStyles.listCellStyle.copyWith(
                         fontWeight: isSelected
                             ? FontWeight.w600
                             : FontWeight.w500,

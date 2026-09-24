@@ -168,8 +168,8 @@ class PartyModel {
 
     return PartyModel(
       id: id,
-      name: result.partyName.trim(),
-      legalName: result.legalName.trim(),
+      name: _normalizedPartyName(result.partyName),
+      legalName: _normalizedLegalName(result.legalName),
       alias: result.alias.trim(),
       phone: result.phone.trim(),
       additionalPhones: result.additionalPhones
@@ -496,13 +496,27 @@ class PartyModel {
     return normalized;
   }
 
+  static String _normalizedPartyName(String value) {
+    return Validators.capitalizeFirstLetter(value);
+  }
+
+  static String _normalizedLegalName(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return Validators.capitalizeFirstLetter(trimmed);
+  }
+
+  static String? _normalizedOptionalLegalName(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    return Validators.capitalizeFirstLetter(trimmed);
+  }
+
   static CreatePartyRequest createRequestFromResult(AddPartyResult result) {
     final primaryMobile = normalizePhone(result.phone);
     return CreatePartyRequest(
-      name: result.partyName.trim(),
-      legalName: result.legalName.trim().isEmpty
-          ? null
-          : result.legalName.trim(),
+      name: _normalizedPartyName(result.partyName),
+      legalName: _normalizedOptionalLegalName(result.legalName),
       alias: result.alias.trim().isEmpty ? null : result.alias.trim(),
       mobile: primaryMobile,
       additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),
@@ -527,8 +541,8 @@ class PartyModel {
     bool? isActive,
   }) {
     return UpdatePartyRequest(
-      name: result.partyName.trim(),
-      legalName: result.legalName.trim(),
+      name: _normalizedPartyName(result.partyName),
+      legalName: _normalizedLegalName(result.legalName),
       alias: result.alias.trim(),
       mobile: normalizePhone(result.phone),
       additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),

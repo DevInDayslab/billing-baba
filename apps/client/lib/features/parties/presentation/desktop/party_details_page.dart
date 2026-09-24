@@ -90,7 +90,6 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
                 currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => _openAddPartyDialog(context, ref),
               ),
-              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {

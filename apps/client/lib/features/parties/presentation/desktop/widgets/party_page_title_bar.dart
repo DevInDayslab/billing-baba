@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/manage_party_groups_dialog.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +29,7 @@ class PartyPageTitleBar extends ConsumerWidget {
 
   static const _addPartyRed = Color(0xFFE53935);
 
-  static const _barHeight = DashboardSpacing.topBarHeight;
+  static const double _barHeight = DashboardSpacing.topBarHeight;
 
   static const _titleStyle = TextStyle(
     fontSize: 16,
@@ -53,16 +53,19 @@ class PartyPageTitleBar extends ConsumerWidget {
         : null;
     final pageLabel = PartySubRoutes.labelForRoute(currentRoute);
 
+    // Match [AppTopBar] height and vertical alignment (search row above).
     return SizedBox(
       height: _barHeight,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Text(
-              pageLabel,
-              style: _titleStyle,
-              overflow: TextOverflow.ellipsis,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                pageLabel,
+                style: _titleStyle,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
           if (addAction != null) ...[
@@ -111,7 +114,9 @@ class _AddPartyButton extends StatelessWidget {
           vertical: AppSpacing.sm + 2,
         ),
         minimumSize: const Size(0, 40),
+        maximumSize: const Size(double.infinity, 40),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
@@ -135,12 +140,14 @@ class _MoreMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       tooltip: 'More options',
       padding: EdgeInsets.zero,
+      splashRadius: 18,
       icon: const Icon(
         Icons.more_vert,
         color: AppColors.textSecondary,
         size: 18,
       ),
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      iconSize: 18,
       onSelected:
           onMoreSelected ??
           (value) {

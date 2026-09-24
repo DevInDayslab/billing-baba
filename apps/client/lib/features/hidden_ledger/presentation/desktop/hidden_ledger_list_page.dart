@@ -115,7 +115,6 @@ class _HiddenLedgerListPageState
               const PartyPageTitleBar(
                 currentRoute: AppRoutes.partyHiddenLedger,
               ),
-              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: _buildContentShell(
                   child: Column(
