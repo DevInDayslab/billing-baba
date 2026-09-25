@@ -4,13 +4,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'party_detail_pane_ratio_provider.g.dart';
 
-/// Persisted height ratio for the party detail upper pane (header + notes)
+/// Persisted height ratio for the party detail upper pane (header)
 /// versus the transactions table on desktop.
 @Riverpod(keepAlive: true)
 class PartyDetailPaneRatio extends _$PartyDetailPaneRatio {
-  static const defaultRatio = 0.42;
-  static const minRatio = 0.22;
-  static const maxRatio = 0.78;
+  static const defaultRatio = 0.36;
+  static const minRatio = 0.24;
+  static const maxRatio = 0.62;
 
   @override
   double build() {

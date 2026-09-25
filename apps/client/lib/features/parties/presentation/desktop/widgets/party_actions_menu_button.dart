@@ -7,10 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class PartyActionsMenuButton extends ConsumerWidget {
   const PartyActionsMenuButton({
     required this.party,
+    this.onMoreDetails,
     super.key,
   });
 
   final PartyModel party;
+  final VoidCallback? onMoreDetails;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,6 +29,11 @@ class PartyActionsMenuButton extends ConsumerWidget {
           label: 'View Party',
           onSelected: () => PartyActions.edit(context, ref, party),
         ),
+        if (onMoreDetails != null)
+          SalesActionMenuItem(
+            label: 'More Details',
+            onSelected: () async => onMoreDetails!(),
+          ),
         if (!party.isActive)
           SalesActionMenuItem(
             label: 'Restore Party',

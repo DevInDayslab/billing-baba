@@ -113,7 +113,6 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
                 currentRoute: AppRoutes.partyGroups,
                 onAddGroup: () => _openAddGroupDialog(context, ref),
               ),
-              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {

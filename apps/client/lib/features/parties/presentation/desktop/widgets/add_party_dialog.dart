@@ -497,10 +497,14 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   void _populateFromParty(PartyModel party, {String? duplicateNameSuffix}) {
-    _partyNameController.text = duplicateNameSuffix == null
-        ? party.name
-        : '${party.name}$duplicateNameSuffix';
-    _legalNameController.text = party.legalName;
+    _partyNameController.text = Validators.capitalizeFirstLetter(
+      duplicateNameSuffix == null
+          ? party.name
+          : '${party.name}$duplicateNameSuffix',
+    );
+    _legalNameController.text = party.legalName.trim().isEmpty
+        ? ''
+        : Validators.capitalizeFirstLetter(party.legalName);
     _aliasController.text = party.alias;
     _areaCodeController.text = party.areaCode;
     _partyType = party.partyType;
@@ -654,8 +658,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   AddPartyResult _buildResult() {
     return AddPartyResult(
-      partyName: _partyNameController.text.trim(),
-      legalName: _legalNameController.text.trim(),
+      partyName: Validators.capitalizeFirstLetter(_partyNameController.text),
+      legalName: _legalNameController.text.trim().isEmpty
+          ? ''
+          : Validators.capitalizeFirstLetter(_legalNameController.text),
       alias: _aliasController.text.trim(),
       partyType: _partyType,
       gstin: _gstinController.text.trim().isEmpty
@@ -1608,6 +1614,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       autofocus: !_isEditMode,
       maxLength: Validators.partyNameMaxLength,
       inputFormatters: [
+        const CapitalizeFirstLetterFormatter(),
         LengthLimitingTextInputFormatter(Validators.partyNameMaxLength),
         FilteringTextInputFormatter.allow(Validators.businessNameInputPattern),
       ],
@@ -1621,6 +1628,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     final legalNameField = _buildInlineTextField(
       controller: _legalNameController,
       hint: 'Legal Name',
+      inputFormatters: const [CapitalizeFirstLetterFormatter()],
     );
 
     final aliasField = _buildInlineTextField(
@@ -2386,60 +2394,96 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               setState(() => _openingBalanceAsOfDate = _dateOnly(date)),
         ),
         const SizedBox(height: FormSpacing.section),
-        _LabeledField(
-          label: 'Opening Balance Type',
-          child: SegmentedButton<OpeningBalanceDirection>(
-            segments: [
-              for (final direction in OpeningBalanceDirection.values)
-                ButtonSegment(
-                  value: direction,
-                  label: Text(direction.label),
-                ),
-            ],
-            selected: {_openingBalanceDirection},
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) return;
-              setState(() => _openingBalanceDirection = selection.first);
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 720;
+            final openingBalanceType = _buildOpeningBalanceTypeField();
+            final loyaltyPoints = _buildLoyaltyPointsOpeningBalanceField();
+            final creditLimit = _buildCreditLimitSection();
+
+            if (isNarrow) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  openingBalanceType,
+                  const SizedBox(height: AppSpacing.md),
+                  loyaltyPoints,
+                  const SizedBox(height: AppSpacing.md),
+                  creditLimit,
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: openingBalanceType),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(flex: 3, child: loyaltyPoints),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(flex: 2, child: creditLimit),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOpeningBalanceTypeField() {
+    return _LabeledField(
+      label: 'Opening Balance Type',
+      child: SegmentedButton<OpeningBalanceDirection>(
+        segments: [
+          for (final direction in OpeningBalanceDirection.values)
+            ButtonSegment(
+              value: direction,
+              label: Text(direction.label),
+            ),
+        ],
+        selected: {_openingBalanceDirection},
+        onSelectionChanged: (selection) {
+          if (selection.isEmpty) return;
+          setState(() => _openingBalanceDirection = selection.first);
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoyaltyPointsOpeningBalanceField() {
+    return _LabeledField(
+      label: 'Loyalty Points Opening Balance',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SaleTextField(
+            controller: _loyaltyPointsOpeningBalanceController,
+            focusNode: _loyaltyPointsFocusNode,
+            hint: _defaultDecimal,
+            hasError: _loyaltyBalanceError != null,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            inputFormatters: [nonNegativeDecimalInputFormatter],
+            onChanged: (_) {
+              if (_loyaltyBalanceError != null) {
+                setState(() => _loyaltyBalanceError = null);
+              }
             },
           ),
-        ),
-        const SizedBox(height: FormSpacing.section),
-        _LabeledField(
-          label: 'Loyalty Points Opening Balance',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SaleTextField(
-                controller: _loyaltyPointsOpeningBalanceController,
-                focusNode: _loyaltyPointsFocusNode,
-                hint: _defaultDecimal,
-                hasError: _loyaltyBalanceError != null,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+          if (_loyaltyBalanceError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 2),
+              child: Text(
+                _loyaltyBalanceError!,
+                style: const TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
                 ),
-                onChanged: (_) {
-                  if (_loyaltyBalanceError != null) {
-                    setState(() => _loyaltyBalanceError = null);
-                  }
-                },
               ),
-              if (_loyaltyBalanceError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 2),
-                  child: Text(
-                    _loyaltyBalanceError!,
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: FormSpacing.section),
-        _buildCreditLimitSection(),
-      ],
+            ),
+        ],
+      ),
     );
   }
 
@@ -2498,6 +2542,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
+                inputFormatters: [nonNegativeDecimalInputFormatter],
                 onChanged: (_) => onAmountChanged?.call(),
               ),
               if (amountError != null)
@@ -2539,17 +2584,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildCreditLimitSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Credit Limit', style: saleFieldLabelStyle),
-        const SizedBox(height: AppSpacing.sm),
-        _buildCreditLimitToggleBar(),
-        if (_useCustomCreditLimit) ...[
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            width: 200,
-            child: Column(
+    return _LabeledField(
+      label: 'Credit Limit',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildCreditLimitToggleBar(),
+          if (_useCustomCreditLimit) ...[
+            const SizedBox(height: AppSpacing.md),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SaleTextField(
@@ -2561,6 +2604,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  inputFormatters: [nonNegativeDecimalInputFormatter],
                   onChanged: (_) {
                     if (_creditLimitError != null) {
                       setState(() => _creditLimitError = null);
@@ -2580,15 +2624,16 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                   ),
               ],
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
   Widget _buildCreditLimitToggleBar() {
     return Container(
       height: 32,
+      width: double.infinity,
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
@@ -2596,28 +2641,31 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         border: Border.all(color: _cardBorder),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildCreditLimitToggleSegment(
-            label: 'No limit',
-            isSelected: !_useCustomCreditLimit,
-            borderRadius: const BorderRadius.horizontal(
-              left: Radius.circular(4),
+          Expanded(
+            child: _buildCreditLimitToggleSegment(
+              label: 'No limit',
+              isSelected: !_useCustomCreditLimit,
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(4),
+              ),
+              onTap: () => setState(() => _useCustomCreditLimit = false),
             ),
-            onTap: () => setState(() => _useCustomCreditLimit = false),
           ),
-          _buildCreditLimitToggleSegment(
-            label: 'Custom limit',
-            isSelected: _useCustomCreditLimit,
-            borderRadius: const BorderRadius.horizontal(
-              right: Radius.circular(4),
+          Expanded(
+            child: _buildCreditLimitToggleSegment(
+              label: 'Custom limit',
+              isSelected: _useCustomCreditLimit,
+              borderRadius: const BorderRadius.horizontal(
+                right: Radius.circular(4),
+              ),
+              onTap: () => setState(() {
+                _useCustomCreditLimit = true;
+                if (_creditLimitController.text.trim().isEmpty) {
+                  _creditLimitController.text = _defaultDecimal;
+                }
+              }),
             ),
-            onTap: () => setState(() {
-              _useCustomCreditLimit = true;
-              if (_creditLimitController.text.trim().isEmpty) {
-                _creditLimitController.text = _defaultDecimal;
-              }
-            }),
           ),
         ],
       ),
