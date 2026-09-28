@@ -83,7 +83,11 @@ class BusinessRepository {
     return BusinessDetailDto.fromJson(data);
   }
 
-  Future<void> deleteBusiness(String businessId) async {
+  Future<void> scheduleBusinessDeletion(String businessId) async {
     await _dio.delete<void>(ApiEndpoints.business(businessId));
+  }
+
+  Future<void> cancelBusinessDeletion(String businessId) async {
+    await _dio.post<void>(ApiEndpoints.businessCancelDeletion(businessId));
   }
 }

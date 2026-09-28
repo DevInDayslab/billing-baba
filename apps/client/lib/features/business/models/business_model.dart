@@ -18,6 +18,7 @@ class BusinessModel {
     this.address,
     this.role,
     this.logoUrl,
+    this.scheduledDeletionAt,
   });
 
   final String id;
@@ -33,8 +34,11 @@ class BusinessModel {
   final String? address;
   final String? role;
   final String? logoUrl;
+  final DateTime? scheduledDeletionAt;
 
   bool get isOwner => role == 'owner';
+
+  bool get isPendingDeletion => scheduledDeletionAt != null;
 
   BusinessModel copyWith({
     String? id,
@@ -50,6 +54,7 @@ class BusinessModel {
     String? address,
     String? role,
     String? logoUrl,
+    DateTime? scheduledDeletionAt,
   }) {
     return BusinessModel(
       id: id ?? this.id,
@@ -65,6 +70,8 @@ class BusinessModel {
       address: address ?? this.address,
       role: role ?? this.role,
       logoUrl: logoUrl ?? this.logoUrl,
+      scheduledDeletionAt:
+          scheduledDeletionAt ?? this.scheduledDeletionAt,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_side_widget.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/features/notifications/presentation/desktop/desktop_notification_popover.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,7 +22,7 @@ class DashboardTabBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          for (final tab in DashboardHomeTab.values)
+          for (final tab in DashboardHomeTab.tabBarTabs)
             Expanded(
               child: _DashboardTabItem(
                 label: tab.label,
@@ -30,6 +31,10 @@ class DashboardTabBar extends ConsumerWidget {
                     ref.read(dashboardActiveTabProvider.notifier).select(tab),
               ),
             ),
+          const Padding(
+            padding: EdgeInsets.only(right: AppSpacing.sm),
+            child: DesktopNotificationBellAnchor(),
+          ),
         ],
       ),
     );

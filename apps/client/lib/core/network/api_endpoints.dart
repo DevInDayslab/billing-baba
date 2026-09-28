@@ -3,6 +3,8 @@ abstract final class ApiEndpoints {
   static const auth = '/api/v1/auth';
   static const businesses = '/api/v1/businesses';
   static String business(String id) => '$businesses/$id';
+  static String businessCancelDeletion(String id) =>
+      '${business(id)}/cancel-deletion';
   static const businessProfile = '/api/v1/business/profile';
   static const businessCommerceSettings = '/api/v1/business/commerce-settings';
   static const businessLogo = '/api/v1/business/logo';

@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/platform/desktop_app_menu_bar.dart';
+import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -32,6 +36,11 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(_imageMemoryHandler);
+    if (AppPlatform.current.isDesktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(ensureDesktopWindowMaximized());
+      });
+    }
   }
 
   @override

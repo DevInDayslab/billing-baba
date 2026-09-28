@@ -33,7 +33,6 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
     final metrics = DashboardLayoutScope.of(context);
     final visible = DashboardSideWidget.pinLowStockFirst(
       ref.watch(dashboardWidgetPreferencesProvider),
-      hasLowStock: dashboard.inventory.lowStockItems.isNotEmpty,
     );
 
     return Column(

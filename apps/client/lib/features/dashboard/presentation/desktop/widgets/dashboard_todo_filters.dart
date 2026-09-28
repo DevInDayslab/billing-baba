@@ -11,11 +11,12 @@ enum DashboardTodoScopeFilter { today, all }
 
 /// **Status** filter (pills) — narrows the scoped list by completion / due state.
 ///
-/// - [all]: every task in the current period (including completed).
+/// - [all]: every non-completed task in the current period.
 /// - [today]: non-completed tasks due today.
 /// - [overdue]: non-completed overdue tasks.
 /// - [pending]: non-completed tasks (active work).
-enum DashboardTodoStatusChip { all, today, overdue, pending }
+/// - [completed]: completed tasks only.
+enum DashboardTodoStatusChip { all, today, overdue, pending, completed }
 
 abstract final class DashboardTodoFilterLogic {
   static List<TaskModel> applyScope(
@@ -49,7 +50,7 @@ abstract final class DashboardTodoFilterLogic {
     return scoped.where((task) {
       switch (chip) {
         case DashboardTodoStatusChip.all:
-          return true;
+          return !task.isCompleted;
         case DashboardTodoStatusChip.pending:
           return !task.isCompleted;
         case DashboardTodoStatusChip.today:
@@ -58,8 +59,31 @@ abstract final class DashboardTodoFilterLogic {
         case DashboardTodoStatusChip.overdue:
           return !task.isCompleted &&
               task.status(now: clock) == TaskStatus.overdue;
+        case DashboardTodoStatusChip.completed:
+          return task.isCompleted;
       }
     }).toList();
+  }
+
+  /// Applies period scope, then status chip. Completed always uses the full list.
+  static List<TaskModel> applyStatusFilters(
+    List<TaskModel> allTasks, {
+    required DashboardTodoScopeFilter scope,
+    required DashboardTodoStatusChip chip,
+    DateTime? now,
+  }) {
+    if (chip == DashboardTodoStatusChip.completed) {
+      return TaskSort.filterAndSort(
+        allTasks,
+        filter: TaskFilter.completed,
+        now: now,
+      );
+    }
+    return applyStatusChip(
+      applyScope(allTasks, scope: scope, now: now),
+      chip: chip,
+      now: now,
+    );
   }
 
   static ({int pending, int overdue}) summaryCounts(
@@ -236,6 +260,12 @@ class DashboardTodoStatusChips extends StatelessWidget {
               label: 'Pending',
               isSelected: selected == DashboardTodoStatusChip.pending,
               onTap: () => onChanged(DashboardTodoStatusChip.pending),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            _StatusChip(
+              label: 'Completed',
+              isSelected: selected == DashboardTodoStatusChip.completed,
+              onTap: () => onChanged(DashboardTodoStatusChip.completed),
             ),
           ],
         ),

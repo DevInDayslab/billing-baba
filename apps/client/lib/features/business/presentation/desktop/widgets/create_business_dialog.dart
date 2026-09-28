@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/constants/dev_demo_constants.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/create_business_controller.dart';
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';
@@ -82,6 +84,7 @@ class _CreateBusinessSheet extends ConsumerStatefulWidget {
 class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   final _formKey = GlobalKey<FormState>();
   final _businessNameController = TextEditingController();
+  final _businessNameFocusNode = FocusNode();
   final _ownerNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -124,6 +127,17 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   void initState() {
     super.initState();
     _businessNameController.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focusBusinessNameField());
+  }
+
+  void _focusBusinessNameField() {
+    if (!mounted) return;
+    _businessNameFocusNode.requestFocus();
+    final text = _businessNameController.text;
+    _businessNameController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: text.length,
+    );
   }
 
   @override
@@ -136,11 +150,32 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     if (phone.length >= 10) {
       _phoneController.text = phone.substring(phone.length - 10);
     }
+
+    String? gstin;
+    final businesses = ref.read(businessListProvider).value ?? const [];
+    for (final business in businesses) {
+      final value = business.gstin?.trim();
+      if (value != null && value.isNotEmpty) {
+        gstin = value;
+        break;
+      }
+    }
+    if (gstin == null) {
+      for (final business in auth.session?.businesses ?? const <BusinessSummary>[]) {
+        final value = business.gstin?.trim();
+        if (value != null && value.isNotEmpty) {
+          gstin = value;
+          break;
+        }
+      }
+    }
+    _gstinController.text = gstin ?? DevDemoConstants.businessGstin;
   }
 
   @override
   void dispose() {
     _businessNameController.dispose();
+    _businessNameFocusNode.dispose();
     _ownerNameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -338,6 +373,7 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       formState: formState,
       logoColumn: _buildLogoColumn(),
       businessNameController: _businessNameController,
+      businessNameFocusNode: _businessNameFocusNode,
       ownerNameController: _ownerNameController,
       phoneController: _phoneController,
       emailController: _emailController,
@@ -409,6 +445,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
     required this.formState,
     required this.logoColumn,
     required this.businessNameController,
+    required this.businessNameFocusNode,
     required this.ownerNameController,
     required this.phoneController,
     required this.emailController,
@@ -435,6 +472,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
   final CreateBusinessFormState formState;
   final Widget logoColumn;
   final TextEditingController businessNameController;
+  final FocusNode businessNameFocusNode;
   final TextEditingController ownerNameController;
   final TextEditingController phoneController;
   final TextEditingController emailController;
@@ -629,6 +667,8 @@ class _CreateBusinessFormContent extends StatelessWidget {
           required: true,
           child: BusinessOutlinedField(
             controller: businessNameController,
+            focusNode: businessNameFocusNode,
+            autofocus: true,
             hintText: 'Business Name',
             textCapitalization: TextCapitalization.words,
             suffixIcon: const Icon(

@@ -6,6 +6,7 @@ import 'package:billing_baba/core/platform/desktop_menu_actions.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/customer_support_strip.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -287,9 +288,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   LogicalKeyboardKey.keyZ,
                   meta: true,
                 ),
-                onSelected: () => _invokeEditIntent(
-                  const UndoTextIntent(SelectionChangedCause.toolbar),
-                ),
+                onSelected: () => _handleUndo(),
               ),
               PlatformMenuItem(
                 label: 'Redo',
@@ -298,9 +297,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   meta: true,
                   shift: true,
                 ),
-                onSelected: () => _invokeEditIntent(
-                  const RedoTextIntent(SelectionChangedCause.toolbar),
-                ),
+                onSelected: () => _handleRedo(),
               ),
             ],
           ),
@@ -362,6 +359,30 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
         ],
       ),
     ];
+  }
+
+  void _handleUndo() {
+    if (tryTaskCompletionUndo(ref, context)) return;
+    _invokeEditIntent(const UndoTextIntent(SelectionChangedCause.toolbar));
+  }
+
+  void _handleRedo() {
+    if (tryTaskCompletionRedo(ref, context)) return;
+    _invokeEditIntent(const RedoTextIntent(SelectionChangedCause.toolbar));
+  }
+
+  static void _handleEditUndoRedo(
+    WidgetRef ref,
+    BuildContext context, {
+    required bool isUndo,
+  }) {
+    if (isUndo) {
+      if (tryTaskCompletionUndo(ref, context)) return;
+      _invokeEditIntent(const UndoTextIntent(SelectionChangedCause.toolbar));
+      return;
+    }
+    if (tryTaskCompletionRedo(ref, context)) return;
+    _invokeEditIntent(const RedoTextIntent(SelectionChangedCause.toolbar));
   }
 
   static void _invokeEditIntent(Intent intent) {
@@ -467,14 +488,18 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
         label: const Text('Edit'),
         menuChildren: [
           MenuItemButton(
-            onPressed: () => _DesktopAppMenuBarState._invokeEditIntent(
-              const UndoTextIntent(SelectionChangedCause.toolbar),
+            onPressed: () => _DesktopAppMenuBarState._handleEditUndoRedo(
+              ref,
+              context,
+              isUndo: true,
             ),
             child: const Text('Undo'),
           ),
           MenuItemButton(
-            onPressed: () => _DesktopAppMenuBarState._invokeEditIntent(
-              const RedoTextIntent(SelectionChangedCause.toolbar),
+            onPressed: () => _DesktopAppMenuBarState._handleEditUndoRedo(
+              ref,
+              context,
+              isUndo: false,
             ),
             child: const Text('Redo'),
           ),

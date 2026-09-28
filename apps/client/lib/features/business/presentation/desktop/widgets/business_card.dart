@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
@@ -7,6 +9,81 @@ import 'package:billing_baba/features/collaboration/domain/models/company_relati
 import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+/// Fade + slight slide when a company is scheduled for deletion.
+class BusinessListCardMotion extends StatefulWidget {
+  const BusinessListCardMotion({
+    required this.isPendingDeletion,
+    required this.child,
+    super.key,
+  });
+
+  final bool isPendingDeletion;
+  final Widget child;
+
+  @override
+  State<BusinessListCardMotion> createState() => _BusinessListCardMotionState();
+}
+
+class _BusinessListCardMotionState extends State<BusinessListCardMotion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<double> _slideY;
+
+  static const _duration = Duration(milliseconds: 520);
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: _duration);
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slideY = Tween<double>(begin: 10, end: 0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    if (widget.isPendingDeletion) {
+      unawaited(_controller.forward());
+    } else {
+      _controller.value = 1;
+    }
+  }
+
+  @override
+  void didUpdateWidget(BusinessListCardMotion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isPendingDeletion && widget.isPendingDeletion) {
+      unawaited(_controller.forward(from: 0));
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isPendingDeletion) {
+      return widget.child;
+    }
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = _fade.value;
+        return Opacity(
+          opacity: 0.5 + (0.42 * t),
+          child: Transform.translate(
+            offset: Offset(0, _slideY.value),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
 
 class BusinessCard extends StatefulWidget {
   const BusinessCard({
@@ -34,14 +111,22 @@ class _BusinessCardState extends State<BusinessCard> {
   static const _currentBadgeColor = Color(0xFFFF9800);
   static const _borderColor = Color(0xFFE8EAED);
 
+  static String _deletionCountdownLabel(DateTime scheduledDeletionAt) {
+    final days = scheduledDeletionAt.difference(DateTime.now()).inDays;
+    if (days <= 0) return 'Deleting soon';
+    if (days == 1) return 'Deletes in 1 day';
+    return 'Deletes in $days days';
+  }
+
   @override
   Widget build(BuildContext context) {
     final entry = widget.entry;
     final dateFormat = DateFormat("dd/MM/yyyy 'at' hh:mm a");
     final syncOn = entry.syncStatus == SyncStatus.on;
     final isSharedTab = entry.isSharedTab;
-    final isPending = entry.relationship.isPending;
+    final isInvitePending = entry.relationship.isPending;
     final isExpired = entry.relationship.isExpired;
+    final isPendingDeletion = entry.isPendingDeletion;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -50,10 +135,14 @@ class _BusinessCardState extends State<BusinessCard> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isPendingDeletion
+              ? AppColors.error.withValues(alpha: 0.04)
+              : Colors.white,
           borderRadius: AppRadius.lgBorder,
           border: Border.all(
-            color: _isHovered
+            color: isPendingDeletion
+                ? AppColors.error.withValues(alpha: 0.35)
+                : _isHovered
                 ? AppColors.primary.withValues(alpha: 0.35)
                 : _borderColor,
           ),
@@ -98,6 +187,18 @@ class _BusinessCardState extends State<BusinessCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (isPendingDeletion) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        _MetaChip(
+                          label: _deletionCountdownLabel(
+                            entry.scheduledDeletionAt!,
+                          ),
+                          color: AppColors.error,
+                          backgroundColor: AppColors.error.withValues(
+                            alpha: 0.1,
+                          ),
+                        ),
+                      ],
                       if (entry.isCurrent) ...[
                         const SizedBox(width: AppSpacing.sm),
                         Container(
@@ -177,7 +278,7 @@ class _BusinessCardState extends State<BusinessCard> {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            if (isPending && !isExpired) ...[
+            if (isInvitePending && !isExpired) ...[
               OutlinedButton(
                 onPressed: widget.onReject,
                 child: const Text('Reject'),

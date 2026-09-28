@@ -10,6 +10,7 @@ import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_editor_dialog.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_empty_state.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,17 +68,10 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
     if (previous == null || !mounted) return;
     if (previous.isCompleted) return;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Reminder completed'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            unawaited(ref.read(tasksProvider.notifier).restore(previous));
-          },
-        ),
-      ),
+    showTaskCompletionUndoRedoSnackBar(
+      context: context,
+      ref: ref,
+      snapshotBeforeComplete: previous,
     );
   }
 
@@ -89,12 +83,9 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
     final searchQuery = homeState.searchQuery.trim().toLowerCase();
     final tasksAsync = ref.watch(tasksProvider);
     final allTasks = tasksAsync.value ?? const <TaskModel>[];
-    final scopedTasks = DashboardTodoFilterLogic.applyScope(
+    final tasks = DashboardTodoFilterLogic.applyStatusFilters(
       allTasks,
       scope: DashboardTodoScopeFilter.all,
-    );
-    final tasks = DashboardTodoFilterLogic.applyStatusChip(
-      scopedTasks,
       chip: _statusChip,
     ).where((task) => _taskMatchesSearch(task, searchQuery)).toList();
     final summary = DashboardTodoFilterLogic.summaryCounts(allTasks);
@@ -230,6 +221,8 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
                                     'No overdue tasks',
                                   DashboardTodoStatusChip.pending =>
                                     "You're all caught up!",
+                                  DashboardTodoStatusChip.completed =>
+                                    'No completed tasks yet',
                                 },
                           style: AppTypography.inter(
                             fontSize: 13,

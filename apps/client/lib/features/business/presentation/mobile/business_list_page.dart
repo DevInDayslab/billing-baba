@@ -6,10 +6,12 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card_menu.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/create_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/delete_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/edit_business_dialog.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/restore_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/mobile/application/business_selection_controller.dart';
 import 'package:billing_baba/features/business/presentation/mobile/widgets/business_selection_tile.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
@@ -83,6 +85,30 @@ class _MobileBusinessListPageState
 
   Future<void> _onContinue(List<CompanyListEntry> entries) async {
     final notifier = ref.read(mobileBusinessSelectionProvider.notifier);
+    final selected = notifier.selectedEntry(entries);
+    if (selected != null && selected.isPendingDeletion) {
+      final restore = await showRestoreScheduledBusinessDialog(
+        context,
+        companyName: selected.name,
+      );
+      if (!mounted || restore != true) return;
+      try {
+        await ref
+            .read(businessListProvider.notifier)
+            .restoreScheduledBusiness(selected.id);
+        ref.invalidate(companyDirectoryProvider);
+      } on Object catch (error) {
+        if (!mounted) return;
+        final message = error is DioException
+            ? ApiErrorParser.userFacingMessage(error)
+            : 'Could not restore company. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
+    }
+
     final errorMessage = await notifier.openSelectedCompany(entries);
     if (!mounted) return;
 
@@ -122,10 +148,14 @@ class _MobileBusinessListPageState
         try {
           await container
               .read(businessListProvider.notifier)
-              .deleteBusiness(entry.id);
+              .scheduleBusinessDeletion(entry.id);
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${entry.name} deleted')),
+            SnackBar(
+              content: Text(
+                '${entry.name} scheduled for deletion in 30 days',
+              ),
+            ),
           );
           ref.invalidate(companyDirectoryProvider);
         } on Object catch (error) {
@@ -236,9 +266,10 @@ class _MobileBusinessListPageState
           }
 
           final directoryService = directoryServiceAsync.value;
-          final owned =
-              directoryService?.ownedCompanies(allEntries) ??
-              allEntries.where((e) => e.relationship.isOwner).toList();
+          final owned = CompanyListEntry.withPendingDeletionLast(
+            directoryService?.ownedCompanies(allEntries) ??
+                allEntries.where((e) => e.relationship.isOwner).toList(),
+          );
           final shared =
               directoryService?.sharedCompanies(allEntries) ??
               allEntries.where((e) => e.isSharedTab).toList();
@@ -273,17 +304,21 @@ class _MobileBusinessListPageState
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.md,
                             ),
-                            child: BusinessSelectionTile(
-                              entry: entry,
-                              isSelected: selection.selectedId == entry.id,
-                              enabled: _isOpenable(entry),
-                              onTap: () => ref
-                                  .read(
-                                    mobileBusinessSelectionProvider.notifier,
-                                  )
-                                  .select(entry.id),
-                              onMenuAction: (action) =>
-                                  _handleCardAction(entry, action),
+                            child: BusinessListCardMotion(
+                              key: ValueKey(entry.id),
+                              isPendingDeletion: entry.isPendingDeletion,
+                              child: BusinessSelectionTile(
+                                entry: entry,
+                                isSelected: selection.selectedId == entry.id,
+                                enabled: _isOpenable(entry),
+                                onTap: () => ref
+                                    .read(
+                                      mobileBusinessSelectionProvider.notifier,
+                                    )
+                                    .select(entry.id),
+                                onMenuAction: (action) =>
+                                    _handleCardAction(entry, action),
+                              ),
                             ),
                           ),
                         ),
@@ -298,17 +333,21 @@ class _MobileBusinessListPageState
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.md,
                             ),
-                            child: BusinessSelectionTile(
-                              entry: entry,
-                              isSelected: selection.selectedId == entry.id,
-                              enabled: _isOpenable(entry),
-                              onTap: () => ref
-                                  .read(
-                                    mobileBusinessSelectionProvider.notifier,
-                                  )
-                                  .select(entry.id),
-                              onMenuAction: (action) =>
-                                  _handleCardAction(entry, action),
+                            child: BusinessListCardMotion(
+                              key: ValueKey(entry.id),
+                              isPendingDeletion: entry.isPendingDeletion,
+                              child: BusinessSelectionTile(
+                                entry: entry,
+                                isSelected: selection.selectedId == entry.id,
+                                enabled: _isOpenable(entry),
+                                onTap: () => ref
+                                    .read(
+                                      mobileBusinessSelectionProvider.notifier,
+                                    )
+                                    .select(entry.id),
+                                onMenuAction: (action) =>
+                                    _handleCardAction(entry, action),
+                              ),
                             ),
                           ),
                         ),

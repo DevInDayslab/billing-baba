@@ -20,6 +20,7 @@ class MobileHomeTodoStatusTabs extends StatelessWidget {
     (label: 'Today', chip: DashboardTodoStatusChip.today),
     (label: 'Overdue', chip: DashboardTodoStatusChip.overdue),
     (label: 'Pending', chip: DashboardTodoStatusChip.pending),
+    (label: 'Completed', chip: DashboardTodoStatusChip.completed),
   ];
 
   int get _selectedIndex {

@@ -31,6 +31,7 @@ class CompanyListEntry {
     this.email,
     this.address,
     this.logoUrl,
+    this.scheduledDeletionAt,
   });
 
   final String id;
@@ -52,8 +53,28 @@ class CompanyListEntry {
   final String? email;
   final String? address;
   final String? logoUrl;
+  final DateTime? scheduledDeletionAt;
 
   bool get isOwner => relationship.isOwner;
+
+  bool get isPendingDeletion => scheduledDeletionAt != null;
+
+  /// Keeps relative order within each group; moves scheduled-deletion rows last.
+  static List<CompanyListEntry> withPendingDeletionLast(
+    List<CompanyListEntry> entries,
+  ) {
+    if (entries.length < 2) return entries;
+    final active = <CompanyListEntry>[];
+    final pendingDeletion = <CompanyListEntry>[];
+    for (final entry in entries) {
+      if (entry.isPendingDeletion) {
+        pendingDeletion.add(entry);
+      } else {
+        active.add(entry);
+      }
+    }
+    return [...active, ...pendingDeletion];
+  }
 
   bool get isSharedTab =>
       relationship.isPending ||
@@ -81,6 +102,7 @@ class CompanyListEntry {
     String? email,
     String? address,
     String? logoUrl,
+    DateTime? scheduledDeletionAt,
   }) {
     return CompanyListEntry(
       id: id ?? this.id,
@@ -102,6 +124,8 @@ class CompanyListEntry {
       email: email ?? this.email,
       address: address ?? this.address,
       logoUrl: logoUrl ?? this.logoUrl,
+      scheduledDeletionAt:
+          scheduledDeletionAt ?? this.scheduledDeletionAt,
     );
   }
 
@@ -123,6 +147,7 @@ class CompanyListEntry {
       email: model.email,
       address: model.address,
       logoUrl: model.logoUrl,
+      scheduledDeletionAt: model.scheduledDeletionAt,
     );
   }
 }

@@ -25,6 +25,9 @@ import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:billing_baba/features/search/application/search_dialog_provider.dart';
 import 'package:billing_baba/features/search/application/search_route_observer.dart';
 import 'package:billing_baba/features/search/application/search_shortcuts_handler.dart';
+import 'package:billing_baba/features/tasks/application/task_completion_undo_redo_provider.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_shortcuts.dart';
 import 'package:billing_baba/features/search/presentation/desktop/search_dialog.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
@@ -1521,6 +1524,7 @@ class _ShellShortcutScope extends ConsumerWidget {
       shortcuts: {
         ...buildQuickCreateShortcuts(),
         ...buildSearchShortcuts(),
+        ...buildTaskCompletionUndoRedoShortcuts(),
       },
       child: Actions(
         actions: {
@@ -1558,6 +1562,30 @@ class _ShellShortcutScope extends ConsumerWidget {
           OpenSearchDialogIntent: CallbackAction<OpenSearchDialogIntent>(
             onInvoke: (_) {
               ref.read(searchDialogProvider.notifier).open(context);
+              return null;
+            },
+          ),
+          TaskCompletionUndoIntent: CallbackAction<TaskCompletionUndoIntent>(
+            onInvoke: (_) {
+              if (shouldSuppressTaskCompletionUndoRedoShortcuts()) {
+                return null;
+              }
+              if (!ref.read(taskCompletionUndoRedoProvider).canUndo) {
+                return null;
+              }
+              performTaskCompletionUndo(context: context, ref: ref);
+              return null;
+            },
+          ),
+          TaskCompletionRedoIntent: CallbackAction<TaskCompletionRedoIntent>(
+            onInvoke: (_) {
+              if (shouldSuppressTaskCompletionUndoRedoShortcuts()) {
+                return null;
+              }
+              if (!ref.read(taskCompletionUndoRedoProvider).canRedo) {
+                return null;
+              }
+              performTaskCompletionRedo(context: context, ref: ref);
               return null;
             },
           ),

@@ -10,6 +10,7 @@ export type BusinessListItem = {
   owner_name: string | null;
   is_shared: boolean;
   logo_url: string | null;
+  scheduled_deletion_at: string | null;
 };
 
 export type BusinessDetail = BusinessListItem;
