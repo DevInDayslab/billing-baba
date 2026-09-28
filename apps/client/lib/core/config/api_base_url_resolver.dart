@@ -26,14 +26,15 @@ abstract final class ApiBaseUrlResolver {
   static Future<String> resolve(String configuredUrl) async {
     if (_cachedResolvedUrl != null) return _cachedResolvedUrl!;
 
-    final uri = Uri.parse(configuredUrl);
+    final normalizedUrl = _ensureScheme(configuredUrl);
+    final uri = Uri.parse(normalizedUrl);
     final host = uri.host.toLowerCase();
     _cachedDeviceKind = await _detectDeviceKind();
 
     if (!_loopbackHosts.contains(host)) {
-      _cachedResolvedUrl = configuredUrl;
+      _cachedResolvedUrl = normalizedUrl;
       _cachedRewriteNote = null;
-      return configuredUrl;
+      return normalizedUrl;
     }
 
     final platform = AppPlatform.current;
@@ -46,23 +47,23 @@ abstract final class ApiBaseUrlResolver {
             'loopback → $_androidEmulatorHost (Android emulator)';
         return _cachedResolvedUrl!;
       }
-      _cachedResolvedUrl = configuredUrl;
+      _cachedResolvedUrl = normalizedUrl;
       _cachedRewriteNote =
           'loopback on physical Android — use adb reverse tcp:3000 tcp:3000 '
           'or set API_BASE_URL to your host LAN IP';
-      return configuredUrl;
+      return normalizedUrl;
     }
 
     if (platform.isIOS && _cachedDeviceKind == 'ios-physical') {
-      _cachedResolvedUrl = configuredUrl;
+      _cachedResolvedUrl = normalizedUrl;
       _cachedRewriteNote =
           'loopback on physical iOS — set API_BASE_URL to your host LAN IP';
-      return configuredUrl;
+      return normalizedUrl;
     }
 
-    _cachedResolvedUrl = configuredUrl;
+    _cachedResolvedUrl = normalizedUrl;
     _cachedRewriteNote = null;
-    return configuredUrl;
+    return normalizedUrl;
   }
 
   static Future<String> _detectDeviceKind() async {
@@ -84,5 +85,20 @@ abstract final class ApiBaseUrlResolver {
 
   static String _trimTrailingSlash(String url) {
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+  }
+
+  /// Dio requires a scheme on non-web platforms; bare hostnames are common in `.env`.
+  static String _ensureScheme(String configuredUrl) {
+    final trimmed = configuredUrl.trim();
+    if (trimmed.isEmpty || trimmed.contains('://')) return trimmed;
+
+    final lower = trimmed.toLowerCase();
+    final useHttp =
+        lower.startsWith('localhost') ||
+        lower.startsWith('127.0.0.1') ||
+        lower.startsWith('0.0.0.0') ||
+        lower.startsWith('10.') ||
+        lower.startsWith('192.168.');
+    return '${useHttp ? 'http' : 'https'}://$trimmed';
   }
 }
