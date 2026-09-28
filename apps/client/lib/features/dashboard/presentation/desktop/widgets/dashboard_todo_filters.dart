@@ -11,7 +11,7 @@ enum DashboardTodoScopeFilter { today, all }
 
 /// **Status** filter (pills) — narrows the scoped list by completion / due state.
 ///
-/// - [all]: every non-completed task in the current period.
+/// - [all]: every task in the current period (completed and open).
 /// - [today]: non-completed tasks due today.
 /// - [overdue]: non-completed overdue tasks.
 /// - [pending]: non-completed tasks (active work).
@@ -50,7 +50,7 @@ abstract final class DashboardTodoFilterLogic {
     return scoped.where((task) {
       switch (chip) {
         case DashboardTodoStatusChip.all:
-          return !task.isCompleted;
+          return true;
         case DashboardTodoStatusChip.pending:
           return !task.isCompleted;
         case DashboardTodoStatusChip.today:
