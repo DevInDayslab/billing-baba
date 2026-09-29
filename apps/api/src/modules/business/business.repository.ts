@@ -772,6 +772,7 @@ export class BusinessRepository {
         owner_name: ownerName,
         logo_url: null,
         is_shared: false,
+        scheduled_deletion_at: null,
       };
     });
   }
