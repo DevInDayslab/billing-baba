@@ -52,6 +52,7 @@ class BusinessDetailDto {
     this.ownerName,
     this.isShared = false,
     this.logoUrl,
+    this.scheduledDeletionAt,
   });
 
   factory BusinessDetailDto.fromJson(Map<String, dynamic> json) {
@@ -67,7 +68,13 @@ class BusinessDetailDto {
       ownerName: json['owner_name'] as String?,
       isShared: json['is_shared'] as bool? ?? false,
       logoUrl: json['logo_url'] as String?,
+      scheduledDeletionAt: _parseDate(json['scheduled_deletion_at']),
     );
+  }
+
+  static DateTime? _parseDate(Object? value) {
+    if (value is! String || value.isEmpty) return null;
+    return DateTime.tryParse(value);
   }
 
   final String id;
@@ -81,4 +88,5 @@ class BusinessDetailDto {
   final String? ownerName;
   final bool isShared;
   final String? logoUrl;
+  final DateTime? scheduledDeletionAt;
 }

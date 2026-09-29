@@ -150,7 +150,7 @@ class _QuickCreateMenuButtonState extends ConsumerState<QuickCreateMenuButton> {
                     if (expanded) ...[
                       const SizedBox(width: AppSpacing.xs),
                       const Text(
-                        'Quick create',
+                        'Add more',
                         maxLines: 1,
                         softWrap: false,
                         overflow: TextOverflow.clip,

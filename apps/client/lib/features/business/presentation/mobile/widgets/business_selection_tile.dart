@@ -36,11 +36,17 @@ class BusinessSelectionTile extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: entry.isPendingDeletion
+              ? AppColors.error.withValues(alpha: 0.04)
+              : AppColors.surface,
           borderRadius: AppRadius.lgBorder,
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFE8EAED),
-            width: isSelected ? 2 : 1,
+            color: entry.isPendingDeletion
+                ? AppColors.error.withValues(alpha: 0.4)
+                : isSelected
+                ? AppColors.primary
+                : const Color(0xFFE8EAED),
+            width: isSelected || entry.isPendingDeletion ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -122,6 +128,12 @@ class BusinessSelectionTile extends StatelessWidget {
   }
 
   String? _subtitleFor(CompanyListEntry entry) {
+    if (entry.isPendingDeletion && entry.scheduledDeletionAt != null) {
+      final days = entry.scheduledDeletionAt!.difference(DateTime.now()).inDays;
+      if (days <= 0) return 'Scheduled for deletion';
+      if (days == 1) return 'Deletes in 1 day — tap Continue to restore';
+      return 'Deletes in $days days — tap Continue to restore';
+    }
     if (entry.isSharedTab) {
       final owner = entry.ownerName ?? 'Business owner';
       return 'Shared by $owner';

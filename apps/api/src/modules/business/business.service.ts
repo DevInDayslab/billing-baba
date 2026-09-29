@@ -150,9 +150,32 @@ export class BusinessService {
     return settings;
   }
 
-  async deleteBusiness(businessId: string, accountId: string): Promise<void> {
-    const deleted = await this.repository.softDelete(businessId, accountId);
-    if (!deleted) {
+  async scheduleBusinessDeletion(
+    businessId: string,
+    accountId: string,
+  ): Promise<void> {
+    const scheduled = await this.repository.scheduleDeletion(
+      businessId,
+      accountId,
+    );
+    if (!scheduled) {
+      throw new AppError(
+        'BUSINESS_NOT_FOUND',
+        'Business not found or you do not have access',
+        404,
+      );
+    }
+  }
+
+  async cancelScheduledBusinessDeletion(
+    businessId: string,
+    accountId: string,
+  ): Promise<void> {
+    const restored = await this.repository.cancelScheduledDeletion(
+      businessId,
+      accountId,
+    );
+    if (!restored) {
       throw new AppError(
         'BUSINESS_NOT_FOUND',
         'Business not found or you do not have access',

@@ -12,6 +12,7 @@ import 'package:billing_baba/features/business/presentation/desktop/widgets/busi
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card_menu.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/create_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/delete_business_dialog.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/restore_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/edit_business_dialog.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
@@ -141,10 +142,14 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
         try {
           await container
               .read(businessListProvider.notifier)
-              .deleteBusiness(entry.id);
+              .scheduleBusinessDeletion(entry.id);
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${entry.name} deleted')),
+            SnackBar(
+              content: Text(
+                '${entry.name} scheduled for deletion in 30 days',
+              ),
+            ),
           );
           ref.invalidate(companyDirectoryProvider);
         } on Object catch (error) {
@@ -184,6 +189,29 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
   Future<void> _openCompanyEntry(CompanyListEntry entry) async {
     final container = ProviderScope.containerOf(context, listen: false);
     if (container.read(businessSessionLoadingProvider) != null) return;
+
+    if (entry.isPendingDeletion) {
+      final restore = await showRestoreScheduledBusinessDialog(
+        context,
+        companyName: entry.name,
+      );
+      if (!mounted || restore != true) return;
+      try {
+        await container
+            .read(businessListProvider.notifier)
+            .restoreScheduledBusiness(entry.id);
+        ref.invalidate(companyDirectoryProvider);
+      } on Object catch (error) {
+        if (!mounted) return;
+        final message = error is DioException
+            ? ApiErrorParser.userFacingMessage(error)
+            : 'Could not restore company. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
+    }
 
     final messenger = ScaffoldMessenger.maybeOf(context);
 
@@ -303,8 +331,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
                 _BottomBar(
                   phoneNumber: phoneNumber,
                   supportEmail: _supportEmail,
-                  onCreate: _openCreateBusiness,
-                  showNewCompany: false,
                 ),
               ],
             );
@@ -314,9 +340,11 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
             directoryService?.sharedCompanies(allEntries) ??
                 allEntries.where((e) => e.isSharedTab).toList(),
           );
-          final myCompanies = _filterEntries(
-            directoryService?.ownedCompanies(allEntries) ??
-                allEntries.where((e) => e.relationship.isOwner).toList(),
+          final myCompanies = CompanyListEntry.withPendingDeletionLast(
+            _filterEntries(
+              directoryService?.ownedCompanies(allEntries) ??
+                  allEntries.where((e) => e.relationship.isOwner).toList(),
+            ),
           );
 
           return Column(
@@ -327,7 +355,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
                 searchFocusNode: _searchFocusNode,
                 tabController: _tabController,
                 onSearchChanged: () => setState(() {}),
-                onCreate: _openCreateBusiness,
               ),
               Expanded(
                 child: RefreshIndicator(
@@ -363,7 +390,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
               _BottomBar(
                 phoneNumber: phoneNumber,
                 supportEmail: _supportEmail,
-                onCreate: _openCreateBusiness,
               ),
             ],
           );
@@ -503,14 +529,12 @@ class _Header extends StatelessWidget {
     required this.searchFocusNode,
     required this.tabController,
     required this.onSearchChanged,
-    required this.onCreate,
   });
 
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
   final TabController tabController;
   final VoidCallback onSearchChanged;
-  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -532,55 +556,23 @@ class _Header extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Company List',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.3,
-                                ),
+                    Text(
+                      'Company List',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            'Manage all your businesses from one place.',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                          ),
-                        ],
-                      ),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    FilledButton.icon(
-                      onPressed: onCreate,
-                      icon: const Icon(
-                        Icons.add,
-                        size: 18,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'New Company',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppRadius.mdBorder,
-                        ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Manage all your businesses from one place.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -778,10 +770,14 @@ class _MyCompaniesTab extends ConsumerWidget {
         ...entries.map(
           (entry) => Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: BusinessCard(
-              entry: entry,
-              onOpen: () => onOpen(entry),
-              onMenuAction: (action) => onAction(entry, action),
+            child: BusinessListCardMotion(
+              key: ValueKey(entry.id),
+              isPendingDeletion: entry.isPendingDeletion,
+              child: BusinessCard(
+                entry: entry,
+                onOpen: () => onOpen(entry),
+                onMenuAction: (action) => onAction(entry, action),
+              ),
             ),
           ),
         ),
@@ -902,14 +898,10 @@ class _BottomBar extends ConsumerWidget {
   const _BottomBar({
     required this.phoneNumber,
     required this.supportEmail,
-    required this.onCreate,
-    this.showNewCompany = true,
   });
 
   final String phoneNumber;
   final String supportEmail;
-  final VoidCallback onCreate;
-  final bool showNewCompany;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -962,27 +954,6 @@ class _BottomBar extends ConsumerWidget {
                     ],
                   ),
                 ),
-                if (showNewCompany) ...[
-                  FilledButton(
-                    onPressed: onCreate,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.mdBorder,
-                      ),
-                    ),
-                    child: const Text(
-                      'New Company',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                ],
                 TextButton(
                   onPressed: () async {
                     await ref.read(authProvider.notifier).logout();

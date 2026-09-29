@@ -565,6 +565,7 @@ class BusinessService {
       address: dto.address,
       role: dto.role,
       logoUrl: dto.logoUrl,
+      scheduledDeletionAt: dto.scheduledDeletionAt,
     );
   }
 
@@ -580,10 +581,24 @@ class BusinessService {
     'owner_name': dto.ownerName,
     'is_shared': dto.isShared,
     'logo_url': dto.logoUrl,
+    'scheduled_deletion_at': dto.scheduledDeletionAt?.toIso8601String(),
   };
 
-  Future<void> deleteBusiness(String businessId) async {
-    await _repository.deleteBusiness(businessId);
+  Future<void> scheduleBusinessDeletion(String businessId) async {
+    await _repository.scheduleBusinessDeletion(businessId);
+    final selectedId = _cache.readLastOpenedBusinessId();
+    if (selectedId == businessId) {
+      final storage = await _ref.read(storageServiceProvider.future);
+      await _cache.clearSelectedBusiness();
+      await storage.deleteSecure(StorageKeys.selectedBusinessId);
+    }
+  }
+
+  Future<void> cancelBusinessDeletion(String businessId) async {
+    await _repository.cancelBusinessDeletion(businessId);
+  }
+
+  Future<void> purgeBusinessLocally(String businessId) async {
     await _cache.removeBusiness(businessId);
 
     final storage = await _ref.read(storageServiceProvider.future);
@@ -785,30 +800,28 @@ class BusinessList extends _$BusinessList {
     );
   }
 
-  Future<void> deleteBusiness(String id) async {
-    _ensureOpenRefMounted('deleteBusiness start');
+  Future<void> scheduleBusinessDeletion(String id) async {
+    _ensureOpenRefMounted('scheduleBusinessDeletion start');
     final service = await ref.read(businessServiceProvider.future);
     final activeId = await service.readActiveBusinessId();
     final wasActive = activeId == id;
 
-    await service.deleteBusiness(id);
-    _ensureOpenRefMounted('deleteBusiness after API');
+    await service.scheduleBusinessDeletion(id);
+    _ensureOpenRefMounted('scheduleBusinessDeletion after API');
 
     if (wasActive) {
       await ref.read(authProvider.notifier).enterBusinessSelection();
-      // enterBusinessSelection invalidates businessListProvider — stop here.
       return;
     }
 
     await ref.read(authProvider.notifier).refreshBusinesses();
-    _ensureOpenRefMounted('deleteBusiness after refreshBusinesses');
+    await refresh();
+  }
 
-    _removeBusinessFromState(id);
-
-    invalidateAllBusinessScopedProviders(
-      ref,
-      includeBusinessService: false,
-    );
+  Future<void> restoreScheduledBusiness(String id) async {
+    final service = await ref.read(businessServiceProvider.future);
+    await service.cancelBusinessDeletion(id);
+    await ref.read(authProvider.notifier).refreshBusinesses();
     await refresh();
   }
 

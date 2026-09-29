@@ -8,17 +8,17 @@ part of 'party_detail_pane_ratio_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Persisted height ratio for the party detail upper pane (header + notes)
+/// Persisted height ratio for the party detail upper pane (header)
 /// versus the transactions table on desktop.
 
 @ProviderFor(PartyDetailPaneRatio)
 final partyDetailPaneRatioProvider = PartyDetailPaneRatioProvider._();
 
-/// Persisted height ratio for the party detail upper pane (header + notes)
+/// Persisted height ratio for the party detail upper pane (header)
 /// versus the transactions table on desktop.
 final class PartyDetailPaneRatioProvider
     extends $NotifierProvider<PartyDetailPaneRatio, double> {
-  /// Persisted height ratio for the party detail upper pane (header + notes)
+  /// Persisted height ratio for the party detail upper pane (header)
   /// versus the transactions table on desktop.
   PartyDetailPaneRatioProvider._()
     : super(
@@ -48,9 +48,9 @@ final class PartyDetailPaneRatioProvider
 }
 
 String _$partyDetailPaneRatioHash() =>
-    r'144e8b8fa4e2dfeb4f2306b757c1384d1a5437f9';
+    r'0cb652e3a619ee31c6c7568f8a303c6894f39cf1';
 
-/// Persisted height ratio for the party detail upper pane (header + notes)
+/// Persisted height ratio for the party detail upper pane (header)
 /// versus the transactions table on desktop.
 
 abstract class _$PartyDetailPaneRatio extends $Notifier<double> {

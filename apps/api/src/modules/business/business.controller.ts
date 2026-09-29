@@ -163,7 +163,22 @@ export function createBusinessController(config: AppConfig) {
 
       const businessId = (request.params as { id: string }).id;
       const service = new BusinessService(config);
-      await service.deleteBusiness(businessId, accountId);
+      await service.scheduleBusinessDeletion(businessId, accountId);
+      return reply.status(204).send();
+    },
+
+    cancelDeletion: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      if (!accountId) {
+        throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+      }
+
+      const businessId = (request.params as { id: string }).id;
+      const service = new BusinessService(config);
+      await service.cancelScheduledBusinessDeletion(businessId, accountId);
       return reply.status(204).send();
     },
   };

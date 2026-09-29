@@ -10,5 +10,10 @@ export const createBusinessRoutes = (config: AppConfig): FastifyPluginAsync => {
     app.get('/', { preHandler: authenticate }, controller.list);
     app.post('/', { preHandler: authenticate }, controller.create);
     app.delete('/:id', { preHandler: authenticate }, controller.delete);
+    app.post(
+      '/:id/cancel-deletion',
+      { preHandler: authenticate },
+      controller.cancelDeletion,
+    );
   };
 };
