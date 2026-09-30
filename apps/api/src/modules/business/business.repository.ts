@@ -674,12 +674,48 @@ export class BusinessRepository {
     const ownerPhone = input.phone?.trim() || accountPhone;
     const fiscalYear = currentFiscalYearLabel();
 
+    const normalizedName = input.name.trim();
+    const gstin = input.gstin?.trim() || null;
+
     return this.db.transaction(async (tx) => {
+      const [nameConflict] = await tx
+        .select({ id: businesses.id })
+        .from(businesses)
+        .innerJoin(users, eq(users.businessId, businesses.id))
+        .where(
+          and(
+            eq(users.accountId, accountId),
+            eq(users.isActive, true),
+            eq(users.isDeleted, false),
+            eq(businesses.isDeleted, false),
+            sql`lower(${businesses.name}) = lower(${normalizedName})`,
+          ),
+        )
+        .limit(1);
+
+      if (nameConflict) {
+        throw new Error('BUSINESS_NAME_ALREADY_EXISTS');
+      }
+
+      if (gstin) {
+        const [gstinConflict] = await tx
+          .select({ id: businesses.id })
+          .from(businesses)
+          .where(
+            and(eq(businesses.gstin, gstin), eq(businesses.isDeleted, false)),
+          )
+          .limit(1);
+
+        if (gstinConflict) {
+          throw new Error('GSTIN_ALREADY_EXISTS');
+        }
+      }
+
       const [business] = await tx
         .insert(businesses)
         .values({
-          name: input.name.trim(),
-          gstin: input.gstin?.trim() || null,
+          name: normalizedName,
+          gstin,
           stateCode,
           address: input.address?.trim() || null,
           phone: input.phone?.trim() || null,

@@ -103,7 +103,7 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
             splashColor: Colors.transparent,
             overlayColor: _transparentOverlay,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               child: Row(
                 children: [
                   Expanded(
@@ -112,16 +112,17 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
                       children: [
                         Icon(
                           widget.leadingIcon,
-                          size: 16,
+                          size: 14,
                           color: Colors.grey.shade500,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: _buildHoverZone(
                             child: InventoryHighlightedText(
                               text: widget.title,
                               query: widget.searchQuery,
-                              style: InventoryStyles.listCellStyle.copyWith(
+                              style: InventoryStyles.listPanelCompactCellStyle
+                                  .copyWith(
                                 fontWeight: widget.isSelected
                                     ? FontWeight.w600
                                     : FontWeight.w500,
@@ -137,8 +138,7 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
                     child: AppEllipsisText(
                       widget.trailingValue,
                       textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 13,
+                      style: InventoryStyles.listPanelCompactCellStyle.copyWith(
                         fontWeight: FontWeight.w600,
                         color: widget.trailingColor ?? AppColors.textPrimary,
                       ),

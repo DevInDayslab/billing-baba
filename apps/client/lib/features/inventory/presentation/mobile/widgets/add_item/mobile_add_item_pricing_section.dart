@@ -1,10 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_field.dart';
+import 'package:billing_baba/features/inventory/presentation/shared/price_amount_in_words_hint.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_tier_pricing_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:flutter/services.dart';
 
 /// Vyapar-style pricing tab for mobile Add Item.
@@ -33,10 +35,20 @@ class MobileAddItemPricingSection extends StatefulWidget {
     this.apiTierLabels = const {},
     this.priceControllerFor,
     this.onUpdateTierPrice,
+    this.showPriceAmountInWords = true,
+    this.mrpAmount = 0,
+    this.salePriceAmount = 0,
+    this.wholesalePriceAmount = 0,
+    this.purchasePriceAmount = 0,
     super.key,
   });
 
   final bool isService;
+  final bool showPriceAmountInWords;
+  final double mrpAmount;
+  final double salePriceAmount;
+  final double wholesalePriceAmount;
+  final double purchasePriceAmount;
   final TextEditingController mrpController;
   final ValueChanged<double> onMrpChanged;
   final TextEditingController salePriceController;
@@ -69,9 +81,7 @@ class MobileAddItemPricingSection extends StatefulWidget {
 
 class _MobileAddItemPricingSectionState
     extends State<MobileAddItemPricingSection> {
-  static final _decimalFormatter = FilteringTextInputFormatter.allow(
-    RegExp(r'^\d*\.?\d*'),
-  );
+  static const _priceFormatters = [indianItemPriceInputFormatter];
 
   static const _taxRateOptions = [
     'None',
@@ -104,14 +114,18 @@ class _MobileAddItemPricingSectionState
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  inputFormatters: [_decimalFormatter],
+                  inputFormatters: _priceFormatters,
                   onChanged: (v) =>
-                      widget.onMrpChanged(double.tryParse(v) ?? 0),
+                      widget.onMrpChanged(parseIndianItemPriceInput(v)),
                   suffixIcon: Icon(
                     Icons.error_outline_rounded,
                     size: 18,
                     color: AppColors.textSecondary.withValues(alpha: 0.6),
                   ),
+                ),
+                PriceAmountInWordsHint(
+                  amount: widget.mrpAmount,
+                  enabled: widget.showPriceAmountInWords,
                 ),
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),
                 InputDecorator(
@@ -140,13 +154,17 @@ class _MobileAddItemPricingSectionState
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  inputFormatters: [_decimalFormatter],
+                  inputFormatters: _priceFormatters,
                   onChanged: (v) =>
-                      widget.onSalePriceChanged(double.tryParse(v) ?? 0),
+                      widget.onSalePriceChanged(parseIndianItemPriceInput(v)),
                   suffix: _TaxModeChip(
                     mode: widget.salePriceTaxMode,
                     onChanged: widget.onSalePriceTaxModeChanged,
                   ),
+                ),
+                PriceAmountInWordsHint(
+                  amount: widget.salePriceAmount,
+                  enabled: widget.showPriceAmountInWords,
                 ),
                 if (widget.showWholesalePrice) ...[
                   const SizedBox(height: 8),
@@ -157,14 +175,18 @@ class _MobileAddItemPricingSectionState
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    inputFormatters: [_decimalFormatter],
+                    inputFormatters: _priceFormatters,
                     onChanged: (v) => widget.onWholesalePriceChanged(
-                      double.tryParse(v) ?? 0,
+                      parseIndianItemPriceInput(v),
                     ),
                     suffix: _TaxModeChip(
                       mode: widget.wholesalePriceTaxMode,
                       onChanged: widget.onWholesalePriceTaxModeChanged,
                     ),
+                  ),
+                  PriceAmountInWordsHint(
+                    amount: widget.wholesalePriceAmount,
+                    enabled: widget.showPriceAmountInWords,
                   ),
                 ],
               ],
@@ -177,20 +199,29 @@ class _MobileAddItemPricingSectionState
               padding: const EdgeInsets.symmetric(
                 horizontal: MobileAddItemTheme.horizontalPadding,
               ),
-              child: MobileAddItemField(
-                controller: widget.purchasePriceController,
-                label: 'Purchase Price',
-                hint: 'Purchase Price',
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [_decimalFormatter],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  MobileAddItemField(
+                    controller: widget.purchasePriceController,
+                    label: 'Purchase Price',
+                    hint: 'Purchase Price',
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                inputFormatters: _priceFormatters,
                 onChanged: (v) =>
-                    widget.onPurchasePriceChanged(double.tryParse(v) ?? 0),
-                suffix: _TaxModeChip(
-                  mode: widget.purchasePriceTaxMode,
-                  onChanged: widget.onPurchasePriceTaxModeChanged,
-                ),
+                    widget.onPurchasePriceChanged(parseIndianItemPriceInput(v)),
+                    suffix: _TaxModeChip(
+                      mode: widget.purchasePriceTaxMode,
+                      onChanged: widget.onPurchasePriceTaxModeChanged,
+                    ),
+                  ),
+                  PriceAmountInWordsHint(
+                    amount: widget.purchasePriceAmount,
+                    enabled: widget.showPriceAmountInWords,
+                  ),
+                ],
               ),
             ),
           ],

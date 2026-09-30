@@ -1,10 +1,13 @@
+import 'dart:async';
+
+import 'package:billing_baba/core/platform/desktop_menu_actions.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/global_search_field.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
-import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/sync_toolbar_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -99,8 +102,59 @@ class _TopBarActions extends ConsumerWidget {
         ],
         const QuickCreateMenuButton(),
         const SizedBox(width: AppSpacing.xs),
-        const SyncNowToolbarButton(),
-        const CloudSyncToolbarButton(),
+        const _TopBarOverflowMenu(),
+      ],
+    );
+  }
+}
+
+enum _TopBarOverflowAction { settings, logout }
+
+class _TopBarOverflowMenu extends ConsumerWidget {
+  const _TopBarOverflowMenu();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider);
+    final canSettings = DesktopMenuActions.canUseBusinessActions(auth);
+    final canLogout = DesktopMenuActions.canLogout(auth);
+
+    return PopupMenuButton<_TopBarOverflowAction>(
+      tooltip: 'More options',
+      padding: EdgeInsets.zero,
+      offset: const Offset(0, AppSpacing.sm),
+      icon: const Icon(
+        Icons.more_vert,
+        size: 20,
+        color: AppColors.textSecondary,
+      ),
+      onSelected: (action) {
+        switch (action) {
+          case _TopBarOverflowAction.settings:
+            DesktopMenuActions.openSettings(ref);
+          case _TopBarOverflowAction.logout:
+            unawaited(DesktopMenuActions.logout(ref));
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<_TopBarOverflowAction>(
+          value: _TopBarOverflowAction.settings,
+          enabled: canSettings,
+          height: 40,
+          child: const Text('Settings'),
+        ),
+        PopupMenuItem<_TopBarOverflowAction>(
+          value: _TopBarOverflowAction.logout,
+          enabled: canLogout,
+          height: 40,
+          child: Text(
+            'Logout',
+            style: TextStyle(
+              color: canLogout ? AppColors.error : null,
+              fontWeight: canLogout ? FontWeight.w600 : null,
+            ),
+          ),
+        ),
       ],
     );
   }

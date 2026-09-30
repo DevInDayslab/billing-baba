@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
+import 'package:billing_baba/shared/widgets/filter_icon.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 
@@ -99,26 +100,43 @@ class _InventoryItemsFilterTriggerState
   Widget build(BuildContext context) {
     final isActive = widget.initialFilters.hasActiveFilters;
     final iconSize = widget.compact ? 14.0 : 20.0;
+    final iconColor =
+        isActive ? AppColors.error : AppColors.textSecondary;
+
+    if (widget.compact) {
+      return CompositedTransformTarget(
+        link: _layerLink,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: InkWell(
+            key: _triggerKey,
+            onTap: _togglePopover,
+            mouseCursor: SystemMouseCursors.click,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: Tooltip(
+              message: 'Filter items',
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: Center(
+                  child: AppFilterIcon(color: iconColor, size: iconSize),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return CompositedTransformTarget(
       link: _layerLink,
       child: IconButton(
         key: _triggerKey,
         onPressed: _togglePopover,
-        icon: Icon(
-          Icons.filter_list,
-          size: iconSize,
-          color: isActive ? AppColors.error : AppColors.textSecondary,
-        ),
+        icon: AppFilterIcon(color: iconColor, size: iconSize),
         tooltip: 'Filter items',
         padding: EdgeInsets.zero,
-        constraints: BoxConstraints(
-          minWidth: widget.compact ? 24 : 36,
-          minHeight: widget.compact ? 24 : 36,
-        ),
-        visualDensity: widget.compact
-            ? VisualDensity.compact
-            : VisualDensity.standard,
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       ),
     );
   }

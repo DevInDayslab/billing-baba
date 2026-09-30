@@ -8,11 +8,12 @@ import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-Future<void> showAddCategoryDialog(
+/// Returns the created or updated category, or `null` if dismissed.
+Future<InventoryCategory?> showAddCategoryDialog(
   BuildContext context, {
   InventoryCategory? editCategory,
 }) {
-  return showFormDialog<void>(
+  return showFormDialog<InventoryCategory?>(
     context: context,
     size: FormDialogSize.compact,
     child: AddCategoryDialog(editCategory: editCategory),
@@ -73,12 +74,12 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
       return;
     }
 
-    if (!_isEditing) {
-      ref.read(selectedCategoryIdProvider.notifier).selected =
-          result.category!.id;
+    final category = result.category;
+    if (!_isEditing && category != null) {
+      ref.read(selectedCategoryIdProvider.notifier).selected = category.id;
     }
 
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(category);
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
@@ -69,7 +70,9 @@ import 'package:billing_baba/features/inventory/models/requests/item_bom_request
 import 'package:billing_baba/features/inventory/models/requests/brand_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/godown_requests.dart';
+import 'package:billing_baba/features/inventory/models/bulk_item_update_payload.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
+import 'package:billing_baba/features/inventory/utils/inventory_item_catalog_status.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/unit_requests.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
@@ -453,6 +456,25 @@ class InventoryService {
     try {
       final dto = await _repository.getUnit(id);
       return UnitMapper.fromDetailDto(dto);
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<List<UnitConversion>> fetchUnitConversions({
+    String? fromUnitId,
+    String? toUnitId,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _repository.getUnitConversions(
+        UnitConversionListQuery(
+          fromUnitId: fromUnitId,
+          toUnitId: toUnitId,
+          limit: limit,
+        ),
+      );
+      return response.conversions.map(UnitConversionMapper.fromDto).toList();
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -1187,6 +1209,96 @@ class InventoryService {
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
+  }
+
+  Future<void> bulkSetCatalogActive({
+    required List<InventoryItem> items,
+    required bool active,
+  }) async {
+    try {
+      for (final item in items) {
+        final keywords = applyCatalogInactiveFlag(
+          item.searchKeywords,
+          inactive: !active,
+        );
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(searchKeywords: keywords),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> bulkAssignBarcodes({
+    required List<InventoryItem> items,
+    bool onlyWithoutBarcode = true,
+  }) async {
+    try {
+      for (final item in items) {
+        final existing = item.barcode?.trim();
+        if (onlyWithoutBarcode && existing != null && existing.isNotEmpty) {
+          continue;
+        }
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(barcode: _generateItemBarcode()),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> bulkAssignBaseUnit({
+    required List<InventoryItem> items,
+    required String baseUnitShortName,
+  }) async {
+    try {
+      for (final item in items) {
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(baseUnit: baseUnitShortName),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> bulkUpdateItems({
+    required List<InventoryItem> items,
+    required BulkItemUpdatePayload payload,
+  }) async {
+    if (!payload.hasChanges) return;
+
+    try {
+      for (final item in items) {
+        final apiCategoryId = payload.categoryId == null
+            ? null
+            : CategoryMapper.toApiCategoryId(payload.categoryId!);
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(
+            salePrice: payload.salePrice,
+            purchasePrice: payload.purchasePrice,
+            mrp: payload.mrp,
+            categoryId: apiCategoryId,
+            clearCategory: payload.clearCategory,
+            hsnCode: payload.hsnCode,
+          ),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  String _generateItemBarcode() {
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    final suffix = Random().nextInt(9000) + 1000;
+    return '$timestamp$suffix';
   }
 
   Future<void> moveItemsToCategory({

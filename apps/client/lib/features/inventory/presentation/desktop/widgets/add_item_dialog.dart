@@ -9,6 +9,7 @@ import 'package:billing_baba/features/inventory/application/add_item_form_provid
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
@@ -25,11 +26,13 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/add_item_image_link_button.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternatives_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/general_information_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/manufacturing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/online_store_section.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/stock_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/suppliers_section.dart';
@@ -43,16 +46,19 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_header.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_image_strip.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_online_store_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_settings_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_stock_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_item_image_picker.dart';
+import 'package:billing_baba/features/inventory/presentation/shared/item_image_pick_crop.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:collection/collection.dart';
@@ -139,9 +145,55 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final List<Uint8List> _pendingItemPhotos = [];
   final _mobileFormScrollController = ScrollController();
   bool _isSaving = false;
+  bool _allowPop = false;
+  bool _isClosing = false;
   String? _rackLocationId;
   String? _rackPhotoUrl;
   double _initialOpeningQty = 0;
+
+  String get _closeFormTitle =>
+      widget.editItem != null ? 'Close Item' : 'Close Add Item';
+
+  bool _hasUnsavedChanges() {
+    final form = ref.read(addItemFormProvider);
+    if (form.isDirty) return true;
+    if (_pendingItemPhotos.isNotEmpty) return true;
+    return false;
+  }
+
+  Future<void> _requestClose() async {
+    if (_isClosing || _allowPop || _isSaving) return;
+    _isClosing = true;
+    try {
+      if (_hasUnsavedChanges()) {
+        final confirmed = await showCloseFormDialog(
+          context,
+          title: _closeFormTitle,
+        );
+        if (!confirmed || !mounted) return;
+      }
+      setState(() => _allowPop = true);
+      Navigator.of(context).pop();
+    } finally {
+      _isClosing = false;
+    }
+  }
+
+  void _popDialog([InventoryItem? result]) {
+    _allowPop = true;
+    Navigator.of(context).pop(result);
+  }
+
+  Widget _wrapWithCloseGuard(Widget child) {
+    return PopScope(
+      canPop: _allowPop,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _requestClose();
+      },
+      child: child,
+    );
+  }
 
   bool get _isMobileFullPage => widget.fullPage && AppPlatform.current.isMobile;
 
@@ -154,25 +206,37 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   int _tabCountFor(ItemType type) {
     if (_isMobileFullPage) {
       if (type == ItemType.product) {
-        return widget.editItem != null ? 5 : 4;
+        return widget.editItem != null ? 6 : 5;
       }
       return 2;
     }
-    return type == ItemType.product ? 6 : 2;
+    if (type == ItemType.product) {
+      return widget.editItem != null ? 7 : 6;
+    }
+    return 2;
   }
+
+  bool get _showDesktopAlternativesTab => widget.editItem != null;
 
   List<String> _mobileTabsFor(ItemType type) {
     if (type == ItemType.product && widget.editItem != null) {
       return const [
         'Pricing',
         'Stock',
+        'Product Description',
         'Online Store',
         'Alternatives',
         'Suppliers',
       ];
     }
     return type == ItemType.product
-        ? const ['Pricing', 'Stock', 'Online Store', 'Suppliers']
+        ? const [
+            'Pricing',
+            'Stock',
+            'Product Description',
+            'Online Store',
+            'Suppliers',
+          ]
         : const ['Pricing', 'Online Store'];
   }
 
@@ -200,7 +264,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         ref
             .read(addItemFormProvider.notifier)
             .setInitialType(widget.initialType);
-        _ensureDefaultServiceUnit();
+        _ensureDefaultBaseUnit();
         unawaited(_applyDefaultItemTaxRate());
         unawaited(_applyItemSettingsDefaults());
       }
@@ -239,12 +303,14 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
   }
 
-  void _ensureDefaultServiceUnit() {
+  void _ensureDefaultBaseUnit() {
     final form = ref.read(addItemFormProvider);
-    if (form.itemType != ItemType.service || form.baseUnitId != null) return;
+    if (form.baseUnitId != null) return;
 
     final units = ref.read(inventoryUnitsProvider).value ?? [];
-    final defaultUnit = resolveDefaultServiceUnit(units);
+    final defaultUnit = form.itemType == ItemType.service
+        ? resolveDefaultServiceUnit(units)
+        : resolveDefaultPcsUnit(units);
     if (defaultUnit == null) return;
 
     ref.read(addItemFormProvider.notifier).setUnits(baseUnitId: defaultUnit.id);
@@ -292,7 +358,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
     if (item.salePrice != null) {
       notifier.updateSalePrice(item.salePrice!);
-      _salePriceController.text = item.salePrice!.toString();
+      _salePriceController.text = formatIndianItemPriceInput(item.salePrice!);
     }
     if (item.categoryId != null) notifier.setCategory(item.categoryId);
     if (item.brandId != null) notifier.setBrand(item.brandId);
@@ -317,14 +383,14 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         final purchasePrice = double.tryParse(detailDto.purchasePrice);
         if (purchasePrice != null) {
           notifier.updateAtPrice(purchasePrice);
-          _atPriceController.text = purchasePrice.toString();
+          _atPriceController.text = formatIndianItemPriceInput(purchasePrice);
         }
       }
       if (detailDto.mrp != null && detailDto.mrp!.isNotEmpty) {
         final mrp = double.tryParse(detailDto.mrp!);
         if (mrp != null) {
           notifier.updateMrp(mrp);
-          _mrpController.text = mrp.toString();
+          _mrpController.text = formatIndianItemPriceInput(mrp);
         }
       }
       if (detailDto.reorderLevel != null && detailDto.reorderLevel!.isNotEmpty) {
@@ -393,7 +459,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           .firstOrNull;
       if (wholesale != null) {
         notifier.updateWholesalePrice(wholesale);
-        _wholesalePriceController.text = wholesale.toString();
+        _wholesalePriceController.text = formatIndianItemPriceInput(wholesale);
       }
 
       final localTiers = ref.read(itemTierPricesProvider).value?[item.id];
@@ -463,9 +529,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     ref.read(addItemFormProvider.notifier).setItemType(type);
     ref.read(addItemFormProvider.notifier).setActiveTab(0);
     ref.read(inventoryItemsTabIndexProvider.notifier).selectForItemType(type);
-    if (type == ItemType.service) {
-      _ensureDefaultServiceUnit();
-    }
+    _ensureDefaultBaseUnit();
 
     setState(() => _tabController = newController);
 
@@ -604,7 +668,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         return;
       }
 
-      Navigator.of(context).pop(savedItem);
+      _popDialog(savedItem);
     } on ApiValidationException catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
@@ -697,6 +761,43 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     return remoteCount + _pendingItemPhotos.length;
   }
 
+  Future<void> _ingestItemPhoto(Uint8List bytes) async {
+    final itemId = widget.editItem?.id;
+    if (itemId != null && isServerBackedInventoryItemId(itemId)) {
+      try {
+        final prepared = await prepareMediaUploadBytes(
+          bytes: bytes,
+          mimeType: 'image/jpeg',
+        );
+        final remote = ref.read(itemImagesProvider(itemId)).value ?? [];
+        final isPrimary = remote.isEmpty;
+        final service = await ref.read(inventoryServiceProvider.future);
+        final uploaded = await service.uploadItemImage(
+          itemId,
+          bytes: prepared.bytes,
+          mimeType: prepared.mimeType,
+          isPrimary: isPrimary,
+        );
+        ref.read(itemImagesProvider(itemId).notifier).upsert(uploaded);
+        unawaited(ref.read(itemImagesProvider(itemId).notifier).refreshInBackground());
+        if (isPrimary) {
+          ref
+              .read(inventoryItemsProvider.notifier)
+              .patchItemPrimaryImageUrl(itemId, uploaded.urlForGrid());
+        }
+        if (mounted) setState(() {});
+      } on Object catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image upload failed: $error')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _pendingItemPhotos.add(bytes));
+  }
+
   Future<void> _addItemPhoto() async {
     if (_totalItemPhotoCount() >= 20) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -705,13 +806,32 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       return;
     }
 
-    final bytes = await pickMobileItemImage(context);
-    if (bytes == null || !mounted) return;
-    setState(() => _pendingItemPhotos.add(bytes));
+    final images = await pickItemImagesForUpload(
+      context,
+      existingCount: _totalItemPhotoCount(),
+    );
+    if (!mounted || images.isEmpty) return;
+
+    for (final bytes in images) {
+      if (_totalItemPhotoCount() >= 20) break;
+      await _ingestItemPhoto(bytes);
+    }
   }
 
   Future<void> _openPendingPhoto(int index) async {
     final bytes = _pendingItemPhotos[index];
+    if (AppPlatform.current.isDesktop) {
+      final outcome = await cropItemImageBytes(context, imageBytes: bytes);
+      if (!mounted || outcome == null) return;
+      switch (outcome) {
+        case ItemImageBytesCropRemoved():
+          setState(() => _pendingItemPhotos.removeAt(index));
+        case ItemImageBytesCropUpdated(:final bytes):
+          setState(() => _pendingItemPhotos[index] = bytes);
+      }
+      return;
+    }
+
     final outcome = await openMobileItemImagePreview(
       context,
       imageBytes: bytes,
@@ -830,7 +950,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   @override
   Widget build(BuildContext context) {
     ref.listen(inventoryUnitsProvider, (previous, next) {
-      next.whenData((_) => _ensureDefaultServiceUnit());
+      next.whenData((_) => _ensureDefaultBaseUnit());
     });
 
     ref.listen<int>(inventoryItemsTabIndexProvider, (previous, next) {
@@ -873,7 +993,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
 
     if (_isMobileFullPage) {
-      return AnnotatedRegion<SystemUiOverlayStyle>(
+      return _wrapWithCloseGuard(
+        AnnotatedRegion<SystemUiOverlayStyle>(
         value: AppTheme.lightSystemUi,
         child: Scaffold(
           backgroundColor: AppColors.surface,
@@ -898,6 +1019,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             ),
           ),
         ),
+      ),
       );
     }
 
@@ -909,7 +1031,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     final maxDialogHeight = media.height * FormSpacing.dialogMaxHeightFactor;
 
-    return ConstrainedBox(
+    return _wrapWithCloseGuard(
+      ConstrainedBox(
       constraints: BoxConstraints(
         maxWidth: preferredWidth.toDouble(),
         maxHeight: maxDialogHeight,
@@ -945,6 +1068,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           },
         ),
       ),
+    ),
     );
   }
 
@@ -991,7 +1115,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             itemType: form.itemType,
             itemNameController: _itemNameController,
             shortNameController: _shortNameController,
-            aliasController: _aliasController,
             searchKeywordsController: _searchKeywordsController,
             hsnController: _hsnController,
             itemCodeController: _itemCodeController,
@@ -1000,7 +1123,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             baseUnitError: form.baseUnitError,
             onItemNameChanged: notifier.updateItemName,
             onShortNameChanged: notifier.updateShortName,
-            onAliasChanged: notifier.updateAlias,
             onSearchKeywordsChanged: notifier.updateSearchKeywords,
             onHsnChanged: notifier.updateHsn,
             onItemCodeChanged: notifier.updateItemCode,
@@ -1009,23 +1131,45 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               notifier.assignCode();
               _itemCodeController.text = ref.read(addItemFormProvider).itemCode;
             },
-            categoryOptions: categoryOptions,
+            selectedCategoryId: form.categoryId,
             selectedCategory: selectedCategory,
             categories: categories,
             onCategorySelected: notifier.setCategory,
-            brandOptions: brandOptions,
+            selectedBrandId: form.brandId,
             selectedBrand: selectedBrand,
             brands: brands,
             onBrandSelected: notifier.setBrand,
             unitLabel: _displayUnitLabel(),
             onSelectUnit: _openUnitPicker,
-            alternativeItemsField: AlternativeItemsField(
-              selectedItemIds: form.alternativeItemIds,
-              excludeItemId: widget.editItem?.id,
-              onChanged: notifier.setAlternativeItemIds,
-            ),
+            alternativesInlineAddButton: widget.editItem == null
+                ? Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      AlternativeItemsAddButton(
+                        selectedItemIds: form.alternativeItemIds,
+                        excludeItemId: widget.editItem?.id,
+                        onChanged: notifier.setAlternativeItemIds,
+                      ),
+                      AddItemImageLinkButton(
+                        itemType: form.itemType,
+                        onPressed: () => unawaited(_addItemPhoto()),
+                      ),
+                    ],
+                  )
+                : null,
+            alternativesListSection: widget.editItem == null
+                ? AlternativeItemsListSection(
+                    selectedItemIds: form.alternativeItemIds,
+                    excludeItemId: widget.editItem?.id,
+                    onChanged: notifier.setAlternativeItemIds,
+                  )
+                : null,
             itemId: widget.editItem?.id,
             seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
+            pendingItemPhotos: _pendingItemPhotos,
+            onPendingPhotoTap: (index) => unawaited(_openPendingPhoto(index)),
           ),
           const SizedBox(height: FormSpacing.section),
           _buildTabBar(form),
@@ -1035,7 +1179,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             key: ValueKey(
               'add-item-tab-${form.itemType.name}-${form.activeTab}',
             ),
-            child: _buildActiveTabContent(form, notifier),
+            child: _buildActiveTabContent(form, notifier, itemSettings),
           ),
         ],
       ),
@@ -1102,8 +1246,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           showDescription: itemSettings.descriptionEnabled,
           showManufacturing:
               form.itemType == ItemType.product && itemSettings.manufacturing,
-          // Match desktop: alternatives field on create (edit uses Alternatives tab).
-          showAlternatives: widget.editItem == null,
+          showAlternatives: false,
           selectedAlternativeItemIds: form.alternativeItemIds,
           excludeAlternativeItemId: widget.editItem?.id,
           onAlternativeItemIdsChanged: notifier.setAlternativeItemIds,
@@ -1137,6 +1280,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
     return MobileAddItemPricingSection(
       isService: isService,
+      showPriceAmountInWords: itemSettings.showPriceAmountInWords,
+      mrpAmount: form.mrp,
+      salePriceAmount: form.salePrice,
+      wholesalePriceAmount: form.wholesalePrice,
+      purchasePriceAmount: form.atPrice,
       mrpController: _mrpController,
       onMrpChanged: notifier.updateMrp,
       salePriceController: _salePriceController,
@@ -1177,13 +1325,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           isService: true,
           itemSettings: itemSettings,
         ),
-        _ => MobileAddItemOnlineStoreSection(
-          itemType: form.itemType,
-          priceController: _onlineStorePriceController,
-          descriptionController: _onlineStoreDescriptionController,
-          onPriceChanged: notifier.updateOnlineStorePrice,
-          onDescriptionChanged: notifier.updateOnlineStoreDescription,
-        ),
+        _ => _buildMobileOnlineStoreSection(form, notifier),
       };
     }
 
@@ -1210,14 +1352,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         selectedGodownId: form.godownId,
         onGodownSelected: notifier.setGodown,
       ),
-      2 => MobileAddItemOnlineStoreSection(
-        itemType: form.itemType,
-        priceController: _onlineStorePriceController,
+      2 => MobileAddItemProductDescriptionSection(
         descriptionController: _onlineStoreDescriptionController,
-        onPriceChanged: notifier.updateOnlineStorePrice,
         onDescriptionChanged: notifier.updateOnlineStoreDescription,
       ),
-      3 when widget.editItem != null => Padding(
+      3 => _buildMobileOnlineStoreSection(form, notifier),
+      4 when widget.editItem != null => Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: AlternativesSection(itemId: widget.editItem?.id),
       ),
@@ -1270,7 +1410,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       return MobileAddItemHeader(
         title: title,
         isProduct: form.itemType == ItemType.product,
-        onBack: () => Navigator.of(context).maybePop(),
+        onBack: _requestClose,
         onSettingsTap: () {
           unawaited(showMobileAddItemSettingsSheet(context));
         },
@@ -1331,7 +1471,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           constraints: const BoxConstraints.tightFor(width: 32, height: 32),
         ),
         IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => unawaited(_requestClose()),
           icon: const Icon(Icons.close, color: AppColors.textSecondary),
           visualDensity: VisualDensity.compact,
           padding: EdgeInsets.zero,
@@ -1344,27 +1484,53 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   Widget _buildActiveTabContent(
     AddItemFormState form,
     AddItemForm notifier,
+    ItemSettings itemSettings,
   ) {
     if (_isMobileFullPage) {
-      final itemSettings =
-          ref.read(itemSettingsProvider).value ?? ItemSettings.defaults();
       return _buildMobileTabContent(form, notifier, itemSettings);
     }
 
     final tabIndex = form.activeTab;
     if (form.itemType == ItemType.service) {
       return switch (tabIndex) {
-        0 => _buildPricingTab(form, notifier, isService: true),
+        0 => _buildPricingTab(
+          form,
+          notifier,
+          isService: true,
+          itemSettings: itemSettings,
+        ),
         _ => _buildOnlineStoreTab(form, notifier),
       };
     }
 
+    if (!_showDesktopAlternativesTab) {
+      return switch (tabIndex) {
+        0 => _buildPricingTab(
+          form,
+          notifier,
+          isService: false,
+          itemSettings: itemSettings,
+        ),
+        1 => _buildStockTab(form, notifier),
+        2 => _buildProductDescriptionTab(form, notifier),
+        3 => _buildOnlineStoreTab(form, notifier),
+        4 => _buildManufacturingTab(form, notifier),
+        _ => _buildSuppliersTab(form, notifier),
+      };
+    }
+
     return switch (tabIndex) {
-      0 => _buildPricingTab(form, notifier, isService: false),
+      0 => _buildPricingTab(
+        form,
+        notifier,
+        isService: false,
+        itemSettings: itemSettings,
+      ),
       1 => _buildStockTab(form, notifier),
-      2 => _buildOnlineStoreTab(form, notifier),
-      3 => _buildManufacturingTab(form, notifier),
-      4 => _buildAlternativesTab(),
+      2 => _buildProductDescriptionTab(form, notifier),
+      3 => _buildOnlineStoreTab(form, notifier),
+      4 => _buildManufacturingTab(form, notifier),
+      5 => _buildAlternativesTab(),
       _ => _buildSuppliersTab(form, notifier),
     };
   }
@@ -1380,12 +1546,18 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     AddItemFormState form,
     AddItemForm notifier, {
     required bool isService,
+    required ItemSettings itemSettings,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         PricingSection(
           isService: isService,
+          showPriceAmountInWords: itemSettings.showPriceAmountInWords,
+          mrpAmount: form.mrp,
+          salePriceAmount: form.salePrice,
+          wholesalePriceAmount: form.wholesalePrice,
+          purchasePriceAmount: form.atPrice,
           mrpController: _mrpController,
           onMrpChanged: notifier.updateMrp,
           salePriceController: _salePriceController,
@@ -1445,13 +1617,44 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  Widget _buildProductDescriptionTab(
+    AddItemFormState form,
+    AddItemForm notifier,
+  ) {
+    return ProductDescriptionSection(
+      descriptionController: _onlineStoreDescriptionController,
+      onDescriptionChanged: notifier.updateOnlineStoreDescription,
+    );
+  }
+
+  Widget _buildMobileOnlineStoreSection(
+    AddItemFormState form,
+    AddItemForm notifier,
+  ) {
+    return MobileAddItemOnlineStoreSection(
+      itemType: form.itemType,
+      priceController: _onlineStorePriceController,
+      onPriceChanged: notifier.updateOnlineStorePrice,
+      descriptionController: form.itemType == ItemType.service
+          ? _onlineStoreDescriptionController
+          : null,
+      onDescriptionChanged: form.itemType == ItemType.service
+          ? notifier.updateOnlineStoreDescription
+          : null,
+    );
+  }
+
   Widget _buildOnlineStoreTab(AddItemFormState form, AddItemForm notifier) {
     return OnlineStoreSection(
       itemType: form.itemType,
       priceController: _onlineStorePriceController,
-      descriptionController: _onlineStoreDescriptionController,
       onPriceChanged: notifier.updateOnlineStorePrice,
-      onDescriptionChanged: notifier.updateOnlineStoreDescription,
+      descriptionController: form.itemType == ItemType.service
+          ? _onlineStoreDescriptionController
+          : null,
+      onDescriptionChanged: form.itemType == ItemType.service
+          ? notifier.updateOnlineStoreDescription
+          : null,
     );
   }
 
@@ -1490,14 +1693,24 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   Widget _buildTabBar(AddItemFormState form) {
     final tabs = form.itemType == ItemType.product
-        ? const [
-            'Pricing',
-            'Stock',
-            'Online Store',
-            'Manufacturing',
-            'Alternatives',
-            'Suppliers',
-          ]
+        ? (_showDesktopAlternativesTab
+              ? const [
+                  'Pricing',
+                  'Stock',
+                  'Product Description',
+                  'Online Store',
+                  'Manufacturing',
+                  'Alternatives',
+                  'Suppliers',
+                ]
+              : const [
+                  'Pricing',
+                  'Stock',
+                  'Product Description',
+                  'Online Store',
+                  'Manufacturing',
+                  'Suppliers',
+                ])
         : const ['Pricing', 'Online Store'];
 
     return TabBar(
@@ -1530,7 +1743,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     if (_isMobileFullPage) {
       return MobileAddItemFooter(
         isSaving: _isSaving,
-        onCancel: () => Navigator.of(context).maybePop(),
+        onCancel: _requestClose,
         onSave: () => _save(saveAndNew: false),
       );
     }

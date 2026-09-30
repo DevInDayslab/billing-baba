@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/auth/models/auth_session.dart';
+
 class CreateBusinessRequest {
   const CreateBusinessRequest({
     required this.name,
@@ -10,6 +12,7 @@ class CreateBusinessRequest {
     this.state,
     this.currency,
     this.address,
+    this.refreshToken,
   });
 
   final String name;
@@ -22,6 +25,7 @@ class CreateBusinessRequest {
   final String? state;
   final String? currency;
   final String? address;
+  final String? refreshToken;
 
   Map<String, dynamic> toJson() => {
     'name': name,
@@ -36,7 +40,19 @@ class CreateBusinessRequest {
     if (state != null && state!.isNotEmpty) 'state': state,
     if (currency != null && currency!.isNotEmpty) 'currency': currency,
     if (address != null && address!.isNotEmpty) 'address': address,
+    if (refreshToken != null && refreshToken!.isNotEmpty)
+      'refresh_token': refreshToken,
   };
+}
+
+class CreateBusinessOutcome {
+  const CreateBusinessOutcome({
+    required this.business,
+    this.session,
+  });
+
+  final BusinessDetailDto business;
+  final AuthSession? session;
 }
 
 class BusinessDetailDto {

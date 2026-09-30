@@ -4,6 +4,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_detail_panel.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_left_panel.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_split_layout.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,6 +39,7 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
     this.onLoadMore,
     this.leadingIcon = Icons.inventory_2_outlined,
     this.showListFilters = true,
+    this.toolbarMenuItems = const [],
     super.key,
   });
 
@@ -68,6 +70,7 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
   final void Function(String value, InventoryItem item) onMenuSelected;
   final IconData leadingIcon;
   final bool showListFilters;
+  final List<SalesActionMenuItem> toolbarMenuItems;
 
   @override
   ConsumerState<InventoryItemWorkspace> createState() =>
@@ -173,7 +176,7 @@ class _InventoryItemWorkspaceState
           selectedId: selectedId,
           focusedIndex: _focusedIndex,
           searchQuery: widget.searchQuery,
-          searchFieldKey: ValueKey(_searchResetToken),
+          searchResetToken: _searchResetToken,
           searchHint: widget.searchHint,
           addButtonLabel: widget.addButtonLabel,
           emptyMessage: widget.emptyMessage,
@@ -196,6 +199,7 @@ class _InventoryItemWorkspaceState
           onItemSelected: _selectItem,
           onAddPressed: widget.onAddPressed,
           onMenuSelected: widget.onMenuSelected,
+          toolbarMenuItems: widget.toolbarMenuItems,
         ),
       ),
       detailPanel: selectedId == null || detailItem == null

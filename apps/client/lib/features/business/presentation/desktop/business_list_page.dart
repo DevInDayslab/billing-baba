@@ -42,7 +42,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
     with SingleTickerProviderStateMixin {
   static const _headerColor = Color(0xFF1A1A2E);
   static const _maxContentWidth = 1040.0;
-  static const _supportPhone = '9333911911 / 080-68195500';
   static const _supportEmail = 'support@billingbaba.com';
 
   late final TabController _tabController;
@@ -324,7 +323,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
           if (allEntries.isEmpty) {
             return Column(
               children: [
-                const _SupportBar(phone: _supportPhone),
                 Expanded(
                   child: _EmptyBusinessState(onCreate: _openCreateBusiness),
                 ),
@@ -349,7 +347,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
 
           return Column(
             children: [
-              const _SupportBar(phone: _supportPhone),
               _Header(
                 searchController: _searchController,
                 searchFocusNode: _searchFocusNode,
@@ -485,39 +482,6 @@ class _ErrorState extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           FilledButton(onPressed: onRetry, child: const Text('Try again')),
         ],
-      ),
-    );
-  }
-}
-
-class _SupportBar extends StatelessWidget {
-  const _SupportBar({required this.phone});
-
-  final String phone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm + 2,
-      ),
-      child: Center(
-        child: Text(
-          'Need help? Call $phone — Get Instant Online Support',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
-          textAlign: TextAlign.center,
-        ),
       ),
     );
   }

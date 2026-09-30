@@ -18,9 +18,13 @@ export const createBusinessBodySchema = z.object({
   state_code: z.string().trim().max(4).optional(),
   currency: z.string().trim().max(10).optional(),
   address: z.string().trim().max(500).optional(),
+  refresh_token: z.string().min(1).optional(),
 });
 
-export type CreateBusinessBody = z.infer<typeof createBusinessBodySchema>;
+export type CreateBusinessBody = Omit<
+  z.infer<typeof createBusinessBodySchema>,
+  'refresh_token'
+>;
 
 const optionalEmail = z
   .string()

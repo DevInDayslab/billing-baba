@@ -263,6 +263,16 @@ class _AddItemSettingsBodyState extends ConsumerState<_AddItemSettingsBody> {
                   ),
                 ),
                 const _FullWidthDivider(),
+                ItemSettingsMobileSwitchTile(
+                  label: 'Amount in words on pricing',
+                  infoTooltip:
+                      'Show each price in words below MRP, sale, wholesale, and purchase fields when adding items.',
+                  value: draft.showPriceAmountInWords,
+                  onChanged: (value) => _update(
+                    (s) => s.copyWith(showPriceAmountInWords: value),
+                  ),
+                ),
+                const _FullWidthDivider(),
                 ItemSettingsMobileCheckboxTile(
                   label: 'Barcode Scan',
                   infoTooltip:

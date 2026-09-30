@@ -64,6 +64,22 @@ class InventoryUnit {
   }
 }
 
+/// Default base unit for products (and unit pickers) when none is selected.
+InventoryUnit? resolveDefaultPcsUnit(List<InventoryUnit> units) {
+  if (units.isEmpty) return null;
+
+  final byShortName = {
+    for (final unit in units) unit.shortName.toLowerCase(): unit,
+  };
+
+  for (final shortName in ['pcs', 'piece', 'pieces']) {
+    final unit = byShortName[shortName];
+    if (unit != null) return unit;
+  }
+
+  return null;
+}
+
 /// Picks a sensible default unit for service items when the user cannot choose one.
 InventoryUnit? resolveDefaultServiceUnit(List<InventoryUnit> units) {
   if (units.isEmpty) return null;

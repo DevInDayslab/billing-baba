@@ -26,7 +26,6 @@ import 'package:billing_baba/features/developer/models/developer_sub_route.dart'
 import 'package:billing_baba/features/developer/presentation/developer_components_page.dart';
 import 'package:billing_baba/features/developer/presentation/diagnostics_page.dart';
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
-import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/brands_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/categories_screen.dart';
@@ -37,8 +36,7 @@ import 'package:billing_baba/features/inventory/presentation/items_page.dart';
 import 'package:billing_baba/features/inventory/presentation/units_screen.dart';
 import 'package:billing_baba/features/notifications/presentation/mobile/notification_settings_screen.dart';
 import 'package:billing_baba/features/notifications/presentation/notifications_page.dart';
-import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
-import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
+import 'package:billing_baba/features/parties/presentation/parties_page.dart';
 import 'package:billing_baba/features/plans_pricing/application/plans_pricing_license_constants.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
@@ -223,15 +221,15 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.partyDetails,
-            builder: (context, state) => const PartyDetailsPage(),
+            builder: (context, state) => const PartiesPage(),
           ),
           GoRoute(
             path: AppRoutes.partyGroups,
-            builder: (context, state) => const PartyGroupsPage(),
+            builder: (context, state) => const PartiesPage(),
           ),
           GoRoute(
             path: AppRoutes.partyHiddenLedger,
-            builder: (context, state) => const HiddenLedgerListPage(),
+            builder: (context, state) => const PartiesPage(),
           ),
           GoRoute(
             path: AppRoutes.crm,

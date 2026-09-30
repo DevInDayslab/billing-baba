@@ -291,6 +291,16 @@ class _ItemSettingsPanelState extends ConsumerState<ItemSettingsPanel> {
               onChanged: (value) =>
                   _update((s) => s.copyWith(updateSalePriceFromTxn: value)),
             ),
+            const ItemSettingsDivider(),
+            ItemSettingsToggleRow(
+              label: 'Amount in words on pricing',
+              infoTooltip:
+                  'Show each price in words below MRP, sale, wholesale, and purchase fields when adding items.',
+              value: settings.showPriceAmountInWords,
+              onChanged: (value) => _update(
+                (s) => s.copyWith(showPriceAmountInWords: value),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),

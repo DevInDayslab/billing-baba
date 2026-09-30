@@ -74,6 +74,7 @@ class ItemSettings {
     required this.descriptionText,
     required this.hsnSacCode,
     required this.additionalCess,
+    required this.showPriceAmountInWords,
   });
 
   factory ItemSettings.defaults() => const ItemSettings(
@@ -99,6 +100,7 @@ class ItemSettings {
     descriptionText: '',
     hsnSacCode: true,
     additionalCess: false,
+    showPriceAmountInWords: true,
   );
 
   factory ItemSettings.fromJson(Map<String, dynamic> json) {
@@ -149,6 +151,9 @@ class ItemSettings {
       hsnSacCode: json['hsn_sac_code'] as bool? ?? defaults.hsnSacCode,
       additionalCess:
           json['additional_cess'] as bool? ?? defaults.additionalCess,
+      showPriceAmountInWords:
+          json['show_price_amount_in_words'] as bool? ??
+          defaults.showPriceAmountInWords,
     );
   }
 
@@ -174,6 +179,7 @@ class ItemSettings {
   final String descriptionText;
   final bool hsnSacCode;
   final bool additionalCess;
+  final bool showPriceAmountInWords;
 
   Map<String, dynamic> toJson() => {
     'enable_item': enableItem,
@@ -198,6 +204,7 @@ class ItemSettings {
     'description_text': descriptionText,
     'hsn_sac_code': hsnSacCode,
     'additional_cess': additionalCess,
+    'show_price_amount_in_words': showPriceAmountInWords,
   };
 
   ItemSettings copyWith({
@@ -224,6 +231,7 @@ class ItemSettings {
     String? descriptionText,
     bool? hsnSacCode,
     bool? additionalCess,
+    bool? showPriceAmountInWords,
   }) {
     return ItemSettings(
       enableItem: enableItem ?? this.enableItem,
@@ -255,6 +263,8 @@ class ItemSettings {
       descriptionText: descriptionText ?? this.descriptionText,
       hsnSacCode: hsnSacCode ?? this.hsnSacCode,
       additionalCess: additionalCess ?? this.additionalCess,
+      showPriceAmountInWords:
+          showPriceAmountInWords ?? this.showPriceAmountInWords,
     );
   }
 }

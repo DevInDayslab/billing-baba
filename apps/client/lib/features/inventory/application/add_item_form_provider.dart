@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/shared/constants/item_price_limits.dart';
 import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
@@ -116,9 +117,15 @@ class AddItemForm extends Notifier<AddItemFormState> {
   }
 
   void setUnits({String? baseUnitId, String? secondaryUnitId}) {
+    final resolvedSecondary =
+        secondaryUnitId != null &&
+            baseUnitId != null &&
+            secondaryUnitId == baseUnitId
+        ? null
+        : secondaryUnitId;
     state = state.copyWith(
       baseUnitId: baseUnitId,
-      secondaryUnitId: secondaryUnitId,
+      secondaryUnitId: resolvedSecondary,
       baseUnitError: false,
       clearFieldErrors: true,
       isDirty: true,
@@ -162,11 +169,14 @@ class AddItemForm extends Notifier<AddItemFormState> {
   }
 
   void updateMrp(double value) {
-    state = state.copyWith(mrp: value, isDirty: true);
+    state = state.copyWith(mrp: ItemPriceLimits.clamp(value), isDirty: true);
   }
 
   void updateSalePrice(double value) {
-    state = state.copyWith(salePrice: value, isDirty: true);
+    state = state.copyWith(
+      salePrice: ItemPriceLimits.clamp(value),
+      isDirty: true,
+    );
   }
 
   void setSalePriceTaxMode(PriceTaxMode mode) {
@@ -174,7 +184,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
   }
 
   void updateWholesalePrice(double value) {
-    state = state.copyWith(wholesalePrice: value, isDirty: true);
+    state = state.copyWith(
+      wholesalePrice: ItemPriceLimits.clamp(value),
+      isDirty: true,
+    );
   }
 
   void setWholesalePriceTaxMode(PriceTaxMode mode) {
@@ -190,7 +203,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
   }
 
   void updateAtPrice(double value) {
-    state = state.copyWith(atPrice: value, isDirty: true);
+    state = state.copyWith(
+      atPrice: ItemPriceLimits.clamp(value),
+      isDirty: true,
+    );
   }
 
   void setPurchasePriceTaxMode(PriceTaxMode mode) {
@@ -367,7 +383,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
       tierPrices: state.tierPrices
           .map(
             (row) => row.id == id
-                ? row.copyWith(tierKey: tierKey, price: price)
+                ? row.copyWith(
+                    tierKey: tierKey,
+                    price: price == null ? null : ItemPriceLimits.clamp(price),
+                  )
                 : row,
           )
           .toList(),

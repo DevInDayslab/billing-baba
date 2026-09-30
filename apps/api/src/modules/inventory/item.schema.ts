@@ -8,13 +8,20 @@ const sortFieldValues = ['name', 'created_at'] as const;
 const sortOrderValues = ['asc', 'desc'] as const;
 const itemTypeValues = ['product', 'service'] as const;
 
+/** 99,99,99,999 rupees — max item price (9-digit whole amount). */
+const MAX_ITEM_MONEY_AMOUNT = 999_999_999.9999;
+
 const moneyField = z
   .union([z.string(), z.number()])
   .transform((value) => String(value).trim())
   .pipe(
     z
       .string()
-      .regex(/^\d+(\.\d{1,4})?$/, 'Must be a valid positive decimal amount'),
+      .regex(/^\d+(\.\d{1,4})?$/, 'Must be a valid positive decimal amount')
+      .refine(
+        (value) => Number(value) <= MAX_ITEM_MONEY_AMOUNT,
+        'Amount cannot exceed 99,99,99,999',
+      ),
   );
 
 const optionalMoneyField = z
@@ -27,6 +34,10 @@ const optionalMoneyField = z
     z
       .string()
       .regex(/^\d+(\.\d{1,4})?$/, 'Must be a valid positive decimal amount')
+      .refine(
+        (value) => Number(value) <= MAX_ITEM_MONEY_AMOUNT,
+        'Amount cannot exceed 99,99,99,999',
+      )
       .optional(),
   );
 

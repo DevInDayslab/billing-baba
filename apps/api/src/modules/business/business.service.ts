@@ -1,6 +1,10 @@
+import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { formatDatabaseError } from '../../shared/errors/database-error';
+import { AuthService } from '../auth/auth.service';
+import type { AuthSessionResponse } from '../auth/auth.types';
 import { BusinessBrandingService } from './business-branding.service';
 import { BusinessRepository } from './business.repository';
 import type {
@@ -13,11 +17,42 @@ import type {
   BusinessListItem,
   BusinessProfile,
   CommerceSettings,
+  CreateBusinessResponse,
 } from './business.types';
+function mapCreateBusinessError(error: unknown): AppError | unknown {
+  if (error instanceof AppError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    if (error.message === 'GSTIN_ALREADY_EXISTS') {
+      return new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        gstin: ['This GSTIN is already registered to another business'],
+      });
+    }
+    if (error.message === 'BUSINESS_NAME_ALREADY_EXISTS') {
+      return new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        name: [
+          'You already have a business with this name. Use a different name or open the existing one from your company list.',
+        ],
+      });
+    }
+  }
+
+  const databaseError = formatDatabaseError(error);
+  if (databaseError?.includes('uq_businesses_gstin')) {
+    return new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+      gstin: ['This GSTIN is already registered to another business'],
+    });
+  }
+
+  return error;
+}
 
 export class BusinessService {
   private readonly repository: BusinessRepository;
   private readonly branding: BusinessBrandingService | null;
+  private readonly config: AppConfig | undefined;
 
   constructor(config?: AppConfig) {
     const db = getDb();
@@ -28,10 +63,10 @@ export class BusinessService {
         503,
       );
     }
+    this.config = config;
     this.repository = new BusinessRepository(db);
     this.branding = config ? new BusinessBrandingService({ config }) : null;
   }
-
   async listBusinesses(accountId: string): Promise<BusinessListItem[]> {
     const items = await this.repository.listByAccountId(accountId);
     if (!this.branding) {
@@ -44,16 +79,37 @@ export class BusinessService {
     accountId: string,
     accountPhone: string,
     input: CreateBusinessBody,
-  ): Promise<BusinessDetail> {
-    const business = await this.repository.createWithBootstrap(
-      accountId,
-      input,
-      accountPhone,
-    );
+    options?: {
+      refreshToken?: string;
+      app?: FastifyInstance;
+    },
+  ): Promise<CreateBusinessResponse> {
+    try {
+      const business = await this.repository.createWithBootstrap(
+        accountId,
+        input,
+        accountPhone,
+      );
 
-    return business;
+      let auth: AuthSessionResponse | undefined;
+      const refreshToken = options?.refreshToken?.trim();
+      if (refreshToken && options?.app && this.config) {
+        try {
+          const authService = new AuthService(options.app, this.config);
+          auth = await authService.refresh(refreshToken, business.id);
+        } catch (error) {
+          options.app.log.warn(
+            { err: error, businessId: business.id },
+            'Business created but session refresh failed',
+          );
+        }
+      }
+
+      return auth ? { ...business, auth } : business;
+    } catch (error) {
+      throw mapCreateBusinessError(error);
+    }
   }
-
   async getProfile(
     businessId: string,
     accountId: string,
