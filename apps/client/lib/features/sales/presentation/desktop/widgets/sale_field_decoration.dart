@@ -266,6 +266,7 @@ double _verticalPaddingForHeight(
 /// Set [fixedHeight] to false for multiline fields (e.g. billing address).
 InputDecoration buildSaleFieldDecoration({
   String? hint,
+  String? labelText,
   Widget? suffixIcon,
   Widget? suffix,
   bool hasError = false,
@@ -273,6 +274,7 @@ InputDecoration buildSaleFieldDecoration({
   bool compact = false,
   bool borderless = false,
   bool fixedHeight = true,
+  EdgeInsetsGeometry? contentPadding,
 }) {
   final fieldHeight = saleFieldControlHeight(compact: compact);
   final fontSize = compact ? 12.0 : 14.0;
@@ -319,18 +321,35 @@ InputDecoration buildSaleFieldDecoration({
       : saleFieldFocusColor;
   final borderRadius = saleFieldBorderRadius(compact: compact);
 
+  final useFloatingLabel = labelText != null && labelText.isNotEmpty;
+
   return InputDecoration(
-    hintText: hint,
+    labelText: useFloatingLabel ? labelText : null,
+    floatingLabelBehavior: FloatingLabelBehavior.auto,
+    alignLabelWithHint: true,
+    labelStyle: TextStyle(
+      color: Colors.grey.shade500,
+      fontSize: fontSize,
+      height: 1.2,
+    ),
+    floatingLabelStyle: TextStyle(
+      color: hasError ? saleFieldErrorColor : Colors.grey.shade600,
+      fontSize: compact ? 10 : 11,
+      height: 1.1,
+    ),
+    hintText: useFloatingLabel ? null : hint,
     hintStyle: TextStyle(
       color: Colors.grey.shade400,
       fontSize: fontSize,
       height: 1.2,
     ),
-    contentPadding: EdgeInsets.symmetric(
-      horizontal: compact ? 6 : 12,
-      vertical: verticalPadding,
-    ),
-    isDense: true,
+    contentPadding:
+        contentPadding ??
+        EdgeInsets.symmetric(
+          horizontal: compact ? 6 : 12,
+          vertical: useFloatingLabel ? (compact ? 10 : 12) : verticalPadding,
+        ),
+    isDense: !useFloatingLabel,
     constraints: fixedHeight
         ? BoxConstraints.tightFor(height: fieldHeight)
         : null,

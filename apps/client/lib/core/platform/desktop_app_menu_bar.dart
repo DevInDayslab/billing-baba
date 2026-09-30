@@ -6,6 +6,7 @@ import 'package:billing_baba/core/platform/desktop_menu_actions.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/customer_support_strip.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/sync_toolbar_controls.dart';
 import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -97,29 +98,36 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: MenuBar(
-                        style: const MenuStyle(
-                          backgroundColor: WidgetStatePropertyAll(
-                            Colors.transparent,
-                          ),
-                          elevation: WidgetStatePropertyAll(0),
-                          padding: WidgetStatePropertyAll(
-                            EdgeInsets.symmetric(horizontal: 2),
-                          ),
-                          minimumSize: WidgetStatePropertyAll(
-                            Size(0, DashboardSpacing.menuBarHeight),
-                          ),
-                          maximumSize: WidgetStatePropertyAll(
-                            Size(
-                              double.infinity,
-                              DashboardSpacing.menuBarHeight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          MenuBar(
+                            style: const MenuStyle(
+                              backgroundColor: WidgetStatePropertyAll(
+                                Colors.transparent,
+                              ),
+                              elevation: WidgetStatePropertyAll(0),
+                              padding: WidgetStatePropertyAll(
+                                EdgeInsets.symmetric(horizontal: 2),
+                              ),
+                              minimumSize: WidgetStatePropertyAll(
+                                Size(0, DashboardSpacing.menuBarHeight),
+                              ),
+                              maximumSize: WidgetStatePropertyAll(
+                                Size(
+                                  double.infinity,
+                                  DashboardSpacing.menuBarHeight,
+                                ),
+                              ),
+                            ),
+                            children: _materialMenus(
+                              canBusiness: host.canBusiness,
+                              canLogout: host.canLogout,
                             ),
                           ),
-                        ),
-                        children: _materialMenus(
-                          canBusiness: host.canBusiness,
-                          canLogout: host.canLogout,
-                        ),
+                          const SyncNowToolbarButton(),
+                          const CloudSyncToolbarButton(),
+                        ],
                       ),
                     ),
                   ),

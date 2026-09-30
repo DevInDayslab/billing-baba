@@ -23,7 +23,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 const double _compactBreakpoint = 860;
 const double _dialogWideWidth = 1080;
 const _cardBorder = Color(0xFFE0E0E0);
+const _fieldBorderColor = Color(0xFFCCCCCC);
+const _fieldBorderRadius = 6.0;
 const double _logoSize = 120;
+const double _signaturePreviewHeight = 96;
 const double _mediaColumnWidth = 180;
 
 const Map<String, String> _currencyLabels = {
@@ -120,6 +123,9 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   Uint8List? _logoBytes;
   Uint8List? _logoPreviewBytes;
   String? _logoMimeType;
+  Uint8List? _signatureBytes;
+  Uint8List? _signaturePreviewBytes;
+  String? _signatureMimeType;
   var _prefilled = false;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
@@ -228,6 +234,43 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     }
   }
 
+  Future<void> _pickSignature() async {
+    final picked = await pickAndPrepareMediaImage(context: context);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _signatureBytes = picked.bytes;
+      _signaturePreviewBytes = picked.previewBytes;
+      _signatureMimeType = picked.mimeType;
+    });
+  }
+
+  void _clearSignature() {
+    setState(() {
+      _signatureBytes = null;
+      _signaturePreviewBytes = null;
+      _signatureMimeType = null;
+    });
+  }
+
+  Future<void> _uploadSignatureIfPicked() async {
+    final bytes = _signatureBytes;
+    final mime = _signatureMimeType;
+    if (bytes == null || mime == null) return;
+
+    try {
+      final api = await ref.read(apiClientProvider.future);
+      if (!mounted) return;
+      await BusinessBrandingRepository(api.dio).uploadSignature(
+        bytes: bytes,
+        mimeType: mime,
+      );
+      if (!mounted) return;
+      await ref.read(businessListProvider.notifier).refresh();
+    } on Object {
+      // Create already succeeded; signature can be added later in profile.
+    }
+  }
+
   Future<void> _submit() async {
     final formState = ref.read(createBusinessFormProvider);
     if (formState.isSubmitting) return;
@@ -246,8 +289,25 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
 
     if (created != null) {
       await _uploadLogoIfPicked();
+      await _uploadSignatureIfPicked();
       if (!mounted) return;
       ref.invalidate(createBusinessFormProvider);
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Business created'),
+          content: Text(
+            '${created.name} is ready to use.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
       Navigator.of(context).pop(true);
       return;
     }
@@ -257,15 +317,13 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     });
   }
 
-  void _showGenericErrorDialog() {
+  void _showCreateErrorDialog(String message) {
     unawaited(
       showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: const Text('Could not create business'),
-          content: const Text(
-            'Something went wrong. Please try again.',
-          ),
+          content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -358,12 +416,11 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       prev,
       next,
     ) {
-      if (next.showGenericErrorDialog &&
-          (prev == null || !prev.showGenericErrorDialog)) {
-        _showGenericErrorDialog();
-        ref
-            .read(createBusinessFormProvider.notifier)
-            .acknowledgeGenericDialog();
+      if (next.showErrorDialog &&
+          (prev == null || !prev.showErrorDialog) &&
+          next.generalError != null) {
+        _showCreateErrorDialog(next.generalError!);
+        ref.read(createBusinessFormProvider.notifier).acknowledgeErrorDialog();
       }
     });
 
@@ -394,6 +451,9 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       onCurrencyChanged: (value) {
         if (value != null) setState(() => _currency = value);
       },
+      signaturePreviewBytes: _signaturePreviewBytes,
+      onPickSignature: _pickSignature,
+      onClearSignature: _signaturePreviewBytes != null ? _clearSignature : null,
       onCancel: formState.isSubmitting
           ? null
           : () => Navigator.of(context).pop(false),
@@ -463,6 +523,9 @@ class _CreateBusinessFormContent extends StatelessWidget {
     required this.onBusinessCategoryChanged,
     required this.onStateChanged,
     required this.onCurrencyChanged,
+    required this.signaturePreviewBytes,
+    required this.onPickSignature,
+    this.onClearSignature,
     required this.onCancel,
     required this.onSubmit,
   });
@@ -490,6 +553,9 @@ class _CreateBusinessFormContent extends StatelessWidget {
   final ValueChanged<String?> onBusinessCategoryChanged;
   final ValueChanged<String?> onStateChanged;
   final ValueChanged<String?> onCurrencyChanged;
+  final Uint8List? signaturePreviewBytes;
+  final VoidCallback onPickSignature;
+  final VoidCallback? onClearSignature;
   final VoidCallback? onCancel;
   final VoidCallback onSubmit;
 
@@ -866,7 +932,141 @@ class _CreateBusinessFormContent extends StatelessWidget {
             serverError: formState.errorFor('address'),
           ),
         ),
+        const SizedBox(height: AppSpacing.md),
+        BusinessLabeledField(
+          label: 'Signature',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(_fieldBorderRadius),
+                  border: Border.all(color: _fieldBorderColor),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius:
+                      BorderRadius.circular(_fieldBorderRadius),
+                  clipBehavior: Clip.antiAlias,
+                  child: signaturePreviewBytes != null
+                      ? SizedBox(
+                          height: _signaturePreviewHeight,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                    vertical: AppSpacing.xs,
+                                  ),
+                                  child: Image.memory(
+                                    signaturePreviewBytes!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  right: AppSpacing.sm,
+                                ),
+                                child: PopupMenuButton<_SignatureMenuAction>(
+                                  tooltip: 'Edit signature',
+                                  offset: const Offset(0, 8),
+                                  onSelected: (action) {
+                                    switch (action) {
+                                      case _SignatureMenuAction.replace:
+                                        onPickSignature();
+                                      case _SignatureMenuAction.remove:
+                                        onClearSignature?.call();
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: _SignatureMenuAction.replace,
+                                      child: Text('Replace signature'),
+                                    ),
+                                    if (onClearSignature != null)
+                                      const PopupMenuItem(
+                                        value: _SignatureMenuAction.remove,
+                                        child: Text('Remove signature'),
+                                      ),
+                                  ],
+                                  child: Material(
+                                    color: AppColors.surface,
+                                    shape: CircleBorder(
+                                      side: BorderSide(color: _cardBorder),
+                                    ),
+                                    elevation: 1,
+                                    child: const SizedBox(
+                                      width: 32,
+                                      height: 32,
+                                      child: Icon(
+                                        Icons.edit_outlined,
+                                        size: 16,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : InkWell(
+                          onTap: onPickSignature,
+                          borderRadius:
+                              BorderRadius.circular(_fieldBorderRadius),
+                          child: SizedBox(
+                            height: _signaturePreviewHeight,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  LucideIcons.plus,
+                                  size: 22,
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.85,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                const Text(
+                                  'Upload signature',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Optional — used on invoices & vouchers',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              const Text(
+                'JPG, PNG or SVG. Max 2MB',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 }
+
+enum _SignatureMenuAction { replace, remove }

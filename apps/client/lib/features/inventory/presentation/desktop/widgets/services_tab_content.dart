@@ -6,6 +6,7 @@ import 'package:billing_baba/features/inventory/models/paginated_inventory_items
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_bulk_menu.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_workspace.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:flutter/material.dart';
@@ -76,6 +77,10 @@ class ServicesTabContent extends ConsumerWidget {
           context,
           initialType: ItemType.service,
         ),
+      ),
+      toolbarMenuItems: buildInventoryItemBulkMenuItems(
+        context: context,
+        itemType: ItemType.service,
       ),
       onMenuSelected: (value, item) {
         switch (value) {

@@ -50,18 +50,27 @@ class StockSection extends StatelessWidget {
     decimalInputFormatter ?? _defaultDecimalFormatter,
   ];
 
+  Widget _floatingField({required String label, required Widget child}) {
+    return AppFormField(
+      label: label,
+      floatingLabel: true,
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FormGrid(
+      rowGap: 12,
       cells: [
         FormGridCell(
           span: 4,
-          child: AppFormField(
+          child: _floatingField(
             label: 'Opening Stock',
             child: TextField(
               controller: openingQtyController,
               style: saleFieldTextStyle,
-              decoration: buildFormControlDecoration(hint: 'Opening Stock'),
+              decoration: buildFormControlDecoration(labelText: 'Opening Stock'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -72,12 +81,12 @@ class StockSection extends StatelessWidget {
         ),
         FormGridCell(
           span: 4,
-          child: AppFormField(
+          child: _floatingField(
             label: 'At Price',
             child: TextField(
               controller: openingPriceController,
               style: saleFieldTextStyle,
-              decoration: buildFormControlDecoration(hint: 'At Price'),
+              decoration: buildFormControlDecoration(labelText: 'At Price'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -88,28 +97,31 @@ class StockSection extends StatelessWidget {
         ),
         FormGridCell(
           span: 4,
-          child: AppFormField(
+          child: _floatingField(
             label: 'As of Date',
-            child: SaleSingleDatePickerAnchor(
-              key: asOfDatePickerKey,
-              selectedDate: asOfDate,
-              onDateSelected: onAsOfDateSelected,
-              child: SaleFieldTrigger(
-                onTap: () => asOfDatePickerKey.currentState?.toggle(),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        formatSaleSingleDate(asOfDate),
-                        style: saleFieldTextStyle,
+            child: InputDecorator(
+              decoration: buildFormControlDecoration(labelText: 'As of Date'),
+              child: SaleSingleDatePickerAnchor(
+                key: asOfDatePickerKey,
+                selectedDate: asOfDate,
+                onDateSelected: onAsOfDateSelected,
+                child: SaleFieldTrigger(
+                  onTap: () => asOfDatePickerKey.currentState?.toggle(),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          formatSaleSingleDate(asOfDate),
+                          style: saleFieldTextStyle,
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                  ],
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -117,12 +129,12 @@ class StockSection extends StatelessWidget {
         ),
         FormGridCell(
           span: 4,
-          child: AppFormField(
+          child: _floatingField(
             label: 'Minimum Stock',
             child: TextField(
               controller: minStockController,
               style: saleFieldTextStyle,
-              decoration: buildFormControlDecoration(hint: 'Minimum Stock'),
+              decoration: buildFormControlDecoration(labelText: 'Minimum Stock'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -133,12 +145,12 @@ class StockSection extends StatelessWidget {
         ),
         FormGridCell(
           span: 4,
-          child: AppFormField(
+          child: _floatingField(
             label: 'Rack / Shelf',
             child: TextField(
               controller: locationController,
               style: saleFieldTextStyle,
-              decoration: buildFormControlDecoration(hint: 'Ex: Rack A-12'),
+              decoration: buildFormControlDecoration(labelText: 'Rack / Shelf'),
               onChanged: onLocationChanged,
             ),
           ),

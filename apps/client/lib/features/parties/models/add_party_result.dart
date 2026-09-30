@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/parties/models/party_additional_phone_detail.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 
 /// Data captured from the Add Party dialog on save.
@@ -10,6 +11,7 @@ class AddPartyResult {
     this.gstin = '',
     this.phone = '',
     this.additionalPhones = const [],
+    this.additionalPhoneDetails = const [],
     this.gstType = 'Unregistered/Consumer',
     this.state = 'Andhra Pradesh',
     this.email = '',
@@ -45,6 +47,7 @@ class AddPartyResult {
   final String gstin;
   final String phone;
   final List<String> additionalPhones;
+  final List<PartyAdditionalPhoneDetail> additionalPhoneDetails;
   final String gstType;
   final String state;
   final String email;

@@ -1,3 +1,5 @@
+import type { AuthSessionResponse } from '../auth/auth.types';
+
 export type BusinessListItem = {
   id: string;
   name: string;
@@ -15,7 +17,9 @@ export type BusinessListItem = {
 
 export type BusinessDetail = BusinessListItem;
 
-export type CreateBusinessResponse = BusinessDetail;
+export type CreateBusinessResponse = BusinessDetail & {
+  auth?: AuthSessionResponse;
+};
 
 export type BusinessProfile = {
   id: string;

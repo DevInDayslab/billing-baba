@@ -3,13 +3,12 @@ import 'package:billing_baba/features/inventory/application/inventory_item_list_
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_category_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/add_item_brand_picker_field.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/add_item_category_picker_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/item_image_gallery_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -19,7 +18,6 @@ class GeneralInformationSection extends StatelessWidget {
     required this.itemType,
     required this.itemNameController,
     required this.shortNameController,
-    required this.aliasController,
     required this.searchKeywordsController,
     required this.hsnController,
     required this.itemCodeController,
@@ -28,32 +26,33 @@ class GeneralInformationSection extends StatelessWidget {
     required this.baseUnitError,
     required this.onItemNameChanged,
     required this.onShortNameChanged,
-    required this.onAliasChanged,
     required this.onSearchKeywordsChanged,
     required this.onHsnChanged,
     required this.onItemCodeChanged,
     required this.onDescriptionChanged,
     required this.onAssignCode,
-    required this.categoryOptions,
+    required this.selectedCategoryId,
     required this.selectedCategory,
     required this.categories,
     required this.onCategorySelected,
-    required this.brandOptions,
+    required this.selectedBrandId,
     required this.selectedBrand,
     required this.brands,
     required this.onBrandSelected,
     required this.unitLabel,
     required this.onSelectUnit,
-    this.alternativeItemsField,
+    this.alternativesInlineAddButton,
+    this.alternativesListSection,
     this.itemId,
     this.seedPrimaryImageUrl,
+    this.pendingItemPhotos = const [],
+    this.onPendingPhotoTap,
     super.key,
   });
 
   final ItemType itemType;
   final TextEditingController itemNameController;
   final TextEditingController shortNameController;
-  final TextEditingController aliasController;
   final TextEditingController searchKeywordsController;
   final TextEditingController hsnController;
   final TextEditingController itemCodeController;
@@ -62,48 +61,115 @@ class GeneralInformationSection extends StatelessWidget {
   final bool baseUnitError;
   final ValueChanged<String> onItemNameChanged;
   final ValueChanged<String> onShortNameChanged;
-  final ValueChanged<String> onAliasChanged;
   final ValueChanged<String> onSearchKeywordsChanged;
   final ValueChanged<String> onHsnChanged;
   final ValueChanged<String> onItemCodeChanged;
   final ValueChanged<String> onDescriptionChanged;
   final VoidCallback onAssignCode;
-  final List<String> categoryOptions;
+  final String? selectedCategoryId;
   final String? selectedCategory;
   final List<InventoryCategory> categories;
   final ValueChanged<String?> onCategorySelected;
-  final List<String> brandOptions;
+  final String? selectedBrandId;
   final String? selectedBrand;
   final List<BrandModel> brands;
   final ValueChanged<String?> onBrandSelected;
   final String unitLabel;
   final VoidCallback onSelectUnit;
-  final Widget? alternativeItemsField;
+  final Widget? alternativesInlineAddButton;
+  final Widget? alternativesListSection;
   final String? itemId;
   final String? seedPrimaryImageUrl;
+  final List<Uint8List> pendingItemPhotos;
+  final ValueChanged<int>? onPendingPhotoTap;
 
   bool get _isProduct => itemType == ItemType.product;
+
+  static const _pendingThumbSize = 52.0;
+
+  static const _gridRowGap = 12.0;
+
+  bool _isUnitEmpty(String display) {
+    return display.isEmpty ||
+        display == 'None' ||
+        display == 'Select unit' ||
+        display == 'Select Unit';
+  }
+
+  bool get _showItemImagesRow {
+    if (itemId != null && isServerBackedInventoryItemId(itemId!)) {
+      return true;
+    }
+    return pendingItemPhotos.isNotEmpty;
+  }
+
+  Widget _buildItemImagesContent() {
+    if (itemId != null && isServerBackedInventoryItemId(itemId!)) {
+      return ItemImageGallerySection(
+        itemId: itemId!,
+        seedPrimaryImageUrl: seedPrimaryImageUrl,
+      );
+    }
+
+    if (pendingItemPhotos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        for (var i = 0; i < pendingItemPhotos.length; i++)
+          _PendingPhotoThumb(
+            bytes: pendingItemPhotos[i],
+            isPrimary: i == 0,
+            onTap: onPendingPhotoTap == null
+                ? null
+                : () => onPendingPhotoTap!(i),
+          ),
+      ],
+    );
+  }
+
+  Widget _floatingField({
+    required String label,
+    required Widget child,
+    bool hasError = false,
+    String? errorText,
+    bool fixedHeight = true,
+  }) {
+    return AppFormField(
+      label: label,
+      floatingLabel: true,
+      hasError: hasError,
+      errorText: errorText,
+      fixedHeight: fixedHeight,
+      child: child,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final nameLabel = _isProduct ? 'Item Name *' : 'Service Name *';
     final taxCodeLabel = _isProduct ? 'Item HSN' : 'SAC';
-    final taxCodeHint = _isProduct ? 'Search HSN' : 'Search SAC';
     final codeLabel = _isProduct ? 'Item Code' : 'Service Code';
     final unitDisplay =
         unitLabel.isEmpty || unitLabel == 'None' || unitLabel == 'Select unit'
-        ? 'Select Unit'
+        ? ''
         : unitLabel;
-
+    final brandDisplay = selectedBrand ?? '';
+    final categoryDisplay = selectedCategory ?? '';
+    const decoratorTriggerHeight = saleFieldHeight - 20;
+    const selectFieldPadding = EdgeInsets.fromLTRB(4, 12, 4, 12);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Row 1 — equal-width controls (3+3+3+3)
         FormGrid(
+          rowGap: _gridRowGap,
           cells: [
             FormGridCell(
               span: 3,
-              child: AppFormField(
+              child: _floatingField(
                 label: nameLabel,
                 hasError: itemNameError,
                 errorText: 'Item name is required',
@@ -111,7 +177,7 @@ class GeneralInformationSection extends StatelessWidget {
                   controller: itemNameController,
                   style: saleFieldTextStyle,
                   decoration: buildFormControlDecoration(
-                    hint: _isProduct ? 'Enter item name' : 'Enter service name',
+                    labelText: nameLabel,
                     hasError: itemNameError,
                   ),
                   onChanged: onItemNameChanged,
@@ -120,18 +186,18 @@ class GeneralInformationSection extends StatelessWidget {
             ),
             FormGridCell(
               span: 3,
-              child: AppFormField(
+              child: _floatingField(
                 label: taxCodeLabel,
                 child: TextField(
                   controller: hsnController,
                   style: saleFieldTextStyle,
                   decoration: buildFormControlDecoration(
-                    hint: taxCodeHint,
+                    labelText: taxCodeLabel,
                     suffixIcon: IconButton(
                       onPressed: () {},
                       icon: const Icon(Icons.search, size: 18),
                       color: AppColors.textSecondary,
-                      tooltip: taxCodeHint,
+                      tooltip: taxCodeLabel,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                         minWidth: FormSpacing.inputHeight,
@@ -145,7 +211,7 @@ class GeneralInformationSection extends StatelessWidget {
             ),
             FormGridCell(
               span: 3,
-              child: AppFormField(
+              child: _floatingField(
                 label: codeLabel,
                 child: TextField(
                   controller: itemCodeController,
@@ -153,7 +219,7 @@ class GeneralInformationSection extends StatelessWidget {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: saleFieldTextStyle,
                   decoration: buildFormControlDecoration(
-                    hint: codeLabel,
+                    labelText: codeLabel,
                     suffix: TextButton(
                       onPressed: onAssignCode,
                       style: TextButton.styleFrom(
@@ -177,44 +243,43 @@ class GeneralInformationSection extends StatelessWidget {
             ),
             FormGridCell(
               span: 3,
-              child: AppFormField(
+              child: _floatingField(
                 label: 'Select Unit',
                 hasError: baseUnitError,
                 errorText: 'Please select a base unit.',
-                child: OutlinedButton(
-                  onPressed: onSelectUnit,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: baseUnitError
-                        ? AppColors.error
-                        : AppColors.primary,
-                    backgroundColor: const Color(0xFFE3F2FD),
-                    side: baseUnitError
-                        ? const BorderSide(color: AppColors.error, width: 1.5)
-                        : BorderSide.none,
-                    minimumSize: const Size.fromHeight(FormSpacing.inputHeight),
-                    maximumSize: const Size.fromHeight(FormSpacing.inputHeight),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+                child: InputDecorator(
+                  isEmpty: _isUnitEmpty(unitDisplay),
+                  decoration: buildFormControlDecoration(
+                    labelText: 'Select Unit',
+                    hasError: baseUnitError,
                   ),
-                  child: AppEllipsisText(
-                    unitDisplay,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  child: InkWell(
+                    onTap: onSelectUnit,
+                    child: SizedBox(
+                      height: saleFieldHeight - 20,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: AppEllipsisText(
+                          _isUnitEmpty(unitDisplay) ? ' ' : unitDisplay,
+                          style: saleFieldTextStyle.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
             FormGridCell(
               span: 3,
-              child: AppFormField(
+              child: _floatingField(
                 label: 'Short Name',
                 child: TextField(
                   controller: shortNameController,
                   style: saleFieldTextStyle,
                   decoration: buildFormControlDecoration(
-                    hint: 'Short display name',
+                    labelText: 'Short Name',
                   ),
                   onChanged: onShortNameChanged,
                 ),
@@ -222,27 +287,13 @@ class GeneralInformationSection extends StatelessWidget {
             ),
             FormGridCell(
               span: 3,
-              child: AppFormField(
-                label: 'Alias',
-                child: TextField(
-                  controller: aliasController,
-                  style: saleFieldTextStyle,
-                  decoration: buildFormControlDecoration(
-                    hint: 'Alternate name',
-                  ),
-                  onChanged: onAliasChanged,
-                ),
-              ),
-            ),
-            FormGridCell(
-              span: 3,
-              child: AppFormField(
+              child: _floatingField(
                 label: 'Search Keywords',
                 child: TextField(
                   controller: searchKeywordsController,
                   style: saleFieldTextStyle,
                   decoration: buildFormControlDecoration(
-                    hint: 'Comma-separated keywords',
+                    labelText: 'Search Keywords',
                   ),
                   onChanged: onSearchKeywordsChanged,
                 ),
@@ -250,108 +301,150 @@ class GeneralInformationSection extends StatelessWidget {
             ),
             FormGridCell(
               span: 3,
-              child: AppFormField(
+              child: _floatingField(
                 label: 'Brand',
-                fixedHeight: false,
-                child: SizedBox(
-                  height: FormSpacing.inputHeight,
-                  child: SaleGenericSelectDropdown(
-                    value: selectedBrand ?? 'Select',
-                    options: brandOptions,
-                    onSelected: (name) {
-                      final brand = brands.firstWhereOrNull(
-                        (entry) => entry.name == name,
-                      );
-                      onBrandSelected(brand?.id);
-                    },
+                child: InputDecorator(
+                  isEmpty: brandDisplay.isEmpty,
+                  decoration: buildFormControlDecoration(
+                    labelText: 'Brand',
+                    contentPadding: selectFieldPadding,
                   ),
-                ),
-              ),
-            ),
-            // Row 2 — Category | Description | Add Item Image
-            FormGridCell(
-              span: 4,
-              child: AppFormField(
-                label: 'Category',
-                fixedHeight: false,
-                child: SizedBox(
-                  height: FormSpacing.inputHeight,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SaleGenericSelectDropdown(
-                          value: selectedCategory ?? 'Select',
-                          options: categoryOptions,
-                          onSelected: (name) {
-                            final category = categories.firstWhereOrNull(
-                              (c) => c.name == name,
-                            );
-                            onCategorySelected(category?.id);
-                          },
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => showAddCategoryDialog(context),
-                        icon: const Icon(Icons.add, size: 18),
-                        tooltip: 'Add category',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: FormSpacing.inputHeight,
-                          minHeight: FormSpacing.inputHeight,
-                        ),
-                      ),
-                    ],
+                  child: AddItemBrandPickerField(
+                    borderless: true,
+                    triggerHeight: decoratorTriggerHeight,
+                    brands: brands,
+                    selectedBrandId: selectedBrandId,
+                    selectedBrandName: selectedBrand,
+                    onBrandSelected: onBrandSelected,
                   ),
-                ),
-              ),
-            ),
-            FormGridCell(
-              span: 5,
-              child: AppFormField(
-                label: 'Description',
-                child: TextField(
-                  controller: descriptionController,
-                  style: saleFieldTextStyle,
-                  decoration: buildFormControlDecoration(hint: 'Description'),
-                  onChanged: onDescriptionChanged,
                 ),
               ),
             ),
             FormGridCell(
               span: 3,
-              child: AppFormField(
-                label: _isProduct ? 'Item Images' : 'Service Images',
-                fixedHeight: false,
-                child: itemId == null || !isServerBackedInventoryItemId(itemId!)
-                    ? Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          itemId == null
-                              ? (_isProduct
-                                    ? 'Save item to add images'
-                                    : 'Save service to add images')
-                              : 'Images available after item is synced to the server',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary.withValues(
-                              alpha: 0.9,
-                            ),
-                          ),
-                        ),
-                      )
-                    : ItemImageGallerySection(
-                        itemId: itemId!,
-                        seedPrimaryImageUrl: seedPrimaryImageUrl,
-                      ),
+              child: _floatingField(
+                label: 'Category',
+                child: InputDecorator(
+                  isEmpty: categoryDisplay.isEmpty,
+                  decoration: buildFormControlDecoration(
+                    labelText: 'Category',
+                    contentPadding: selectFieldPadding,
+                  ),
+                  child: AddItemCategoryPickerField(
+                    borderless: true,
+                    triggerHeight: decoratorTriggerHeight,
+                    categories: categories,
+                    selectedCategoryId: selectedCategoryId,
+                    selectedCategoryName: selectedCategory,
+                    onCategorySelected: onCategorySelected,
+                  ),
+                ),
               ),
             ),
+            FormGridCell(
+              span: alternativesInlineAddButton != null ? 4 : 9,
+              child: _floatingField(
+                label: 'Description',
+                child: TextField(
+                  controller: descriptionController,
+                  style: saleFieldTextStyle,
+                  decoration: buildFormControlDecoration(
+                    labelText: 'Description',
+                  ),
+                  onChanged: onDescriptionChanged,
+                ),
+              ),
+            ),
+            if (alternativesInlineAddButton case final inlineActions?)
+              FormGridCell(
+                span: 5,
+                child: SizedBox(
+                  height: FormSpacing.inputHeight,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: inlineActions,
+                  ),
+                ),
+              ),
+            if (_showItemImagesRow)
+              FormGridCell(
+                span: 6,
+                child: _floatingField(
+                  label: _isProduct ? 'Item Images' : 'Service Images',
+                  fixedHeight: false,
+                  child: _buildItemImagesContent(),
+                ),
+              ),
           ],
         ),
-        if (alternativeItemsField != null) ...[
+        if (alternativesListSection != null) ...[
           const SizedBox(height: FormSpacing.section),
-          alternativeItemsField!,
+          alternativesListSection!,
         ],
       ],
+    );
+  }
+}
+
+class _PendingPhotoThumb extends StatelessWidget {
+  const _PendingPhotoThumb({
+    required this.bytes,
+    required this.isPrimary,
+    this.onTap,
+  });
+
+  final Uint8List bytes;
+  final bool isPrimary;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.smBorder,
+        child: Ink(
+          width: GeneralInformationSection._pendingThumbSize,
+          height: GeneralInformationSection._pendingThumbSize,
+          decoration: BoxDecoration(
+            borderRadius: AppRadius.smBorder,
+            border: Border.all(color: const Color(0xFFE0E0E0)),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: AppRadius.smBorder,
+                child: Image.memory(bytes, fit: BoxFit.cover),
+              ),
+              if (isPrimary)
+                Positioned(
+                  top: 2,
+                  left: 2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: const Text(
+                      'Primary',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

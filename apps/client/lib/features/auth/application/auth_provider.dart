@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
+import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/network/network_diagnostics_service.dart';
 import 'package:billing_baba/core/network/network_error_details.dart';
@@ -1106,14 +1107,16 @@ class Auth extends _$Auth {
     }
 
     BusinessOpenDebugLog.step('selectBusiness', 'begin id=$businessId');
-    final refreshToken = state.session?.refreshToken;
-    if (refreshToken == null) {
+    final storage = await ref.read(storageServiceProvider.future);
+    final refreshToken =
+        await storage.readSecure(StorageKeys.refreshToken) ??
+        state.session?.refreshToken;
+    if (refreshToken == null || refreshToken.isEmpty) {
       throw const BusinessSelectionFailed(
         'Session expired. Please sign in again.',
       );
     }
 
-    final storage = await ref.read(storageServiceProvider.future);
     final accessToken = await storage.readSecure(StorageKeys.accessToken);
     if (accessToken != null && AuthService.isOfflineDevToken(accessToken)) {
       BusinessOpenDebugLog.step(
@@ -1327,6 +1330,24 @@ class Auth extends _$Auth {
     }
   }
 
+  /// Persists scoped tokens returned from create-business (avoids a second refresh).
+  Future<void> commitSessionAfterBusinessCreate(
+    AuthSession session, {
+    required String businessId,
+  }) async {
+    final service = await _service();
+    await service.persistSession(session, businessId: businessId);
+    _setAuthStatus(AuthStatus.authenticated);
+    _commitState(
+      state.copyWith(
+        session: session,
+        status: AuthStatus.authenticated,
+        clearError: true,
+      ),
+    );
+    BusinessSelectionRetryGuard.recordSuccess(businessId);
+  }
+
   Future<AuthSession?> refreshAccessToken({String? businessId}) async {
     try {
       final service = await _service();
@@ -1422,13 +1443,10 @@ class Auth extends _$Auth {
           : error.message;
     }
     if (error is DioException) {
-      final data = error.response?.data;
-      if (data is Map<String, dynamic>) {
-        final code = data['code']?.toString();
-        final message = data['message'];
-        if (message is String && message.isNotEmpty) {
-          return _mapApiErrorMessage(code, message);
-        }
+      final code = ApiErrorParser.errorCode(error);
+      final apiMessage = ApiErrorParser.errorMessage(error);
+      if (apiMessage != null && apiMessage.isNotEmpty) {
+        return _mapApiErrorMessage(code, apiMessage);
       }
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
@@ -1477,6 +1495,10 @@ class Auth extends _$Auth {
         return 'Authentication is not configured on the server.';
       case 'VALIDATION_ERROR':
         return 'Invalid login request. Please try again.';
+      case 'INVALID_TOKEN':
+      case 'TOKEN_EXPIRED':
+      case 'UNAUTHORIZED':
+        return 'Your session expired. Please sign in again.';
       default:
         if (message.toLowerCase().contains('phone number')) {
           return 'Could not complete sign-in. Please try again.';

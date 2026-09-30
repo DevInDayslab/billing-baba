@@ -337,6 +337,16 @@ class _ItemSettingsMobilePanelState
                   onChanged: (value) =>
                       _update((s) => s.copyWith(updateSalePriceFromTxn: value)),
                 ),
+                const ItemSettingsMobileDivider(),
+                ItemSettingsMobileSwitchTile(
+                  label: 'Amount in words on pricing',
+                  infoTooltip:
+                      'Show each price in words below MRP, sale, wholesale, and purchase fields when adding items.',
+                  value: settings.showPriceAmountInWords,
+                  onChanged: (value) => _update(
+                    (s) => s.copyWith(showPriceAmountInWords: value),
+                  ),
+                ),
               ],
             ),
           ],

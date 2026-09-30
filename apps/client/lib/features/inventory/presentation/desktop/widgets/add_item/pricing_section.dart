@@ -1,6 +1,8 @@
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/features/inventory/presentation/shared/price_amount_in_words_hint.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +30,11 @@ class PricingSection extends StatelessWidget {
     required this.taxRate,
     required this.onTaxRateChanged,
     required this.unitLabel,
+    this.showPriceAmountInWords = true,
+    this.mrpAmount = 0,
+    this.salePriceAmount = 0,
+    this.wholesalePriceAmount = 0,
+    this.purchasePriceAmount = 0,
     this.decimalInputFormatter,
     super.key,
   });
@@ -52,6 +59,11 @@ class PricingSection extends StatelessWidget {
   final String taxRate;
   final ValueChanged<String> onTaxRateChanged;
   final String unitLabel;
+  final bool showPriceAmountInWords;
+  final double mrpAmount;
+  final double salePriceAmount;
+  final double wholesalePriceAmount;
+  final double purchasePriceAmount;
   final TextInputFormatter? decimalInputFormatter;
 
   static final _defaultDecimalFormatter = FilteringTextInputFormatter.allow(
@@ -67,9 +79,11 @@ class PricingSection extends StatelessWidget {
     'GST @ 28%',
   ];
 
-  List<TextInputFormatter> get _formatters => [
+  List<TextInputFormatter> get _qtyFormatters => [
     decimalInputFormatter ?? _defaultDecimalFormatter,
   ];
+
+  static const _priceFormatters = [indianItemPriceInputFormatter];
 
   List<String> get _taxModeOptions => [
     priceTaxModeLabel(PriceTaxMode.withoutTax),
@@ -82,30 +96,40 @@ class PricingSection extends StatelessWidget {
     );
   }
 
-  String get _qtyHint {
-    final label = unitLabel.trim();
-    if (label.isEmpty || label == 'None' || label == 'Select unit') {
-      return '0 PCS';
-    }
-    return '0 $label';
-  }
+  static const _fullRowSpan = FormSpacing.columns;
 
-  Widget _priceField({
+  Widget _priceInput({
     required String label,
     required TextEditingController controller,
     required ValueChanged<double> onChanged,
-    String? hint,
   }) {
     return AppFormField(
       label: label,
+      floatingLabel: true,
       child: TextField(
         controller: controller,
         style: saleFieldTextStyle,
-        decoration: buildFormControlDecoration(hint: hint ?? label),
+        decoration: buildFormControlDecoration(labelText: label),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: _formatters,
-        onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
+        inputFormatters: _priceFormatters,
+        onChanged: (v) => onChanged(parseIndianItemPriceInput(v)),
       ),
+    );
+  }
+
+  Widget _pricingFieldsWithWords({
+    required List<FormGridCell> cells,
+    required double amount,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FormGrid(rowGap: 12, cells: cells),
+        PriceAmountInWordsHint(
+          amount: amount,
+          enabled: showPriceAmountInWords,
+        ),
+      ],
     );
   }
 
@@ -113,23 +137,39 @@ class PricingSection extends StatelessWidget {
     required PriceTaxMode value,
     required ValueChanged<PriceTaxMode> onChanged,
   }) {
+    const label = 'Tax mode';
     return AppFormField(
-      label: ' ',
-      child: SaleGenericSelectDropdown(
-        value: priceTaxModeLabel(value),
-        options: _taxModeOptions,
-        onSelected: (v) => _onTaxMode(v, onChanged),
+      label: label,
+      floatingLabel: true,
+      child: InputDecorator(
+        isEmpty: false,
+        decoration: buildFormControlDecoration(labelText: label),
+        child: SaleGenericSelectDropdown(
+          borderless: true,
+          triggerHeight: saleFieldHeight - 20,
+          value: priceTaxModeLabel(value),
+          options: _taxModeOptions,
+          onSelected: (v) => _onTaxMode(v, onChanged),
+        ),
       ),
     );
   }
 
   Widget _taxRateField() {
+    const label = 'Tax Rate';
     return AppFormField(
-      label: 'Tax Rate',
-      child: SaleGenericSelectDropdown(
-        value: taxRate,
-        options: _taxRateOptions,
-        onSelected: onTaxRateChanged,
+      label: label,
+      floatingLabel: true,
+      child: InputDecorator(
+        isEmpty: taxRate.isEmpty,
+        decoration: buildFormControlDecoration(labelText: label),
+        child: SaleGenericSelectDropdown(
+          borderless: true,
+          triggerHeight: saleFieldHeight - 20,
+          value: taxRate,
+          options: _taxRateOptions,
+          onSelected: onTaxRateChanged,
+        ),
       ),
     );
   }
@@ -139,11 +179,12 @@ class PricingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FormGrid(
+        _pricingFieldsWithWords(
+          amount: mrpAmount,
           cells: [
             FormGridCell(
-              span: 3,
-              child: _priceField(
+              span: _fullRowSpan,
+              child: _priceInput(
                 label: 'MRP',
                 controller: mrpController,
                 onChanged: onMrpChanged,
@@ -151,12 +192,13 @@ class PricingSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: FormSpacing.row),
-        FormGrid(
+        const SizedBox(height: 12),
+        _pricingFieldsWithWords(
+          amount: salePriceAmount,
           cells: [
             FormGridCell(
               span: 3,
-              child: _priceField(
+              child: _priceInput(
                 label: 'Selling Price',
                 controller: salePriceController,
                 onChanged: onSalePriceChanged,
@@ -171,12 +213,13 @@ class PricingSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: FormSpacing.row),
-        FormGrid(
+        const SizedBox(height: 12),
+        _pricingFieldsWithWords(
+          amount: wholesalePriceAmount,
           cells: [
             FormGridCell(
               span: 3,
-              child: _priceField(
+              child: _priceInput(
                 label: 'Wholesale Price',
                 controller: wholesalePriceController,
                 onChanged: onWholesalePriceChanged,
@@ -193,14 +236,17 @@ class PricingSection extends StatelessWidget {
               span: 3,
               child: AppFormField(
                 label: 'Minimum Wholesale Qty',
+                floatingLabel: true,
                 child: TextField(
                   controller: minWholesaleQtyController,
                   style: saleFieldTextStyle,
-                  decoration: buildFormControlDecoration(hint: _qtyHint),
+                  decoration: buildFormControlDecoration(
+                    labelText: 'Minimum Wholesale Qty',
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  inputFormatters: _formatters,
+                  inputFormatters: _qtyFormatters,
                   onChanged: (v) =>
                       onMinWholesaleQtyChanged(double.tryParse(v) ?? 0),
                 ),
@@ -208,13 +254,14 @@ class PricingSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: FormSpacing.row),
-        FormGrid(
-          cells: [
-            if (!isService) ...[
+        const SizedBox(height: 12),
+        if (!isService)
+          _pricingFieldsWithWords(
+            amount: purchasePriceAmount,
+            cells: [
               FormGridCell(
                 span: 3,
-                child: _priceField(
+                child: _priceInput(
                   label: 'Purchase Price',
                   controller: purchasePriceController,
                   onChanged: onPurchasePriceChanged,
@@ -227,10 +274,14 @@ class PricingSection extends StatelessWidget {
                   onChanged: onPurchasePriceTaxModeChanged,
                 ),
               ),
+              FormGridCell(span: 3, child: _taxRateField()),
             ],
-            FormGridCell(span: 3, child: _taxRateField()),
-          ],
-        ),
+          )
+        else
+          FormGrid(
+            rowGap: 12,
+            cells: [FormGridCell(span: 3, child: _taxRateField())],
+          ),
       ],
     );
   }

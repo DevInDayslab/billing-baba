@@ -19,7 +19,9 @@ import 'package:intl/intl.dart';
 const _minTableWidth = 960.0;
 
 class DesktopHiddenLedgerListPage extends ConsumerStatefulWidget {
-  const DesktopHiddenLedgerListPage({super.key});
+  const DesktopHiddenLedgerListPage({this.embedded = false, super.key});
+
+  final bool embedded;
 
   @override
   ConsumerState<DesktopHiddenLedgerListPage> createState() =>
@@ -99,6 +101,51 @@ class _HiddenLedgerListPageState
     final filters = ref.watch(hiddenLedgerFiltersStateProvider);
     final listAsync = ref.watch(hiddenLedgerListProvider);
 
+    final body = _buildContentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: _buildFilterBar(filters),
+          ),
+          const Divider(height: 1, thickness: 1),
+          Expanded(
+            child: listAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => _ErrorState(
+                message: OfflineUiMessages.messageFor(error),
+                onRetry: () => ref.invalidate(hiddenLedgerListProvider),
+              ),
+              data: (page) {
+                if (page.entries.isEmpty) {
+                  return const _EmptyState();
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _buildTable(page.entries)),
+                    const Divider(height: 1, thickness: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: _buildPagination(page),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (widget.embedded) {
+      return body;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -115,53 +162,7 @@ class _HiddenLedgerListPageState
               const PartyPageTitleBar(
                 currentRoute: AppRoutes.partyHiddenLedger,
               ),
-              Expanded(
-                child: _buildContentShell(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: _buildFilterBar(filters),
-                      ),
-                      const Divider(height: 1, thickness: 1),
-                      Expanded(
-                        child: listAsync.when(
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                          error: (error, _) => _ErrorState(
-                            message: OfflineUiMessages.messageFor(error),
-                            onRetry: () =>
-                                ref.invalidate(hiddenLedgerListProvider),
-                          ),
-                          data: (page) {
-                            if (page.entries.isEmpty) {
-                              return const _EmptyState();
-                            }
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: _buildTable(page.entries),
-                                ),
-                                const Divider(height: 1, thickness: 1),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.md,
-                                    vertical: AppSpacing.sm,
-                                  ),
-                                  child: _buildPagination(page),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              Expanded(child: body),
             ],
           ),
         ),

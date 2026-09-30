@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/utils/inventory_item_catalog_status.dart';
 
 abstract final class InventoryItemFilterService {
   static bool matches(
@@ -42,6 +43,7 @@ abstract final class InventoryItemFilterService {
   }
 
   static bool _isActive(InventoryItem item) {
+    if (isCatalogInactiveItem(item)) return false;
     if (item.type == ItemType.service) return true;
     final quantity = item.quantity;
     return quantity == null || quantity > 0;

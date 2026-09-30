@@ -10,6 +10,7 @@ import 'package:billing_baba/features/inventory/application/inventory_service.da
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/features/inventory/models/bulk_item_update_payload.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
@@ -413,6 +414,92 @@ class InventoryItems extends _$InventoryItems {
     }
   }
 
+  Future<String?> bulkSetCatalogActive({
+    required List<InventoryItem> items,
+    required bool active,
+  }) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.bulkSetCatalogActive(items: items, active: active);
+      await refresh();
+      invalidateDashboard(ref);
+      for (final item in items) {
+        invalidateItemCaches(ref, item.id);
+      }
+      return null;
+    } on InventoryException catch (error) {
+      return error.message;
+    } catch (error) {
+      return InventoryErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> bulkAssignBarcodes({
+    required List<InventoryItem> items,
+    bool onlyWithoutBarcode = true,
+  }) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.bulkAssignBarcodes(
+        items: items,
+        onlyWithoutBarcode: onlyWithoutBarcode,
+      );
+      await refresh();
+      invalidateDashboard(ref);
+      for (final item in items) {
+        invalidateItemCaches(ref, item.id);
+      }
+      return null;
+    } on InventoryException catch (error) {
+      return error.message;
+    } catch (error) {
+      return InventoryErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> bulkAssignBaseUnit({
+    required List<InventoryItem> items,
+    required String baseUnitShortName,
+  }) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.bulkAssignBaseUnit(
+        items: items,
+        baseUnitShortName: baseUnitShortName,
+      );
+      await refresh();
+      invalidateDashboard(ref);
+      for (final item in items) {
+        invalidateItemCaches(ref, item.id);
+      }
+      return null;
+    } on InventoryException catch (error) {
+      return error.message;
+    } catch (error) {
+      return InventoryErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> bulkUpdateItems({
+    required List<InventoryItem> items,
+    required BulkItemUpdatePayload payload,
+  }) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.bulkUpdateItems(items: items, payload: payload);
+      await refresh();
+      invalidateDashboard(ref);
+      for (final item in items) {
+        invalidateItemCaches(ref, item.id);
+      }
+      return null;
+    } on InventoryException catch (error) {
+      return error.message;
+    } catch (error) {
+      return InventoryErrorMapper.messageFor(error);
+    }
+  }
+
   Future<String?> moveItemsToCategory({
     required List<String> itemIds,
     required String categoryId,
@@ -436,10 +523,9 @@ class InventoryItems extends _$InventoryItems {
   }
 
   Future<void> refreshAfterStockAdjustment(String itemId) async {
-    await refreshAfterItemMutation(
-      ref,
-      context: (partyId: null, itemIds: [itemId]),
-    );
+    await refresh();
+    invalidateDashboard(ref);
+    invalidateItemCaches(ref, itemId);
   }
 
   void patchItemPrimaryImageUrl(String itemId, String? primaryImageUrl) {

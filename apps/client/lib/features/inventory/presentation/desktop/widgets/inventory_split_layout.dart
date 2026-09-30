@@ -6,7 +6,7 @@ class InventorySplitLayout extends StatelessWidget {
   const InventorySplitLayout({
     required this.listPanel,
     required this.detailPanel,
-    this.listWidthFactor = 0.22,
+    this.listWidthFactor = 0.185,
     this.listWidth,
     super.key,
   });
@@ -18,8 +18,8 @@ class InventorySplitLayout extends StatelessWidget {
   /// When set, uses a fixed left-panel width instead of [listWidthFactor].
   final double? listWidth;
 
-  static const _minListWidth = 260.0;
-  static const _maxListWidth = 420.0;
+  static const _minListWidth = 219.0;
+  static const _maxListWidth = 352.0;
 
   @override
   Widget build(BuildContext context) {

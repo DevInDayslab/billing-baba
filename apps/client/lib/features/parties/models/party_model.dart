@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
+import 'package:billing_baba/features/parties/models/party_additional_phone_detail.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
@@ -26,6 +27,7 @@ class PartyModel {
     this.legalName = '',
     this.alias = '',
     this.additionalPhones = const [],
+    this.additionalPhoneDetails = const [],
     this.partyType = 'customer',
     this.balance = 0,
     this.unrecoveredAmount = 0,
@@ -79,6 +81,11 @@ class PartyModel {
       additionalPhones: _phonesFrom(
         dto.additionalPhones,
         extension.additionalPhones,
+      ),
+      additionalPhoneDetails: _additionalPhoneDetailsFrom(
+        dto.additionalPhones,
+        extension.additionalPhones,
+        extension.additionalPhoneDetails,
       ),
       partyType: dto.partyType,
       balance: balance,
@@ -176,6 +183,7 @@ class PartyModel {
           .map(_formatPhone)
           .where((phone) => phone.isNotEmpty)
           .toList(),
+      additionalPhoneDetails: result.additionalPhoneDetails,
       partyType: result.partyType,
       balance: openingBalance,
       openingBalance: openingBalance,
@@ -216,6 +224,7 @@ class PartyModel {
   final String alias;
   final String phone;
   final List<String> additionalPhones;
+  final List<PartyAdditionalPhoneDetail> additionalPhoneDetails;
   final String partyType;
 
   /// Positive = amount to receive. Negative = amount to pay.
@@ -453,6 +462,20 @@ class PartyModel {
   ) {
     final source = dtoPhones.isNotEmpty ? dtoPhones : extensionPhones;
     return source.map(_formatPhone).where((phone) => phone.isNotEmpty).toList();
+  }
+
+  static List<PartyAdditionalPhoneDetail> _additionalPhoneDetailsFrom(
+    List<String> dtoPhones,
+    List<String> extensionPhones,
+    List<PartyAdditionalPhoneDetail> extensionDetails,
+  ) {
+    if (extensionDetails.isNotEmpty) {
+      return extensionDetails;
+    }
+    return _phonesFrom(dtoPhones, extensionPhones)
+        .map((phone) => PartyAdditionalPhoneDetail(phone: normalizePhone(phone)))
+        .where((entry) => entry.phone.isNotEmpty)
+        .toList();
   }
 
   static String _formatPhone(String? mobile) {

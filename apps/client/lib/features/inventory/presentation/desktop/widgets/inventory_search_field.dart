@@ -17,6 +17,7 @@ class InventorySearchField extends StatefulWidget {
     this.onEnter,
     this.debounceDuration = Duration.zero,
     this.initialValue = '',
+    this.textStyle,
     super.key,
   });
 
@@ -31,6 +32,7 @@ class InventorySearchField extends StatefulWidget {
   final VoidCallback? onEnter;
   final Duration debounceDuration;
   final String initialValue;
+  final TextStyle? textStyle;
 
   @override
   State<InventorySearchField> createState() => _InventorySearchFieldState();
@@ -148,7 +150,7 @@ class _InventorySearchFieldState extends State<InventorySearchField> {
           controller: _controller,
           focusNode: _focusNode,
           onChanged: _handleChanged,
-          style: saleFieldTextStyle,
+          style: widget.textStyle ?? saleFieldTextStyle,
           decoration:
               buildSaleFieldDecoration(
                 hint: widget.hint,

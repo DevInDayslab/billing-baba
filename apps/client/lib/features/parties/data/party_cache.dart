@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
+import 'package:billing_baba/features/parties/models/party_additional_phone_detail.dart';
 import 'package:billing_baba/features/parties/utils/party_group_names.dart';
 
 /// Local-only UI fields not yet stored on the API.
@@ -28,6 +29,7 @@ class PartyLocalExtension {
     this.additionalField2 = '',
     this.defaultPriceTier = '',
     this.additionalPhones = const [],
+    this.additionalPhoneDetails = const [],
   });
 
   factory PartyLocalExtension.fromJson(Map<String, dynamic> json) {
@@ -61,6 +63,16 @@ class PartyLocalExtension {
                 .map((phone) => phone.toString())
                 .toList()
           : const [],
+      additionalPhoneDetails: json['additional_phone_details'] is List
+          ? (json['additional_phone_details'] as List)
+                .whereType<Map<dynamic, dynamic>>()
+                .map(
+                  (item) => PartyAdditionalPhoneDetail.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList()
+          : const [],
     );
   }
 
@@ -92,6 +104,11 @@ class PartyLocalExtension {
           : '',
       defaultPriceTier: result.defaultPriceTier,
       additionalPhones: result.additionalPhones,
+      additionalPhoneDetails: result.additionalPhoneDetails.isNotEmpty
+          ? result.additionalPhoneDetails
+          : result.additionalPhones
+                .map((phone) => PartyAdditionalPhoneDetail(phone: phone))
+                .toList(),
     );
   }
 
@@ -115,6 +132,7 @@ class PartyLocalExtension {
   final String additionalField2;
   final String defaultPriceTier;
   final List<String> additionalPhones;
+  final List<PartyAdditionalPhoneDetail> additionalPhoneDetails;
 
   Map<String, dynamic> toJson() => {
     'gst_type': gstType,
@@ -139,6 +157,8 @@ class PartyLocalExtension {
     'additional_field_2': additionalField2,
     'default_price_tier': defaultPriceTier,
     'additional_phones': additionalPhones,
+    'additional_phone_details':
+        additionalPhoneDetails.map((entry) => entry.toJson()).toList(),
   };
 }
 

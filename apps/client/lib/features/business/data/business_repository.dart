@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_endpoints.dart';
+import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
@@ -66,7 +67,7 @@ class BusinessRepository {
         .toList();
   }
 
-  Future<BusinessDetailDto> createBusiness(
+  Future<CreateBusinessOutcome> createBusiness(
     CreateBusinessRequest request,
   ) async {
     final response = await _dio.post<Map<String, dynamic>>(
@@ -80,7 +81,17 @@ class BusinessRepository {
         message: 'Invalid create business response',
       );
     }
-    return BusinessDetailDto.fromJson(data);
+
+    AuthSession? session;
+    final auth = data['auth'];
+    if (auth is Map<String, dynamic>) {
+      session = AuthSession.fromJson(auth);
+    }
+
+    return CreateBusinessOutcome(
+      business: BusinessDetailDto.fromJson(data),
+      session: session,
+    );
   }
 
   Future<void> scheduleBusinessDeletion(String businessId) async {

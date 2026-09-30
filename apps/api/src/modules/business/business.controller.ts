@@ -50,8 +50,17 @@ export function createBusinessController(config: AppConfig) {
         }
 
         const body = createBusinessBodySchema.parse(request.body);
+        const { refresh_token: refreshToken, ...businessInput } = body;
         const service = new BusinessService(config);
-        const data = await service.createBusiness(accountId, phone, body);
+        const data = await service.createBusiness(
+          accountId,
+          phone,
+          businessInput,
+          {
+            refreshToken,
+            app: request.server,
+          },
+        );
         return sendData(reply, data, 201);
       } catch (error) {
         if (error instanceof ZodError) {
