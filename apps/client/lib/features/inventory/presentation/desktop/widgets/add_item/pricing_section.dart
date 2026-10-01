@@ -1,8 +1,12 @@
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/utils/min_wholesale_qty_units.dart';
+import 'package:collection/collection.dart';
 import 'package:billing_baba/features/inventory/presentation/shared/price_amount_in_words_hint.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/utils/text_input_formatters.dart';
+import 'package:billing_baba/shared/widgets/gst_tax_rate_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,22 +27,26 @@ class PricingSection extends StatelessWidget {
     required this.onWholesalePriceTaxModeChanged,
     required this.minWholesaleQtyController,
     required this.onMinWholesaleQtyChanged,
+    required this.minWholesaleQtyUnitOptions,
+    required this.minWholesaleQtyUnitId,
+    required this.onMinWholesaleQtyUnitChanged,
     required this.purchasePriceController,
     required this.purchasePriceTaxMode,
     required this.onPurchasePriceChanged,
     required this.onPurchasePriceTaxModeChanged,
     required this.taxRate,
     required this.onTaxRateChanged,
-    required this.unitLabel,
     this.showPriceAmountInWords = true,
     this.mrpAmount = 0,
     this.salePriceAmount = 0,
     this.wholesalePriceAmount = 0,
     this.purchasePriceAmount = 0,
     this.decimalInputFormatter,
+    this.baseUnitId,
     super.key,
   });
 
+  final String? baseUnitId;
   final bool isService;
   final TextEditingController mrpController;
   final ValueChanged<double> onMrpChanged;
@@ -52,13 +60,15 @@ class PricingSection extends StatelessWidget {
   final ValueChanged<PriceTaxMode> onWholesalePriceTaxModeChanged;
   final TextEditingController minWholesaleQtyController;
   final ValueChanged<double> onMinWholesaleQtyChanged;
+  final List<InventoryUnit> minWholesaleQtyUnitOptions;
+  final String? minWholesaleQtyUnitId;
+  final ValueChanged<String> onMinWholesaleQtyUnitChanged;
   final TextEditingController purchasePriceController;
   final PriceTaxMode purchasePriceTaxMode;
   final ValueChanged<double> onPurchasePriceChanged;
   final ValueChanged<PriceTaxMode> onPurchasePriceTaxModeChanged;
   final String taxRate;
   final ValueChanged<String> onTaxRateChanged;
-  final String unitLabel;
   final bool showPriceAmountInWords;
   final double mrpAmount;
   final double salePriceAmount;
@@ -70,15 +80,6 @@ class PricingSection extends StatelessWidget {
     RegExp(r'^\d*\.?\d*'),
   );
 
-  static const _taxRateOptions = [
-    'None',
-    'GST @ 0%',
-    'GST @ 5%',
-    'GST @ 12%',
-    'GST @ 18%',
-    'GST @ 28%',
-  ];
-
   List<TextInputFormatter> get _qtyFormatters => [
     decimalInputFormatter ?? _defaultDecimalFormatter,
   ];
@@ -89,6 +90,50 @@ class PricingSection extends StatelessWidget {
     priceTaxModeLabel(PriceTaxMode.withoutTax),
     priceTaxModeLabel(PriceTaxMode.withTax),
   ];
+
+  Widget? _minWholesaleQtyUnitSuffix({required String? baseUnitId}) {
+    final options = minWholesaleQtyUnitOptions;
+    if (options.isEmpty) return null;
+
+    final selectedShortName = minWholesaleQtyUnitShortName(
+      options: options,
+      selectedUnitId: minWholesaleQtyUnitId,
+      fallbackBaseUnitId: baseUnitId,
+    );
+    if (selectedShortName == null) return null;
+
+    if (options.length == 1) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: Text(
+          selectedShortName,
+          style: saleFieldTextStyle.copyWith(
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: 88,
+      child: SaleGenericSelectDropdown(
+        borderless: true,
+        compact: true,
+        triggerHeight: saleFieldHeight - 20,
+        value: selectedShortName,
+        options: options.map((unit) => unit.shortName).toList(),
+        onSelected: (shortName) {
+          final unit = options.firstWhereOrNull(
+            (entry) => entry.shortName == shortName,
+          );
+          if (unit != null) {
+            onMinWholesaleQtyUnitChanged(unit.id);
+          }
+        },
+      ),
+    );
+  }
 
   void _onTaxMode(String label, ValueChanged<PriceTaxMode> onChanged) {
     onChanged(
@@ -163,11 +208,10 @@ class PricingSection extends StatelessWidget {
       child: InputDecorator(
         isEmpty: taxRate.isEmpty,
         decoration: buildFormControlDecoration(labelText: label),
-        child: SaleGenericSelectDropdown(
+        child: GstTaxRateSelectDropdown(
           borderless: true,
           triggerHeight: saleFieldHeight - 20,
           value: taxRate,
-          options: _taxRateOptions,
           onSelected: onTaxRateChanged,
         ),
       ),
@@ -242,6 +286,7 @@ class PricingSection extends StatelessWidget {
                   style: saleFieldTextStyle,
                   decoration: buildFormControlDecoration(
                     labelText: 'Minimum Wholesale Qty',
+                    suffix: _minWholesaleQtyUnitSuffix(baseUnitId: baseUnitId),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,

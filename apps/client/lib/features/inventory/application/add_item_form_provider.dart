@@ -123,9 +123,40 @@ class AddItemForm extends Notifier<AddItemFormState> {
             secondaryUnitId == baseUnitId
         ? null
         : secondaryUnitId;
+
+    final allowedMinQtyUnits = {
+      if (baseUnitId != null) baseUnitId,
+      if (resolvedSecondary != null) resolvedSecondary,
+    };
+    var minWholesaleQtyUnitId = state.minWholesaleQtyUnitId;
+    if (minWholesaleQtyUnitId != null &&
+        !allowedMinQtyUnits.contains(minWholesaleQtyUnitId)) {
+      minWholesaleQtyUnitId = baseUnitId;
+    }
+    var openingQtyUnitId = state.openingQtyUnitId;
+    if (openingQtyUnitId != null &&
+        !allowedMinQtyUnits.contains(openingQtyUnitId)) {
+      openingQtyUnitId = baseUnitId;
+    }
+    var minStockUnitId = state.minStockUnitId;
+    if (minStockUnitId != null && !allowedMinQtyUnits.contains(minStockUnitId)) {
+      minStockUnitId = baseUnitId;
+    }
+    if (baseUnitId == null) {
+      minWholesaleQtyUnitId = null;
+      openingQtyUnitId = null;
+      minStockUnitId = null;
+    }
+
     state = state.copyWith(
       baseUnitId: baseUnitId,
       secondaryUnitId: resolvedSecondary,
+      minWholesaleQtyUnitId: minWholesaleQtyUnitId,
+      openingQtyUnitId: openingQtyUnitId,
+      minStockUnitId: minStockUnitId,
+      clearMinWholesaleQtyUnit: baseUnitId == null,
+      clearOpeningQtyUnit: baseUnitId == null,
+      clearMinStockUnit: baseUnitId == null,
       baseUnitError: false,
       clearFieldErrors: true,
       isDirty: true,
@@ -196,6 +227,18 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void updateMinWholesaleQty(double value) {
     state = state.copyWith(minWholesaleQty: value, isDirty: true);
+  }
+
+  void updateMinWholesaleQtyUnitId(String unitId) {
+    state = state.copyWith(minWholesaleQtyUnitId: unitId, isDirty: true);
+  }
+
+  void setOpeningQtyUnitId(String unitId) {
+    state = state.copyWith(openingQtyUnitId: unitId, isDirty: true);
+  }
+
+  void setMinStockUnitId(String unitId) {
+    state = state.copyWith(minStockUnitId: unitId, isDirty: true);
   }
 
   void updateOpeningQty(double value) {

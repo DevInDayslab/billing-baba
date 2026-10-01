@@ -6,6 +6,7 @@ import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_bom_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_supplier_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_location_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_location_history_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_summary_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/price_history_dto.dart';
@@ -467,6 +468,18 @@ class InventoryRemoteDataSource {
 
   Future<void> deleteItemLocation(String id) async {
     await _dio.delete<void>(ApiEndpoints.inventoryItemLocation(id));
+  }
+
+  Future<PaginatedItemLocationHistoryDto> listItemLocationHistory(
+    String locationId, {
+    int page = 1,
+    int limit = 50,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.inventoryItemLocationHistory(locationId),
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return PaginatedItemLocationHistoryDto.fromJson(response.data ?? {});
   }
 
   Future<PaginatedStockLevelsDto> listStockLevels(

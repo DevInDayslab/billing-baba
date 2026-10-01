@@ -259,9 +259,5 @@ String generateNextPurchaseBillNumber(List<String> billNumbers) {
 }
 
 String taxLabelForPurchasePercent(double percent) {
-  if (percent == 0) return 'NONE';
-  for (final entry in saleTaxSlabs.entries) {
-    if (entry.value == percent) return entry.key;
-  }
-  return 'NONE';
+  return taxLabelForPercent(percent);
 }

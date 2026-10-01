@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
@@ -467,13 +468,7 @@ class AddSaleFormState {
 
 const saleLineItemUnits = ['NONE', 'PCS', 'KG', 'GM', 'LTR', 'MTR', 'BOX'];
 
-const saleTaxSlabs = <String, double>{
-  'NONE': 0,
-  '5%': 5,
-  '12%': 12,
-  '18%': 18,
-  '28%': 28,
-};
+Map<String, double> get saleTaxSlabs => GstTaxSlabs.saleDropdownToPercent();
 
 const salePaymentTypes = ['Cash', 'Credit', 'UPI', 'Cheque'];
 
@@ -512,10 +507,13 @@ const saleIndianStates = [
 const saleGodowns = ['Main Location', 'Warehouse B'];
 
 String taxLabelForPercent(double percent) {
-  if (percent == 0) return 'NONE';
+  if (GstTaxSlabs.samePercent(percent, 0)) return 'NONE';
   for (final entry in saleTaxSlabs.entries) {
-    if (entry.value == percent) return entry.key;
+    if (entry.key == 'NONE') continue;
+    if (GstTaxSlabs.samePercent(entry.value, percent)) return entry.key;
   }
+  final slab = GstTaxSlabs.definitionForPercent(percent);
+  if (slab != null) return slab.saleDropdownLabel;
   return 'NONE';
 }
 

@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -227,7 +228,7 @@ class PurchaseDocumentParseMapper {
   }
 
   static double _normalizeToPurchaseTaxSlab(double rate) {
-    const slabs = <double>[5, 12, 18, 28];
+    final slabs = [...GstTaxSlabs.standardPercents, 28.0];
 
     for (final slab in slabs) {
       if ((rate - slab).abs() < 0.75) return slab;

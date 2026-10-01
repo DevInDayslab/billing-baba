@@ -13,6 +13,7 @@ import { rackPhotoUploadBodySchema } from './item-media.schema';
 import {
   createItemLocationBodySchema,
   itemLocationIdParamSchema,
+  listItemLocationHistoryQuerySchema,
   listItemLocationsQuerySchema,
   updateItemLocationBodySchema,
 } from './item-location.schema';
@@ -67,6 +68,32 @@ export function createItemLocationController(config: AppConfig) {
           throw new AppError(
             'VALIDATION_ERROR',
             'Invalid request body',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    listHistory: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = itemLocationIdParamSchema.parse(request.params);
+        const query = listItemLocationHistoryQuerySchema.parse(request.query);
+        const service = new ItemLocationService();
+        const result = await service.listItemLocationHistory(
+          businessId,
+          accountId,
+          id,
+          query,
+        );
+        return sendPaginated(reply, result.data, result.meta);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid query parameters',
             400,
             formatZodError(error),
           );
@@ -166,6 +193,7 @@ export function createItemLocationController(config: AppConfig) {
           userId,
           id,
           body.intent_id,
+          'employee_label' in body ? body.employee_label : undefined,
         );
         return sendData(reply, data);
       } catch (error) {

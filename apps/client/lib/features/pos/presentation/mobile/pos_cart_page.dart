@@ -7,6 +7,7 @@ import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
+import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_quantity_pad_sheet.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
@@ -33,12 +34,14 @@ final _timeFormat = DateFormat('hh:mm a');
 
 const _billDiscountChips = [100.0, 50.0, 30.0, 20.0, 10.0, 5.0];
 
-const _taxRateOptions = <({String label, double percent})>[
+List<({String label, double percent})> get _taxRateOptions => [
   (label: 'None', percent: 0),
-  (label: 'GST@0%', percent: 0),
-  (label: 'GST@5%', percent: 5),
-  (label: 'GST@12%', percent: 12),
-  (label: 'GST@18%', percent: 18),
+  ...GstTaxSlabs.definitions().map(
+    (slab) => (
+      label: slab.itemFormLabel.replaceFirst('GST @ ', 'GST@'),
+      percent: slab.percent,
+    ),
+  ),
   (label: 'GST@28%', percent: 28),
 ];
 

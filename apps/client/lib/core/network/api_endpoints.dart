@@ -120,6 +120,8 @@ abstract final class ApiEndpoints {
   static const inventoryItemLocations = '$inventory/item-locations';
   static String inventoryItemLocation(String id) =>
       '$inventoryItemLocations/$id';
+  static String inventoryItemLocationHistory(String id) =>
+      '${inventoryItemLocation(id)}/history';
 
   static const inventoryStockLevels = '$inventory/stock-levels';
   static String inventoryStockLevel(String id) => '$inventoryStockLevels/$id';

@@ -4,9 +4,9 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/shared/price_amount_in_words_hint.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_tier_pricing_section.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 import 'package:billing_baba/shared/utils/text_input_formatters.dart';
+import 'package:billing_baba/shared/widgets/gst_tax_rate_select_dropdown.dart';
 import 'package:flutter/services.dart';
 
 /// Vyapar-style pricing tab for mobile Add Item.
@@ -82,15 +82,6 @@ class MobileAddItemPricingSection extends StatefulWidget {
 class _MobileAddItemPricingSectionState
     extends State<MobileAddItemPricingSection> {
   static const _priceFormatters = [indianItemPriceInputFormatter];
-
-  static const _taxRateOptions = [
-    'None',
-    'GST @ 0%',
-    'GST @ 5%',
-    'GST @ 12%',
-    'GST @ 18%',
-    'GST @ 28%',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -234,10 +225,13 @@ class _MobileAddItemPricingSectionState
               MobileAddItemTheme.horizontalPadding,
               16,
             ),
-            child: _TaxRateField(
-              value: widget.taxRate,
-              options: _taxRateOptions,
-              onChanged: widget.onTaxRateChanged,
+            child: InputDecorator(
+              decoration: MobileAddItemTheme.fieldDecoration(label: 'Tax Rate'),
+              child: GstTaxRateSelectDropdown(
+                borderless: true,
+                value: widget.taxRate,
+                onSelected: widget.onTaxRateChanged,
+              ),
             ),
           ),
           if (widget.showTierPricing &&
@@ -301,72 +295,5 @@ class _TaxModeChip extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _TaxRateField extends StatelessWidget {
-  const _TaxRateField({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final String value;
-  final List<String> options;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => _openPicker(context),
-      borderRadius: BorderRadius.circular(MobileAddItemTheme.fieldRadius),
-      child: InputDecorator(
-        decoration: MobileAddItemTheme.fieldDecoration(label: 'Tax Rate'),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                value,
-                style: saleFieldTextStyle,
-              ),
-            ),
-            const Icon(Icons.arrow_drop_down, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openPicker(BuildContext context) async {
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Tax Rate',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
-            ),
-            for (final option in options)
-              ListTile(
-                title: Text(option),
-                trailing: option == value
-                    ? const Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () => Navigator.of(sheetContext).pop(option),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (picked != null) onChanged(picked);
   }
 }
