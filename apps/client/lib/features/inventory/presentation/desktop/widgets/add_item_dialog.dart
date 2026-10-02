@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
-import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/add_item_form_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
@@ -22,6 +22,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
+import 'package:billing_baba/features/inventory/models/item_location_history_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
@@ -48,11 +49,13 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_online_store_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_pricing_section.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_settings_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_stock_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
 import 'package:billing_baba/features/inventory/presentation/shared/item_image_pick_crop.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
+import 'package:billing_baba/features/inventory/utils/item_tax_rate_preference.dart';
+import 'package:billing_baba/features/inventory/utils/item_unit_qty_conversion.dart';
+import 'package:billing_baba/features/inventory/utils/min_wholesale_qty_units.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
@@ -65,7 +68,6 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _tabActiveColor = Color(0xFFD32F2F);
@@ -136,6 +138,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final _atPriceController = TextEditingController();
   final _minStockController = TextEditingController();
   final _locationController = TextEditingController();
+  final _rackEmployeeController = TextEditingController();
   final _onlineStorePriceController = TextEditingController();
   final _onlineStoreDescriptionController = TextEditingController();
   final Map<String, TextEditingController> _rawMaterialControllers = {};
@@ -149,6 +152,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   bool _isClosing = false;
   String? _rackLocationId;
   String? _rackPhotoUrl;
+  DateTime? _rackLastUpdatedAt;
+  List<ItemLocationHistoryModel> _rackHistory = const [];
+  Uint8List? _pendingRackPhoto;
+  String _initialRackLocation = '';
   double _initialOpeningQty = 0;
 
   String get _closeFormTitle =>
@@ -158,6 +165,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final form = ref.read(addItemFormProvider);
     if (form.isDirty) return true;
     if (_pendingItemPhotos.isNotEmpty) return true;
+    if (_pendingRackPhoto != null) return true;
     return false;
   }
 
@@ -291,6 +299,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   Future<void> _applyDefaultItemTaxRate() async {
     try {
+      final businessId = ref.read(currentBusinessProvider)?.id;
+      if (businessId != null) {
+        final pinned = await ItemTaxRatePreference.readPinned(businessId);
+        if (pinned != null && pinned.isNotEmpty) {
+          if (!mounted) return;
+          ref.read(addItemFormProvider.notifier).setTaxRate(pinned);
+          return;
+        }
+      }
+
       final commerce = await ref.read(commerceSettingsProvider.future);
       final defaultTax = commerce.defaultInvoiceTaxPercent;
       if (defaultTax == null || defaultTax <= 0) return;
@@ -397,7 +415,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         final reorderLevel = double.tryParse(detailDto.reorderLevel!);
         if (reorderLevel != null) {
           notifier.updateMinStock(reorderLevel);
-          _minStockController.text = reorderLevel.toString();
+          _syncMinStockController(reorderLevel, ref.read(unitsProvider));
         }
       }
 
@@ -430,7 +448,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       _initialOpeningQty = openingQty;
       if (openingQty > 0) {
         notifier.updateOpeningQty(openingQty);
-        _openingQtyController.text = openingQty.toString();
+        _syncOpeningQtyController(openingQty, ref.read(unitsProvider));
       }
 
       final openingGodown = detailDto.openingStock?.godowns.firstOrNull;
@@ -442,6 +460,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (location?.rack != null && location!.rack!.isNotEmpty) {
         notifier.updateLocation(location.rack!);
         _locationController.text = location.rack!;
+        _initialRackLocation = location.rack!;
       }
 
       final itemLocations = await service.fetchItemLocations(item.id);
@@ -450,7 +469,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         setState(() {
           _rackLocationId = firstLocation.id;
           _rackPhotoUrl = firstLocation.photoUrl;
+          _rackLastUpdatedAt = firstLocation.updatedAt;
         });
+        await _refreshRackHistory(firstLocation.id);
       }
 
       final wholesale = tiers
@@ -565,6 +586,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _atPriceController.dispose();
     _minStockController.dispose();
     _locationController.dispose();
+    _rackEmployeeController.dispose();
     _onlineStorePriceController.dispose();
     _onlineStoreDescriptionController.dispose();
     _primaryImageUrlController.dispose();
@@ -654,6 +676,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (!mounted) return;
 
       if (savedItem != null) {
+        await _syncRackShelfAfterSave(savedItem.id, form);
         await _uploadPendingPhotosIfNeeded(savedItem.id);
       }
 
@@ -665,6 +688,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         _clearControllers();
         _initialOpeningQty = 0;
         _tabController.index = 0;
+        unawaited(_applyDefaultItemTaxRate());
         return;
       }
 
@@ -719,6 +743,104 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       return;
     }
     showTransactionErrorToast(context, message: message);
+  }
+
+  Future<void> _refreshRackHistory(String locationId) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final history = await service.fetchItemLocationHistory(locationId);
+      if (!mounted) return;
+      setState(() {
+        _rackHistory = history;
+        _rackLastUpdatedAt = history.isNotEmpty
+            ? history.first.createdAt
+            : _rackLastUpdatedAt;
+      });
+    } on Object {
+      // History is optional UI — ignore load failures.
+    }
+  }
+
+  Future<void> _syncRackShelfAfterSave(
+    String itemId,
+    AddItemFormState form,
+  ) async {
+    final rack = form.location.trim();
+    final employee = _rackEmployeeController.text.trim();
+    final rackChanged = rack != _initialRackLocation;
+    final hasWork =
+        rack.isNotEmpty ||
+        rackChanged ||
+        employee.isNotEmpty ||
+        _pendingRackPhoto != null;
+
+    if (!hasWork) return;
+
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final defaultGodown = form.godownId ?? (await service.getDefaultGodown())?.id;
+      if (defaultGodown == null) return;
+
+      var locationId = _rackLocationId;
+      if (locationId == null) {
+        final locations = await service.fetchItemLocations(itemId);
+        final existing = locations
+            .where((location) => location.godownId == defaultGodown)
+            .firstOrNull;
+        if (existing != null) {
+          locationId = existing.id;
+        } else if (rack.isNotEmpty) {
+          final created = await service.createItemLocation(
+            itemId: itemId,
+            godownId: defaultGodown,
+            rack: rack,
+            employeeLabel: employee.isEmpty ? null : employee,
+          );
+          locationId = created.id;
+        }
+      } else if (rackChanged || employee.isNotEmpty) {
+        await service.updateItemLocation(
+          locationId,
+          rack: rack.isEmpty ? '' : rack,
+          employeeLabel: employee.isEmpty ? null : employee,
+        );
+      }
+
+      if (locationId == null) return;
+
+      if (_pendingRackPhoto != null) {
+        final prepared = await prepareMediaUploadBytes(
+          bytes: _pendingRackPhoto!,
+          mimeType: 'image/jpeg',
+        );
+        final url = await service.uploadRackPhoto(
+          locationId: locationId,
+          bytes: prepared.bytes,
+          mimeType: prepared.mimeType,
+          employeeLabel: employee.isEmpty ? null : employee,
+        );
+        if (mounted) {
+          setState(() {
+            _rackPhotoUrl = url;
+            _pendingRackPhoto = null;
+          });
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _rackLocationId = locationId;
+        _initialRackLocation = rack;
+      });
+      await _refreshRackHistory(locationId);
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Item saved but rack/shelf update failed: $error'),
+        ),
+      );
+    }
   }
 
   Future<void> _uploadPendingPhotosIfNeeded(String itemId) async {
@@ -900,6 +1022,13 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _atPriceController.clear();
     _minStockController.clear();
     _locationController.clear();
+    _rackEmployeeController.clear();
+    _pendingRackPhoto = null;
+    _rackLocationId = null;
+    _rackPhotoUrl = null;
+    _rackLastUpdatedAt = null;
+    _rackHistory = const [];
+    _initialRackLocation = '';
     _onlineStorePriceController.clear();
     _onlineStoreDescriptionController.clear();
     _primaryImageUrlController.clear();
@@ -932,6 +1061,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           baseUnitId: result.baseUnitId,
           secondaryUnitId: result.secondaryUnitId,
         );
+    final updated = ref.read(addItemFormProvider);
+    final units = ref.read(unitsProvider);
+    _syncOpeningQtyController(updated.openingQty, units);
+    _syncMinStockController(updated.minStock, units);
   }
 
   String _displayUnitLabel() {
@@ -1351,6 +1484,24 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         godowns: godowns,
         selectedGodownId: form.godownId,
         onGodownSelected: notifier.setGodown,
+        stockQtyUnitOptions: minWholesaleQtyUnitOptions(
+          allUnits: ref.watch(unitsProvider),
+          baseUnitId: form.baseUnitId,
+          secondaryUnitId: form.secondaryUnitId,
+        ),
+        baseUnitId: form.baseUnitId,
+        secondaryUnitId: form.secondaryUnitId,
+        baseToSecondaryRate: form.baseUnitId == null
+            ? null
+            : resolveBaseToSecondaryRate(
+                units: ref.watch(unitsProvider),
+                baseUnitId: form.baseUnitId!,
+                secondaryUnitId: form.secondaryUnitId,
+              ),
+        openingQtyUnitId: form.openingQtyUnitId,
+        minStockUnitId: form.minStockUnitId,
+        onOpeningQtyUnitChanged: notifier.setOpeningQtyUnitId,
+        onMinStockUnitChanged: notifier.setMinStockUnitId,
       ),
       2 => MobileAddItemProductDescriptionSection(
         descriptionController: _onlineStoreDescriptionController,
@@ -1411,9 +1562,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         title: title,
         isProduct: form.itemType == ItemType.product,
         onBack: _requestClose,
-        onSettingsTap: () {
-          unawaited(showMobileAddItemSettingsSheet(context));
-        },
         onProductServiceChanged: (isProduct) => _handleItemTypeChange(
           isProduct ? ItemType.product : ItemType.service,
         ),
@@ -1450,34 +1598,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   }
 
   Widget _buildHeaderActions() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          onPressed: () {
-            if (AppPlatform.current.isMobile) {
-              unawaited(showMobileAddItemSettingsSheet(context));
-              return;
-            }
-            context.push(AppRoutes.itemsSettings);
-          },
-          icon: const Icon(
-            Icons.settings_outlined,
-            color: AppColors.textSecondary,
-          ),
-          tooltip: 'Settings',
-          visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-        ),
-        IconButton(
-          onPressed: () => unawaited(_requestClose()),
-          icon: const Icon(Icons.close, color: AppColors.textSecondary),
-          visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-        ),
-      ],
+    return IconButton(
+      onPressed: () => unawaited(_requestClose()),
+      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 32, height: 32),
     );
   }
 
@@ -1570,13 +1696,20 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
           minWholesaleQtyController: _minWholesaleQtyController,
           onMinWholesaleQtyChanged: notifier.updateMinWholesaleQty,
+          minWholesaleQtyUnitOptions: minWholesaleQtyUnitOptions(
+            allUnits: ref.watch(unitsProvider),
+            baseUnitId: form.baseUnitId,
+            secondaryUnitId: form.secondaryUnitId,
+          ),
+          minWholesaleQtyUnitId: form.minWholesaleQtyUnitId,
+          onMinWholesaleQtyUnitChanged: notifier.updateMinWholesaleQtyUnitId,
+          baseUnitId: form.baseUnitId,
           purchasePriceController: _atPriceController,
           purchasePriceTaxMode: form.purchasePriceTaxMode,
           onPurchasePriceChanged: notifier.updateAtPrice,
           onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
           taxRate: form.taxRate,
           onTaxRateChanged: notifier.setTaxRate,
-          unitLabel: _displayUnitLabel(),
         ),
         const SizedBox(height: FormSpacing.section),
         TierPricingSection(
@@ -1598,12 +1731,71 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  void _syncOpeningQtyController(double baseQty, List<InventoryUnit> units) {
+    final form = ref.read(addItemFormProvider);
+    _openingQtyController.text = _displayStockQtyText(
+      baseQty: baseQty,
+      displayUnitId: form.openingQtyUnitId,
+      form: form,
+      units: units,
+    );
+  }
+
+  void _syncMinStockController(double baseQty, List<InventoryUnit> units) {
+    final form = ref.read(addItemFormProvider);
+    _minStockController.text = _displayStockQtyText(
+      baseQty: baseQty,
+      displayUnitId: form.minStockUnitId,
+      form: form,
+      units: units,
+    );
+  }
+
+  String _displayStockQtyText({
+    required double baseQty,
+    required String? displayUnitId,
+    required AddItemFormState form,
+    required List<InventoryUnit> units,
+  }) {
+    if (baseQty == 0) return '';
+    final baseUnitId = form.baseUnitId;
+    if (baseUnitId == null) return formatItemQtyFieldValue(baseQty);
+    final rate = resolveBaseToSecondaryRate(
+      units: units,
+      baseUnitId: baseUnitId,
+      secondaryUnitId: form.secondaryUnitId,
+    );
+    final display = qtyFromBaseUnit(
+      baseQty: baseQty,
+      displayUnitId: displayUnitId ?? baseUnitId,
+      baseUnitId: baseUnitId,
+      secondaryUnitId: form.secondaryUnitId,
+      baseToSecondaryRate: rate,
+    );
+    return formatItemQtyFieldValue(display);
+  }
+
   Widget _buildStockTab(AddItemFormState form, AddItemForm notifier) {
+    final units = ref.watch(unitsProvider);
+    final stockQtyUnitOptions = minWholesaleQtyUnitOptions(
+      allUnits: units,
+      baseUnitId: form.baseUnitId,
+      secondaryUnitId: form.secondaryUnitId,
+    );
+    final baseToSecondaryRate = form.baseUnitId == null
+        ? null
+        : resolveBaseToSecondaryRate(
+            units: units,
+            baseUnitId: form.baseUnitId!,
+            secondaryUnitId: form.secondaryUnitId,
+          );
+
     return StockSection(
       openingQtyController: _openingQtyController,
       openingPriceController: _atPriceController,
       minStockController: _minStockController,
       locationController: _locationController,
+      employeeController: _rackEmployeeController,
       asOfDate: form.asOfDate,
       onOpeningQtyChanged: notifier.updateOpeningQty,
       onOpeningPriceChanged: notifier.updateAtPrice,
@@ -1611,9 +1803,25 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       onLocationChanged: notifier.updateLocation,
       onAsOfDateSelected: notifier.setAsOfDate,
       asOfDatePickerKey: _asOfDatePickerKey,
+      stockQtyUnitOptions: stockQtyUnitOptions,
+      baseUnitId: form.baseUnitId,
+      secondaryUnitId: form.secondaryUnitId,
+      baseToSecondaryRate: baseToSecondaryRate,
+      openingQtyUnitId: form.openingQtyUnitId,
+      minStockUnitId: form.minStockUnitId,
+      onOpeningQtyUnitChanged: notifier.setOpeningQtyUnitId,
+      onMinStockUnitChanged: notifier.setMinStockUnitId,
       rackLocationId: _rackLocationId,
       rackPhotoUrl: _rackPhotoUrl,
+      rackLastUpdatedAt: _rackLastUpdatedAt,
+      rackHistory: _rackHistory,
       onRackPhotoChanged: (url) => setState(() => _rackPhotoUrl = url),
+      onRackHistoryRefresh: _rackLocationId == null
+          ? null
+          : () => unawaited(_refreshRackHistory(_rackLocationId!)),
+      pendingRackPhotoBytes: _pendingRackPhoto,
+      onPendingRackPhotoChanged: (bytes) =>
+          setState(() => _pendingRackPhoto = bytes),
     );
   }
 

@@ -55,10 +55,14 @@ class ItemMediaRepository {
     required String locationId,
     required Uint8List bytes,
     required String mimeType,
+    String? employeeLabel,
   }) => _uploadClient.upload(
     endpoint: ApiEndpoints.inventoryItemLocationPhoto(locationId),
     bytes: bytes,
     mimeType: mimeType,
+    completeExtra: employeeLabel != null && employeeLabel.isNotEmpty
+        ? {'employee_label': employeeLabel}
+        : null,
   );
 
   Future<void> deleteRackPhoto(String locationId) =>

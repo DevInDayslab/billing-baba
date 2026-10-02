@@ -130,6 +130,7 @@ abstract final class ItemMapper {
             id: location.id,
             itemId: dto.id,
             godownId: location.godownId,
+            updatedAt: DateTime.now(),
             rack: location.rack,
             shelf: location.shelf,
           ),

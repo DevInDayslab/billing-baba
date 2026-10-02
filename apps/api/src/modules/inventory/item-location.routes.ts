@@ -16,6 +16,7 @@ export const createItemLocationRoutes = (
     app.post('/', { preHandler }, controller.create);
     app.post('/:id/photo', { preHandler }, controller.uploadPhoto);
     app.delete('/:id/photo', { preHandler }, controller.deletePhoto);
+    app.get('/:id/history', { preHandler }, controller.listHistory);
     app.get('/:id', { preHandler }, controller.getById);
     app.patch('/:id', { preHandler }, controller.update);
     app.delete('/:id', { preHandler }, controller.delete);

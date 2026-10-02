@@ -41,6 +41,7 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
   TabController? _tabController;
   int _lastTabCount = 0;
   List<_PartiesTabSpec> _visibleTabs = const [];
+  String? _lastRouteLocation;
 
   @override
   void dispose() {
@@ -74,18 +75,19 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
   }
 
   void _ensureTabController(List<_PartiesTabSpec> tabs, int tabIndex) {
+    final resolvedIndex = tabs.indexWhere((tab) => tab.tabIndex == tabIndex);
+    final safeIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
+
     if (_tabController == null || _lastTabCount != tabs.length) {
       _tabController?.removeListener(_onTabChanged);
       _tabController?.dispose();
-      _tabController = TabController(length: tabs.length, vsync: this);
+      _tabController = TabController(
+        length: tabs.length,
+        vsync: this,
+        initialIndex: safeIndex,
+      );
       _tabController!.addListener(_onTabChanged);
       _lastTabCount = tabs.length;
-    }
-
-    final resolvedIndex = tabs.indexWhere((tab) => tab.tabIndex == tabIndex);
-    final safeIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
-    if (_tabController!.index != safeIndex) {
-      _tabController!.index = safeIndex;
     }
   }
 
@@ -95,11 +97,6 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
 
     final tab = _visibleTabs[controller.index];
     ref.read(partiesTabIndexProvider.notifier).tabIndex = tab.tabIndex;
-
-    final currentPath = GoRouterState.of(context).uri.path;
-    if (currentPath != tab.route) {
-      context.go(tab.route);
-    }
   }
 
   @override
@@ -109,14 +106,41 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
     final tabs = _buildVisibleTabs(showHiddenLedger);
     _visibleTabs = tabs;
 
-    final routeTabIndex = partiesTabIndexForRoute(
-      GoRouterState.of(context).uri.path,
-    );
+    final location = GoRouterState.of(context).uri.path;
+    final routeTabIndex = partiesTabIndexForRoute(location);
+    final providerTabIndex = ref.watch(partiesTabIndexProvider);
 
-    _ensureTabController(tabs, routeTabIndex);
+    var routeJustChanged = false;
+    if (_lastRouteLocation != location) {
+      _lastRouteLocation = location;
+      routeJustChanged = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(partiesTabIndexProvider.notifier).tabIndex = routeTabIndex;
+        final targetIndex =
+            tabs.indexWhere((tab) => tab.tabIndex == routeTabIndex);
+        if (targetIndex >= 0 && _tabController?.index != targetIndex) {
+          _tabController?.animateTo(targetIndex);
+        }
+      });
+    }
+
+    final tabIndex = routeJustChanged ? routeTabIndex : providerTabIndex;
+
+    ref.listen<int>(partiesTabIndexProvider, (previous, next) {
+      final controller = _tabController;
+      if (controller == null || !mounted) return;
+      final targetIndex = tabs.indexWhere((tab) => tab.tabIndex == next);
+      if (targetIndex < 0) return;
+      if (controller.index != targetIndex) {
+        controller.animateTo(targetIndex);
+      }
+    });
+
+    _ensureTabController(tabs, tabIndex);
 
     final controller = _tabController!;
-    final currentRoute = tabs[controller.index].route;
+    final currentRoute = partiesRouteForTabIndex(tabIndex);
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -1,14 +1,15 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/godown_model.dart';
+import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_field.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/godowns/mobile_add_godown_sheet.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/item_qty_unit_suffix.dart';
+import 'package:billing_baba/features/inventory/utils/item_unit_qty_conversion.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-
 /// Vyapar-style Stock tab for mobile Add Item.
 class MobileAddItemStockSection extends StatelessWidget {
   const MobileAddItemStockSection({
@@ -26,6 +27,14 @@ class MobileAddItemStockSection extends StatelessWidget {
     required this.godowns,
     required this.selectedGodownId,
     required this.onGodownSelected,
+    required this.stockQtyUnitOptions,
+    required this.baseUnitId,
+    required this.secondaryUnitId,
+    required this.baseToSecondaryRate,
+    required this.openingQtyUnitId,
+    required this.minStockUnitId,
+    required this.onOpeningQtyUnitChanged,
+    required this.onMinStockUnitChanged,
     super.key,
   });
 
@@ -43,22 +52,78 @@ class MobileAddItemStockSection extends StatelessWidget {
   final List<GodownModel> godowns;
   final String? selectedGodownId;
   final ValueChanged<String?> onGodownSelected;
+  final List<InventoryUnit> stockQtyUnitOptions;
+  final String? baseUnitId;
+  final String? secondaryUnitId;
+  final double? baseToSecondaryRate;
+  final String? openingQtyUnitId;
+  final String? minStockUnitId;
+  final ValueChanged<String> onOpeningQtyUnitChanged;
+  final ValueChanged<String> onMinStockUnitChanged;
 
   static final _decimalFormatter = FilteringTextInputFormatter.allow(
     RegExp(r'^\d*\.?\d*'),
   );
-
-  String get _asOfDateLabel {
-    final date = asOfDate;
-    if (date == null) return '';
-    return DateFormat('dd/MM/yyyy').format(date);
-  }
 
   String? get _selectedGodownName {
     return godowns
         .where((godown) => godown.id == selectedGodownId)
         .map((godown) => godown.name)
         .firstOrNull;
+  }
+
+  String _effectiveUnitId(String? selectedUnitId) {
+    return selectedUnitId ?? baseUnitId ?? '';
+  }
+
+  void _onQtyUnitChanged({
+    required TextEditingController controller,
+    required String? currentUnitId,
+    required String newUnitId,
+    required ValueChanged<String> onUnitChanged,
+    required ValueChanged<double> onBaseQtyChanged,
+  }) {
+    if (baseUnitId == null) return;
+    final fromUnitId = _effectiveUnitId(currentUnitId);
+    final displayQty = double.tryParse(controller.text.trim()) ?? 0;
+    final baseQty = qtyInBaseUnit(
+      qty: displayQty,
+      qtyUnitId: fromUnitId,
+      baseUnitId: baseUnitId!,
+      secondaryUnitId: secondaryUnitId,
+      baseToSecondaryRate: baseToSecondaryRate,
+    );
+    onUnitChanged(newUnitId);
+    final newDisplay = qtyFromBaseUnit(
+      baseQty: baseQty,
+      displayUnitId: newUnitId,
+      baseUnitId: baseUnitId!,
+      secondaryUnitId: secondaryUnitId,
+      baseToSecondaryRate: baseToSecondaryRate,
+    );
+    controller.text = formatItemQtyFieldValue(newDisplay);
+    onBaseQtyChanged(baseQty);
+  }
+
+  void _onDisplayQtyChanged({
+    required String text,
+    required String? displayUnitId,
+    required ValueChanged<double> onBaseQtyChanged,
+  }) {
+    if (baseUnitId == null) {
+      onBaseQtyChanged(double.tryParse(text) ?? 0);
+      return;
+    }
+    final displayQty = double.tryParse(text) ?? 0;
+    onBaseQtyChanged(
+      qtyInBaseUnit(
+        qty: displayQty,
+        qtyUnitId: _effectiveUnitId(displayUnitId),
+        baseUnitId: baseUnitId!,
+        secondaryUnitId: secondaryUnitId,
+        baseToSecondaryRate: baseToSecondaryRate,
+      ),
+    );
   }
 
   Future<void> _openGodownPicker(BuildContext context) async {
@@ -155,8 +220,23 @@ class MobileAddItemStockSection extends StatelessWidget {
                     decimal: true,
                   ),
                   inputFormatters: [_decimalFormatter],
-                  onChanged: (v) =>
-                      onOpeningQtyChanged(double.tryParse(v) ?? 0),
+                  suffix: ItemQtyUnitSuffix(
+                    unitOptions: stockQtyUnitOptions,
+                    selectedUnitId: openingQtyUnitId,
+                    fallbackBaseUnitId: baseUnitId,
+                    onUnitSelected: (unitId) => _onQtyUnitChanged(
+                      controller: openingQtyController,
+                      currentUnitId: openingQtyUnitId,
+                      newUnitId: unitId,
+                      onUnitChanged: onOpeningQtyUnitChanged,
+                      onBaseQtyChanged: onOpeningQtyChanged,
+                    ),
+                  ),
+                  onChanged: (v) => _onDisplayQtyChanged(
+                    text: v,
+                    displayUnitId: openingQtyUnitId,
+                    onBaseQtyChanged: onOpeningQtyChanged,
+                  ),
                 ),
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),
                 MobileAddItemField(
@@ -180,50 +260,26 @@ class MobileAddItemStockSection extends StatelessWidget {
                       label: 'Godown',
                       hint: 'Godown',
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _selectedGodownName ?? 'Select godown',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: _selectedGodownName == null
-                                  ? AppColors.textSecondary
-                                      .withValues(alpha: 0.7)
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.textSecondary.withValues(alpha: 0.7),
-                        ),
-                      ],
+                    child: Text(
+                      _selectedGodownName ?? 'Select godown',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _selectedGodownName == null
+                            ? AppColors.textSecondary.withValues(alpha: 0.7)
+                            : AppColors.textPrimary,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),
-                SaleSingleDatePickerAnchor(
-                  key: asOfDatePickerKey,
+                SaleEditableSingleDateField(
+                  datePickerKey: asOfDatePickerKey,
                   selectedDate: asOfDate,
                   onDateSelected: onAsOfDateSelected,
-                  child: InkWell(
-                    onTap: () => asOfDatePickerKey.currentState?.showPicker(),
-                    child: InputDecorator(
-                      decoration: MobileAddItemTheme.fieldDecoration(
-                        label: 'As Of Date',
-                        hint: 'As Of Date',
-                      ),
-                      child: Text(
-                        _asOfDateLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _asOfDateLabel.isEmpty
-                              ? AppColors.textSecondary.withValues(alpha: 0.7)
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
+                  hintText: 'DD/MM/YYYY',
+                  decoration: MobileAddItemTheme.fieldDecoration(
+                    label: 'As Of Date',
+                    hint: 'DD/MM/YYYY',
                   ),
                 ),
               ],
@@ -248,8 +304,23 @@ class MobileAddItemStockSection extends StatelessWidget {
                     decimal: true,
                   ),
                   inputFormatters: [_decimalFormatter],
-                  onChanged: (v) =>
-                      onMinStockChanged(double.tryParse(v) ?? 0),
+                  suffix: ItemQtyUnitSuffix(
+                    unitOptions: stockQtyUnitOptions,
+                    selectedUnitId: minStockUnitId,
+                    fallbackBaseUnitId: baseUnitId,
+                    onUnitSelected: (unitId) => _onQtyUnitChanged(
+                      controller: minStockController,
+                      currentUnitId: minStockUnitId,
+                      newUnitId: unitId,
+                      onUnitChanged: onMinStockUnitChanged,
+                      onBaseQtyChanged: onMinStockChanged,
+                    ),
+                  ),
+                  onChanged: (v) => _onDisplayQtyChanged(
+                    text: v,
+                    displayUnitId: minStockUnitId,
+                    onBaseQtyChanged: onMinStockChanged,
+                  ),
                 ),
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),
                 MobileAddItemField(

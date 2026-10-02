@@ -108,6 +108,9 @@ class AddItemFormState {
     this.wholesalePrice = 0,
     this.wholesalePriceTaxMode = PriceTaxMode.withoutTax,
     this.minWholesaleQty = 0,
+    this.minWholesaleQtyUnitId,
+    this.openingQtyUnitId,
+    this.minStockUnitId,
     this.openingQty = 0,
     this.atPrice = 0,
     this.purchasePriceTaxMode = PriceTaxMode.withoutTax,
@@ -150,6 +153,12 @@ class AddItemFormState {
   final double wholesalePrice;
   final PriceTaxMode wholesalePriceTaxMode;
   final double minWholesaleQty;
+  /// Unit for [minWholesaleQty]; defaults to [baseUnitId] when null.
+  final String? minWholesaleQtyUnitId;
+  /// Display unit for [openingQty] (stored in [baseUnitId]); defaults to base.
+  final String? openingQtyUnitId;
+  /// Display unit for [minStock] (stored in base unit); defaults to base.
+  final String? minStockUnitId;
   final double openingQty;
   final double atPrice;
   final PriceTaxMode purchasePriceTaxMode;
@@ -213,6 +222,12 @@ class AddItemFormState {
     double? wholesalePrice,
     PriceTaxMode? wholesalePriceTaxMode,
     double? minWholesaleQty,
+    String? minWholesaleQtyUnitId,
+    bool clearMinWholesaleQtyUnit = false,
+    String? openingQtyUnitId,
+    bool clearOpeningQtyUnit = false,
+    String? minStockUnitId,
+    bool clearMinStockUnit = false,
     double? openingQty,
     double? atPrice,
     PriceTaxMode? purchasePriceTaxMode,
@@ -260,6 +275,15 @@ class AddItemFormState {
       wholesalePriceTaxMode:
           wholesalePriceTaxMode ?? this.wholesalePriceTaxMode,
       minWholesaleQty: minWholesaleQty ?? this.minWholesaleQty,
+      minWholesaleQtyUnitId: clearMinWholesaleQtyUnit
+          ? null
+          : (minWholesaleQtyUnitId ?? this.minWholesaleQtyUnitId),
+      openingQtyUnitId: clearOpeningQtyUnit
+          ? null
+          : (openingQtyUnitId ?? this.openingQtyUnitId),
+      minStockUnitId: clearMinStockUnit
+          ? null
+          : (minStockUnitId ?? this.minStockUnitId),
       openingQty: openingQty ?? this.openingQty,
       atPrice: atPrice ?? this.atPrice,
       purchasePriceTaxMode: purchasePriceTaxMode ?? this.purchasePriceTaxMode,

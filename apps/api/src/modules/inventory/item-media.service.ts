@@ -13,6 +13,7 @@ import {
   RACK_PHOTO_POLICY,
 } from './item-media.constants';
 import { ItemLocationRepository } from './item-location.repository';
+import { ItemLocationService } from './item-location.service';
 import { ItemRepository } from './item.repository';
 import type { ItemImageRecord } from './item.types';
 
@@ -383,6 +384,7 @@ export class ItemMediaService extends InventoryServiceBase {
     userId: string | undefined,
     locationId: string,
     intentId: string,
+    employeeLabel?: string,
   ): Promise<RackPhotoResponse> {
     await this.assertLocationExists(businessId, locationId);
 
@@ -430,6 +432,14 @@ export class ItemMediaService extends InventoryServiceBase {
         }
       }
     }
+
+    const locationService = new ItemLocationService();
+    await locationService.recordRackPhotoHistory(businessId, locationId, {
+      photoUrl: url,
+      photoMediaAssetId: asset.id,
+      employeeLabel: employeeLabel ?? null,
+      changedBy: userId ?? null,
+    });
 
     return {
       photo_url: url,

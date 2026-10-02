@@ -35,6 +35,12 @@ export const rackPhotoUploadBodySchema = z.union([
   }),
   z.object({
     intent_id: z.uuid(),
+    employee_label: z
+      .string()
+      .trim()
+      .max(120, 'Employee name or ID is too long')
+      .optional()
+      .transform((value) => (value === '' ? undefined : value)),
   }),
 ]);
 

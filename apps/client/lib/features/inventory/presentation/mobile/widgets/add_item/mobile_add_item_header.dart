@@ -7,7 +7,6 @@ class MobileAddItemHeader extends StatelessWidget {
     required this.title,
     required this.isProduct,
     required this.onBack,
-    required this.onSettingsTap,
     required this.onProductServiceChanged,
     super.key,
   });
@@ -15,7 +14,6 @@ class MobileAddItemHeader extends StatelessWidget {
   final String title;
   final bool isProduct;
   final VoidCallback onBack;
-  final VoidCallback onSettingsTap;
   final ValueChanged<bool> onProductServiceChanged;
 
   @override
@@ -47,14 +45,7 @@ class MobileAddItemHeader extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
-                  onPressed: onSettingsTap,
-                  icon: const Icon(
-                    Icons.settings_outlined,
-                    color: AppColors.textSecondary,
-                  ),
-                  tooltip: 'Settings',
-                ),
+                const SizedBox(width: 48),
               ],
             ),
           ),

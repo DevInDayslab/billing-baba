@@ -47,6 +47,7 @@ import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart'
 import 'package:billing_baba/features/inventory/models/dto/unit_dto.dart';
 import 'package:billing_baba/features/inventory/models/godown_model.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
+import 'package:billing_baba/features/inventory/models/item_location_history_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/item_supplier_model.dart';
@@ -57,6 +58,7 @@ import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_bom_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/godown_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_image_mapper.dart';
+import 'package:billing_baba/features/inventory/models/mappers/item_location_history_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_location_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_supplier_mapper.dart';
@@ -766,6 +768,7 @@ class InventoryService {
     required String locationId,
     required Uint8List bytes,
     required String mimeType,
+    String? employeeLabel,
   }) async {
     final media = _media;
     if (media == null) {
@@ -777,6 +780,7 @@ class InventoryService {
         locationId: locationId,
         bytes: bytes,
         mimeType: mimeType,
+        employeeLabel: employeeLabel,
       );
       final url = result['photo_url'] as String?;
       if (url == null || url.isEmpty) {
@@ -866,11 +870,31 @@ class InventoryService {
     }
   }
 
+  Future<List<ItemLocationHistoryModel>> fetchItemLocationHistory(
+    String locationId,
+  ) async {
+    try {
+      final records = await _fetchAllPages(
+        fetchPage: (page) async {
+          final response = await _repository.getItemLocationHistory(
+            locationId,
+            page: page,
+          );
+          return (response.records, response.meta.total);
+        },
+      );
+      return records.map(ItemLocationHistoryMapper.fromDto).toList();
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
   Future<ItemLocationModel> createItemLocation({
     required String itemId,
     required String godownId,
     String? rack,
     String? shelf,
+    String? employeeLabel,
   }) async {
     try {
       final dto = await _repository.createItemLocation(
@@ -879,6 +903,7 @@ class InventoryService {
           godownId: godownId,
           rack: rack,
           shelf: shelf,
+          employeeLabel: employeeLabel,
         ),
       );
       return ItemLocationMapper.fromDto(dto);
@@ -893,11 +918,16 @@ class InventoryService {
     String id, {
     String? rack,
     String? shelf,
+    String? employeeLabel,
   }) async {
     try {
       final dto = await _repository.updateItemLocation(
         id,
-        UpdateItemLocationRecordRequest(rack: rack, shelf: shelf),
+        UpdateItemLocationRecordRequest(
+          rack: rack,
+          shelf: shelf,
+          employeeLabel: employeeLabel,
+        ),
       );
       return ItemLocationMapper.fromDto(dto);
     } on DioException catch (error) {

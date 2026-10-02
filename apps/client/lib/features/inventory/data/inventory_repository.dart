@@ -23,6 +23,7 @@ import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/godown_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_location_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_location_history_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_bom_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_supplier_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_tier_price_dto.dart';
@@ -650,6 +651,12 @@ class InventoryRepository {
   ) => _remote.updateItemLocation(id, request);
 
   Future<void> deleteItemLocation(String id) => _remote.deleteItemLocation(id);
+
+  Future<PaginatedItemLocationHistoryDto> getItemLocationHistory(
+    String locationId, {
+    int page = 1,
+    int limit = 50,
+  }) => _remote.listItemLocationHistory(locationId, page: page, limit: limit);
 
   Future<PaginatedStockLevelsDto> getStockLevels(StockLevelListQuery query) async {
     final businessId = _requireBusinessId();

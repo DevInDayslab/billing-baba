@@ -1,29 +1,27 @@
+import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
+
 /// Maps item GST labels used in forms to API numeric rates.
 abstract final class ItemTaxRate {
-  static const options = [
+  static List<String> get options => [
     'None',
-    'GST @ 0%',
-    'GST @ 5%',
-    'GST @ 12%',
-    'GST @ 18%',
-    'GST @ 28%',
+    ...GstTaxSlabs.definitions().map((s) => s.itemFormLabel),
   ];
 
   static double? parsePercent(String label) {
     if (label.trim().isEmpty || label == 'None') return null;
+    final slab = GstTaxSlabs.definitionForItemLabel(label);
+    if (slab != null) return slab.percent;
     final match = RegExp(r'(\d+(?:\.\d+)?)').firstMatch(label);
     return match == null ? null : double.tryParse(match.group(1)!);
   }
 
   static String labelForPercent(double? percent) {
-    if (percent == null || percent <= 0) return 'None';
-    for (final option in options) {
-      if (parsePercent(option) == percent) return option;
-    }
-    if (percent == percent.roundToDouble()) {
-      return 'GST @ ${percent.toInt()}%';
-    }
-    return 'GST @ $percent%';
+    if (percent == null) return 'None';
+    if (percent < 0) return 'None';
+    final slab = GstTaxSlabs.definitionForPercent(percent);
+    if (slab != null) return slab.itemFormLabel;
+    if (GstTaxSlabs.samePercent(percent, 28)) return 'GST @ 28%';
+    return GstTaxSlabs.itemFormLabelForPercent(percent);
   }
 
   static String? toApiValue(String label) {
