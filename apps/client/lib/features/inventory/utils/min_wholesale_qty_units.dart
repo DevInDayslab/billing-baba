@@ -15,10 +15,7 @@ List<InventoryUnit> minWholesaleQtyUnitOptions({
   if (orderedIds.isEmpty) return const [];
 
   final byId = {for (final unit in allUnits) unit.id: unit};
-  return orderedIds
-      .map((id) => byId[id])
-      .whereType<InventoryUnit>()
-      .toList();
+  return orderedIds.map((id) => byId[id]).whereType<InventoryUnit>().toList();
 }
 
 String? minWholesaleQtyUnitShortName({

@@ -1,7 +1,8 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
-import 'package:billing_baba/features/notifications/application/notification_service.dart' as svc;
+import 'package:billing_baba/features/notifications/application/notification_service.dart'
+    as svc;
 import 'package:billing_baba/features/notifications/data/local_notification_platform_service.dart';
 import 'package:billing_baba/features/notifications/data/notification_local_data_source.dart';
 import 'package:billing_baba/features/notifications/data/notification_repository.dart';

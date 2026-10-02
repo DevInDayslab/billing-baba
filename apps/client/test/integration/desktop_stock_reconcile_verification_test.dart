@@ -158,9 +158,10 @@ void main() {
       expect(totalsAfterSecondPull, totals);
       sqliteDb.dispose();
     },
-    skip: !File(
-      r'C:\Users\saksh\OneDrive\Documents\billing_baba.sqlite',
-    ).existsSync()
+    skip:
+        !File(
+          r'C:\Users\saksh\OneDrive\Documents\billing_baba.sqlite',
+        ).existsSync()
         ? 'Desktop DB not present on this machine'
         : false,
   );

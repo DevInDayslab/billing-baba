@@ -38,7 +38,8 @@ class MobilePartyPickerSheet extends ConsumerStatefulWidget {
       _MobilePartyPickerSheetState();
 }
 
-class _MobilePartyPickerSheetState extends ConsumerState<MobilePartyPickerSheet> {
+class _MobilePartyPickerSheetState
+    extends ConsumerState<MobilePartyPickerSheet> {
   String _query = '';
 
   @override

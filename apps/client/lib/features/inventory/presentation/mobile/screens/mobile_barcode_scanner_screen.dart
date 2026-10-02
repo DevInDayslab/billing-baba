@@ -33,7 +33,8 @@ class MobileBarcodeScannerScreen extends StatefulWidget {
       _MobileBarcodeScannerScreenState();
 }
 
-class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen> {
+class _MobileBarcodeScannerScreenState
+    extends State<MobileBarcodeScannerScreen> {
   final MobileScannerController _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     autoStart: false,
@@ -145,7 +146,9 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
   Future<void> _toggleTorch() async {
     await _controller.toggleTorch();
     if (!mounted) return;
-    setState(() => _torchEnabled = _controller.value.torchState == TorchState.on);
+    setState(
+      () => _torchEnabled = _controller.value.torchState == TorchState.on,
+    );
   }
 
   @override
@@ -166,7 +169,8 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
                   const ColoredBox(color: Colors.black)
                 else if (_cameraAvailable == false)
                   _ScannerErrorState(
-                    message: 'No camera is available on this device. '
+                    message:
+                        'No camera is available on this device. '
                         'Use a physical phone or connect a USB/Bluetooth scanner.',
                     onRetry: () => Navigator.of(context).pop(),
                     retryLabel: 'Go back',
@@ -177,7 +181,8 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
                     scanWindow: _scanWindow,
                     onDetect: _handleDetection,
                     errorBuilder: (context, error) => _ScannerErrorState(
-                      message: error.errorDetails?.message ??
+                      message:
+                          error.errorDetails?.message ??
                           'Unable to access the camera.',
                       onRetry: () => unawaited(_controller.start()),
                     ),
@@ -306,7 +311,9 @@ class _TorchButton extends StatelessWidget {
           width: 52,
           height: 52,
           child: Icon(
-            enabled ? Icons.flashlight_on_rounded : Icons.flashlight_off_rounded,
+            enabled
+                ? Icons.flashlight_on_rounded
+                : Icons.flashlight_off_rounded,
             color: AppColors.primary,
             size: 26,
           ),

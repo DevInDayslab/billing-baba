@@ -148,7 +148,9 @@ abstract final class MobileTransactionLiveMapper {
     );
   }
 
-  static MobileTransactionListItem fromExpense(ExpenseTransactionModel expense) {
+  static MobileTransactionListItem fromExpense(
+    ExpenseTransactionModel expense,
+  ) {
     final amount = expense.amount ?? 0;
     final (label, color) = switch (expense.status) {
       ExpenseStatus.paid => ('Paid', const Color(0xFF2E7D32)),
@@ -254,7 +256,10 @@ abstract final class MobileTransactionLiveMapper {
   static (String, Color) _saleOrderStatus(SaleInvoiceModel order) {
     return switch (saleOrderDisplayStatus(order)) {
       SaleOrderDisplayStatus.open => ('Open', AppColors.primary),
-      SaleOrderDisplayStatus.completed => ('Completed', const Color(0xFF2E7D32)),
+      SaleOrderDisplayStatus.completed => (
+        'Completed',
+        const Color(0xFF2E7D32),
+      ),
       SaleOrderDisplayStatus.overdue => ('Overdue', const Color(0xFFB71C1C)),
       SaleOrderDisplayStatus.draft => ('Draft', AppColors.textSecondary),
       SaleOrderDisplayStatus.cancelled => (

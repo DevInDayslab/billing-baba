@@ -157,8 +157,9 @@ class PartyLocalExtension {
     'additional_field_2': additionalField2,
     'default_price_tier': defaultPriceTier,
     'additional_phones': additionalPhones,
-    'additional_phone_details':
-        additionalPhoneDetails.map((entry) => entry.toJson()).toList(),
+    'additional_phone_details': additionalPhoneDetails
+        .map((entry) => entry.toJson())
+        .toList(),
   };
 }
 

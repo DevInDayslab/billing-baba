@@ -42,8 +42,7 @@ class ItemListCard extends StatelessWidget {
     final stockQty = item.quantity;
     final reservedQty = item.reservedQuantity;
     final showReserved = reservedQty != null && reservedQty != 0;
-    final hasCategory =
-        categoryName != null && categoryName!.trim().isNotEmpty;
+    final hasCategory = categoryName != null && categoryName!.trim().isNotEmpty;
 
     return MobileCard(
       onTap: onTap,

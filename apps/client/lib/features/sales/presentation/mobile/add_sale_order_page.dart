@@ -32,7 +32,8 @@ class MobileAddSaleOrderPage extends ConsumerStatefulWidget {
 
 class _MobileAddSaleOrderPageState
     extends ConsumerState<MobileAddSaleOrderPage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.saleOrder;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.saleOrder;
   late final String _sessionKey;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
@@ -110,7 +111,9 @@ class _MobileAddSaleOrderPageState
     final error = await _notifier().save();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final form = _form();
@@ -159,7 +162,10 @@ class _MobileAddSaleOrderPageState
           if (form.saveError != null)
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
+              child: Text(
+                form.saveError!,
+                style: const TextStyle(color: AppColors.error),
+              ),
             ),
           MobileDocumentHeader(
             visibility: _visibility,
@@ -213,8 +219,9 @@ class _MobileAddSaleOrderPageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),

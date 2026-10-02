@@ -26,7 +26,11 @@ class PaymentFailureScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(Icons.error_outline_rounded, size: 72, color: AppColors.danger),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 72,
+              color: AppColors.danger,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               message,

@@ -47,8 +47,7 @@ class NotificationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.button),
         child: InkWell(
           onTap: onTap,
-          onLongPress:
-              onDelete == null ? null : () => _confirmDelete(context),
+          onLongPress: onDelete == null ? null : () => _confirmDelete(context),
           borderRadius: BorderRadius.circular(AppRadius.button),
           child: Ink(
             decoration: BoxDecoration(

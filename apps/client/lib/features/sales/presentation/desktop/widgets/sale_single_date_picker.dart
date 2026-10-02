@@ -212,7 +212,8 @@ class SaleEditableSingleDateField extends StatefulWidget {
       _SaleEditableSingleDateFieldState();
 }
 
-class _SaleEditableSingleDateFieldState extends State<SaleEditableSingleDateField> {
+class _SaleEditableSingleDateFieldState
+    extends State<SaleEditableSingleDateField> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
   DateTime? _lastCommittedDate;
@@ -221,7 +222,9 @@ class _SaleEditableSingleDateFieldState extends State<SaleEditableSingleDateFiel
   void initState() {
     super.initState();
     _lastCommittedDate = widget.selectedDate;
-    _controller = TextEditingController(text: _textForDate(widget.selectedDate));
+    _controller = TextEditingController(
+      text: _textForDate(widget.selectedDate),
+    );
     _focusNode = FocusNode();
     _focusNode.addListener(_handleFocusChange);
   }
@@ -305,8 +308,7 @@ class _SaleEditableSingleDateFieldState extends State<SaleEditableSingleDateFiel
     );
 
     final baseDecoration =
-        widget.decoration ??
-        buildFormControlDecoration(hint: widget.hintText);
+        widget.decoration ?? buildFormControlDecoration(hint: widget.hintText);
     final decoration = baseDecoration.copyWith(
       suffixIcon: calendarSuffix,
       hintText: baseDecoration.hintText ?? widget.hintText,

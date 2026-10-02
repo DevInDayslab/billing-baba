@@ -38,94 +38,96 @@ class DesktopAddPurchasePage extends ConsumerWidget {
     return DocumentBarcodeKeyboardHost(
       onCatalogItem: (catalog) async {
         final current = ref.read(addPurchaseFormProvider(billId: billId));
-        final notifier =
-            ref.read(addPurchaseFormProvider(billId: billId).notifier);
+        final notifier = ref.read(
+          addPurchaseFormProvider(billId: billId).notifier,
+        );
         var index = current.items.lastIndexWhere(isEmptyPurchaseLineDraft);
         if (index < 0) {
           notifier.addLineItem();
           index =
-              ref.read(addPurchaseFormProvider(billId: billId)).items.length - 1;
+              ref.read(addPurchaseFormProvider(billId: billId)).items.length -
+              1;
         }
         notifier.selectCatalogItem(index, catalog);
       },
       child: Stack(
-      children: [
-        ColoredBox(
-          color: AppColors.background,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                PurchasePageTitleBar(
-                  currentRoute: AppRoutes.purchaseBills,
-                  onBack: () => leaveTransactionFormPage(
-                    context: context,
-                    isDirty: form.isDirty,
-                    isSaving: form.isSaving,
-                    listRoute: AppRoutes.purchaseBills,
+        children: [
+          ColoredBox(
+            color: AppColors.background,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PurchasePageTitleBar(
+                    currentRoute: AppRoutes.purchaseBills,
+                    onBack: () => leaveTransactionFormPage(
+                      context: context,
+                      isDirty: form.isDirty,
+                      isSaving: form.isSaving,
+                      listRoute: AppRoutes.purchaseBills,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.lgBorder,
-                    border: Border.all(color: _cardBorder),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          _sectionGap,
-                          _sectionGap,
-                          _sectionGap,
-                          0,
+                  const SizedBox(height: AppSpacing.md),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.lgBorder,
+                      border: Border.all(color: _cardBorder),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0A000000),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
                         ),
-                        child: _PageHeader(billId: billId),
-                      ),
-                      const SizedBox(height: _sectionGap),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: _sectionGap,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            _sectionGap,
+                            _sectionGap,
+                            _sectionGap,
+                            0,
+                          ),
+                          child: _PageHeader(billId: billId),
                         ),
-                        child: _FormFields(billId: billId),
-                      ),
-                      const SizedBox(height: _sectionGap),
-                      PurchaseLineItemsTable(embedded: true, billId: billId),
-                      const Divider(height: 1, color: _cardBorder),
-                      Padding(
-                        padding: const EdgeInsets.all(_sectionGap),
-                        child: AddPurchaseFooter(billId: billId),
-                      ),
-                      const Divider(height: 1, color: _cardBorder),
-                      _BottomActionBar(billId: billId),
-                    ],
+                        const SizedBox(height: _sectionGap),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: _sectionGap,
+                          ),
+                          child: _FormFields(billId: billId),
+                        ),
+                        const SizedBox(height: _sectionGap),
+                        PurchaseLineItemsTable(embedded: true, billId: billId),
+                        const Divider(height: 1, color: _cardBorder),
+                        Padding(
+                          padding: const EdgeInsets.all(_sectionGap),
+                          child: AddPurchaseFooter(billId: billId),
+                        ),
+                        const Divider(height: 1, color: _cardBorder),
+                        _BottomActionBar(billId: billId),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        Positioned.fill(
-          child: TransactionFormBusyOverlay(
-            isLoading: form.isLoading,
-            isSaving: form.isSaving,
-            savingLabel: billId == null
-                ? 'Saving purchase bill…'
-                : 'Updating purchase bill…',
+          Positioned.fill(
+            child: TransactionFormBusyOverlay(
+              isLoading: form.isLoading,
+              isSaving: form.isSaving,
+              savingLabel: billId == null
+                  ? 'Saving purchase bill…'
+                  : 'Updating purchase bill…',
+            ),
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
     );
   }
 }

@@ -206,63 +206,69 @@ class AuthService {
     }
 
     late final Future<AuthSession?> operation;
-    operation = _withRefreshLock(() async {
-      // Another refresh may have completed (e.g. selectBusiness) while we waited.
-      final latestAccess = await _storage.readSecure(StorageKeys.accessToken);
-      final latestRefresh = await _storage.readSecure(StorageKeys.refreshToken);
-      if (latestAccess != null &&
-          latestAccess.isNotEmpty &&
-          latestAccess != accessToken &&
-          latestRefresh != null &&
-          latestRefresh.isNotEmpty) {
-        return AuthSession(
-          accessToken: latestAccess,
-          refreshToken: latestRefresh,
-          expiresIn: 0,
-          user: AuthUser(
-            id: JwtUtils.sessionUserId(latestAccess) ?? 'unknown',
-            phone: JwtUtils.phone(latestAccess) ??
-                _storage.read(StorageKeys.accountPhone) ??
-                '',
-            role: JwtUtils.role(latestAccess),
-          ),
-          businesses: const [],
-        );
-      }
+    operation =
+        _withRefreshLock(() async {
+          // Another refresh may have completed (e.g. selectBusiness) while we waited.
+          final latestAccess = await _storage.readSecure(
+            StorageKeys.accessToken,
+          );
+          final latestRefresh = await _storage.readSecure(
+            StorageKeys.refreshToken,
+          );
+          if (latestAccess != null &&
+              latestAccess.isNotEmpty &&
+              latestAccess != accessToken &&
+              latestRefresh != null &&
+              latestRefresh.isNotEmpty) {
+            return AuthSession(
+              accessToken: latestAccess,
+              refreshToken: latestRefresh,
+              expiresIn: 0,
+              user: AuthUser(
+                id: JwtUtils.sessionUserId(latestAccess) ?? 'unknown',
+                phone:
+                    JwtUtils.phone(latestAccess) ??
+                    _storage.read(StorageKeys.accountPhone) ??
+                    '',
+                role: JwtUtils.role(latestAccess),
+              ),
+              businesses: const [],
+            );
+          }
 
-      final tokenToUse = latestRefresh ?? token;
-      if (tokenToUse.isEmpty) return null;
+          final tokenToUse = latestRefresh ?? token;
+          if (tokenToUse.isEmpty) return null;
 
-      try {
-        final session = await _repository.refresh(
-          refreshToken: tokenToUse,
-          businessId: effectiveBusinessId,
-        );
-        final persistBusinessId = _businessIdForSession(
-          session,
-          explicitBusinessId: businessId ?? effectiveBusinessId,
-        );
-        await persistSession(session, businessId: persistBusinessId);
-        return session;
-      } on DioException catch (e) {
-        if (NetworkExceptionClassifier.isConnectivityError(e)) {
-          // Keep stored tokens when the backend is unreachable.
-          return null;
-        }
-        // Only wipe local credentials on definitive auth failures. Clearing on
-        // every Dio error (timeouts, 5xx) left Switch Company with Headers:{}
-        // and endless "Could not load businesses" 401 loops.
-        final status = e.response?.statusCode;
-        if (status == 401 || status == 403) {
-          await clearSession();
-        }
-        return null;
-      }
-    }).whenComplete(() {
-      if (identical(_inflightRefreshStoredSession, operation)) {
-        _inflightRefreshStoredSession = null;
-      }
-    });
+          try {
+            final session = await _repository.refresh(
+              refreshToken: tokenToUse,
+              businessId: effectiveBusinessId,
+            );
+            final persistBusinessId = _businessIdForSession(
+              session,
+              explicitBusinessId: businessId ?? effectiveBusinessId,
+            );
+            await persistSession(session, businessId: persistBusinessId);
+            return session;
+          } on DioException catch (e) {
+            if (NetworkExceptionClassifier.isConnectivityError(e)) {
+              // Keep stored tokens when the backend is unreachable.
+              return null;
+            }
+            // Only wipe local credentials on definitive auth failures. Clearing on
+            // every Dio error (timeouts, 5xx) left Switch Company with Headers:{}
+            // and endless "Could not load businesses" 401 loops.
+            final status = e.response?.statusCode;
+            if (status == 401 || status == 403) {
+              await clearSession();
+            }
+            return null;
+          }
+        }).whenComplete(() {
+          if (identical(_inflightRefreshStoredSession, operation)) {
+            _inflightRefreshStoredSession = null;
+          }
+        });
 
     _inflightRefreshStoredSession = operation;
     return operation;
@@ -288,7 +294,10 @@ class AuthService {
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
     await persistSession(session);
-    await _syncDeviceTrustFromLogin(session, rememberFor30Days: rememberFor30Days);
+    await _syncDeviceTrustFromLogin(
+      session,
+      rememberFor30Days: rememberFor30Days,
+    );
     return session;
   }
 
@@ -346,7 +355,11 @@ class AuthService {
       return null;
     }
 
-    return DeviceTrustCredential(token: token, phone: phone, expiresAt: expiresAt);
+    return DeviceTrustCredential(
+      token: token,
+      phone: phone,
+      expiresAt: expiresAt,
+    );
   }
 
   bool isDeviceTrustValidForPhone(DeviceTrustCredential trust, String phone) {

@@ -26,7 +26,11 @@ class MobileOfflineBanner extends ConsumerWidget {
       color: const Color(0xFFFFF3E0),
       child: Row(
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 18, color: Color(0xFFE65100)),
+          const Icon(
+            Icons.wifi_off_rounded,
+            size: 18,
+            color: Color(0xFFE65100),
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

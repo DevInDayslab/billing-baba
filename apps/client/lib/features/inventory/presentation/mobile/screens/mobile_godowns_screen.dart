@@ -53,7 +53,9 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       unawaited(
-        ref.read(inventoryGodownsProvider.notifier).refresh(
+        ref
+            .read(inventoryGodownsProvider.notifier)
+            .refresh(
               searchQuery: query.trim().isEmpty ? null : query.trim(),
             ),
       );
@@ -61,7 +63,9 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryGodownsProvider.notifier).refresh(
+    return ref
+        .read(inventoryGodownsProvider.notifier)
+        .refresh(
           searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
         );
   }
@@ -187,12 +191,14 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
                     title: 'No godowns found',
                     message: 'Add a godown to track stock by warehouse.',
                     icon: Icons.warehouse_outlined,
-                    actionLabel: ref
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Godown'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addGodown())
@@ -243,11 +249,11 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
             right: 0,
             bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
             child: Center(
-            child: PermissionGate(
-              module: PermissionModule.item,
-              action: PermissionAction.create,
-              child: _AddGodownFab(onPressed: () => unawaited(_addGodown())),
-            ),
+              child: PermissionGate(
+                module: PermissionModule.item,
+                action: PermissionAction.create,
+                child: _AddGodownFab(onPressed: () => unawaited(_addGodown())),
+              ),
             ),
           ),
         ],
@@ -323,11 +329,11 @@ class _GodownListRow extends StatelessWidget {
                       Flexible(
                         child: Text(
                           godown.name,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
                       ),
                       if (godown.isDefault) ...[
@@ -343,12 +349,12 @@ class _GodownListRow extends StatelessWidget {
                           ),
                           child: Text(
                             'DEFAULT',
-                            style:
-                                Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                ),
                           ),
                         ),
                       ],

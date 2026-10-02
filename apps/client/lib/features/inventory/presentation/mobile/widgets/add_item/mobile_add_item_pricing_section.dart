@@ -122,8 +122,7 @@ class MobileAddItemPricingSection extends StatelessWidget {
                     decimal: true,
                   ),
                   inputFormatters: _priceFormatters,
-                  onChanged: (v) =>
-                      onMrpChanged(parseIndianItemPriceInput(v)),
+                  onChanged: (v) => onMrpChanged(parseIndianItemPriceInput(v)),
                 ),
                 PriceAmountInWordsHint(
                   amount: mrpAmount,
@@ -331,7 +330,10 @@ class _DiscountTypeChip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(width: 2),
             const Icon(Icons.arrow_drop_down, size: 18),
@@ -341,11 +343,15 @@ class _DiscountTypeChip extends StatelessWidget {
       itemBuilder: (context) => [
         PopupMenuItem(
           value: PriceDiscountKind.percentage,
-          child: Text(ItemPricingDiscount.labelForKind(PriceDiscountKind.percentage)),
+          child: Text(
+            ItemPricingDiscount.labelForKind(PriceDiscountKind.percentage),
+          ),
         ),
         PopupMenuItem(
           value: PriceDiscountKind.amount,
-          child: Text(ItemPricingDiscount.labelForKind(PriceDiscountKind.amount)),
+          child: Text(
+            ItemPricingDiscount.labelForKind(PriceDiscountKind.amount),
+          ),
         ),
       ],
     );
@@ -380,7 +386,10 @@ class _TaxModeChip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(width: 2),
             const Icon(Icons.arrow_drop_down, size: 18),

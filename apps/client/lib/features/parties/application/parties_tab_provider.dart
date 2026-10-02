@@ -26,8 +26,9 @@ String partiesRouteForTabIndex(int index) {
   }
 }
 
-final partiesTabIndexProvider =
-    NotifierProvider<PartiesTabIndex, int>(PartiesTabIndex.new);
+final partiesTabIndexProvider = NotifierProvider<PartiesTabIndex, int>(
+  PartiesTabIndex.new,
+);
 
 class PartiesTabIndex extends Notifier<int> {
   @override

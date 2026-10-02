@@ -213,7 +213,9 @@ void main() {
 
     test('maps post-create session failure away from generic copy', () {
       final message = CreateBusinessErrorMessages.fromError(
-        const BusinessSelectionFailed('Something went wrong. Please try again.'),
+        const BusinessSelectionFailed(
+          'Something went wrong. Please try again.',
+        ),
       );
 
       expect(message, contains('Your business was created'));

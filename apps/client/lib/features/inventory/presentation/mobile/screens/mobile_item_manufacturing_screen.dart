@@ -39,7 +39,8 @@ class _MobileItemManufacturingScreenState
   Widget build(BuildContext context) {
     final form = ref.watch(addItemFormProvider);
     final notifier = ref.read(addItemFormProvider.notifier);
-    final units = ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
+    final units =
+        ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(
@@ -171,9 +172,11 @@ class _MobileItemManufacturingScreenState
                     Align(
                       alignment: Alignment.centerRight,
                       child: IconButton(
-                        onPressed: () =>
-                            notifier.removeAdditionalCost(row.id),
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => notifier.removeAdditionalCost(row.id),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                       ),
                     ),
                   ],

@@ -27,45 +27,54 @@ abstract final class ReportsNavCatalog {
 
   static List<ReportSubsectionEntry> subsectionsFor(ReportNavGroup group) {
     return switch (group) {
-      ReportNavGroup.transaction => TransactionReportSubSection.values
-          .map(
-            (sub) => ReportSubsectionEntry(
-              id: sub.name,
-              label: sub.label,
-              showNotificationDot: sub.showNotificationDot,
-            ),
-          )
-          .toList(growable: false),
-      ReportNavGroup.party => PartyReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
-      ReportNavGroup.gst => GstReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
-      ReportNavGroup.itemStock => ItemStockReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
-      ReportNavGroup.businessStatus => BusinessStatusReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
-      ReportNavGroup.taxes => TaxesReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
-      ReportNavGroup.expenseReport => ExpenseReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
+      ReportNavGroup.transaction =>
+        TransactionReportSubSection.values
+            .map(
+              (sub) => ReportSubsectionEntry(
+                id: sub.name,
+                label: sub.label,
+                showNotificationDot: sub.showNotificationDot,
+              ),
+            )
+            .toList(growable: false),
+      ReportNavGroup.party =>
+        PartyReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
+      ReportNavGroup.gst =>
+        GstReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
+      ReportNavGroup.itemStock =>
+        ItemStockReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
+      ReportNavGroup.businessStatus =>
+        BusinessStatusReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
+      ReportNavGroup.taxes =>
+        TaxesReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
+      ReportNavGroup.expenseReport =>
+        ExpenseReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
       ReportNavGroup.salePurchaseOrderReport =>
         SalePurchaseOrderReportSubSection.values
             .map(
               (sub) => ReportSubsectionEntry(id: sub.name, label: sub.label),
             )
             .toList(growable: false),
-      ReportNavGroup.otherIncomeReport => OtherIncomeReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
-      ReportNavGroup.loanAccounts => LoanAccountsReportSubSection.values
-          .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
-          .toList(growable: false),
+      ReportNavGroup.otherIncomeReport =>
+        OtherIncomeReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
+      ReportNavGroup.loanAccounts =>
+        LoanAccountsReportSubSection.values
+            .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
+            .toList(growable: false),
     };
   }
 }

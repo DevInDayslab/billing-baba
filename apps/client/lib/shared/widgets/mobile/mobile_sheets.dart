@@ -12,7 +12,8 @@ Future<void> showMobileQuickActionsSheet({
   List<MobileQuickActionSection>? sections,
   String title = 'Quick Actions',
 }) {
-  final resolvedSections = sections ??
+  final resolvedSections =
+      sections ??
       (actions.isEmpty
           ? null
           : [MobileQuickActionSection(title: '', actions: actions)]);

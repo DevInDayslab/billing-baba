@@ -237,7 +237,8 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
         var index = form.items.lastIndexWhere(isEmptySaleLineDraft);
         if (index < 0) {
           notifier.addLineItem();
-          index = ref
+          index =
+              ref
                   .read(addSaleFormProvider(sessionKey: sessionKey))
                   .items
                   .length -
@@ -246,117 +247,117 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
         await notifier.selectCatalogItem(index, catalog);
       },
       child: PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        await _handleClose();
-      },
-      child: ColoredBox(
-        color: AppColors.background,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                0,
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          await _handleClose();
+        },
+        child: ColoredBox(
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  0,
+                ),
+                child: SalePageTitleBar(
+                  currentRoute: AppRoutes.saleInvoices,
+                  onBack: _handleClose,
+                ),
               ),
-              child: SalePageTitleBar(
-                currentRoute: AppRoutes.saleInvoices,
-                onBack: _handleClose,
-              ),
-            ),
-            if (_supportsTabs) ...[
-              const SizedBox(height: AppSpacing.sm),
-              const SaleTabsBar(),
-            ],
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.lgBorder,
-                    border: Border.all(color: _cardBorder),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          _sectionGap,
-                          _sectionGap,
-                          _sectionGap,
-                          0,
-                        ),
-                        child: _PageHeader(
-                          sessionKey: sessionKey,
-                          readOnly: widget.readOnly,
-                          isEditing: _isEditing,
-                          onClose: _handleClose,
-                        ),
-                      ),
-                      const SizedBox(height: _sectionGap),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: _sectionGap,
-                        ),
-                        child: IgnorePointer(
-                          ignoring: widget.readOnly,
-                          child: Opacity(
-                            opacity: widget.readOnly ? 0.85 : 1,
-                            child: _FormFields(sessionKey: sessionKey),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: _sectionGap),
-                      IgnorePointer(
-                        ignoring: widget.readOnly,
-                        child: Opacity(
-                          opacity: widget.readOnly ? 0.85 : 1,
-                          child: SaleLineItemsTable(
-                            sessionKey: sessionKey,
-                            embedded: true,
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1, color: _cardBorder),
-                      Padding(
-                        padding: const EdgeInsets.all(_sectionGap),
-                        child: IgnorePointer(
-                          ignoring: widget.readOnly,
-                          child: Opacity(
-                            opacity: widget.readOnly ? 0.85 : 1,
-                            child: AddSaleFooter(sessionKey: sessionKey),
-                          ),
-                        ),
-                      ),
-                      if (!widget.readOnly) ...[
-                        const Divider(height: 1, color: _cardBorder),
-                        _BottomActionBar(
-                          sessionKey: sessionKey,
-                          isEditing: _isEditing,
-                          onSaved: _navigateToSaleInvoices,
+              if (_supportsTabs) ...[
+                const SizedBox(height: AppSpacing.sm),
+                const SaleTabsBar(),
+              ],
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.lgBorder,
+                      border: Border.all(color: _cardBorder),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0A000000),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
                         ),
                       ],
-                    ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            _sectionGap,
+                            _sectionGap,
+                            _sectionGap,
+                            0,
+                          ),
+                          child: _PageHeader(
+                            sessionKey: sessionKey,
+                            readOnly: widget.readOnly,
+                            isEditing: _isEditing,
+                            onClose: _handleClose,
+                          ),
+                        ),
+                        const SizedBox(height: _sectionGap),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: _sectionGap,
+                          ),
+                          child: IgnorePointer(
+                            ignoring: widget.readOnly,
+                            child: Opacity(
+                              opacity: widget.readOnly ? 0.85 : 1,
+                              child: _FormFields(sessionKey: sessionKey),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: _sectionGap),
+                        IgnorePointer(
+                          ignoring: widget.readOnly,
+                          child: Opacity(
+                            opacity: widget.readOnly ? 0.85 : 1,
+                            child: SaleLineItemsTable(
+                              sessionKey: sessionKey,
+                              embedded: true,
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 1, color: _cardBorder),
+                        Padding(
+                          padding: const EdgeInsets.all(_sectionGap),
+                          child: IgnorePointer(
+                            ignoring: widget.readOnly,
+                            child: Opacity(
+                              opacity: widget.readOnly ? 0.85 : 1,
+                              child: AddSaleFooter(sessionKey: sessionKey),
+                            ),
+                          ),
+                        ),
+                        if (!widget.readOnly) ...[
+                          const Divider(height: 1, color: _cardBorder),
+                          _BottomActionBar(
+                            sessionKey: sessionKey,
+                            isEditing: _isEditing,
+                            onSaved: _navigateToSaleInvoices,
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }

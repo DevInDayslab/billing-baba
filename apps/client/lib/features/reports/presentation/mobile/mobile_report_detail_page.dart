@@ -42,16 +42,21 @@ class MobileReportDetailPage extends ConsumerWidget {
         showNotification: false,
       ),
       body: switch (type) {
-        MobileReportDetailType.partyOutstanding =>
-          _PartyOutstandingBody(onRetry: () => ref.invalidate(partyOutstandingReportProvider)),
-        MobileReportDetailType.stockSummary =>
-          _StockSummaryBody(onRetry: () => ref.invalidate(stockSummaryReportProvider)),
-        MobileReportDetailType.dayBook =>
-          _DayBookBody(onRetry: () => ref.invalidate(dayBookReportProvider)),
-        MobileReportDetailType.profitLoss =>
-          _ProfitLossBody(onRetry: () => ref.invalidate(profitLossReportProvider)),
-        MobileReportDetailType.gstr1 =>
-          _Gstr1Body(onRetry: () => ref.invalidate(gstr1ReportProvider)),
+        MobileReportDetailType.partyOutstanding => _PartyOutstandingBody(
+          onRetry: () => ref.invalidate(partyOutstandingReportProvider),
+        ),
+        MobileReportDetailType.stockSummary => _StockSummaryBody(
+          onRetry: () => ref.invalidate(stockSummaryReportProvider),
+        ),
+        MobileReportDetailType.dayBook => _DayBookBody(
+          onRetry: () => ref.invalidate(dayBookReportProvider),
+        ),
+        MobileReportDetailType.profitLoss => _ProfitLossBody(
+          onRetry: () => ref.invalidate(profitLossReportProvider),
+        ),
+        MobileReportDetailType.gstr1 => _Gstr1Body(
+          onRetry: () => ref.invalidate(gstr1ReportProvider),
+        ),
       },
     );
   }
@@ -94,7 +99,10 @@ class _PartyOutstandingBody extends ConsumerWidget {
                 title: Text(party.name),
                 trailing: Text(
                   ChartAxisFormatters.formatCurrency(party.balance),
-                  style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -135,7 +143,10 @@ class _StockSummaryBody extends ConsumerWidget {
                 subtitle: Text('Qty ${row.stockQty}'),
                 trailing: Text(
                   ChartAxisFormatters.formatCurrency(row.stockValue),
-                  style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -181,7 +192,10 @@ class _DayBookBody extends ConsumerWidget {
                 ),
                 trailing: Text(
                   ChartAxisFormatters.formatCurrency(row.total),
-                  style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -222,14 +236,19 @@ class _ProfitLossBody extends ConsumerWidget {
                   item.particular,
                   style: AppTypography.inter(
                     fontSize: AppTypography.bodySize,
-                    fontWeight: item.isHeader ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: item.isHeader
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                   ),
                 ),
                 trailing: item.isHeader
                     ? null
                     : Text(
                         ChartAxisFormatters.formatCurrency(item.amount),
-                        style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
               ),
             ),
@@ -268,7 +287,10 @@ class _Gstr1Body extends ConsumerWidget {
                 ),
                 trailing: Text(
                   ChartAxisFormatters.formatCurrency(row.value),
-                  style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -299,7 +321,10 @@ class _SummaryCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(

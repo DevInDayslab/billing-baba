@@ -105,7 +105,8 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                         onChanged: ref
                             .read(mobileHomeControllerProvider.notifier)
                             .setSearch,
-                        hint: homeState.activeView ==
+                        hint:
+                            homeState.activeView ==
                                 MobileHomeView.transactionDetails
                             ? 'Search by item, party or number'
                             : 'Search transactions, parties, invoices...',

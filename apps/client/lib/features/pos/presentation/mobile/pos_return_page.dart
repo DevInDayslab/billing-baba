@@ -237,7 +237,10 @@ class _ReturnItemRow extends StatelessWidget {
           children: [
             Text(
               item.name,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(

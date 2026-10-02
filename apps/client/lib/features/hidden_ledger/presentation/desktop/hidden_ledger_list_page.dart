@@ -487,7 +487,11 @@ class _HiddenLedgerTableRow extends StatelessWidget {
               style: _cellStyle,
             ),
           ),
-          const Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
+          const Icon(
+            Icons.chevron_right,
+            size: 20,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
     );

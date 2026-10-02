@@ -134,7 +134,8 @@ class MobileHomeTransactionCard extends StatelessWidget {
       MobileHomeTransactionFilterType.sale => Icons.shopping_cart_outlined,
       MobileHomeTransactionFilterType.purchase => Icons.shopping_bag_outlined,
       MobileHomeTransactionFilterType.paymentIn => Icons.arrow_upward_rounded,
-      MobileHomeTransactionFilterType.paymentOut => Icons.arrow_downward_rounded,
+      MobileHomeTransactionFilterType.paymentOut =>
+        Icons.arrow_downward_rounded,
       MobileHomeTransactionFilterType.expense =>
         Icons.account_balance_wallet_outlined,
       _ => Icons.receipt_long_outlined,

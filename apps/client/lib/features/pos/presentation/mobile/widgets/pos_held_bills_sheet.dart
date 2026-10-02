@@ -101,7 +101,8 @@ class _HeldBillsSheetBody extends ConsumerWidget {
               cart.resumeBill(heldBills[index]);
               Navigator.of(context).pop();
             },
-            onDiscard: () => unawaited(cart.discardHeldBill(heldBills[index].id)),
+            onDiscard: () =>
+                unawaited(cart.discardHeldBill(heldBills[index].id)),
           ),
         ],
       ],

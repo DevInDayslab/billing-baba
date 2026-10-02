@@ -58,8 +58,9 @@ class ItemListView extends StatelessWidget {
       item: item,
       categoryName: categoryNamesById[item.categoryId],
       onTap: onItemTap == null ? null : () => onItemTap!(item),
-      onLongPress:
-          onItemLongPress == null ? null : () => onItemLongPress!(item),
+      onLongPress: onItemLongPress == null
+          ? null
+          : () => onItemLongPress!(item),
     );
   }
 }

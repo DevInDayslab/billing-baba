@@ -64,10 +64,11 @@ class _MobileItemDetailsScreenState
   }
 
   InventoryItem? _resolveDisplayItem() {
-    final listItem = (ref.watch(inventoryItemsProvider).value?.items ??
-            const <InventoryItem>[])
-        .where((entry) => entry.id == widget.itemId)
-        .firstOrNull;
+    final listItem =
+        (ref.watch(inventoryItemsProvider).value?.items ??
+                const <InventoryItem>[])
+            .where((entry) => entry.id == widget.itemId)
+            .firstOrNull;
     final detailAsync = ref.watch(productDetailProvider(widget.itemId));
     final fallback = widget.fallbackItem ?? listItem ?? detailAsync.value;
     if (fallback == null) return null;
@@ -125,8 +126,7 @@ class _MobileItemDetailsScreenState
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => AppError(
             message: InventoryErrorMapper.messageFor(error),
-            onRetry: () =>
-                ref.invalidate(productDetailProvider(widget.itemId)),
+            onRetry: () => ref.invalidate(productDetailProvider(widget.itemId)),
           ),
           data: (_) => const MobileEmptyState(
             title: 'Item not found',
@@ -148,13 +148,16 @@ class _MobileItemDetailsScreenState
         : null;
     final contextData = ref.watch(productDetailContextProvider(widget.itemId));
     final unitLabel = displayItem.baseUnitShortName ?? 'pcs';
-    final transactionsAsync =
-        ref.watch(productTransactionsProvider(widget.itemId));
-    final paginated =
-        ref.watch(paginatedProductTransactionsProvider(widget.itemId));
+    final transactionsAsync = ref.watch(
+      productTransactionsProvider(widget.itemId),
+    );
+    final paginated = ref.watch(
+      paginatedProductTransactionsProvider(widget.itemId),
+    );
     final stockAfter = ref.watch(productStockAfterProvider(widget.itemId));
-    final hasSearch =
-        ref.watch(productTransactionSearchQueryProvider).isNotEmpty;
+    final hasSearch = ref
+        .watch(productTransactionSearchQueryProvider)
+        .isNotEmpty;
     final sectionTitle = isProduct ? 'Stock History' : 'Transactions';
 
     final permissions = ref.watch(permissionServiceProvider);
@@ -365,8 +368,7 @@ class _PaginationBar extends ConsumerWidget {
         ),
         IconButton(
           tooltip: 'Next page',
-          onPressed:
-              canGoNext ? () => notifier.setPage(currentPage + 1) : null,
+          onPressed: canGoNext ? () => notifier.setPage(currentPage + 1) : null,
           icon: const Icon(Icons.chevron_right_rounded),
         ),
       ],

@@ -240,10 +240,13 @@ class AddItemFormState {
   final PriceTaxMode wholesalePriceTaxMode;
   final bool wholesaleSectionVisible;
   final double minWholesaleQty;
+
   /// Unit for [minWholesaleQty]; defaults to [baseUnitId] when null.
   final String? minWholesaleQtyUnitId;
+
   /// Display unit for [openingQty] (stored in [baseUnitId]); defaults to base.
   final String? openingQtyUnitId;
+
   /// Display unit for [minStock] (stored in base unit); defaults to base.
   final String? minStockUnitId;
   final double openingQty;
@@ -264,6 +267,7 @@ class AddItemFormState {
   final String? defaultSupplierPartyId;
   final bool itemNameError;
   final bool baseUnitError;
+
   /// Server / extra validation messages keyed by API field name.
   final Map<String, String> fieldErrors;
   final bool isDirty;
@@ -421,7 +425,9 @@ class AddItemFormState {
           : (defaultSupplierPartyId ?? this.defaultSupplierPartyId),
       itemNameError: itemNameError ?? this.itemNameError,
       baseUnitError: baseUnitError ?? this.baseUnitError,
-      fieldErrors: clearFieldErrors ? const {} : (fieldErrors ?? this.fieldErrors),
+      fieldErrors: clearFieldErrors
+          ? const {}
+          : (fieldErrors ?? this.fieldErrors),
       isDirty: isDirty ?? this.isDirty,
     );
   }

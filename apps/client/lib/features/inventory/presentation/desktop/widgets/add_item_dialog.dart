@@ -262,9 +262,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final form = ref.read(addItemFormProvider);
     final units = ref.read(unitsProvider);
     if (form.baseUnitId == null) return null;
-    return units
-        .where((unit) => unit.id == form.baseUnitId)
-        .firstOrNull;
+    return units.where((unit) => unit.id == form.baseUnitId).firstOrNull;
   }
 
   @override
@@ -425,7 +423,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           _syncMrpSaleDiscountController();
         }
       }
-      if (detailDto.reorderLevel != null && detailDto.reorderLevel!.isNotEmpty) {
+      if (detailDto.reorderLevel != null &&
+          detailDto.reorderLevel!.isNotEmpty) {
         final reorderLevel = double.tryParse(detailDto.reorderLevel!);
         if (reorderLevel != null) {
           notifier.updateMinStock(reorderLevel);
@@ -533,8 +532,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     try {
       await ref.read(itemSuppliersProvider.notifier).ensureInitialized();
-      final localSuppliers =
-          ref.read(itemSuppliersProvider.notifier).suppliersFor(item.id);
+      final localSuppliers = ref
+          .read(itemSuppliersProvider.notifier)
+          .suppliersFor(item.id);
       if (localSuppliers.isNotEmpty) {
         final formState = ref.read(addItemFormProvider);
         final parties = ref.read(partiesListProvider);
@@ -550,7 +550,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
 
     try {
-      final bom = await ref.read(itemBomProvider.notifier).fetchForItem(item.id);
+      final bom = await ref
+          .read(itemBomProvider.notifier)
+          .fetchForItem(item.id);
       notifier.setBomFromModel(bom);
     } on Object {
       // BOM cache is best-effort.
@@ -802,7 +804,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     try {
       final service = await ref.read(inventoryServiceProvider.future);
-      final defaultGodown = form.godownId ?? (await service.getDefaultGodown())?.id;
+      final defaultGodown =
+          form.godownId ?? (await service.getDefaultGodown())?.id;
       if (defaultGodown == null) return;
 
       var locationId = _rackLocationId;
@@ -925,7 +928,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           isPrimary: isPrimary,
         );
         ref.read(itemImagesProvider(itemId).notifier).upsert(uploaded);
-        unawaited(ref.read(itemImagesProvider(itemId).notifier).refreshInBackground());
+        unawaited(
+          ref.read(itemImagesProvider(itemId).notifier).refreshInBackground(),
+        );
         if (isPrimary) {
           ref
               .read(inventoryItemsProvider.notifier)
@@ -1154,31 +1159,31 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     if (_isMobileFullPage) {
       return _wrapWithCloseGuard(
         AnnotatedRegion<SystemUiOverlayStyle>(
-        value: AppTheme.lightSystemUi,
-        child: Scaffold(
-          backgroundColor: AppColors.surface,
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildHeader(form),
-                Expanded(
-                  child: ColoredBox(
-                    color: AppColors.background,
-                    child: SingleChildScrollView(
-                      controller: _mobileFormScrollController,
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      child: formBody,
+          value: AppTheme.lightSystemUi,
+          child: Scaffold(
+            backgroundColor: AppColors.surface,
+            body: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(form),
+                  Expanded(
+                    child: ColoredBox(
+                      color: AppColors.background,
+                      child: SingleChildScrollView(
+                        controller: _mobileFormScrollController,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: formBody,
+                      ),
                     ),
                   ),
-                ),
-                _buildFooter(),
-              ],
+                  _buildFooter(),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       );
     }
 
@@ -1277,8 +1282,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     onDescriptionChanged: notifier.updateDescription,
                     onAssignCode: () {
                       notifier.assignCode();
-                      _itemCodeController.text =
-                          ref.read(addItemFormProvider).itemCode;
+                      _itemCodeController.text = ref
+                          .read(addItemFormProvider)
+                          .itemCode;
                     },
                     selectedCategoryId: form.categoryId,
                     selectedCategory: selectedCategory,
@@ -1358,7 +1364,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     String? selectedBrand,
     ItemSettings itemSettings,
   ) {
-    final showBarcodeScan = form.itemType == ItemType.product &&
+    final showBarcodeScan =
+        form.itemType == ItemType.product &&
         itemSettings.barcodeScanningEnabled;
 
     return Column(
@@ -2095,7 +2102,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textPrimary,
                 side: const BorderSide(color: _cardBorder),
-                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
+                minimumSize: Size(
+                  compact ? double.infinity : 0,
+                  FormSpacing.inputHeight,
+                ),
                 padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
@@ -2110,7 +2120,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               onPressed: _isSaving ? null : () => _save(saveAndNew: false),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
+                minimumSize: Size(
+                  compact ? double.infinity : 0,
+                  FormSpacing.inputHeight,
+                ),
                 padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 28),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),

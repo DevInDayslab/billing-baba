@@ -114,7 +114,9 @@ class MobileHomeTabBar extends StatelessWidget {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeInOutCubic,
-                    left: activeIndex * tabWidth + (tabWidth - indicatorWidth) / 2,
+                    left:
+                        activeIndex * tabWidth +
+                        (tabWidth - indicatorWidth) / 2,
                     bottom: 6,
                     width: indicatorWidth,
                     height: 2.5,

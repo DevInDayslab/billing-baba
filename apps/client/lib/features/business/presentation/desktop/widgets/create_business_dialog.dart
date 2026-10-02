@@ -133,7 +133,9 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   void initState() {
     super.initState();
     _businessNameController.addListener(() => setState(() {}));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _focusBusinessNameField());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _focusBusinessNameField(),
+    );
   }
 
   void _focusBusinessNameField() {
@@ -167,7 +169,8 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
       }
     }
     if (gstin == null) {
-      for (final business in auth.session?.businesses ?? const <BusinessSummary>[]) {
+      for (final business
+          in auth.session?.businesses ?? const <BusinessSummary>[]) {
         final value = business.gstin?.trim();
         if (value != null && value.isNotEmpty) {
           gstin = value;
@@ -946,8 +949,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
                 ),
                 child: Material(
                   color: Colors.transparent,
-                  borderRadius:
-                      BorderRadius.circular(_fieldBorderRadius),
+                  borderRadius: BorderRadius.circular(_fieldBorderRadius),
                   clipBehavior: Clip.antiAlias,
                   child: signaturePreviewBytes != null
                       ? SizedBox(
@@ -1015,8 +1017,9 @@ class _CreateBusinessFormContent extends StatelessWidget {
                         )
                       : InkWell(
                           onTap: onPickSignature,
-                          borderRadius:
-                              BorderRadius.circular(_fieldBorderRadius),
+                          borderRadius: BorderRadius.circular(
+                            _fieldBorderRadius,
+                          ),
                           child: SizedBox(
                             height: _signaturePreviewHeight,
                             child: Column(

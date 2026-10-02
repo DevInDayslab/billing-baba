@@ -47,8 +47,8 @@ class PartyPageTitleBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final permissions = ref.watch(permissionServiceProvider);
-    final addAction = !_isHiddenLedgerView &&
-            permissions.canCreate(PermissionModule.party)
+    final addAction =
+        !_isHiddenLedgerView && permissions.canCreate(PermissionModule.party)
         ? (_isGroupsView ? onAddGroup : onAddParty)
         : null;
     final pageLabel = PartySubRoutes.labelForRoute(currentRoute);

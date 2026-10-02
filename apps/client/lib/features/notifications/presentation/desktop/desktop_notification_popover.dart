@@ -111,7 +111,9 @@ class _DesktopNotificationPopoverPanelState
   var _actionsMenuOpen = false;
 
   Future<void> _onNotificationTap(AppNotification notification) async {
-    await ref.read(notificationActionsProvider.notifier).markRead(notification.id);
+    await ref
+        .read(notificationActionsProvider.notifier)
+        .markRead(notification.id);
     widget.onClose();
     if (!mounted) return;
     NotificationNavigation.navigate(GoRouter.of(context), notification);

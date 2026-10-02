@@ -226,8 +226,7 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
       final rate = double.tryParse(_rateController.text.trim());
       if (rate == null || rate <= 0) {
         setState(
-          () => _errorMessage =
-              'Enter a valid conversion rate greater than 0',
+          () => _errorMessage = 'Enter a valid conversion rate greater than 0',
         );
         return;
       }
@@ -283,9 +282,7 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
     final secondaryUnit = _unitById(units, _secondaryUnitId);
     final secondaryUnitOptions = [
       'None',
-      ...units
-          .where((unit) => unit.id != _baseUnitId)
-          .map(_unitOptionLabel),
+      ...units.where((unit) => unit.id != _baseUnitId).map(_unitOptionLabel),
     ];
     final hasError = _errorMessage != null;
 
@@ -312,7 +309,9 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
                   ),
                 ),
                 IconButton(
-                  onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                  onPressed: _isSaving
+                      ? null
+                      : () => Navigator.of(context).pop(),
                   icon: const Icon(
                     Icons.close,
                     color: AppColors.textSecondary,
@@ -384,7 +383,8 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
                       value: _unitOptionLabelFromId(units, _secondaryUnitId),
                       options: secondaryUnitOptions,
                       hasError: _unitsConflict,
-                      onSelected: (label) => _onSecondaryUnitSelected(units, label),
+                      onSelected: (label) =>
+                          _onSecondaryUnitSelected(units, label),
                     ),
                   ),
                 ],
@@ -396,7 +396,9 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
                   style: TextStyle(fontSize: 12, color: AppColors.error),
                 ),
               ],
-              if (_showConversionRate && baseUnit != null && secondaryUnit != null) ...[
+              if (_showConversionRate &&
+                  baseUnit != null &&
+                  secondaryUnit != null) ...[
                 const SizedBox(height: AppSpacing.lg),
                 const Text(
                   'Conversion Rates',

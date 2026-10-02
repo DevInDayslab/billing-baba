@@ -166,21 +166,21 @@ class MobileHomeQuickActions extends ConsumerWidget {
     final sections = [
       MobileQuickActionSection(
         title: 'SALE',
-        actions: QuickCreateActions.forCategory(QuickCreateCategory.sale)
-            .map(mobileAction)
-            .toList(),
+        actions: QuickCreateActions.forCategory(
+          QuickCreateCategory.sale,
+        ).map(mobileAction).toList(),
       ),
       MobileQuickActionSection(
         title: 'PURCHASE',
-        actions: QuickCreateActions.forCategory(QuickCreateCategory.purchase)
-            .map(mobileAction)
-            .toList(),
+        actions: QuickCreateActions.forCategory(
+          QuickCreateCategory.purchase,
+        ).map(mobileAction).toList(),
       ),
       MobileQuickActionSection(
         title: 'OTHERS',
-        actions: QuickCreateActions.forCategory(QuickCreateCategory.others)
-            .map(mobileAction)
-            .toList(),
+        actions: QuickCreateActions.forCategory(
+          QuickCreateCategory.others,
+        ).map(mobileAction).toList(),
       ),
     ];
 

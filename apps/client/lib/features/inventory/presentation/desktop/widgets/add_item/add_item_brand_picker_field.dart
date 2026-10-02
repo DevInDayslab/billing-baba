@@ -29,7 +29,8 @@ class AddItemBrandPickerField extends StatefulWidget {
   final double? triggerHeight;
 
   @override
-  State<AddItemBrandPickerField> createState() => _AddItemBrandPickerFieldState();
+  State<AddItemBrandPickerField> createState() =>
+      _AddItemBrandPickerFieldState();
 }
 
 class _AddItemBrandPickerFieldState extends State<AddItemBrandPickerField> {

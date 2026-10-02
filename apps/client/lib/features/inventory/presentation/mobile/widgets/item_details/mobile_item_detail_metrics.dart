@@ -104,7 +104,8 @@ class _MobileItemDetailMetricsState extends State<MobileItemDetailMetrics> {
         ? [
             _MetricTile(
               label: 'Stock Value',
-              value: widget.stockSummary?.stockValue != null &&
+              value:
+                  widget.stockSummary?.stockValue != null &&
                       widget.stockSummary!.stockValue! > 0
                   ? _currencyFormat.format(widget.stockSummary!.stockValue)
                   : inventoryEmDash,
@@ -127,8 +128,9 @@ class _MobileItemDetailMetricsState extends State<MobileItemDetailMetrics> {
       if (isProduct && widget.latestStockUpdate != null) ...[
         _DetailRow(
           label: 'Last Stock Update',
-          value: DateFormat('dd MMM yyyy, hh:mm a')
-              .format(widget.latestStockUpdate!.updatedAt.toLocal()),
+          value: DateFormat(
+            'dd MMM yyyy, hh:mm a',
+          ).format(widget.latestStockUpdate!.updatedAt.toLocal()),
         ),
         _DetailRow(
           label: 'Updated By',

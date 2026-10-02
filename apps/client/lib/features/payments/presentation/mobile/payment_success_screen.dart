@@ -37,7 +37,11 @@ class PaymentSuccessScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(Icons.check_circle_rounded, size: 72, color: AppColors.success),
+            Icon(
+              Icons.check_circle_rounded,
+              size: 72,
+              color: AppColors.success,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               amount,

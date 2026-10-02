@@ -175,8 +175,7 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_scannerOpen)
-                  const SizedBox(height: _stripHeight),
+                if (_scannerOpen) const SizedBox(height: _stripHeight),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -32,7 +32,10 @@ class MobilePosTerminalView extends StatelessWidget {
               Text(
                 'Open the POS billing screen to start selling.',
                 textAlign: TextAlign.center,
-                style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+                style: AppTypography.inter(
+                  fontSize: AppTypography.bodySize,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton.icon(

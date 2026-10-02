@@ -236,7 +236,6 @@ abstract final class MobileMenuCatalog {
         route: AppRoutes.collaborationSyncShare,
         section: MobileMenuSection.utilities,
       ),
-    
   ];
 
   static const _settingsAccordion = MobileMenuItem(

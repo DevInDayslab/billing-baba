@@ -12,10 +12,12 @@ class TodoLocalSource {
   final AppDatabase _db;
 
   Future<int> countActive(String businessId) async {
-    final rows = await (_db.select(_db.todosLocal)..where(
-          (t) => t.businessId.equals(businessId) & t.isDeleted.equals(false),
-        ))
-        .get();
+    final rows =
+        await (_db.select(_db.todosLocal)..where(
+              (t) =>
+                  t.businessId.equals(businessId) & t.isDeleted.equals(false),
+            ))
+            .get();
     return rows.length;
   }
 
@@ -69,7 +71,10 @@ class TodoLocalSource {
     required String id,
     required String businessId,
     required String title,
-    required int syncVersion, required DateTime createdAt, required DateTime updatedAt, String? description,
+    required int syncVersion,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    String? description,
     String priority = 'medium',
     String? category,
     String? partyId,

@@ -165,8 +165,7 @@ class BusinessCardMenu extends StatelessWidget {
           ),
         ),
       ],
-      CompanyRelationship.secondaryAdmin ||
-      CompanyRelationship.member => [
+      CompanyRelationship.secondaryAdmin || CompanyRelationship.member => [
         const PopupMenuItem(
           value: CompanyCardMenuAction.leave,
           child: _MenuRow(icon: Icons.logout, label: 'Leave'),

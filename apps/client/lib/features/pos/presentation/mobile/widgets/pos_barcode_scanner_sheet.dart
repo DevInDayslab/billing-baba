@@ -35,7 +35,8 @@ class PosBarcodeScannerLayer extends ConsumerStatefulWidget {
       _PosBarcodeScannerLayerState();
 }
 
-class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer> {
+class _PosBarcodeScannerLayerState
+    extends ConsumerState<PosBarcodeScannerLayer> {
   bool _isHardwareMode = false;
   bool? _cameraAvailable;
   final _cameraHandler = BarcodeScanHandler(
@@ -166,7 +167,8 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
                 controller: widget.controller,
                 onDetect: _onBarcodeDetected,
                 errorBuilder: (context, error) => _CameraScannerErrorState(
-                  message: error.errorDetails?.message ??
+                  message:
+                      error.errorDetails?.message ??
                       'Unable to access the camera.',
                   onRetry: () => unawaited(widget.controller.start()),
                 ),
@@ -225,8 +227,9 @@ class _ScannerModeToggle extends StatelessWidget {
     final shellColor = onDarkBackground
         ? Colors.black.withValues(alpha: 0.45)
         : Colors.grey.shade200;
-    final unselectedIconColor =
-        onDarkBackground ? Colors.white70 : AppColors.textSecondary;
+    final unselectedIconColor = onDarkBackground
+        ? Colors.white70
+        : AppColors.textSecondary;
 
     return DecoratedBox(
       decoration: BoxDecoration(

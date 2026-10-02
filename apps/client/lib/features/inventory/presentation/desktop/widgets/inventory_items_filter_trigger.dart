@@ -100,8 +100,7 @@ class _InventoryItemsFilterTriggerState
   Widget build(BuildContext context) {
     final isActive = widget.initialFilters.hasActiveFilters;
     final iconSize = widget.compact ? 14.0 : 20.0;
-    final iconColor =
-        isActive ? AppColors.error : AppColors.textSecondary;
+    final iconColor = isActive ? AppColors.error : AppColors.textSecondary;
 
     if (widget.compact) {
       return CompositedTransformTarget(

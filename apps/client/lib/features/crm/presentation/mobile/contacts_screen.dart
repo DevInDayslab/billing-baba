@@ -58,10 +58,13 @@ class MobileContactsScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       [
-                        contact.phone,
-                        contact.email,
-                        contact.accountName,
-                      ].whereType<String>().where((v) => v.isNotEmpty).join(' · '),
+                            contact.phone,
+                            contact.email,
+                            contact.accountName,
+                          ]
+                          .whereType<String>()
+                          .where((v) => v.isNotEmpty)
+                          .join(' · '),
                     ),
                   ),
                 );

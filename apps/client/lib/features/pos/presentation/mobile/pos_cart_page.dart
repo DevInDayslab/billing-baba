@@ -81,7 +81,9 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
 
   void _onCustomerNameChanged() {
     final trimmed = _customerNameController.text.trim();
-    ref.read(posCartProvider.notifier).setCustomerName(
+    ref
+        .read(posCartProvider.notifier)
+        .setCustomerName(
           trimmed.isEmpty ? null : trimmed,
         );
   }
@@ -191,11 +193,11 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
   }
 
   String _paymentModeLabel(PaymentMode mode) => switch (mode) {
-        PaymentMode.cash => 'Cash',
-        PaymentMode.upi => 'UPI',
-        PaymentMode.card => 'Card',
-        PaymentMode.bank => 'Bank',
-      };
+    PaymentMode.cash => 'Cash',
+    PaymentMode.upi => 'UPI',
+    PaymentMode.card => 'Card',
+    PaymentMode.bank => 'Bank',
+  };
 
   String _selectedPaymentLabel(PosCartState cart) {
     if (cart.payments.isEmpty) return 'None';
@@ -242,8 +244,8 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
           backgroundColor: AppColors.error,
         ),
       );
-    // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
-    // ignore: avoid_catching_errors
+      // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
+      // ignore: avoid_catching_errors
     } on StateError catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -280,8 +282,8 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
           backgroundColor: AppColors.error,
         ),
       );
-    // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
-    // ignore: avoid_catching_errors
+      // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
+      // ignore: avoid_catching_errors
     } on StateError catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -571,8 +573,8 @@ class _CustomerSectionState extends State<_CustomerSection> {
     return InputDecoration(
       hintText: hint,
       hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+        color: AppColors.textSecondary,
+      ),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       border: const UnderlineInputBorder(borderSide: borderSide),
@@ -1145,10 +1147,9 @@ class _TotalsCardState extends State<_TotalsCard> {
       _showCustomDiscountInput = true;
       final current = widget.cartState.billDiscountPercent;
       if (current > 0 && !_billDiscountChips.contains(current)) {
-        _customDiscountController.text =
-            current == current.roundToDouble()
-                ? current.toStringAsFixed(0)
-                : current.toString();
+        _customDiscountController.text = current == current.roundToDouble()
+            ? current.toStringAsFixed(0)
+            : current.toString();
       } else {
         _customDiscountController.clear();
       }
@@ -1350,7 +1351,8 @@ class _TotalsCardState extends State<_TotalsCard> {
               const SizedBox(height: AppSpacing.sm),
               _TotalRow(
                 label: 'Bill Discount',
-                value: '-${_currencyFormat.format(cartState.billDiscountAmount)}',
+                value:
+                    '-${_currencyFormat.format(cartState.billDiscountAmount)}',
                 valueColor: AppColors.error,
               ),
             ],
@@ -1450,8 +1452,7 @@ class _TotalsCardState extends State<_TotalsCard> {
               color: Colors.transparent,
               child: CheckboxListTile(
                 value: widget.isFullyPaid,
-                onChanged: (value) =>
-                    widget.onFullyPaidChanged(value ?? false),
+                onChanged: (value) => widget.onFullyPaidChanged(value ?? false),
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 activeColor: AppColors.primary,
@@ -1917,8 +1918,8 @@ class _DashedDivider extends StatelessWidget {
       builder: (context, constraints) {
         const dashWidth = 4.0;
         const dashSpace = 4.0;
-        final dashCount =
-            (constraints.maxWidth / (dashWidth + dashSpace)).floor();
+        final dashCount = (constraints.maxWidth / (dashWidth + dashSpace))
+            .floor();
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

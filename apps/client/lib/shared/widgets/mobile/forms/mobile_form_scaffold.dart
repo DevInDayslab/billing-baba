@@ -117,8 +117,7 @@ class MobileFormScaffold extends StatelessWidget {
                           const CircularProgressIndicator(),
                           const SizedBox(height: AppSpacing.md),
                           Text(
-                            loadingLabel ??
-                                (isSaving ? 'Saving…' : 'Loading…'),
+                            loadingLabel ?? (isSaving ? 'Saving…' : 'Loading…'),
                           ),
                         ],
                       ),

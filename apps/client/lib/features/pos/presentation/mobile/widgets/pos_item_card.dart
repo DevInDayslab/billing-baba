@@ -128,8 +128,7 @@ class PosItemCard extends ConsumerWidget {
                               context,
                               itemName: item.name,
                               initialQuantity: cartQty,
-                              maxQuantity:
-                                  item.stock > 0 ? item.stock : null,
+                              maxQuantity: item.stock > 0 ? item.stock : null,
                             );
                             if (qty == null || !context.mounted) return;
                             cart.updateQuantity(item.id, qty);

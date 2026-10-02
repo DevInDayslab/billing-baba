@@ -66,9 +66,7 @@ class _MobileItemPickerSheetState extends ConsumerState<MobileItemPickerSheet> {
     final item = _selected;
     if (item == null) return;
     final qty = double.tryParse(_qtyController.text) ?? 0;
-    final price = double.tryParse(_priceController.text) ??
-        item.salePrice ??
-        0;
+    final price = double.tryParse(_priceController.text) ?? item.salePrice ?? 0;
     if (qty <= 0) return;
     Navigator.of(context).pop(
       MobileItemPickResult(

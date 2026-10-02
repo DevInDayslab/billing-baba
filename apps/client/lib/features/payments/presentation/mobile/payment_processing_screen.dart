@@ -11,7 +11,8 @@ class PaymentProcessingScreen extends ConsumerStatefulWidget {
       _PaymentProcessingScreenState();
 }
 
-class _PaymentProcessingScreenState extends ConsumerState<PaymentProcessingScreen>
+class _PaymentProcessingScreenState
+    extends ConsumerState<PaymentProcessingScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
 

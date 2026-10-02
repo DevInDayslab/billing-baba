@@ -213,8 +213,7 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
                           searchQuery.isNotEmpty
                               ? 'No tasks match your search'
                               : switch (_statusChip) {
-                                  DashboardTodoStatusChip.all =>
-                                    'No tasks yet',
+                                  DashboardTodoStatusChip.all => 'No tasks yet',
                                   DashboardTodoStatusChip.today =>
                                     'Nothing due today',
                                   DashboardTodoStatusChip.overdue =>

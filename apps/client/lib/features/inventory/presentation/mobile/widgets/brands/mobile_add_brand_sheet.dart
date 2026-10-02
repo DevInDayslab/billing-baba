@@ -166,7 +166,10 @@ class _AddBrandSheetBodyState extends ConsumerState<_AddBrandSheetBody> {
                 iconSize: 22,
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                constraints: const BoxConstraints.tightFor(
+                  width: 36,
+                  height: 36,
+                ),
               ),
             ],
           ),
@@ -211,11 +214,11 @@ class _AddBrandSheetBodyState extends ConsumerState<_AddBrandSheetBody> {
                         )
                       : Text(
                           actionLabel,
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                 ),
               ),

@@ -47,7 +47,10 @@ class MobileScopedTransactionPage extends ConsumerWidget {
       filterMatcher: MobileTransactionCatalog.statusFilterMatcher,
       onRefresh: () => refreshMobileTransactionItems(ref, definition.scopeId),
       onItemTap: (item) {
-        final detailRoute = MobileTransactionMapper.detailRouteFor(route, item.id);
+        final detailRoute = MobileTransactionMapper.detailRouteFor(
+          route,
+          item.id,
+        );
         if (detailRoute != null) {
           context.push(detailRoute);
         } else {

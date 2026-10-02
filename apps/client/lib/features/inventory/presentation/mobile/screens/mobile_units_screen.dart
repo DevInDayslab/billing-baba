@@ -57,7 +57,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
       final trimmed = query.trim();
       ref.read(unitBackendSearchProvider.notifier).query = trimmed;
       unawaited(
-        ref.read(inventoryUnitsProvider.notifier).refresh(
+        ref
+            .read(inventoryUnitsProvider.notifier)
+            .refresh(
               searchQuery: trimmed.isEmpty ? null : trimmed,
             ),
       );
@@ -65,7 +67,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryUnitsProvider.notifier).refresh(
+    return ref
+        .read(inventoryUnitsProvider.notifier)
+        .refresh(
           searchQuery: ref.read(unitBackendSearchProvider),
         );
   }
@@ -99,8 +103,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final error =
-        await ref.read(inventoryUnitsProvider.notifier).deleteUnit(unit.id);
+    final error = await ref
+        .read(inventoryUnitsProvider.notifier)
+        .deleteUnit(unit.id);
     if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,7 +190,8 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
 
   Future<void> _showItemsForUnit(InventoryUnit unit) async {
     final items =
-        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
+        ref.read(inventoryItemsProvider).value?.items ??
+        const <InventoryItem>[];
     final shortName = unit.shortName.toLowerCase();
     final matching = items
         .where(
@@ -325,12 +331,14 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                     title: 'No units found',
                     message: 'Add a unit to measure your inventory items.',
                     icon: Icons.straighten_outlined,
-                    actionLabel: ref
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Unit'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addUnit())
@@ -356,10 +364,13 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                           ),
                           itemBuilder: (context, index) {
                             final unit = units[index];
-                            final isExpanded = _expandedUnitIds.contains(unit.id);
+                            final isExpanded = _expandedUnitIds.contains(
+                              unit.id,
+                            );
                             final hasConversions = _hasConversions(unit);
-                            final permissions =
-                                ref.read(permissionServiceProvider);
+                            final permissions = ref.read(
+                              permissionServiceProvider,
+                            );
                             return _UnitListTile(
                               unit: unit,
                               isExpanded: isExpanded,
@@ -525,17 +536,19 @@ class _UnitListTile extends StatelessWidget {
                       children: [
                         Text(
                           unit.fullName.toUpperCase(),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           unit.shortName,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                         ),
                       ],
                     ),
@@ -577,9 +590,7 @@ class _UnitListTile extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   conversion.label,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: AppColors.textPrimary,
                                       ),
@@ -587,9 +598,7 @@ class _UnitListTile extends StatelessWidget {
                               ),
                               Text(
                                 '${conversion.factor}x',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),

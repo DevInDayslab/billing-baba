@@ -101,8 +101,7 @@ Future<String> resolveImageUrl({
   String? fallbackUrl,
   MediaImageUrlResolver? resolver,
 }) async {
-  final assetId =
-      sourceMediaAssetId?.trim().isNotEmpty == true
+  final assetId = sourceMediaAssetId?.trim().isNotEmpty == true
       ? sourceMediaAssetId!.trim()
       : extractMediaAssetIdFromUrl(fallbackUrl);
 
@@ -150,7 +149,6 @@ List<String> mediaAssetCacheKeys(String mediaAssetId) {
   final assetId = mediaAssetId.trim();
   return [
     'media:$assetId:source',
-    ...ImageVariant.values
-      .map((variant) => 'media:$assetId:${variant.name}'),
+    ...ImageVariant.values.map((variant) => 'media:$assetId:${variant.name}'),
   ];
 }

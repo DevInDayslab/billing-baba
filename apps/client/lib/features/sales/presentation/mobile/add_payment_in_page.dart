@@ -178,8 +178,9 @@ class _MobileAddPaymentInPageState
 
     if (_receivedController.text != form.receivedAmount.toStringAsFixed(2) &&
         !form.isSaving) {
-      _receivedController.text =
-          form.receivedAmount > 0 ? form.receivedAmount.toStringAsFixed(2) : '';
+      _receivedController.text = form.receivedAmount > 0
+          ? form.receivedAmount.toStringAsFixed(2)
+          : '';
     }
     if (_receiptController.text != form.receiptNo && !form.isSaving) {
       _receiptController.text = form.receiptNo;
@@ -200,7 +201,10 @@ class _MobileAddPaymentInPageState
           const MobileOfflineBanner(),
           const PaymentRecoveryBanner(),
           if (form.saveError != null)
-            Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
+            Text(
+              form.saveError!,
+              style: const TextStyle(color: AppColors.error),
+            ),
           MobileDocumentPartySection(
             visibility: _visibility,
             useInlinePartySearch: false,
@@ -252,8 +256,9 @@ class _MobileAddPaymentInPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Receipt No',
-            documentNumberValue:
-                form.receiptNo.isEmpty ? 'Auto' : form.receiptNo,
+            documentNumberValue: form.receiptNo.isEmpty
+                ? 'Auto'
+                : form.receiptNo,
             documentNumberIsPlaceholder: form.receiptNo.isEmpty,
             onDocumentNumberTap: () async {
               // Keep editable via field below for clarity on mobile.

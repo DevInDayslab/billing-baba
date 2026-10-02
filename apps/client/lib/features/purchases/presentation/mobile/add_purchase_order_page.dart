@@ -33,7 +33,8 @@ class MobileAddPurchaseOrderPage extends ConsumerStatefulWidget {
 
 class _MobileAddPurchaseOrderPageState
     extends ConsumerState<MobileAddPurchaseOrderPage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.purchaseOrder;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.purchaseOrder;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
 
@@ -43,8 +44,9 @@ class _MobileAddPurchaseOrderPageState
     _descriptionController = TextEditingController();
     _termsTextController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final form =
-          ref.read(addPurchaseOrderFormProvider(orderId: widget.orderId));
+      final form = ref.read(
+        addPurchaseOrderFormProvider(orderId: widget.orderId),
+      );
       _descriptionController.text = form.description;
       _termsTextController.text = form.termsNotes;
     });
@@ -61,8 +63,8 @@ class _MobileAddPurchaseOrderPageState
       ref.watch(addPurchaseOrderFormProvider(orderId: widget.orderId));
 
   AddPurchaseOrderForm _notifier() => ref.read(
-        addPurchaseOrderFormProvider(orderId: widget.orderId).notifier,
-      );
+    addPurchaseOrderFormProvider(orderId: widget.orderId).notifier,
+  );
 
   Future<bool> _handleClose() async {
     if (_form().isSaving) return false;
@@ -106,7 +108,9 @@ class _MobileAddPurchaseOrderPageState
     final error = await _notifier().saveOrder();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final docId = _form().documentId;
@@ -136,8 +140,9 @@ class _MobileAddPurchaseOrderPageState
   Widget build(BuildContext context) {
     final form = _form();
     final notifier = _notifier();
-    final confirmed =
-        form.items.where((item) => item.itemName.trim().isNotEmpty).toList();
+    final confirmed = form.items
+        .where((item) => item.itemName.trim().isNotEmpty)
+        .toList();
 
     return MobileDocumentFormScaffold(
       title: widget.orderId != null ? 'Edit Purchase Order' : 'Purchase Order',
@@ -151,12 +156,16 @@ class _MobileAddPurchaseOrderPageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (form.saveError != null)
-            Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
+            Text(
+              form.saveError!,
+              style: const TextStyle(color: AppColors.error),
+            ),
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Order No.',
-            documentNumberValue:
-                form.orderNumber.isEmpty ? 'Auto' : form.orderNumber,
+            documentNumberValue: form.orderNumber.isEmpty
+                ? 'Auto'
+                : form.orderNumber,
             documentNumberIsPlaceholder: form.orderNumber.isEmpty,
             dateValue: formatSaleSingleDate(form.orderDate),
             dateIsPlaceholder: form.orderDate == null,
@@ -205,8 +214,9 @@ class _MobileAddPurchaseOrderPageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),
@@ -229,8 +239,9 @@ class _MobileAddPurchaseOrderPageState
                   name: item.itemName,
                   qtyLabel:
                       '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
-                  amountLabel:
-                      MobileDocumentItemsSection.formatAmount(item.amount),
+                  amountLabel: MobileDocumentItemsSection.formatAmount(
+                    item.amount,
+                  ),
                 ),
             ],
             onAddItems: () => unawaited(_addLine()),

@@ -39,14 +39,17 @@ class _ResizableVerticalSplitState extends State<ResizableVerticalSplit> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final available = constraints.maxHeight - ResizableVerticalSplit.dividerHeight;
+        final available =
+            constraints.maxHeight - ResizableVerticalSplit.dividerHeight;
         if (available <= 0) {
           return const SizedBox.shrink();
         }
 
         final maxTop = available - widget.minBottomHeight;
         final minTop = widget.minTopHeight.clamp(0, maxTop).toDouble();
-        final topHeight = (available * widget.ratio).clamp(minTop, maxTop).toDouble();
+        final topHeight = (available * widget.ratio)
+            .clamp(minTop, maxTop)
+            .toDouble();
         final bottomHeight = available - topHeight;
         final isActive = _isDragging || _isHovering;
 
@@ -62,7 +65,9 @@ class _ResizableVerticalSplitState extends State<ResizableVerticalSplit> {
               onHover: (hovering) => setState(() => _isHovering = hovering),
               onDragStart: () => setState(() => _isDragging = true),
               onDragUpdate: (delta) {
-                final newTop = (topHeight + delta).clamp(minTop, maxTop).toDouble();
+                final newTop = (topHeight + delta)
+                    .clamp(minTop, maxTop)
+                    .toDouble();
                 widget.onRatioChanged(newTop / available);
               },
               onDragEnd: () => setState(() {

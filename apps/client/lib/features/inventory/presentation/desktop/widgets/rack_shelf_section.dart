@@ -162,12 +162,14 @@ class _RackShelfSectionState extends ConsumerState<RackShelfSection> {
       widget.onPhotoChanged?.call(url);
       widget.onHistoryRefresh?.call();
       unawaited(
-        ref.read(imageServiceProvider).replaceImage(
-          oldUrl: previousUrl,
-          newUrl: url,
-          oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
-          newCacheKey: buildImageCacheKey(fallbackUrl: url),
-        ),
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
+              oldUrl: previousUrl,
+              newUrl: url,
+              oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+              newCacheKey: buildImageCacheKey(fallbackUrl: url),
+            ),
       );
     } on Exception catch (error) {
       if (mounted) {
@@ -195,10 +197,12 @@ class _RackShelfSectionState extends ConsumerState<RackShelfSection> {
       setState(() => _photoUrl = null);
       widget.onPhotoChanged?.call(null);
       unawaited(
-        ref.read(imageServiceProvider).invalidateImage(
-          url: previousUrl,
-          cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
-        ),
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
+              url: previousUrl,
+              cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+            ),
       );
     } on Exception catch (error) {
       if (mounted) {
@@ -269,7 +273,9 @@ class _RackShelfSectionState extends ConsumerState<RackShelfSection> {
     _activateSection();
     if (widget.locationId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Save the item to view rack/shelf history.')),
+        const SnackBar(
+          content: Text('Save the item to view rack/shelf history.'),
+        ),
       );
       return;
     }
@@ -340,7 +346,10 @@ class _RackShelfSectionState extends ConsumerState<RackShelfSection> {
               const Expanded(
                 child: Text(
                   'Record employee for this update',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],

@@ -42,7 +42,8 @@ class MobileSyncSharePage extends ConsumerWidget {
             data: (status) {
               if (!status.isOffline) return const SizedBox.shrink();
               return const MobileOfflineBanner(
-                message: 'Collaboration sync is offline. Changes queue locally.',
+                message:
+                    'Collaboration sync is offline. Changes queue locally.',
               );
             },
           ),
@@ -82,8 +83,7 @@ class MobileSyncSharePage extends ConsumerWidget {
                   );
                 }
                 return RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(membersProvider.notifier).reload(),
+                  onRefresh: () => ref.read(membersProvider.notifier).reload(),
                   child: ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(AppSpacing.lg),

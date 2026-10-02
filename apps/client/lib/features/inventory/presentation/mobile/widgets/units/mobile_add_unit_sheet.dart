@@ -182,7 +182,10 @@ class _AddUnitSheetBodyState extends ConsumerState<_AddUnitSheetBody> {
                 iconSize: 22,
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                constraints: const BoxConstraints.tightFor(
+                  width: 36,
+                  height: 36,
+                ),
               ),
             ],
           ),
@@ -234,8 +237,8 @@ class _AddUnitSheetBodyState extends ConsumerState<_AddUnitSheetBody> {
                       child: Center(
                         child: Text(
                           'Cancel',
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -267,9 +270,7 @@ class _AddUnitSheetBodyState extends ConsumerState<_AddUnitSheetBody> {
                               )
                             : Text(
                                 'Save',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
+                                style: Theme.of(context).textTheme.labelLarge
                                     ?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w600,

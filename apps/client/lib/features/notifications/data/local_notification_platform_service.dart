@@ -30,7 +30,9 @@ class LocalNotificationPlatformService {
       tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
     }
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -50,8 +52,10 @@ class LocalNotificationPlatformService {
   }
 
   Future<void> _createAndroidChannels() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android == null) return;
 
     for (final channel in NotificationChannelId.values) {
@@ -72,14 +76,18 @@ class LocalNotificationPlatformService {
     if (!AppPlatform.current.isMobile) return false;
 
     if (AppPlatform.current.isAndroid) {
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       return await android?.requestNotificationsPermission() ?? false;
     }
 
     if (AppPlatform.current.isIOS) {
-      final ios = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       final granted = await ios?.requestPermissions(
         alert: true,
         badge: true,
@@ -95,14 +103,18 @@ class LocalNotificationPlatformService {
     if (!AppPlatform.current.isMobile) return false;
 
     if (AppPlatform.current.isAndroid) {
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       return await android?.areNotificationsEnabled() ?? false;
     }
 
     if (AppPlatform.current.isIOS) {
-      final ios = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       final settings = await ios?.checkPermissions();
       return settings?.isEnabled ?? false;
     }

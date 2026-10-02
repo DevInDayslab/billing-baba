@@ -144,7 +144,9 @@ class _MobileAddSaleDocumentPageState
     final error = await _notifier().save();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
 
@@ -165,7 +167,11 @@ class _MobileAddSaleDocumentPageState
       _descriptionController.clear();
       _termsTextController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.documentType.saveSuccessMessage}. Ready for new.')),
+        SnackBar(
+          content: Text(
+            '${widget.documentType.saveSuccessMessage}. Ready for new.',
+          ),
+        ),
       );
       return;
     }
@@ -258,8 +264,9 @@ class _MobileAddSaleDocumentPageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),

@@ -571,8 +571,7 @@ class BusinessService {
   BusinessModel businessModelFromDetail(
     BusinessDetailDto dto, {
     String? selectedId,
-  }) =>
-      _toModel(dto, selectedId);
+  }) => _toModel(dto, selectedId);
 
   BusinessModel _toModel(BusinessDetailDto dto, String? selectedId) {
     return BusinessModel(

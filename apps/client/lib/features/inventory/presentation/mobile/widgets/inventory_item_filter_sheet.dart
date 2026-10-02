@@ -135,11 +135,12 @@ class _InventoryItemFilterBodyState
   @override
   Widget build(BuildContext context) {
     final brands = ref.watch(inventoryBrandsProvider).value ?? const [];
-    final categories = ref
-        .watch(inventoryCategoriesProvider)
-        .value
-        ?.where((c) => !c.isUncategorized)
-        .toList() ??
+    final categories =
+        ref
+            .watch(inventoryCategoriesProvider)
+            .value
+            ?.where((c) => !c.isUncategorized)
+            .toList() ??
         const [];
 
     return Column(

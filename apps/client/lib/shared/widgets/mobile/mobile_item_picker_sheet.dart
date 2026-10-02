@@ -97,8 +97,9 @@ class _MobileItemPickerBodyState extends ConsumerState<_MobileItemPickerBody> {
       item,
     ).availableForSale;
     final unit = item.baseUnitShortName?.trim();
-    final unitSuffix =
-        unit == null || unit.isEmpty || unit == 'NONE' ? '' : ' $unit';
+    final unitSuffix = unit == null || unit.isEmpty || unit == 'NONE'
+        ? ''
+        : ' $unit';
     return '${stock.toStringAsFixed(stock == stock.roundToDouble() ? 0 : 2)}'
         '$unitSuffix';
   }

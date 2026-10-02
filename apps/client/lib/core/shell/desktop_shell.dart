@@ -39,6 +39,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 /// Visual tokens for the desktop sidebar chrome.
 abstract final class _SidebarTokens {
   static const background = Color(0xFF1C2333);
+
   /// Pearl white — sidebar nav labels (Home, Parties, …).
   static const text = Color(0xFFFDFCFA);
   static const textActive = Color(0xFFFFFFFF);

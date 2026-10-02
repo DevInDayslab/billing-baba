@@ -52,7 +52,8 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
     _searchController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final scope = ref.read(itemSettingsProvider).value?.itemTypeScope ??
+      final scope =
+          ref.read(itemSettingsProvider).value?.itemTypeScope ??
           ItemTypeScope.productsAndServices;
       _ensureTabMatchesScope(scope);
       _syncSearchControllerFromProvider();
@@ -358,126 +359,131 @@ class _MobileItemsScreenState extends ConsumerState<MobileItemsScreen> {
                 ),
                 Expanded(
                   child: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification.metrics.pixels >=
-                          notification.metrics.maxScrollExtent - 200) {
-                        unawaited(
-                          ref.read(inventoryItemsProvider.notifier).loadMore(),
-                        );
-                      }
-                      return false;
-                    },
-                    child: CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: ItemQuickLinks(links: _quickLinks()),
-                      ),
-                      if (showTypeTabs)
-                        SliverToBoxAdapter(
-                          child: MobileAddItemTabBar(
-                            tabs: const ['Products', 'Services'],
-                            activeIndex: tabIndex,
-                            onTabSelected: _onTabSelected,
-                          ),
-                        ),
-                      SliverToBoxAdapter(
-                        child: ItemSearchBar(
-                          searchController: _searchController,
-                          onSearchChanged: _onSearchChanged,
-                          hasActiveFilter: filters.hasActiveFilters,
-                          onFilterTap: () => unawaited(_showFilterSheet()),
-                          onScanTap: () => unawaited(_onBarcodeScan()),
-                          onMoreTap: _showMoreSheet,
-                        ),
-                      ),
-                      itemsAsync.when(
-                        loading: () => displayItems.isEmpty
-                            ? const SliverFillRemaining(
-                                hasScrollBody: false,
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                            : _itemsSliver(
-                                items: displayItems,
-                                categoryNamesById: categoryNamesById,
-                              ),
-                        error: (error, _) => displayItems.isEmpty
-                            ? SliverFillRemaining(
-                                hasScrollBody: false,
-                                child: AppError(
-                                  message: InventoryErrorMapper.messageFor(
-                                    error,
-                                  ),
-                                  onRetry: () =>
-                                      ref.invalidate(inventoryItemsProvider),
-                                ),
-                              )
-                            : _itemsSliver(
-                                items: displayItems,
-                                categoryNamesById: categoryNamesById,
-                              ),
-                        data: (_) {
-                          if (displayItems.isEmpty) {
-                            return SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: MobileEmptyState(
-                                title: 'No items found',
-                                message: searchQuery.isNotEmpty ||
-                                    filters.hasActiveFilters
-                                    ? 'Try changing your search or filter.'
-                                    : emptyMessage,
-                                icon: Icons.inventory_2_outlined,
-                              ),
-                            );
-                          }
-
-                          return _itemsSliver(
-                            items: displayItems,
-                            categoryNamesById: categoryNamesById,
+                    onRefresh: _onRefresh,
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (notification.metrics.pixels >=
+                            notification.metrics.maxScrollExtent - 200) {
+                          unawaited(
+                            ref
+                                .read(inventoryItemsProvider.notifier)
+                                .loadMore(),
                           );
-                        },
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: MobileBottomNavigation.scrollBottomPadding(
-                            context,
+                        }
+                        return false;
+                      },
+                      child: CustomScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: ItemQuickLinks(links: _quickLinks()),
                           ),
-                        ),
+                          if (showTypeTabs)
+                            SliverToBoxAdapter(
+                              child: MobileAddItemTabBar(
+                                tabs: const ['Products', 'Services'],
+                                activeIndex: tabIndex,
+                                onTabSelected: _onTabSelected,
+                              ),
+                            ),
+                          SliverToBoxAdapter(
+                            child: ItemSearchBar(
+                              searchController: _searchController,
+                              onSearchChanged: _onSearchChanged,
+                              hasActiveFilter: filters.hasActiveFilters,
+                              onFilterTap: () => unawaited(_showFilterSheet()),
+                              onScanTap: () => unawaited(_onBarcodeScan()),
+                              onMoreTap: _showMoreSheet,
+                            ),
+                          ),
+                          itemsAsync.when(
+                            loading: () => displayItems.isEmpty
+                                ? const SliverFillRemaining(
+                                    hasScrollBody: false,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  )
+                                : _itemsSliver(
+                                    items: displayItems,
+                                    categoryNamesById: categoryNamesById,
+                                  ),
+                            error: (error, _) => displayItems.isEmpty
+                                ? SliverFillRemaining(
+                                    hasScrollBody: false,
+                                    child: AppError(
+                                      message: InventoryErrorMapper.messageFor(
+                                        error,
+                                      ),
+                                      onRetry: () => ref.invalidate(
+                                        inventoryItemsProvider,
+                                      ),
+                                    ),
+                                  )
+                                : _itemsSliver(
+                                    items: displayItems,
+                                    categoryNamesById: categoryNamesById,
+                                  ),
+                            data: (_) {
+                              if (displayItems.isEmpty) {
+                                return SliverFillRemaining(
+                                  hasScrollBody: false,
+                                  child: MobileEmptyState(
+                                    title: 'No items found',
+                                    message:
+                                        searchQuery.isNotEmpty ||
+                                            filters.hasActiveFilters
+                                        ? 'Try changing your search or filter.'
+                                        : emptyMessage,
+                                    icon: Icons.inventory_2_outlined,
+                                  ),
+                                );
+                              }
+
+                              return _itemsSliver(
+                                items: displayItems,
+                                categoryNamesById: categoryNamesById,
+                              );
+                            },
+                          ),
+                          SliverToBoxAdapter(
+                            child: SizedBox(
+                              height:
+                                  MobileBottomNavigation.scrollBottomPadding(
+                                    context,
+                                  ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: MobileBottomNavigation.fabBottomInset,
-            child: PermissionGate(
-              module: PermissionModule.item,
-              action: PermissionAction.create,
-              child: Center(
-                child: MobileHomeAddSaleFab(
-                  label: _isServicesTab ? 'Add Service' : 'Add Item',
-                  icon: Icons.add_rounded,
-                  onPressed: () => unawaited(
-                    showAddItemDialog(
-                      context,
-                      initialType: _activeItemType,
+              ],
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: MobileBottomNavigation.fabBottomInset,
+              child: PermissionGate(
+                module: PermissionModule.item,
+                action: PermissionAction.create,
+                child: Center(
+                  child: MobileHomeAddSaleFab(
+                    label: _isServicesTab ? 'Add Service' : 'Add Item',
+                    icon: Icons.add_rounded,
+                    onPressed: () => unawaited(
+                      showAddItemDialog(
+                        context,
+                        initialType: _activeItemType,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

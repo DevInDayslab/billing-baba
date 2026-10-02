@@ -8,7 +8,10 @@ abstract final class NotificationNavigation {
   static String? resolveRoute(AppNotification notification) {
     if (notification.actionRoute != null &&
         notification.actionRoute!.isNotEmpty) {
-      return _withPayload(notification.actionRoute!, notification.actionPayload);
+      return _withPayload(
+        notification.actionRoute!,
+        notification.actionPayload,
+      );
     }
 
     return switch (notification.type) {
@@ -18,12 +21,11 @@ abstract final class NotificationNavigation {
       NotificationType.invoiceShared => AppRoutes.saleInvoices,
       NotificationType.purchaseDue => AppRoutes.purchaseBills,
       NotificationType.lowStock => AppRoutes.items,
-      NotificationType.syncFailed || NotificationType.syncCompleted =>
-        AppRoutes.collaborationSyncShare,
+      NotificationType.syncFailed ||
+      NotificationType.syncCompleted => AppRoutes.collaborationSyncShare,
       NotificationType.subscriptionExpiry => AppRoutes.plansPricing,
       NotificationType.backupReminder => AppRoutes.settingsBackup,
-      NotificationType.importCompleted =>
-        AppRoutes.utilitiesImportItems,
+      NotificationType.importCompleted => AppRoutes.utilitiesImportItems,
       NotificationType.exportCompleted => AppRoutes.reports,
       NotificationType.businessReminder ||
       NotificationType.outstandingReminder => AppRoutes.parties,
@@ -85,8 +87,8 @@ String formatNotificationTime(DateTime dateTime) {
 
   if (diff.inMinutes < 1) return 'Just now';
   if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-  if (diff.inHours < 24 && NotificationDateGroup.forDate(dateTime) ==
-      NotificationDateGroup.today) {
+  if (diff.inHours < 24 &&
+      NotificationDateGroup.forDate(dateTime) == NotificationDateGroup.today) {
     return '${diff.inHours} hr ago';
   }
 
@@ -95,8 +97,18 @@ String formatNotificationTime(DateTime dateTime) {
 
   if (now.year == dateTime.year) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${dateTime.day} ${months[dateTime.month - 1]}';
   }

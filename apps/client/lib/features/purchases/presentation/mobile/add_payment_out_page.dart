@@ -123,8 +123,9 @@ class _MobileAddPaymentOutPageState
 
     if (_paidController.text != form.paidAmount.toStringAsFixed(2) &&
         !form.isSaving) {
-      _paidController.text =
-          form.paidAmount > 0 ? form.paidAmount.toStringAsFixed(2) : '';
+      _paidController.text = form.paidAmount > 0
+          ? form.paidAmount.toStringAsFixed(2)
+          : '';
     }
     if (_descriptionController.text != form.description && !form.isSaving) {
       _descriptionController.text = form.description;
@@ -141,7 +142,10 @@ class _MobileAddPaymentOutPageState
         children: [
           const MobileOfflineBanner(),
           if (form.saveError != null)
-            Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
+            Text(
+              form.saveError!,
+              style: const TextStyle(color: AppColors.error),
+            ),
           MobileDocumentPartySection(
             visibility: _visibility,
             useInlinePartySearch: false,
@@ -187,8 +191,9 @@ class _MobileAddPaymentOutPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Receipt No',
-            documentNumberValue:
-                form.receiptNo.isEmpty ? 'Auto' : form.receiptNo,
+            documentNumberValue: form.receiptNo.isEmpty
+                ? 'Auto'
+                : form.receiptNo,
             documentNumberIsPlaceholder: form.receiptNo.isEmpty,
             dateValue: formatSaleSingleDate(form.date),
             dateIsPlaceholder: form.date == null,

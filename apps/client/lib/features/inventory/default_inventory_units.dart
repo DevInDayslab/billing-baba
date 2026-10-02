@@ -16,11 +16,23 @@ class DefaultInventoryUnitSeed {
 const defaultInventoryUnitSeeds = <DefaultInventoryUnitSeed>[
   DefaultInventoryUnitSeed(id: 'pcs', fullName: 'PIECES', shortName: 'PCS'),
   DefaultInventoryUnitSeed(id: 'bags', fullName: 'BAGS', shortName: 'Bag'),
-  DefaultInventoryUnitSeed(id: 'bottles', fullName: 'BOTTLES', shortName: 'Btl'),
+  DefaultInventoryUnitSeed(
+    id: 'bottles',
+    fullName: 'BOTTLES',
+    shortName: 'Btl',
+  ),
   DefaultInventoryUnitSeed(id: 'box', fullName: 'BOX', shortName: 'Box'),
-  DefaultInventoryUnitSeed(id: 'bundles', fullName: 'BUNDLES', shortName: 'Bdl'),
+  DefaultInventoryUnitSeed(
+    id: 'bundles',
+    fullName: 'BUNDLES',
+    shortName: 'Bdl',
+  ),
   DefaultInventoryUnitSeed(id: 'cans', fullName: 'CANS', shortName: 'Cns'),
-  DefaultInventoryUnitSeed(id: 'cartons', fullName: 'CARTONS', shortName: 'Ctn'),
+  DefaultInventoryUnitSeed(
+    id: 'cartons',
+    fullName: 'CARTONS',
+    shortName: 'Ctn',
+  ),
   DefaultInventoryUnitSeed(id: 'dozens', fullName: 'DOZENS', shortName: 'Dzn'),
   DefaultInventoryUnitSeed(id: 'grammes', fullName: 'GRAMMES', shortName: 'Gm'),
   DefaultInventoryUnitSeed(

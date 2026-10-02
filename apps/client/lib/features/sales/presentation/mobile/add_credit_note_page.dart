@@ -38,7 +38,8 @@ class MobileAddCreditNotePage extends ConsumerStatefulWidget {
 
 class _MobileAddCreditNotePageState
     extends ConsumerState<MobileAddCreditNotePage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.creditNote;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.creditNote;
   late final String _sessionKey;
   late final TextEditingController _phoneController;
   late final TextEditingController _descriptionController;
@@ -129,7 +130,9 @@ class _MobileAddCreditNotePageState
     final error = await _notifier().save();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final form = _form();
@@ -182,8 +185,7 @@ class _MobileAddCreditNotePageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Return No.',
-            documentNumberValue:
-                form.returnNo.isEmpty ? 'Auto' : form.returnNo,
+            documentNumberValue: form.returnNo.isEmpty ? 'Auto' : form.returnNo,
             documentNumberIsPlaceholder: form.returnNo.isEmpty,
             dateValue: formatSaleSingleDate(form.returnDate),
             dateIsPlaceholder: form.returnDate == null,
@@ -232,8 +234,9 @@ class _MobileAddCreditNotePageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),

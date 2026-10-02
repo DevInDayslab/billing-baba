@@ -135,7 +135,8 @@ class _BarcodeKeyboardListenerState extends State<BarcodeKeyboardListener> {
     if (!widget.enabled) return false;
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
 
-    final isModifierHeld = HardwareKeyboard.instance.isControlPressed ||
+    final isModifierHeld =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isAltPressed ||
         HardwareKeyboard.instance.isMetaPressed;
     if (isModifierHeld) return false;

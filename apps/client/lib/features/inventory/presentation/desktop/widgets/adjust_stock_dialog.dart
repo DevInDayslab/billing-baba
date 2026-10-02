@@ -29,8 +29,7 @@ class AdjustStockDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final media = MediaQuery.of(context);
-    final maxDialogHeight =
-        (media.size.height - media.viewInsets.bottom) * 0.9;
+    final maxDialogHeight = (media.size.height - media.viewInsets.bottom) * 0.9;
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: 420, maxHeight: maxDialogHeight),

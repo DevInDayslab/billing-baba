@@ -128,7 +128,9 @@ class MobileReportInfoBanner extends StatelessWidget {
         decoration: BoxDecoration(
           color: MobileReportTheme.accentSoft,
           borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: MobileReportTheme.accent.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: MobileReportTheme.accent.withValues(alpha: 0.2),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(

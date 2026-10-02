@@ -51,7 +51,9 @@ class PaymentApi {
     return PaymentVerificationResult(
       status: switch (status) {
         'verified' => PaymentVerificationStatus.verified,
-        'failed' || 'cancelled' || 'expired' => PaymentVerificationStatus.failed,
+        'failed' ||
+        'cancelled' ||
+        'expired' => PaymentVerificationStatus.failed,
         _ => PaymentVerificationStatus.pending,
       },
       paymentId: payment?['id'] as String?,

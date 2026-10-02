@@ -57,7 +57,8 @@ class MobileAddSalePage extends ConsumerStatefulWidget {
 }
 
 class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.saleInvoice;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.saleInvoice;
 
   var _initialized = false;
   late final TextEditingController _customerController;
@@ -104,10 +105,14 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _termsTextController = TextEditingController();
 
     if (widget.invoiceId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeEditForm(),
+      );
     } else if (widget.attachOrderIds != null &&
         widget.attachOrderIds!.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeAttachForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeAttachForm(),
+      );
     } else if (widget.duplicateFromId != null) {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _initializeDuplicateForm(),
@@ -314,8 +319,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       addSaleFormProvider(sessionKey: _sessionKey).notifier,
     );
     final items = ref.read(addSaleFormProvider(sessionKey: _sessionKey)).items;
-    final lastEmpty =
-        items.isNotEmpty && items.last.itemName.trim().isEmpty;
+    final lastEmpty = items.isNotEmpty && items.last.itemName.trim().isEmpty;
     if (!lastEmpty) notifier.addLineItem();
     final form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
     final index = form.items.length - 1;
@@ -374,8 +378,9 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     }
 
     final paidAmount = form.displayReceivedAmount;
-    final allowHiddenLedger =
-        ref.read(permissionServiceProvider).canViewHiddenLedger;
+    final allowHiddenLedger = ref
+        .read(permissionServiceProvider)
+        .canViewHiddenLedger;
 
     final handling = await showShortPaymentHandlingDialog(
       context,
@@ -544,8 +549,9 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     final title = widget.readOnly
         ? 'View Sale'
         : (_isEditing ? 'Edit Sale' : 'Sale');
-    final canViewHiddenLedger =
-        ref.watch(permissionServiceProvider).canViewHiddenLedger;
+    final canViewHiddenLedger = ref
+        .watch(permissionServiceProvider)
+        .canViewHiddenLedger;
     final partyId = form.partyId;
     final showHiddenLedgerBanner =
         canViewHiddenLedger && partyId != null && partyId.isNotEmpty;
@@ -575,8 +581,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       showGstin: _visibility.showGstin,
       showEmail: _visibility.showEmail,
       showItems: _visibility.showItems,
-      showBarcodeScan:
-          !widget.readOnly && isBarcodeScanningEnabled(ref),
+      showBarcodeScan: !widget.readOnly && isBarcodeScanningEnabled(ref),
       showTotals: _visibility.showTotals,
       showRoundOff: _visibility.showRoundOff,
       showPaymentSection: _visibility.showPaymentSection,
@@ -593,217 +598,219 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       enabled: !widget.readOnly,
       onCatalogItem: _applyCatalogFromBarcode,
       child: MobileDocumentFormScaffold(
-      title: title,
-      visibility: visibility,
-      isLoading: !_initialized || (widget.invoiceId != null && form.isLoading),
-      isSaving: form.isSaving,
-      readOnly: widget.readOnly,
-      onClose: _handleClose,
-      onSave: () => unawaited(_save(saveAndNew: false)),
-      onSaveAndNew: () => unawaited(_save(saveAndNew: true)),
-      onMore: _showMoreOptions,
-      leadingToggle: (!widget.readOnly && visibility.showSaleTypeToggle)
-          ? MobileSaleTypeToggle(
-              saleType: form.saleType,
-              onChanged: notifier.toggleSaleType,
-            )
-          : null,
-      appBarActions: [
-        if (visibility.showSettings && !widget.readOnly)
-          MobileIconActionButton(
-            icon: Icons.settings_outlined,
-            tooltip: 'Settings',
-            onPressed: () => showMobileSaleSettingsPanel(
-              context: context,
-              ref: ref,
-            ),
-          ),
-        const SizedBox(width: AppSpacing.xs),
-      ],
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          MobileDocumentHeader(
-            visibility: visibility,
-            documentNumberValue: _invoiceNumberLabel(form),
-            documentNumberIsPlaceholder:
-                form.invoiceNumberMode == InvoiceNumberMode.auto &&
-                form.invoiceNumber == 'Auto',
-            dateValue: formatSaleSingleDate(form.invoiceDate),
-            dateIsPlaceholder: form.invoiceDate == null,
-            onDateTap: _pickInvoiceDate,
-            timeValue: formatSaleTime(form.invoiceTime),
-            timeIsPlaceholder: form.invoiceTime == null,
-            onTimeTap: _pickInvoiceTime,
-            paymentTermsValue: form.paymentTerms,
-            onPaymentTermsTap: _pickPaymentTerms,
-            dueDateValue: form.dueDate != null
-                ? formatSaleSingleDate(form.dueDate)
-                : null,
-            dueDateIsPlaceholder: form.dueDate == null,
-            onDueDateTap: _pickDueDate,
-            stateOfSupplyValue: form.stateOfSupply,
-            onStateOfSupplyTap: _pickStateOfSupply,
-            godownValue: form.godown,
-            onGodownTap: _pickGodown,
-            eWayBillController: _eWayController,
-            onEWayBillChanged: notifier.updateEWayBillNo,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          MobileDocumentPartySection(
-            visibility: visibility,
-            partyController: _customerController,
-            selectedPartyId: form.partyId,
-            partyHasError: form.partyHasError,
-            onSearchChanged: notifier.updateBillingName,
-            onPartySelected: (party) {
-              notifier.applyPartyDetails(party);
-              _syncControllersFromForm();
-            },
-            billingNameController: _billingNameController,
-            onBillingNameChanged: notifier.updateBusinessName,
-            phoneController: _phoneController,
-            phoneHasError: form.phoneHasError,
-            phoneErrorText: form.phoneErrorMessage,
-            onPhoneChanged: notifier.updatePhone,
-            billingAddressController: _billingAddressController,
-            onBillingAddressChanged: (value) =>
-                notifier.updateAddresses(billing: value),
-            shippingAddressController: _shippingAddressController,
-            onShippingAddressChanged: (value) =>
-                notifier.updateAddresses(shipping: value),
-            gstinController: _gstinController,
-            onGstinChanged: notifier.updateGstin,
-            emailController: _emailController,
-            onEmailChanged: notifier.updateEmail,
-          ),
-          if (showHiddenLedgerBanner) ...[
-            const SizedBox(height: AppSpacing.lg),
-            HiddenLedgerSummaryTile(partyId: partyId),
-          ],
-          const SizedBox(height: AppSpacing.xl),
-          MobileDocumentItemsSection(
-            visibility: visibility,
-            lines: [
-              for (final entry in confirmedLines)
-                MobileDocumentLineDisplay(
-                  name: entry.item.itemName,
-                  qtyLabel:
-                      '${entry.item.qty} ${entry.item.unit} × ₹${MobileDocumentItemsSection.formatAmount(entry.item.pricePerUnit)}',
-                  amountLabel: MobileDocumentItemsSection.formatAmount(
-                    entry.item.amount,
-                  ),
-                ),
-            ],
-            onAddItems: () => unawaited(_addLine()),
-            onScan: visibility.showBarcodeScan
-                ? () => unawaited(_scanBarcodeCamera())
-                : null,
-            onRemoveLine: (displayIndex) {
-              notifier.removeLineItem(confirmedLines[displayIndex].index);
-            },
-            onLineTap: (displayIndex) async {
-              final entry = confirmedLines[displayIndex];
-              final draft = await showMobileDocumentLineEditSheet(
-                context: context,
-                itemName: entry.item.itemName,
-                fields: MobileDocumentLineEditFields.sale,
-                initial: MobileDocumentLineEditDraft(
-                  qty: entry.item.qty,
-                  unit: entry.item.unit,
-                  pricePerUnit: entry.item.pricePerUnit,
-                  discountPercent: entry.item.discountPercent,
-                  taxPercent: entry.item.taxPercent,
-                  serialNo: entry.item.serialNo,
-                  batchNo: entry.item.batchNo,
-                  mrp: entry.item.mrp,
-                  description: entry.item.description,
-                ),
-              );
-              if (draft == null || !mounted) return;
-              notifier.updateLineItem(
-                entry.index,
-                entry.item.copyWith(
-                  qty: draft.qty,
-                  unit: draft.unit,
-                  pricePerUnit: draft.pricePerUnit,
-                  discountPercent: draft.discountPercent,
-                  taxPercent: draft.taxPercent,
-                  serialNo: draft.serialNo,
-                  batchNo: draft.batchNo,
-                  mrp: draft.mrp,
-                  description: draft.description,
-                  priceManuallyOverridden: true,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          MobileDocumentTotalsSection(
-            visibility: visibility,
-            totalAmount: grandTotal,
-            subtotal: subtotal,
-            taxAmount: tax,
-            roundOff: form.roundOff,
-            onRoundOffChanged: (value) => notifier.toggleRoundOff(value: value),
-            receivedAmount: form.receivedAmount,
-            onReceivedAmountChanged: notifier.updateReceivedAmount,
-            payments: [
-              for (final payment in form.payments)
-                (type: payment.type, amount: payment.amount),
-            ],
-            onPaymentTypeTap: () async {
-              final picked = await pickMobilePaymentType(
-                context,
-                selected: form.paymentType,
-              );
-              if (picked != null) notifier.updatePaymentType(picked);
-            },
-            onPaymentAmountChanged: notifier.updatePaymentAmount,
-            onAddPaymentType: notifier.addPaymentType,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          MobileDocumentNotesAttachmentsSection(
-            visibility: visibility,
-            descriptionController: _descriptionController,
-            onDescriptionChanged: notifier.updateDescription,
-            termsTitle: form.termsTitle,
-            termsTextController: _termsTextController,
-            onTermsTitleTap: () async {
-              final picked = await pickMobileTermsTitle(
-                context,
-                selected: form.termsTitle,
-              );
-              if (picked != null) notifier.updateTermsTitle(picked);
-            },
-            onTermsTextChanged: notifier.updateTermsText,
-            images: form.attachedImages,
-            documents: form.attachedDocuments,
-            onAddImage: () => unawaited(
-              transactionAddImage(
+        title: title,
+        visibility: visibility,
+        isLoading:
+            !_initialized || (widget.invoiceId != null && form.isLoading),
+        isSaving: form.isSaving,
+        readOnly: widget.readOnly,
+        onClose: _handleClose,
+        onSave: () => unawaited(_save(saveAndNew: false)),
+        onSaveAndNew: () => unawaited(_save(saveAndNew: true)),
+        onMore: _showMoreOptions,
+        leadingToggle: (!widget.readOnly && visibility.showSaleTypeToggle)
+            ? MobileSaleTypeToggle(
+                saleType: form.saleType,
+                onChanged: notifier.toggleSaleType,
+              )
+            : null,
+        appBarActions: [
+          if (visibility.showSettings && !widget.readOnly)
+            MobileIconActionButton(
+              icon: Icons.settings_outlined,
+              tooltip: 'Settings',
+              onPressed: () => showMobileSaleSettingsPanel(
                 context: context,
                 ref: ref,
-                entityType: DocumentAttachmentEntityType.sale.apiValue,
-                entityId: form.documentId,
-                onAdded: notifier.addImage,
               ),
             ),
-            onAddDocument: () => unawaited(
-              transactionAddDocument(
-                context: context,
-                ref: ref,
-                entityType: DocumentAttachmentEntityType.sale.apiValue,
-                entityId: form.documentId,
-                onAdded: notifier.addDocument,
-              ),
-            ),
-            onRemoveImage: notifier.removeImage,
-            onRemoveDocument: notifier.removeDocument,
-          ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(width: AppSpacing.xs),
         ],
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MobileDocumentHeader(
+              visibility: visibility,
+              documentNumberValue: _invoiceNumberLabel(form),
+              documentNumberIsPlaceholder:
+                  form.invoiceNumberMode == InvoiceNumberMode.auto &&
+                  form.invoiceNumber == 'Auto',
+              dateValue: formatSaleSingleDate(form.invoiceDate),
+              dateIsPlaceholder: form.invoiceDate == null,
+              onDateTap: _pickInvoiceDate,
+              timeValue: formatSaleTime(form.invoiceTime),
+              timeIsPlaceholder: form.invoiceTime == null,
+              onTimeTap: _pickInvoiceTime,
+              paymentTermsValue: form.paymentTerms,
+              onPaymentTermsTap: _pickPaymentTerms,
+              dueDateValue: form.dueDate != null
+                  ? formatSaleSingleDate(form.dueDate)
+                  : null,
+              dueDateIsPlaceholder: form.dueDate == null,
+              onDueDateTap: _pickDueDate,
+              stateOfSupplyValue: form.stateOfSupply,
+              onStateOfSupplyTap: _pickStateOfSupply,
+              godownValue: form.godown,
+              onGodownTap: _pickGodown,
+              eWayBillController: _eWayController,
+              onEWayBillChanged: notifier.updateEWayBillNo,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            MobileDocumentPartySection(
+              visibility: visibility,
+              partyController: _customerController,
+              selectedPartyId: form.partyId,
+              partyHasError: form.partyHasError,
+              onSearchChanged: notifier.updateBillingName,
+              onPartySelected: (party) {
+                notifier.applyPartyDetails(party);
+                _syncControllersFromForm();
+              },
+              billingNameController: _billingNameController,
+              onBillingNameChanged: notifier.updateBusinessName,
+              phoneController: _phoneController,
+              phoneHasError: form.phoneHasError,
+              phoneErrorText: form.phoneErrorMessage,
+              onPhoneChanged: notifier.updatePhone,
+              billingAddressController: _billingAddressController,
+              onBillingAddressChanged: (value) =>
+                  notifier.updateAddresses(billing: value),
+              shippingAddressController: _shippingAddressController,
+              onShippingAddressChanged: (value) =>
+                  notifier.updateAddresses(shipping: value),
+              gstinController: _gstinController,
+              onGstinChanged: notifier.updateGstin,
+              emailController: _emailController,
+              onEmailChanged: notifier.updateEmail,
+            ),
+            if (showHiddenLedgerBanner) ...[
+              const SizedBox(height: AppSpacing.lg),
+              HiddenLedgerSummaryTile(partyId: partyId),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            MobileDocumentItemsSection(
+              visibility: visibility,
+              lines: [
+                for (final entry in confirmedLines)
+                  MobileDocumentLineDisplay(
+                    name: entry.item.itemName,
+                    qtyLabel:
+                        '${entry.item.qty} ${entry.item.unit} × ₹${MobileDocumentItemsSection.formatAmount(entry.item.pricePerUnit)}',
+                    amountLabel: MobileDocumentItemsSection.formatAmount(
+                      entry.item.amount,
+                    ),
+                  ),
+              ],
+              onAddItems: () => unawaited(_addLine()),
+              onScan: visibility.showBarcodeScan
+                  ? () => unawaited(_scanBarcodeCamera())
+                  : null,
+              onRemoveLine: (displayIndex) {
+                notifier.removeLineItem(confirmedLines[displayIndex].index);
+              },
+              onLineTap: (displayIndex) async {
+                final entry = confirmedLines[displayIndex];
+                final draft = await showMobileDocumentLineEditSheet(
+                  context: context,
+                  itemName: entry.item.itemName,
+                  fields: MobileDocumentLineEditFields.sale,
+                  initial: MobileDocumentLineEditDraft(
+                    qty: entry.item.qty,
+                    unit: entry.item.unit,
+                    pricePerUnit: entry.item.pricePerUnit,
+                    discountPercent: entry.item.discountPercent,
+                    taxPercent: entry.item.taxPercent,
+                    serialNo: entry.item.serialNo,
+                    batchNo: entry.item.batchNo,
+                    mrp: entry.item.mrp,
+                    description: entry.item.description,
+                  ),
+                );
+                if (draft == null || !mounted) return;
+                notifier.updateLineItem(
+                  entry.index,
+                  entry.item.copyWith(
+                    qty: draft.qty,
+                    unit: draft.unit,
+                    pricePerUnit: draft.pricePerUnit,
+                    discountPercent: draft.discountPercent,
+                    taxPercent: draft.taxPercent,
+                    serialNo: draft.serialNo,
+                    batchNo: draft.batchNo,
+                    mrp: draft.mrp,
+                    description: draft.description,
+                    priceManuallyOverridden: true,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            MobileDocumentTotalsSection(
+              visibility: visibility,
+              totalAmount: grandTotal,
+              subtotal: subtotal,
+              taxAmount: tax,
+              roundOff: form.roundOff,
+              onRoundOffChanged: (value) =>
+                  notifier.toggleRoundOff(value: value),
+              receivedAmount: form.receivedAmount,
+              onReceivedAmountChanged: notifier.updateReceivedAmount,
+              payments: [
+                for (final payment in form.payments)
+                  (type: payment.type, amount: payment.amount),
+              ],
+              onPaymentTypeTap: () async {
+                final picked = await pickMobilePaymentType(
+                  context,
+                  selected: form.paymentType,
+                );
+                if (picked != null) notifier.updatePaymentType(picked);
+              },
+              onPaymentAmountChanged: notifier.updatePaymentAmount,
+              onAddPaymentType: notifier.addPaymentType,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            MobileDocumentNotesAttachmentsSection(
+              visibility: visibility,
+              descriptionController: _descriptionController,
+              onDescriptionChanged: notifier.updateDescription,
+              termsTitle: form.termsTitle,
+              termsTextController: _termsTextController,
+              onTermsTitleTap: () async {
+                final picked = await pickMobileTermsTitle(
+                  context,
+                  selected: form.termsTitle,
+                );
+                if (picked != null) notifier.updateTermsTitle(picked);
+              },
+              onTermsTextChanged: notifier.updateTermsText,
+              images: form.attachedImages,
+              documents: form.attachedDocuments,
+              onAddImage: () => unawaited(
+                transactionAddImage(
+                  context: context,
+                  ref: ref,
+                  entityType: DocumentAttachmentEntityType.sale.apiValue,
+                  entityId: form.documentId,
+                  onAdded: notifier.addImage,
+                ),
+              ),
+              onAddDocument: () => unawaited(
+                transactionAddDocument(
+                  context: context,
+                  ref: ref,
+                  entityType: DocumentAttachmentEntityType.sale.apiValue,
+                  entityId: form.documentId,
+                  onAdded: notifier.addDocument,
+                ),
+              ),
+              onRemoveImage: notifier.removeImage,
+              onRemoveDocument: notifier.removeDocument,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

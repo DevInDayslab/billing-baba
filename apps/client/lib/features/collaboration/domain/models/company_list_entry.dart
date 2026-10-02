@@ -124,8 +124,7 @@ class CompanyListEntry {
       email: email ?? this.email,
       address: address ?? this.address,
       logoUrl: logoUrl ?? this.logoUrl,
-      scheduledDeletionAt:
-          scheduledDeletionAt ?? this.scheduledDeletionAt,
+      scheduledDeletionAt: scheduledDeletionAt ?? this.scheduledDeletionAt,
     );
   }
 

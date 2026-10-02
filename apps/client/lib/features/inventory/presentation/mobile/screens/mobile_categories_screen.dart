@@ -32,7 +32,8 @@ class MobileCategoriesScreen extends ConsumerStatefulWidget {
       _MobileCategoriesScreenState();
 }
 
-class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen> {
+class _MobileCategoriesScreenState
+    extends ConsumerState<MobileCategoriesScreen> {
   late final TextEditingController _searchController;
   Timer? _debounce;
 
@@ -56,7 +57,9 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
       final trimmed = query.trim();
       ref.read(categoryBackendSearchProvider.notifier).query = trimmed;
       unawaited(
-        ref.read(inventoryCategoriesProvider.notifier).refresh(
+        ref
+            .read(inventoryCategoriesProvider.notifier)
+            .refresh(
               searchQuery: trimmed.isEmpty ? null : trimmed,
             ),
       );
@@ -64,7 +67,9 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryCategoriesProvider.notifier).refresh(
+    return ref
+        .read(inventoryCategoriesProvider.notifier)
+        .refresh(
           searchQuery: ref.read(categoryBackendSearchProvider),
         );
   }
@@ -179,7 +184,11 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
               ),
               const _CategoryListHeader(),
               Expanded(
-                child: switch ((isInitialLoading, showError, categories.isEmpty)) {
+                child: switch ((
+                  isInitialLoading,
+                  showError,
+                  categories.isEmpty,
+                )) {
                   (true, _, _) => const Center(
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
@@ -193,12 +202,14 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
                     title: 'No categories found',
                     message: 'Add a category to organize your items.',
                     icon: Icons.category_outlined,
-                    actionLabel: ref
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Category'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addCategory())
@@ -251,11 +262,13 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
             right: 0,
             bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
             child: Center(
-            child: PermissionGate(
-              module: PermissionModule.item,
-              action: PermissionAction.create,
-              child: _AddCategoryFab(onPressed: () => unawaited(_addCategory())),
-            ),
+              child: PermissionGate(
+                module: PermissionModule.item,
+                action: PermissionAction.create,
+                child: _AddCategoryFab(
+                  onPressed: () => unawaited(_addCategory()),
+                ),
+              ),
             ),
           ),
         ],

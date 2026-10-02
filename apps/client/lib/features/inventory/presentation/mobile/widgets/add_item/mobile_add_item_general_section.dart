@@ -105,8 +105,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nameLabel = _isProduct ? 'Item Name *' : 'Service Name *';
-    final codeLabel =
-        _isProduct ? 'Item Code / Barcode' : 'Service Code';
+    final codeLabel = _isProduct ? 'Item Code / Barcode' : 'Service Code';
     final taxLabel = _isProduct ? 'HSN/SAC Code' : 'SAC Code';
 
     return ColoredBox(
@@ -133,7 +132,9 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
                 onPressed: onSelectUnit,
                 style: MobileAddItemTheme.inlineActionStyle().copyWith(
                   foregroundColor: WidgetStatePropertyAll(
-                    baseUnitError ? AppColors.error : MobileAddItemTheme.inlineButtonText,
+                    baseUnitError
+                        ? AppColors.error
+                        : MobileAddItemTheme.inlineButtonText,
                   ),
                 ),
                 child: Text(baseUnit == null ? 'Select Unit' : 'Edit Unit'),
@@ -214,7 +215,11 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
               onChanged: onHsnChanged,
               suffixIcon: IconButton(
                 onPressed: () {},
-                icon: const Icon(Icons.search, size: 20, color: AppColors.primary),
+                icon: const Icon(
+                  Icons.search,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
                 tooltip: 'Search $taxLabel',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -497,8 +502,8 @@ class _BrandPickerSheetState extends State<_BrandPickerSheet> {
     final filtered = query.isEmpty
         ? widget.brands
         : widget.brands
-            .where((b) => b.name.toLowerCase().contains(query))
-            .toList();
+              .where((b) => b.name.toLowerCase().contains(query))
+              .toList();
     final height = MediaQuery.sizeOf(context).height * 0.6;
 
     return SizedBox(

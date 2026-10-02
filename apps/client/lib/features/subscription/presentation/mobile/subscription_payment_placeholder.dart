@@ -77,7 +77,10 @@ class MobileSubscriptionPaymentPlaceholder extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Upgrade or renew your subscription on the Billing Baba website.',
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             FilledButton.icon(

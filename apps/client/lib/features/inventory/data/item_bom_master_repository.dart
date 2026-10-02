@@ -73,7 +73,10 @@ class ItemBomMasterRepository {
   Future<ItemBomDto> getForItem(String itemId) async {
     final businessId = _requireBusinessId();
     await _hydrateItemIfEmpty(businessId, itemId);
-    final materials = await _materialsLocal.listActiveForItem(businessId, itemId);
+    final materials = await _materialsLocal.listActiveForItem(
+      businessId,
+      itemId,
+    );
     final costs = await _costsLocal.listActiveForItem(businessId, itemId);
     return ItemBomDto(materials: materials, costs: costs);
   }
@@ -232,7 +235,10 @@ class ItemBomMasterRepository {
     required List<ItemBomReplaceCostInput> costs,
     required DateTime now,
   }) async {
-    final existing = await _costsLocal.listActiveRowsForItem(businessId, itemId);
+    final existing = await _costsLocal.listActiveRowsForItem(
+      businessId,
+      itemId,
+    );
     final existingById = {for (final row in existing) row.id: row};
     final incomingIds = costs
         .map((cost) => cost.id?.trim())

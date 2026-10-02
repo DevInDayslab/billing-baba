@@ -166,9 +166,9 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleDeliveryChallan => AppRoutes.addDeliveryChallan,
     AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
     AppRoutes.saleFa => AppRoutes.addSaleFa,
-      AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
-      AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
-      AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
+    AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
+    AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
+    AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
     _ => null,
   };
 

@@ -34,7 +34,8 @@ class MobileAddDebitNotePage extends ConsumerStatefulWidget {
 
 class _MobileAddDebitNotePageState
     extends ConsumerState<MobileAddDebitNotePage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.debitNote;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.debitNote;
   late final TextEditingController _descriptionController;
   late final TextEditingController _billNumberController;
 
@@ -44,8 +45,9 @@ class _MobileAddDebitNotePageState
     _descriptionController = TextEditingController();
     _billNumberController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final form =
-          ref.read(debitNoteFormProvider(debitNoteId: widget.debitNoteId));
+      final form = ref.read(
+        debitNoteFormProvider(debitNoteId: widget.debitNoteId),
+      );
       _descriptionController.text = form.description;
       _billNumberController.text = form.billNumber;
     });
@@ -108,7 +110,9 @@ class _MobileAddDebitNotePageState
     final error = await _notifier().saveDebitNote();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final docId = _form().documentId;
@@ -137,12 +141,14 @@ class _MobileAddDebitNotePageState
   Widget build(BuildContext context) {
     final form = _form();
     final notifier = _notifier();
-    final confirmed =
-        form.items.where((item) => item.itemName.trim().isNotEmpty).toList();
+    final confirmed = form.items
+        .where((item) => item.itemName.trim().isNotEmpty)
+        .toList();
 
     return MobileDocumentFormScaffold(
-      title:
-          widget.debitNoteId != null ? 'Edit Purchase Return' : 'Purchase Return',
+      title: widget.debitNoteId != null
+          ? 'Edit Purchase Return'
+          : 'Purchase Return',
       visibility: _visibility,
       isSaving: form.isSaving,
       onClose: _handleClose,
@@ -152,12 +158,14 @@ class _MobileAddDebitNotePageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (form.saveError != null)
-            Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
+            Text(
+              form.saveError!,
+              style: const TextStyle(color: AppColors.error),
+            ),
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Return No.',
-            documentNumberValue:
-                form.returnNo.isEmpty ? 'Auto' : form.returnNo,
+            documentNumberValue: form.returnNo.isEmpty ? 'Auto' : form.returnNo,
             documentNumberIsPlaceholder: form.returnNo.isEmpty,
             dateValue: formatSaleSingleDate(form.returnDate),
             dateIsPlaceholder: form.returnDate == null,
@@ -206,8 +214,9 @@ class _MobileAddDebitNotePageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),
@@ -253,8 +262,9 @@ class _MobileAddDebitNotePageState
                   name: item.itemName,
                   qtyLabel:
                       '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
-                  amountLabel:
-                      MobileDocumentItemsSection.formatAmount(item.amount),
+                  amountLabel: MobileDocumentItemsSection.formatAmount(
+                    item.amount,
+                  ),
                 ),
             ],
             onAddItems: () => unawaited(_addLine()),

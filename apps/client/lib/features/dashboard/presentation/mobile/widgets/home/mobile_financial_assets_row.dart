@@ -40,8 +40,10 @@ class MobileFinancialAssetsRow extends ConsumerWidget {
     final primary = Theme.of(context).colorScheme.primary;
     final periodLabel = dashboard.period.label.toLowerCase();
     final cashInTrend = _trendLabel(dashboard.sales.trendPoints, periodLabel);
-    final cashOutTrend =
-        _trendLabel(dashboard.purchases.trendPoints, periodLabel);
+    final cashOutTrend = _trendLabel(
+      dashboard.purchases.trendPoints,
+      periodLabel,
+    );
 
     final items = [
       _AssetItem(

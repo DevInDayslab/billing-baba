@@ -387,7 +387,9 @@ class ItemNameAutocompleteFieldState
                                     if (!mounted) return;
 
                                     final tierStore =
-                                        ref.read(itemTierPricesProvider).value ??
+                                        ref
+                                            .read(itemTierPricesProvider)
+                                            .value ??
                                         const {};
                                     final resolved =
                                         saleItemOptionFromInventory(

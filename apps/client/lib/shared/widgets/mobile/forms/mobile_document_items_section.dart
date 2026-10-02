@@ -46,8 +46,7 @@ class MobileDocumentItemsSection extends StatelessWidget {
     decimalDigits: 2,
   );
 
-  static String formatAmount(double amount) =>
-      _currency.format(amount).trim();
+  static String formatAmount(double amount) => _currency.format(amount).trim();
 
   @override
   Widget build(BuildContext context) {

@@ -55,14 +55,20 @@ class _SaleInvoiceSettingsBody extends ConsumerWidget {
     WidgetRef ref,
     SaleInvoiceSettings Function(SaleInvoiceSettings) updater,
   ) {
-    return ref.read(saleInvoiceSettingsProvider.notifier).updateSettings(updater);
+    return ref
+        .read(saleInvoiceSettingsProvider.notifier)
+        .updateSettings(updater);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final businesses = ref.watch(businessListProvider).asData?.value ?? [];
     final currentBusiness = ref.watch(currentBusinessProvider);
-    final selectedFirm = _resolveFirm(businesses, settings, currentBusiness?.id);
+    final selectedFirm = _resolveFirm(
+      businesses,
+      settings,
+      currentBusiness?.id,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -58,7 +58,8 @@ class _MobileItemDetailReportScreenState
     final itemId = ref.read(reportFiltersProvider).itemId;
     if (itemId == null) return;
     final items =
-        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
+        ref.read(inventoryItemsProvider).value?.items ??
+        const <InventoryItem>[];
     final item = items.where((entry) => entry.id == itemId).firstOrNull;
     if (item != null) {
       _itemSearchController.text = item.name;
@@ -107,7 +108,8 @@ class _MobileItemDetailReportScreenState
 
   Future<void> _openItemPicker() async {
     final items =
-        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
+        ref.read(inventoryItemsProvider).value?.items ??
+        const <InventoryItem>[];
     if (items.isEmpty) return;
 
     final selected = await showModalBottomSheet<InventoryItem>(
@@ -264,7 +266,9 @@ class _MobileItemDetailReportScreenState
                           ),
                           Icon(
                             Icons.keyboard_arrow_down_rounded,
-                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                         ],
                       ),
@@ -486,7 +490,11 @@ class _TableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text('Purchase qty', style: style, textAlign: TextAlign.right),
+            child: Text(
+              'Purchase qty',
+              style: style,
+              textAlign: TextAlign.right,
+            ),
           ),
           Expanded(
             flex: 2,
@@ -494,7 +502,11 @@ class _TableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text('Closing qty', style: style, textAlign: TextAlign.right),
+            child: Text(
+              'Closing qty',
+              style: style,
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),
@@ -591,8 +603,8 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
     final filtered = query.isEmpty
         ? widget.items
         : widget.items
-            .where((item) => item.name.toLowerCase().contains(query))
-            .toList();
+              .where((item) => item.name.toLowerCase().contains(query))
+              .toList();
 
     return SafeArea(
       child: Padding(

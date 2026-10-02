@@ -312,9 +312,7 @@ class InventoryUnits extends _$InventoryUnits {
       return AddConversionResult(conversion: conversion);
     } on ApiValidationException catch (error) {
       return AddConversionResult(
-        error:
-            error.fieldErrors['conversion_factor'] ??
-            error.message,
+        error: error.fieldErrors['conversion_factor'] ?? error.message,
       );
     } on InventoryException catch (error) {
       return AddConversionResult(error: error.message);

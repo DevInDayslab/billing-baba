@@ -91,13 +91,19 @@ class MobileDiagnosticsPage extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Text(
               error.toString(),
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.error),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                color: AppColors.error,
+              ),
             ),
             data: (jobs) {
               if (jobs.isEmpty) {
                 return Text(
                   'No pending sync jobs',
-                  style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodySize,
+                    color: AppColors.textSecondary,
+                  ),
                 );
               }
               return Column(
@@ -108,7 +114,10 @@ class MobileDiagnosticsPage extends ConsumerWidget {
                       dense: true,
                       title: Text(
                         '${job.entityType} · ${job.operation.wire}',
-                        style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w500),
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       subtitle: Text(
                         '${job.status.wire} · ${job.kind.wire}',
@@ -193,14 +202,20 @@ class _InfoRow extends StatelessWidget {
             flex: 2,
             child: Text(
               label,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           Expanded(
             flex: 3,
             child: Text(
               value,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w500),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

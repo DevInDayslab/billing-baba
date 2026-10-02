@@ -60,7 +60,8 @@ class PartyMoreDetailsDialog extends ConsumerWidget {
     final lines = <_DetailLine>[
       _DetailLine('Party Type', party.partyTypeLabel),
       _DetailLine('Status', party.statusLabel),
-      if (party.alias.trim().isNotEmpty) _DetailLine('Alias', party.alias.trim()),
+      if (party.alias.trim().isNotEmpty)
+        _DetailLine('Alias', party.alias.trim()),
       if (party.partyGroup.trim().isNotEmpty)
         _DetailLine('Party Group', party.partyGroup.trim()),
       if (party.areaCode.trim().isNotEmpty)
@@ -78,11 +79,16 @@ class PartyMoreDetailsDialog extends ConsumerWidget {
         ),
       if (party.gstType.trim().isNotEmpty)
         _DetailLine('GST Type', party.gstType.trim()),
-      if (party.state.trim().isNotEmpty) _DetailLine('State', party.state.trim()),
+      if (party.state.trim().isNotEmpty)
+        _DetailLine('State', party.state.trim()),
       if (party.shippingAddress.trim().isNotEmpty)
         _DetailLine('Shipping Address', party.shippingAddress.trim()),
-      if (party.notes.trim().isNotEmpty) _DetailLine('Notes', party.notes.trim()),
-      _DetailLine('Default Price Tier', PriceTier.labelFor(party.defaultPriceTier)),
+      if (party.notes.trim().isNotEmpty)
+        _DetailLine('Notes', party.notes.trim()),
+      _DetailLine(
+        'Default Price Tier',
+        PriceTier.labelFor(party.defaultPriceTier),
+      ),
       if (party.openingBalance != 0)
         _DetailLine(
           'Opening Balance',
@@ -103,7 +109,8 @@ class PartyMoreDetailsDialog extends ConsumerWidget {
             : ListView.separated(
                 shrinkWrap: true,
                 itemCount: lines.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, index) {
                   final line = lines[index];
                   return Column(

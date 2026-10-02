@@ -34,12 +34,13 @@ Future<List<Uint8List>> pickItemImagesForUpload(
   final bytes = await pickRawItemImageBytes(context);
   if (bytes == null || !context.mounted) return const [];
 
-  final cropped = await Navigator.of(context, rootNavigator: true).push<Uint8List>(
-    MaterialPageRoute(
-      fullscreenDialog: true,
-      builder: (_) => MobileItemImageEditorScreen(imageBytes: bytes),
-    ),
-  );
+  final cropped = await Navigator.of(context, rootNavigator: true)
+      .push<Uint8List>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => MobileItemImageEditorScreen(imageBytes: bytes),
+        ),
+      );
   return cropped != null ? [cropped] : const [];
 }
 
@@ -64,12 +65,13 @@ Future<ItemImageBytesCropResult?> cropItemImageBytes(
   required Uint8List imageBytes,
 }) async {
   if (!AppPlatform.current.isDesktop) {
-    final cropped = await Navigator.of(context, rootNavigator: true).push<Uint8List>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => MobileItemImageEditorScreen(imageBytes: imageBytes),
-      ),
-    );
+    final cropped = await Navigator.of(context, rootNavigator: true)
+        .push<Uint8List>(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => MobileItemImageEditorScreen(imageBytes: imageBytes),
+          ),
+        );
     return cropped == null ? null : ItemImageBytesCropUpdated(cropped);
   }
 

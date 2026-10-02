@@ -34,8 +34,9 @@ Future<bool> confirmAndDeleteInventoryItem(
   );
   if (confirmed != true || !context.mounted) return false;
 
-  final error =
-      await ref.read(inventoryItemsProvider.notifier).deleteItem(item.id);
+  final error = await ref
+      .read(inventoryItemsProvider.notifier)
+      .deleteItem(item.id);
   if (!context.mounted) return false;
   if (error != null) {
     ScaffoldMessenger.of(context).showSnackBar(

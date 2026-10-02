@@ -67,7 +67,8 @@ class _MobileStockSummaryScreenState
     _filters = StockSummaryMobileFilters(
       categoryId: reportFilters.categoryId,
       categoryLabel: _categoryLabelForId(reportFilters.categoryId),
-      stock: initialStock ??
+      stock:
+          initialStock ??
           (reportFilters.inStockOnly
               ? StockSummaryStockFilter.inStock
               : StockSummaryStockFilter.all),
@@ -325,7 +326,8 @@ class _MobileStockSummaryScreenState
         children: [
           _DateToggle(
             enabled: _showStockAsOnDate,
-            date: ref.watch(reportFiltersProvider).selectedDate ?? DateTime.now(),
+            date:
+                ref.watch(reportFiltersProvider).selectedDate ?? DateTime.now(),
             hasActiveFilters: _filters.hasActiveFilters,
             onChanged: (enabled) {
               setState(() => _showStockAsOnDate = enabled);
@@ -368,14 +370,14 @@ class _MobileStockSummaryScreenState
               error: (error, _) => viewData.rows.isEmpty
                   ? AppError(
                       message: ReportsErrorMapper.messageFor(error),
-                      onRetry: () =>
-                          ref.invalidate(stockSummaryReportProvider),
+                      onRetry: () => ref.invalidate(stockSummaryReportProvider),
                     )
                   : _StockSummaryList(rows: viewData.rows),
               data: (_) => viewData.rows.isEmpty
                   ? MobileEmptyState(
                       title: 'No stock items',
-                      message: _filters.hasActiveFilters || _searchQuery.isNotEmpty
+                      message:
+                          _filters.hasActiveFilters || _searchQuery.isNotEmpty
                           ? 'Try changing your search or filters.'
                           : 'Add items to see stock summary.',
                       icon: Icons.inventory_2_outlined,

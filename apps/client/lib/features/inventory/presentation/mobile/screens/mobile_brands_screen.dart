@@ -52,7 +52,9 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       unawaited(
-        ref.read(inventoryBrandsProvider.notifier).refresh(
+        ref
+            .read(inventoryBrandsProvider.notifier)
+            .refresh(
               searchQuery: query.trim().isEmpty ? null : query.trim(),
             ),
       );
@@ -60,7 +62,9 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryBrandsProvider.notifier).refresh(
+    return ref
+        .read(inventoryBrandsProvider.notifier)
+        .refresh(
           searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
         );
   }
@@ -99,8 +103,9 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final error =
-        await ref.read(inventoryBrandsProvider.notifier).deleteBrand(brand.id);
+    final error = await ref
+        .read(inventoryBrandsProvider.notifier)
+        .deleteBrand(brand.id);
     if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,12 +190,14 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
                     title: 'No brands found',
                     message: 'Add a brand to organize your items.',
                     icon: Icons.branding_watermark_outlined,
-                    actionLabel: ref
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Brand'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addBrand())

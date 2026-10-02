@@ -33,8 +33,8 @@ class MobileUserProfilePage extends ConsumerWidget {
                 (name?.isNotEmpty == true
                         ? name![0]
                         : phone.isNotEmpty
-                            ? phone[0]
-                            : 'U')
+                        ? phone[0]
+                        : 'U')
                     .toUpperCase(),
                 style: AppTypography.inter(
                   fontSize: 28,

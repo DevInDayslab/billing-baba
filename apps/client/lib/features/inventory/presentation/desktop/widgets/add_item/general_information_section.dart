@@ -371,7 +371,8 @@ class GeneralInformationSection extends StatelessWidget {
             if (_showItemImagesRow)
               FormGridCell(
                 span: 6,
-                child: itemId != null &&
+                child:
+                    itemId != null &&
                         isServerBackedInventoryItemId(itemId!) &&
                         alternativesInlineAddButton != null
                     ? _ServerItemImagesField(

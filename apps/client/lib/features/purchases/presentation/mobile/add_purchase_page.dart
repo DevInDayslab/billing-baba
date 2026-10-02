@@ -36,7 +36,8 @@ class MobileAddPurchasePage extends ConsumerStatefulWidget {
 }
 
 class _MobileAddPurchasePageState extends ConsumerState<MobileAddPurchasePage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.purchaseBill;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.purchaseBill;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
   late final TextEditingController _eWayController;
@@ -86,8 +87,9 @@ class _MobileAddPurchasePageState extends ConsumerState<MobileAddPurchasePage> {
     );
     if (party != null) {
       _notifier().updateParty(party.name, partyId: party.id);
-      _billingNameController.text =
-          ref.read(addPurchaseFormProvider(billId: widget.billId)).billingName;
+      _billingNameController.text = ref
+          .read(addPurchaseFormProvider(billId: widget.billId))
+          .billingName;
     }
   }
 
@@ -142,7 +144,9 @@ class _MobileAddPurchasePageState extends ConsumerState<MobileAddPurchasePage> {
     final error = await _notifier().saveBill();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final form = _form();
@@ -212,234 +216,236 @@ class _MobileAddPurchasePageState extends ConsumerState<MobileAddPurchasePage> {
     return DocumentBarcodeKeyboardHost(
       onCatalogItem: _applyCatalogFromBarcode,
       child: MobileDocumentFormScaffold(
-      title: widget.billId != null ? 'Edit Purchase' : 'Purchase',
-      visibility: visibility,
-      isLoading: form.isLoading,
-      isSaving: form.isSaving,
-      onClose: _handleClose,
-      onSave: () => unawaited(_save(saveAndNew: false)),
-      onSaveAndNew: () => unawaited(_save(saveAndNew: true)),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (form.saveError != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: Text(
-                form.saveError!,
-                style: const TextStyle(color: AppColors.error),
+        title: widget.billId != null ? 'Edit Purchase' : 'Purchase',
+        visibility: visibility,
+        isLoading: form.isLoading,
+        isSaving: form.isSaving,
+        onClose: _handleClose,
+        onSave: () => unawaited(_save(saveAndNew: false)),
+        onSaveAndNew: () => unawaited(_save(saveAndNew: true)),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (form.saveError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Text(
+                  form.saveError!,
+                  style: const TextStyle(color: AppColors.error),
+                ),
               ),
+            MobileDocumentHeader(
+              visibility: visibility,
+              documentNumberLabel: 'Bill No.',
+              documentNumberValue: form.billNumber.isEmpty
+                  ? 'Auto'
+                  : form.billNumber,
+              documentNumberIsPlaceholder: form.billNumber.isEmpty,
+              dateValue: formatSaleSingleDate(form.billDate),
+              dateIsPlaceholder: form.billDate == null,
+              onDateTap: () async {
+                final date = await showMobileDatePicker(
+                  context,
+                  initialDate: form.billDate,
+                );
+                if (date != null) notifier.updateBillDate(date);
+              },
+              timeValue: formatSaleTime(form.billTime),
+              timeIsPlaceholder: form.billTime == null,
+              onTimeTap: () async {
+                final picked = await showTimePicker(
+                  context: context,
+                  initialTime: form.billTime ?? TimeOfDay.now(),
+                );
+                if (picked != null) notifier.updateBillTime(picked);
+              },
+              paymentTermsValue: form.paymentTerms,
+              onPaymentTermsTap: () async {
+                final selected = await showMobileOptionSheet<String>(
+                  context: context,
+                  title: 'Payment Terms',
+                  selected: form.paymentTerms,
+                  options: [
+                    for (final term in SaleDropdownOptions.paymentTerms)
+                      MobileOption(value: term, label: term),
+                  ],
+                );
+                if (selected != null) notifier.updatePaymentTerms(selected);
+              },
+              dueDateValue: form.dueDate != null
+                  ? formatSaleSingleDate(form.dueDate)
+                  : null,
+              dueDateIsPlaceholder: form.dueDate == null,
+              onDueDateTap: () async {
+                final date = await showMobileDatePicker(
+                  context,
+                  initialDate: form.dueDate ?? form.billDate,
+                );
+                if (date != null) notifier.updateDueDate(date);
+              },
+              stateOfSupplyValue: form.stateOfSupply,
+              onStateOfSupplyTap: () async {
+                final selected = await showMobileOptionSheet<String>(
+                  context: context,
+                  title: 'State of supply',
+                  selected: form.stateOfSupply,
+                  options: [
+                    for (final state in SaleDropdownOptions.indianStates)
+                      MobileOption(value: state, label: state),
+                  ],
+                );
+                if (selected != null) notifier.updateStateOfSupply(selected);
+              },
+              godownValue: form.godown,
+              onGodownTap: () async {
+                final godowns = ref.read(inventoryGodownsProvider).value ?? [];
+                final options = godowns.isNotEmpty
+                    ? godowns.map((g) => g.name).toList()
+                    : SaleDropdownOptions.godowns;
+                final selected = await showMobileOptionSheet<String>(
+                  context: context,
+                  title: 'Godown',
+                  selected: form.godown,
+                  options: [
+                    for (final name in options)
+                      MobileOption(value: name, label: name),
+                  ],
+                );
+                if (selected == null) return;
+                final match = godowns
+                    .where((g) => g.name == selected)
+                    .firstOrNull;
+                notifier.updateGodown(selected, godownId: match?.id);
+              },
+              eWayBillController: _eWayController,
+              onEWayBillChanged: notifier.updateEWayBillNo,
             ),
-          MobileDocumentHeader(
-            visibility: visibility,
-            documentNumberLabel: 'Bill No.',
-            documentNumberValue:
-                form.billNumber.isEmpty ? 'Auto' : form.billNumber,
-            documentNumberIsPlaceholder: form.billNumber.isEmpty,
-            dateValue: formatSaleSingleDate(form.billDate),
-            dateIsPlaceholder: form.billDate == null,
-            onDateTap: () async {
-              final date = await showMobileDatePicker(
-                context,
-                initialDate: form.billDate,
-              );
-              if (date != null) notifier.updateBillDate(date);
-            },
-            timeValue: formatSaleTime(form.billTime),
-            timeIsPlaceholder: form.billTime == null,
-            onTimeTap: () async {
-              final picked = await showTimePicker(
-                context: context,
-                initialTime: form.billTime ?? TimeOfDay.now(),
-              );
-              if (picked != null) notifier.updateBillTime(picked);
-            },
-            paymentTermsValue: form.paymentTerms,
-            onPaymentTermsTap: () async {
-              final selected = await showMobileOptionSheet<String>(
-                context: context,
-                title: 'Payment Terms',
-                selected: form.paymentTerms,
-                options: [
-                  for (final term in SaleDropdownOptions.paymentTerms)
-                    MobileOption(value: term, label: term),
-                ],
-              );
-              if (selected != null) notifier.updatePaymentTerms(selected);
-            },
-            dueDateValue: form.dueDate != null
-                ? formatSaleSingleDate(form.dueDate)
-                : null,
-            dueDateIsPlaceholder: form.dueDate == null,
-            onDueDateTap: () async {
-              final date = await showMobileDatePicker(
-                context,
-                initialDate: form.dueDate ?? form.billDate,
-              );
-              if (date != null) notifier.updateDueDate(date);
-            },
-            stateOfSupplyValue: form.stateOfSupply,
-            onStateOfSupplyTap: () async {
-              final selected = await showMobileOptionSheet<String>(
-                context: context,
-                title: 'State of supply',
-                selected: form.stateOfSupply,
-                options: [
-                  for (final state in SaleDropdownOptions.indianStates)
-                    MobileOption(value: state, label: state),
-                ],
-              );
-              if (selected != null) notifier.updateStateOfSupply(selected);
-            },
-            godownValue: form.godown,
-            onGodownTap: () async {
-              final godowns = ref.read(inventoryGodownsProvider).value ?? [];
-              final options = godowns.isNotEmpty
-                  ? godowns.map((g) => g.name).toList()
-                  : SaleDropdownOptions.godowns;
-              final selected = await showMobileOptionSheet<String>(
-                context: context,
-                title: 'Godown',
-                selected: form.godown,
-                options: [
-                  for (final name in options)
-                    MobileOption(value: name, label: name),
-                ],
-              );
-              if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
-              notifier.updateGodown(selected, godownId: match?.id);
-            },
-            eWayBillController: _eWayController,
-            onEWayBillChanged: notifier.updateEWayBillNo,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          MobileDocumentPartySection(
-            visibility: visibility,
-            useInlinePartySearch: false,
-            partyLabel: 'Supplier',
-            partyValue: form.party,
-            partyHasError: form.partyHasError,
-            partyTypeFilter: PartyTypeFilter.supplier,
-            onPickParty: () => unawaited(_pickParty()),
-            billingNameController: _billingNameController,
-            onBillingNameChanged: notifier.updateBillingName,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          MobileDocumentItemsSection(
-            visibility: visibility,
-            lines: [
-              for (final item in confirmed)
-                MobileDocumentLineDisplay(
-                  name: item.itemName,
-                  qtyLabel:
-                      '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
-                  amountLabel: MobileDocumentItemsSection.formatAmount(
-                    item.amount,
+            const SizedBox(height: AppSpacing.lg),
+            MobileDocumentPartySection(
+              visibility: visibility,
+              useInlinePartySearch: false,
+              partyLabel: 'Supplier',
+              partyValue: form.party,
+              partyHasError: form.partyHasError,
+              partyTypeFilter: PartyTypeFilter.supplier,
+              onPickParty: () => unawaited(_pickParty()),
+              billingNameController: _billingNameController,
+              onBillingNameChanged: notifier.updateBillingName,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            MobileDocumentItemsSection(
+              visibility: visibility,
+              lines: [
+                for (final item in confirmed)
+                  MobileDocumentLineDisplay(
+                    name: item.itemName,
+                    qtyLabel:
+                        '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
+                    amountLabel: MobileDocumentItemsSection.formatAmount(
+                      item.amount,
+                    ),
                   ),
-                ),
-            ],
-            onAddItems: () => unawaited(_addLine()),
-            onScan: visibility.showBarcodeScan
-                ? () => unawaited(_scanBarcodeCamera())
-                : null,
-            onRemoveLine: (i) {
-              final index = form.items.indexWhere(
-                (item) => item.id == confirmed[i].id,
-              );
-              if (index >= 0) notifier.removeLineItem(index);
-            },
-            onLineTap: (i) async {
-              final item = confirmed[i];
-              final index = form.items.indexWhere((e) => e.id == item.id);
-              if (index < 0) return;
-              final draft = await showMobileDocumentLineEditSheet(
-                context: context,
-                itemName: item.itemName,
-                fields: MobileDocumentLineEditFields.purchase,
-                initial: MobileDocumentLineEditDraft(
-                  qty: item.qty,
-                  unit: item.unit,
-                  pricePerUnit: item.pricePerUnit,
-                  taxPercent: item.taxPercent,
-                  description: item.description,
-                ),
-              );
-              if (draft == null || !mounted) return;
-              notifier.updateLineItem(
-                index,
-                item.copyWith(
-                  qty: draft.qty,
-                  unit: draft.unit,
-                  pricePerUnit: draft.pricePerUnit,
-                  taxPercent: draft.taxPercent,
-                  description: draft.description,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          MobileDocumentTotalsSection(
-            visibility: visibility,
-            totalAmount: form.grandTotal,
-            subtotal: form.subtotal,
-            taxAmount: form.totalTax,
-            roundOff: form.roundOff,
-            onRoundOffChanged: (v) => notifier.toggleRoundOff(value: v),
-            paymentType: form.paymentType,
-            paymentAmount: form.paymentAmount,
-            onPaymentTypeTap: () async {
-              final picked = await pickMobilePaymentType(
-                context,
-                selected: form.paymentType,
-              );
-              if (picked != null) notifier.updatePaymentType(picked);
-            },
-            onPaymentAmountChanged: notifier.updatePaymentAmount,
-            onAddPaymentType: notifier.addPaymentType,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          MobileDocumentNotesAttachmentsSection(
-            visibility: visibility,
-            descriptionController: _descriptionController,
-            onDescriptionChanged: notifier.updateDescription,
-            termsTitle: form.termsTitle,
-            termsTextController: _termsTextController,
-            onTermsTitleTap: () async {
-              final picked = await pickMobileTermsTitle(
-                context,
-                selected: form.termsTitle,
-              );
-              if (picked != null) notifier.updateTermsTitle(picked);
-            },
-            onTermsTextChanged: notifier.updateTermsNotes,
-            images: form.attachedImages,
-            documents: form.attachedDocuments,
-            onAddImage: () => unawaited(
-              transactionAddImage(
-                context: context,
-                ref: ref,
-                entityType: DocumentAttachmentEntityType.purchase.apiValue,
-                entityId: form.documentId,
-                onAdded: notifier.addImage,
-              ),
+              ],
+              onAddItems: () => unawaited(_addLine()),
+              onScan: visibility.showBarcodeScan
+                  ? () => unawaited(_scanBarcodeCamera())
+                  : null,
+              onRemoveLine: (i) {
+                final index = form.items.indexWhere(
+                  (item) => item.id == confirmed[i].id,
+                );
+                if (index >= 0) notifier.removeLineItem(index);
+              },
+              onLineTap: (i) async {
+                final item = confirmed[i];
+                final index = form.items.indexWhere((e) => e.id == item.id);
+                if (index < 0) return;
+                final draft = await showMobileDocumentLineEditSheet(
+                  context: context,
+                  itemName: item.itemName,
+                  fields: MobileDocumentLineEditFields.purchase,
+                  initial: MobileDocumentLineEditDraft(
+                    qty: item.qty,
+                    unit: item.unit,
+                    pricePerUnit: item.pricePerUnit,
+                    taxPercent: item.taxPercent,
+                    description: item.description,
+                  ),
+                );
+                if (draft == null || !mounted) return;
+                notifier.updateLineItem(
+                  index,
+                  item.copyWith(
+                    qty: draft.qty,
+                    unit: draft.unit,
+                    pricePerUnit: draft.pricePerUnit,
+                    taxPercent: draft.taxPercent,
+                    description: draft.description,
+                  ),
+                );
+              },
             ),
-            onAddDocument: () => unawaited(
-              transactionAddDocument(
-                context: context,
-                ref: ref,
-                entityType: DocumentAttachmentEntityType.purchase.apiValue,
-                entityId: form.documentId,
-                onAdded: notifier.addDocument,
-              ),
+            const SizedBox(height: AppSpacing.xl),
+            MobileDocumentTotalsSection(
+              visibility: visibility,
+              totalAmount: form.grandTotal,
+              subtotal: form.subtotal,
+              taxAmount: form.totalTax,
+              roundOff: form.roundOff,
+              onRoundOffChanged: (v) => notifier.toggleRoundOff(value: v),
+              paymentType: form.paymentType,
+              paymentAmount: form.paymentAmount,
+              onPaymentTypeTap: () async {
+                final picked = await pickMobilePaymentType(
+                  context,
+                  selected: form.paymentType,
+                );
+                if (picked != null) notifier.updatePaymentType(picked);
+              },
+              onPaymentAmountChanged: notifier.updatePaymentAmount,
+              onAddPaymentType: notifier.addPaymentType,
             ),
-            onRemoveImage: notifier.removeImage,
-            onRemoveDocument: notifier.removeDocument,
-          ),
-        ],
+            const SizedBox(height: AppSpacing.xl),
+            MobileDocumentNotesAttachmentsSection(
+              visibility: visibility,
+              descriptionController: _descriptionController,
+              onDescriptionChanged: notifier.updateDescription,
+              termsTitle: form.termsTitle,
+              termsTextController: _termsTextController,
+              onTermsTitleTap: () async {
+                final picked = await pickMobileTermsTitle(
+                  context,
+                  selected: form.termsTitle,
+                );
+                if (picked != null) notifier.updateTermsTitle(picked);
+              },
+              onTermsTextChanged: notifier.updateTermsNotes,
+              images: form.attachedImages,
+              documents: form.attachedDocuments,
+              onAddImage: () => unawaited(
+                transactionAddImage(
+                  context: context,
+                  ref: ref,
+                  entityType: DocumentAttachmentEntityType.purchase.apiValue,
+                  entityId: form.documentId,
+                  onAdded: notifier.addImage,
+                ),
+              ),
+              onAddDocument: () => unawaited(
+                transactionAddDocument(
+                  context: context,
+                  ref: ref,
+                  entityType: DocumentAttachmentEntityType.purchase.apiValue,
+                  entityId: form.documentId,
+                  onAdded: notifier.addDocument,
+                ),
+              ),
+              onRemoveImage: notifier.removeImage,
+              onRemoveDocument: notifier.removeDocument,
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

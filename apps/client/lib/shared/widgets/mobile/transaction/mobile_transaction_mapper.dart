@@ -30,7 +30,8 @@ abstract final class MobileTransactionMapper {
 
   static String formatAmount(double amount) => _currencyFormat.format(amount);
 
-  static String formatHomeAmount(double amount) => formatHomeAmountIndian(amount);
+  static String formatHomeAmount(double amount) =>
+      formatHomeAmountIndian(amount);
 
   /// Compact Indian notation for the mobile home transaction feed (L / Cr).
   static String formatHomeAmountIndian(double amount) {
@@ -427,8 +428,7 @@ abstract final class MobileTransactionMapper {
       partyName: fa.partyName,
       documentNumber: fa.invoiceNo,
       title: 'Sale Assets',
-      statusLabel:
-          'SALE FA : ${_saleFaStatus(fa.status).$1.toUpperCase()}',
+      statusLabel: 'SALE FA : ${_saleFaStatus(fa.status).$1.toUpperCase()}',
       statusType: MobileHomeTransactionStatusType.salePaid,
       filterType: MobileHomeTransactionFilterType.sale,
       dateLabel: _homeDateFormat.format(fa.date),
@@ -700,8 +700,7 @@ abstract final class MobileTransactionMapper {
     SaleInvoiceModel invoice, {
     required String sourceType,
   }) {
-    final isEstimate =
-        sourceType == 'estimate' || sourceType == 'proforma';
+    final isEstimate = sourceType == 'estimate' || sourceType == 'proforma';
     return PartyLedgerTransactionModel(
       id: invoice.id,
       date: invoice.date,

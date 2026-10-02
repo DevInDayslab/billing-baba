@@ -60,9 +60,12 @@ class MobileDealsScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       [
-                        deal.stage.label,
-                        deal.accountName,
-                      ].whereType<String>().where((v) => v.isNotEmpty).join(' · '),
+                            deal.stage.label,
+                            deal.accountName,
+                          ]
+                          .whereType<String>()
+                          .where((v) => v.isNotEmpty)
+                          .join(' · '),
                     ),
                     trailing: Text(
                       ChartAxisFormatters.formatCurrency(deal.amount),

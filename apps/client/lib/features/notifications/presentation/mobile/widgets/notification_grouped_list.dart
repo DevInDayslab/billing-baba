@@ -66,8 +66,9 @@ class NotificationGroupedList extends StatelessWidget {
               return NotificationCard(
                 notification: notification,
                 onTap: () => onTap(notification),
-                onDelete:
-                    onDelete == null ? null : () => onDelete!(notification),
+                onDelete: onDelete == null
+                    ? null
+                    : () => onDelete!(notification),
               );
             }
             cursor++;

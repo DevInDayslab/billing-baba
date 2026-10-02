@@ -64,7 +64,8 @@ class ManufacturingSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
-    final units = ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
+    final units =
+        ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
     final unitLabels = units.map((unit) => unit.shortName).toList();
 
     return FormSection(

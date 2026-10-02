@@ -10,6 +10,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_si
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 /// Vyapar-style Stock tab for mobile Add Item.
 class MobileAddItemStockSection extends StatelessWidget {
   const MobileAddItemStockSection({
@@ -253,8 +254,9 @@ class MobileAddItemStockSection extends StatelessWidget {
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),
                 InkWell(
                   onTap: () => _openGodownPicker(context),
-                  borderRadius:
-                      BorderRadius.circular(MobileAddItemTheme.fieldRadius),
+                  borderRadius: BorderRadius.circular(
+                    MobileAddItemTheme.fieldRadius,
+                  ),
                   child: InputDecorator(
                     decoration: MobileAddItemTheme.fieldDecoration(
                       label: 'Godown',

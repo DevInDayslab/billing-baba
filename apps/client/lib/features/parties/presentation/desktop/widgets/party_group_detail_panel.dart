@@ -81,8 +81,7 @@ class PartyGroupDetailPanel extends ConsumerWidget {
                         );
                         await service.rememberSelectedParty(party.id);
                       },
-                      onDoubleTap: () =>
-                          PartyActions.edit(context, ref, party),
+                      onDoubleTap: () => PartyActions.edit(context, ref, party),
                     );
                   },
                 ),

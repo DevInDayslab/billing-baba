@@ -73,7 +73,9 @@ class _QuickAddItemSheetState extends ConsumerState<_QuickAddItemSheet> {
     super.dispose();
   }
 
-  List<PosCategoryOption> _categoryOptions(List<PosCategoryOption> fromProvider) {
+  List<PosCategoryOption> _categoryOptions(
+    List<PosCategoryOption> fromProvider,
+  ) {
     final options = [...fromProvider];
     for (final extra in _extraCategories) {
       if (!options.any((category) => category.id == extra.id)) {
@@ -122,8 +124,7 @@ class _QuickAddItemSheetState extends ConsumerState<_QuickAddItemSheet> {
     }
 
     setState(
-      () => _selectedCategoryId =
-          selected == _noneCategoryId ? null : selected,
+      () => _selectedCategoryId = selected == _noneCategoryId ? null : selected,
     );
   }
 
@@ -164,12 +165,14 @@ class _QuickAddItemSheetState extends ConsumerState<_QuickAddItemSheet> {
                       hintText: 'Category name',
                       border: OutlineInputBorder(),
                     ),
-                    onSubmitted: (_) => unawaited(_submitAddCategory(
-                      dialogContext,
-                      controller,
-                      setDialogState,
-                      (error) => dialogError = error,
-                    )),
+                    onSubmitted: (_) => unawaited(
+                      _submitAddCategory(
+                        dialogContext,
+                        controller,
+                        setDialogState,
+                        (error) => dialogError = error,
+                      ),
+                    ),
                   ),
                   if (dialogError.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.xs),
@@ -188,12 +191,14 @@ class _QuickAddItemSheetState extends ConsumerState<_QuickAddItemSheet> {
                   child: const Text('Cancel'),
                 ),
                 FilledButton(
-                  onPressed: () => unawaited(_submitAddCategory(
-                    dialogContext,
-                    controller,
-                    setDialogState,
-                    (error) => dialogError = error,
-                  )),
+                  onPressed: () => unawaited(
+                    _submitAddCategory(
+                      dialogContext,
+                      controller,
+                      setDialogState,
+                      (error) => dialogError = error,
+                    ),
+                  ),
                   child: const Text('Add'),
                 ),
               ],

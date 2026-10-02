@@ -11,7 +11,9 @@ class MobileNotificationSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final preferencesAsync = ref.watch(notificationPreferencesControllerProvider);
+    final preferencesAsync = ref.watch(
+      notificationPreferencesControllerProvider,
+    );
     final permissionAsync = ref.watch(notificationPermissionStateProvider);
 
     return Scaffold(
@@ -59,8 +61,12 @@ class MobileNotificationSettingsScreen extends ConsumerWidget {
                         if (!granted) return;
                       }
                       await ref
-                          .read(notificationPreferencesControllerProvider.notifier)
-                          .savePreferences(preferences.copyWith(enabled: value));
+                          .read(
+                            notificationPreferencesControllerProvider.notifier,
+                          )
+                          .savePreferences(
+                            preferences.copyWith(enabled: value),
+                          );
                     },
                   ),
                   const Divider(height: 1),

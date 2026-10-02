@@ -59,10 +59,13 @@ class MobileLeadsScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       [
-                        lead.company,
-                        lead.phone,
-                        _leadStatusLabel(lead.status),
-                      ].whereType<String>().where((v) => v.isNotEmpty).join(' · '),
+                            lead.company,
+                            lead.phone,
+                            _leadStatusLabel(lead.status),
+                          ]
+                          .whereType<String>()
+                          .where((v) => v.isNotEmpty)
+                          .join(' · '),
                     ),
                   ),
                 );

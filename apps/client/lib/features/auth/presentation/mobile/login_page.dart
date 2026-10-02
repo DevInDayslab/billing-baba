@@ -139,7 +139,9 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
                                   ? null
                                   : (value) => ref
                                         .read(authProvider.notifier)
-                                        .setRememberFor30Days(value: value ?? false),
+                                        .setRememberFor30Days(
+                                          value: value ?? false,
+                                        ),
                               contentPadding: EdgeInsets.zero,
                               controlAffinity: ListTileControlAffinity.leading,
                               activeColor: AppColors.primary,
@@ -273,7 +275,10 @@ class _PhoneField extends StatelessWidget {
           color: AppColors.textSecondary.withValues(alpha: 0.55),
         ),
         prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.sm),
+          padding: const EdgeInsets.only(
+            left: AppSpacing.md,
+            right: AppSpacing.sm,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

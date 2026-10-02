@@ -10,7 +10,10 @@ abstract final class ItemTaxRatePreference {
     return prefs.getString(_key(businessId));
   }
 
-  static Future<void> writePinned(String businessId, String taxRateLabel) async {
+  static Future<void> writePinned(
+    String businessId,
+    String taxRateLabel,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key(businessId), taxRateLabel);
   }

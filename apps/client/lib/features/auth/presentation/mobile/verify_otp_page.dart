@@ -286,8 +286,9 @@ class _MobileVerifyOtpPageState extends ConsumerState<MobileVerifyOtpPage> {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: TextButton(
-                                onPressed:
-                                    auth.isOtpBusy ? null : _goBackToLogin,
+                                onPressed: auth.isOtpBusy
+                                    ? null
+                                    : _goBackToLogin,
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: Size.zero,
@@ -563,8 +564,9 @@ class _PrimaryActions extends StatelessWidget {
                 onPressed: canRetry && !isOtpBusy ? onRetry : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  disabledBackgroundColor:
-                      AppColors.primary.withValues(alpha: 0.45),
+                  disabledBackgroundColor: AppColors.primary.withValues(
+                    alpha: 0.45,
+                  ),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(

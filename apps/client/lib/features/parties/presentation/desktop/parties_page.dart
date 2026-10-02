@@ -117,8 +117,9 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ref.read(partiesTabIndexProvider.notifier).tabIndex = routeTabIndex;
-        final targetIndex =
-            tabs.indexWhere((tab) => tab.tabIndex == routeTabIndex);
+        final targetIndex = tabs.indexWhere(
+          (tab) => tab.tabIndex == routeTabIndex,
+        );
         if (targetIndex >= 0 && _tabController?.index != targetIndex) {
           _tabController?.animateTo(targetIndex);
         }
@@ -231,8 +232,7 @@ class _PartiesTabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isSelected ? _partiesTabActiveColor : AppColors.textSecondary;
+    final color = isSelected ? _partiesTabActiveColor : AppColors.textSecondary;
 
     return Material(
       color: Colors.transparent,

@@ -429,7 +429,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     ) {
       if (left.length != right.length) return false;
       for (var i = 0; i < left.length; i++) {
-        if (left[i].phone != right[i].phone || left[i].label != right[i].label) {
+        if (left[i].phone != right[i].phone ||
+            left[i].label != right[i].label) {
           return false;
         }
       }
@@ -1669,35 +1670,35 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       final title = _isEditMode ? 'Edit Party' : 'Add Party';
       return _wrapWithCloseGuard(
         Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.surface,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: _isSaving ? null : _requestClose,
-          ),
-          title: Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.surface,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: _isSaving ? null : _requestClose,
             ),
-          ),
-          actions: [
-            if (_isEditMode)
-              IconButton(
-                tooltip: 'Delete party',
-                onPressed: _isSaving ? null : _confirmAndDeleteParty,
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: AppColors.error,
-                ),
+            title: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-          ],
+            ),
+            actions: [
+              if (_isEditMode)
+                IconButton(
+                  tooltip: 'Delete party',
+                  onPressed: _isSaving ? null : _confirmAndDeleteParty,
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.error,
+                  ),
+                ),
+            ],
+          ),
+          body: SafeArea(top: false, child: content),
         ),
-        body: SafeArea(top: false, child: content),
-      ),
       );
     }
 
@@ -1943,12 +1944,14 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 final partyId = widget.partyToEdit?.id;
                 if (partyId != null) {
                   unawaited(
-                    ref.read(partyListProvider.notifier).patchProfileImage(
-                      partyId,
-                      profileImageUrl: imageUrl,
-                      profileMediaAssetId: mediaAssetId,
-                      clear: imageUrl == null && mediaAssetId == null,
-                    ),
+                    ref
+                        .read(partyListProvider.notifier)
+                        .patchProfileImage(
+                          partyId,
+                          profileImageUrl: imageUrl,
+                          profileMediaAssetId: mediaAssetId,
+                          clear: imageUrl == null && mediaAssetId == null,
+                        ),
                   );
                 }
               },
@@ -2022,7 +2025,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          for (var index = 0; index < _additionalPhoneEntries.length; index++) ...[
+          for (
+            var index = 0;
+            index < _additionalPhoneEntries.length;
+            index++
+          ) ...[
             _buildAdditionalPhoneEntryRow(index),
             if (index < _additionalPhoneEntries.length - 1)
               const Divider(height: 1, color: _cardBorder),

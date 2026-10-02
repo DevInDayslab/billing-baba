@@ -28,63 +28,63 @@ class CustomerSupportStrip extends StatelessWidget {
   }
 
   Widget get _content => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Contact Support',
-            style: DashboardTypography.supportStrip,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: () => _openUrl(_telUrl),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.phone,
-                    size: _iconSize,
-                    color: AppColors.primary,
-                  ),
-                  Text(
-                    ' : ',
-                    style: DashboardTypography.supportStrip,
-                  ),
-                  Text(
-                    supportPhone,
-                    style: DashboardTypography.supportStripLink,
-                  ),
-                ],
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Text(
+        'Contact Support',
+        style: DashboardTypography.supportStrip,
+      ),
+      const SizedBox(width: AppSpacing.xs),
+      MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => _openUrl(_telUrl),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                LucideIcons.phone,
+                size: _iconSize,
+                color: AppColors.primary,
               ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          const Text('|', style: DashboardTypography.supportStrip),
-          const SizedBox(width: AppSpacing.sm),
-          MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: () => _openUrl(_whatsAppUrl),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.whatsapp,
-                    size: _iconSize,
-                    color: AppColors.primary,
-                  ),
-                  SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Get instant support',
-                    style: DashboardTypography.supportStripLink,
-                  ),
-                ],
+              Text(
+                ' : ',
+                style: DashboardTypography.supportStrip,
               ),
-            ),
+              Text(
+                supportPhone,
+                style: DashboardTypography.supportStripLink,
+              ),
+            ],
           ),
-        ],
-      );
+        ),
+      ),
+      const SizedBox(width: AppSpacing.sm),
+      const Text('|', style: DashboardTypography.supportStrip),
+      const SizedBox(width: AppSpacing.sm),
+      MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => _openUrl(_whatsAppUrl),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FaIcon(
+                FontAwesomeIcons.whatsapp,
+                size: _iconSize,
+                color: AppColors.primary,
+              ),
+              SizedBox(width: AppSpacing.xs),
+              Text(
+                'Get instant support',
+                style: DashboardTypography.supportStripLink,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
