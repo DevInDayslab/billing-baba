@@ -34,5 +34,8 @@ export const todos = pgTable('todos', {
   linkedInvoiceId: uuid('linked_invoice_id'),
   linkedPurchaseId: uuid('linked_purchase_id'),
   linkedProductId: uuid('linked_product_id'),
-  attachmentIds: jsonb('attachment_ids').$type<string[]>().notNull().default([]),
+  attachmentIds: jsonb('attachment_ids')
+    .$type<string[]>()
+    .notNull()
+    .default([]),
 });

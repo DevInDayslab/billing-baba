@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { eq } from 'drizzle-orm';
+import { seedWalkInPartyForBusiness } from '../shared/parties/walk-in-party';
 import { getDb } from './client';
 import { businesses } from './schema/business/tables';
-import { seedWalkInPartyForBusiness } from '../shared/parties/walk-in-party';
 
 /**
  * One-time repair: seed walk-in customer party for every business.

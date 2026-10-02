@@ -3,7 +3,7 @@ import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,9 +55,9 @@ void main() {
             godownId: godownId,
             currentQuantity: Value(quantity),
             reservedQuantity: Value(reserved),
-            availableQuantity: Value('0'),
+            availableQuantity: const Value('0'),
             averageCost: const Value('10'),
-            updatedAt: DateTime.utc(2026, 1, 1),
+            updatedAt: DateTime.utc(2026, 1),
           ),
         );
   }
@@ -135,7 +135,7 @@ void main() {
       businessId: businessId,
       entityId: serverIdA,
       syncVersion: 2,
-      updatedAt: DateTime.utc(2026, 8, 1),
+      updatedAt: DateTime.utc(2026, 8),
       isDeleted: false,
       payload: {
         'item_id': itemId,
@@ -159,7 +159,7 @@ void main() {
   test('pull upserts by business/item/godown and preserves reserved_quantity',
       () async {
     await markReconciled();
-    await seedLocalCompositeRow(godownId: godownA, quantity: '5', reserved: '2');
+    await seedLocalCompositeRow(godownId: godownA, quantity: '5');
 
     await sync.applyChange(
       businessId: businessId,

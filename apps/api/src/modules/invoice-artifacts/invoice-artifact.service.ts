@@ -15,12 +15,12 @@ import {
 } from '../notifications/notification-media.service';
 import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
-import { InvoicePreviewRenderer } from './invoice-preview.renderer';
 import type {
   InvoiceShareMetadata,
   PaymentQrResult,
   TemporaryPreviewUpload,
 } from './invoice-artifact.types';
+import { InvoicePreviewRenderer } from './invoice-preview.renderer';
 import { PaymentQrService } from './payment-qr.service';
 
 export type InvoiceArtifactServiceDeps = {

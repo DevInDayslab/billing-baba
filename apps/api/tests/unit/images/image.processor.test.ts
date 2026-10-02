@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import sharp from 'sharp';
 import { IMAGE_VARIANT_MAX_EDGE } from '../../../src/modules/images/image.constants';
-import { buildProcessedImagePath } from '../../../src/modules/media-processing/image/image-path.builder';
+import { ImageValidationError } from '../../../src/modules/images/image.errors';
 import {
   generateImageVariants,
   readImageDimensions,
   validateImageDimensions,
 } from '../../../src/modules/images/image.processor';
-import { ImageValidationError } from '../../../src/modules/images/image.errors';
+import { buildProcessedImagePath } from '../../../src/modules/media-processing/image/image-path.builder';
 
 async function createTestJpeg(width: number, height: number): Promise<Buffer> {
   return sharp({

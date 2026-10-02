@@ -1,20 +1,20 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import type { UserRole } from '../auth/auth.types';
 import { StorageNotFoundError } from '../storage/storage.errors';
-import { StorageService } from '../storage/storage.service';
 import { MediaAssetRepository } from '../storage/storage.repository';
+import { StorageService } from '../storage/storage.service';
 import type { UploadIntent } from '../storage/storage.types';
 import {
   attachmentKindFromMime,
   DOCUMENT_ATTACHMENT_POLICY,
+  type DocumentAttachmentEntityType,
   MAX_DOCUMENT_ATTACHMENTS,
   storagePurposeForEntity,
-  type DocumentAttachmentEntityType,
 } from './document-attachment.constants';
 import { assertAttachmentEntityExists } from './document-attachment.entity-resolver';
 import { DocumentAttachmentRepository } from './document-attachment.repository';
-import type { UserRole } from '../auth/auth.types';
 import type {
   DocumentAttachmentRecord,
   DocumentAttachmentResponse,

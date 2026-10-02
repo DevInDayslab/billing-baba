@@ -1,4 +1,5 @@
 import postgres from 'postgres';
+
 const sql = postgres(process.env.DATABASE_URL!);
 await sql`CREATE TABLE IF NOT EXISTS item_alternatives (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

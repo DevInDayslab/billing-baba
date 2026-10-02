@@ -9,7 +9,6 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import {
   money,
@@ -33,6 +32,7 @@ import {
 import { users } from '../identity/tables';
 import { salesDocuments } from '../sales/tables';
 import { areas } from '../settings/tables';
+import { syncPullIndex } from '../sync-pull-index';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);

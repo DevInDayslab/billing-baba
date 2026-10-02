@@ -11,6 +11,8 @@ import {
   buildBusinessPaths,
   buildHealthPaths,
 } from './paths/core.paths';
+import { buildDocumentAttachmentPaths } from './paths/document-attachments.paths';
+import { buildGeneratedDocumentPaths } from './paths/generated-documents.paths';
 import {
   buildInventoryPaths,
   buildPartiesPaths,
@@ -19,8 +21,6 @@ import { buildPurchasesPaths } from './paths/purchases.paths';
 import { buildReportsPaths } from './paths/reports.paths';
 import { buildSalesPaths } from './paths/sales.paths';
 import { buildStoragePaths } from './paths/storage.paths';
-import { buildDocumentAttachmentPaths } from './paths/document-attachments.paths';
-import { buildGeneratedDocumentPaths } from './paths/generated-documents.paths';
 import { polishOpenApiDocument } from './polish';
 import { buildSchemas } from './schemas';
 

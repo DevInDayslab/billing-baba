@@ -172,7 +172,10 @@ const NON_RETRIABLE_CLIENT_METHODS = new Set([
 ]);
 
 function createQueryClient(connectionString: string): postgres.Sql {
-  const base = postgres(connectionString, createPostgresOptions(connectionString));
+  const base = postgres(
+    connectionString,
+    createPostgresOptions(connectionString),
+  );
 
   return new Proxy(base, {
     apply(target, thisArg, args) {

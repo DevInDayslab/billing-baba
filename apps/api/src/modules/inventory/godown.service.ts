@@ -129,7 +129,9 @@ export class GodownService extends InventoryServiceBase {
     const updated = await this.repository.update(businessId, godownId, {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
       ...(input.address !== undefined ? { address: input.address } : {}),
-      ...(input.is_default !== undefined ? { isDefault: input.is_default } : {}),
+      ...(input.is_default !== undefined
+        ? { isDefault: input.is_default }
+        : {}),
       updatedBy: userId ?? null,
     });
 

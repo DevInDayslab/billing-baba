@@ -8,8 +8,6 @@ import {
   formatZodError,
   requireAuthContext,
 } from './inventory.controller-helpers';
-import { ItemMediaService } from './item-media.service';
-import { rackPhotoUploadBodySchema } from './item-media.schema';
 import {
   createItemLocationBodySchema,
   itemLocationIdParamSchema,
@@ -19,6 +17,8 @@ import {
 } from './item-location.schema';
 import { ItemLocationService } from './item-location.service';
 import type { PaginatedItemLocationsResponse } from './item-location.types';
+import { rackPhotoUploadBodySchema } from './item-media.schema';
+import { ItemMediaService } from './item-media.service';
 
 export function createItemLocationController(config: AppConfig) {
   const mediaService = new ItemMediaService({ config });

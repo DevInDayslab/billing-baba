@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { AccountAvatarService } from '../business/business-branding.service';
 import { AuthRepository } from './auth.repository';
 import type {
   AccountProfileResponse,
@@ -17,19 +18,18 @@ import {
   phoneLookupVariants,
   verifyMsg91WidgetAccessToken,
 } from './msg91-widget.service';
-import { AccountAvatarService } from '../business/business-branding.service';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const DEVICE_TRUST_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+import { ensureDemoCatalogIfEmpty } from '../../db/seed/demo-seeder';
 import {
   DEV_ACCOUNT_NAME,
   DEV_BUSINESS_NAME,
   DEV_BUSINESS_PHONE,
   DEV_LOGIN_PHONE,
 } from '../../shared/dev-demo.constants';
-import { ensureDemoCatalogIfEmpty } from '../../db/seed/demo-seeder';
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -155,14 +155,19 @@ export class AuthService {
     return digits;
   }
 
-  private phonesMatchForTrust(accountPhone: string, inputPhone: string): boolean {
+  private phonesMatchForTrust(
+    accountPhone: string,
+    inputPhone: string,
+  ): boolean {
     const normalizedAccount = this.normalizePhoneForTrust(accountPhone);
     const normalizedInput = this.normalizePhoneForTrust(inputPhone);
     if (normalizedAccount === normalizedInput) {
       return true;
     }
     const variants = phoneLookupVariants(inputPhone);
-    return variants.includes(accountPhone) || variants.includes(normalizedAccount);
+    return (
+      variants.includes(accountPhone) || variants.includes(normalizedAccount)
+    );
   }
 
   private async issueDeviceTrust(

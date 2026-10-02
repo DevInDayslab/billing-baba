@@ -2,8 +2,6 @@ import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { InventoryServiceBase } from './inventory.base-service';
 import { ItemRepository } from './item.repository';
-import { ItemLocationHistoryRepository } from './item-location-history.repository';
-import type { ItemLocationHistoryRecord } from './item-location-history.types';
 import { ItemLocationRepository } from './item-location.repository';
 import type {
   CreateItemLocationBody,
@@ -12,6 +10,8 @@ import type {
   UpdateItemLocationBody,
 } from './item-location.schema';
 import type { ItemLocationRecord } from './item-location.types';
+import { ItemLocationHistoryRepository } from './item-location-history.repository';
+import type { ItemLocationHistoryRecord } from './item-location-history.types';
 
 export class ItemLocationService extends InventoryServiceBase {
   private readonly repository: ItemLocationRepository;

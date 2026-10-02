@@ -7,8 +7,8 @@ import {
   createPartyBodySchema,
   listPartiesQuerySchema,
   partyIdParamSchema,
-  upsertPartyNotesBodySchema,
   updatePartyBodySchema,
+  upsertPartyNotesBodySchema,
 } from './party.schema';
 import { PartyService } from './party.service';
 import type { PaginatedPartiesResponse } from './party.types';

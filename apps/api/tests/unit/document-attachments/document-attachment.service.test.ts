@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
-import { AppError } from '../../../src/shared/errors/app-error';
+import { MAX_DOCUMENT_ATTACHMENTS } from '../../../src/modules/document-attachments/document-attachment.constants';
+import type { DocumentAttachmentRepository } from '../../../src/modules/document-attachments/document-attachment.repository';
+import { DocumentAttachmentService } from '../../../src/modules/document-attachments/document-attachment.service';
 import { StorageNotFoundError } from '../../../src/modules/storage/storage.errors';
 import type { StorageService } from '../../../src/modules/storage/storage.service';
 import type { UploadIntent } from '../../../src/modules/storage/storage.types';
-import type { DocumentAttachmentRepository } from '../../../src/modules/document-attachments/document-attachment.repository';
-import { DocumentAttachmentService } from '../../../src/modules/document-attachments/document-attachment.service';
-import { MAX_DOCUMENT_ATTACHMENTS } from '../../../src/modules/document-attachments/document-attachment.constants';
+import { AppError } from '../../../src/shared/errors/app-error';
 
 const BIZ = '11111111-1111-1111-1111-111111111111';
 const ACC = '22222222-2222-2222-2222-222222222222';
@@ -351,7 +351,10 @@ describe('DocumentAttachmentService', () => {
 
   test('staff can view attachment download url', async () => {
     const repository = {
-      findById: async () => ({ ...sampleAttachment, entity_type: 'party' as const }),
+      findById: async () => ({
+        ...sampleAttachment,
+        entity_type: 'party' as const,
+      }),
     } as unknown as DocumentAttachmentRepository;
 
     const storage = {

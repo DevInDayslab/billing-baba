@@ -1,6 +1,6 @@
 import { index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { timestamptz, uuidPrimaryKey } from '../columns';
 import { businesses } from '../business/tables';
+import { timestamptz, uuidPrimaryKey } from '../columns';
 
 /**
  * Durable outbound notification send log for idempotency.

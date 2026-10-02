@@ -24,7 +24,9 @@ type CostRow = {
   sortOrder: number;
 };
 
-export function toItemBomMaterialRecord(row: MaterialRow): ItemBomMaterialRecord {
+export function toItemBomMaterialRecord(
+  row: MaterialRow,
+): ItemBomMaterialRecord {
   return {
     id: row.id,
     item_id: row.itemId,

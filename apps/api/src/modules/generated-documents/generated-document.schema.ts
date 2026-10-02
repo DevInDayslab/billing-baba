@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import {
   GENERATED_DOCUMENT_KINDS,
-  GENERATED_SOURCE_TYPES,
   GENERATED_DOCUMENT_MIME_TYPES,
+  GENERATED_SOURCE_TYPES,
 } from './generated-document.constants';
 
 export const lookupGeneratedDocumentQuerySchema = z.object({

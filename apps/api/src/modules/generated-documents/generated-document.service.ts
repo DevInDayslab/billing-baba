@@ -3,16 +3,16 @@ import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { StorageNotFoundError } from '../storage/storage.errors';
-import { StorageService } from '../storage/storage.service';
 import { MediaAssetRepository } from '../storage/storage.repository';
+import { StorageService } from '../storage/storage.service';
 import {
   GENERATED_DOCUMENT_POLICY,
   GENERATED_MIME_EXTENSIONS,
+  type GeneratedDocumentKind,
+  type GeneratedDocumentSourceType,
   MIME_FOR_GENERATED_KIND,
   ownerTypeForGeneratedKind,
   storagePurposeForGeneratedKind,
-  type GeneratedDocumentKind,
-  type GeneratedDocumentSourceType,
 } from './generated-document.constants';
 import {
   assertGeneratedKindMatchesSource,

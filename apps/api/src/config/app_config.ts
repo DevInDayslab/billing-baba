@@ -33,7 +33,10 @@ const envSchema = z.object({
     z.string().min(1).optional(),
   ),
   MSG91_AUTH_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
-  GSTVERIFY_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GSTVERIFY_API_KEY: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
   RAZORPAY_KEY_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   RAZORPAY_KEY_SECRET: z.preprocess(
     emptyToUndefined,

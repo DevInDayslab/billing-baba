@@ -5,12 +5,12 @@ import { users } from '../../db/schema/identity/tables';
 import type { UserRole } from '../../modules/auth/auth.types';
 import type { CollaborationRole } from '../../modules/collaboration/collaboration.types';
 import { AppError } from '../errors/app-error';
-import type { BusinessAccessContext } from './collaboration-permission.types';
-import { canPermission, presetDto } from './role-permission-registry';
 import type {
+  BusinessAccessContext,
   PermissionAction,
   PermissionModule,
 } from './collaboration-permission.types';
+import { canPermission, presetDto } from './role-permission-registry';
 
 export class BusinessAccessService {
   constructor(private readonly db: Database) {}

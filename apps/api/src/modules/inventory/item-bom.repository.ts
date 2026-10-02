@@ -2,16 +2,12 @@ import { and, asc, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { itemBomCosts } from '../../db/schema/inventory/item-bom-costs.table';
 import { itemBomMaterials } from '../../db/schema/inventory/item-bom-materials.table';
-import { items } from '../../db/schema/inventory/tables';
-import { unitDefinitions } from '../../db/schema/inventory/tables';
+import { items, unitDefinitions } from '../../db/schema/inventory/tables';
 import {
   toItemBomCostRecord,
   toItemBomMaterialRecord,
 } from './item-bom.mapper';
-import type {
-  ItemBomRecord,
-  ReplaceItemBomParams,
-} from './item-bom.types';
+import type { ItemBomRecord, ReplaceItemBomParams } from './item-bom.types';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 type DbOrTransaction = Database | DbTransaction;
@@ -19,7 +15,10 @@ type DbOrTransaction = Database | DbTransaction;
 export class ItemBomRepository {
   constructor(private readonly db: Database) {}
 
-  async getByItemId(businessId: string, itemId: string): Promise<ItemBomRecord> {
+  async getByItemId(
+    businessId: string,
+    itemId: string,
+  ): Promise<ItemBomRecord> {
     const materials = await this.listMaterialsByItemId(businessId, itemId);
     const costs = await this.listCostsByItemId(businessId, itemId);
     return { materials, costs };
@@ -81,7 +80,11 @@ export class ItemBomRepository {
       });
 
       return {
-        materials: await this.listMaterialsByItemIdWithDb(tx, businessId, itemId),
+        materials: await this.listMaterialsByItemIdWithDb(
+          tx,
+          businessId,
+          itemId,
+        ),
         costs: await this.listCostsByItemIdWithDb(tx, businessId, itemId),
       };
     });
@@ -358,7 +361,10 @@ export class ItemBomRepository {
           eq(itemBomMaterials.isDeleted, false),
         ),
       )
-      .orderBy(asc(itemBomMaterials.sortOrder), asc(itemBomMaterials.createdAt));
+      .orderBy(
+        asc(itemBomMaterials.sortOrder),
+        asc(itemBomMaterials.createdAt),
+      );
 
     return rows.map((row) => toItemBomMaterialRecord(row));
   }

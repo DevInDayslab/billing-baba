@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { applyHiddenLedgerVisibility } from '../../../src/shared/hidden-ledger/party-hidden-ledger';
-import { canViewHiddenLedger } from '../../../src/shared/hidden-ledger/hidden-ledger-access';
 import type { PartyRecord } from '../../../src/modules/parties/party.types';
+import { canViewHiddenLedger } from '../../../src/shared/hidden-ledger/hidden-ledger-access';
+import { applyHiddenLedgerVisibility } from '../../../src/shared/hidden-ledger/party-hidden-ledger';
 
 const sampleParty: PartyRecord = {
   id: 'party-1',

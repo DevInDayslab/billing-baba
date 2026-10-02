@@ -7,8 +7,8 @@ import {
   createBusinessBodySchema,
   updateBusinessProfileBodySchema,
 } from './business.schema';
-import { updateCommerceSettingsBodySchema } from './business-commerce-settings.schema';
 import { BusinessService } from './business.service';
+import { updateCommerceSettingsBodySchema } from './business-commerce-settings.schema';
 
 function formatZodError(error: ZodError): Record<string, string[]> {
   const errors: Record<string, string[]> = {};

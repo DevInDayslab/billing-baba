@@ -2,17 +2,14 @@ import 'dotenv/config';
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import { watermarkCursor } from '../../src/modules/sync/cursor';
 import { loadAppConfig } from '../../src/config/app_config';
-import {
-  ensureAccount,
-  issueTestSession,
-} from '../helpers/auth-session';
+import { watermarkCursor } from '../../src/modules/sync/cursor';
 import {
   createTestApp,
   jsonAuthHeaders,
   uniqueIndianMobile,
 } from '../helpers/app';
+import { ensureAccount, issueTestSession } from '../helpers/auth-session';
 import { canRunDbTests, INTEGRATION_TIMEOUT_MS } from '../helpers/env';
 
 function syncHeaders(token: string, deviceId: string): Record<string, string> {
@@ -48,9 +45,8 @@ describe.skipIf(!canRunDbTests)('Collaborator sync integration', () => {
       url: `${config.apiPrefix}/auth/me`,
       headers: jsonAuthHeaders(ownerToken),
     });
-    businessId = (
-      me.json() as { data: { businesses: Array<{ id: string }> } }
-    ).data.businesses[0]!.id;
+    businessId = (me.json() as { data: { businesses: Array<{ id: string }> } })
+      .data.businesses[0]!.id;
   });
 
   afterAll(async () => {
@@ -75,9 +71,8 @@ describe.skipIf(!canRunDbTests)('Collaborator sync integration', () => {
         },
       });
       expect(created.statusCode).toBe(201);
-      const inviteCode = (
-        created.json() as { data: { invite_code: string } }
-      ).data.invite_code;
+      const inviteCode = (created.json() as { data: { invite_code: string } })
+        .data.invite_code;
 
       const inviteeAccountId = await ensureAccount(
         inviteePhone,
@@ -93,11 +88,7 @@ describe.skipIf(!canRunDbTests)('Collaborator sync integration', () => {
       });
       expect(accepted.statusCode).toBe(200);
 
-      const scoped = await issueTestSession(
-        app,
-        inviteeAccountId,
-        businessId,
-      );
+      const scoped = await issueTestSession(app, inviteeAccountId, businessId);
       expect(scoped.access_token).toBeTruthy();
 
       const me = await app.inject({
@@ -171,9 +162,8 @@ describe.skipIf(!canRunDbTests)('Collaborator sync integration', () => {
           role: 'salesman',
         },
       });
-      const inviteCode = (
-        created.json() as { data: { invite_code: string } }
-      ).data.invite_code;
+      const inviteCode = (created.json() as { data: { invite_code: string } })
+        .data.invite_code;
 
       const wrongAccountId = await ensureAccount(uniqueIndianMobile('7'));
       const wrongSession = await issueTestSession(app, wrongAccountId);
@@ -206,9 +196,8 @@ describe.skipIf(!canRunDbTests)('Collaborator sync integration', () => {
           role: 'salesman',
         },
       });
-      const inviteCode = (
-        created.json() as { data: { invite_code: string } }
-      ).data.invite_code;
+      const inviteCode = (created.json() as { data: { invite_code: string } })
+        .data.invite_code;
 
       const accepted = await app.inject({
         method: 'POST',
@@ -237,9 +226,8 @@ describe.skipIf(!canRunDbTests)('Collaborator sync integration', () => {
           role: 'biller',
         },
       });
-      const inviteCode = (
-        created.json() as { data: { invite_code: string } }
-      ).data.invite_code;
+      const inviteCode = (created.json() as { data: { invite_code: string } })
+        .data.invite_code;
 
       const accountId = await ensureAccount(phone, 'Purchase Blocked');
       const preAccept = await issueTestSession(app, accountId);

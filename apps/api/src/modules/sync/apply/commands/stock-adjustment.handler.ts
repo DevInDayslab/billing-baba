@@ -2,15 +2,15 @@ import { and, eq } from 'drizzle-orm';
 import type { Database } from '../../../../db/client';
 import { inventoryMovements } from '../../../../db/schema/inventory/tables';
 import { AppError } from '../../../../shared/errors/app-error';
+import { normalizeMoney } from '../../../inventory/inventory.utils';
 import { recordMovementAndUpdateStock } from '../../../inventory/inventory-stock.service';
 import { ItemRepository } from '../../../inventory/item.repository';
-import { normalizeMoney } from '../../../inventory/inventory.utils';
-import { stockAdjustmentPayloadSchema } from './stock-adjustment.schema';
 import type {
   CommandApplyOutcome,
   CommandHandler,
   CommandMutationInput,
 } from './command.types';
+import { stockAdjustmentPayloadSchema } from './stock-adjustment.schema';
 
 export const stockAdjustmentHandler: CommandHandler = async (db, input) => {
   const parsed = stockAdjustmentPayloadSchema.safeParse(input.payload);

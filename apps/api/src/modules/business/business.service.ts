@@ -5,13 +5,11 @@ import { AppError } from '../../shared/errors/app-error';
 import { formatDatabaseError } from '../../shared/errors/database-error';
 import { AuthService } from '../auth/auth.service';
 import type { AuthSessionResponse } from '../auth/auth.types';
-import { BusinessBrandingService } from './business-branding.service';
 import { BusinessRepository } from './business.repository';
 import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
 } from './business.schema';
-import type { UpdateCommerceSettingsBody } from './business-commerce-settings.schema';
 import type {
   BusinessDetail,
   BusinessListItem,
@@ -19,6 +17,9 @@ import type {
   CommerceSettings,
   CreateBusinessResponse,
 } from './business.types';
+import { BusinessBrandingService } from './business-branding.service';
+import type { UpdateCommerceSettingsBody } from './business-commerce-settings.schema';
+
 function mapCreateBusinessError(error: unknown): AppError | unknown {
   if (error instanceof AppError) {
     return error;

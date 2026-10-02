@@ -3,8 +3,8 @@ import { ZodError } from 'zod';
 import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
 import { sendData } from '../../shared/http/response';
-import { toUploadIntentResponse } from '../storage/storage.mapper';
 import { brandingUploadBodySchema } from '../business/business-branding.schema';
+import { toUploadIntentResponse } from '../storage/storage.mapper';
 import { partyIdParamSchema } from './party.schema';
 import { PartyProfileImageService } from './party-profile-image.service';
 

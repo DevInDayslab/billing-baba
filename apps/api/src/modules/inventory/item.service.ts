@@ -1,5 +1,5 @@
-import { getDb } from '../../db/client';
 import type { AppConfig } from '../../config/app_config';
+import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { InventoryServiceBase } from './inventory.base-service';
@@ -14,7 +14,6 @@ import {
   recordMovementAndUpdateStock,
 } from './inventory-stock.service';
 import { ItemRepository } from './item.repository';
-import { ItemMediaService } from './item-media.service';
 import type {
   CreateItemBody,
   CreateItemImageBody,
@@ -31,6 +30,7 @@ import type {
   ItemPriceHistoryRecord,
   ItemTierPriceRecord,
 } from './item.types';
+import { ItemMediaService } from './item-media.service';
 
 export class ItemService extends InventoryServiceBase {
   private readonly repository: ItemRepository;

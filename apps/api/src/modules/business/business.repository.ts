@@ -4,32 +4,33 @@ import { businesses } from '../../db/schema/business/tables';
 import { users } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
 import { expenseCategories } from '../../db/schema/purchases/tables';
-import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
 import {
   businessSettings,
   documentNumberSequences,
 } from '../../db/schema/settings/tables';
+import { seedWalkInPartyForBusiness } from '../../shared/parties/walk-in-party';
+import {
+  defaultPricingTierLabels,
+  PRICING_TIER_VALUES,
+} from '../../shared/pricing/pricing-tier';
+import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
 import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
 } from './business.schema';
-import type { BrandingKind } from './business-branding.constants';
 import type {
   BusinessDetail,
   BusinessListItem,
   BusinessProfile,
   CommerceSettings,
 } from './business.types';
-import { seedWalkInPartyForBusiness } from '../../shared/parties/walk-in-party';
-import {
-  defaultPricingTierLabels,
-  PRICING_TIER_VALUES,
-} from '../../shared/pricing/pricing-tier';
+import type { BrandingKind } from './business-branding.constants';
 import type { UpdateCommerceSettingsBody } from './business-commerce-settings.schema';
 
 export type BusinessListItemRow = BusinessListItem & {
   logoMediaAssetId: string | null;
 };
+
 import {
   currentFiscalYearLabel,
   resolveStateCode,
@@ -146,7 +147,10 @@ export class BusinessRepository {
     return map;
   }
 
-  async scheduleDeletion(businessId: string, accountId: string): Promise<boolean> {
+  async scheduleDeletion(
+    businessId: string,
+    accountId: string,
+  ): Promise<boolean> {
     const now = new Date();
     const scheduled = new Date(now);
     scheduled.setDate(scheduled.getDate() + BUSINESS_DELETION_GRACE_DAYS);

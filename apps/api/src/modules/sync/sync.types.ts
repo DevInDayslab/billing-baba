@@ -1,7 +1,8 @@
 import { REGISTERED_ROW_ENTITY_TYPES } from './apply/row-entities';
 
 /** MVP: finalize commands for Phase 2 transactional documents. */
-export const SUPPORTED_SYNC_COMMANDS = [  'finalize_sale',
+export const SUPPORTED_SYNC_COMMANDS = [
+  'finalize_sale',
   'finalize_purchase',
   'finalize_credit_note',
   'finalize_debit_note',

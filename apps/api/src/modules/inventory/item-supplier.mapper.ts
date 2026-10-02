@@ -1,4 +1,7 @@
-import type { ItemSupplierRecord, ItemSupplierRow } from './item-supplier.types';
+import type {
+  ItemSupplierRecord,
+  ItemSupplierRow,
+} from './item-supplier.types';
 
 export function toItemSupplierRecord(row: ItemSupplierRow): ItemSupplierRecord {
   return {

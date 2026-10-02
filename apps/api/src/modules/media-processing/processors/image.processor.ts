@@ -3,8 +3,8 @@ import {
   type ImagePolicyKey,
 } from '../media-processing.constants';
 import type {
-  MediaProcessResult,
   MediaProcessingContext,
+  MediaProcessResult,
 } from '../media-processing.types';
 import { runImagePipeline } from '../pipeline/image-pipeline';
 

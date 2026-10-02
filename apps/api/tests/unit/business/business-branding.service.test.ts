@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
-import { AppError } from '../../../src/shared/errors/app-error';
+import type { BusinessRepository } from '../../../src/modules/business/business.repository';
+import { BusinessBrandingService } from '../../../src/modules/business/business-branding.service';
 import { StorageNotFoundError } from '../../../src/modules/storage/storage.errors';
 import type { StorageService } from '../../../src/modules/storage/storage.service';
 import type { UploadIntent } from '../../../src/modules/storage/storage.types';
-import type { BusinessRepository } from '../../../src/modules/business/business.repository';
-import { BusinessBrandingService } from '../../../src/modules/business/business-branding.service';
+import { AppError } from '../../../src/shared/errors/app-error';
 
 function baseConfig(): AppConfig {
   return {

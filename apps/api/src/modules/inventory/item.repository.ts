@@ -12,6 +12,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import type { Database } from '../../db/client';
+import { itemBomMaterials } from '../../db/schema/inventory/item-bom-materials.table';
 import {
   brands,
   categories,
@@ -26,7 +27,6 @@ import {
   stockLevels,
   unitDefinitions,
 } from '../../db/schema/inventory/tables';
-import { itemBomMaterials } from '../../db/schema/inventory/item-bom-materials.table';
 import { purchaseDocumentLines } from '../../db/schema/purchases/tables';
 import { salesDocumentLines } from '../../db/schema/sales/tables';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';

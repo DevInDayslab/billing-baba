@@ -7,15 +7,15 @@ import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import type { UploadIntent } from '../storage/storage.types';
 import { InventoryServiceBase } from './inventory.base-service';
+import { ItemRepository } from './item.repository';
+import type { ItemImageRecord } from './item.types';
+import { ItemLocationRepository } from './item-location.repository';
+import { ItemLocationService } from './item-location.service';
 import {
   ITEM_IMAGE_POLICY,
   MAX_ITEM_GALLERY_IMAGES,
   RACK_PHOTO_POLICY,
 } from './item-media.constants';
-import { ItemLocationRepository } from './item-location.repository';
-import { ItemLocationService } from './item-location.service';
-import { ItemRepository } from './item.repository';
-import type { ItemImageRecord } from './item.types';
 
 export type ItemMediaAssetResponse = {
   id: string;

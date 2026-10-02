@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
-import { AppError } from '../../../src/shared/errors/app-error';
+import type { ItemRepository } from '../../../src/modules/inventory/item.repository';
+import type { ItemLocationRepository } from '../../../src/modules/inventory/item-location.repository';
+import { MAX_ITEM_GALLERY_IMAGES } from '../../../src/modules/inventory/item-media.constants';
+import { ItemMediaService } from '../../../src/modules/inventory/item-media.service';
 import { StorageNotFoundError } from '../../../src/modules/storage/storage.errors';
 import type { StorageService } from '../../../src/modules/storage/storage.service';
 import type { UploadIntent } from '../../../src/modules/storage/storage.types';
-import type { ItemLocationRepository } from '../../../src/modules/inventory/item-location.repository';
-import type { ItemRepository } from '../../../src/modules/inventory/item.repository';
-import { ItemMediaService } from '../../../src/modules/inventory/item-media.service';
-import { MAX_ITEM_GALLERY_IMAGES } from '../../../src/modules/inventory/item-media.constants';
+import { AppError } from '../../../src/shared/errors/app-error';
 
 function baseConfig(): AppConfig {
   return {

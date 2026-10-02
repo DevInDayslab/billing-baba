@@ -4,10 +4,10 @@ import { businesses } from '../../db/schema/business/tables';
 import { parties } from '../../db/schema/crm/tables';
 import { users } from '../../db/schema/identity/tables';
 import {
-  gatewayPaymentIntents,
-  gatewayReconciliationJobs,
   GATEWAY_INTENT_PAYLOAD_VERSION,
   type GatewayIntentPayload,
+  gatewayPaymentIntents,
+  gatewayReconciliationJobs,
 } from '../../db/schema/payments/gateway-tables';
 import type {
   GatewayPaymentIntentStatus,

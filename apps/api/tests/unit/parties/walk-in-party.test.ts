@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  isWalkInPartyId,
   LEGACY_WALK_IN_PARTY_ID,
   walkInPartyIdForBusiness,
-  isWalkInPartyId,
 } from '../../../src/shared/parties/walk-in-party';
 
 describe('walkInPartyIdForBusiness', () => {
@@ -23,10 +23,7 @@ describe('walkInPartyIdForBusiness', () => {
       isWalkInPartyId(businessId, walkInPartyIdForBusiness(businessId)),
     ).toBe(true);
     expect(
-      isWalkInPartyId(
-        businessId,
-        'cccccccc-cccc-cccc-cccc-cccccccccccc',
-      ),
+      isWalkInPartyId(businessId, 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
     ).toBe(false);
   });
 });

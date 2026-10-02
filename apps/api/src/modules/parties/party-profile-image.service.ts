@@ -4,12 +4,12 @@ import { AppError } from '../../shared/errors/app-error';
 import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import type { UploadIntent } from '../storage/storage.types';
+import { PartyRepository } from './party.repository';
+import type { PartyRecord } from './party.types';
 import {
   PARTY_PROFILE_IMAGE_POLICY,
   PARTY_PROFILE_OWNER_TYPE,
 } from './party-profile-image.constants';
-import { PartyRepository } from './party.repository';
-import type { PartyRecord } from './party.types';
 
 export type PartyProfileImageResponse = {
   media_asset_id: string;

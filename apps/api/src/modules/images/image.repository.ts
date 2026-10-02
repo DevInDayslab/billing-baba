@@ -1,9 +1,9 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { Database } from '../../db/client';
-import { mediaAssets } from '../../db/schema/storage/tables';
 import { mediaImageVariants } from '../../db/schema/images/tables';
-import type { ImageVariant } from '../media-processing/image/image.constants';
+import { mediaAssets } from '../../db/schema/storage/tables';
 import type { ImageVariantRecord } from '../images/image.types';
+import type { ImageVariant } from '../media-processing/image/image.constants';
 
 export type UpsertImageVariantValues = {
   businessId: string | null;

@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  dueAmount,
   generateInvoiceShareToken,
   paymentStatusFromAmounts,
-  dueAmount,
 } from '../../../src/modules/invoice-share/invoice-share.utils';
 
 describe('invoice share tokens', () => {

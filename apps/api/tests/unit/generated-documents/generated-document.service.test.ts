@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
-import { GeneratedDocumentRepository } from '../../../src/modules/generated-documents/generated-document.repository';
+import type { GeneratedDocumentRepository } from '../../../src/modules/generated-documents/generated-document.repository';
 import { GeneratedDocumentService } from '../../../src/modules/generated-documents/generated-document.service';
 import type { GeneratedDocumentRecord } from '../../../src/modules/generated-documents/generated-document.types';
 import { StorageNotFoundError } from '../../../src/modules/storage/storage.errors';
-import { StorageService } from '../../../src/modules/storage/storage.service';
 import type { MediaAssetRepository } from '../../../src/modules/storage/storage.repository';
+import type { StorageService } from '../../../src/modules/storage/storage.service';
 import type { StorageProvider } from '../../../src/providers/storage';
 
 const businessId = '11111111-1111-1111-1111-111111111111';

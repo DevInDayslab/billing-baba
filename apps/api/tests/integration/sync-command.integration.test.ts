@@ -264,9 +264,8 @@ describe.skipIf(!canRunDbTests)('Sync command push integration', () => {
         url: `${config.apiPrefix}/inventory/stock-levels?item_id=${itemId}`,
         headers: jsonAuthHeaders(token),
       });
-      const qtyBefore = (
-        stockBefore.json() as { data: { quantity: string }[] }
-      ).data[0]?.quantity;
+      const qtyBefore = (stockBefore.json() as { data: { quantity: string }[] })
+        .data[0]?.quantity;
 
       const push = await app.inject({
         method: 'POST',
@@ -356,11 +355,12 @@ describe.skipIf(!canRunDbTests)('Sync command push integration', () => {
         url: `${config.apiPrefix}/inventory/stock-levels?item_id=${itemId}`,
         headers: jsonAuthHeaders(token),
       });
-      const qtyAfter = (
-        stockAfter.json() as { data: { quantity: string }[] }
-      ).data[0]?.quantity;
+      const qtyAfter = (stockAfter.json() as { data: { quantity: string }[] })
+        .data[0]?.quantity;
 
-      expect(parseFloat(qtyAfter ?? '0')).toBe(parseFloat(qtyBefore ?? '0') - 2);
+      expect(parseFloat(qtyAfter ?? '0')).toBe(
+        parseFloat(qtyBefore ?? '0') - 2,
+      );
     },
     INTEGRATION_TIMEOUT_MS,
   );
