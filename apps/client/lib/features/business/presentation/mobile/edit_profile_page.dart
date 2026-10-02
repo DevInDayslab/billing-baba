@@ -1,17 +1,26 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
+import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/utils/text_input_formatters.dart';
-import 'package:billing_baba/shared/utils/validators.dart';
-import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/data/business_branding_repository.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/business_avatar.dart';
 import 'package:billing_baba/features/business/presentation/mobile/application/mobile_business_profile_completion.dart';
 import 'package:billing_baba/features/business/presentation/mobile/application/mobile_business_profile_loader.dart';
 import 'package:billing_baba/features/business/presentation/mobile/widgets/mobile_business_profile_completion_section.dart';
 import 'package:billing_baba/features/business/presentation/mobile/widgets/mobile_business_profile_labeled_field.dart';
 import 'package:billing_baba/features/business/presentation/mobile/widgets/mobile_business_profile_signature_section.dart';
 import 'package:billing_baba/features/business/presentation/mobile/widgets/mobile_business_profile_tab_bar.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/pick_media_image.dart';
+import 'package:billing_baba/shared/utils/text_input_formatters.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
+import 'package:billing_baba/shared/widgets/app_error.dart';
+import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +36,9 @@ class MobileEditProfilePage extends ConsumerStatefulWidget {
 
 class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
   static const _saveRed = Color(0xFFE53935);
+  static const _logoSize = 112.0;
+  static const _logoMimes = {'image/png', 'image/jpeg', 'image/webp'};
+  static const _pngOnly = {'image/png'};
 
   static const _businessTypes = [
     'Retail',
@@ -88,19 +100,37 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
   String? _businessCategory;
   String? _state;
   String? _hydratedProfileId;
-  var _showGstinOnCard = false;
+  String? _profileSeed;
+  final _showGstinOnCard = false;
+
+  String? _logoUrl;
+  String? _signatureUrl;
+  Uint8List? _logoOptimisticBytes;
+  Uint8List? _signatureOptimisticBytes;
+  bool _uploadingLogo = false;
+  bool _uploadingSignature = false;
+  var _logoUploadGeneration = 0;
+  var _signatureUploadGeneration = 0;
+  BusinessBrandingRepository? _brandingRepository;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final BusinessProfileModel? profile =
+      final profile =
           ref.read(mobileBusinessProfileLoaderProvider).asData?.value ??
           ref.read(businessProfileProvider).asData?.value;
       if (profile != null && mounted) {
         setState(() => _hydrateFromProfile(profile));
       }
+      unawaited(_initBrandingRepository());
     });
+  }
+
+  Future<void> _initBrandingRepository() async {
+    final api = await ref.read(apiClientProvider.future);
+    if (!mounted) return;
+    setState(() => _brandingRepository = BusinessBrandingRepository(api.dio));
   }
 
   @override
@@ -132,7 +162,217 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
     _businessType = profile.businessType;
     _businessCategory = profile.businessCategory;
     _state = profile.state;
+    _logoUrl = profile.logoUrl;
+    _signatureUrl = profile.signatureUrl;
+    _logoOptimisticBytes = null;
+    _signatureOptimisticBytes = null;
+    _profileSeed = profile.id;
     _hydratedProfileId = profile.id;
+  }
+
+  void _patchLogoOnProfile(String? url) {
+    final current = ref.read(businessProfileProvider).asData?.value;
+    if (current == null) return;
+    ref
+        .read(businessProfileProvider.notifier)
+        .replaceWith(
+          url == null
+              ? current.copyWith(clearLogoUrl: true)
+              : current.copyWith(logoUrl: url),
+        );
+    ref.invalidate(mobileBusinessProfileLoaderProvider);
+  }
+
+  void _patchSignatureOnProfile(String? url) {
+    final current = ref.read(businessProfileProvider).asData?.value;
+    if (current == null) return;
+    ref
+        .read(businessProfileProvider.notifier)
+        .replaceWith(
+          url == null
+              ? current.copyWith(clearSignatureUrl: true)
+              : current.copyWith(signatureUrl: url),
+        );
+    ref.invalidate(mobileBusinessProfileLoaderProvider);
+  }
+
+  Future<void> _uploadBranding({
+    required Set<String> allowedMimes,
+    required int maxBytes,
+    required Future<Map<String, dynamic>> Function(
+      BusinessBrandingRepository repo,
+      Uint8List bytes,
+      String mime,
+    )
+    upload,
+    required void Function(bool value) setUploading,
+    required void Function(String? url) setUrl,
+    required void Function(Uint8List? bytes) setOptimisticBytes,
+    required String? Function() currentUrl,
+    required int Function() nextGeneration,
+    required int Function() currentGeneration,
+    required void Function(String? url) patchProfileMedia,
+  }) async {
+    final repo = _brandingRepository;
+    if (repo == null) return;
+
+    final picked = await pickAndPrepareMediaImage(
+      context: context,
+      allowedMimes: allowedMimes,
+      maxBytes: maxBytes,
+    );
+    if (picked == null) return;
+
+    final generation = nextGeneration();
+    final previousUrl = currentUrl();
+
+    setState(() {
+      setOptimisticBytes(picked.previewBytes);
+      setUploading(true);
+    });
+
+    try {
+      if (!mounted || currentGeneration() != generation) return;
+
+      final result = await upload(repo, picked.bytes, picked.mimeType);
+      if (!mounted || currentGeneration() != generation) return;
+
+      final newUrl = result['url'] as String?;
+      setState(() {
+        setUrl(newUrl);
+        setUploading(false);
+      });
+      patchProfileMedia(newUrl);
+      unawaited(
+        ref
+            .read(imageServiceProvider)
+            .replaceImage(
+              oldUrl: previousUrl,
+              newUrl: newUrl,
+              oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+              newCacheKey: buildImageCacheKey(fallbackUrl: newUrl),
+            ),
+      );
+    } on Exception catch (e) {
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() {
+        setOptimisticBytes(null);
+        setUrl(previousUrl);
+        setUploading(false);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteBranding({
+    required Future<void> Function(BusinessBrandingRepository repo) delete,
+    required void Function(bool value) setUploading,
+    required void Function(String? url) setUrl,
+    required void Function(Uint8List? bytes) setOptimisticBytes,
+    required String? Function() currentUrl,
+    required int Function() nextGeneration,
+    required int Function() currentGeneration,
+    required void Function() patchProfileMediaCleared,
+    required void Function(String? url) patchProfileMedia,
+  }) async {
+    final repo = _brandingRepository;
+    if (repo == null) return;
+
+    final generation = nextGeneration();
+    final previousUrl = currentUrl();
+
+    setState(() {
+      setOptimisticBytes(null);
+      setUrl(null);
+      setUploading(true);
+    });
+    patchProfileMediaCleared();
+
+    try {
+      await delete(repo);
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() => setUploading(false));
+      unawaited(
+        ref
+            .read(imageServiceProvider)
+            .invalidateImage(
+              url: previousUrl,
+              cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+            ),
+      );
+    } on Exception catch (e) {
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() {
+        setUrl(previousUrl);
+        setUploading(false);
+      });
+      patchProfileMedia(previousUrl);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Delete failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _uploadLogo() {
+    return _uploadBranding(
+      allowedMimes: _logoMimes,
+      maxBytes: 2 * 1024 * 1024,
+      upload: (repo, bytes, mime) =>
+          repo.uploadLogo(bytes: bytes, mimeType: mime),
+      setUploading: (v) => _uploadingLogo = v,
+      setUrl: (url) => _logoUrl = url,
+      setOptimisticBytes: (bytes) => _logoOptimisticBytes = bytes,
+      currentUrl: () => _logoUrl,
+      nextGeneration: () => ++_logoUploadGeneration,
+      currentGeneration: () => _logoUploadGeneration,
+      patchProfileMedia: _patchLogoOnProfile,
+    );
+  }
+
+  Future<void> _deleteLogo() {
+    return _deleteBranding(
+      delete: (repo) => repo.deleteLogo(),
+      setUploading: (v) => _uploadingLogo = v,
+      setUrl: (url) => _logoUrl = url,
+      setOptimisticBytes: (bytes) => _logoOptimisticBytes = bytes,
+      currentUrl: () => _logoUrl,
+      nextGeneration: () => ++_logoUploadGeneration,
+      currentGeneration: () => _logoUploadGeneration,
+      patchProfileMediaCleared: () => _patchLogoOnProfile(null),
+      patchProfileMedia: _patchLogoOnProfile,
+    );
+  }
+
+  Future<void> _uploadSignature() {
+    return _uploadBranding(
+      allowedMimes: _pngOnly,
+      maxBytes: 1024 * 1024,
+      upload: (repo, bytes, mime) =>
+          repo.uploadSignature(bytes: bytes, mimeType: mime),
+      setUploading: (v) => _uploadingSignature = v,
+      setUrl: (url) => _signatureUrl = url,
+      setOptimisticBytes: (bytes) => _signatureOptimisticBytes = bytes,
+      currentUrl: () => _signatureUrl,
+      nextGeneration: () => ++_signatureUploadGeneration,
+      currentGeneration: () => _signatureUploadGeneration,
+      patchProfileMedia: _patchSignatureOnProfile,
+    );
+  }
+
+  Future<void> _deleteSignature() {
+    return _deleteBranding(
+      delete: (repo) => repo.deleteSignature(),
+      setUploading: (v) => _uploadingSignature = v,
+      setUrl: (url) => _signatureUrl = url,
+      setOptimisticBytes: (bytes) => _signatureOptimisticBytes = bytes,
+      currentUrl: () => _signatureUrl,
+      nextGeneration: () => ++_signatureUploadGeneration,
+      currentGeneration: () => _signatureUploadGeneration,
+      patchProfileMediaCleared: () => _patchSignatureOnProfile(null),
+      patchProfileMedia: _patchSignatureOnProfile,
+    );
   }
 
   int _completionPercent(BusinessProfileModel profile) {
@@ -198,12 +438,6 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
     }
   }
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature coming soon')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(mobileBusinessProfileLoaderProvider);
@@ -212,7 +446,7 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
     ref.listen<AsyncValue<BusinessProfileModel>>(
       mobileBusinessProfileLoaderProvider,
       (previous, next) {
-        next.whenData((BusinessProfileModel profile) {
+        next.whenData((profile) {
           if (_hydratedProfileId != profile.id && mounted) {
             setState(() => _hydrateFromProfile(profile));
           }
@@ -259,31 +493,6 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
             ),
           ],
         ),
-        actions: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                tooltip: 'Business images',
-                onPressed: () => _showComingSoon('Business images'),
-                icon: const Icon(Icons.photo_library_outlined),
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF42A5F5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.add, size: 12, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -341,9 +550,37 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
   }
 
   Widget _buildBasicDetailsTab(EditBusinessProfileFormState formState) {
+    final displayName = _businessNameController.text.trim().isEmpty
+        ? 'Business'
+        : _businessNameController.text.trim();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Center(
+          child: OptimisticMediaUploader(
+            label: 'Business logo',
+            size: _logoSize,
+            imageUrl: _logoUrl,
+            optimisticBytes: _logoOptimisticBytes,
+            isUploading: _uploadingLogo,
+            replaceLabel: 'Change logo',
+            removeLabel: 'Remove logo',
+            emptyLabel: 'Add logo',
+            placeholder: BusinessAvatar(
+              name: displayName,
+              seed: _profileSeed ?? _hydratedProfileId ?? 'business',
+              diameter: _logoSize,
+            ),
+            onReplace: () => unawaited(_uploadLogo()),
+            onRemove:
+                (_logoUrl != null && _logoUrl!.trim().isNotEmpty) ||
+                    _logoOptimisticBytes != null
+                ? () => unawaited(_deleteLogo())
+                : null,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
         MobileBusinessProfileLabeledField(
           label: 'Business Name',
           controller: _businessNameController,
@@ -448,10 +685,34 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
           maxLines: 4,
         ),
         const SizedBox(height: AppSpacing.xl),
-        MobileBusinessProfileSignatureSection(
-          onCreate: () => _showComingSoon('Signature create'),
-          onUpload: () => _showComingSoon('Signature upload'),
-        ),
+        if (_signatureUrl != null ||
+            _signatureOptimisticBytes != null ||
+            _uploadingSignature) ...[
+          Center(
+            child: OptimisticMediaUploader(
+              label: 'Signature',
+              width: 220,
+              height: 96,
+              shape: OptimisticMediaShape.roundedRect,
+              imageUrl: _signatureUrl,
+              optimisticBytes: _signatureOptimisticBytes,
+              isUploading: _uploadingSignature,
+              replaceLabel: 'Replace signature',
+              removeLabel: 'Remove signature',
+              emptyLabel: 'Sign',
+              onReplace: () => unawaited(_uploadSignature()),
+              onRemove:
+                  (_signatureUrl != null && _signatureUrl!.trim().isNotEmpty) ||
+                      _signatureOptimisticBytes != null
+                  ? () => unawaited(_deleteSignature())
+                  : null,
+            ),
+          ),
+        ] else
+          MobileBusinessProfileSignatureSection(
+            onCreate: () => unawaited(_uploadSignature()),
+            onUpload: () => unawaited(_uploadSignature()),
+          ),
       ],
     );
   }

@@ -438,15 +438,22 @@ class AuthService {
           rawHost == '127.0.0.1' ||
           rawHost == 'localhost' ||
           rawHost == '0.0.0.0';
-      if (AppPlatform.current.isAndroid &&
-          AppPlatform.current.isMobile &&
-          isLoopback) {
-        AuthDebugLogger.log(
-          'AuthService.devLogin: cannot reach $rawHost from Android. '
-          'For USB devices run: adb reverse tcp:3000 tcp:3000 '
-          '(or set API_BASE_URL to your PC LAN IP on the same Wi‑Fi). '
-          'Using offline local fallback.',
-        );
+      if (AppPlatform.current.isMobile && isLoopback) {
+        if (AppPlatform.current.isAndroid) {
+          AuthDebugLogger.log(
+            'AuthService.devLogin: cannot reach $rawHost from Android. '
+            'For USB devices run: adb reverse tcp:3000 tcp:3000 '
+            '(or set API_BASE_URL to your PC LAN IP on the same Wi‑Fi). '
+            'Using offline local fallback.',
+          );
+        } else if (AppPlatform.current.isIOS) {
+          AuthDebugLogger.log(
+            'AuthService.devLogin: cannot reach $rawHost from iOS. '
+            'On a physical device set API_BASE_URL to your Mac LAN IP '
+            'on the same Wi‑Fi (simulator can use 127.0.0.1). '
+            'Using offline local fallback.',
+          );
+        }
       }
       AuthDebugLogger.log(
         'AuthService.devLogin: API unreachable — offline local fallback '

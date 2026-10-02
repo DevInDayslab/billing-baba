@@ -37,9 +37,11 @@ class OtpService {
   static const mockReqId = 'mock-otp-req';
   static const mockAccessToken = 'mock-otp-verified';
 
+  /// MSG91 OTP widget is Dart HTTP — supported on mobile and desktop clients.
   bool get isSdkSupported =>
       kIsWeb ||
       defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS ||
       defaultTargetPlatform == TargetPlatform.windows;
 

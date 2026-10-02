@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
-import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_quantity_pad_sheet.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_settings_panel.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/app_text_field.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
@@ -337,9 +338,9 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             color: AppColors.textSecondary,
-            onPressed: () {
-              // TODO(pos): POS cart settings
-            },
+            onPressed: () => unawaited(
+              showMobileSaleSettingsPanel(context: context, ref: ref),
+            ),
           ),
         ],
       ),

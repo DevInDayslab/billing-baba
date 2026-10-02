@@ -65,6 +65,12 @@
 	<string>Contacts access lets you import party details from your phone contacts.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photo library access is required to select item images.</string>
+	<!-- Local HTTP API (dev). Prefer HTTPS API_BASE_URL in production. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

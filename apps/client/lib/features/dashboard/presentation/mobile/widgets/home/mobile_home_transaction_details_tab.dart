@@ -19,7 +19,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MobileHomeTransactionDetailsTab extends ConsumerStatefulWidget {
-  const MobileHomeTransactionDetailsTab({super.key});
+  const MobileHomeTransactionDetailsTab({
+    required this.scrollChrome,
+    super.key,
+  });
+
+  /// Search + home tabs — scrolls with content (Items-style).
+  final Widget scrollChrome;
 
   @override
   ConsumerState<MobileHomeTransactionDetailsTab> createState() =>
@@ -121,6 +127,68 @@ class _MobileHomeTransactionDetailsTabState
     );
   }
 
+  Widget _sectionHeader({
+    required Color primary,
+    required VoidCallback onExport,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xs,
+        AppSpacing.lg,
+        0,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Transaction Details',
+                  style: AppTypography.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  'Overview of your business transactions',
+                  style: AppTypography.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: _showFilterSheet,
+            icon: Icon(Icons.tune_rounded, color: primary, size: 22),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(
+              minWidth: 36,
+              minHeight: 36,
+            ),
+            tooltip: 'Filter',
+          ),
+          IconButton(
+            onPressed: onExport,
+            icon: Icon(Icons.download_rounded, color: primary, size: 22),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(
+              minWidth: 36,
+              minHeight: 36,
+            ),
+            tooltip: 'Download',
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -128,144 +196,134 @@ class _MobileHomeTransactionDetailsTabState
     final transactionsAsync = ref.watch(mobileHomeTransactionsProvider);
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.xs,
-            AppSpacing.lg,
-            0,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Transaction Details',
-                      style: AppTypography.inter(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    Text(
-                      'Overview of your business transactions',
-                      style: AppTypography.inter(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: _showFilterSheet,
-                icon: Icon(Icons.tune_rounded, color: primary, size: 22),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 36,
-                ),
-                tooltip: 'Filter',
-              ),
-              IconButton(
-                onPressed: () {
-                  final data = transactionsAsync.value ?? const [];
-                  final filtered = filterHomeTransactions(
-                    data,
-                    homeState.searchQuery,
-                    typeFilters: homeState.transactionTypeFilters,
-                    dateRange: _dateRange,
-                  );
-                  _exportTransactions(filtered);
-                },
-                icon: Icon(Icons.download_rounded, color: primary, size: 22),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 36,
-                ),
-                tooltip: 'Download',
-              ),
-            ],
-          ),
-        ),
-        MobileHomeTransactionTypeTabs(
-          selected: homeState.transactionTypeFilters,
-          onChanged: ref
-              .read(mobileHomeControllerProvider.notifier)
-              .setTransactionTypeFilters,
-        ),
-        MobileHomeTransactionDateFilters(
-          dateRange: _dateRange,
-          quickPeriod: _quickPeriod,
-          onDateRangeChanged: (range) => setState(() => _dateRange = range),
-          onQuickPeriodChanged: (period) =>
-              setState(() => _quickPeriod = period),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => refreshMobileHomeTransactions(ref),
-            child: transactionsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => AppError(
-                message: OfflineUiMessages.messageFor(error),
-                onRetry: () => unawaited(refreshMobileHomeTransactions(ref)),
-              ),
-              data: (allTransactions) {
-                final transactions = filterHomeTransactions(
-                  allTransactions,
+    return RefreshIndicator(
+      onRefresh: () => refreshMobileHomeTransactions(ref),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(child: widget.scrollChrome),
+          SliverToBoxAdapter(
+            child: _sectionHeader(
+              primary: primary,
+              onExport: () {
+                final data = transactionsAsync.value ?? const [];
+                final filtered = filterHomeTransactions(
+                  data,
                   homeState.searchQuery,
                   typeFilters: homeState.transactionTypeFilters,
                   dateRange: _dateRange,
                 );
+                _exportTransactions(filtered);
+              },
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: MobileHomeTransactionTypeTabs(
+              selected: homeState.transactionTypeFilters,
+              onChanged: ref
+                  .read(mobileHomeControllerProvider.notifier)
+                  .setTransactionTypeFilters,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: MobileHomeTransactionDateFilters(
+              dateRange: _dateRange,
+              quickPeriod: _quickPeriod,
+              onDateRangeChanged: (range) => setState(() => _dateRange = range),
+              onQuickPeriodChanged: (period) =>
+                  setState(() => _quickPeriod = period),
+            ),
+          ),
+          ...transactionsAsync.when(
+            loading: () => [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                // Shell extendBody: inset so content centers above the nav.
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MobileBottomNavigation.contentBottomPadding(
+                      context,
+                    ),
+                  ),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+            ],
+            error: (error, _) => [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MobileBottomNavigation.contentBottomPadding(
+                      context,
+                    ),
+                  ),
+                  child: AppError(
+                    message: OfflineUiMessages.messageFor(error),
+                    onRetry: () =>
+                        unawaited(refreshMobileHomeTransactions(ref)),
+                  ),
+                ),
+              ),
+            ],
+            data: (allTransactions) {
+              final transactions = filterHomeTransactions(
+                allTransactions,
+                homeState.searchQuery,
+                typeFilters: homeState.transactionTypeFilters,
+                dateRange: _dateRange,
+              );
 
-                if (transactions.isEmpty) {
-                  return ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: const [
-                      SizedBox(height: 80),
-                      MobileEmptyState(
+              if (transactions.isEmpty) {
+                return [
+                  // Shell extendBody: pad bottom so empty state centers in the
+                  // visible area above the floating nav, not the full viewport.
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MobileBottomNavigation.contentBottomPadding(
+                          context,
+                        ),
+                      ),
+                      child: const MobileEmptyState(
                         title: 'No transactions found',
                         message: 'Try a different search or filter.',
                         icon: Icons.receipt_long_outlined,
                       ),
-                    ],
-                  );
-                }
+                    ),
+                  ),
+                ];
+              }
 
-                return ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(),
+              return [
+                SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     AppSpacing.lg,
                     AppSpacing.sm,
                     AppSpacing.lg,
                     MobileBottomNavigation.contentBottomPadding(context),
                   ),
-                  itemCount: transactions.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final item = transactions[index];
-                    return MobileHomeTransactionCard(
-                      item: item,
-                      onTap: () => navigateToHomeTransaction(context, item),
-                      onPrint: () => _handlePrint(item),
-                      onShare: () => _handleShare(item),
-                    );
-                  },
-                );
-              },
-            ),
+                  sliver: SliverList.separated(
+                    itemCount: transactions.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      final item = transactions[index];
+                      return MobileHomeTransactionCard(
+                        item: item,
+                        onTap: () => navigateToHomeTransaction(context, item),
+                        onPrint: () => _handlePrint(item),
+                        onShare: () => _handleShare(item),
+                      );
+                    },
+                  ),
+                ),
+              ];
+            },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
