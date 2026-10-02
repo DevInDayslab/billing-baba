@@ -35,15 +35,16 @@ class GstSlabDefinition {
 
 /// Standard Indian GST slabs for Billing Baba.
 abstract final class GstTaxSlabs {
+  /// Standard item GST slabs (Nil/Exempt, 0.25% … 40%) per product reference.
   static const standardPercents = <double>[
     0,
     0.25,
     1.5,
     3,
     5,
-    6,
     12,
     18,
+    28,
     40,
   ];
 

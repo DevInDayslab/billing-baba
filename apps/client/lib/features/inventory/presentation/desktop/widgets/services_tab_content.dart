@@ -78,6 +78,13 @@ class ServicesTabContent extends ConsumerWidget {
           initialType: ItemType.service,
         ),
       ),
+      onItemDoubleTap: (item) => unawaited(
+        showAddItemDialog(
+          context,
+          initialType: item.type,
+          editItem: item,
+        ),
+      ),
       toolbarMenuItems: buildInventoryItemBulkMenuItems(
         context: context,
         itemType: ItemType.service,

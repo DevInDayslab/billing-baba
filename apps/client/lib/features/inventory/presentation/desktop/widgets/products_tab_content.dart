@@ -106,6 +106,13 @@ class ProductsTabContent extends ConsumerWidget {
                   searchQuery: ref.read(productBackendSearchProvider),
                 ),
             onAddPressed: () => unawaited(showAddItemDialog(context)),
+            onItemDoubleTap: (item) => unawaited(
+              showAddItemDialog(
+                context,
+                initialType: item.type,
+                editItem: item,
+              ),
+            ),
             toolbarMenuItems: buildInventoryItemBulkMenuItems(
               context: context,
               itemType: ItemType.product,

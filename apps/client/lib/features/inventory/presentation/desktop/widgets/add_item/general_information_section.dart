@@ -5,12 +5,14 @@ import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/add_item_brand_picker_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/add_item_category_picker_field.dart';
+import 'package:billing_baba/features/inventory/application/item_images_provider.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/item_image_gallery_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Basic details block — shared Product / Service grid (Vyapar-aligned).
 class GeneralInformationSection extends StatelessWidget {
@@ -369,11 +371,19 @@ class GeneralInformationSection extends StatelessWidget {
             if (_showItemImagesRow)
               FormGridCell(
                 span: 6,
-                child: _floatingField(
-                  label: _isProduct ? 'Item Images' : 'Service Images',
-                  fixedHeight: false,
-                  child: _buildItemImagesContent(),
-                ),
+                child: itemId != null &&
+                        isServerBackedInventoryItemId(itemId!) &&
+                        alternativesInlineAddButton != null
+                    ? _ServerItemImagesField(
+                        itemId: itemId!,
+                        isProduct: _isProduct,
+                        seedPrimaryImageUrl: seedPrimaryImageUrl,
+                      )
+                    : _floatingField(
+                        label: _isProduct ? 'Item Images' : 'Service Images',
+                        fixedHeight: false,
+                        child: _buildItemImagesContent(),
+                      ),
               ),
           ],
         ),
@@ -382,6 +392,43 @@ class GeneralInformationSection extends StatelessWidget {
           alternativesListSection!,
         ],
       ],
+    );
+  }
+}
+
+/// Thumbnail row for saved items — hidden until at least one image exists
+/// (empty state uses inline add-image control beside description).
+class _ServerItemImagesField extends ConsumerWidget {
+  const _ServerItemImagesField({
+    required this.itemId,
+    required this.isProduct,
+    this.seedPrimaryImageUrl,
+  });
+
+  final String itemId;
+  final bool isProduct;
+  final String? seedPrimaryImageUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final imagesAsync = ref.watch(itemImagesProvider(itemId));
+    final images = imagesAsync.value ?? const [];
+    final hasSeedImage = seedPrimaryImageUrl?.trim().isNotEmpty ?? false;
+    if (images.isEmpty && !hasSeedImage) {
+      return const SizedBox.shrink();
+    }
+
+    final label = isProduct ? 'Item Images' : 'Service Images';
+    return AppFormField(
+      label: label,
+      floatingLabel: true,
+      fixedHeight: false,
+      child: ItemImageGallerySection(
+        itemId: itemId,
+        label: label,
+        seedPrimaryImageUrl: seedPrimaryImageUrl,
+        showEmptyAddAction: false,
+      ),
     );
   }
 }

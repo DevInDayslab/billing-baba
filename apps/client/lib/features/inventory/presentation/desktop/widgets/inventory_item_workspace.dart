@@ -34,6 +34,7 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
     required this.onRefresh,
     required this.onAddPressed,
     required this.onMenuSelected,
+    this.onItemDoubleTap,
     this.hasMore = false,
     this.isLoadingMore = false,
     this.onLoadMore,
@@ -68,6 +69,7 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
   final VoidCallback onAddPressed;
   final void Function(String value, InventoryItem item) onMenuSelected;
+  final ValueChanged<InventoryItem>? onItemDoubleTap;
   final IconData leadingIcon;
   final bool showListFilters;
   final List<SalesActionMenuItem> toolbarMenuItems;
@@ -197,6 +199,7 @@ class _InventoryItemWorkspaceState
           hasMore: widget.hasMore,
           isLoadingMore: widget.isLoadingMore,
           onItemSelected: _selectItem,
+          onItemDoubleTap: widget.onItemDoubleTap,
           onAddPressed: widget.onAddPressed,
           onMenuSelected: widget.onMenuSelected,
           toolbarMenuItems: widget.toolbarMenuItems,

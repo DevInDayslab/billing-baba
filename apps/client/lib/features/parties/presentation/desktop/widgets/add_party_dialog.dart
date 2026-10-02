@@ -56,6 +56,23 @@ const _partyTopFieldRowGap = 20.0;
 const _partySectionGap = 20.0;
 const _partyAdditionalRowMinHeight = 40.0;
 
+/// Wider/taller than default ERP modals — party form has tabs and address blocks.
+const _addPartyDialogWidth = 1280.0;
+const _addPartyDialogMaxWidth = 1320.0;
+const _addPartyDialogMaxHeightFactor = 0.93;
+
+Future<AddPartyResult?> _showPartyDesktopDialog(
+  BuildContext context, {
+  required Widget child,
+}) {
+  return showFormDialog<AddPartyResult>(
+    context: context,
+    maxWidth: _addPartyDialogMaxWidth,
+    maxHeightFactor: _addPartyDialogMaxHeightFactor,
+    child: child,
+  );
+}
+
 /// Shows the Add Party modal from sale forms and party pickers.
 Future<AddPartyResult?> showAddPartyDialog(BuildContext context) {
   if (AppPlatform.current.isMobile) {
@@ -64,8 +81,8 @@ Future<AddPartyResult?> showAddPartyDialog(BuildContext context) {
       child: const AddPartyDialog(),
     );
   }
-  return showFormDialog<AddPartyResult>(
-    context: context,
+  return _showPartyDesktopDialog(
+    context,
     child: const AddPartyDialog(),
   );
 }
@@ -81,8 +98,8 @@ Future<AddPartyResult?> showEditPartyDialog(
       child: AddPartyDialog(partyToEdit: party),
     );
   }
-  return showFormDialog<AddPartyResult>(
-    context: context,
+  return _showPartyDesktopDialog(
+    context,
     child: AddPartyDialog(partyToEdit: party),
   );
 }
@@ -98,8 +115,8 @@ Future<AddPartyResult?> showDuplicatePartyDialog(
       child: AddPartyDialog(duplicateFrom: party),
     );
   }
-  return showFormDialog<AddPartyResult>(
-    context: context,
+  return _showPartyDesktopDialog(
+    context,
     child: AddPartyDialog(duplicateFrom: party),
   );
 }
@@ -1684,7 +1701,19 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       );
     }
 
-    return _wrapWithCloseGuard(content);
+    final media = MediaQuery.sizeOf(context);
+    final availableWidth = media.width - 48;
+    final preferredWidth = availableWidth >= _addPartyDialogWidth
+        ? _addPartyDialogWidth
+        : availableWidth.clamp(0, _addPartyDialogMaxWidth);
+
+    return _wrapWithCloseGuard(
+      SizedBox(
+        width: preferredWidth.toDouble(),
+        height: media.height * _addPartyDialogMaxHeightFactor,
+        child: content,
+      ),
+    );
   }
 
   Widget _buildDialogContent({

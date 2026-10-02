@@ -80,17 +80,26 @@ class _UnitsTabContentState extends ConsumerState<UnitsTabContent> {
     }
   }
 
+  static String? _activeUnitId(List<InventoryUnit> units, String? selectedId) {
+    if (units.isEmpty) return null;
+    if (selectedId != null && units.any((unit) => unit.id == selectedId)) {
+      return selectedId;
+    }
+    return units.first.id;
+  }
+
   @override
   Widget build(BuildContext context) {
     final units = ref.watch(unitsProvider);
     final unitsAsync = ref.watch(inventoryUnitsProvider);
     final selectedId = ref.watch(selectedUnitIdProvider);
+    final activeUnitId = _activeUnitId(units, selectedId);
 
     return InventorySplitLayout(
       listPanel: _UnitsListPanel(
         units: units,
         unitsAsync: unitsAsync,
-        selectedId: selectedId,
+        selectedId: activeUnitId,
         onSearchChanged: _onSearchChanged,
         onRefresh: () => ref
             .read(inventoryUnitsProvider.notifier)
@@ -113,13 +122,13 @@ class _UnitsTabContentState extends ConsumerState<UnitsTabContent> {
           }
         },
       ),
-      detailPanel: selectedId == null
+      detailPanel: activeUnitId == null
           ? const InventoryDetailPlaceholder(
               message: 'Select a unit to view details',
             )
           : _UnitDetailPanel(
               unit: units.firstWhere(
-                (unit) => unit.id == selectedId,
+                (unit) => unit.id == activeUnitId,
                 orElse: () => units.first,
               ),
             ),

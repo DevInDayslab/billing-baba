@@ -244,10 +244,9 @@ class _TierPricingRow extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             flex: 4,
-            child: TextField(
+            child: SaleTextField(
               controller: priceController,
-              style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: '0.00'),
+              hint: '0.00',
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),

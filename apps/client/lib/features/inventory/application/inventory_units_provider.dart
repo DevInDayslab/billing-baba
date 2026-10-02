@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/default_inventory_units.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
@@ -66,11 +67,29 @@ Future<List<InventoryUnit>> fetchInventoryUnitsWithFallback(
   try {
     final service = await ref.read(inventoryServiceProvider.future);
     final units = await service.fetchUnits(searchQuery: searchQuery);
-    if (units.isNotEmpty) return units;
+    return _filterUnits(
+      mergeUnitsWithCatalogDefaults(units),
+      searchQuery: searchQuery,
+    );
   } on Object {
     // Fall through to local catalog when API is empty or unavailable.
   }
   return _catalogUnits(searchQuery: searchQuery);
+}
+
+List<InventoryUnit> _filterUnits(
+  List<InventoryUnit> units, {
+  String? searchQuery,
+}) {
+  final query = searchQuery?.trim().toLowerCase() ?? '';
+  if (query.isEmpty) return units;
+  return units
+      .where(
+        (unit) =>
+            unit.fullName.toLowerCase().contains(query) ||
+            unit.shortName.toLowerCase().contains(query),
+      )
+      .toList();
 }
 
 List<InventoryUnit> _catalogUnits({String? searchQuery}) {

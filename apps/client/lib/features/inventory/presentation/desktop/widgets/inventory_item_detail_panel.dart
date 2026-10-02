@@ -4,7 +4,6 @@ import 'package:billing_baba/features/inventory/application/inventory_stock_calc
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/adjust_stock_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_history_table.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_transactions_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,15 +62,10 @@ class InventoryItemDetailPanel extends ConsumerWidget {
         ),
         const Divider(height: 1, thickness: 1),
         Expanded(
-          child: mode == InventoryDetailHeaderMode.product
-              ? InventoryStockHistoryTable(
-                  itemId: itemId,
-                  unitLabel: unitLabel,
-                )
-              : InventoryTransactionsTable(
-                  itemId: itemId,
-                  unitLabel: unitLabel,
-                ),
+          child: InventoryTransactionsTable(
+            itemId: itemId,
+            unitLabel: unitLabel,
+          ),
         ),
       ],
     );

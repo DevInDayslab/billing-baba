@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/brands_tab_content.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/categories_tab_content.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/products_tab_content.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/services_tab_content.dart';
@@ -16,6 +17,7 @@ const _itemsTabs = [
   _ItemsTabSpec(icon: LucideIcons.package, label: 'Products'),
   _ItemsTabSpec(icon: LucideIcons.settings, label: 'Services'),
   _ItemsTabSpec(icon: LucideIcons.layoutGrid, label: 'Category'),
+  _ItemsTabSpec(icon: LucideIcons.tag, label: 'Brand'),
   _ItemsTabSpec(icon: LucideIcons.ruler, label: 'Units'),
 ];
 
@@ -105,6 +107,7 @@ class _ItemsPageState extends ConsumerState<DesktopItemsPage>
                   ProductsTabContent(),
                   ServicesTabContent(),
                   CategoriesTabContent(),
+                  BrandsTabContent(),
                   UnitsTabContent(),
                 ],
               ),

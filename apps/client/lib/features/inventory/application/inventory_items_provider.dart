@@ -522,6 +522,28 @@ class InventoryItems extends _$InventoryItems {
     }
   }
 
+  Future<String?> moveItemsToBrand({
+    required List<String> itemIds,
+    required String brandId,
+    required bool removeFromExistingBrand,
+  }) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.moveItemsToBrand(
+        itemIds: itemIds,
+        brandId: brandId,
+        removeFromExistingBrand: removeFromExistingBrand,
+      );
+      await refresh(searchQuery: ref.read(productBackendSearchProvider));
+      await refreshAfterItemMutation(ref);
+      return null;
+    } on InventoryException catch (error) {
+      return error.message;
+    } catch (error) {
+      return InventoryErrorMapper.messageFor(error);
+    }
+  }
+
   Future<void> refreshAfterStockAdjustment(String itemId) async {
     await refresh();
     invalidateDashboard(ref);
