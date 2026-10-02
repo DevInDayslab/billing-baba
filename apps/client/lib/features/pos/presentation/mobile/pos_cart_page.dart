@@ -42,7 +42,6 @@ List<({String label, double percent})> get _taxRateOptions => [
       percent: slab.percent,
     ),
   ),
-  (label: 'GST@28%', percent: 28),
 ];
 
 int _nextInvoiceNumber = 1;

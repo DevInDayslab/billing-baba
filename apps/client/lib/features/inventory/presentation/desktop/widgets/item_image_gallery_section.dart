@@ -27,12 +27,14 @@ class ItemImageGallerySection extends ConsumerStatefulWidget {
     required this.itemId,
     this.label = '',
     this.seedPrimaryImageUrl,
+    this.showEmptyAddAction = true,
     super.key,
   });
 
   final String itemId;
   final String label;
   final String? seedPrimaryImageUrl;
+  final bool showEmptyAddAction;
 
   @override
   ConsumerState<ItemImageGallerySection> createState() =>
@@ -374,6 +376,10 @@ class _ItemImageGallerySectionState
     final hasAny = visibleRemote.isNotEmpty || _pending.isNotEmpty;
 
     if (!hasAny) {
+      if (!widget.showEmptyAddAction) {
+        return const SizedBox.shrink();
+      }
+
       if (imagesAsync.isLoading) {
         return Align(
           alignment: Alignment.centerLeft,

@@ -37,6 +37,7 @@ class InventoryLeftPanel extends ConsumerWidget {
     required this.onEnter,
     required this.onRefresh,
     required this.onItemSelected,
+    this.onItemDoubleTap,
     required this.onAddPressed,
     required this.onMenuSelected,
     this.toolbarMenuItems = const [],
@@ -72,6 +73,7 @@ class InventoryLeftPanel extends ConsumerWidget {
   final bool hasMore;
   final bool isLoadingMore;
   final ValueChanged<String> onItemSelected;
+  final ValueChanged<InventoryItem>? onItemDoubleTap;
   final VoidCallback onAddPressed;
   final void Function(String value, InventoryItem item) onMenuSelected;
   final List<SalesActionMenuItem> toolbarMenuItems;
@@ -157,6 +159,9 @@ class InventoryLeftPanel extends ConsumerWidget {
                 searchQuery: searchQuery,
                 leadingIcon: leadingIcon,
                 onTap: () => onItemSelected(item.id),
+                onDoubleTap: onItemDoubleTap == null
+                    ? null
+                    : () => onItemDoubleTap!(item),
                 onMenuSelected: (value) => onMenuSelected(value, item),
               );
             },

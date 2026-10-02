@@ -9,6 +9,7 @@ import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_category_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_field.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/brands/mobile_add_brand_sheet.dart';
@@ -758,9 +759,13 @@ class _AlternativeItemsPickerSheetState
                           return CheckboxListTile(
                             value: checked,
                             title: Text(item.name),
-                            subtitle: item.shortName?.isNotEmpty == true
-                                ? Text(item.shortName!)
-                                : null,
+                            subtitle: Text(
+                              alternativePickerStockLabel(item),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                             onChanged: (value) {
                               setState(() {
                                 if (value == true) {

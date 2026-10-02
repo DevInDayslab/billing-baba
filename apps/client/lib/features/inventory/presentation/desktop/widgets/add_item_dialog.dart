@@ -17,6 +17,7 @@ import 'package:billing_baba/features/inventory/application/inventory_units_prov
 import 'package:billing_baba/features/inventory/application/item_bom_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_suppliers_provider.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
@@ -80,6 +81,11 @@ String _nextTierRowId() {
   return 'tier_row_$_tierRowCounter';
 }
 
+/// Wider/taller than default ERP modals — Add Item has many tabs and fields.
+const _addItemDialogWidth = 1280.0;
+const _addItemDialogMaxWidth = 1320.0;
+const _addItemDialogMaxHeightFactor = 0.93;
+
 Future<InventoryItem?> showAddItemDialog(
   BuildContext context, {
   ItemType initialType = ItemType.product,
@@ -99,6 +105,8 @@ Future<InventoryItem?> showAddItemDialog(
 
   return showFormDialog<InventoryItem>(
     context: context,
+    maxWidth: _addItemDialogMaxWidth,
+    maxHeightFactor: _addItemDialogMaxHeightFactor,
     child: AddItemDialog(initialType: initialType, editItem: editItem),
   );
 }
@@ -132,6 +140,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final _descriptionController = TextEditingController();
   final _salePriceController = TextEditingController();
   final _mrpController = TextEditingController();
+  final _mrpSaleDiscountController = TextEditingController();
+  final _salePriceDiscountController = TextEditingController();
   final _wholesalePriceController = TextEditingController();
   final _minWholesaleQtyController = TextEditingController();
   final _openingQtyController = TextEditingController();
@@ -377,6 +387,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     if (item.salePrice != null) {
       notifier.updateSalePrice(item.salePrice!);
       _salePriceController.text = formatIndianItemPriceInput(item.salePrice!);
+      notifier.syncMrpSaleDiscountFromPrices();
+      _syncMrpSaleDiscountController();
     }
     if (item.categoryId != null) notifier.setCategory(item.categoryId);
     if (item.brandId != null) notifier.setBrand(item.brandId);
@@ -409,6 +421,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         if (mrp != null) {
           notifier.updateMrp(mrp);
           _mrpController.text = formatIndianItemPriceInput(mrp);
+          _syncSalePriceController();
+          _syncMrpSaleDiscountController();
         }
       }
       if (detailDto.reorderLevel != null && detailDto.reorderLevel!.isNotEmpty) {
@@ -480,6 +494,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           .firstOrNull;
       if (wholesale != null) {
         notifier.updateWholesalePrice(wholesale);
+        notifier.enableWholesaleSection();
         _wholesalePriceController.text = formatIndianItemPriceInput(wholesale);
       }
 
@@ -521,7 +536,14 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       final localSuppliers =
           ref.read(itemSuppliersProvider.notifier).suppliersFor(item.id);
       if (localSuppliers.isNotEmpty) {
-        notifier.setSupplierPartyIds(localSuppliers);
+        final formState = ref.read(addItemFormProvider);
+        final parties = ref.read(partiesListProvider);
+        final partiesById = {for (final party in parties) party.id: party};
+        notifier.mergeSupplierParties(
+          partyIds: localSuppliers,
+          product: _suppliersProductSnapshot(formState),
+          partiesById: partiesById,
+        );
       }
     } on Object {
       // Local suppliers cache is best-effort.
@@ -580,6 +602,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _descriptionController.dispose();
     _salePriceController.dispose();
     _mrpController.dispose();
+    _mrpSaleDiscountController.dispose();
+    _salePriceDiscountController.dispose();
     _wholesalePriceController.dispose();
     _minWholesaleQtyController.dispose();
     _openingQtyController.dispose();
@@ -634,7 +658,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             );
         await ref
             .read(itemTierPricesProvider.notifier)
-            .setTierPrices(editItem.id, form.tierPriceMap);
+            .setTierPrices(editItem.id, form.resolvedTierPriceMap);
         await ref
             .read(itemSuppliersProvider.notifier)
             .setSuppliers(
@@ -652,7 +676,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         if (savedItem != null) {
           await ref
               .read(itemTierPricesProvider.notifier)
-              .setTierPrices(savedItem.id, form.tierPriceMap);
+              .setTierPrices(savedItem.id, form.resolvedTierPriceMap);
           await ref
               .read(itemSuppliersProvider.notifier)
               .setSuppliers(
@@ -1016,6 +1040,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _descriptionController.clear();
     _salePriceController.clear();
     _mrpController.clear();
+    _mrpSaleDiscountController.clear();
+    _salePriceDiscountController.clear();
     _wholesalePriceController.clear();
     _minWholesaleQtyController.clear();
     _openingQtyController.clear();
@@ -1158,50 +1184,34 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     final media = MediaQuery.sizeOf(context);
     final availableWidth = media.width - 48;
-    final preferredWidth = availableWidth >= FormSpacing.dialogWidth
-        ? FormSpacing.dialogWidth
-        : availableWidth.clamp(0, FormSpacing.dialogMaxWidth);
+    final preferredWidth = availableWidth >= _addItemDialogWidth
+        ? _addItemDialogWidth
+        : availableWidth.clamp(0, _addItemDialogMaxWidth);
 
-    final maxDialogHeight = media.height * FormSpacing.dialogMaxHeightFactor;
+    final dialogWidth = preferredWidth.toDouble();
+    final dialogHeight = media.height * _addItemDialogMaxHeightFactor;
+    const dividerHeight = 1.0;
 
     return _wrapWithCloseGuard(
-      ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: preferredWidth.toDouble(),
-        maxHeight: maxDialogHeight,
-      ),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppRadius.lgBorder,
-        clipBehavior: Clip.antiAlias,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            const dividerHeight = 1.0;
-            final bodyMaxHeight =
-                (constraints.maxHeight -
-                        _headerHeight -
-                        FormSpacing.footerHeight -
-                        dividerHeight * 2)
-                    .clamp(0.0, double.infinity);
-
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildHeader(form),
-                const Divider(height: dividerHeight, color: _cardBorder),
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: bodyMaxHeight),
-                  child: SingleChildScrollView(child: formBody),
-                ),
-                const Divider(height: dividerHeight, color: _cardBorder),
-                _buildFooter(),
-              ],
-            );
-          },
+      SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
+        child: Material(
+          color: AppColors.surface,
+          borderRadius: AppRadius.lgBorder,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(form),
+              const Divider(height: dividerHeight, color: _cardBorder),
+              Expanded(child: formBody),
+              const Divider(height: dividerHeight, color: _cardBorder),
+              _buildFooter(),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -1238,87 +1248,103 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       isService ? FormSpacing.section : FormSpacing.page,
     );
 
-    final content = Padding(
+    return Padding(
       padding: bodyPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          GeneralInformationSection(
-            itemType: form.itemType,
-            itemNameController: _itemNameController,
-            shortNameController: _shortNameController,
-            searchKeywordsController: _searchKeywordsController,
-            hsnController: _hsnController,
-            itemCodeController: _itemCodeController,
-            descriptionController: _descriptionController,
-            itemNameError: form.itemNameError,
-            baseUnitError: form.baseUnitError,
-            onItemNameChanged: notifier.updateItemName,
-            onShortNameChanged: notifier.updateShortName,
-            onSearchKeywordsChanged: notifier.updateSearchKeywords,
-            onHsnChanged: notifier.updateHsn,
-            onItemCodeChanged: notifier.updateItemCode,
-            onDescriptionChanged: notifier.updateDescription,
-            onAssignCode: () {
-              notifier.assignCode();
-              _itemCodeController.text = ref.read(addItemFormProvider).itemCode;
-            },
-            selectedCategoryId: form.categoryId,
-            selectedCategory: selectedCategory,
-            categories: categories,
-            onCategorySelected: notifier.setCategory,
-            selectedBrandId: form.brandId,
-            selectedBrand: selectedBrand,
-            brands: brands,
-            onBrandSelected: notifier.setBrand,
-            unitLabel: _displayUnitLabel(),
-            onSelectUnit: _openUnitPicker,
-            alternativesInlineAddButton: widget.editItem == null
-                ? Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      AlternativeItemsAddButton(
-                        selectedItemIds: form.alternativeItemIds,
-                        excludeItemId: widget.editItem?.id,
-                        onChanged: notifier.setAlternativeItemIds,
-                      ),
-                      AddItemImageLinkButton(
-                        itemType: form.itemType,
-                        onPressed: () => unawaited(_addItemPhoto()),
-                      ),
-                    ],
-                  )
-                : null,
-            alternativesListSection: widget.editItem == null
-                ? AlternativeItemsListSection(
-                    selectedItemIds: form.alternativeItemIds,
-                    excludeItemId: widget.editItem?.id,
-                    onChanged: notifier.setAlternativeItemIds,
-                  )
-                : null,
-            itemId: widget.editItem?.id,
-            seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
-            pendingItemPhotos: _pendingItemPhotos,
-            onPendingPhotoTap: (index) => unawaited(_openPendingPhoto(index)),
-          ),
-          const SizedBox(height: FormSpacing.section),
-          _buildTabBar(form),
-          const Divider(height: 1, color: _cardBorder),
-          const SizedBox(height: FormSpacing.section),
-          KeyedSubtree(
-            key: ValueKey(
-              'add-item-tab-${form.itemType.name}-${form.activeTab}',
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GeneralInformationSection(
+                    itemType: form.itemType,
+                    itemNameController: _itemNameController,
+                    shortNameController: _shortNameController,
+                    searchKeywordsController: _searchKeywordsController,
+                    hsnController: _hsnController,
+                    itemCodeController: _itemCodeController,
+                    descriptionController: _descriptionController,
+                    itemNameError: form.itemNameError,
+                    baseUnitError: form.baseUnitError,
+                    onItemNameChanged: notifier.updateItemName,
+                    onShortNameChanged: notifier.updateShortName,
+                    onSearchKeywordsChanged: notifier.updateSearchKeywords,
+                    onHsnChanged: notifier.updateHsn,
+                    onItemCodeChanged: notifier.updateItemCode,
+                    onDescriptionChanged: notifier.updateDescription,
+                    onAssignCode: () {
+                      notifier.assignCode();
+                      _itemCodeController.text =
+                          ref.read(addItemFormProvider).itemCode;
+                    },
+                    selectedCategoryId: form.categoryId,
+                    selectedCategory: selectedCategory,
+                    categories: categories,
+                    onCategorySelected: notifier.setCategory,
+                    selectedBrandId: form.brandId,
+                    selectedBrand: selectedBrand,
+                    brands: brands,
+                    onBrandSelected: notifier.setBrand,
+                    unitLabel: _displayUnitLabel(),
+                    onSelectUnit: _openUnitPicker,
+                    alternativesInlineAddButton: widget.editItem == null
+                        ? Wrap(
+                            spacing: 12,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              AlternativeItemsAddButton(
+                                selectedItemIds: form.alternativeItemIds,
+                                excludeItemId: widget.editItem?.id,
+                                onChanged: notifier.setAlternativeItemIds,
+                              ),
+                              AddItemImageLinkButton(
+                                itemType: form.itemType,
+                                onPressed: () => unawaited(_addItemPhoto()),
+                              ),
+                            ],
+                          )
+                        : AddItemImageLinkButton(
+                            itemType: form.itemType,
+                            onPressed: () => unawaited(_addItemPhoto()),
+                          ),
+                    alternativesListSection: widget.editItem == null
+                        ? AlternativeItemsListSection(
+                            selectedItemIds: form.alternativeItemIds,
+                            excludeItemId: widget.editItem?.id,
+                            onChanged: notifier.setAlternativeItemIds,
+                          )
+                        : null,
+                    itemId: widget.editItem?.id,
+                    seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
+                    pendingItemPhotos: _pendingItemPhotos,
+                    onPendingPhotoTap: (index) =>
+                        unawaited(_openPendingPhoto(index)),
+                  ),
+                  const SizedBox(height: FormSpacing.section),
+                  _buildTabBar(form),
+                  const Divider(height: 1, color: _cardBorder),
+                  const SizedBox(height: FormSpacing.section),
+                ],
+              ),
             ),
-            child: _buildActiveTabContent(form, notifier, itemSettings),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: KeyedSubtree(
+                key: ValueKey(
+                  'add-item-tab-${form.itemType.name}-${form.activeTab}',
+                ),
+                child: _buildActiveTabContent(form, notifier, itemSettings),
+              ),
+            ),
           ),
         ],
       ),
     );
-
-    return content;
   }
 
   Widget buildMobileFormBody(
@@ -1402,6 +1428,22 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  String _discountText(double value) {
+    if (value == 0) return '';
+    if (value == value.roundToDouble()) return value.toStringAsFixed(0);
+    return value.toString();
+  }
+
+  void _syncSalePriceController() {
+    final sale = ref.read(addItemFormProvider).salePrice;
+    _salePriceController.text = formatIndianItemPriceInput(sale);
+  }
+
+  void _syncMrpSaleDiscountController() {
+    final discount = ref.read(addItemFormProvider).mrpSaleDiscount;
+    _mrpSaleDiscountController.text = _discountText(discount);
+  }
+
   Widget _buildMobilePricingSection({
     required AddItemFormState form,
     required AddItemForm notifier,
@@ -1419,11 +1461,32 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       wholesalePriceAmount: form.wholesalePrice,
       purchasePriceAmount: form.atPrice,
       mrpController: _mrpController,
-      onMrpChanged: notifier.updateMrp,
+      onMrpChanged: (value) {
+        notifier.updateMrp(value);
+        _syncSalePriceController();
+        _syncMrpSaleDiscountController();
+      },
+      mrpSaleDiscountController: _mrpSaleDiscountController,
+      onMrpSaleDiscountChanged: (value) {
+        notifier.updateMrpSaleDiscount(value);
+        _syncSalePriceController();
+      },
+      mrpSaleDiscountKind: form.mrpSaleDiscountKind,
+      onMrpSaleDiscountKindChanged: (kind) {
+        notifier.setMrpSaleDiscountKind(kind);
+        _syncSalePriceController();
+      },
       salePriceController: _salePriceController,
       salePriceTaxMode: form.salePriceTaxMode,
-      onSalePriceChanged: notifier.updateSalePrice,
+      onSalePriceChanged: (value) {
+        notifier.updateSalePrice(value);
+        _syncMrpSaleDiscountController();
+      },
       onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
+      salePriceDiscountController: _salePriceDiscountController,
+      onSalePriceDiscountChanged: notifier.updateSalePriceDiscount,
+      salePriceDiscountKind: form.salePriceDiscountKind,
+      onSalePriceDiscountKindChanged: notifier.setSalePriceDiscountKind,
       wholesalePriceController: _wholesalePriceController,
       wholesalePriceTaxMode: form.wholesalePriceTaxMode,
       onWholesalePriceChanged: notifier.updateWholesalePrice,
@@ -1434,6 +1497,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
       taxRate: form.taxRate,
       onTaxRateChanged: notifier.setTaxRate,
+      showWholesaleSection: form.showWholesaleSection,
+      onAddWholesale: notifier.enableWholesaleSection,
       showWholesalePrice: itemSettings.wholesalePrice,
       showTierPricing: itemSettings.wholesalePrice,
       tierPrices: form.tierPrices,
@@ -1515,8 +1580,18 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       _ => Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: SuppliersSection(
-          selectedPartyIds: form.supplierPartyIds,
-          onChanged: notifier.setSupplierPartyIds,
+          rows: form.supplierRows,
+          product: _suppliersProductSnapshot(form),
+          onPartiesSelected: (partyIds, partiesById, imageUrl) {
+            notifier.mergeSupplierParties(
+              partyIds: partyIds,
+              product: _suppliersProductSnapshot(form),
+              partiesById: partiesById,
+              resolvedProductImageUrl: imageUrl,
+            );
+          },
+          onUpdateRow: notifier.updateSupplierRow,
+          onRemoveRow: notifier.removeSupplierRow,
           defaultPartyId: form.defaultSupplierPartyId,
           onDefaultChanged: notifier.setDefaultSupplierPartyId,
         ),
@@ -1679,17 +1754,41 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       children: [
         PricingSection(
           isService: isService,
+          wholesalePriceEnabled: itemSettings.wholesalePrice,
+          showWholesaleSection: form.showWholesaleSection,
+          onAddWholesale: notifier.enableWholesaleSection,
           showPriceAmountInWords: itemSettings.showPriceAmountInWords,
           mrpAmount: form.mrp,
           salePriceAmount: form.salePrice,
           wholesalePriceAmount: form.wholesalePrice,
           purchasePriceAmount: form.atPrice,
           mrpController: _mrpController,
-          onMrpChanged: notifier.updateMrp,
+          onMrpChanged: (value) {
+            notifier.updateMrp(value);
+            _syncSalePriceController();
+            _syncMrpSaleDiscountController();
+          },
+          mrpSaleDiscountController: _mrpSaleDiscountController,
+          onMrpSaleDiscountChanged: (value) {
+            notifier.updateMrpSaleDiscount(value);
+            _syncSalePriceController();
+          },
+          mrpSaleDiscountKind: form.mrpSaleDiscountKind,
+          onMrpSaleDiscountKindChanged: (kind) {
+            notifier.setMrpSaleDiscountKind(kind);
+            _syncSalePriceController();
+          },
           salePriceController: _salePriceController,
           salePriceTaxMode: form.salePriceTaxMode,
-          onSalePriceChanged: notifier.updateSalePrice,
+          onSalePriceChanged: (value) {
+            notifier.updateSalePrice(value);
+            _syncMrpSaleDiscountController();
+          },
           onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
+          salePriceDiscountController: _salePriceDiscountController,
+          onSalePriceDiscountChanged: notifier.updateSalePriceDiscount,
+          salePriceDiscountKind: form.salePriceDiscountKind,
+          onSalePriceDiscountKindChanged: notifier.setSalePriceDiscountKind,
           wholesalePriceController: _wholesalePriceController,
           wholesalePriceTaxMode: form.wholesalePriceTaxMode,
           onWholesalePriceChanged: notifier.updateWholesalePrice,
@@ -1890,10 +1989,38 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  SuppliersProductSnapshot _suppliersProductSnapshot(AddItemFormState form) {
+    final brands = ref.watch(inventoryBrandsProvider).value ?? const [];
+    final brandName = brands
+        .where((brand) => brand.id == form.brandId)
+        .map((brand) => brand.name)
+        .firstOrNull;
+
+    return SuppliersProductSnapshot(
+      itemId: widget.editItem?.id,
+      productImageUrl: form.primaryImageUrl,
+      brandName: brandName ?? '',
+      mrp: form.mrp,
+      pricing: form.atPrice,
+      minOrderQuantity: form.minWholesaleQty,
+      productNotes: form.description,
+    );
+  }
+
   Widget _buildSuppliersTab(AddItemFormState form, AddItemForm notifier) {
     return SuppliersSection(
-      selectedPartyIds: form.supplierPartyIds,
-      onChanged: notifier.setSupplierPartyIds,
+      rows: form.supplierRows,
+      product: _suppliersProductSnapshot(form),
+      onPartiesSelected: (partyIds, partiesById, imageUrl) {
+        notifier.mergeSupplierParties(
+          partyIds: partyIds,
+          product: _suppliersProductSnapshot(form),
+          partiesById: partiesById,
+          resolvedProductImageUrl: imageUrl,
+        );
+      },
+      onUpdateRow: notifier.updateSupplierRow,
+      onRemoveRow: notifier.removeSupplierRow,
       defaultPartyId: form.defaultSupplierPartyId,
       onDefaultChanged: notifier.setDefaultSupplierPartyId,
     );

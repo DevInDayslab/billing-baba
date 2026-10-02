@@ -1331,6 +1331,34 @@ class InventoryService {
     return '$timestamp$suffix';
   }
 
+  Future<void> moveItemsToBrand({
+    required List<String> itemIds,
+    required String brandId,
+    required bool removeFromExistingBrand,
+  }) async {
+    final apiBrandId = BrandMapper.toApiBrandId(brandId);
+    try {
+      for (final itemId in itemIds) {
+        final item = await getItem(itemId);
+        final hasExistingBrand =
+            item.brandId != null && item.brandId != unbrandedBrandId;
+        if (!removeFromExistingBrand && hasExistingBrand) {
+          continue;
+        }
+
+        await _repository.updateItem(
+          itemId,
+          UpdateItemRequest(
+            brandId: apiBrandId,
+            clearBrand: apiBrandId == null,
+          ),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
   Future<void> moveItemsToCategory({
     required List<String> itemIds,
     required String categoryId,

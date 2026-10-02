@@ -1,14 +1,55 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _alternativeRowMinHeight = 40.0;
+const _pickerDialogWidth = 560.0;
+const _pickerDialogHeight = 520.0;
+
+String alternativePickerStockLabel(InventoryItem item) {
+  if (item.type == ItemType.service) {
+    return 'Stock: $inventoryEmDash';
+  }
+  final metrics = InventoryStockCalculator.metricsFromItem(item);
+  final quantityLabel = formatQuantityValue(metrics.availableForSale);
+  final unit = item.baseUnitShortName?.trim();
+  if (unit != null && unit.isNotEmpty) {
+    return 'Stock: $quantityLabel $unit';
+  }
+  return 'Stock: $quantityLabel';
+}
+
+/// Multi-select picker for alternative items (desktop).
+Future<List<String>?> showAlternativeItemsPickerDialog({
+  required BuildContext context,
+  required WidgetRef ref,
+  required List<String> initialSelection,
+  required String? excludeItemId,
+}) {
+  final items = ref.read(inventoryItemListProvider);
+  return showDialog<List<String>>(
+    context: context,
+    builder: (dialogContext) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: _AlternativeItemsPickerDialog(
+        items: items,
+        initialSelection: initialSelection,
+        excludeItemId: excludeItemId,
+      ),
+    ),
+  );
+}
 
 Future<void> _openAlternativeItemsPicker({
   required BuildContext context,
@@ -17,14 +58,11 @@ Future<void> _openAlternativeItemsPicker({
   required String? excludeItemId,
   required ValueChanged<List<String>> onChanged,
 }) async {
-  final items = ref.read(inventoryItemListProvider);
-  final picked = await showDialog<List<String>>(
+  final picked = await showAlternativeItemsPickerDialog(
     context: context,
-    builder: (dialogContext) => _AlternativeItemsPickerDialog(
-      items: items,
-      initialSelection: selectedItemIds,
-      excludeItemId: excludeItemId,
-    ),
+    ref: ref,
+    initialSelection: selectedItemIds,
+    excludeItemId: excludeItemId,
   );
   if (picked != null) onChanged(picked);
 }
@@ -330,84 +368,306 @@ class _AlternativeItemsPickerDialog extends ConsumerStatefulWidget {
 
 class _AlternativeItemsPickerDialogState
     extends ConsumerState<_AlternativeItemsPickerDialog> {
-  late final TextEditingController _searchController;
   late Set<String> _selected;
+  var _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController();
     _selected = widget.initialSelection.toSet();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  List<InventoryItem> get _candidates => widget.items
+      .where((item) => item.id != widget.excludeItemId)
+      .toList();
+
+  List<InventoryItem> get _visibleItems {
+    final engine = ref.read(inventorySearchEngineProvider);
+    return searchInventoryItems(
+      engine,
+      _candidates,
+      query: _searchQuery,
+    ).toList();
+  }
+
+  void _toggleAll(List<InventoryItem> visible) {
+    final allSelected =
+        visible.isNotEmpty && visible.every((i) => _selected.contains(i.id));
+    setState(() {
+      if (allSelected) {
+        for (final item in visible) {
+          _selected.remove(item.id);
+        }
+      } else {
+        _selected.addAll(visible.map((i) => i.id));
+      }
+    });
+  }
+
+  void _toggleItem(String id) {
+    setState(() {
+      if (_selected.contains(id)) {
+        _selected.remove(id);
+      } else {
+        _selected.add(id);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final query = _searchController.text.trim();
-    final engine = ref.watch(inventorySearchEngineProvider);
-    final candidates = widget.items
-        .where((item) => item.id != widget.excludeItemId)
-        .toList();
-    final filtered = query.isEmpty
-        ? candidates
-        : engine.searchItems(candidates, query: query);
+    final visible = _visibleItems;
+    final allSelected =
+        visible.isNotEmpty && visible.every((i) => _selected.contains(i.id));
+    final selectionCount = _selected.length;
 
-    return AlertDialog(
-      title: const Text('Select alternative items'),
-      content: SizedBox(
-        width: 480,
-        height: 420,
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: buildFormControlDecoration(hint: 'Search items'),
-              onChanged: (_) => setState(() {}),
+    return ClipRRect(
+      borderRadius: AppRadius.lgBorder,
+      child: SizedBox(
+        width: _pickerDialogWidth,
+        height: _pickerDialogHeight,
+        child: Material(
+          color: AppColors.surface,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.lg,
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filtered.length,
-                itemBuilder: (context, index) {
-                  final item = filtered[index];
-                  final checked = _selected.contains(item.id);
-                  return CheckboxListTile(
-                    value: checked,
-                    title: Text(item.name),
-                    subtitle: item.shortName?.isNotEmpty == true
-                        ? Text(item.shortName!)
-                        : null,
-                    onChanged: (value) {
-                      setState(() {
-                        if (value == true) {
-                          _selected.add(item.id);
-                        } else {
-                          _selected.remove(item.id);
-                        }
-                      });
-                    },
-                  );
-                },
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      LucideIcons.package,
+                      size: 22,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Select alternative items',
+                            style: AppTypography.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              height: 1.3,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Choose items that can be suggested as alternatives '
+                            'for this product.',
+                            style: AppTypography.inter(
+                              fontSize: AppTypography.bodySmallSize,
+                              height: 1.45,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 20),
+                      tooltip: 'Close',
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                InventorySearchField(
+                  hint: 'Search items by name or code...',
+                  onChanged: (query) => setState(() => _searchQuery = query),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: allSelected,
+                        onChanged:
+                            visible.isEmpty ? null : (_) => _toggleAll(visible),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      Text(
+                        'Select all',
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySmallSize,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$selectionCount selected',
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySmallSize,
+                          height: 1.4,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: listPanelCardBorder),
+                      borderRadius: AppRadius.mdBorder,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: AppRadius.mdBorder,
+                      child: visible.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No items found',
+                                style: InventoryStyles.emptyStateStyle,
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: visible.length,
+                              separatorBuilder: (_, __) => const Divider(
+                                height: 1,
+                                color: listPanelCardBorder,
+                              ),
+                              itemBuilder: (context, index) {
+                                final item = visible[index];
+                                return _AlternativePickerItemRow(
+                                  item: item,
+                                  isSelected: _selected.contains(item.id),
+                                  onToggle: () => _toggleItem(item.id),
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    FilledButton.icon(
+                      onPressed: () =>
+                          Navigator.of(context).pop(_selected.toList()),
+                      icon: const Icon(LucideIcons.check, size: 18),
+                      label: Text('Save ($selectionCount)'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+    );
+  }
+}
+
+class _AlternativePickerItemRow extends StatefulWidget {
+  const _AlternativePickerItemRow({
+    required this.item,
+    required this.isSelected,
+    required this.onToggle,
+  });
+
+  final InventoryItem item;
+  final bool isSelected;
+  final VoidCallback onToggle;
+
+  @override
+  State<_AlternativePickerItemRow> createState() =>
+      _AlternativePickerItemRowState();
+}
+
+class _AlternativePickerItemRowState extends State<_AlternativePickerItemRow> {
+  var _isHovered = false;
+
+  Color get _backgroundColor {
+    if (widget.isSelected) return listPanelSelectedRowColor;
+    if (_isHovered) return listPanelRowHoverColor;
+    return Colors.transparent;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: _backgroundColor,
+        child: InkWell(
+          onTap: widget.onToggle,
+          hoverColor: Colors.transparent,
+          splashColor: AppColors.primary.withValues(alpha: 0.08),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.package,
+                  size: 18,
+                  color: AppColors.textSecondary.withValues(alpha: 0.65),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          height: 1.45,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        alternativePickerStockLabel(widget.item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.inter(
+                          fontSize: 11,
+                          height: 1.5,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Checkbox(
+                  value: widget.isSelected,
+                  onChanged: (_) => widget.onToggle(),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ],
+            ),
+          ),
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_selected.toList()),
-          child: const Text('Save'),
-        ),
-      ],
+      ),
     );
   }
 }

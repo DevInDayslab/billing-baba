@@ -3,7 +3,7 @@ import 'package:billing_baba/features/inventory/application/inventory_providers.
 import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_ledger_column_header.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_movement_indicator.dart';
+import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
@@ -19,10 +19,9 @@ const _tableBorder = Color(0xFFE0E0E0);
 const _zebraRowBg = Color(0xFFFAFAFA);
 const double _cellHorizontalPadding = 8;
 
-const _indicatorColWidth = 28.0;
 const _typeColWidth = 148.0;
 const _invoiceRefColWidth = 120.0;
-const _partyColWidth = 128.0;
+const _nameColWidth = 128.0;
 const _dateColWidth = 132.0;
 const _qtyColWidth = 80.0;
 const _priceColWidth = 92.0;
@@ -167,6 +166,7 @@ class _TransactionsTableShell extends ConsumerWidget {
             child: ResizableDataTable(
               columns: columns,
               rows: const [],
+              headerBackgroundColor: const Color(0xFFF5F5F5),
             ),
           ),
           Expanded(
@@ -182,6 +182,7 @@ class _TransactionsTableShell extends ConsumerWidget {
         child: ResizableDataTable(
           columns: columns,
           rows: dataRows,
+          headerBackgroundColor: const Color(0xFFF5F5F5),
         ),
       ),
     );
@@ -196,15 +197,6 @@ class InventoryTransactionTableRows {
     symbol: '₹',
     decimalDigits: 2,
   );
-
-  static String _typeLabel(ProductTransaction transaction) {
-    final type = transaction.transactionType;
-    final godown = transaction.godownName?.trim();
-    if (godown != null && godown.isNotEmpty) {
-      return '$type ($godown)';
-    }
-    return type;
-  }
 
   static String _invoiceRef(ProductTransaction transaction) {
     final ref = transaction.invoiceRefNo.trim();
@@ -236,13 +228,8 @@ class InventoryTransactionTableRows {
       backgroundColor: isOdd ? _zebraRowBg : Colors.transparent,
       cells: [
         _DataCell(
-          child: InventoryMovementIndicator(
-            movementType: transaction.movementType,
-          ),
-        ),
-        _DataCell(
           child: Text(
-            _typeLabel(transaction),
+            InventoryTransactionTableService.typeDisplayLabel(transaction),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -300,13 +287,6 @@ class _InventoryTransactionTableColumns {
     );
 
     return [
-      const ResizableDataColumn(
-        initialWidth: _indicatorColWidth,
-        minWidth: _indicatorColWidth,
-        maxWidth: _indicatorColWidth,
-        resizable: false,
-        header: SizedBox.shrink(),
-      ),
       ResizableDataColumn(
         initialWidth: _typeColWidth,
         header: InventoryLedgerColumnHeader(
@@ -335,7 +315,7 @@ class _InventoryTransactionTableColumns {
       ResizableDataColumn(
         initialWidth: _invoiceRefColWidth,
         header: InventoryLedgerColumnHeader(
-          label: 'Invoice / Ref.',
+          label: 'Invoice/Ref.',
           sortColumn: InventoryTransactionSortColumn.invoiceRef,
           filters: filters,
           onSort: () => filtersNotifier.toggleSort(
@@ -344,9 +324,9 @@ class _InventoryTransactionTableColumns {
           filter: TableColumnFilterTrigger(
             config: const ColumnFilter(
               id: 'invoiceRef',
-              title: 'Invoice / Ref.',
+              title: 'Invoice/Ref.',
               type: FilterType.text,
-              hintText: 'Invoice / reference',
+              hintText: 'Invoice or reference',
             ),
             iconOnly: true,
             initialValue: filters.invoiceRefColumnFilter,
@@ -357,9 +337,9 @@ class _InventoryTransactionTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: _partyColWidth,
+        initialWidth: _nameColWidth,
         header: InventoryLedgerColumnHeader(
-          label: 'Party',
+          label: 'Name',
           sortColumn: InventoryTransactionSortColumn.party,
           filters: filters,
           onSort: () => filtersNotifier.toggleSort(
@@ -368,9 +348,9 @@ class _InventoryTransactionTableColumns {
           filter: TableColumnFilterTrigger(
             config: const ColumnFilter(
               id: 'party',
-              title: 'Party',
+              title: 'Name',
               type: FilterType.text,
-              hintText: 'Party',
+              hintText: 'Party or customer name',
             ),
             iconOnly: true,
             initialValue: filters.partyColumnFilter,
@@ -431,7 +411,7 @@ class _InventoryTransactionTableColumns {
       ResizableDataColumn(
         initialWidth: _priceColWidth,
         header: InventoryLedgerColumnHeader(
-          label: 'Price / Unit',
+          label: 'Price/Unit',
           sortColumn: InventoryTransactionSortColumn.pricePerUnit,
           filters: filters,
           onSort: () => filtersNotifier.toggleSort(
@@ -440,7 +420,7 @@ class _InventoryTransactionTableColumns {
           filter: TableColumnFilterTrigger(
             config: const ColumnFilter(
               id: 'price',
-              title: 'Price / Unit',
+              title: 'Price/Unit',
               type: FilterType.number,
             ),
             iconOnly: true,

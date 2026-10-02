@@ -111,6 +111,20 @@ class ItemAlternativesNotifier extends _$ItemAlternativesNotifier {
       rethrow;
     }
   }
+
+  Future<void> replaceAlternatives(List<String> alternativeItemIds) async {
+    try {
+      final repository = await ref.read(
+        itemAlternativesRepositoryProvider.future,
+      );
+      await repository.replaceForItem(itemId, alternativeItemIds);
+      ref.invalidateSelf();
+    } on InventoryOfflineException {
+      rethrow;
+    } on InventoryException {
+      rethrow;
+    }
+  }
 }
 
 @riverpod
