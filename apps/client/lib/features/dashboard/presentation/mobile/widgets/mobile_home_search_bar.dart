@@ -83,7 +83,11 @@ class MobileHomeSearchBar extends StatelessWidget {
                   if (showFilter && onFilterTap != null)
                     IconButton(
                       onPressed: onFilterTap,
-                      icon: Icon(LucideIcons.slidersHorizontal, color: primary, size: 18),
+                      icon: Icon(
+                        LucideIcons.slidersHorizontal,
+                        color: primary,
+                        size: 18,
+                      ),
                       visualDensity: VisualDensity.compact,
                     ),
                 ],

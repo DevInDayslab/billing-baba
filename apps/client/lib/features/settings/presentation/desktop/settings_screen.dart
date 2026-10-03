@@ -54,7 +54,9 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
     _didPrefetchSettings = true;
     // Kick local prefs load without awaiting — tabs open with data ready.
     unawaited(
-      ref.read(printSettingsProvider.future).then<void>((_) {}, onError: (_) {}),
+      ref
+          .read(printSettingsProvider.future)
+          .then<void>((_) {}, onError: (_) {}),
     );
     unawaited(
       ref
@@ -124,8 +126,9 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
     return switch (SettingsTab.values[index]) {
       SettingsTab.profile => const DesktopEditProfilePage(embedded: true),
       SettingsTab.print => const DesktopPrintSettingsScreen(embedded: true),
-      SettingsTab.transactionMessages =>
-        const DesktopTransactionMessagesScreen(embedded: true),
+      SettingsTab.transactionMessages => const DesktopTransactionMessagesScreen(
+        embedded: true,
+      ),
       SettingsTab.backup => const BackupRestorePage(embedded: true),
       SettingsTab.about => const AboutSettingsTab(),
     };

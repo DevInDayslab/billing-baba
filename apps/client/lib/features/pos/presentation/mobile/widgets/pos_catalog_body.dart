@@ -47,9 +47,7 @@ class PosCatalogBody extends ConsumerWidget {
                 message: hasSearch
                     ? 'Try a different search term or category.'
                     : 'Add inventory items to start selling from POS.',
-                icon: hasSearch
-                    ? LucideIcons.searchX
-                    : LucideIcons.package,
+                icon: hasSearch ? LucideIcons.searchX : LucideIcons.package,
               ),
             ),
           ],

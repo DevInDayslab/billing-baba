@@ -184,7 +184,10 @@ class MobileAddItemStockSection extends StatelessWidget {
                           ? const Text('Default godown')
                           : null,
                       trailing: selected
-                          ? const Icon(LucideIcons.check, color: AppColors.primary)
+                          ? const Icon(
+                              LucideIcons.check,
+                              color: AppColors.primary,
+                            )
                           : null,
                       onTap: () => Navigator.of(sheetContext).pop(godown.id),
                     );

@@ -86,7 +86,11 @@ class MobileHomeTransactionSearchRow extends StatelessWidget {
                     border: Border.all(color: AppColors.chipBorder),
                     boxShadow: AppShadows.subtle,
                   ),
-                  child: Icon(LucideIcons.slidersHorizontal, color: primary, size: 18),
+                  child: Icon(
+                    LucideIcons.slidersHorizontal,
+                    color: primary,
+                    size: 18,
+                  ),
                 ),
               ),
             ),

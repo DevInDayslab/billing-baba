@@ -268,8 +268,10 @@ class _MobileBusinessListPageState
             return _EmptyState(onCreate: _onCreateBusiness);
           }
 
-          final mergedEntries =
-              mergeDirectoryProfileFields(allEntries, businesses);
+          final mergedEntries = mergeDirectoryProfileFields(
+            allEntries,
+            businesses,
+          );
           final directoryService = directoryServiceAsync.value;
           final owned = CompanyListEntry.withPendingDeletionLast(
             directoryService?.ownedCompanies(mergedEntries) ??

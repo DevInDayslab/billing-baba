@@ -9,23 +9,24 @@ ui.Paragraph _buildStampLine({
   required double maxWidth,
   required double fontSize,
 }) {
-  final builder = ui.ParagraphBuilder(
-    ui.ParagraphStyle(
-      textAlign: ui.TextAlign.left,
-      fontSize: fontSize,
-      fontWeight: ui.FontWeight.w500,
-      maxLines: 2,
-      ellipsis: '…',
-    ),
-  )
-    ..pushStyle(
-      ui.TextStyle(
-        color: const ui.Color(0xFFFFFFFF),
-        fontSize: fontSize,
-        fontWeight: ui.FontWeight.w500,
-      ),
-    )
-    ..addText(text);
+  final builder =
+      ui.ParagraphBuilder(
+          ui.ParagraphStyle(
+            textAlign: ui.TextAlign.left,
+            fontSize: fontSize,
+            fontWeight: ui.FontWeight.w500,
+            maxLines: 2,
+            ellipsis: '…',
+          ),
+        )
+        ..pushStyle(
+          ui.TextStyle(
+            color: const ui.Color(0xFFFFFFFF),
+            fontSize: fontSize,
+            fontWeight: ui.FontWeight.w500,
+          ),
+        )
+        ..addText(text);
   final paragraph = builder.build()
     ..layout(ui.ParagraphConstraints(width: maxWidth));
   return paragraph;

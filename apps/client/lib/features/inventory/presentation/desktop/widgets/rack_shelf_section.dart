@@ -7,11 +7,12 @@ import 'package:billing_baba/features/inventory/models/item_location_history_mod
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/rack_location_history_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
-import 'package:billing_baba/shared/image/image_urls.dart' show
-    buildImageCacheKey,
-    coalesceStorageMediaAssetId,
-    extractMediaAssetIdFromUrl,
-    stripUrlQuery;
+import 'package:billing_baba/shared/image/image_urls.dart'
+    show
+        buildImageCacheKey,
+        coalesceStorageMediaAssetId,
+        extractMediaAssetIdFromUrl,
+        stripUrlQuery;
 import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/shared/media/media_upload_client.dart';
 import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
@@ -27,6 +28,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _rackPhotoAllowedMimes = {'image/png', 'image/jpeg', 'image/webp'};
 const int _rackPhotoMaxBytes = 2 * 1024 * 1024;
+
 /// Matches server retention ([InventoryService.rackLocationHistoryLimit]).
 const int _maxRackLocationHistory = 5;
 const double _rackListThumbSize = 100;

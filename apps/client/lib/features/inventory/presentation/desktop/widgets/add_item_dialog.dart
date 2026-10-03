@@ -1439,8 +1439,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               itemId: widget.editItem?.id,
               seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
               pendingItemPhotos: _pendingItemPhotos,
-              onPendingPhotoTap: (index) =>
-                  unawaited(_openPendingPhoto(index)),
+              onPendingPhotoTap: (index) => unawaited(_openPendingPhoto(index)),
             ),
             const SizedBox(height: FormSpacing.section),
             _buildTabBar(form),

@@ -118,7 +118,7 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
               newUrl: upload.url,
               oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
               newCacheKey: buildImageCacheKey(fallbackUrl: upload.url),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ),
+            ),
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

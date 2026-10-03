@@ -313,9 +313,7 @@ class _TorchButton extends StatelessWidget {
           width: 52,
           height: 52,
           child: Icon(
-            enabled
-                ? LucideIcons.flashlight
-                : LucideIcons.flashlightOff,
+            enabled ? LucideIcons.flashlight : LucideIcons.flashlightOff,
             color: AppColors.primary,
             size: 26,
           ),

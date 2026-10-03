@@ -367,9 +367,7 @@ class _RadioOptionList<T> extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  isSelected
-                      ? LucideIcons.circleDot
-                      : LucideIcons.circle,
+                  isSelected ? LucideIcons.circleDot : LucideIcons.circle,
                   color: isSelected
                       ? MobileReportTheme.accent
                       : AppColors.textSecondary.withValues(alpha: 0.5),

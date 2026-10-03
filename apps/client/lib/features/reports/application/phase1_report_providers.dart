@@ -137,7 +137,9 @@ class PartyStatementReport extends _$PartyStatementReport {
   @override
   Future<PartyStatementReportData?> build() async {
     watchReportListReload(ref);
-    final partyId = ref.watch(reportFiltersProvider.select((state) => state.partyId));
+    final partyId = ref.watch(
+      reportFiltersProvider.select((state) => state.partyId),
+    );
     if (partyId == null) return null;
     return runReportLoad(ref, _load);
   }

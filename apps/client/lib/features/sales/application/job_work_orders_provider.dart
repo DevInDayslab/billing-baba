@@ -162,7 +162,9 @@ class JobWorkOutFilters extends _$JobWorkOutFilters {
 
 @riverpod
 List<JobWorkOrderListItem> filteredJobWorkOrders(Ref ref) {
-  final items = jobWorkOrderItemsFromAsync(ref.watch(jobWorkOrdersListProvider));
+  final items = jobWorkOrderItemsFromAsync(
+    ref.watch(jobWorkOrdersListProvider),
+  );
   final filters = ref.watch(jobWorkOutFiltersProvider);
   final searchQuery = ref.watch(jobWorkOutSearchQueryProvider);
   return applyJobWorkOutClientFilters(items, filters, searchQuery);

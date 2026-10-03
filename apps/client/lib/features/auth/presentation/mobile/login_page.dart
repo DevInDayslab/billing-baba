@@ -92,8 +92,7 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
                         isReturningUser: isReturningUser,
                         phoneController: _phoneController,
                         phoneFocus: _phoneFocus,
-                        phoneEnabled:
-                            !isOtpFlowLoading && !isDevLoginLoading,
+                        phoneEnabled: !isOtpFlowLoading && !isDevLoginLoading,
                         rememberChecked: auth.rememberFor30Days,
                         rememberEnabled:
                             !isOtpFlowLoading && !isDevLoginLoading,

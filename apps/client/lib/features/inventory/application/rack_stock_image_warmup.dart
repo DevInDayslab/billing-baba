@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/features/inventory/models/item_location_history_model.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
+
 /// Warms rack audit thumbnails using persisted signed URLs (no storage API round-trip).
 void warmRackHistoryThumbnails(
   ImageService imageService,

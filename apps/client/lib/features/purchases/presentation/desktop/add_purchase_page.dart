@@ -61,7 +61,9 @@ class _DesktopAddPurchasePageState
       return;
     }
     unawaited(
-      ref.read(addPurchaseFormProvider().notifier).consumeRouteExtraParse(extra),
+      ref
+          .read(addPurchaseFormProvider().notifier)
+          .consumeRouteExtraParse(extra),
     );
   }
 

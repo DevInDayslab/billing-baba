@@ -336,8 +336,10 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
             );
           }
 
-          final mergedEntries =
-              mergeDirectoryProfileFields(allEntries, businesses);
+          final mergedEntries = mergeDirectoryProfileFields(
+            allEntries,
+            businesses,
+          );
           final sharedCompanies = _filterEntries(
             directoryService?.sharedCompanies(mergedEntries) ??
                 mergedEntries.where((e) => e.isSharedTab).toList(),

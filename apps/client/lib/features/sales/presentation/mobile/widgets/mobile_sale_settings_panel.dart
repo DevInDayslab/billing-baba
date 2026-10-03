@@ -425,9 +425,7 @@ class _BillingTypeOption extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                isSelected
-                    ? LucideIcons.circleDot
-                    : LucideIcons.circle,
+                isSelected ? LucideIcons.circleDot : LucideIcons.circle,
                 color: isSelected
                     ? _panelBlue
                     : AppColors.textSecondary.withValues(alpha: 0.45),

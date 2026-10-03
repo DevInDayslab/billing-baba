@@ -136,10 +136,8 @@ class MobileHomeTransactionCard extends StatelessWidget {
       MobileHomeTransactionFilterType.sale => LucideIcons.shoppingCart,
       MobileHomeTransactionFilterType.purchase => LucideIcons.shoppingBag,
       MobileHomeTransactionFilterType.paymentIn => LucideIcons.arrowUp,
-      MobileHomeTransactionFilterType.paymentOut =>
-        LucideIcons.arrowDown,
-      MobileHomeTransactionFilterType.expense =>
-        LucideIcons.wallet,
+      MobileHomeTransactionFilterType.paymentOut => LucideIcons.arrowDown,
+      MobileHomeTransactionFilterType.expense => LucideIcons.wallet,
       _ => LucideIcons.receipt,
     };
   }

@@ -65,7 +65,9 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
       ref.read(saleReportProvider.future).then<void>((_) {}, onError: (_) {}),
     );
     unawaited(
-      ref.read(purchaseReportProvider.future).then<void>((_) {}, onError: (_) {}),
+      ref
+          .read(purchaseReportProvider.future)
+          .then<void>((_) {}, onError: (_) {}),
     );
     unawaited(
       ref

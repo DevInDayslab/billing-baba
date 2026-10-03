@@ -355,7 +355,10 @@ class _CategoryField extends StatelessWidget {
                       return ListTile(
                         title: Text(name),
                         trailing: name == selectedCategory
-                            ? const Icon(LucideIcons.check, color: AppColors.primary)
+                            ? const Icon(
+                                LucideIcons.check,
+                                color: AppColors.primary,
+                              )
                             : null,
                         onTap: () => Navigator.of(sheetContext).pop(name),
                       );
@@ -553,7 +556,10 @@ class _BrandPickerSheetState extends State<_BrandPickerSheet> {
                     return ListTile(
                       title: const Text('None'),
                       trailing: widget.selectedBrandName == null
-                          ? const Icon(LucideIcons.check, color: AppColors.primary)
+                          ? const Icon(
+                              LucideIcons.check,
+                              color: AppColors.primary,
+                            )
                           : null,
                       // Empty string signals clear selection.
                       onTap: () => Navigator.of(context).pop(''),
@@ -564,7 +570,10 @@ class _BrandPickerSheetState extends State<_BrandPickerSheet> {
                   return ListTile(
                     title: Text(brand.name),
                     trailing: selected
-                        ? const Icon(LucideIcons.check, color: AppColors.primary)
+                        ? const Icon(
+                            LucideIcons.check,
+                            color: AppColors.primary,
+                          )
                         : null,
                     onTap: () => Navigator.of(context).pop(brand.id),
                   );

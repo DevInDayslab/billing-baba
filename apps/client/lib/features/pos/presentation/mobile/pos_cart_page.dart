@@ -1647,9 +1647,7 @@ class _PaymentModeCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Icon(
-                    expanded
-                        ? LucideIcons.chevronUp
-                        : LucideIcons.chevronDown,
+                    expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                     color: AppColors.textSecondary,
                   ),
                 ],

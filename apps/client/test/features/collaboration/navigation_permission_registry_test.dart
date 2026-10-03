@@ -8,7 +8,10 @@ void main() {
     test('shows standard nav when company session is not seeded yet', () {
       final service = PermissionService(null);
 
-      expect(NavigationPermissionRegistry.isVisible(AppRoutes.home, service), isTrue);
+      expect(
+        NavigationPermissionRegistry.isVisible(AppRoutes.home, service),
+        isTrue,
+      );
       expect(
         NavigationPermissionRegistry.isVisible(AppRoutes.parties, service),
         isTrue,

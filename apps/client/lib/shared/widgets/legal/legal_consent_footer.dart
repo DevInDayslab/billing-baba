@@ -101,15 +101,16 @@ class _LegalInlineLink extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
           child: Text(
             label,
-            style: AppTypography.inter(
-              fontSize: AppTypography.captionSize,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-              height: 1.45,
-            ).copyWith(
-              decoration: TextDecoration.underline,
-              decorationColor: AppColors.primary.withValues(alpha: 0.35),
-            ),
+            style:
+                AppTypography.inter(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                  height: 1.45,
+                ).copyWith(
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.primary.withValues(alpha: 0.35),
+                ),
           ),
         ),
       ),

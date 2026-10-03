@@ -18,7 +18,8 @@ class MediaImageUrlResolver {
 
     // Staging rack/item uploads often have no variants — resolve source first
     // to avoid three variant 404s per thumbnail.
-    if (preferred == ImageVariant.thumbnail && _isStagingObjectUrl(fallbackUrl)) {
+    if (preferred == ImageVariant.thumbnail &&
+        _isStagingObjectUrl(fallbackUrl)) {
       try {
         final sourceUrl = await _ref.read(
           mediaSourceUrlProvider(sourceMediaAssetId).future,

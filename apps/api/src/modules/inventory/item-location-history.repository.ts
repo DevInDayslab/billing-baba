@@ -1,7 +1,7 @@
 import { and, count, desc, eq, inArray } from 'drizzle-orm';
-import { ITEM_LOCATION_HISTORY_RETENTION_COUNT } from './item-location-history.constants';
 import type { Database } from '../../db/client';
 import { itemLocationHistory } from '../../db/schema/inventory/tables';
+import { ITEM_LOCATION_HISTORY_RETENTION_COUNT } from './item-location-history.constants';
 import { toItemLocationHistoryRecord } from './item-location-history.mapper';
 import type {
   InsertItemLocationHistoryInput,

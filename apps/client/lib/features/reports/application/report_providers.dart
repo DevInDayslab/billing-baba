@@ -84,7 +84,9 @@ class PartyReportByItemReport extends _$PartyReportByItemReport {
   @override
   Future<PartyReportByItemReportData?> build() async {
     watchReportListReload(ref);
-    final value = ref.watch(reportFiltersProvider.select((state) => state.itemId));
+    final value = ref.watch(
+      reportFiltersProvider.select((state) => state.itemId),
+    );
     if (value == null || value.isEmpty) return null;
     return runReportLoad(ref, _load);
   }
@@ -289,7 +291,9 @@ class ItemDetailReport extends _$ItemDetailReport {
   @override
   Future<ItemDetailReportData?> build() async {
     watchReportListReload(ref);
-    final value = ref.watch(reportFiltersProvider.select((state) => state.itemId));
+    final value = ref.watch(
+      reportFiltersProvider.select((state) => state.itemId),
+    );
     if (value == null || value.isEmpty) return null;
     return runReportLoad(ref, _load);
   }

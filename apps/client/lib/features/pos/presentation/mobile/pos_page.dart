@@ -42,9 +42,7 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
 
   final _searchDebouncer = Debouncer();
   final _hidController = BarcodeKeyboardController();
-  final _hidHandler = BarcodeScanHandler(
-    
-  );
+  final _hidHandler = BarcodeScanHandler();
   String _searchQuery = '';
   String? _selectedCategoryId;
   bool _didRequestInitialRefresh = false;

@@ -44,8 +44,7 @@ class MediaUploadClient {
         response: error.response,
         type: error.type,
         error: error.error,
-        message:
-            'Upload intent failed: ${error.message ?? error.type.name}',
+        message: 'Upload intent failed: ${error.message ?? error.type.name}',
       );
     }
 
@@ -144,8 +143,7 @@ class MediaUploadClient {
         response: error.response,
         type: error.type,
         error: error.error,
-        message:
-            'Upload complete failed: ${error.message ?? error.type.name}',
+        message: 'Upload complete failed: ${error.message ?? error.type.name}',
       );
     }
   }

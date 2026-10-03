@@ -226,7 +226,8 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
       future: _resolvedUrlFuture,
       builder: (context, snapshot) {
         final needsSignedResolve =
-            _effectiveMediaAssetId != null && _effectiveMediaAssetId!.isNotEmpty;
+            _effectiveMediaAssetId != null &&
+            _effectiveMediaAssetId!.isNotEmpty;
         if (needsSignedResolve &&
             snapshot.connectionState != ConnectionState.done) {
           return widget.placeholder ?? _defaultPlaceholder();

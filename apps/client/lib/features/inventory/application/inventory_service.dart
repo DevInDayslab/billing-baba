@@ -787,8 +787,9 @@ class InventoryService {
         throw const InventoryException('Rack photo upload returned no URL.');
       }
       final takenRaw = result['photo_taken_at'] as String?;
-      final takenAt =
-          takenRaw == null ? null : DateTime.tryParse(takenRaw)?.toLocal();
+      final takenAt = takenRaw == null
+          ? null
+          : DateTime.tryParse(takenRaw)?.toLocal();
       return (url: url, takenAt: takenAt);
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
