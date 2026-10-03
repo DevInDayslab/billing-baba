@@ -16,6 +16,19 @@ class MediaImageUrlResolver {
     final preferred = context.preferredVariant;
     final chain = _fallbackChain(preferred);
 
+    // Staging rack/item uploads often have no variants — resolve source first
+    // to avoid three variant 404s per thumbnail.
+    if (preferred == ImageVariant.thumbnail && _isStagingObjectUrl(fallbackUrl)) {
+      try {
+        final sourceUrl = await _ref.read(
+          mediaSourceUrlProvider(sourceMediaAssetId).future,
+        );
+        if (sourceUrl.isNotEmpty) return sourceUrl;
+      } on Object {
+        // Fall through to variant chain + fallback URL.
+      }
+    }
+
     for (final variant in chain) {
       try {
         final url = await _ref.read(
@@ -66,6 +79,12 @@ class MediaImageUrlResolver {
     }
 
     throw StateError('Unable to resolve source URL for $sourceMediaAssetId');
+  }
+
+  bool _isStagingObjectUrl(String? url) {
+    final normalized = url?.trim();
+    if (normalized == null || normalized.isEmpty) return false;
+    return normalized.contains('/staging/');
   }
 
   List<ImageVariant> _fallbackChain(ImageVariant preferred) {

@@ -13,6 +13,7 @@ export function toItemLocationHistoryRecord(
     rack: row.rack,
     shelf: row.shelf,
     photo_url: row.photoUrl,
+    photo_media_asset_id: row.photoMediaAssetId,
     employee_label: row.employeeLabel,
     changed_by: row.changedBy,
     created_at: row.createdAt.toISOString(),

@@ -193,7 +193,9 @@ class PurchaseDocumentsList extends _$PurchaseDocumentsList {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() => _fetchPage(scope));
   }
 

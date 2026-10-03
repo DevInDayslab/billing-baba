@@ -64,6 +64,7 @@ abstract final class DashboardTypography {
     fontSize: AppTypography.captionSize,
     fontWeight: FontWeight.w500,
     color: AppColors.primary,
+    decoration: TextDecoration.none,
   );
 
   static const TextStyle tabLabel = TextStyle(
@@ -76,6 +77,7 @@ abstract final class DashboardTypography {
     fontFamily: AppTypography.fontFamily,
     fontSize: AppTypography.captionSize,
     color: AppColors.textSecondary,
+    decoration: TextDecoration.none,
   );
 
   static const TextStyle supportStripLink = TextStyle(
@@ -83,6 +85,7 @@ abstract final class DashboardTypography {
     fontSize: AppTypography.captionSize,
     fontWeight: FontWeight.w500,
     color: AppColors.primary,
+    decoration: TextDecoration.none,
   );
 }
 

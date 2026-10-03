@@ -37,7 +37,11 @@ import 'package:billing_baba/features/purchases/application/expenses_provider.da
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_fa_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_orders_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
+import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_refresh_provider.dart';
+import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
 import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/application/job_work_orders_provider.dart';
@@ -276,6 +280,15 @@ Future<void> warmBusinessScopedProvidersCritical(
   _ensureRefMounted(ref, 'warm-critical after parallel fetch');
 
   ref.read(dashboardWidgetPreferencesProvider);
+  // Prefetch local settings so Settings → Print / Messages open instantly.
+  unawaited(
+    ref.read(printSettingsProvider.future).then<void>((_) {}, onError: (_) {}),
+  );
+  unawaited(
+    ref
+        .read(transactionMessageSettingsProvider.future)
+        .then<void>((_) {}, onError: (_) {}),
+  );
   BusinessOpenDebugLog.step('warm-critical', 'complete');
 }
 
@@ -292,7 +305,7 @@ Future<void> warmBusinessScopedProvidersDeferred(
 
   BusinessOpenDebugLog.step(
     'warm-deferred',
-    'parallel (profile network, dashboard, inventory if empty)',
+    'parallel (profile network, dashboard, inventory if empty, nav lists)',
   );
   await Future.wait<void>([
     _warmBusinessProfileNetwork(ref, service, businessId),
@@ -300,7 +313,49 @@ Future<void> warmBusinessScopedProvidersDeferred(
     _warmInventoryCatalogIfEmpty(ref, businessId),
   ]);
   _ensureRefMounted(ref, 'warm-deferred after parallel fetch');
+
+  _warmDeferredDesktopLists(ref);
+
   BusinessOpenDebugLog.step('warm-deferred', 'complete');
+}
+
+void _prefetchAsyncProvider(Ref ref, Future<dynamic> future) {
+  unawaited(future.then<void>((_) {}, onError: (_) {}));
+}
+
+/// Background prefetch for sales, purchase, and report list screens.
+void _warmDeferredDesktopLists(Ref ref) {
+  _prefetchAsyncProvider(ref, ref.read(partyListProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(inventoryItemsProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(saleInvoicesProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(purchaseBillsProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(reportsServiceProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(saleReportProvider.future));
+
+  for (final scope in [
+    proformaListScope(),
+    estimateListScope(),
+    deliveryChallanListScope(),
+    saleOrderListScope(),
+    salesReturnListScope(),
+  ]) {
+    _prefetchAsyncProvider(
+      ref,
+      ref.read(salesDocumentsListProvider(scope).future),
+    );
+  }
+
+  _prefetchAsyncProvider(ref, ref.read(deliveryChallansProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(saleOrdersProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(estimateQuotationsProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(saleReturnsProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(jobWorkOrdersListProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(saleFaProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(paymentInRecordsProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(paymentOutRecordsProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(purchaseOrdersProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(purchaseReturnsProvider.future));
+  _prefetchAsyncProvider(ref, ref.read(purchaseFaProvider.future));
 }
 
 /// Loads core business-scoped data for the dashboard shell after a switch.

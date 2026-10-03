@@ -6,6 +6,8 @@ import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/backup/presentation/desktop/backup_restore_page.dart';
 import 'package:billing_baba/features/business/presentation/desktop/edit_profile_page.dart';
+import 'package:billing_baba/features/settings/application/print_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/transaction_message_settings_provider.dart';
 import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/about_settings_tab.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/print_settings_screen.dart';
@@ -28,6 +30,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
   late final TabController _tabController;
   String? _appliedTabQuery;
   var _isLoggingOut = false;
+  var _didPrefetchSettings = false;
 
   @override
   void initState() {
@@ -35,6 +38,28 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
     _tabController = TabController(
       length: SettingsTab.values.length,
       vsync: this,
+    );
+    _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prefetchSettings());
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      setState(() {});
+    }
+  }
+
+  void _prefetchSettings() {
+    if (!mounted || _didPrefetchSettings) return;
+    _didPrefetchSettings = true;
+    // Kick local prefs load without awaiting — tabs open with data ready.
+    unawaited(
+      ref.read(printSettingsProvider.future).then<void>((_) {}, onError: (_) {}),
+    );
+    unawaited(
+      ref
+          .read(transactionMessageSettingsProvider.future)
+          .then<void>((_) {}, onError: (_) {}),
     );
   }
 
@@ -56,7 +81,9 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController
+      ..removeListener(_onTabChanged)
+      ..dispose();
     super.dispose();
   }
 
@@ -91,6 +118,17 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
     } finally {
       if (mounted) setState(() => _isLoggingOut = false);
     }
+  }
+
+  Widget _tabBody(int index) {
+    return switch (SettingsTab.values[index]) {
+      SettingsTab.profile => const DesktopEditProfilePage(embedded: true),
+      SettingsTab.print => const DesktopPrintSettingsScreen(embedded: true),
+      SettingsTab.transactionMessages =>
+        const DesktopTransactionMessagesScreen(embedded: true),
+      SettingsTab.backup => const BackupRestorePage(embedded: true),
+      SettingsTab.about => const AboutSettingsTab(),
+    };
   }
 
   @override
@@ -131,21 +169,10 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen>
           ),
         ),
         Expanded(
-          child: AnimatedBuilder(
-            animation: _tabController,
-            builder: (context, _) {
-              return IndexedStack(
-                index: _tabController.index,
-                sizing: StackFit.expand,
-                children: const [
-                  DesktopEditProfilePage(embedded: true),
-                  DesktopPrintSettingsScreen(embedded: true),
-                  DesktopTransactionMessagesScreen(embedded: true),
-                  BackupRestorePage(embedded: true),
-                  AboutSettingsTab(),
-                ],
-              );
-            },
+          // Build only the active tab — IndexedStack was mounting all five.
+          child: KeyedSubtree(
+            key: ValueKey<int>(_tabController.index),
+            child: _tabBody(_tabController.index),
           ),
         ),
         const Divider(height: 1, color: listPanelCardBorder),

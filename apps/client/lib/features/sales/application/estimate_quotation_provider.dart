@@ -3,6 +3,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -288,7 +289,9 @@ List<String> estimateFirmFilterOptions(Ref ref) {
 List<String> estimateUserFilterOptions(Ref ref) {
   final authState = ref.watch(authProvider);
   final authUser = authState.session?.user;
-  final estimates = ref.watch(estimateQuotationsProvider).value?.items ?? [];
+  final estimates = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(estimateQuotationsProvider),
+  );
 
   return _withAllOption(
     'All Users',
@@ -303,7 +306,9 @@ List<String> estimateUserFilterOptions(Ref ref) {
 @riverpod
 List<String> estimateGodownFilterOptions(Ref ref) {
   final godownsAsync = ref.watch(inventoryGodownsProvider);
-  final estimates = ref.watch(estimateQuotationsProvider).value?.items ?? [];
+  final estimates = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(estimateQuotationsProvider),
+  );
 
   final godownNames = godownsAsync.maybeWhen(
     data: (godowns) => godowns.map((godown) => godown.name),
@@ -381,7 +386,9 @@ class EstimateQuotations extends _$EstimateQuotations {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allItems = await _fetchAllEstimates();
       return PaginatedSaleInvoices(
@@ -532,7 +539,9 @@ class EstimateQuotationFilters extends _$EstimateQuotationFilters {
 
 @riverpod
 List<SaleInvoiceModel> filteredEstimateQuotations(Ref ref) {
-  final allEstimates = ref.watch(estimateQuotationsProvider).value?.items ?? [];
+  final allEstimates = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(estimateQuotationsProvider),
+  );
   final filters = ref.watch(estimateQuotationFiltersProvider);
   return applyEstimateClientFilters(allEstimates, filters);
 }

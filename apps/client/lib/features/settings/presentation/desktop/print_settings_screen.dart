@@ -77,119 +77,149 @@ class _PrintSettingsScreenState
     _updateDraft((settings) => settings.copyWith(printerType: type));
   }
 
+  Widget _buildContent(AsyncValue<PrintSettings> settingsAsync) {
+    return settingsAsync.when(
+      // Local prefs load is near-instant; keep layout stable without a spinner.
+      loading: () {
+        _draft ??= const PrintSettings.defaults();
+        return _PrintSettingsBody(
+          settings: _draft!,
+          tabController: _tabController,
+          onPrinterTypeChanged: _setPrinterType,
+          onUpdate: _updateDraft,
+        );
+      },
+      error: (error, _) => _ErrorState(
+        message: OfflineUiMessages.messageFor(error),
+        onRetry: () => ref.invalidate(printSettingsProvider),
+      ),
+      data: (savedSettings) {
+        _draft ??= savedSettings;
+
+        final tabIndex = _draft!.printerType == PrinterType.thermal ? 0 : 1;
+        if (_tabController.index != tabIndex &&
+            !_tabController.indexIsChanging) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _tabController.index != tabIndex) {
+              _tabController.index = tabIndex;
+            }
+          });
+        }
+
+        return _PrintSettingsBody(
+          settings: _draft!,
+          tabController: _tabController,
+          onPrinterTypeChanged: _setPrinterType,
+          onUpdate: _updateDraft,
+        );
+      },
+    );
+  }
+
+  Widget _buildApplyBar(AsyncValue<PrintSettings> settingsAsync) {
+    if (!settingsAsync.hasValue && _draft == null) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(color: listPanelCardBorder),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      child: SafeArea(
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton(
+            onPressed: _isApplying || _draft == null ? null : _handleApply,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              minimumSize: const Size(96, 40),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: 10,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              textStyle: AppTypography.inter(
+                fontSize: AppTypography.bodyMediumSize,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            child: _isApplying
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Apply'),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(printSettingsProvider);
-    final embedded = widget.embedded;
+    final content = _buildContent(settingsAsync);
+    final applyBar = _buildApplyBar(settingsAsync);
+
+    // Embedded in Settings hub — avoid nested Scaffold (blank body).
+    if (widget.embedded) {
+      return ColoredBox(
+        color: AppColors.background,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: content),
+            applyBar,
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: embedded
-          ? null
-          : AppBar(
-              backgroundColor: AppColors.surface,
-              elevation: 0,
-              surfaceTintColor: Colors.transparent,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                color: AppColors.textPrimary,
-                onPressed: () => context.pop(),
-              ),
-              iconTheme: const IconThemeData(color: AppColors.textPrimary),
-              title: Text(
-                'Print Settings',
-                style: AppTypography.inter(
-                  fontSize: AppTypography.titleMediumSize,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              bottom: const PreferredSize(
-                preferredSize: Size.fromHeight(1),
-                child: Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: listPanelCardBorder,
-                ),
-              ),
-            ),
-      body: settingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _ErrorState(
-          message: OfflineUiMessages.messageFor(error),
-          onRetry: () => ref.invalidate(printSettingsProvider),
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: AppColors.textPrimary,
+          onPressed: () => context.pop(),
         ),
-        data: (savedSettings) {
-          _draft ??= savedSettings;
-
-          final tabIndex = _draft!.printerType == PrinterType.thermal ? 0 : 1;
-          if (_tabController.index != tabIndex &&
-              !_tabController.indexIsChanging) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && _tabController.index != tabIndex) {
-                _tabController.index = tabIndex;
-              }
-            });
-          }
-
-          return _PrintSettingsBody(
-            settings: _draft!,
-            tabController: _tabController,
-            onPrinterTypeChanged: _setPrinterType,
-            onUpdate: _updateDraft,
-          );
-        },
-      ),
-      bottomNavigationBar: settingsAsync.maybeWhen(
-        data: (_) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            border: Border(
-              top: BorderSide(color: listPanelCardBorder),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          child: SafeArea(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                onPressed: _isApplying || _draft == null ? null : _handleApply,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  minimumSize: const Size(96, 40),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  textStyle: AppTypography.inter(
-                    fontSize: AppTypography.bodyMediumSize,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                child: _isApplying
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Apply'),
-              ),
-            ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        title: Text(
+          'Print Settings',
+          style: AppTypography.inter(
+            fontSize: AppTypography.titleMediumSize,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
         ),
-        orElse: () => const SizedBox.shrink(),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: listPanelCardBorder,
+          ),
+        ),
       ),
+      body: content,
+      bottomNavigationBar: applyBar,
     );
   }
 }

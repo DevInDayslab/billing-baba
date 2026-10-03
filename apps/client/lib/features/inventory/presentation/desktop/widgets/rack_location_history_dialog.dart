@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+const int _rackLocationHistoryDisplayLimit = 5;
+
 Future<void> showRackLocationHistoryDialog(
   BuildContext context, {
   required List<ItemLocationHistoryModel> history,
@@ -23,6 +25,14 @@ class RackLocationHistoryDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd MMM yyyy, hh:mm a');
+    final entries = [...history]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (entries.length > _rackLocationHistoryDisplayLimit) {
+      entries.removeRange(
+        _rackLocationHistoryDisplayLimit,
+        entries.length,
+      );
+    }
 
     return Dialog(
       child: ConstrainedBox(
@@ -38,7 +48,7 @@ class RackLocationHistoryDialog extends StatelessWidget {
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'Rack / Shelf History',
+                      'Last location updates',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -51,20 +61,25 @@ class RackLocationHistoryDialog extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 4),
+              const Text(
+                'Showing the 5 most recent updates.',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 12),
               Expanded(
-                child: history.isEmpty
+                child: entries.isEmpty
                     ? const Center(
                         child: Text(
-                          'No history yet.',
+                          'No location updates recorded yet.',
                           style: TextStyle(color: AppColors.textSecondary),
                         ),
                       )
                     : ListView.separated(
-                        itemCount: history.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemCount: entries.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
-                          final entry = history[index];
+                          final entry = entries[index];
                           final locationLabel = [
                             if (entry.rack != null && entry.rack!.isNotEmpty)
                               entry.rack,
@@ -85,7 +100,6 @@ class RackLocationHistoryDialog extends StatelessWidget {
                                       imageUrl: entry.photoUrl!,
                                       width: 72,
                                       height: 72,
-                                      fit: BoxFit.cover,
                                     ),
                                   )
                                 else
@@ -126,7 +140,7 @@ class RackLocationHistoryDialog extends StatelessWidget {
                                           entry.employeeLabel!.isNotEmpty) ...[
                                         const SizedBox(height: 4),
                                         Text(
-                                          'By: ${entry.employeeLabel}',
+                                          'Updated by: ${entry.employeeLabel}',
                                           style: const TextStyle(fontSize: 13),
                                         ),
                                       ],

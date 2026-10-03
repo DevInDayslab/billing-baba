@@ -3,6 +3,7 @@ import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -406,7 +407,9 @@ List<String> saleInvoiceFirmFilterOptions(Ref ref) {
 List<String> saleInvoiceUserFilterOptions(Ref ref) {
   final authState = ref.watch(authProvider);
   final authUser = authState.session?.user;
-  final invoices = ref.watch(saleInvoicesProvider).value?.items ?? [];
+  final invoices = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleInvoicesProvider),
+  );
 
   return _withAllOption(
     'All Users',
@@ -440,7 +443,9 @@ List<String> _uniqueSortedValues(Iterable<String> values) {
 
 @riverpod
 List<String> saleInvoiceTransactionTypeFilterOptions(Ref ref) {
-  final invoices = ref.watch(saleInvoicesProvider).value?.items ?? [];
+  final invoices = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleInvoicesProvider),
+  );
   return _uniqueSortedValues([
     ..._saleInvoiceTransactionTypeOptions,
     ...invoices.map((invoice) => invoice.transactionType),
@@ -449,7 +454,9 @@ List<String> saleInvoiceTransactionTypeFilterOptions(Ref ref) {
 
 @riverpod
 List<String> saleInvoicePaymentTypeFilterOptions(Ref ref) {
-  final invoices = ref.watch(saleInvoicesProvider).value?.items ?? [];
+  final invoices = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleInvoicesProvider),
+  );
   return _uniqueSortedValues([
     ...SaleDropdownOptions.paymentTypes,
     ...invoices.map((invoice) => invoice.paymentType),
@@ -459,7 +466,9 @@ List<String> saleInvoicePaymentTypeFilterOptions(Ref ref) {
 @riverpod
 List<String> saleInvoiceGodownFilterOptions(Ref ref) {
   final godownsAsync = ref.watch(inventoryGodownsProvider);
-  final invoices = ref.watch(saleInvoicesProvider).value?.items ?? [];
+  final invoices = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleInvoicesProvider),
+  );
 
   final godownNames = godownsAsync.maybeWhen(
     data: (godowns) => godowns.map((godown) => godown.name),
@@ -505,17 +514,6 @@ PaginatedSaleInvoices _allInvoicesPage(List<SaleInvoiceModel> allInvoices) {
   );
 }
 
-List<SaleInvoiceModel> _allInvoicesFromAsync(
-  AsyncValue<PaginatedSaleInvoices> invoicesAsync,
-) {
-  final previousItems = invoicesAsync.value?.items;
-  return invoicesAsync.when(
-    data: (page) => page.items,
-    loading: () => previousItems ?? const [],
-    error: (_, _) => previousItems ?? const [],
-  );
-}
-
 @Riverpod(keepAlive: true)
 class SaleInvoices extends _$SaleInvoices {
   @override
@@ -551,7 +549,9 @@ class SaleInvoices extends _$SaleInvoices {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allInvoices = await _fetchAllInvoices();
       return _allInvoicesPage(allInvoices);
@@ -738,7 +738,9 @@ class SaleInvoiceFilters extends _$SaleInvoiceFilters {
 
 @riverpod
 List<SaleInvoiceModel> filteredSaleInvoices(Ref ref) {
-  final allInvoices = _allInvoicesFromAsync(ref.watch(saleInvoicesProvider));
+  final allInvoices = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleInvoicesProvider),
+  );
   final filters = ref.watch(saleInvoiceFiltersProvider);
   final searchQuery = ref.watch(saleInvoiceSearchQueryProvider);
   return applySaleInvoiceClientFilters(

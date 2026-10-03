@@ -7,6 +7,7 @@ class ItemLocationModel {
     this.rack,
     this.shelf,
     this.photoUrl,
+    this.photoTakenAt,
   });
 
   final String id;
@@ -16,4 +17,5 @@ class ItemLocationModel {
   final String? rack;
   final String? shelf;
   final String? photoUrl;
+  final DateTime? photoTakenAt;
 }

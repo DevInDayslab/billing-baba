@@ -7,6 +7,7 @@ class ItemLocationHistoryModel {
     this.rack,
     this.shelf,
     this.photoUrl,
+    this.photoMediaAssetId,
     this.employeeLabel,
     this.changedBy,
   });
@@ -18,6 +19,7 @@ class ItemLocationHistoryModel {
   final String? rack;
   final String? shelf;
   final String? photoUrl;
+  final String? photoMediaAssetId;
   final String? employeeLabel;
   final String? changedBy;
 }

@@ -218,7 +218,9 @@ class ExpenseCategories extends _$ExpenseCategories {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final service = await ref.read(expenseServiceProvider.future);
       return service.fetchCategories();
@@ -290,7 +292,9 @@ class ExpenseTransactions extends _$ExpenseTransactions {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final filters = ref.read(expenseFiltersProvider);
       final service = await ref.read(expenseServiceProvider.future);

@@ -8,11 +8,11 @@ import 'package:billing_baba/features/print/presentation/desktop/widgets/documen
 import 'package:billing_baba/features/sales/application/credit_note_form_provider.dart';
 import 'package:billing_baba/features/sales/application/credit_note_tabs_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
-import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_document_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_empty_state_card.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_status_badge.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
@@ -107,29 +107,11 @@ class SaleReturnTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          returnsAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    SalesErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) => _SaleReturnTransactionsTable(
+          SalesPaginatedListAsyncBody(
+            listAsync: returnsAsync,
+            onRetry: notifier.refresh,
+            hasStaleRows: paginated.items.isNotEmpty,
+            table: _SaleReturnTransactionsTable(
               items: paginated.items,
               currentPage: paginated.currentPage,
             ),

@@ -86,7 +86,7 @@ final class PurchaseFaProvider
   PurchaseFa create() => PurchaseFa();
 }
 
-String _$purchaseFaHash() => r'fdea263540fa0e118f9c2682718e8c43016c8b36';
+String _$purchaseFaHash() => r'704fbcb06235ad2bd5d3ba6cac63538683077147';
 
 abstract class _$PurchaseFa extends $AsyncNotifier<PaginatedPurchaseFaRecords> {
   FutureOr<PaginatedPurchaseFaRecords> build();

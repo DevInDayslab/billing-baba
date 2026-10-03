@@ -105,14 +105,63 @@ class ReportAsyncBody<T> extends ConsumerWidget {
         ref.watch(connectivityStatusProvider).value ==
         SyncConnectivityStatus.offline;
 
+    final previous = value.asData?.value;
+
     return ReportReloadScope(
       isReloading: isReloading,
       child: value.when(
-        loading: () => AppLoader(message: loadingMessage),
-        error: (error, _) => AppError(
-          message: ReportsErrorMapper.messageFor(error),
-          onRetry: onRetry,
-        ),
+        skipLoadingOnReload: true,
+        loading: () {
+          if (previous != null) {
+            return RefreshIndicator(
+              onRefresh: () async => onRetry(),
+              child: data(previous),
+            );
+          }
+          return AppLoader(message: loadingMessage);
+        },
+        error: (error, _) {
+          if (previous != null) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Material(
+                  color: AppColors.error.withValues(alpha: 0.08),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            ReportsErrorMapper.messageFor(error),
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        TextButton(onPressed: onRetry, child: const Text('Retry')),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () async => onRetry(),
+                    child: data(previous),
+                  ),
+                ),
+              ],
+            );
+          }
+          return AppError(
+            message: ReportsErrorMapper.messageFor(error),
+            onRetry: onRetry,
+          );
+        },
         data: (result) {
           if (empty != null &&
               (isEmpty?.call(result) ?? _defaultIsEmpty(result))) {
@@ -131,7 +180,6 @@ class ReportAsyncBody<T> extends ConsumerWidget {
             child: data(result),
           );
         },
-        skipLoadingOnReload: true,
       ),
     );
   }

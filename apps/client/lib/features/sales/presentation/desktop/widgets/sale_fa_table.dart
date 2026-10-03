@@ -5,10 +5,10 @@ import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_provider.dart';
-import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fa_status_badge.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
@@ -100,29 +100,11 @@ class SaleFaTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          faAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    SalesErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) => _SaleFaTransactionsTable(items: paginated.items),
+          SalesPaginatedListAsyncBody(
+            listAsync: faAsync,
+            onRetry: notifier.refresh,
+            hasStaleRows: paginated.items.isNotEmpty,
+            table: _SaleFaTransactionsTable(items: paginated.items),
           ),
           const Divider(height: 1, color: _cardBorder),
           if (paginated.totalPages > 1)

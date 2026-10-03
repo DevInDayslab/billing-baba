@@ -341,7 +341,9 @@ class PurchaseFa extends _$PurchaseFa {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allRecords = await _fetchAllRecords();
       return _allRecordsPage(allRecords);

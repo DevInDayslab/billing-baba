@@ -19,6 +19,57 @@ void showTransactionSuccessToast(
   );
 }
 
+/// Snackbar on the root overlay (above dialogs), anchored to the bottom.
+void showOverlaySnackBar(
+  BuildContext context, {
+  required String message,
+  Duration duration = _toastDuration,
+}) {
+  final overlay = Overlay.of(context, rootOverlay: true);
+  late OverlayEntry entry;
+
+  void dismiss() {
+    if (entry.mounted) {
+      entry.remove();
+    }
+  }
+
+  entry = OverlayEntry(
+    builder: (overlayContext) {
+      final bottomInset = MediaQuery.viewPaddingOf(overlayContext).bottom;
+      return Positioned(
+        bottom: bottomInset + 16,
+        left: 24,
+        right: 24,
+        child: Material(
+          elevation: 6,
+          shadowColor: Colors.black26,
+          borderRadius: _toastBorderRadius,
+          color: const Color(0xFF323232),
+          child: InkWell(
+            onTap: dismiss,
+            borderRadius: _toastBorderRadius,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+
+  overlay.insert(entry);
+  Future<void>.delayed(duration, dismiss);
+}
+
 /// Shows a dismissible error note at the top-right of the screen.
 void showTransactionErrorToast(
   BuildContext context, {

@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
+import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/application/sale_report_column_filters_provider.dart';
 import 'package:billing_baba/features/reports/models/business_status_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/expense_report_subsection.dart';
@@ -49,7 +53,25 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _applyPendingIntent());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyPendingIntent();
+      _prefetchReportsShell();
+    });
+  }
+
+  void _prefetchReportsShell() {
+    unawaited(ref.read(reportsServiceProvider.future));
+    unawaited(
+      ref.read(saleReportProvider.future).then<void>((_) {}, onError: (_) {}),
+    );
+    unawaited(
+      ref.read(purchaseReportProvider.future).then<void>((_) {}, onError: (_) {}),
+    );
+    unawaited(
+      ref
+          .read(stockSummaryReportProvider.future)
+          .then<void>((_) {}, onError: (_) {}),
+    );
   }
 
   void _applyPendingIntent() {

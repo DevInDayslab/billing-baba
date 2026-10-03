@@ -103,22 +103,22 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
         takenAt: DateTime.now(),
       );
       final service = await ref.read(inventoryServiceProvider.future);
-      final url = await service.uploadRackPhoto(
+      final upload = await service.uploadRackPhoto(
         locationId: locationId,
         bytes: stamped.bytes,
         mimeType: stamped.mimeType,
       );
-      setState(() => _photoUrl = url);
-      widget.onPhotoChanged?.call(url);
+      setState(() => _photoUrl = upload.url);
+      widget.onPhotoChanged?.call(upload.url);
       unawaited(
         ref
             .read(imageServiceProvider)
             .replaceImage(
               oldUrl: previousUrl,
-              newUrl: url,
+              newUrl: upload.url,
               oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
-              newCacheKey: buildImageCacheKey(fallbackUrl: url),
-            ),
+              newCacheKey: buildImageCacheKey(fallbackUrl: upload.url),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ),
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -170,7 +170,7 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
   Widget build(BuildContext context) {
     if (widget.locationId == null) {
       return const Text(
-        'Save the item with rack/shelf details to add a rack photo.',
+        'Save the item with rack details to add a rack photo.',
         style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
       );
     }

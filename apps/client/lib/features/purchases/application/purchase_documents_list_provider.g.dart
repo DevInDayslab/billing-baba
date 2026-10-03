@@ -264,7 +264,7 @@ final class PurchaseDocumentsListProvider
 }
 
 String _$purchaseDocumentsListHash() =>
-    r'ce6622e924644f3bdeb6335561e4b6532728d345';
+    r'83561f4418b417d45f9682605e82e194f5762618';
 
 final class PurchaseDocumentsListFamily extends $Family
     with

@@ -24,7 +24,6 @@ class _PurchaseReturnPageState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(purchaseReturnsProvider.notifier).refresh();
       _showPendingSuccessMessage();
     });
   }

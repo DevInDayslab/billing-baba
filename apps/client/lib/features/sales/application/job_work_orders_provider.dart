@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/sales/application/job_work_service.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/models/requests/job_work_requests.dart';
@@ -161,7 +162,7 @@ class JobWorkOutFilters extends _$JobWorkOutFilters {
 
 @riverpod
 List<JobWorkOrderListItem> filteredJobWorkOrders(Ref ref) {
-  final items = ref.watch(jobWorkOrdersListProvider).value?.items ?? const [];
+  final items = jobWorkOrderItemsFromAsync(ref.watch(jobWorkOrdersListProvider));
   final filters = ref.watch(jobWorkOutFiltersProvider);
   final searchQuery = ref.watch(jobWorkOutSearchQueryProvider);
   return applyJobWorkOutClientFilters(items, filters, searchQuery);
@@ -182,7 +183,9 @@ class JobWorkOrdersList extends _$JobWorkOrdersList {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(_fetchPage);
   }
 

@@ -3,10 +3,10 @@ import 'package:billing_baba/features/export/presentation/desktop/widgets/module
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sale_document_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';
-import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_document_footer.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_document_line_items_table.dart';
@@ -187,10 +187,7 @@ class _EmptyState extends ConsumerWidget {
       SaleDocumentType.proforma => proformaListScope(),
     };
     final documentsAsync = ref.watch(salesDocumentsListProvider(scope));
-    final documents = documentsAsync.maybeWhen(
-      data: (page) => page.items,
-      orElse: () => const <SaleInvoiceModel>[],
-    );
+    final documents = saleInvoiceItemsFromPaginatedAsync(documentsAsync);
     final listNotifier = ref.read(salesDocumentsListProvider(scope).notifier);
 
     return SizedBox(
@@ -254,12 +251,7 @@ class _EmptyState extends ConsumerWidget {
                 ),
               ),
             ),
-            if (documentsAsync.isLoading)
-              const Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: CircularProgressIndicator(),
-              )
-            else if (documentsAsync.hasError)
+            if (documentsAsync.hasError && documents.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(

@@ -81,7 +81,7 @@ class ReportFilters extends _$ReportFilters {
   }
 
   void setPage(int page) {
-    state = state.copyWith(currentPage: page);
+    state = state.copyWith(currentPage: page, isTableLoading: true);
   }
 
   void resetPage() {

@@ -49,9 +49,12 @@ class Contacts extends _$Contacts {
         .toServiceFilters()
         .copyWith(searchQuery: ref.read(contactSearchQueryProvider));
 
-    await service.syncFromRemote();
+    // Local-first: paint SQLite immediately, sync in background.
+    unawaited(
+      service.syncFromRemote().then<void>((_) {}, onError: (_, _) {}),
+    );
 
-    _subscription?.cancel();
+    unawaited(_subscription?.cancel() ?? Future<void>.value());
     _subscription = service
         .watchContacts(filters: filters)
         .listen(
@@ -67,13 +70,16 @@ class Contacts extends _$Contacts {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final service = await ref.read(contactServiceProvider.future);
       final filters = ref
           .read(contactFiltersProvider.notifier)
           .toServiceFilters()
           .copyWith(searchQuery: ref.read(contactSearchQueryProvider));
+      unawaited(service.syncFromRemote());
       return service.loadContacts(filters: filters);
     });
   }

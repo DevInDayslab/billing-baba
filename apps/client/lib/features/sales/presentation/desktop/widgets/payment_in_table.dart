@@ -3,7 +3,6 @@ import 'package:billing_baba/features/export/presentation/desktop/widgets/module
 import 'package:billing_baba/features/print/presentation/desktop/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
-import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/payment_in_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/payment_in_status_badge.dart';
@@ -85,31 +84,11 @@ class PaymentInTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          recordsAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const SalesLoadingState(),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    SalesErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) {
-              if (recordsAsync.isReloading) {
-                return const SalesLoadingState();
-              }
-              return _PaymentInTransactionsTable(items: paginated.items);
-            },
+          SalesPaginatedListAsyncBody(
+            listAsync: recordsAsync,
+            onRetry: notifier.refresh,
+            hasStaleRows: paginated.items.isNotEmpty,
+            table: _PaymentInTransactionsTable(items: paginated.items),
           ),
           const Divider(height: 1, color: _cardBorder),
           if (paginated.totalPages > 1)

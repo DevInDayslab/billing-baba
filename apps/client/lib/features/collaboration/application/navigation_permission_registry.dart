@@ -5,7 +5,12 @@ import 'package:billing_baba/features/collaboration/domain/models/permission_mod
 /// Sidebar and search visibility rules.
 abstract final class NavigationPermissionRegistry {
   static bool isVisible(String route, PermissionService service) {
-    if (!service.hasSession) return false;
+    // Cold start: company session may not be seeded yet. Show standard nav
+    // (owner-like) so the desktop sidebar is never empty; route guards still
+    // enforce real permissions once the session exists.
+    if (!service.hasSession) {
+      return !_isOwnerOnlyRoute(route);
+    }
     if (service.hasFullAccess) return true;
 
     if (route == AppRoutes.home || route.startsWith('${AppRoutes.home}/')) {
@@ -24,7 +29,7 @@ abstract final class NavigationPermissionRegistry {
   }
 
   static bool isPurchaseNavVisible(PermissionService service) {
-    if (service.hasFullAccess) return true;
+    if (!service.hasSession || service.hasFullAccess) return true;
     return service.canView(PermissionModule.purchase) ||
         service.canView(PermissionModule.expense) ||
         service.canView(PermissionModule.paymentOut) ||

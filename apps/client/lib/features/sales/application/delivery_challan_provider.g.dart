@@ -93,7 +93,7 @@ final class DeliveryChallanUserFilterOptionsProvider
 }
 
 String _$deliveryChallanUserFilterOptionsHash() =>
-    r'72784a95939b3d448f7f47eb25e5dd6fe7c51262';
+    r'590bc99172372e25e15b3805689924609f9fc6eb';
 
 @ProviderFor(deliveryChallanGodownFilterOptions)
 final deliveryChallanGodownFilterOptionsProvider =
@@ -137,7 +137,7 @@ final class DeliveryChallanGodownFilterOptionsProvider
 }
 
 String _$deliveryChallanGodownFilterOptionsHash() =>
-    r'931a25eaefa36953fe56f5e4f47c5781c2813e3d';
+    r'cf045a851f836f6537d0934aa37e91cfddee88d2';
 
 @ProviderFor(DeliveryChallanSearchQuery)
 final deliveryChallanSearchQueryProvider =
@@ -271,7 +271,7 @@ final class DeliveryChallansProvider
   DeliveryChallans create() => DeliveryChallans();
 }
 
-String _$deliveryChallansHash() => r'dd07411c925a55beed95085d522598586ac2736c';
+String _$deliveryChallansHash() => r'18b37b2b6c1c9b2d1cee1e698c8e9a6b5a76e7d6';
 
 abstract class _$DeliveryChallans
     extends $AsyncNotifier<PaginatedSaleInvoices> {
@@ -403,7 +403,7 @@ final class FilteredDeliveryChallansProvider
 }
 
 String _$filteredDeliveryChallansHash() =>
-    r'd2c7c64d3040979d4d97eb33d83f9359124dc48b';
+    r'911e48d21cddded0c842426bdbea65e30fc0567a';
 
 @ProviderFor(paginatedDeliveryChallans)
 final paginatedDeliveryChallansProvider = PaginatedDeliveryChallansProvider._();

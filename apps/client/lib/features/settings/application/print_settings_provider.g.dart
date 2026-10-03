@@ -76,7 +76,7 @@ final class PrintSettingsNotifierProvider
 }
 
 String _$printSettingsNotifierHash() =>
-    r'8f0d06ad53c6aa0f08a22d97b5a7f7e408abff0e';
+    r'c64126328d3fb257832a00e4b5e08ba867ea8d6f';
 
 abstract class _$PrintSettingsNotifier extends $AsyncNotifier<PrintSettings> {
   FutureOr<PrintSettings> build();

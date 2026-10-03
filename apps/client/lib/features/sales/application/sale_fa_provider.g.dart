@@ -85,7 +85,7 @@ final class SaleFaProvider
   SaleFa create() => SaleFa();
 }
 
-String _$saleFaHash() => r'61eec3c5a1b70fc6fb51a3b44b9dc66c6384595f';
+String _$saleFaHash() => r'9ad23e17b03e83cb780aa0739c3f27f952d72f0a';
 
 abstract class _$SaleFa extends $AsyncNotifier<PaginatedSaleFaRecords> {
   FutureOr<PaginatedSaleFaRecords> build();

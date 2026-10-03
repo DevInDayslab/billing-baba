@@ -28,8 +28,6 @@ class _ExpensesPageState extends ConsumerState<DesktopExpensesPage>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(expenseCategoriesProvider.notifier).refresh();
-      ref.read(expenseTransactionsProvider.notifier).refresh();
       _showPendingSuccessMessage();
     });
   }

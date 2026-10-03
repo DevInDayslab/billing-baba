@@ -22,30 +22,32 @@ import 'package:billing_baba/features/inventory/data/inventory_movement_projecto
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
-import 'package:billing_baba/features/inventory/data/item_local_source.dart';
-import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_alternative_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_alternative_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_alternatives_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_bom_cost_local_source.dart';
-import 'package:billing_baba/features/inventory/data/item_bom_material_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_bom_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_bom_material_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_supplier_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_supplier_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_tier_price_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_tier_price_master_repository.dart';
-import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
 import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
+import 'package:billing_baba/features/inventory/models/bulk_item_update_payload.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/unit_dto.dart';
 import 'package:billing_baba/features/inventory/models/godown_model.dart';
+import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_history_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_model.dart';
@@ -54,9 +56,8 @@ import 'package:billing_baba/features/inventory/models/item_supplier_model.dart'
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/brand_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
-import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
-import 'package:billing_baba/features/inventory/models/mappers/item_bom_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/godown_mapper.dart';
+import 'package:billing_baba/features/inventory/models/mappers/item_bom_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_image_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_location_history_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_location_mapper.dart';
@@ -68,17 +69,16 @@ import 'package:billing_baba/features/inventory/models/mappers/unit_mapper.dart'
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/price_history_model.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
-import 'package:billing_baba/features/inventory/models/requests/item_bom_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/brand_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/godown_requests.dart';
-import 'package:billing_baba/features/inventory/models/bulk_item_update_payload.dart';
+import 'package:billing_baba/features/inventory/models/requests/item_bom_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
-import 'package:billing_baba/features/inventory/utils/inventory_item_catalog_status.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/unit_requests.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/utils/inventory_item_catalog_status.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:dio/dio.dart';
@@ -764,7 +764,7 @@ class InventoryService {
     }
   }
 
-  Future<String> uploadRackPhoto({
+  Future<({String url, DateTime? takenAt})> uploadRackPhoto({
     required String locationId,
     required Uint8List bytes,
     required String mimeType,
@@ -786,7 +786,10 @@ class InventoryService {
       if (url == null || url.isEmpty) {
         throw const InventoryException('Rack photo upload returned no URL.');
       }
-      return url;
+      final takenRaw = result['photo_taken_at'] as String?;
+      final takenAt =
+          takenRaw == null ? null : DateTime.tryParse(takenRaw)?.toLocal();
+      return (url: url, takenAt: takenAt);
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
       if (validation != null) rethrow;
@@ -870,20 +873,18 @@ class InventoryService {
     }
   }
 
+  static const rackLocationHistoryLimit = 5;
+
   Future<List<ItemLocationHistoryModel>> fetchItemLocationHistory(
-    String locationId,
-  ) async {
+    String locationId, {
+    int limit = rackLocationHistoryLimit,
+  }) async {
     try {
-      final records = await _fetchAllPages(
-        fetchPage: (page) async {
-          final response = await _repository.getItemLocationHistory(
-            locationId,
-            page: page,
-          );
-          return (response.records, response.meta.total);
-        },
+      final response = await _repository.getItemLocationHistory(
+        locationId,
+        limit: limit,
       );
-      return records.map(ItemLocationHistoryMapper.fromDto).toList();
+      return response.records.map(ItemLocationHistoryMapper.fromDto).toList();
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -1307,7 +1308,7 @@ class InventoryService {
       for (final item in items) {
         final apiCategoryId = payload.categoryId == null
             ? null
-            : CategoryMapper.toApiCategoryId(payload.categoryId!);
+            : CategoryMapper.toApiCategoryId(payload.categoryId);
         await _repository.updateItem(
           item.id,
           UpdateItemRequest(
