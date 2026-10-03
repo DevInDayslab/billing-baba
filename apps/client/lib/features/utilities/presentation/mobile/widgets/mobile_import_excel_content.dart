@@ -14,6 +14,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile Excel import flow — reuses [importItemsExcelProvider].
 class MobileImportExcelContent extends ConsumerStatefulWidget {
   const MobileImportExcelContent({super.key, this.onBack});
@@ -302,7 +304,7 @@ class _StepsCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             OutlinedButton.icon(
               onPressed: onDownloadSample,
-              icon: const Icon(Icons.download_outlined),
+              icon: const Icon(LucideIcons.download),
               label: const Text('Download Sample Template'),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -386,7 +388,7 @@ class _UploadCard extends StatelessWidget {
         child: Column(
           children: [
             const Icon(
-              Icons.upload_file_rounded,
+              LucideIcons.upload,
               size: 40,
               color: AppColors.primary,
             ),
@@ -513,7 +515,7 @@ class _PreviewSection extends StatelessWidget {
                           onChanged: (value) =>
                               onToggleRow(row.id, value ?? false),
                         )
-                      : Icon(Icons.block, color: color, size: 22),
+                      : Icon(LucideIcons.ban, color: color, size: 22),
                   title: Text(
                     row.itemName,
                     style: const TextStyle(fontWeight: FontWeight.w600),

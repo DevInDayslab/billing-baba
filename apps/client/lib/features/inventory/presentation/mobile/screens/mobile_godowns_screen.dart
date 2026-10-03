@@ -21,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile godowns list with search and add/edit/delete.
 class MobileGodownsScreen extends ConsumerStatefulWidget {
   const MobileGodownsScreen({super.key});
@@ -120,13 +122,13 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
     final actions = <MobileSheetAction>[
       if (permissions.canEdit(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.edit_outlined,
+          icon: LucideIcons.pencil,
           label: 'Edit Godown',
           onTap: () => unawaited(_editGodown(godown)),
         ),
       if (permissions.canDelete(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.delete_outline_rounded,
+          icon: LucideIcons.trash2,
           label: 'Delete Godown',
           onTap: () => unawaited(_confirmDeleteGodown(godown)),
         ),
@@ -190,7 +192,7 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
                   (_, _, true) => MobileEmptyState(
                     title: 'No godowns found',
                     message: 'Add a godown to track stock by warehouse.',
-                    icon: Icons.warehouse_outlined,
+                    icon: LucideIcons.warehouse,
                     actionLabel:
                         ref
                             .read(permissionServiceProvider)
@@ -410,7 +412,7 @@ class _AddGodownFab extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              const Icon(LucideIcons.plus, color: Colors.white, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Add Godown',

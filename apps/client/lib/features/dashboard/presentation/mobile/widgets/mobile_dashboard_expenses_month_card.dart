@@ -3,6 +3,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Expenses (Month) summary card.
 class MobileDashboardExpensesMonthCard extends StatelessWidget {
   const MobileDashboardExpensesMonthCard({
@@ -39,7 +41,7 @@ class MobileDashboardExpensesMonthCard extends StatelessWidget {
               borderRadius: AppRadius.mdBorder,
             ),
             child: const Icon(
-              Icons.receipt_long_outlined,
+              LucideIcons.receipt,
               color: Color(0xFFEF6C00),
             ),
           ),

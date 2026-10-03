@@ -22,6 +22,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddDebitNotePage extends ConsumerStatefulWidget {
   const MobileAddDebitNotePage({super.key, this.debitNoteId});
 
@@ -234,7 +236,7 @@ class _MobileAddDebitNotePageState
                 ? formatSaleSingleDate(form.billDate)
                 : 'Select date',
             isPlaceholder: form.billDate == null,
-            trailingIcon: Icons.calendar_today_outlined,
+            trailingIcon: LucideIcons.calendar,
             onTap: () async {
               final date = await showMobileDatePicker(
                 context,

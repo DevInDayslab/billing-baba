@@ -9,6 +9,8 @@ import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style horizontal image thumbnails with add button for Add Item.
 class MobileAddItemImageStrip extends ConsumerStatefulWidget {
   const MobileAddItemImageStrip({
@@ -171,7 +173,7 @@ class _RemoteThumb extends StatelessWidget {
               ),
               errorWidget: ColoredBox(
                 color: Colors.grey.shade100,
-                child: const Icon(Icons.broken_image_outlined, size: 18),
+                child: const Icon(LucideIcons.imageOff, size: 18),
               ),
             ),
           ),
@@ -243,7 +245,7 @@ class _AddPhotoChip extends StatelessWidget {
             color: AppColors.surface,
           ),
           child: Icon(
-            Icons.add_rounded,
+            LucideIcons.plus,
             size: 24,
             color: AppColors.primary,
           ),

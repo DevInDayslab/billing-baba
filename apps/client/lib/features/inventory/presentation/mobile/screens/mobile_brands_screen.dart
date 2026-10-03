@@ -21,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile brands list with search and add/edit/delete.
 class MobileBrandsScreen extends ConsumerStatefulWidget {
   const MobileBrandsScreen({super.key});
@@ -119,13 +121,13 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
     final actions = <MobileSheetAction>[
       if (permissions.canEdit(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.edit_outlined,
+          icon: LucideIcons.pencil,
           label: 'Edit Brand',
           onTap: () => unawaited(_editBrand(brand)),
         ),
       if (permissions.canDelete(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.delete_outline_rounded,
+          icon: LucideIcons.trash2,
           label: 'Delete Brand',
           onTap: () => unawaited(_confirmDeleteBrand(brand)),
         ),
@@ -189,7 +191,7 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
                   (_, _, true) => MobileEmptyState(
                     title: 'No brands found',
                     message: 'Add a brand to organize your items.',
-                    icon: Icons.branding_watermark_outlined,
+                    icon: LucideIcons.tag,
                     actionLabel:
                         ref
                             .read(permissionServiceProvider)
@@ -362,7 +364,7 @@ class _AddBrandFab extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              const Icon(LucideIcons.plus, color: Colors.white, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Add Brand',

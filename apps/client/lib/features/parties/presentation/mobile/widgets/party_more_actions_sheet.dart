@@ -11,6 +11,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// More actions bottom sheet for a party.
 Future<void> showPartyMoreActionsSheet({
   required BuildContext context,
@@ -25,17 +27,17 @@ Future<void> showPartyMoreActionsSheet({
     context: context,
     actions: [
       MobileSheetAction(
-        icon: Icons.edit_outlined,
+        icon: LucideIcons.pencil,
         label: 'Edit Party',
         onTap: () => PartyActions.edit(context, ref, party),
       ),
       MobileSheetAction(
-        icon: Icons.content_copy_outlined,
+        icon: LucideIcons.copy,
         label: 'Duplicate',
         onTap: () => PartyActions.duplicate(context, ref, party),
       ),
       MobileSheetAction(
-        icon: Icons.print_outlined,
+        icon: LucideIcons.printer,
         label: 'Print Ledger',
         onTap: () {
           final ledger = ref.read(partyTimelineProvider(party.id)).value;
@@ -52,7 +54,7 @@ Future<void> showPartyMoreActionsSheet({
         },
       ),
       MobileSheetAction(
-        icon: Icons.table_chart_outlined,
+        icon: LucideIcons.table,
         label: 'Export Ledger',
         onTap: () {
           final ledger = ref.read(partyTimelineProvider(party.id)).value;
@@ -67,7 +69,7 @@ Future<void> showPartyMoreActionsSheet({
       ),
       if (canReceive)
         MobileSheetAction(
-          icon: Icons.call_received_rounded,
+          icon: LucideIcons.phoneIncoming,
           label: 'Receive Payment',
           onTap: () => showMobileReceivePaymentSheet(
             context: context,
@@ -77,7 +79,7 @@ Future<void> showPartyMoreActionsSheet({
         ),
       if (canRecord)
         MobileSheetAction(
-          icon: Icons.call_made_rounded,
+          icon: LucideIcons.phoneOutgoing,
           label: 'Record Payment',
           onTap: () => showMobileRecordPaymentSheet(
             context: context,
@@ -87,13 +89,13 @@ Future<void> showPartyMoreActionsSheet({
         ),
       if (!party.isActive)
         MobileSheetAction(
-          icon: Icons.restore_rounded,
+          icon: LucideIcons.rotateCcw,
           label: 'Restore Party',
           onTap: () => PartyActions.restore(context, ref, party),
         ),
       if (party.isActive)
         MobileSheetAction(
-          icon: Icons.delete_outline_rounded,
+          icon: LucideIcons.trash2,
           label: 'Delete',
           isDestructive: true,
           onTap: () => PartyActions.delete(context, ref, party),

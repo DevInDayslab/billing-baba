@@ -7,6 +7,8 @@ import 'package:billing_baba/shared/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Primary quick actions shown on the mobile party detail screen.
 class MobilePartyQuickActions extends ConsumerWidget {
   const MobilePartyQuickActions({
@@ -61,7 +63,7 @@ class MobilePartyQuickActions extends ConsumerWidget {
                 party,
                 outstanding: outstanding,
               ),
-              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+              icon: const Icon(LucideIcons.messageCircle, size: 18),
               label: const Text('WhatsApp'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),

@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// How the scanner should behave after a barcode is detected.
 enum MobileBarcodeScannerMode {
   /// Returns the scanned barcode to the caller via [Navigator.pop].
@@ -226,7 +228,7 @@ class _MobileBarcodeScannerScreenState
         children: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close_rounded, color: Colors.white),
+            icon: const Icon(LucideIcons.x, color: Colors.white),
           ),
           const Spacer(),
           _CameraStatusBadge(isActive: _controller.value.isInitialized),
@@ -281,7 +283,7 @@ class _CameraStatusBadge extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: const Icon(
-        Icons.photo_camera_outlined,
+        LucideIcons.camera,
         color: Colors.white,
         size: 18,
       ),
@@ -312,8 +314,8 @@ class _TorchButton extends StatelessWidget {
           height: 52,
           child: Icon(
             enabled
-                ? Icons.flashlight_on_rounded
-                : Icons.flashlight_off_rounded,
+                ? LucideIcons.flashlight
+                : LucideIcons.flashlightOff,
             color: AppColors.primary,
             size: 26,
           ),
@@ -345,7 +347,7 @@ class _ScannerErrorState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.no_photography_outlined,
+                LucideIcons.cameraOff,
                 color: Colors.white70,
                 size: 48,
               ),

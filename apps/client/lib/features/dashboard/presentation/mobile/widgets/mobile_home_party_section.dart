@@ -8,6 +8,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Party list embedded in the mobile home screen when Party Details is active.
 ///
 /// Builds slivers so it shares the parent [CustomScrollView] — a nested
@@ -49,7 +51,7 @@ class MobileHomePartySection extends ConsumerWidget {
             child: MobileEmptyState(
               title: 'No parties found',
               message: 'Try a different search term.',
-              icon: Icons.people_outline_rounded,
+              icon: LucideIcons.users,
             ),
           );
         }

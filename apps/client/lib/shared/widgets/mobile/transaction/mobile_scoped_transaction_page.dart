@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Route-driven wrapper around [MobileTransactionPage].
 ///
 /// Use for sales, purchases, and other transaction list screens on mobile.
@@ -31,7 +33,7 @@ class MobileScopedTransactionPage extends ConsumerWidget {
         body: const MobileEmptyState(
           title: 'Unsupported route',
           message: 'No mobile transaction list is configured for this page.',
-          icon: Icons.error_outline_rounded,
+          icon: LucideIcons.circleAlert,
         ),
       );
     }

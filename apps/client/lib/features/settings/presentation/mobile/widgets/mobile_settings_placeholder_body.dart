@@ -3,6 +3,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Placeholder body for settings screens that are not yet implemented on mobile.
 class MobileSettingsPlaceholderBody extends StatelessWidget {
   const MobileSettingsPlaceholderBody({
@@ -19,7 +21,7 @@ class MobileSettingsPlaceholderBody extends StatelessWidget {
     return MobileEmptyState(
       title: '$title coming soon',
       message: message ?? 'This setting will be available in a future update.',
-      icon: Icons.construction_outlined,
+      icon: LucideIcons.construction,
     );
   }
 }

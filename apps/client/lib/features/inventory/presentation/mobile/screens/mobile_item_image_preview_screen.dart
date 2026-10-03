@@ -4,6 +4,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_editor_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Result of the mobile item image preview flow.
 sealed class MobileItemImagePreviewOutcome {}
 
@@ -87,7 +89,7 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(LucideIcons.x),
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         ),
         title: const Text('Photo'),
@@ -127,7 +129,7 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
                           vertical: AppSpacing.md,
                         ),
                       ),
-                      icon: const Icon(Icons.delete_outline_rounded),
+                      icon: const Icon(LucideIcons.trash2),
                       label: const Text('Delete'),
                     ),
                   ),
@@ -142,7 +144,7 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
                           vertical: AppSpacing.md,
                         ),
                       ),
-                      icon: const Icon(Icons.crop_rounded),
+                      icon: const Icon(LucideIcons.crop),
                       label: const Text('Edit'),
                     ),
                   ),

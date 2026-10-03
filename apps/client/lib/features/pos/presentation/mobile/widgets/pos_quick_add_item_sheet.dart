@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _addCategoryOptionId = '__add_category__';
 const _noneCategoryId = '__none__';
 const _fieldBorderColor = Color(0xFFE0E0E0);
@@ -571,7 +573,7 @@ class _PickerField extends StatelessWidget {
                 ),
               ),
               const Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 size: AppIconSize.md,
                 color: AppColors.textSecondary,
               ),

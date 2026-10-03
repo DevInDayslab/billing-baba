@@ -34,6 +34,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddSalePage extends ConsumerStatefulWidget {
   const MobileAddSalePage({
     super.key,
@@ -617,7 +619,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
         appBarActions: [
           if (visibility.showSettings && !widget.readOnly)
             MobileIconActionButton(
-              icon: Icons.settings_outlined,
+              icon: LucideIcons.settings,
               tooltip: 'Settings',
               onPressed: () => showMobileSaleSettingsPanel(
                 context: context,

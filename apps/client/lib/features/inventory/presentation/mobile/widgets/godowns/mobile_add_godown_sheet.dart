@@ -5,6 +5,8 @@ import 'package:billing_baba/features/inventory/models/godown_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile bottom sheet for creating or editing a godown.
 Future<GodownModel?> showMobileAddGodownSheet(
   BuildContext context, {
@@ -173,7 +175,7 @@ class _AddGodownSheetBodyState extends ConsumerState<_AddGodownSheetBody> {
               ),
               IconButton(
                 onPressed: () => Navigator.of(widget.sheetContext).pop(),
-                icon: const Icon(Icons.close_rounded),
+                icon: const Icon(LucideIcons.x),
                 color: AppColors.textSecondary,
                 iconSize: 22,
                 visualDensity: VisualDensity.compact,

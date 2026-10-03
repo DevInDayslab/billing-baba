@@ -7,6 +7,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Description, terms, and attachment actions matching desktop transaction forms.
 class MobileDocumentNotesAttachmentsSection extends StatelessWidget {
   const MobileDocumentNotesAttachmentsSection({
@@ -83,7 +85,7 @@ class MobileDocumentNotesAttachmentsSection extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onAddImage,
-                  icon: const Icon(Icons.image_outlined, size: 18),
+                  icon: const Icon(LucideIcons.image, size: 18),
                   label: const Text('Add Image'),
                 ),
               ),
@@ -91,7 +93,7 @@ class MobileDocumentNotesAttachmentsSection extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onAddDocument,
-                  icon: const Icon(Icons.attach_file_rounded, size: 18),
+                  icon: const Icon(LucideIcons.paperclip, size: 18),
                   label: const Text('Add Document'),
                 ),
               ),
@@ -136,7 +138,7 @@ class _AttachmentTile extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.insert_drive_file_outlined, size: 20),
+      leading: const Icon(LucideIcons.file, size: 20),
       title: Text(
         name,
         maxLines: 1,
@@ -146,7 +148,7 @@ class _AttachmentTile extends StatelessWidget {
       trailing: onRemove == null
           ? null
           : IconButton(
-              icon: const Icon(Icons.close_rounded, size: 18),
+              icon: const Icon(LucideIcons.x, size: 18),
               onPressed: onRemove,
               color: AppColors.textSecondary,
             ),

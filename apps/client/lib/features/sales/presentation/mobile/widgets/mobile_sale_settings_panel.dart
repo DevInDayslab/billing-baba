@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _panelBlue = AppColors.primary;
 const _badgeRed = Color(0xFFE53935);
 
@@ -151,7 +153,7 @@ class _MobileSaleSettingsPanelState
                     IconButton(
                       onPressed: widget.onClose,
                       icon: Icon(
-                        Icons.close_rounded,
+                        LucideIcons.x,
                         color: AppColors.textSecondary.withValues(alpha: 0.75),
                       ),
                       visualDensity: VisualDensity.compact,
@@ -237,7 +239,7 @@ class _MobileSaleSettingsPanelState
                 top: false,
                 child: TextButton.icon(
                   onPressed: widget.onMoreSettings,
-                  icon: const Icon(Icons.settings_outlined, color: _panelBlue),
+                  icon: const Icon(LucideIcons.settings, color: _panelBlue),
                   label: Text(
                     'More Settings',
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -387,7 +389,7 @@ class _NavigationSettingTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: AppColors.textSecondary.withValues(alpha: 0.55),
               ),
             ],
@@ -424,8 +426,8 @@ class _BillingTypeOption extends StatelessWidget {
             children: [
               Icon(
                 isSelected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_off_rounded,
+                    ? LucideIcons.circleDot
+                    : LucideIcons.circle,
                 color: isSelected
                     ? _panelBlue
                     : AppColors.textSecondary.withValues(alpha: 0.45),

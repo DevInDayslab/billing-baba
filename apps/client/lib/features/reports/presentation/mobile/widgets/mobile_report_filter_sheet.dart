@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 enum _MobileReportFilterSection {
   partyType,
   paymentMode,
@@ -77,7 +79,7 @@ Future<MobileReportFilterDraft?> showMobileReportFilterSheet({
                 IconButton(
                   tooltip: 'Close',
                   onPressed: () => Navigator.of(sheetContext).pop(),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(LucideIcons.x),
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -366,8 +368,8 @@ class _RadioOptionList<T> extends StatelessWidget {
                 ),
                 Icon(
                   isSelected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_off_rounded,
+                      ? LucideIcons.circleDot
+                      : LucideIcons.circle,
                   color: isSelected
                       ? MobileReportTheme.accent
                       : AppColors.textSecondary.withValues(alpha: 0.5),

@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile metrics card mirroring the desktop item detail header.
 ///
 /// Shows the item name and the first four metrics. Secondary fields
@@ -246,7 +248,7 @@ class _MoreDetailsToggle extends StatelessWidget {
                 turns: expanded ? 0.5 : 0,
                 duration: const Duration(milliseconds: 200),
                 child: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
+                  LucideIcons.chevronDown,
                   size: AppIconSize.md,
                   color: AppColors.textSecondary,
                 ),

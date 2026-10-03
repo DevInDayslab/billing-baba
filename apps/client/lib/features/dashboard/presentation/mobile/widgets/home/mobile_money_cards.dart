@@ -3,6 +3,8 @@ import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Money section — To Collect / To Pay cards.
 class MobileMoneyCards extends StatelessWidget {
   const MobileMoneyCards({
@@ -58,7 +60,7 @@ class MobileMoneyCards extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     color: AppColors.textSecondary.withValues(alpha: 0.4),
                     size: 20,
                   ),
@@ -151,7 +153,7 @@ class _MoneyCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.person_outline_rounded,
+                      LucideIcons.user,
                       size: 24,
                       color: color,
                     ),

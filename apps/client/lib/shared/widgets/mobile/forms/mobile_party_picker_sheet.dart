@@ -8,6 +8,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Opens a select-spinner style dialog to pick a party.
 Future<PartyModel?> showMobilePartyPickerSheet(
   BuildContext context, {
@@ -71,7 +73,7 @@ class _MobilePartyPickerSheetState
             error: (error, _) => MobileEmptyState(
               title: 'Could not load parties',
               message: error.toString(),
-              icon: Icons.error_outline_rounded,
+              icon: LucideIcons.circleAlert,
             ),
             data: (parties) {
               final filtered = parties.where((party) {
@@ -89,7 +91,7 @@ class _MobilePartyPickerSheetState
                 return const MobileEmptyState(
                   title: 'No parties found',
                   message: 'Try a different search.',
-                  icon: Icons.people_outline_rounded,
+                  icon: LucideIcons.users,
                 );
               }
 

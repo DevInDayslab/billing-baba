@@ -22,6 +22,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style mobile Plans & Pricing screen with accordion plan cards.
 class MobilePlansPricingPage extends ConsumerWidget {
   const MobilePlansPricingPage({super.key});
@@ -41,7 +43,7 @@ class MobilePlansPricingPage extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'More options',
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: const Icon(LucideIcons.ellipsisVertical),
             onPressed: () =>
                 showMobilePlansPricingMoreOptionsSheet(context, ref),
           ),

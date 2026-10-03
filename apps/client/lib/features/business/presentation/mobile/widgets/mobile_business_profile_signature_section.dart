@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Signature placeholder with create/upload actions on the business profile.
 class MobileBusinessProfileSignatureSection extends StatelessWidget {
   const MobileBusinessProfileSignatureSection({
@@ -43,7 +45,7 @@ class MobileBusinessProfileSignatureSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.draw_outlined,
+                LucideIcons.penLine,
                 color: AppColors.textSecondary.withValues(alpha: 0.55),
                 size: 28,
               ),

@@ -2,6 +2,7 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Search + scan row for the home overview screen.
 class MobileHomeSearchBar extends StatelessWidget {
@@ -47,7 +48,7 @@ class MobileHomeSearchBar extends StatelessWidget {
               child: Row(
                 children: [
                   const SizedBox(width: AppSpacing.md),
-                  Icon(Icons.search_rounded, color: primary, size: 24),
+                  Icon(LucideIcons.search, color: primary, size: 24),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: TextField(
@@ -82,7 +83,7 @@ class MobileHomeSearchBar extends StatelessWidget {
                   if (showFilter && onFilterTap != null)
                     IconButton(
                       onPressed: onFilterTap,
-                      icon: Icon(Icons.tune_rounded, color: primary, size: 18),
+                      icon: Icon(LucideIcons.slidersHorizontal, color: primary, size: 18),
                       visualDensity: VisualDensity.compact,
                     ),
                 ],
@@ -100,7 +101,7 @@ class MobileHomeSearchBar extends StatelessWidget {
                 width: _rowHeight,
                 height: _rowHeight,
                 child: Icon(
-                  Icons.qr_code_scanner_rounded,
+                  LucideIcons.scanBarcode,
                   color: Colors.white,
                   size: 22,
                 ),

@@ -35,7 +35,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
   /// Compact style for MenuBar labels only (not dropdown items).
   static const _barButtonStyle = ButtonStyle(
     padding: WidgetStatePropertyAll(
-      EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+      EdgeInsets.symmetric(horizontal: 8),
     ),
     minimumSize: WidgetStatePropertyAll(
       Size(0, DashboardSpacing.menuBarHeight),
@@ -257,6 +257,11 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
             onSelected: () => unawaited(DesktopMenuActions.reportIssue()),
           ),
           PlatformMenuItem(
+            label: 'Terms of Service',
+            onSelected: () =>
+                unawaited(DesktopMenuActions.openTermsOfService()),
+          ),
+          PlatformMenuItem(
             label: 'Privacy Policy',
             onSelected: () => unawaited(DesktopMenuActions.openPrivacyPolicy()),
           ),
@@ -296,7 +301,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   LogicalKeyboardKey.keyZ,
                   meta: true,
                 ),
-                onSelected: () => _handleUndo(),
+                onSelected: _handleUndo,
               ),
               PlatformMenuItem(
                 label: 'Redo',
@@ -305,7 +310,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   meta: true,
                   shift: true,
                 ),
-                onSelected: () => _handleRedo(),
+                onSelected: _handleRedo,
               ),
             ],
           ),
@@ -467,6 +472,10 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
           MenuItemButton(
             onPressed: () => unawaited(DesktopMenuActions.reportIssue()),
             child: const Text('Report an Issue'),
+          ),
+          MenuItemButton(
+            onPressed: () => unawaited(DesktopMenuActions.openTermsOfService()),
+            child: const Text('Terms of Service'),
           ),
           MenuItemButton(
             onPressed: () => unawaited(DesktopMenuActions.openPrivacyPolicy()),

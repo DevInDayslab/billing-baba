@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _shareRed = Color(0xFFE53935);
 const _pdfBackground = Color(0xFFE8F4FD);
 const _pdfText = Color(0xFF455A64);
@@ -226,7 +228,7 @@ class _ShareImageIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: const Icon(
-        Icons.image_outlined,
+        LucideIcons.image,
         color: _shareRed,
         size: 24,
       ),

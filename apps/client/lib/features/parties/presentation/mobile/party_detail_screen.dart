@@ -30,6 +30,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile party detail view (info, quick actions, transactions).
 class MobilePartyDetailScreen extends ConsumerWidget {
   const MobilePartyDetailScreen({
@@ -266,14 +268,14 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
         backgroundColor: const Color(0xFFEAF4FF),
         actions: [
           MobileIconActionButton(
-            icon: Icons.edit_outlined,
+            icon: LucideIcons.pencil,
             tooltip: 'Edit party',
             onPressed: canEditParty
                 ? () => PartyActions.edit(context, ref, party)
                 : null,
           ),
           MobileIconActionButton(
-            icon: Icons.more_horiz_rounded,
+            icon: LucideIcons.ellipsis,
             tooltip: 'More actions',
             onPressed: () => showPartyMoreActionsSheet(
               context: context,
@@ -480,7 +482,7 @@ class _TransactionSearchBar extends StatelessWidget {
                 ),
               ),
               child: Icon(
-                Icons.filter_list_rounded,
+                LucideIcons.listFilter,
                 color: isFilterActive
                     ? AppColors.primary
                     : AppColors.textSecondary,
@@ -505,7 +507,7 @@ class _TransactionSearchBar extends StatelessWidget {
                   border: Border.all(color: const Color(0xFFD9E7F6)),
                 ),
                 child: const Icon(
-                  Icons.print_outlined,
+                  LucideIcons.printer,
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -852,7 +854,7 @@ class _MinimalActionRow extends StatelessWidget {
           Expanded(
             child: TextButton.icon(
               onPressed: onReminderTap,
-              icon: const Icon(Icons.notifications_none_rounded),
+              icon: const Icon(LucideIcons.bell),
               label: const Text('Send Reminder'),
             ),
           ),
@@ -860,7 +862,7 @@ class _MinimalActionRow extends StatelessWidget {
           Expanded(
             child: TextButton.icon(
               onPressed: onStatementTap,
-              icon: const Icon(Icons.receipt_long_outlined),
+              icon: const Icon(LucideIcons.receipt),
               label: const Text('Send Statement'),
             ),
           ),

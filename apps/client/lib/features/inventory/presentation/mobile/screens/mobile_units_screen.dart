@@ -24,6 +24,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile units list with search, conversions, and add/edit/delete.
 class MobileUnitsScreen extends ConsumerStatefulWidget {
   const MobileUnitsScreen({super.key});
@@ -330,7 +332,7 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                   (_, _, true) => MobileEmptyState(
                     title: 'No units found',
                     message: 'Add a unit to measure your inventory items.',
-                    icon: Icons.straighten_outlined,
+                    icon: LucideIcons.ruler,
                     actionLabel:
                         ref
                             .read(permissionServiceProvider)
@@ -513,8 +515,8 @@ class _UnitListTile extends StatelessWidget {
                   IconButton(
                     icon: Icon(
                       isExpanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
+                          ? LucideIcons.chevronUp
+                          : LucideIcons.chevronDown,
                     ),
                     color: AppColors.textSecondary,
                     onPressed: onToggleExpand,
@@ -556,7 +558,7 @@ class _UnitListTile extends StatelessWidget {
                 ),
                 if (onEdit != null)
                   IconButton(
-                    icon: const Icon(Icons.edit_outlined),
+                    icon: const Icon(LucideIcons.pencil),
                     color: AppColors.textSecondary,
                     tooltip: 'Edit unit',
                     onPressed: onEdit,
@@ -606,7 +608,7 @@ class _UnitListTile extends StatelessWidget {
                               if (onDeleteConversion != null)
                                 IconButton(
                                   icon: const Icon(
-                                    Icons.delete_outline,
+                                    LucideIcons.trash2,
                                     size: 18,
                                   ),
                                   color: AppColors.textSecondary,
@@ -631,7 +633,7 @@ class _UnitListTile extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
                   onPressed: onAddConversion,
-                  icon: const Icon(Icons.add_rounded, size: 18),
+                  icon: const Icon(LucideIcons.plus, size: 18),
                   label: const Text('Add Conversion'),
                 ),
               ),
@@ -673,7 +675,7 @@ class _AddUnitFab extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 1.5),
                 ),
                 child: const Icon(
-                  Icons.add_rounded,
+                  LucideIcons.plus,
                   color: Colors.white,
                   size: 14,
                 ),

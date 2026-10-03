@@ -3,6 +3,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Shows a Vyapar-style icon grid bottom sheet (e.g. More Options, Add Txn).
 Future<void> showMobileMenuGridSheet({
   required BuildContext context,
@@ -51,7 +53,7 @@ class _MenuGridSheetHeader extends StatelessWidget {
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: Icon(
-            Icons.close_rounded,
+            LucideIcons.x,
             color: AppColors.textSecondary.withValues(alpha: 0.7),
           ),
           visualDensity: VisualDensity.compact,
@@ -157,7 +159,7 @@ class _MenuGridTile extends StatelessWidget {
                     top: -6,
                     right: -6,
                     child: Icon(
-                      Icons.workspace_premium_rounded,
+                      LucideIcons.award,
                       size: 18,
                       color: _premiumColor,
                     ),
@@ -200,17 +202,17 @@ class _SparkleAccent extends StatelessWidget {
           Positioned(
             left: 0,
             top: 4,
-            child: Icon(Icons.star, size: 7, color: _color),
+            child: Icon(LucideIcons.star, size: 7, color: _color),
           ),
           Positioned(
             left: 6,
             top: 0,
-            child: Icon(Icons.star, size: 9, color: _color),
+            child: Icon(LucideIcons.star, size: 9, color: _color),
           ),
           Positioned(
             left: 11,
             top: 5,
-            child: Icon(Icons.star, size: 6, color: _color),
+            child: Icon(LucideIcons.star, size: 6, color: _color),
           ),
         ],
       ),

@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class PaymentFailureScreen extends StatelessWidget {
   const PaymentFailureScreen({
     required this.message,
@@ -27,7 +29,7 @@ class PaymentFailureScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Icon(
-              Icons.error_outline_rounded,
+              LucideIcons.circleAlert,
               size: 72,
               color: AppColors.danger,
             ),

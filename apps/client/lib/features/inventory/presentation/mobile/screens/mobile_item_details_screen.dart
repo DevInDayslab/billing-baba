@@ -27,6 +27,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile item ledger screen — pricing, stock metrics, and history/transactions.
 class MobileItemDetailsScreen extends ConsumerStatefulWidget {
   const MobileItemDetailsScreen({
@@ -131,7 +133,7 @@ class _MobileItemDetailsScreenState
           data: (_) => const MobileEmptyState(
             title: 'Item not found',
             message: 'This item may have been deleted or is unavailable.',
-            icon: Icons.inventory_2_outlined,
+            icon: LucideIcons.package,
           ),
         ),
       );
@@ -175,13 +177,13 @@ class _MobileItemDetailsScreenState
         actions: [
           if (canEdit)
             MobileIconActionButton(
-              icon: Icons.edit_outlined,
+              icon: LucideIcons.pencil,
               tooltip: 'Edit item',
               onPressed: () => unawaited(_editItem(displayItem)),
             ),
           if (canDelete)
             MobileIconActionButton(
-              icon: Icons.delete_outline_rounded,
+              icon: LucideIcons.trash2,
               tooltip: 'Delete item',
               onPressed: () => unawaited(_deleteItem(displayItem)),
             ),
@@ -282,7 +284,7 @@ class _MobileItemDetailsScreenState
                           : isProduct
                           ? 'No stock history yet'
                           : 'No transactions yet',
-                      icon: Icons.history_rounded,
+                      icon: LucideIcons.history,
                     ),
                   );
                 }
@@ -358,7 +360,7 @@ class _PaginationBar extends ConsumerWidget {
         IconButton(
           tooltip: 'Previous page',
           onPressed: canGoBack ? () => notifier.setPage(currentPage - 1) : null,
-          icon: const Icon(Icons.chevron_left_rounded),
+          icon: const Icon(LucideIcons.chevronLeft),
         ),
         Text(
           'Page ${currentPage + 1} of $totalPages',
@@ -369,7 +371,7 @@ class _PaginationBar extends ConsumerWidget {
         IconButton(
           tooltip: 'Next page',
           onPressed: canGoNext ? () => notifier.setPage(currentPage + 1) : null,
-          icon: const Icon(Icons.chevron_right_rounded),
+          icon: const Icon(LucideIcons.chevronRight),
         ),
       ],
     );

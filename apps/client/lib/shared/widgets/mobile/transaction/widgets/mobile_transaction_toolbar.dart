@@ -4,6 +4,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Search, filter, sort, and more-actions controls for transaction lists.
 class MobileTransactionToolbar extends StatelessWidget {
   const MobileTransactionToolbar({
@@ -61,7 +63,7 @@ class MobileTransactionToolbar extends StatelessWidget {
               if (showMoreButton && onMoreTap != null) ...[
                 const SizedBox(width: AppSpacing.sm),
                 MobileIconActionButton(
-                  icon: Icons.more_horiz_rounded,
+                  icon: LucideIcons.ellipsis,
                   tooltip: 'More actions',
                   onPressed: onMoreTap,
                 ),
@@ -73,14 +75,14 @@ class MobileTransactionToolbar extends StatelessWidget {
             children: [
               _ToolbarChip(
                 label: filterLabel,
-                icon: Icons.filter_list_rounded,
+                icon: LucideIcons.listFilter,
                 isActive: isFilterActive,
                 onTap: onFilterTap,
               ),
               const SizedBox(width: AppSpacing.sm),
               _ToolbarChip(
                 label: sortLabel,
-                icon: Icons.sort_rounded,
+                icon: LucideIcons.arrowUpDown,
                 isActive: sortState.isActive,
                 onTap: onSortTap,
               ),

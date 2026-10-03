@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Field toggles shown from the Add Item dialog settings gear.
 Future<void> showMobileAddItemSettingsSheet(BuildContext context) {
   return showGeneralDialog<void>(
@@ -353,7 +355,7 @@ class _SheetHeader extends StatelessWidget {
           ),
           IconButton(
             onPressed: onClose,
-            icon: const Icon(Icons.close_rounded),
+            icon: const Icon(LucideIcons.x),
             color: AppColors.textSecondary,
             iconSize: 22,
             visualDensity: VisualDensity.compact,
@@ -416,7 +418,7 @@ class _ServiceRemindersBanner extends StatelessWidget {
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         Icon(
-                          Icons.workspace_premium,
+                          LucideIcons.award,
                           size: 16,
                           color: Colors.deepPurple.shade400,
                         ),
@@ -424,7 +426,7 @@ class _ServiceRemindersBanner extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     color: AppColors.textSecondary.withValues(alpha: 0.7),
                   ),
                 ],
@@ -467,7 +469,7 @@ class _MoreSettingsFooter extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(
-                Icons.settings_outlined,
+                LucideIcons.settings,
                 size: 18,
                 color: AppColors.primary,
               ),

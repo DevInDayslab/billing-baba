@@ -17,6 +17,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style mobile report screen used for all report subsections.
 class MobileReportSubsectionScreen extends ConsumerWidget {
   const MobileReportSubsectionScreen({
@@ -187,7 +189,7 @@ class _ReportBody extends StatelessWidget {
               ? const MobileEmptyState(
                   title: 'No records found',
                   message: 'Try changing the date range or filters.',
-                  icon: Icons.receipt_long_outlined,
+                  icon: LucideIcons.receipt,
                 )
               : ListView.separated(
                   padding: EdgeInsets.fromLTRB(

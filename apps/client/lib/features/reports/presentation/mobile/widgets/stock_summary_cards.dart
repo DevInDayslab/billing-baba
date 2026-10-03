@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Summary stat cards for the mobile stock summary screen.
 class StockSummaryStatCards extends StatelessWidget {
   const StockSummaryStatCards({
@@ -185,7 +187,7 @@ class _DetailedCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(
-                Icons.inventory_2_outlined,
+                LucideIcons.package,
                 size: 18,
                 color: AppColors.textSecondary,
               ),

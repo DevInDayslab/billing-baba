@@ -19,6 +19,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style mobile item detail stock movement report.
 class MobileItemDetailReportScreen extends ConsumerStatefulWidget {
   const MobileItemDetailReportScreen({super.key});
@@ -210,7 +212,7 @@ class _MobileItemDetailReportScreenState
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: const Text(
@@ -265,7 +267,7 @@ class _MobileItemDetailReportScreenState
                             ),
                           ),
                           Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            LucideIcons.chevronDown,
                             color: AppColors.textSecondary.withValues(
                               alpha: 0.8,
                             ),
@@ -293,7 +295,7 @@ class _MobileItemDetailReportScreenState
                       child: Row(
                         children: [
                           const Icon(
-                            Icons.calendar_today_outlined,
+                            LucideIcons.calendar,
                             size: 16,
                             color: AppColors.primary,
                           ),
@@ -384,7 +386,7 @@ class _MobileItemDetailReportScreenState
                   : const MobileEmptyState(
                       title: 'Select an item',
                       message: 'Choose an item to view daily stock movement.',
-                      icon: Icons.inventory_2_outlined,
+                      icon: LucideIcons.package,
                     ),
               error: (error, _) => AppError(
                 message: error.toString(),
@@ -396,14 +398,14 @@ class _MobileItemDetailReportScreenState
                   return const MobileEmptyState(
                     title: 'Select an item',
                     message: 'Choose an item to view daily stock movement.',
-                    icon: Icons.inventory_2_outlined,
+                    icon: LucideIcons.package,
                   );
                 }
                 if (displayRows.isEmpty) {
                   return const MobileEmptyState(
                     title: 'No data',
                     message: 'No movement for the selected period.',
-                    icon: Icons.assessment_outlined,
+                    icon: LucideIcons.chartBar,
                   );
                 }
                 return ListView.separated(
@@ -624,7 +626,7 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
               controller: _searchController,
               decoration: const InputDecoration(
                 hintText: 'Search item',
-                prefixIcon: Icon(Icons.search, size: 20),
+                prefixIcon: Icon(LucideIcons.search, size: 20),
                 isDense: true,
               ),
               onChanged: (value) => setState(() => _query = value),

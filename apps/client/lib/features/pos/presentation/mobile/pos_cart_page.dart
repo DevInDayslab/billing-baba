@@ -20,6 +20,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _itemsHeaderColor = Color(0xFFE8456A);
 const _customerBorderColor = Color(0xFFE8E8E8);
 const _taxDropdownBorderColor = Color(0xFFE0E0E0);
@@ -176,7 +178,7 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
                   ),
                 ),
                 trailing: isSelected
-                    ? const Icon(Icons.check, color: AppColors.primary)
+                    ? const Icon(LucideIcons.check, color: AppColors.primary)
                     : null,
                 onTap: () {
                   setState(() {
@@ -323,7 +325,7 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           color: AppColors.textPrimary,
           onPressed: () => context.pop(),
         ),
@@ -336,7 +338,7 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(LucideIcons.settings),
             color: AppColors.textSecondary,
             onPressed: () => unawaited(
               showMobileSaleSettingsPanel(context: context, ref: ref),
@@ -620,7 +622,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                   child: Row(
                     children: [
                       const _CustomerIconContainer(
-                        icon: Icons.person_outline,
+                        icon: LucideIcons.user,
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -655,7 +657,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                         )
                       else
                         const Icon(
-                          Icons.add,
+                          LucideIcons.plus,
                           color: AppColors.primary,
                           size: AppIconSize.md,
                         ),
@@ -676,7 +678,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _CustomerFieldRow(
-                      icon: Icons.person_outline,
+                      icon: LucideIcons.user,
                       child: TextField(
                         controller: widget.nameController,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -687,7 +689,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _CustomerFieldRow(
-                      icon: Icons.phone_outlined,
+                      icon: LucideIcons.phone,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -718,7 +720,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _CustomerFieldRow(
-                      icon: Icons.location_on_outlined,
+                      icon: LucideIcons.mapPin,
                       child: TextField(
                         controller: widget.addressController,
                         maxLines: 2,
@@ -730,7 +732,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _CustomerFieldRow(
-                      icon: Icons.business_outlined,
+                      icon: LucideIcons.building2,
                       child: TextField(
                         controller: widget.gstinController,
                         textCapitalization: TextCapitalization.characters,
@@ -762,7 +764,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             const Icon(
-                              Icons.keyboard_arrow_up_rounded,
+                              LucideIcons.chevronUp,
                               color: AppColors.primary,
                               size: AppIconSize.md,
                             ),
@@ -1042,7 +1044,7 @@ class _QuantityStepper extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _StepperButton(icon: Icons.remove_rounded, onPressed: onDecrease),
+          _StepperButton(icon: LucideIcons.minus, onPressed: onDecrease),
           InkWell(
             onTap: onQuantityTap,
             borderRadius: BorderRadius.circular(8),
@@ -1062,7 +1064,7 @@ class _QuantityStepper extends StatelessWidget {
               ),
             ),
           ),
-          _StepperButton(icon: Icons.add_rounded, onPressed: onIncrease),
+          _StepperButton(icon: LucideIcons.plus, onPressed: onIncrease),
         ],
       ),
     );
@@ -1336,7 +1338,7 @@ class _TotalsCardState extends State<_TotalsCard> {
                   ),
                   IconButton(
                     onPressed: _hideCustomInput,
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(LucideIcons.x),
                     color: AppColors.textSecondary,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -1401,7 +1403,7 @@ class _TotalsCardState extends State<_TotalsCard> {
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         const Icon(
-                          Icons.keyboard_arrow_down,
+                          LucideIcons.chevronDown,
                           color: AppColors.textSecondary,
                           size: AppIconSize.md,
                         ),
@@ -1623,7 +1625,7 @@ class _PaymentModeCard extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.payments_outlined,
+                    LucideIcons.banknote,
                     color: AppColors.textSecondary,
                     size: AppIconSize.md,
                   ),
@@ -1646,8 +1648,8 @@ class _PaymentModeCard extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xs),
                   Icon(
                     expanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
+                        ? LucideIcons.chevronUp
+                        : LucideIcons.chevronDown,
                     color: AppColors.textSecondary,
                   ),
                 ],
@@ -1767,7 +1769,7 @@ class _NotesCard extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.notes_outlined,
+                    LucideIcons.stickyNote,
                     color: AppColors.textSecondary,
                     size: AppIconSize.md,
                   ),
@@ -1781,7 +1783,7 @@ class _NotesCard extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    expanded ? Icons.remove : Icons.add,
+                    expanded ? LucideIcons.minus : LucideIcons.plus,
                     color: AppColors.textSecondary,
                   ),
                 ],

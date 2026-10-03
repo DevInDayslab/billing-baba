@@ -11,6 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class PaymentSuccessPage extends ConsumerStatefulWidget {
   const PaymentSuccessPage({super.key});
 
@@ -102,7 +104,7 @@ class _PaymentSuccessPageState extends ConsumerState<PaymentSuccessPage>
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.check_circle_rounded,
+                      LucideIcons.circleCheck,
                       color: Color(0xFF2E7D32),
                       size: 56,
                     ),

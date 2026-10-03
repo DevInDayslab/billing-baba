@@ -1,12 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Notification bell with unread badge for mobile headers.
 class NotificationIconButton extends StatelessWidget {
   const NotificationIconButton({
     required this.onTap,
     this.unreadCount = 0,
-    this.icon = Icons.notifications_none_rounded,
+    this.icon = LucideIcons.bell,
     super.key,
   });
 

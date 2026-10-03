@@ -4,6 +4,8 @@ import 'package:billing_baba/features/subscription/presentation/desktop/review_o
 import 'package:billing_baba/features/subscription/presentation/mobile/utils/subscription_price_format.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class SelectedPlanSummaryCard extends StatelessWidget {
   const SelectedPlanSummaryCard({
     required this.input,
@@ -44,7 +46,7 @@ class SelectedPlanSummaryCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isGold ? Icons.change_history : Icons.flag_outlined,
+                  isGold ? LucideIcons.triangle : LucideIcons.flag,
                   color: isGold ? _goldIconColor : _platinumIconColor,
                 ),
               ),

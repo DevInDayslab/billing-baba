@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 enum _ImportItemsMethod { barcode, excel }
 
 /// Mobile import items — method picker and Excel flow.
@@ -53,7 +55,7 @@ class _MobileImportItemsPageState extends ConsumerState<MobileImportItemsPage> {
           _MethodCard(
             isSelected: _selectedMethod == _ImportItemsMethod.barcode,
             showRecommended: true,
-            icon: Icons.qr_code_scanner_outlined,
+            icon: LucideIcons.scanBarcode,
             title: 'Import From Barcode',
             description:
                 'Scan barcodes to fetch item details from our library of '
@@ -65,7 +67,7 @@ class _MobileImportItemsPageState extends ConsumerState<MobileImportItemsPage> {
           const SizedBox(height: AppSpacing.md),
           _MethodCard(
             isSelected: _selectedMethod == _ImportItemsMethod.excel,
-            icon: Icons.table_chart_outlined,
+            icon: LucideIcons.table,
             title: 'Import From Excel',
             description: 'Import item data from Excel files on your device.',
             onTap: () => setState(

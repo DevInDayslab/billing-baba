@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style app bar for mobile Add Item.
 class MobileAddItemHeader extends StatelessWidget {
   const MobileAddItemHeader({
@@ -29,7 +31,7 @@ class MobileAddItemHeader extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back_rounded),
+                  icon: const Icon(LucideIcons.arrowLeft),
                   tooltip: 'Back',
                 ),
                 Expanded(

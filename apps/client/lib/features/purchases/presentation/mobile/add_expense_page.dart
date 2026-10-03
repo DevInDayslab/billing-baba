@@ -18,6 +18,8 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddExpensePage extends ConsumerStatefulWidget {
   const MobileAddExpensePage({super.key, this.expenseId});
 
@@ -225,7 +227,7 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
                 label: 'Time',
                 value: formatSaleTime(form.expenseTime),
                 isPlaceholder: form.expenseTime == null,
-                trailingIcon: Icons.schedule_outlined,
+                trailingIcon: LucideIcons.clock,
                 onTap: () async {
                   final picked = await showTimePicker(
                     context: context,

@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileLicenseExpandableCard extends StatelessWidget {
   const MobileLicenseExpandableCard({
     required this.title,
@@ -64,7 +66,7 @@ class MobileLicenseExpandableCard extends StatelessWidget {
                       turns: isExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
                       child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
+                        LucideIcons.chevronDown,
                         color: chevronBlue,
                       ),
                     ),

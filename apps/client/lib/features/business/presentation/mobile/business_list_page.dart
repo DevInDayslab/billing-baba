@@ -28,6 +28,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile company picker — Vyapar-style list with tap-to-select + Continue.
 class MobileBusinessListPage extends ConsumerStatefulWidget {
   const MobileBusinessListPage({super.key});
@@ -250,7 +252,7 @@ class _MobileBusinessListPageState
           IconButton(
             tooltip: 'Create business',
             onPressed: _onCreateBusiness,
-            icon: const Icon(Icons.add_business_outlined),
+            icon: const Icon(LucideIcons.building2),
           ),
         ],
       ),

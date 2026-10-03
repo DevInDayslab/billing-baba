@@ -1,6 +1,19 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
+import 'package:billing_baba/features/reports/application/reports_service.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_display_row.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_cards.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_filter_sheet.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
@@ -8,23 +21,11 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dar
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheets.dart';
-import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
-import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
-import 'package:billing_baba/features/inventory/models/category_model.dart';
-import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
-import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
-import 'package:billing_baba/features/reports/application/reports_service.dart';
-import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_display_row.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_cards.dart';
-import 'package:billing_baba/features/reports/presentation/mobile/widgets/stock_summary_filter_sheet.dart';
-import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
-import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mobile stock summary report with filters, stats, and item list.
 class MobileStockSummaryScreen extends ConsumerStatefulWidget {
@@ -246,12 +247,12 @@ class _MobileStockSummaryScreenState
         title: 'Stock Summary',
         actions: [
           MobileSheetAction(
-            icon: Icons.table_chart_outlined,
+            icon: LucideIcons.table,
             label: 'Export Excel',
             onTap: () => _exportExcel(rows),
           ),
           MobileSheetAction(
-            icon: Icons.picture_as_pdf_outlined,
+            icon: LucideIcons.fileType,
             label: 'Export PDF',
             onTap: () => _exportPdf(rows),
           ),
@@ -298,24 +299,24 @@ class _MobileStockSummaryScreenState
         showSettings: false,
         actions: [
           MobileIconActionButton(
-            icon: Icons.search_rounded,
+            icon: LucideIcons.search,
             tooltip: 'Search',
             onPressed: () => setState(() => _showSearch = !_showSearch),
           ),
           MobileIconActionButton(
-            icon: Icons.picture_as_pdf_outlined,
+            icon: LucideIcons.fileType,
             tooltip: 'Export PDF',
             iconColor: const Color(0xFFE53935),
             onPressed: () => _exportPdf(viewData.rows),
           ),
           MobileIconActionButton(
-            icon: Icons.grid_on_rounded,
+            icon: LucideIcons.grid3x3,
             tooltip: 'Export Excel',
             iconColor: const Color(0xFF2E7D32),
             onPressed: () => _exportExcel(viewData.rows),
           ),
           MobileIconActionButton(
-            icon: Icons.more_vert_rounded,
+            icon: LucideIcons.ellipsisVertical,
             tooltip: 'More',
             onPressed: () => _showMoreActions(viewData.rows),
           ),
@@ -380,7 +381,7 @@ class _MobileStockSummaryScreenState
                           _filters.hasActiveFilters || _searchQuery.isNotEmpty
                           ? 'Try changing your search or filters.'
                           : 'Add items to see stock summary.',
-                      icon: Icons.inventory_2_outlined,
+                      icon: LucideIcons.package,
                     )
                   : _StockSummaryList(rows: viewData.rows),
             ),
@@ -475,7 +476,7 @@ class _DateToggle extends StatelessWidget {
           ),
           if (onFilterTap != null)
             MobileIconActionButton(
-              icon: Icons.filter_list_rounded,
+              icon: LucideIcons.listFilter,
               tooltip: 'Filter',
               iconColor: hasActiveFilters ? _activeFilterColor : null,
               onPressed: onFilterTap,

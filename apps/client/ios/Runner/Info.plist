@@ -64,7 +64,7 @@
 	<key>NSContactsUsageDescription</key>
 	<string>Contacts access lets you import party details from your phone contacts.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Photo library access is required to select item images.</string>
+	<string>Photo library access lets you choose images for your business logo, profile, and inventory.</string>
 	<!-- Local HTTP API (dev). Prefer HTTPS API_BASE_URL in production. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>

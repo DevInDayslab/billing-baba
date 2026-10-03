@@ -8,6 +8,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileDiagnosticsPage extends ConsumerWidget {
   const MobileDiagnosticsPage({super.key});
 
@@ -32,7 +34,7 @@ class MobileDiagnosticsPage extends ConsumerWidget {
               ref.invalidate(syncPendingCountProvider);
               ref.invalidate(syncStateProvider);
             },
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(LucideIcons.refreshCw),
           ),
         ],
       ),
@@ -128,7 +130,7 @@ class MobileDiagnosticsPage extends ConsumerWidget {
                       ),
                       trailing: job.lastError != null
                           ? const Icon(
-                              Icons.error_outline_rounded,
+                              LucideIcons.circleAlert,
                               color: AppColors.error,
                               size: 18,
                             )

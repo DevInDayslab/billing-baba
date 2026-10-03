@@ -4,6 +4,8 @@ import 'package:billing_baba/features/business/presentation/desktop/widgets/busi
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Selectable business row for the mobile company picker (Vyapar-style).
 class BusinessSelectionTile extends StatelessWidget {
   const BusinessSelectionTile({
@@ -195,7 +197,7 @@ class _SelectionIndicator extends StatelessWidget {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 180),
       child: Icon(
-        isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
+        isSelected ? LucideIcons.circleCheck : LucideIcons.circle,
         key: ValueKey(isSelected),
         color: color,
         size: AppIconSize.xl,

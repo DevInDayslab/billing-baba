@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style full-screen license info with attach license & offline payment.
 class MobileLicenseInfoPage extends ConsumerStatefulWidget {
   const MobileLicenseInfoPage({
@@ -140,7 +142,7 @@ class _MobileLicenseInfoPageState extends ConsumerState<MobileLicenseInfoPage> {
                   const SizedBox(height: AppSpacing.md),
                   MobileLicenseExpandableCard(
                     title: 'Already have a License?',
-                    icon: Icons.badge_outlined,
+                    icon: LucideIcons.idCard,
                     isExpanded: _attachLicenseExpanded,
                     onToggle: () => setState(
                       () => _attachLicenseExpanded = !_attachLicenseExpanded,
@@ -176,7 +178,7 @@ class _MobileLicenseInfoPageState extends ConsumerState<MobileLicenseInfoPage> {
                   const SizedBox(height: AppSpacing.md),
                   MobileLicenseExpandableCard(
                     title: 'Offline Payment',
-                    icon: Icons.payments_outlined,
+                    icon: LucideIcons.banknote,
                     isExpanded: _offlinePaymentExpanded,
                     onToggle: () => setState(
                       () => _offlinePaymentExpanded = !_offlinePaymentExpanded,

@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class ItemSettingsMobileLabel extends StatelessWidget {
   const ItemSettingsMobileLabel({
     required this.label,
@@ -39,7 +41,7 @@ class ItemSettingsMobileLabel extends StatelessWidget {
         if (isPremium) ...[
           const SizedBox(width: AppSpacing.xs),
           Icon(
-            Icons.workspace_premium,
+            LucideIcons.award,
             size: 16,
             color: Colors.deepPurple.shade400,
           ),
@@ -345,7 +347,7 @@ class ItemSettingsMobileNavTile extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xs),
                   ],
                   Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     color: AppColors.textSecondary.withValues(alpha: 0.7),
                   ),
                 ],
@@ -408,7 +410,7 @@ class ItemSettingsMobileOptionTile extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Icon(
-                      Icons.keyboard_arrow_down_rounded,
+                      LucideIcons.chevronDown,
                       color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
                   ],
@@ -459,7 +461,7 @@ class ItemSettingsMobileCounterTile extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _StepButton(
-                icon: Icons.remove,
+                icon: LucideIcons.minus,
                 onTap: value > min ? () => onChanged(value - 1) : null,
               ),
               SizedBox(
@@ -474,7 +476,7 @@ class ItemSettingsMobileCounterTile extends StatelessWidget {
                 ),
               ),
               _StepButton(
-                icon: Icons.add,
+                icon: LucideIcons.plus,
                 onTap: value < max ? () => onChanged(value + 1) : null,
               ),
             ],
@@ -517,7 +519,7 @@ class _InfoButton extends StatelessWidget {
         );
       },
       child: Icon(
-        Icons.info_outline,
+        LucideIcons.info,
         size: 16,
         color: AppColors.textSecondary.withValues(alpha: 0.8),
       ),

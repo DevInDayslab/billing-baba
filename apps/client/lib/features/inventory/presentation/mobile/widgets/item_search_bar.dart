@@ -4,6 +4,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Search field with filter, scan, and more actions for the mobile items screen.
 class ItemSearchBar extends StatelessWidget {
   const ItemSearchBar({
@@ -45,18 +47,18 @@ class ItemSearchBar extends StatelessWidget {
           ),
           const Gap(AppSpacing.sm),
           MobileIconActionButton(
-            icon: Icons.filter_list_rounded,
+            icon: LucideIcons.listFilter,
             tooltip: 'Filter',
             iconColor: hasActiveFilter ? AppColors.primary : null,
             onPressed: onFilterTap,
           ),
           MobileIconActionButton(
-            icon: Icons.qr_code_scanner_rounded,
+            icon: LucideIcons.scanBarcode,
             tooltip: 'Scan barcode',
             onPressed: onScanTap,
           ),
           MobileIconActionButton(
-            icon: Icons.more_vert_rounded,
+            icon: LucideIcons.ellipsisVertical,
             tooltip: 'More',
             onPressed: onMoreTap,
           ),

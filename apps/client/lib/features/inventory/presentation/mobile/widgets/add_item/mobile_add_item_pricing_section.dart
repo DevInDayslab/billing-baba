@@ -10,6 +10,8 @@ import 'package:billing_baba/shared/widgets/gst_tax_rate_select_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style pricing tab for mobile Add Item.
 class MobileAddItemPricingSection extends StatelessWidget {
   const MobileAddItemPricingSection({
@@ -336,7 +338,7 @@ class _DiscountTypeChip extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 2),
-            const Icon(Icons.arrow_drop_down, size: 18),
+            const Icon(LucideIcons.chevronDown, size: 18),
           ],
         ),
       ),
@@ -392,7 +394,7 @@ class _TaxModeChip extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 2),
-            const Icon(Icons.arrow_drop_down, size: 18),
+            const Icon(LucideIcons.chevronDown, size: 18),
           ],
         ),
       ),

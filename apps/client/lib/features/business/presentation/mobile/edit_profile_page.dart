@@ -26,6 +26,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileEditProfilePage extends ConsumerStatefulWidget {
   const MobileEditProfilePage({super.key});
 
@@ -461,7 +463,7 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
         title: Column(
@@ -478,7 +480,7 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.workspace_premium_outlined,
+                  LucideIcons.award,
                   size: 14,
                   color: AppColors.error.withValues(alpha: 0.85),
                 ),

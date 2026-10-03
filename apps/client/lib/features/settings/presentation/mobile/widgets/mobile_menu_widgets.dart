@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/settings/models/mobile_menu_item.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Tappable navigation card matching [MobileMenuAccordionCard] styling.
 class MobileMenuNavCard extends StatelessWidget {
   const MobileMenuNavCard({
@@ -94,7 +96,7 @@ class MobileMenuNavCard extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  Icons.chevron_right_rounded,
+                  LucideIcons.chevronRight,
                   color: AppColors.textSecondary.withValues(alpha: 0.7),
                 ),
               ],
@@ -182,7 +184,7 @@ class MobileMenuExpandableTile extends StatelessWidget {
                     turns: isExpanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
+                      LucideIcons.chevronDown,
                       color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
@@ -321,7 +323,7 @@ class MobileMenuAccordionCard extends StatelessWidget {
                       turns: isExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
                       child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
+                        LucideIcons.chevronDown,
                         color: _chevronBlue,
                       ),
                     ),
@@ -434,7 +436,7 @@ class MobileMenuLeafTile extends StatelessWidget {
               ),
               if (showChevron && !isVersion)
                 Icon(
-                  Icons.chevron_right_rounded,
+                  LucideIcons.chevronRight,
                   color: AppColors.textSecondary.withValues(alpha: 0.7),
                 ),
             ],

@@ -3,6 +3,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class PaymentSuccessScreen extends StatelessWidget {
   const PaymentSuccessScreen({
     required this.amountPaise,
@@ -38,7 +40,7 @@ class PaymentSuccessScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Icon(
-              Icons.check_circle_rounded,
+              LucideIcons.circleCheck,
               size: 72,
               color: AppColors.success,
             ),
@@ -66,14 +68,14 @@ class PaymentSuccessScreen extends StatelessWidget {
             if (onPrint != null)
               FilledButton.icon(
                 onPressed: onPrint,
-                icon: const Icon(Icons.print_rounded),
+                icon: const Icon(LucideIcons.printer),
                 label: const Text('Print receipt'),
               ),
             if (onShare != null) ...[
               const SizedBox(height: AppSpacing.sm),
               OutlinedButton.icon(
                 onPressed: onShare,
-                icon: const Icon(Icons.share_rounded),
+                icon: const Icon(LucideIcons.share2),
                 label: const Text('Share receipt'),
               ),
             ],

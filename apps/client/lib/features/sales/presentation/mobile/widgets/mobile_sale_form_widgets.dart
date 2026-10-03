@@ -3,6 +3,8 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _fieldBorder = Color(0xFFE0E0E0);
 const _creditGreen = Color(0xFF43A047);
 const _saveBlue = AppColors.primary;
@@ -219,7 +221,7 @@ class MobileSalePickerField extends StatelessWidget {
     required this.onTap,
     super.key,
     this.isPlaceholder = false,
-    this.trailingIcon = Icons.keyboard_arrow_down_rounded,
+    this.trailingIcon = LucideIcons.chevronDown,
   });
 
   final String label;
@@ -330,7 +332,7 @@ class MobileSaleAddItemsRow extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.add_rounded,
+                        LucideIcons.plus,
                         color: _saveBlue,
                         size: 20,
                       ),
@@ -364,7 +366,7 @@ class MobileSaleAddItemsRow extends StatelessWidget {
                 border: Border.all(color: _fieldBorder),
               ),
               child: const Icon(
-                Icons.qr_code_scanner_rounded,
+                LucideIcons.scanBarcode,
                 color: _saveBlue,
               ),
             ),
@@ -518,7 +520,7 @@ class MobileSaleBottomBar extends StatelessWidget {
             ),
             IconButton(
               onPressed: isSaving ? null : onMore,
-              icon: const Icon(Icons.more_vert_rounded),
+              icon: const Icon(LucideIcons.ellipsisVertical),
               color: AppColors.textSecondary,
             ),
           ],

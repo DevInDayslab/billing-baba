@@ -23,6 +23,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile categories list with search, item counts, and add/edit/delete.
 class MobileCategoriesScreen extends ConsumerStatefulWidget {
   const MobileCategoriesScreen({super.key});
@@ -127,13 +129,13 @@ class _MobileCategoriesScreenState
     final actions = <MobileSheetAction>[
       if (permissions.canEdit(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.edit_outlined,
+          icon: LucideIcons.pencil,
           label: 'Edit Category',
           onTap: () => unawaited(_editCategory(category)),
         ),
       if (permissions.canDelete(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.delete_outline_rounded,
+          icon: LucideIcons.trash2,
           label: 'Delete Category',
           onTap: () => unawaited(_confirmDeleteCategory(category)),
         ),
@@ -201,7 +203,7 @@ class _MobileCategoriesScreenState
                   (_, _, true) => MobileEmptyState(
                     title: 'No categories found',
                     message: 'Add a category to organize your items.',
-                    icon: Icons.category_outlined,
+                    icon: LucideIcons.layoutGrid,
                     actionLabel:
                         ref
                             .read(permissionServiceProvider)
@@ -388,7 +390,7 @@ class _AddCategoryFab extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 1.5),
                 ),
                 child: const Icon(
-                  Icons.add_rounded,
+                  LucideIcons.plus,
                   color: Colors.white,
                   size: 14,
                 ),

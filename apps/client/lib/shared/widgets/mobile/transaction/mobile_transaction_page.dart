@@ -13,6 +13,8 @@ import 'package:billing_baba/shared/widgets/mobile/transaction/widgets/mobile_tr
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 typedef MobileTransactionItemBuilder =
     Widget Function(
       BuildContext context,
@@ -138,7 +140,7 @@ class _MobileTransactionPageState extends ConsumerState<MobileTransactionPage> {
           ...?config.appBarActions,
           if (config.moreActions.isNotEmpty)
             MobileIconActionButton(
-              icon: Icons.more_horiz_rounded,
+              icon: LucideIcons.ellipsis,
               tooltip: 'More actions',
               onPressed: () => showMobileTransactionMoreActionsSheet(
                 context: context,

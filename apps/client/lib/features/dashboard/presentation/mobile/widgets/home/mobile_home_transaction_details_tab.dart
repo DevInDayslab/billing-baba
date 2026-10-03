@@ -18,6 +18,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_transaction_type_filte
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileHomeTransactionDetailsTab extends ConsumerStatefulWidget {
   const MobileHomeTransactionDetailsTab({
     required this.scrollChrome,
@@ -166,7 +168,7 @@ class _MobileHomeTransactionDetailsTabState
           ),
           IconButton(
             onPressed: _showFilterSheet,
-            icon: Icon(Icons.tune_rounded, color: primary, size: 22),
+            icon: Icon(LucideIcons.slidersHorizontal, color: primary, size: 22),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(
               minWidth: 36,
@@ -176,7 +178,7 @@ class _MobileHomeTransactionDetailsTabState
           ),
           IconButton(
             onPressed: onExport,
-            icon: Icon(Icons.download_rounded, color: primary, size: 22),
+            icon: Icon(LucideIcons.download, color: primary, size: 22),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(
               minWidth: 36,
@@ -289,7 +291,7 @@ class _MobileHomeTransactionDetailsTabState
                       child: const MobileEmptyState(
                         title: 'No transactions found',
                         message: 'Try a different search or filter.',
-                        icon: Icons.receipt_long_outlined,
+                        icon: LucideIcons.receipt,
                       ),
                     ),
                   ),

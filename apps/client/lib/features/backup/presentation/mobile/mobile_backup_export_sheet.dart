@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 enum MobileBackupExportAction { saveToDevice, share }
 
 const _saveBackground = Color(0xFFE8F5E9);
@@ -60,7 +62,7 @@ class _BackupExportSheetBody extends StatelessWidget {
                 backgroundColor: _saveBackground,
                 labelColor: _saveText,
                 icon: const Icon(
-                  Icons.save_alt_rounded,
+                  LucideIcons.download,
                   color: _saveText,
                   size: 26,
                 ),
@@ -74,7 +76,7 @@ class _BackupExportSheetBody extends StatelessWidget {
                 backgroundColor: _shareBackground,
                 labelColor: _shareText,
                 icon: const Icon(
-                  Icons.ios_share_rounded,
+                  LucideIcons.share,
                   color: _shareText,
                   size: 26,
                 ),

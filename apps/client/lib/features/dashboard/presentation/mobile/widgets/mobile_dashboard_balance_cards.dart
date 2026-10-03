@@ -4,6 +4,8 @@ import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// You'll Get / You'll Give balance row (Vyapar-style).
 class MobileDashboardBalanceCards extends StatelessWidget {
   const MobileDashboardBalanceCards({
@@ -36,7 +38,7 @@ class MobileDashboardBalanceCards extends StatelessWidget {
                 : '${overview.receivablePartyCount} parties',
             backgroundColor: AppColors.successSoft,
             accentColor: AppColors.success,
-            icon: Icons.south_west_rounded,
+            icon: LucideIcons.arrowDownLeft,
             onTap: onYoullGetTap,
           ),
         ),
@@ -50,7 +52,7 @@ class MobileDashboardBalanceCards extends StatelessWidget {
                 : '${overview.payablePartyCount} parties',
             backgroundColor: AppColors.dangerSoft,
             accentColor: AppColors.danger,
-            icon: Icons.north_east_rounded,
+            icon: LucideIcons.arrowUpRight,
             onTap: onYoullGiveTap,
           ),
         ),

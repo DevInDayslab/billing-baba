@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Opens a searchable item picker backed by [inventoryItemsProvider].
 Future<InventoryItem?> showMobileItemPickerSheet({
   required BuildContext context,
@@ -122,7 +124,7 @@ class _MobileItemPickerBodyState extends ConsumerState<_MobileItemPickerBody> {
           controller: _searchController,
           decoration: InputDecoration(
             hintText: 'Search item',
-            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            prefixIcon: const Icon(LucideIcons.search, size: 20),
             isDense: true,
             filled: true,
             fillColor: AppColors.background,

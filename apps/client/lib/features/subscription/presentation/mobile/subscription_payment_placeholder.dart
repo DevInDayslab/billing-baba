@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile placeholder for subscription payment — opens website checkout.
 class MobileSubscriptionPaymentPlaceholder extends ConsumerWidget {
   const MobileSubscriptionPaymentPlaceholder({super.key});
@@ -85,7 +87,7 @@ class MobileSubscriptionPaymentPlaceholder extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             FilledButton.icon(
               onPressed: () => _openWebsite(context),
-              icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+              icon: const Icon(LucideIcons.externalLink, size: 18),
               label: const Text('Open billingbaba.com'),
             ),
           ],

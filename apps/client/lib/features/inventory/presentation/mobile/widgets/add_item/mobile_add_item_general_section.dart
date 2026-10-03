@@ -17,6 +17,8 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style basic details for mobile Add Item.
 class MobileAddItemGeneralSection extends ConsumerWidget {
   const MobileAddItemGeneralSection({
@@ -159,7 +161,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
                   onPressed: onScanBarcode,
-                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                  icon: const Icon(LucideIcons.scanBarcode, size: 18),
                   label: const Text('Scan code'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
@@ -216,7 +218,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
               suffixIcon: IconButton(
                 onPressed: () {},
                 icon: const Icon(
-                  Icons.search,
+                  LucideIcons.search,
                   size: 20,
                   color: AppColors.primary,
                 ),
@@ -230,7 +232,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),
                 TextButton.icon(
                   onPressed: onAddManufacturingDetails,
-                  icon: const Icon(Icons.add_rounded, size: 18),
+                  icon: const Icon(LucideIcons.plus, size: 18),
                   label: const Text('Add Manufacturing Details'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
@@ -292,7 +294,7 @@ class _CategoryField extends StatelessWidget {
               ),
             ),
             Icon(
-              Icons.keyboard_arrow_down_rounded,
+              LucideIcons.chevronDown,
               color: AppColors.textSecondary.withValues(alpha: 0.7),
             ),
           ],
@@ -353,7 +355,7 @@ class _CategoryField extends StatelessWidget {
                       return ListTile(
                         title: Text(name),
                         trailing: name == selectedCategory
-                            ? const Icon(Icons.check, color: AppColors.primary)
+                            ? const Icon(LucideIcons.check, color: AppColors.primary)
                             : null,
                         onTap: () => Navigator.of(sheetContext).pop(name),
                       );
@@ -412,7 +414,7 @@ class _BrandField extends ConsumerWidget {
               ),
             ),
             Icon(
-              Icons.keyboard_arrow_down_rounded,
+              LucideIcons.chevronDown,
               color: AppColors.textSecondary.withValues(alpha: 0.7),
             ),
           ],
@@ -551,7 +553,7 @@ class _BrandPickerSheetState extends State<_BrandPickerSheet> {
                     return ListTile(
                       title: const Text('None'),
                       trailing: widget.selectedBrandName == null
-                          ? const Icon(Icons.check, color: AppColors.primary)
+                          ? const Icon(LucideIcons.check, color: AppColors.primary)
                           : null,
                       // Empty string signals clear selection.
                       onTap: () => Navigator.of(context).pop(''),
@@ -562,7 +564,7 @@ class _BrandPickerSheetState extends State<_BrandPickerSheet> {
                   return ListTile(
                     title: Text(brand.name),
                     trailing: selected
-                        ? const Icon(Icons.check, color: AppColors.primary)
+                        ? const Icon(LucideIcons.check, color: AppColors.primary)
                         : null,
                     onTap: () => Navigator.of(context).pop(brand.id),
                   );
@@ -620,7 +622,7 @@ class _AlternativesField extends ConsumerWidget {
                 ),
               ),
             ActionChip(
-              avatar: const Icon(Icons.add, size: 16),
+              avatar: const Icon(LucideIcons.plus, size: 16),
               label: const Text('Add alternative'),
               onPressed: () => unawaited(_openPicker(context, ref)),
             ),

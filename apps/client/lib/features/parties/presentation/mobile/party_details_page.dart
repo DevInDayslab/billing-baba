@@ -20,6 +20,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile parties experience — list, search, filter, sort, and detail.
 class MobilePartyDetailsPage extends ConsumerStatefulWidget {
   const MobilePartyDetailsPage({super.key});
@@ -165,7 +167,7 @@ class _MobilePartyDetailsPageState
         showSettings: false,
         actions: [
           MobileIconActionButton(
-            icon: Icons.person_add_alt_1_outlined,
+            icon: LucideIcons.userPlus,
             tooltip: 'Add party',
             onPressed: () => showAddPartyEntry(context, ref),
           ),
@@ -273,7 +275,7 @@ class _PartyListBody extends ConsumerWidget {
                           searchQuery.isNotEmpty
                       ? 'Try changing your search or filter.'
                       : 'Add your first party to get started.',
-                  icon: Icons.people_outline_rounded,
+                  icon: LucideIcons.users,
                   actionLabel: 'Add Party',
                   onAction: onAddParty,
                 );

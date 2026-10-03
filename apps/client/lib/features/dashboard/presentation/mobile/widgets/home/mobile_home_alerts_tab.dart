@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Alerts / daily-todo tab — mobile home reminders and tasks.
 ///
 /// [scrollChrome] (search + home tabs) scrolls with content, like Items.
@@ -150,7 +152,7 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
                 width: 40,
                 height: 40,
                 child: Icon(
-                  Icons.add_rounded,
+                  LucideIcons.plus,
                   color: Colors.white,
                   size: 24,
                 ),

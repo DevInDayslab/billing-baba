@@ -3,6 +3,8 @@ import 'package:billing_baba/features/subscription/application/payment_state_pro
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 Future<void> showPaymentFailedDialog(
   BuildContext context, {
   required WidgetRef ref,
@@ -41,7 +43,7 @@ Future<void> showPaymentFailedDialog(
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.error_outline,
+                    LucideIcons.circleAlert,
                     color: AppColors.error,
                     size: 36,
                   ),

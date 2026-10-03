@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Horizontal scrolling financial asset cards.
 class MobileFinancialAssetsRow extends ConsumerWidget {
   const MobileFinancialAssetsRow({
@@ -50,7 +52,7 @@ class MobileFinancialAssetsRow extends ConsumerWidget {
         title: 'Stock Value',
         amount: _currency.format(dashboard.inventory.totalStockValue),
         trend: _trendLabel(dashboard.sales.trendPoints, periodLabel),
-        icon: Icons.view_in_ar_outlined,
+        icon: LucideIcons.box,
         color: primary,
         cardColor: const Color(0xFFF5F1FF),
         onTap: () => DashboardNavigation.openSideWidget(
@@ -63,7 +65,7 @@ class MobileFinancialAssetsRow extends ConsumerWidget {
         title: 'Cash in Hand',
         amount: _currency.format(dashboard.finance.cashIn),
         trend: cashInTrend,
-        icon: Icons.payments_outlined,
+        icon: LucideIcons.banknote,
         color: AppColors.success,
         cardColor: const Color(0xFFEEF7EF),
         onTap: () => DashboardNavigation.openSideWidget(
@@ -76,7 +78,7 @@ class MobileFinancialAssetsRow extends ConsumerWidget {
         title: 'Bank / UPI Payments',
         amount: _currency.format(dashboard.finance.cashOut),
         trend: cashOutTrend,
-        icon: Icons.account_balance_outlined,
+        icon: LucideIcons.landmark,
         color: const Color(0xFF1976D2),
         cardColor: const Color(0xFFEEF4FB),
         onTap: () => DashboardNavigation.openSideWidget(

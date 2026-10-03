@@ -255,7 +255,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       iconColor: _SidebarTokens.home,
       label: 'Home',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.partyDetails,
       icon: LucideIcons.users,
       iconColor: _SidebarTokens.parties,
@@ -286,7 +286,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (!ShellSidebarVisibility.hidePos)
       const _NavItem(
         route: AppRoutes.pos,
-        icon: LucideIcons.store,
+        icon: Icons.point_of_sale_outlined,
         iconColor: _SidebarTokens.pos,
         label: 'POS',
       ),

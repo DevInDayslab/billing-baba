@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile reports hub — lists all report categories from the desktop app.
 class MobileReportsHubScreen extends StatelessWidget {
   const MobileReportsHubScreen({super.key});
@@ -57,7 +59,7 @@ class MobileReportsHubScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
-                      Icons.assessment_outlined,
+                      LucideIcons.chartBar,
                       color: MobileReportTheme.accent,
                     ),
                   ),

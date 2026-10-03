@@ -6,6 +6,8 @@ import 'package:billing_baba/shared/widgets/mobile/forms/mobile_item_picker_shee
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Display model for a confirmed line on mobile document forms.
 class MobileDocumentLineDisplay {
   const MobileDocumentLineDisplay({
@@ -120,7 +122,7 @@ class _AddItemsOnlyButton extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.add_rounded,
+                  LucideIcons.plus,
                   color: _saveBlue,
                   size: 20,
                 ),

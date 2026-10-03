@@ -4,6 +4,8 @@ import 'package:billing_baba/features/dashboard/presentation/mobile/application/
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Recent expenses list card for the mobile dashboard.
 class MobileDashboardExpensesListCard extends StatelessWidget {
   const MobileDashboardExpensesListCard({
@@ -121,7 +123,7 @@ class _ExpenseRow extends StatelessWidget {
               borderRadius: AppRadius.mdBorder,
             ),
             child: const Icon(
-              Icons.payments_outlined,
+              LucideIcons.banknote,
               color: Color(0xFFEF6C00),
               size: 20,
             ),

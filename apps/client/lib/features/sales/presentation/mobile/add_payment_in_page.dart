@@ -19,6 +19,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddPaymentInPage extends ConsumerStatefulWidget {
   const MobileAddPaymentInPage({
     super.key,
@@ -249,7 +251,7 @@ class _MobileAddPaymentInPageState
             onPressed: form.isSaving
                 ? null
                 : () => unawaited(_payOnline(notifier)),
-            icon: const Icon(Icons.payments_rounded, size: 18),
+            icon: const Icon(LucideIcons.banknote, size: 18),
             label: const Text('Pay online (UPI / Card)'),
           ),
           const SizedBox(height: AppSpacing.lg),

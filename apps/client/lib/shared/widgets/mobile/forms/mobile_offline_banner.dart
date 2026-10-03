@@ -4,6 +4,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Banner shown when a screen requires internet and the device is offline.
 class MobileOfflineBanner extends ConsumerWidget {
   const MobileOfflineBanner({super.key, this.message});
@@ -27,7 +29,7 @@ class MobileOfflineBanner extends ConsumerWidget {
       child: Row(
         children: [
           const Icon(
-            Icons.wifi_off_rounded,
+            LucideIcons.wifiOff,
             size: 18,
             color: Color(0xFFE65100),
           ),
