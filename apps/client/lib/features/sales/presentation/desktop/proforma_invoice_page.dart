@@ -35,8 +35,6 @@ class DesktopProformaInvoicePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             SalesDocumentsFilterBar(
               scope: proformaListScope(),
-              onAdd: () => context.push(AppRoutes.addProforma),
-              addButtonLabel: 'Create Proforma Invoice',
             ),
             const SizedBox(height: AppSpacing.md),
             SalesDocumentsTable(config: proformaTableConfig()),

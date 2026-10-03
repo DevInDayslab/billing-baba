@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
@@ -10,6 +11,7 @@ import 'package:billing_baba/features/purchases/application/add_purchase_order_f
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
@@ -163,10 +165,15 @@ class _MobileAddPurchaseOrderPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Order No.',
-            documentNumberValue: form.orderNumber.isEmpty
-                ? 'Auto'
-                : form.orderNumber,
-            documentNumberIsPlaceholder: form.orderNumber.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: form.documentId,
+              currentNumber: form.orderNumber,
+              preview: watchDocumentNumberPreview(
+                ref,
+                PurchaseConstants.purchaseOrderSeries,
+              ),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.orderDate),
             dateIsPlaceholder: form.orderDate == null,
             onDateTap: () async {

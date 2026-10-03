@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
@@ -191,10 +192,16 @@ class _MobileAddPaymentOutPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Receipt No',
-            documentNumberValue: form.receiptNo.isEmpty
-                ? 'Auto'
-                : form.receiptNo,
-            documentNumberIsPlaceholder: form.receiptNo.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: null,
+              currentNumber: form.receiptNo,
+              preview: watchDocumentNumberPreview(
+                ref,
+                paymentOutDocumentSeries,
+              ),
+              forceAuto: isUnsetDocumentNumber(form.receiptNo),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.date),
             dateIsPlaceholder: form.date == null,
             onDateTap: () async {

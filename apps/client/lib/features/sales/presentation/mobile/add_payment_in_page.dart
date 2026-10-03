@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/short_payment_handling_dialog.dart';
 import 'package:billing_baba/features/payments/presentation/mobile/widgets/payment_recovery_banner.dart';
@@ -258,13 +259,16 @@ class _MobileAddPaymentInPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Receipt No',
-            documentNumberValue: form.receiptNo.isEmpty
-                ? 'Auto'
-                : form.receiptNo,
-            documentNumberIsPlaceholder: form.receiptNo.isEmpty,
-            onDocumentNumberTap: () async {
-              // Keep editable via field below for clarity on mobile.
-            },
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: null,
+              currentNumber: form.receiptNo,
+              preview: watchDocumentNumberPreview(
+                ref,
+                paymentInDocumentSeries,
+              ),
+              forceAuto: isUnsetDocumentNumber(form.receiptNo),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.date),
             dateIsPlaceholder: form.date == null,
             onDateTap: () async {

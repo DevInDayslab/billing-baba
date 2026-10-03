@@ -3,6 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/sale_order_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_order_tabs_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_order_form_model.dart';
@@ -14,6 +15,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_ge
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_order_footer.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_order_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_order_tabs_bar.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
@@ -25,6 +27,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
+const _orderMetaWidth = 200.0;
+const _partyRowFlex = 3;
+const _partyRowTrailingSpacerFlex = 9;
+/// Phone sits under party at 60% of the party field width (40% narrower).
+const _phoneWidthFactor = 0.6;
 
 class DesktopAddSaleOrderPage extends ConsumerStatefulWidget {
   const DesktopAddSaleOrderPage({
@@ -210,7 +217,7 @@ class _AddSaleOrderPageState extends ConsumerState<DesktopAddSaleOrderPage> {
   }
 }
 
-class _PageHeader extends ConsumerStatefulWidget {
+class _PageHeader extends ConsumerWidget {
   const _PageHeader({
     required this.sessionKey,
     this.isEditing = false,
@@ -222,107 +229,26 @@ class _PageHeader extends ConsumerStatefulWidget {
   final bool showTitle;
 
   @override
-  ConsumerState<_PageHeader> createState() => _PageHeaderState();
-}
-
-class _PageHeaderState extends ConsumerState<_PageHeader> {
-  final _orderDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
-  final _dueDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(
-      saleOrderFormProvider(sessionKey: widget.sessionKey),
+      saleOrderFormProvider(sessionKey: sessionKey),
     );
     final notifier = ref.read(
-      saleOrderFormProvider(sessionKey: widget.sessionKey).notifier,
+      saleOrderFormProvider(sessionKey: sessionKey).notifier,
     );
 
     return Row(
       children: [
-        if (widget.showTitle) ...[
+        if (showTitle)
           Text(
-            widget.isEditing ? 'Edit Sale Order' : 'Sale Order',
+            isEditing ? 'Edit Sale Order' : 'Sale Order',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
-        ],
         const Spacer(),
-        _InlineHeaderField(
-          label: 'Order No.',
-          fieldWidth: 80,
-          child: _SaleTextField(
-            initialValue: form.orderNo.isEmpty ? 'Auto' : form.orderNo,
-            hintText: 'Order number',
-            compact: true,
-            onChanged: notifier.updateOrderNo,
-          ),
-        ),
-        const SizedBox(width: _sectionGap),
-        _InlineHeaderField(
-          label: 'Order Date',
-          fieldWidth: 120,
-          child: SaleSingleDatePickerAnchor(
-            key: _orderDatePickerKey,
-            selectedDate: form.orderDate,
-            onDateSelected: notifier.updateOrderDate,
-            child: _PickerField(
-              value: form.orderDate != null
-                  ? formatSaleSingleDate(form.orderDate)
-                  : 'Select Date',
-              icon: Icons.calendar_today_outlined,
-              isPlaceholder: form.orderDate == null,
-              compact: true,
-              onTap: () => _orderDatePickerKey.currentState?.toggle(),
-            ),
-          ),
-        ),
-        const SizedBox(width: _sectionGap),
-        _InlineHeaderField(
-          label: 'Time',
-          fieldWidth: 100,
-          child: SaleTimeDropdown(
-            value: form.orderTime,
-            compact: true,
-            onSelected: notifier.updateOrderTime,
-          ),
-        ),
-        const SizedBox(width: _sectionGap),
-        _InlineHeaderField(
-          label: 'Due Date',
-          fieldWidth: 120,
-          child: SaleSingleDatePickerAnchor(
-            key: _dueDatePickerKey,
-            selectedDate: form.dueDate,
-            onDateSelected: notifier.updateDueDate,
-            child: _PickerField(
-              value: form.dueDate != null
-                  ? formatSaleSingleDate(form.dueDate)
-                  : 'Select Date',
-              icon: Icons.calendar_today_outlined,
-              isPlaceholder: form.dueDate == null,
-              compact: true,
-              onTap: () => _dueDatePickerKey.currentState?.toggle(),
-            ),
-          ),
-        ),
-        const SizedBox(width: _sectionGap),
-        _InlineHeaderField(
-          label: 'State of supply',
-          fieldWidth: 140,
-          child: SaleGenericSelectDropdown(
-            value: form.stateOfSupply,
-            options: SaleDropdownOptions.indianStates,
-            maxMenuHeight: 280,
-            compact: true,
-            onSelected: notifier.updateStateOfSupply,
-          ),
-        ),
-        const SizedBox(width: _sectionGap),
         _GodownSelector(
           value: form.godown,
           onSelected: notifier.updateGodown,
@@ -363,63 +289,208 @@ class _GodownSelector extends ConsumerWidget {
   }
 }
 
-class _FormFields extends ConsumerWidget {
+class _FormFields extends ConsumerStatefulWidget {
   const _FormFields({required this.sessionKey});
 
   final String sessionKey;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FormFields> createState() => _FormFieldsState();
+}
+
+class _FormFieldsState extends ConsumerState<_FormFields> {
+  final _orderDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
+  final _dueDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
+
+  @override
+  Widget build(BuildContext context) {
     final form = ref.watch(
-      saleOrderFormProvider(sessionKey: sessionKey),
+      saleOrderFormProvider(sessionKey: widget.sessionKey),
     );
     final notifier = ref.read(
-      saleOrderFormProvider(sessionKey: sessionKey).notifier,
+      saleOrderFormProvider(sessionKey: widget.sessionKey).notifier,
+    );
+
+    final partyField = _RequiredLabeledField(
+      label: 'Party',
+      child: BillingNamePartySearchField(
+        value: form.party,
+        selectedPartyId: form.partyId,
+        hasError: form.partyHasError,
+        emptyPlaceholder: 'Search Party Name',
+        errorMessage: 'Party is required',
+        onSelected: notifier.updateParty,
+        onPartySelectedWithId: (partyId, name) =>
+            notifier.updatePartyWithId(
+              partyId: partyId,
+              partyName: name,
+            ),
+        onPartyCreated: (party) {
+          notifier.updateParty(party.partyName);
+          if (party.phone.isNotEmpty) {
+            notifier.updatePhoneNo(party.phone);
+          }
+          if (party.state.isNotEmpty) {
+            notifier.updateStateOfSupply(party.state);
+          }
+        },
+      ),
+    );
+    final phoneField = _LabeledField(
+      label: 'Phone No.',
+      child: _SaleTextField(
+        initialValue: form.phoneNo,
+        hintText: 'Phone number',
+        keyboardType: TextInputType.phone,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(10),
+        ],
+        hasError: form.phoneHasError,
+        errorText: form.phoneErrorMessage,
+        onChanged: notifier.updatePhoneNo,
+      ),
     );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: _RequiredLabeledField(
-            label: 'Party',
-            child: BillingNamePartySearchField(
-              value: form.party,
-              selectedPartyId: form.partyId,
-              hasError: form.partyHasError,
-              emptyPlaceholder: 'Search Party Name',
-              errorMessage: 'Party is required',
-              onSelected: notifier.updateParty,
-              onPartySelectedWithId: (partyId, name) =>
-                  notifier.updatePartyWithId(partyId: partyId, partyName: name),
-              onPartyCreated: (party) {
-                notifier.updateParty(party.partyName);
-                if (party.phone.isNotEmpty) {
-                  notifier.updatePhoneNo(party.phone);
-                }
-                if (party.state.isNotEmpty) {
-                  notifier.updateStateOfSupply(party.state);
-                }
-              },
-            ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: _partyRowFlex,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    partyField,
+                    const SizedBox(height: _sectionGap),
+                    FractionallySizedBox(
+                      widthFactor: _phoneWidthFactor,
+                      alignment: Alignment.centerLeft,
+                      child: phoneField,
+                    ),
+                  ],
+                ),
+              ),
+              const Expanded(
+                flex: _partyRowTrailingSpacerFlex,
+                child: SizedBox.shrink(),
+              ),
+            ],
           ),
         ),
         const SizedBox(width: _sectionGap),
-        Expanded(
-          child: _LabeledField(
-            label: 'Phone No.',
-            child: _SaleTextField(
-              initialValue: form.phoneNo,
-              hintText: 'Phone number',
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-              hasError: form.phoneHasError,
-              errorText: form.phoneErrorMessage,
-              onChanged: notifier.updatePhoneNo,
+        SizedBox(
+          width: _orderMetaWidth,
+          child: _OrderDetailsFields(
+            sessionKey: widget.sessionKey,
+            orderDatePickerKey: _orderDatePickerKey,
+            dueDatePickerKey: _dueDatePickerKey,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrderDetailsFields extends ConsumerWidget {
+  const _OrderDetailsFields({
+    required this.sessionKey,
+    required this.orderDatePickerKey,
+    required this.dueDatePickerKey,
+  });
+
+  final String sessionKey;
+  final GlobalKey<SaleSingleDatePickerAnchorState> orderDatePickerKey;
+  final GlobalKey<SaleSingleDatePickerAnchorState> dueDatePickerKey;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(saleOrderFormProvider(sessionKey: sessionKey));
+    final notifier = ref.read(
+      saleOrderFormProvider(sessionKey: sessionKey).notifier,
+    );
+    final preview = watchDocumentNumberPreview(
+      ref,
+      SalesConstants.saleOrderSeries,
+    );
+    final displayNumber = resolveDocumentNumberDisplay(
+      documentId: form.documentId,
+      currentNumber: form.orderNo,
+      preview: preview,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _LabeledField(
+          label: 'Order No.',
+          child: _SaleTextField(
+            initialValue: displayNumber,
+            hintText: 'Order number',
+            compact: true,
+            readOnly: true,
+            filled: true,
+            onChanged: (_) {},
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'Order Date',
+          child: SaleSingleDatePickerAnchor(
+            key: orderDatePickerKey,
+            selectedDate: form.orderDate,
+            onDateSelected: notifier.updateOrderDate,
+            child: _PickerField(
+              value: form.orderDate != null
+                  ? formatSaleSingleDate(form.orderDate)
+                  : 'Select Date',
+              icon: Icons.calendar_today_outlined,
+              isPlaceholder: form.orderDate == null,
+              compact: true,
+              onTap: () => orderDatePickerKey.currentState?.toggle(),
             ),
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'Time',
+          child: SaleTimeDropdown(
+            value: form.orderTime,
+            compact: true,
+            onSelected: notifier.updateOrderTime,
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'Due Date',
+          child: SaleSingleDatePickerAnchor(
+            key: dueDatePickerKey,
+            selectedDate: form.dueDate,
+            onDateSelected: notifier.updateDueDate,
+            child: _PickerField(
+              value: form.dueDate != null
+                  ? formatSaleSingleDate(form.dueDate)
+                  : 'Select Date',
+              icon: Icons.calendar_today_outlined,
+              isPlaceholder: form.dueDate == null,
+              compact: true,
+              onTap: () => dueDatePickerKey.currentState?.toggle(),
+            ),
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'State of supply',
+          child: SaleGenericSelectDropdown(
+            value: form.stateOfSupply,
+            options: SaleDropdownOptions.indianStates,
+            hintText: 'Select state',
+            maxMenuHeight: 280,
+            compact: true,
+            onSelected: notifier.updateStateOfSupply,
           ),
         ),
       ],
@@ -665,33 +736,6 @@ class _LabeledField extends StatelessWidget {
   }
 }
 
-class _InlineHeaderField extends StatelessWidget {
-  const _InlineHeaderField({
-    required this.label,
-    required this.child,
-    this.fieldWidth,
-  });
-
-  final String label;
-  final Widget child;
-  final double? fieldWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    final field = fieldWidth != null
-        ? SizedBox(width: fieldWidth, child: child)
-        : child;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('$label ', style: saleFieldLabelStyle),
-        field,
-      ],
-    );
-  }
-}
-
 class _SaleTextField extends StatefulWidget {
   const _SaleTextField({
     required this.initialValue,
@@ -699,6 +743,8 @@ class _SaleTextField extends StatefulWidget {
     this.hintText,
     this.keyboardType,
     this.compact = false,
+    this.readOnly = false,
+    this.filled = false,
     this.hasError = false,
     this.errorText,
     this.inputFormatters,
@@ -709,6 +755,8 @@ class _SaleTextField extends StatefulWidget {
   final String? hintText;
   final TextInputType? keyboardType;
   final bool compact;
+  final bool readOnly;
+  final bool filled;
   final bool hasError;
   final String? errorText;
   final List<TextInputFormatter>? inputFormatters;
@@ -743,19 +791,13 @@ class _SaleTextFieldState extends State<_SaleTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return SaleTextField(
       controller: _controller,
-      style: saleFieldTextStyle.copyWith(
-        fontSize: widget.compact ? 13 : 14,
-      ),
-      decoration:
-          buildSaleFieldDecoration(
-            hint: widget.hintText,
-            compact: widget.compact,
-            hasError: widget.hasError,
-          ).copyWith(
-            errorText: widget.hasError ? widget.errorText : null,
-          ),
+      hint: widget.hintText,
+      hasError: widget.hasError,
+      compact: widget.compact,
+      readOnly: widget.readOnly,
+      filled: widget.filled,
       keyboardType: widget.keyboardType,
       inputFormatters: widget.inputFormatters,
       onChanged: widget.onChanged,

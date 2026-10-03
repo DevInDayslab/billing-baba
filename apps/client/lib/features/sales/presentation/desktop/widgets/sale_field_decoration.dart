@@ -339,10 +339,13 @@ InputDecoration buildSaleFieldDecoration({
       fontSize: fontSize,
       height: 1.2,
     ),
+    // Keep fontSize equal to [labelStyle] — Material already scales the
+    // floated label to 0.75. A smaller fontSize here double-shrinks it.
     floatingLabelStyle: TextStyle(
       color: hasError ? saleFieldErrorColor : Colors.grey.shade600,
-      fontSize: compact ? 10 : 11,
-      height: 1.1,
+      fontSize: fontSize,
+      height: 1,
+      fontWeight: FontWeight.w500,
     ),
     hintText: useFloatingLabel ? null : hint,
     hintStyle: TextStyle(
@@ -357,7 +360,9 @@ InputDecoration buildSaleFieldDecoration({
           vertical: useFloatingLabel ? (compact ? 10 : 12) : verticalPadding,
         ),
     isDense: !useFloatingLabel,
-    constraints: fixedHeight
+    // Tight height + outlined floating label squeezes the label into the
+    // border. Let the decorator size itself when a floating label is used.
+    constraints: fixedHeight && !useFloatingLabel
         ? BoxConstraints.tightFor(height: fieldHeight)
         : null,
     suffixIconConstraints: BoxConstraints(

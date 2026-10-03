@@ -7,6 +7,7 @@ import 'package:billing_baba/features/hidden_ledger/models/short_payment_handlin
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_recovery_dialog.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_summary_tile.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/short_payment_handling_dialog.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/barcode_scan_handler.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
@@ -18,6 +19,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_si
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_settings_panel.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
@@ -528,10 +530,16 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   }
 
   String _invoiceNumberLabel(AddSaleFormState form) {
-    if (form.invoiceNumberMode == InvoiceNumberMode.auto) {
-      return form.invoiceNumber == 'Auto' ? 'Auto' : form.invoiceNumber;
-    }
-    return form.invoiceNumber.isEmpty ? 'Enter number' : form.invoiceNumber;
+    final preview = watchDocumentNumberPreview(
+      ref,
+      SalesConstants.defaultDocumentSeries,
+    );
+    return resolveDocumentNumberDisplay(
+      documentId: form.documentId,
+      currentNumber: form.invoiceNumber,
+      preview: preview,
+      forceAuto: form.invoiceNumberMode == InvoiceNumberMode.auto,
+    );
   }
 
   @override
@@ -634,9 +642,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
             MobileDocumentHeader(
               visibility: visibility,
               documentNumberValue: _invoiceNumberLabel(form),
-              documentNumberIsPlaceholder:
-                  form.invoiceNumberMode == InvoiceNumberMode.auto &&
-                  form.invoiceNumber == 'Auto',
+              documentNumberIsPlaceholder: false,
               dateValue: formatSaleSingleDate(form.invoiceDate),
               dateIsPlaceholder: form.invoiceDate == null,
               onDateTap: _pickInvoiceDate,

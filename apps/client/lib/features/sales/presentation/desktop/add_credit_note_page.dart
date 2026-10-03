@@ -3,6 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/credit_note_form_provider.dart';
 import 'package:billing_baba/features/sales/application/credit_note_tabs_provider.dart';
 import 'package:billing_baba/features/sales/models/credit_note_form_model.dart';
@@ -14,6 +15,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
@@ -25,6 +27,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
+const _invoiceMetaWidth = 200.0;
+const _narrowBreakpoint = 720.0;
 
 class DesktopAddCreditNotePage extends ConsumerStatefulWidget {
   const DesktopAddCreditNotePage({
@@ -226,7 +230,7 @@ class _AddCreditNotePageState extends ConsumerState<DesktopAddCreditNotePage> {
   }
 }
 
-class _PageHeader extends ConsumerStatefulWidget {
+class _PageHeader extends ConsumerWidget {
   const _PageHeader({
     required this.sessionKey,
     this.isEditing = false,
@@ -238,134 +242,32 @@ class _PageHeader extends ConsumerStatefulWidget {
   final bool showTitle;
 
   @override
-  ConsumerState<_PageHeader> createState() => _PageHeaderState();
-}
-
-class _PageHeaderState extends ConsumerState<_PageHeader> {
-  final _returnDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
-  final _originalInvoiceDatePickerKey =
-      GlobalKey<SaleSingleDatePickerAnchorState>();
-
-  @override
-  Widget build(BuildContext context) {
-    final form = ref.watch(
-      creditNoteFormProvider(sessionKey: widget.sessionKey),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(creditNoteFormProvider(sessionKey: sessionKey));
     final notifier = ref.read(
-      creditNoteFormProvider(sessionKey: widget.sessionKey).notifier,
+      creditNoteFormProvider(sessionKey: sessionKey).notifier,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
       children: [
-        Row(
-          children: [
-            if (widget.showTitle) ...[
-              Text(
-                widget.isEditing ? 'Edit Credit Note' : 'Credit Note',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+        if (showTitle) ...[
+          Flexible(
+            child: Text(
+              isEditing ? 'Edit Credit Note' : 'Credit Note',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
-              const SizedBox(width: AppSpacing.md),
-            ],
-            const Spacer(),
-            _InlineHeaderField(
-              label: 'Return No.',
-              fieldWidth: 80,
-              child: _SaleTextField(
-                initialValue: form.returnNo,
-                hintText: 'Return number',
-                compact: true,
-                onChanged: notifier.updateReturnNo,
-              ),
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: _sectionGap),
-            _InlineHeaderField(
-              label: 'Invoice Number',
-              fieldWidth: 100,
-              child: _SaleTextField(
-                initialValue: form.originalInvoiceNo,
-                hintText: 'Invoice number',
-                compact: true,
-                onChanged: notifier.updateOriginalInvoiceNo,
-              ),
-            ),
-            const SizedBox(width: _sectionGap),
-            _InlineHeaderField(
-              label: 'Invoice Date',
-              fieldWidth: 120,
-              child: SaleSingleDatePickerAnchor(
-                key: _originalInvoiceDatePickerKey,
-                selectedDate: form.originalInvoiceDate,
-                onDateSelected: notifier.updateOriginalInvoiceDate,
-                child: _PickerField(
-                  value: form.originalInvoiceDate != null
-                      ? formatSaleSingleDate(form.originalInvoiceDate)
-                      : 'DD/MM/YYYY',
-                  icon: Icons.calendar_today_outlined,
-                  isPlaceholder: form.originalInvoiceDate == null,
-                  compact: true,
-                  onTap: () =>
-                      _originalInvoiceDatePickerKey.currentState?.toggle(),
-                ),
-              ),
-            ),
-            const SizedBox(width: _sectionGap),
-            _InlineHeaderField(
-              label: 'Date',
-              fieldWidth: 120,
-              child: SaleSingleDatePickerAnchor(
-                key: _returnDatePickerKey,
-                selectedDate: form.returnDate,
-                onDateSelected: notifier.updateReturnDate,
-                child: _PickerField(
-                  value: form.returnDate != null
-                      ? formatSaleSingleDate(form.returnDate)
-                      : 'DD/MM/YYYY',
-                  icon: Icons.calendar_today_outlined,
-                  isPlaceholder: form.returnDate == null,
-                  compact: true,
-                  onTap: () => _returnDatePickerKey.currentState?.toggle(),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            const Spacer(),
-            _InlineHeaderField(
-              label: 'Time',
-              fieldWidth: 100,
-              child: SaleTimeDropdown(
-                value: form.returnTime,
-                compact: true,
-                onSelected: notifier.updateReturnTime,
-              ),
-            ),
-            const SizedBox(width: _sectionGap),
-            _InlineHeaderField(
-              label: 'State of supply',
-              fieldWidth: 140,
-              child: SaleGenericSelectDropdown(
-                value: form.stateOfSupply,
-                options: SaleDropdownOptions.indianStates,
-                hintText: 'Select state',
-                maxMenuHeight: 280,
-                compact: true,
-                onSelected: notifier.updateStateOfSupply,
-              ),
-            ),
-            const SizedBox(width: _sectionGap),
-            _GodownSelector(
-              value: form.godown,
-              onSelected: notifier.updateGodown,
-            ),
-          ],
+          ),
+          const SizedBox(width: AppSpacing.md),
+        ],
+        const Spacer(),
+        _GodownSelector(
+          value: form.godown,
+          onSelected: notifier.updateGodown,
         ),
       ],
     );
@@ -403,10 +305,115 @@ class _GodownSelector extends ConsumerWidget {
   }
 }
 
-class _FormFields extends ConsumerWidget {
+class _FormFields extends ConsumerStatefulWidget {
   const _FormFields({required this.sessionKey});
 
   final String sessionKey;
+
+  @override
+  ConsumerState<_FormFields> createState() => _FormFieldsState();
+}
+
+class _FormFieldsState extends ConsumerState<_FormFields> {
+  final _returnDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
+  final _originalInvoiceDatePickerKey =
+      GlobalKey<SaleSingleDatePickerAnchorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    final form = ref.watch(
+      creditNoteFormProvider(sessionKey: widget.sessionKey),
+    );
+    final notifier = ref.read(
+      creditNoteFormProvider(sessionKey: widget.sessionKey).notifier,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < _narrowBreakpoint;
+
+        final partyField = _LabeledField(
+          label: 'Party *',
+          child: BillingNamePartySearchField(
+            value: form.party,
+            selectedPartyId: form.partyId,
+            hasError: form.partyHasError,
+            emptyPlaceholder: 'Search Party...',
+            errorMessage: 'Party is required',
+            onSelected: notifier.updateParty,
+            onPartySelectedWithId: (partyId, name) =>
+                notifier.updatePartyWithId(
+                  partyId: partyId,
+                  partyName: name,
+                ),
+            onPartyCreated: (party) {
+              notifier.updateParty(party.partyName);
+              if (party.phone.isNotEmpty) {
+                notifier.updatePhone(party.phone);
+              }
+            },
+          ),
+        );
+        final phoneField = _LabeledField(
+          label: 'Phone No.',
+          child: _SaleTextField(
+            initialValue: form.phone,
+            hintText: 'Phone number',
+            keyboardType: TextInputType.phone,
+            onChanged: notifier.updatePhone,
+          ),
+        );
+
+        final partyDetails = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            partyField,
+            const SizedBox(height: _sectionGap),
+            phoneField,
+          ],
+        );
+
+        final metaDetails = _CreditNoteMetaFields(
+          sessionKey: widget.sessionKey,
+          returnDatePickerKey: _returnDatePickerKey,
+          originalInvoiceDatePickerKey: _originalInvoiceDatePickerKey,
+        );
+
+        if (isNarrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              partyDetails,
+              const SizedBox(height: _sectionGap),
+              metaDetails,
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: partyDetails),
+            const SizedBox(width: _sectionGap),
+            SizedBox(width: _invoiceMetaWidth, child: metaDetails),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _CreditNoteMetaFields extends ConsumerWidget {
+  const _CreditNoteMetaFields({
+    required this.sessionKey,
+    required this.returnDatePickerKey,
+    required this.originalInvoiceDatePickerKey,
+  });
+
+  final String sessionKey;
+  final GlobalKey<SaleSingleDatePickerAnchorState> returnDatePickerKey;
+  final GlobalKey<SaleSingleDatePickerAnchorState>
+  originalInvoiceDatePickerKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -414,45 +421,95 @@ class _FormFields extends ConsumerWidget {
     final notifier = ref.read(
       creditNoteFormProvider(sessionKey: sessionKey).notifier,
     );
+    final preview = watchDocumentNumberPreview(
+      ref,
+      SalesConstants.creditNoteSeries,
+    );
+    final displayNumber = resolveDocumentNumberDisplay(
+      documentId: form.documentId,
+      currentNumber: form.returnNo,
+      preview: preview,
+    );
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          flex: 3,
-          child: _LabeledField(
-            label: 'Party *',
-            child: BillingNamePartySearchField(
-              value: form.party,
-              selectedPartyId: form.partyId,
-              hasError: form.partyHasError,
-              emptyPlaceholder: 'Search Party...',
-              errorMessage: 'Party is required',
-              onSelected: notifier.updateParty,
-              onPartySelectedWithId: (partyId, name) =>
-                  notifier.updatePartyWithId(
-                    partyId: partyId,
-                    partyName: name,
-                  ),
-              onPartyCreated: (party) {
-                notifier.updateParty(party.partyName);
-                if (party.phone.isNotEmpty) {
-                  notifier.updatePhone(party.phone);
-                }
-              },
+        _LabeledField(
+          label: 'Return No.',
+          child: _SaleTextField(
+            initialValue: displayNumber,
+            hintText: 'Return number',
+            compact: true,
+            readOnly: true,
+            filled: true,
+            onChanged: (_) {},
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'Invoice Number',
+          child: _SaleTextField(
+            initialValue: form.originalInvoiceNo,
+            hintText: 'Invoice number',
+            compact: true,
+            onChanged: notifier.updateOriginalInvoiceNo,
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'Invoice Date',
+          child: SaleSingleDatePickerAnchor(
+            key: originalInvoiceDatePickerKey,
+            selectedDate: form.originalInvoiceDate,
+            onDateSelected: notifier.updateOriginalInvoiceDate,
+            child: _PickerField(
+              value: form.originalInvoiceDate != null
+                  ? formatSaleSingleDate(form.originalInvoiceDate)
+                  : 'DD/MM/YYYY',
+              icon: Icons.calendar_today_outlined,
+              isPlaceholder: form.originalInvoiceDate == null,
+              compact: true,
+              onTap: () => originalInvoiceDatePickerKey.currentState?.toggle(),
             ),
           ),
         ),
-        const SizedBox(width: _sectionGap),
-        Expanded(
-          child: _LabeledField(
-            label: 'Phone No.',
-            child: _SaleTextField(
-              initialValue: form.phone,
-              hintText: 'Phone number',
-              keyboardType: TextInputType.phone,
-              onChanged: notifier.updatePhone,
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'Date',
+          child: SaleSingleDatePickerAnchor(
+            key: returnDatePickerKey,
+            selectedDate: form.returnDate,
+            onDateSelected: notifier.updateReturnDate,
+            child: _PickerField(
+              value: form.returnDate != null
+                  ? formatSaleSingleDate(form.returnDate)
+                  : 'DD/MM/YYYY',
+              icon: Icons.calendar_today_outlined,
+              isPlaceholder: form.returnDate == null,
+              compact: true,
+              onTap: () => returnDatePickerKey.currentState?.toggle(),
             ),
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'Time',
+          child: SaleTimeDropdown(
+            value: form.returnTime,
+            compact: true,
+            onSelected: notifier.updateReturnTime,
+          ),
+        ),
+        const SizedBox(height: _sectionGap),
+        _LabeledField(
+          label: 'State of supply',
+          child: SaleGenericSelectDropdown(
+            value: form.stateOfSupply,
+            options: SaleDropdownOptions.indianStates,
+            hintText: 'Select state',
+            maxMenuHeight: 280,
+            compact: true,
+            onSelected: notifier.updateStateOfSupply,
           ),
         ),
       ],
@@ -660,33 +717,6 @@ class _LabeledField extends StatelessWidget {
   }
 }
 
-class _InlineHeaderField extends StatelessWidget {
-  const _InlineHeaderField({
-    required this.label,
-    required this.child,
-    this.fieldWidth,
-  });
-
-  final String label;
-  final Widget child;
-  final double? fieldWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    final field = fieldWidth != null
-        ? SizedBox(width: fieldWidth, child: child)
-        : child;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('$label ', style: saleFieldLabelStyle),
-        field,
-      ],
-    );
-  }
-}
-
 class _SaleTextField extends StatefulWidget {
   const _SaleTextField({
     required this.initialValue,
@@ -694,6 +724,8 @@ class _SaleTextField extends StatefulWidget {
     this.hintText,
     this.keyboardType,
     this.compact = false,
+    this.readOnly = false,
+    this.filled = false,
   });
 
   final String initialValue;
@@ -701,6 +733,8 @@ class _SaleTextField extends StatefulWidget {
   final String? hintText;
   final TextInputType? keyboardType;
   final bool compact;
+  final bool readOnly;
+  final bool filled;
 
   @override
   State<_SaleTextField> createState() => _SaleTextFieldState();
@@ -735,9 +769,11 @@ class _SaleTextFieldState extends State<_SaleTextField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle,
+      readOnly: widget.readOnly,
       decoration: buildSaleFieldDecoration(
         hint: widget.hintText,
         compact: widget.compact,
+        filled: widget.filled,
       ),
       keyboardType: widget.keyboardType,
       onChanged: widget.onChanged,

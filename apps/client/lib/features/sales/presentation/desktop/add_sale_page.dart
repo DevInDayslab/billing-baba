@@ -11,6 +11,7 @@ import 'package:billing_baba/features/inventory/application/inventory_godowns_pr
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_tabs_provider.dart';
@@ -26,6 +27,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_li
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_tabs_bar.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
@@ -941,6 +943,16 @@ class _InvoiceDetailsFields extends ConsumerWidget {
       addSaleFormProvider(sessionKey: sessionKey).notifier,
     );
     final isAutoNumber = form.invoiceNumberMode == InvoiceNumberMode.auto;
+    final preview = watchDocumentNumberPreview(
+      ref,
+      SalesConstants.defaultDocumentSeries,
+    );
+    final displayNumber = resolveDocumentNumberDisplay(
+      documentId: form.documentId,
+      currentNumber: form.invoiceNumber,
+      preview: preview,
+      forceAuto: isAutoNumber,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -948,12 +960,12 @@ class _InvoiceDetailsFields extends ConsumerWidget {
         _LabeledField(
           label: 'Invoice Number',
           child: _SaleTextField(
-            initialValue: isAutoNumber ? 'Auto' : form.invoiceNumber,
+            initialValue: displayNumber,
             hintText: 'Invoice number',
-            readOnly: isAutoNumber,
-            filled: isAutoNumber,
+            readOnly: true,
+            filled: true,
             compact: true,
-            onChanged: notifier.updateInvoiceNumber,
+            onChanged: (_) {},
           ),
         ),
         const SizedBox(height: _sectionGap),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
@@ -13,6 +14,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
@@ -187,8 +189,15 @@ class _MobileAddCreditNotePageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Return No.',
-            documentNumberValue: form.returnNo.isEmpty ? 'Auto' : form.returnNo,
-            documentNumberIsPlaceholder: form.returnNo.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: form.documentId,
+              currentNumber: form.returnNo,
+              preview: watchDocumentNumberPreview(
+                ref,
+                SalesConstants.creditNoteSeries,
+              ),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.returnDate),
             dateIsPlaceholder: form.returnDate == null,
             onDateTap: () async {
