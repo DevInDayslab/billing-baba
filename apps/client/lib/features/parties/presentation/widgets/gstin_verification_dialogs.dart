@@ -187,16 +187,14 @@ Future<bool?> showGstinVerificationConfirmationDialog(
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(false),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: const Text('Cancel'),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: FilledButton(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(true),
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: const Text('Use Details'),
                       ),
                     ),
@@ -241,7 +239,8 @@ class _GstinDetailRow extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
-            child: valueWidget ??
+            child:
+                valueWidget ??
                 Text(
                   value ?? '',
                   style: const TextStyle(

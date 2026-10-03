@@ -7,14 +7,15 @@ import {
 
 describe('role permission registry', () => {
   test('owner-equivalent full access allows everything', () => {
-    expect(
-      canPermission({ kind: 'full' }, 'sync_settings', 'view'),
-    ).toBe(true);
+    expect(canPermission({ kind: 'full' }, 'sync_settings', 'view')).toBe(true);
     expect(canPermission({ kind: 'full' }, 'purchase', 'create')).toBe(true);
   });
 
   test('biller can create sales but not purchases', () => {
-    const access = { kind: 'collaborator' as const, role: 'biller' as CollaborationRole };
+    const access = {
+      kind: 'collaborator' as const,
+      role: 'biller' as CollaborationRole,
+    };
     expect(canPermission(access, 'sale', 'create')).toBe(true);
     expect(canPermission(access, 'purchase', 'view')).toBe(false);
     expect(canPermission(access, 'item', 'view')).toBe(true);

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import Fastify, { LogController, type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, LogController } from 'fastify';
 import type { AppConfig } from './config/app_config';
 import { createLoggerOptions } from './config/logger';
 import { registerMiddleware } from './middleware';

@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _settingsBlue = Color(0xFF42A5F5);
 const _dividerColor = Color(0xFFE8EAED);
@@ -145,7 +146,7 @@ class SettingsTile extends StatelessWidget {
                 trailing!,
               ] else if (showChevron && onTap != null)
                 Icon(
-                  Icons.chevron_right_rounded,
+                  LucideIcons.chevronRight,
                   color: AppColors.textSecondary.withValues(alpha: 0.55),
                 ),
             ],
@@ -283,7 +284,7 @@ class DropdownTile<T> extends StatelessWidget {
                 ListTile(
                   title: Text(labelBuilder(option)),
                   trailing: option == value
-                      ? const Icon(Icons.check_rounded, color: _settingsBlue)
+                      ? const Icon(LucideIcons.check, color: _settingsBlue)
                       : null,
                   onTap: () => Navigator.of(context).pop(option),
                 ),

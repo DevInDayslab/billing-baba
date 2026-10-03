@@ -14,9 +14,7 @@ PaymentIntent? paymentIntentFromPaymentInForm(
     type: type,
     partyId: partyId,
     amount: form.receivedAmount.toStringAsFixed(2),
-    discountAmount: form.discount > 0
-        ? form.discount.toStringAsFixed(2)
-        : null,
+    discountAmount: form.discount > 0 ? form.discount.toStringAsFixed(2) : null,
     notes: form.description.isEmpty ? null : form.description,
     referenceNumber: form.receiptNo.isEmpty ? null : form.receiptNo,
     partyName: form.party,

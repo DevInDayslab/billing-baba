@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Compact mobile header — profile, business selector, sync row, actions.
 class MobileAppHeader extends ConsumerWidget {
   const MobileAppHeader({
@@ -93,7 +95,7 @@ class MobileAppHeader extends ConsumerWidget {
                             ),
                           ),
                           const Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            LucideIcons.chevronDown,
                             color: AppColors.textPrimary,
                             size: 20,
                           ),
@@ -110,7 +112,7 @@ class MobileAppHeader extends ConsumerWidget {
                 ),
               IconButton(
                 onPressed: onSettingsTap,
-                icon: const Icon(Icons.settings_outlined),
+                icon: const Icon(LucideIcons.settings),
                 color: AppColors.textPrimary,
                 iconSize: 22,
                 padding: EdgeInsets.zero,
@@ -141,7 +143,7 @@ class MobileAppHeader extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.sync_rounded,
+                        LucideIcons.refreshCw,
                         size: 11,
                         color: AppColors.textSecondary.withValues(alpha: 0.65),
                       ),

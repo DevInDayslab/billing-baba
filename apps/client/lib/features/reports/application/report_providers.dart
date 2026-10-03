@@ -3,6 +3,7 @@ import 'package:billing_baba/features/reports/application/report_load_helper.dar
 import 'package:billing_baba/features/reports/application/report_refresh_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'report_providers.g.dart';
@@ -15,20 +16,18 @@ ReportQuery _currentQuery(Ref ref) {
 class BillWiseProfitReport extends _$BillWiseProfitReport {
   @override
   Future<BillWiseProfitReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<BillWiseProfitReportData> _load() async {
@@ -41,14 +40,13 @@ class BillWiseProfitReport extends _$BillWiseProfitReport {
 class CashFlowReport extends _$CashFlowReport {
   @override
   Future<CashFlowReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<CashFlowReportData> _load() async {
@@ -61,20 +59,18 @@ class CashFlowReport extends _$CashFlowReport {
 class PartyWiseProfitLossReport extends _$PartyWiseProfitLossReport {
   @override
   Future<PartyWiseProfitLossReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<PartyWiseProfitLossReportData> _load() async {
@@ -87,21 +83,21 @@ class PartyWiseProfitLossReport extends _$PartyWiseProfitLossReport {
 class PartyReportByItemReport extends _$PartyReportByItemReport {
   @override
   Future<PartyReportByItemReportData?> build() async {
-    final filters = ref.watch(reportFiltersProvider);
-    final value = filters.itemId;
+    watchReportListReload(ref);
+    final value = ref.watch(
+      reportFiltersProvider.select((state) => state.itemId),
+    );
     if (value == null || value.isEmpty) return null;
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<PartyReportByItemReportData?> _load() async {
@@ -117,20 +113,18 @@ class PartyReportByItemReport extends _$PartyReportByItemReport {
 class SalePurchaseByPartyReport extends _$SalePurchaseByPartyReport {
   @override
   Future<SalePurchaseByPartyReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<SalePurchaseByPartyReportData> _load() async {
@@ -143,20 +137,18 @@ class SalePurchaseByPartyReport extends _$SalePurchaseByPartyReport {
 class SalePurchaseByPartyGroupReport extends _$SalePurchaseByPartyGroupReport {
   @override
   Future<SalePurchaseByPartyGroupReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<SalePurchaseByPartyGroupReportData> _load() async {
@@ -169,14 +161,13 @@ class SalePurchaseByPartyGroupReport extends _$SalePurchaseByPartyGroupReport {
 class Gstr9Report extends _$Gstr9Report {
   @override
   Future<Gstr9ReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<Gstr9ReportData> _load() async {
@@ -189,14 +180,13 @@ class Gstr9Report extends _$Gstr9Report {
 class SaleSummaryByHsnReport extends _$SaleSummaryByHsnReport {
   @override
   Future<SaleSummaryByHsnReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<SaleSummaryByHsnReportData> _load() async {
@@ -209,14 +199,13 @@ class SaleSummaryByHsnReport extends _$SaleSummaryByHsnReport {
 class SacReportReport extends _$SacReportReport {
   @override
   Future<SacReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<SacReportData> _load() async {
@@ -229,20 +218,18 @@ class SacReportReport extends _$SacReportReport {
 class ItemReportByPartyReport extends _$ItemReportByPartyReport {
   @override
   Future<ItemReportByPartyReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ItemReportByPartyReportData> _load() async {
@@ -255,20 +242,18 @@ class ItemReportByPartyReport extends _$ItemReportByPartyReport {
 class ItemWiseProfitLossReport extends _$ItemWiseProfitLossReport {
   @override
   Future<ItemWiseProfitLossReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ItemWiseProfitLossReportData> _load() async {
@@ -281,20 +266,18 @@ class ItemWiseProfitLossReport extends _$ItemWiseProfitLossReport {
 class StockDetailReport extends _$StockDetailReport {
   @override
   Future<StockDetailReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<StockDetailReportData> _load() async {
@@ -307,21 +290,21 @@ class StockDetailReport extends _$StockDetailReport {
 class ItemDetailReport extends _$ItemDetailReport {
   @override
   Future<ItemDetailReportData?> build() async {
-    final filters = ref.watch(reportFiltersProvider);
-    final value = filters.itemId;
+    watchReportListReload(ref);
+    final value = ref.watch(
+      reportFiltersProvider.select((state) => state.itemId),
+    );
     if (value == null || value.isEmpty) return null;
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ItemDetailReportData?> _load() async {
@@ -338,14 +321,13 @@ class SalePurchaseByItemCategoryReport
     extends _$SalePurchaseByItemCategoryReport {
   @override
   Future<CategoryAmountReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<CategoryAmountReportData> _load() async {
@@ -359,14 +341,13 @@ class StockSummaryByItemCategoryReport
     extends _$StockSummaryByItemCategoryReport {
   @override
   Future<CategoryAmountReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<CategoryAmountReportData> _load() async {
@@ -380,14 +361,13 @@ class ItemCategoryWiseProfitLossReport
     extends _$ItemCategoryWiseProfitLossReport {
   @override
   Future<CategoryAmountReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<CategoryAmountReportData> _load() async {
@@ -400,20 +380,18 @@ class ItemCategoryWiseProfitLossReport
 class ItemWiseDiscountReport extends _$ItemWiseDiscountReport {
   @override
   Future<ItemWiseDiscountReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ItemWiseDiscountReportData> _load() async {
@@ -426,20 +404,18 @@ class ItemWiseDiscountReport extends _$ItemWiseDiscountReport {
 class ManufacturingReport extends _$ManufacturingReport {
   @override
   Future<ManufacturingReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ManufacturingReportData> _load() async {
@@ -452,20 +428,18 @@ class ManufacturingReport extends _$ManufacturingReport {
 class ConsumptionReport extends _$ConsumptionReport {
   @override
   Future<ConsumptionReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ConsumptionReportData> _load() async {
@@ -478,20 +452,18 @@ class ConsumptionReport extends _$ConsumptionReport {
 class StockTransferReport extends _$StockTransferReport {
   @override
   Future<StockTransferReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<StockTransferReportData> _load() async {
@@ -504,15 +476,16 @@ class StockTransferReport extends _$StockTransferReport {
 class BankStatementReport extends _$BankStatementReport {
   @override
   Future<BankStatementReportData?> build() async {
-    final filters = ref.watch(reportFiltersProvider);
-    final value = filters.bankName;
+    watchReportListReload(ref);
+    final value = ref.watch(
+      reportFiltersProvider.select((state) => state.bankName),
+    );
     if (value == null || value.isEmpty) return null;
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<BankStatementReportData?> _load() async {
@@ -528,20 +501,18 @@ class BankStatementReport extends _$BankStatementReport {
 class GstTaxReport extends _$GstTaxReport {
   @override
   Future<GstTaxReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<GstTaxReportData> _load() async {
@@ -554,14 +525,13 @@ class GstTaxReport extends _$GstTaxReport {
 class GstTaxRateReport extends _$GstTaxRateReport {
   @override
   Future<GstTaxRateReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<GstTaxRateReportData> _load() async {
@@ -574,20 +544,18 @@ class GstTaxRateReport extends _$GstTaxRateReport {
 class Form27eqReport extends _$Form27eqReport {
   @override
   Future<TaxInvoiceReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<TaxInvoiceReportData> _load() async {
@@ -600,20 +568,18 @@ class Form27eqReport extends _$Form27eqReport {
 class TcsReceivableReport extends _$TcsReceivableReport {
   @override
   Future<TaxInvoiceReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<TaxInvoiceReportData> _load() async {
@@ -626,20 +592,18 @@ class TcsReceivableReport extends _$TcsReceivableReport {
 class TdsPayableReport extends _$TdsPayableReport {
   @override
   Future<TaxInvoiceReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<TaxInvoiceReportData> _load() async {
@@ -652,20 +616,18 @@ class TdsPayableReport extends _$TdsPayableReport {
 class TdsReceivableReport extends _$TdsReceivableReport {
   @override
   Future<TaxInvoiceReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<TaxInvoiceReportData> _load() async {
@@ -678,20 +640,18 @@ class TdsReceivableReport extends _$TdsReceivableReport {
 class ExpensesReport extends _$ExpensesReport {
   @override
   Future<ExpensesReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ExpensesReportData> _load() async {
@@ -704,14 +664,13 @@ class ExpensesReport extends _$ExpensesReport {
 class ExpenseByCategoryReport extends _$ExpenseByCategoryReport {
   @override
   Future<ExpenseByCategoryReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ExpenseByCategoryReportData> _load() async {
@@ -724,14 +683,13 @@ class ExpenseByCategoryReport extends _$ExpenseByCategoryReport {
 class ExpenseByItemReport extends _$ExpenseByItemReport {
   @override
   Future<ExpenseByItemReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<ExpenseByItemReportData> _load() async {
@@ -744,20 +702,18 @@ class ExpenseByItemReport extends _$ExpenseByItemReport {
 class SalePurchaseOrdersReport extends _$SalePurchaseOrdersReport {
   @override
   Future<SalePurchaseOrdersReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<SalePurchaseOrdersReportData> _load() async {
@@ -770,20 +726,18 @@ class SalePurchaseOrdersReport extends _$SalePurchaseOrdersReport {
 class SalePurchaseOrderItemsReport extends _$SalePurchaseOrderItemsReport {
   @override
   Future<SalePurchaseOrderItemsReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<SalePurchaseOrderItemsReportData> _load() async {
@@ -796,20 +750,18 @@ class SalePurchaseOrderItemsReport extends _$SalePurchaseOrderItemsReport {
 class OtherIncomeReport extends _$OtherIncomeReport {
   @override
   Future<OtherIncomeReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<void> goToPage(int page) async {
     ref.read(reportFiltersProvider.notifier).setPage(page);
-    ref.invalidateSelf();
-    await future;
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<OtherIncomeReportData> _load() async {
@@ -822,14 +774,13 @@ class OtherIncomeReport extends _$OtherIncomeReport {
 class OtherIncomeByCategoryReport extends _$OtherIncomeByCategoryReport {
   @override
   Future<OtherIncomeByCategoryReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<OtherIncomeByCategoryReportData> _load() async {
@@ -842,14 +793,13 @@ class OtherIncomeByCategoryReport extends _$OtherIncomeByCategoryReport {
 class OtherIncomeByItemReport extends _$OtherIncomeByItemReport {
   @override
   Future<OtherIncomeByItemReportData> build() async {
-    ref.watch(reportFiltersProvider);
+    watchReportListReload(ref);
     ref.watch(reportDataEpochProvider);
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<OtherIncomeByItemReportData> _load() async {
@@ -862,15 +812,16 @@ class OtherIncomeByItemReport extends _$OtherIncomeByItemReport {
 class LoanStatementReport extends _$LoanStatementReport {
   @override
   Future<LoanStatementReportData?> build() async {
-    final filters = ref.watch(reportFiltersProvider);
-    final value = filters.loanAccount;
+    watchReportListReload(ref);
+    final value = ref.watch(
+      reportFiltersProvider.select((state) => state.loanAccount),
+    );
     if (value == null || value.isEmpty) return null;
     return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    await guardedReportRefresh(state, (value) => state = value, _load);
   }
 
   Future<LoanStatementReportData?> _load() async {

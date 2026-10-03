@@ -351,7 +351,9 @@ class PurchaseReturns extends _$PurchaseReturns {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allReturns = await _fetchAllReturns();
       return _allReturnsPage(allReturns);

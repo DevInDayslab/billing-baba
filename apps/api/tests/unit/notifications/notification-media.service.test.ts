@@ -3,8 +3,8 @@ import type { AppConfig } from '../../../src/config/app_config';
 import type { BusinessRepository } from '../../../src/modules/business/business.repository';
 import type { GeneratedDocumentRepository } from '../../../src/modules/generated-documents/generated-document.repository';
 import {
-  NotificationMediaService,
   generatedKindForSalesDocumentType,
+  NotificationMediaService,
 } from '../../../src/modules/notifications/notification-media.service';
 import type { StorageService } from '../../../src/modules/storage/storage.service';
 

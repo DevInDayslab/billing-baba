@@ -86,8 +86,7 @@ class AddItemForm extends Notifier<AddItemFormState> {
         .where((id) => id.isNotEmpty)
         .toList();
     final snapshot = product ?? _suppliersSnapshotFromState();
-    final imageUrl =
-        resolvedProductImageUrl ?? snapshot.productImageUrl.trim();
+    final imageUrl = resolvedProductImageUrl ?? snapshot.productImageUrl.trim();
     final existing = {
       for (final row in state.supplierRows) row.partyId: row,
     };
@@ -161,8 +160,7 @@ class AddItemForm extends Notifier<AddItemFormState> {
     required String productImageUrl,
     PartyModel? party,
   }) {
-    final moq =
-        snapshot.minOrderQuantity > 0 ? snapshot.minOrderQuantity : 1.0;
+    final moq = snapshot.minOrderQuantity > 0 ? snapshot.minOrderQuantity : 1.0;
     final partyNotes = party?.notes.trim() ?? '';
     final notes = snapshot.productNotes.trim().isNotEmpty
         ? snapshot.productNotes.trim()
@@ -182,7 +180,8 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   String _inferPaymentPolicy(PartyModel? party) {
     if (party == null) return '';
-    if (party.hasCustomCreditLimit && (double.tryParse(party.creditLimit) ?? 0) > 0) {
+    if (party.hasCustomCreditLimit &&
+        (double.tryParse(party.creditLimit) ?? 0) > 0) {
       return 'Credit';
     }
     return 'Net 30';
@@ -253,7 +252,8 @@ class AddItemForm extends Notifier<AddItemFormState> {
       openingQtyUnitId = baseUnitId;
     }
     var minStockUnitId = state.minStockUnitId;
-    if (minStockUnitId != null && !allowedMinQtyUnits.contains(minStockUnitId)) {
+    if (minStockUnitId != null &&
+        !allowedMinQtyUnits.contains(minStockUnitId)) {
       minStockUnitId = baseUnitId;
     }
     if (baseUnitId == null) {
@@ -352,7 +352,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
   void updateSalePrice(double value) {
     final salePrice = ItemPriceLimits.clamp(value);
     final mrpDiscount = state.mrp > 0
-        ? ItemPricingDiscount.percentFromMrp(mrp: state.mrp, salePrice: salePrice)
+        ? ItemPricingDiscount.percentFromMrp(
+            mrp: state.mrp,
+            salePrice: salePrice,
+          )
         : state.mrpSaleDiscount;
     state = state.copyWith(
       salePrice: salePrice,
@@ -409,14 +412,20 @@ class AddItemForm extends Notifier<AddItemFormState> {
     state = state.copyWith(
       wholesalePrice: price,
       wholesaleSectionVisible: true,
-      tierPrices: _upsertTierPrice(state.tierPrices, PriceTier.wholesale, price),
+      tierPrices: _upsertTierPrice(
+        state.tierPrices,
+        PriceTier.wholesale,
+        price,
+      ),
       isDirty: true,
     );
   }
 
   void enableWholesaleSection() {
     final tiers = state.tierPrices;
-    final hasWholesaleRow = tiers.any((row) => row.tierKey == PriceTier.wholesale);
+    final hasWholesaleRow = tiers.any(
+      (row) => row.tierKey == PriceTier.wholesale,
+    );
     state = state.copyWith(
       wholesaleSectionVisible: true,
       tierPrices: hasWholesaleRow
@@ -442,9 +451,7 @@ class AddItemForm extends Notifier<AddItemFormState> {
     if (index >= 0) {
       return rows
           .map(
-            (row) => row.tierKey == tierKey
-                ? row.copyWith(price: price)
-                : row,
+            (row) => row.tierKey == tierKey ? row.copyWith(price: price) : row,
           )
           .toList();
     }
@@ -694,7 +701,9 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void ensureAllTierRows() {
     final used = state.tierPrices.map((row) => row.tierKey).toSet();
-    final missing = PriceTier.all.where((tier) => !used.contains(tier)).toList();
+    final missing = PriceTier.all
+        .where((tier) => !used.contains(tier))
+        .toList();
     if (missing.isEmpty) return;
     state = state.copyWith(
       tierPrices: [
@@ -709,7 +718,8 @@ class AddItemForm extends Notifier<AddItemFormState> {
   bool validate() {
     final nameMissing = state.itemName.trim().isEmpty;
     // Services can fall back to a default unit; products must pick one.
-    final unitMissing = state.itemType == ItemType.product &&
+    final unitMissing =
+        state.itemType == ItemType.product &&
         (state.baseUnitId == null || state.baseUnitId!.isEmpty);
 
     state = state.copyWith(

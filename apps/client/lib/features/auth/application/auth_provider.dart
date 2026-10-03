@@ -919,7 +919,9 @@ class Auth extends _$Auth {
     }
 
     if (_devLoginInFlight) {
-      LoggingService.instance.warn('Developer Login ignored: already in flight');
+      LoggingService.instance.warn(
+        'Developer Login ignored: already in flight',
+      );
       return;
     }
     if (state.status == AuthStatus.authenticated ||
@@ -932,7 +934,9 @@ class Auth extends _$Auth {
     }
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log('devLogin: API /auth/dev-login (offline fallback if unreachable)');
+    AuthDebugLogger.log(
+      'devLogin: API /auth/dev-login (offline fallback if unreachable)',
+    );
     state = state.copyWith(clearError: true, backendLoginCompleted: false);
     _setOtpPhase(OtpPhase.backendLogin);
 
@@ -1375,8 +1379,9 @@ class Auth extends _$Auth {
       // left in-memory auth state authenticated. Detect credential loss and
       // force a full logout so routing returns to /login.
       final storage = await ref.read(storageServiceProvider.future);
-      final storedRefreshToken =
-          await storage.readSecure(StorageKeys.refreshToken);
+      final storedRefreshToken = await storage.readSecure(
+        StorageKeys.refreshToken,
+      );
       final credentialsCleared =
           storedRefreshToken == null || storedRefreshToken.isEmpty;
       if (credentialsCleared &&

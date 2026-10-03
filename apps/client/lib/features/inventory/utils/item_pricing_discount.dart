@@ -29,8 +29,9 @@ abstract final class ItemPricingDiscount {
     PriceDiscountKind.amount => 'Amount',
   };
 
-  static PriceDiscountKind kindFromLabel(String label) =>
-      label == 'Amount' ? PriceDiscountKind.amount : PriceDiscountKind.percentage;
+  static PriceDiscountKind kindFromLabel(String label) => label == 'Amount'
+      ? PriceDiscountKind.amount
+      : PriceDiscountKind.percentage;
 
   static const discountKindLabels = ['Percentage', 'Amount'];
 }

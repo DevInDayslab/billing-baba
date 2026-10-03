@@ -14,6 +14,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile Excel import flow — reuses [importItemsExcelProvider].
 class MobileImportExcelContent extends ConsumerStatefulWidget {
   const MobileImportExcelContent({super.key, this.onBack});
@@ -88,11 +90,15 @@ class _MobileImportExcelContentState
                 AppSpacing.xl,
               ),
               children: [
-                _StepsCard(onDownloadSample: () => unawaited(_downloadSample())),
+                _StepsCard(
+                  onDownloadSample: () => unawaited(_downloadSample()),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 _UploadCard(
                   fileName: state.isParsing ? null : state.fileName,
-                  onBrowse: state.isParsing ? null : () => unawaited(_pickFile()),
+                  onBrowse: state.isParsing
+                      ? null
+                      : () => unawaited(_pickFile()),
                 ),
                 if (state.rows.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.lg),
@@ -152,7 +158,9 @@ class _MobileImportExcelContentState
       await ref.read(importItemsExcelProvider.notifier).parseBytes(bytes);
     } on Object catch (error) {
       if (!mounted) return;
-      ref.read(importItemsExcelProvider.notifier).cancelParsing(
+      ref
+          .read(importItemsExcelProvider.notifier)
+          .cancelParsing(
             error: 'Failed to read file: $error',
           );
       ScaffoldMessenger.of(context).showSnackBar(
@@ -173,8 +181,9 @@ class _MobileImportExcelContentState
     }
 
     try {
-      final result =
-          await ref.read(importItemsExcelProvider.notifier).confirmImport();
+      final result = await ref
+          .read(importItemsExcelProvider.notifier)
+          .confirmImport();
       if (!mounted) return;
 
       if (result == null) {
@@ -213,10 +222,15 @@ class _MobileImportExcelContentState
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  ...result.errors.take(5).map(
+                  ...result.errors
+                      .take(5)
+                      .map(
                         (error) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(error, style: const TextStyle(fontSize: 12)),
+                          child: Text(
+                            error,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
                       ),
                 ],
@@ -284,12 +298,13 @@ class _StepsCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             const _StepLine(
               step: 'STEP 1',
-              text: 'Download the sample template and fill in your item details.',
+              text:
+                  'Download the sample template and fill in your item details.',
             ),
             const SizedBox(height: AppSpacing.md),
             OutlinedButton.icon(
               onPressed: onDownloadSample,
-              icon: const Icon(Icons.download_outlined),
+              icon: const Icon(LucideIcons.download),
               label: const Text('Download Sample Template'),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -373,7 +388,7 @@ class _UploadCard extends StatelessWidget {
         child: Column(
           children: [
             const Icon(
-              Icons.upload_file_rounded,
+              LucideIcons.upload,
               size: 40,
               color: AppColors.primary,
             ),
@@ -420,16 +435,16 @@ class _PreviewSection extends StatelessWidget {
   final VoidCallback onImport;
 
   Color _statusColor(ImportRowStatus status) => switch (status) {
-        ImportRowStatus.valid => inventoryPositiveColor,
-        ImportRowStatus.duplicate => inventoryNegativeColor,
-        ImportRowStatus.error => const Color(0xFFE65100),
-      };
+    ImportRowStatus.valid => inventoryPositiveColor,
+    ImportRowStatus.duplicate => inventoryNegativeColor,
+    ImportRowStatus.error => const Color(0xFFE65100),
+  };
 
   String _statusLabel(ImportRowStatus status) => switch (status) {
-        ImportRowStatus.valid => 'Valid',
-        ImportRowStatus.duplicate => 'Duplicate',
-        ImportRowStatus.error => 'Error',
-      };
+    ImportRowStatus.valid => 'Valid',
+    ImportRowStatus.duplicate => 'Duplicate',
+    ImportRowStatus.error => 'Error',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -500,7 +515,7 @@ class _PreviewSection extends StatelessWidget {
                           onChanged: (value) =>
                               onToggleRow(row.id, value ?? false),
                         )
-                      : Icon(Icons.block, color: color, size: 22),
+                      : Icon(LucideIcons.ban, color: color, size: 22),
                   title: Text(
                     row.itemName,
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -608,7 +623,9 @@ class _ParsingOverlay extends StatelessWidget {
                     const CircularProgressIndicator(),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      fileName == null ? 'Parsing file...' : 'Parsing $fileName',
+                      fileName == null
+                          ? 'Parsing file...'
+                          : 'Parsing $fileName',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ],

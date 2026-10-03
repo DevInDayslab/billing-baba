@@ -22,6 +22,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style mobile Plans & Pricing screen with accordion plan cards.
 class MobilePlansPricingPage extends ConsumerWidget {
   const MobilePlansPricingPage({super.key});
@@ -41,7 +43,7 @@ class MobilePlansPricingPage extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'More options',
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: const Icon(LucideIcons.ellipsisVertical),
             onPressed: () =>
                 showMobilePlansPricingMoreOptionsSheet(context, ref),
           ),
@@ -96,7 +98,9 @@ class _PlansPricingBody extends ConsumerWidget {
     final pricing = plan.pricingFor(platform, duration);
     final metadata = metadataFor(planType);
 
-    ref.read(subscriptionCheckoutSessionProvider.notifier).startSession(
+    ref
+        .read(subscriptionCheckoutSessionProvider.notifier)
+        .startSession(
           SubscriptionCheckoutSession(
             input: ReviewOrderSummaryInput(
               planType: planType,
@@ -134,7 +138,11 @@ class _PlansPricingBody extends ConsumerWidget {
     );
   }
 
-  String _ctaLabel(PricingPlan plan, PlanPlatform platform, PlanDuration duration) {
+  String _ctaLabel(
+    PricingPlan plan,
+    PlanPlatform platform,
+    PlanDuration duration,
+  ) {
     final pricing = plan.pricingFor(platform, duration);
     final tierLabel = _planTypeFor(plan).comparisonTierLabel;
     if (pricing.ctaLabel.startsWith('Renew ')) {
@@ -208,7 +216,8 @@ class _PlansPricingBody extends ConsumerWidget {
                     onTap: () => ref
                         .read(mobilePlansSelectionProvider.notifier)
                         .selectPlan(_planTypeFor(plan)),
-                    onViewAllFeatures: _planTypeFor(plan) == selection.selectedPlan
+                    onViewAllFeatures:
+                        _planTypeFor(plan) == selection.selectedPlan
                         ? () => _showAllFeaturesSheet(context, ref)
                         : null,
                   ),
@@ -300,7 +309,9 @@ class _DurationChip extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: isSelected ? const Color(0xFFE91E63) : AppColors.textPrimary,
+                color: isSelected
+                    ? const Color(0xFFE91E63)
+                    : AppColors.textPrimary,
               ),
             ),
           ),

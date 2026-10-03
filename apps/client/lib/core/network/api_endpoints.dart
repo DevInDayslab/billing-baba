@@ -74,7 +74,8 @@ abstract final class ApiEndpoints {
   static String inventoryItem(String id) => '$inventoryItems/$id';
   static String inventoryItemSuppliers(String itemId) =>
       '${inventoryItem(itemId)}/suppliers';
-  static String inventoryItemBom(String itemId) => '${inventoryItem(itemId)}/bom';
+  static String inventoryItemBom(String itemId) =>
+      '${inventoryItem(itemId)}/bom';
   static String inventoryItemImages(String itemId) =>
       '${inventoryItem(itemId)}/images';
   static String inventoryItemImage(String itemId, String imageId) =>

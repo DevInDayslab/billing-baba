@@ -39,7 +39,6 @@ class DashboardService {
     if (cached == null) return null;
     return DashboardViewState(
       dashboard: DashboardMapper.toModel(cached.dto),
-      isCachedSnapshot: true,
       snapshotSavedAt: cached.savedAt,
     );
   }

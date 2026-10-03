@@ -1,5 +1,5 @@
-import { createHash, randomBytes } from 'node:crypto';
 import { expect } from 'bun:test';
+import { createHash, randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { loadAppConfig } from '../../src/config/app_config';
 import { getDb } from '../../src/db/client';
@@ -63,6 +63,7 @@ export async function issueTestSession(
   });
 
   expect(response.statusCode).toBe(200);
-  return (response.json() as { data: { access_token: string; refresh_token: string } })
-    .data;
+  return (
+    response.json() as { data: { access_token: string; refresh_token: string } }
+  ).data;
 }

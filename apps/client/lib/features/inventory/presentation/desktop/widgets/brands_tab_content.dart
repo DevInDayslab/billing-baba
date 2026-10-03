@@ -29,8 +29,7 @@ class BrandsTabContent extends ConsumerStatefulWidget {
   const BrandsTabContent({super.key});
 
   @override
-  ConsumerState<BrandsTabContent> createState() =>
-      _BrandsTabContentState();
+  ConsumerState<BrandsTabContent> createState() => _BrandsTabContentState();
 }
 
 class _BrandsTabContentState extends ConsumerState<BrandsTabContent> {
@@ -233,8 +232,7 @@ class _BrandsListPanel extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(right: AppSpacing.sm),
                           child: InventoryListRowMenu(
-                            onSelected: (value) =>
-                                onMenuSelected(value, brand),
+                            onSelected: (value) => onMenuSelected(value, brand),
                           ),
                         ),
                     ],

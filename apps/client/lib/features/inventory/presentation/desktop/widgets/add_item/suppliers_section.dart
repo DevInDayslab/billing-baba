@@ -268,7 +268,10 @@ class _SuppliersSectionState extends ConsumerState<SuppliersSection> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textPrimary,
                 side: const BorderSide(color: _cardBorder),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
               ),
               child: const Text('Add Party'),
             ),
@@ -279,7 +282,10 @@ class _SuppliersSectionState extends ConsumerState<SuppliersSection> {
               label: const Text('Add Supplier'),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
               ),
             ),
           ],
@@ -352,7 +358,8 @@ class _SuppliersSectionState extends ConsumerState<SuppliersSection> {
                               entry.value.sellerAddress,
                             ),
                             onChanged: widget.onUpdateRow,
-                            onRemove: () => widget.onRemoveRow(entry.value.partyId),
+                            onRemove: () =>
+                                widget.onRemoveRow(entry.value.partyId),
                             onSetDefault: widget.onDefaultChanged == null
                                 ? null
                                 : () => widget.onDefaultChanged!(
@@ -396,7 +403,10 @@ class _SuppliersTableHeader extends StatelessWidget {
         children: [
           SizedBox(width: 28, child: Text('#', style: _tableHeaderStyle)),
           SizedBox(width: 52, child: Text('IMAGE', style: _tableHeaderStyle)),
-          Expanded(flex: 2, child: Text('BRAND NAME', style: _tableHeaderStyle)),
+          Expanded(
+            flex: 2,
+            child: Text('BRAND NAME', style: _tableHeaderStyle),
+          ),
           Expanded(child: Text('MRP (₹)', style: _tableHeaderStyle)),
           Expanded(child: Text('PRICING (₹)', style: _tableHeaderStyle)),
           Expanded(child: Text('MIN. ORDER QTY', style: _tableHeaderStyle)),
@@ -429,7 +439,11 @@ class _SuppliersEmptyTableBody extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
       child: Column(
         children: [
-          Icon(Icons.inventory_2_outlined, size: 36, color: Colors.grey.shade400),
+          Icon(
+            Icons.inventory_2_outlined,
+            size: 36,
+            color: Colors.grey.shade400,
+          ),
           const SizedBox(height: 8),
           Text(
             'No suppliers added yet',
@@ -484,7 +498,9 @@ class _SupplierEditableRow extends StatelessWidget {
   final VoidCallback onRemove;
   final VoidCallback? onSetDefault;
 
-  void _patch(ItemSupplierFormRow Function(ItemSupplierFormRow current) transform) {
+  void _patch(
+    ItemSupplierFormRow Function(ItemSupplierFormRow current) transform,
+  ) {
     onChanged(transform(row));
   }
 
@@ -504,143 +520,153 @@ class _SupplierEditableRow extends StatelessWidget {
               width: 28,
               child: Padding(
                 padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                '$index',
-                style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 52,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: _ProductImageThumb(url: imageUrl),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: _CompactField(
-              controller: brandController,
-              hint: 'Enter brand name',
-              onChanged: (value) => _patch((r) => r.copyWith(brandName: value)),
-            ),
-          ),
-          Expanded(
-            child: _CompactField(
-              controller: mrpController,
-              hint: '0.00',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [_decimalInputFormatter],
-              onChanged: (value) => _patch(
-                (r) => r.copyWith(mrp: double.tryParse(value) ?? 0),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _CompactField(
-              controller: pricingController,
-              hint: '0.00',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [_decimalInputFormatter],
-              onChanged: (value) => _patch(
-                (r) => r.copyWith(pricing: double.tryParse(value) ?? 0),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _CompactField(
-              controller: moqController,
-              hint: '1',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [_decimalInputFormatter],
-              onChanged: (value) => _patch(
-                (r) => r.copyWith(
-                  minOrderQuantity: double.tryParse(value) ?? 1,
+                child: Text(
+                  '$index',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: _PaymentPolicyField(
-              value: row.paymentPolicy,
-              onChanged: (value) =>
-                  _patch((r) => r.copyWith(paymentPolicy: value)),
+            SizedBox(
+              width: 52,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: _ProductImageThumb(url: imageUrl),
+              ),
             ),
-          ),
-          SizedBox(
-            width: _ratingColumnWidth,
-            child: _QualityRatingField(
-              rating: row.qualityRating,
-              onChanged: (value) =>
-                  _patch((r) => r.copyWith(qualityRating: value)),
+            Expanded(
+              flex: 2,
+              child: _CompactField(
+                controller: brandController,
+                hint: 'Enter brand name',
+                onChanged: (value) =>
+                    _patch((r) => r.copyWith(brandName: value)),
+              ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: _CompactField(
-              controller: notesController,
-              hint: 'Add notes',
-              minLines: 2,
-              maxLines: 3,
-              onChanged: (value) => _patch((r) => r.copyWith(notes: value)),
+            Expanded(
+              child: _CompactField(
+                controller: mrpController,
+                hint: '0.00',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [_decimalInputFormatter],
+                onChanged: (value) => _patch(
+                  (r) => r.copyWith(mrp: double.tryParse(value) ?? 0),
+                ),
+              ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: _CompactField(
-              controller: addressController,
-              hint: 'Enter seller address',
-              minLines: 2,
-              maxLines: 3,
-              onChanged: (value) =>
-                  _patch((r) => r.copyWith(sellerAddress: value)),
+            Expanded(
+              child: _CompactField(
+                controller: pricingController,
+                hint: '0.00',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [_decimalInputFormatter],
+                onChanged: (value) => _patch(
+                  (r) => r.copyWith(pricing: double.tryParse(value) ?? 0),
+                ),
+              ),
             ),
-          ),
-          SizedBox(
-            width: 32,
-            child: PopupMenuButton<String>(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              icon: const Icon(Icons.more_vert, size: 20),
-              onSelected: (action) {
-                switch (action) {
-                  case 'default':
-                    onSetDefault?.call();
-                  case 'remove':
-                    onRemove();
-                }
-              },
-              itemBuilder: (context) => [
-                if (onSetDefault != null)
-                  PopupMenuItem(
-                    value: 'default',
-                    enabled: !isDefault,
-                    child: Text(
-                      isDefault ? 'Default supplier' : 'Set as default',
-                    ),
+            Expanded(
+              child: _CompactField(
+                controller: moqController,
+                hint: '1',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [_decimalInputFormatter],
+                onChanged: (value) => _patch(
+                  (r) => r.copyWith(
+                    minOrderQuantity: double.tryParse(value) ?? 1,
                   ),
-                if (partyName != null && partyName!.trim().isNotEmpty)
-                  PopupMenuItem(
-                    enabled: false,
-                    child: Text(
-                      partyName!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: _PaymentPolicyField(
+                value: row.paymentPolicy,
+                onChanged: (value) =>
+                    _patch((r) => r.copyWith(paymentPolicy: value)),
+              ),
+            ),
+            SizedBox(
+              width: _ratingColumnWidth,
+              child: _QualityRatingField(
+                rating: row.qualityRating,
+                onChanged: (value) =>
+                    _patch((r) => r.copyWith(qualityRating: value)),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: _CompactField(
+                controller: notesController,
+                hint: 'Add notes',
+                minLines: 2,
+                maxLines: 3,
+                onChanged: (value) => _patch((r) => r.copyWith(notes: value)),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: _CompactField(
+                controller: addressController,
+                hint: 'Enter seller address',
+                minLines: 2,
+                maxLines: 3,
+                onChanged: (value) =>
+                    _patch((r) => r.copyWith(sellerAddress: value)),
+              ),
+            ),
+            SizedBox(
+              width: 32,
+              child: PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                icon: const Icon(Icons.more_vert, size: 20),
+                onSelected: (action) {
+                  switch (action) {
+                    case 'default':
+                      onSetDefault?.call();
+                    case 'remove':
+                      onRemove();
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (onSetDefault != null)
+                    PopupMenuItem(
+                      value: 'default',
+                      enabled: !isDefault,
+                      child: Text(
+                        isDefault ? 'Default supplier' : 'Set as default',
                       ),
                     ),
+                  if (partyName != null && partyName!.trim().isNotEmpty)
+                    PopupMenuItem(
+                      enabled: false,
+                      child: Text(
+                        partyName!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  const PopupMenuItem(
+                    value: 'remove',
+                    child: Text(
+                      'Remove supplier',
+                      style: TextStyle(color: Color(0xFFD32F2F)),
+                    ),
                   ),
-                const PopupMenuItem(
-                  value: 'remove',
-                  child: Text(
-                    'Remove supplier',
-                    style: TextStyle(color: Color(0xFFD32F2F)),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           ],
         ),
       ),
@@ -747,9 +773,7 @@ class _QualityRatingField extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 1),
                     child: Icon(
-                      filled
-                          ? Icons.star_rounded
-                          : Icons.star_outline_rounded,
+                      filled ? Icons.star_rounded : Icons.star_outline_rounded,
                       size: 16,
                       color: filled
                           ? const Color(0xFFFFB300)

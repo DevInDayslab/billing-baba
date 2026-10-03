@@ -119,10 +119,10 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
                               query: widget.searchQuery,
                               style: InventoryStyles.listPanelCompactCellStyle
                                   .copyWith(
-                                fontWeight: widget.isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                              ),
+                                    fontWeight: widget.isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
                             ),
                           ),
                         ),

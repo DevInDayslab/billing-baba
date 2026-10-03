@@ -7,6 +7,7 @@ import 'package:billing_baba/features/inventory/application/inventory_service.da
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/media/media_upload_client.dart';
+import 'package:billing_baba/shared/media/rack_photo_stamp.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -97,22 +98,26 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
     setState(() => _isUploading = true);
     final previousUrl = _photoUrl;
     try {
-      final service = await ref.read(inventoryServiceProvider.future);
-      final url = await service.uploadRackPhoto(
-        locationId: locationId,
+      final stamped = await stampRackPhoto(
         bytes: picked.bytes,
-        mimeType: picked.mimeType,
+        takenAt: DateTime.now(),
       );
-      setState(() => _photoUrl = url);
-      widget.onPhotoChanged?.call(url);
+      final service = await ref.read(inventoryServiceProvider.future);
+      final upload = await service.uploadRackPhoto(
+        locationId: locationId,
+        bytes: stamped.bytes,
+        mimeType: stamped.mimeType,
+      );
+      setState(() => _photoUrl = upload.url);
+      widget.onPhotoChanged?.call(upload.url);
       unawaited(
         ref
             .read(imageServiceProvider)
             .replaceImage(
               oldUrl: previousUrl,
-              newUrl: url,
+              newUrl: upload.url,
               oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
-              newCacheKey: buildImageCacheKey(fallbackUrl: url),
+              newCacheKey: buildImageCacheKey(fallbackUrl: upload.url),
             ),
       );
       if (mounted) {
@@ -165,7 +170,7 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
   Widget build(BuildContext context) {
     if (widget.locationId == null) {
       return const Text(
-        'Save the item with rack/shelf details to add a rack photo.',
+        'Save the item with rack details to add a rack photo.',
         style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
       );
     }

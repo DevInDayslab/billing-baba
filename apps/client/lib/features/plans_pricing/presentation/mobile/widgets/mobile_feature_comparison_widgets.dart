@@ -3,6 +3,8 @@ import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/application/mobile_feature_comparison_data.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _checkColor = Color(0xFF2E7D32);
 const _crossColor = Color(0xFFD32F2F);
 
@@ -19,12 +21,12 @@ class MobileFeatureComparisonCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (value) {
       MobileFeatureIncluded() => const Icon(
-        Icons.check,
+        LucideIcons.check,
         color: _checkColor,
         size: 20,
       ),
       MobileFeatureExcluded() => const Icon(
-        Icons.close,
+        LucideIcons.x,
         color: _crossColor,
         size: 20,
       ),
@@ -299,7 +301,7 @@ class _FilterChip extends StatelessWidget {
               if (showChevron) ...[
                 const SizedBox(width: AppSpacing.xs),
                 Icon(
-                  Icons.keyboard_arrow_down_rounded,
+                  LucideIcons.chevronDown,
                   size: 18,
                   color: AppColors.textSecondary.withValues(alpha: 0.7),
                 ),

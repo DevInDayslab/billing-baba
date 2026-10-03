@@ -132,6 +132,9 @@ abstract final class AppConfig {
   /// Privacy policy page on the public site.
   static String get privacyPolicyUrl => '$_websiteBase/privacy';
 
+  /// Terms of service page on the public site.
+  static String get termsOfServiceUrl => '$_websiteBase/terms';
+
   /// Support inbox for issue reports and mailto: actions.
   static const supportEmail = 'support@billingbaba.com';
 

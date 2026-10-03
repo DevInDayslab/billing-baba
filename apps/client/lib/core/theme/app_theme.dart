@@ -57,6 +57,8 @@ abstract final class AppTheme {
     final textTheme = AppTypography.textTheme.apply(
       bodyColor: AppColors.textPrimary,
       displayColor: AppColors.textPrimary,
+      // Prevent macOS/desktop DefaultTextStyle merge from adding link underlines.
+      decoration: TextDecoration.none,
     );
 
     final colorScheme = ColorScheme.fromSeed(

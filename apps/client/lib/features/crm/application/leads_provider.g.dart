@@ -32,7 +32,7 @@ final class LeadsProvider extends $AsyncNotifierProvider<Leads, List<Lead>> {
   Leads create() => Leads();
 }
 
-String _$leadsHash() => r'2a8f3c1b67ac3cb7827333884d719f970fe83bd0';
+String _$leadsHash() => r'6c2e30e67a947cbfd572258446c52021390bac19';
 
 abstract class _$Leads extends $AsyncNotifier<List<Lead>> {
   FutureOr<List<Lead>> build();

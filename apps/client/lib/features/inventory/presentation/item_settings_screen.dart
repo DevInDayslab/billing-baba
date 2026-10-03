@@ -1,4 +1,3 @@
-
 import 'package:billing_baba/features/inventory/presentation/desktop/screens/item_settings_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_settings_screen.dart';
 import 'package:billing_baba/shared/widgets/adaptive_page.dart';

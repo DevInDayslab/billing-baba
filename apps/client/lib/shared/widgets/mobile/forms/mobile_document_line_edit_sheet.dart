@@ -119,12 +119,15 @@ class _MobileDocumentLineEditBodyState
     super.initState();
     final initial = widget.initial;
     _qtyController = TextEditingController(text: _formatNum(initial.qty));
-    _rateController =
-        TextEditingController(text: _formatNum(initial.pricePerUnit));
-    _discountController =
-        TextEditingController(text: _formatNum(initial.discountPercent));
-    _taxController =
-        TextEditingController(text: _formatNum(initial.taxPercent));
+    _rateController = TextEditingController(
+      text: _formatNum(initial.pricePerUnit),
+    );
+    _discountController = TextEditingController(
+      text: _formatNum(initial.discountPercent),
+    );
+    _taxController = TextEditingController(
+      text: _formatNum(initial.taxPercent),
+    );
     _serialController = TextEditingController(text: initial.serialNo);
     _batchController = TextEditingController(text: initial.batchNo);
     _mrpController = TextEditingController(text: _formatNum(initial.mrp));

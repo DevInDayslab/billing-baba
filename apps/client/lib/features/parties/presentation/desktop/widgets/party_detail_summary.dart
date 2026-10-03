@@ -30,8 +30,7 @@ class _PartyDetailFieldData {
 
   bool get isFilled => value != null && value!.trim().isNotEmpty;
 
-  String get displayValue =>
-      isFilled ? value!.trim() : _partyDetailEmDash;
+  String get displayValue => isFilled ? value!.trim() : _partyDetailEmDash;
 }
 
 /// Primary party fields shown in the detail header (Vyapar-style grid).

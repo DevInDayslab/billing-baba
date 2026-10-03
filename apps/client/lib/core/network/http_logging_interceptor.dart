@@ -72,6 +72,10 @@ class HttpLoggingInterceptor extends Interceptor {
 
     final isRecoverableAuth401 =
         status == 401 && err.requestOptions.path.contains('/auth/me');
+    final isExpectedStorageMiss =
+        status == 404 &&
+        err.requestOptions.path.contains('/storage/files/') &&
+        body.contains('STORAGE_NOT_FOUND');
     final message =
         '✗ ${err.requestOptions.method} ${err.requestOptions.uri}\n'
         '  Type: ${err.type}\n'
@@ -81,7 +85,7 @@ class HttpLoggingInterceptor extends Interceptor {
         '  Response: $body';
 
     if (AppConfig.consoleVerbose || AppConfig.fileLoggingEnabled) {
-      if (isRecoverableAuth401) {
+      if (isRecoverableAuth401 || isExpectedStorageMiss) {
         LoggingService.instance.info(message);
       } else {
         LoggingService.instance.error(message, err, err.stackTrace);

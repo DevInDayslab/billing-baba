@@ -3,11 +3,11 @@ import {
   CommandAckRepository,
   hashCommandRequest,
 } from '../command-ack.repository';
-import { getCommandHandler, isSupportedSyncCommand } from './command-registry';
 import type {
   CommandApplyOutcome,
   CommandMutationInput,
 } from './command.types';
+import { getCommandHandler, isSupportedSyncCommand } from './command-registry';
 
 export class CommandApplier {
   constructor(

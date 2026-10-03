@@ -23,7 +23,6 @@ class _PaymentOutPageState extends ConsumerState<DesktopPaymentOutPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(paymentOutRecordsProvider.notifier).refresh();
       _showPendingSuccessMessage();
     });
   }

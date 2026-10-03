@@ -473,7 +473,9 @@ class PartyModel {
       return extensionDetails;
     }
     return _phonesFrom(dtoPhones, extensionPhones)
-        .map((phone) => PartyAdditionalPhoneDetail(phone: normalizePhone(phone)))
+        .map(
+          (phone) => PartyAdditionalPhoneDetail(phone: normalizePhone(phone)),
+        )
         .where((entry) => entry.phone.isNotEmpty)
         .toList();
   }

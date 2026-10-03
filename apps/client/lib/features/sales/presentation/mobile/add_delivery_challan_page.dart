@@ -37,7 +37,8 @@ class MobileAddDeliveryChallanPage extends ConsumerStatefulWidget {
 
 class _MobileAddDeliveryChallanPageState
     extends ConsumerState<MobileAddDeliveryChallanPage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.deliveryChallan;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.deliveryChallan;
   late final TextEditingController _billingAddressController;
   late final TextEditingController _shippingAddressController;
   late final TextEditingController _descriptionController;
@@ -125,7 +126,9 @@ class _MobileAddDeliveryChallanPageState
     final error = await _notifier().save();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final form = _form();
@@ -184,8 +187,9 @@ class _MobileAddDeliveryChallanPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Challan No.',
-            documentNumberValue:
-                form.challanNo.isEmpty ? 'Auto' : form.challanNo,
+            documentNumberValue: form.challanNo.isEmpty
+                ? 'Auto'
+                : form.challanNo,
             documentNumberIsPlaceholder: form.challanNo.isEmpty,
             dateValue: formatSaleSingleDate(form.invoiceDate),
             dateIsPlaceholder: form.invoiceDate == null,
@@ -245,8 +249,9 @@ class _MobileAddDeliveryChallanPageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),

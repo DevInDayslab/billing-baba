@@ -4,6 +4,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -293,7 +294,9 @@ List<String> deliveryChallanFirmFilterOptions(Ref ref) {
 List<String> deliveryChallanUserFilterOptions(Ref ref) {
   final authState = ref.watch(authProvider);
   final authUser = authState.session?.user;
-  final challans = ref.watch(deliveryChallansProvider).value?.items ?? [];
+  final challans = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(deliveryChallansProvider),
+  );
 
   return _withAllOption(
     'All Users',
@@ -308,7 +311,9 @@ List<String> deliveryChallanUserFilterOptions(Ref ref) {
 @riverpod
 List<String> deliveryChallanGodownFilterOptions(Ref ref) {
   final godownsAsync = ref.watch(inventoryGodownsProvider);
-  final challans = ref.watch(deliveryChallansProvider).value?.items ?? [];
+  final challans = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(deliveryChallansProvider),
+  );
 
   final godownNames = godownsAsync.maybeWhen(
     data: (godowns) => godowns.map((godown) => godown.name),
@@ -400,7 +405,9 @@ class DeliveryChallans extends _$DeliveryChallans {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(_fetchPage);
   }
 
@@ -584,7 +591,9 @@ class DeliveryChallanFilters extends _$DeliveryChallanFilters {
 
 @riverpod
 List<SaleInvoiceModel> filteredDeliveryChallans(Ref ref) {
-  final allChallans = ref.watch(deliveryChallansProvider).value?.items ?? [];
+  final allChallans = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(deliveryChallansProvider),
+  );
   final filters = ref.watch(deliveryChallanFiltersProvider);
   return applyChallanClientFilters(allChallans, filters);
 }

@@ -12,7 +12,8 @@ Future<PartyAdditionalPhoneDetail?> showAddPartyAdditionalPhoneDialog(
 }) {
   return showDialog<PartyAdditionalPhoneDetail>(
     context: context,
-    builder: (dialogContext) => _AddPartyAdditionalPhoneDialog(initial: initial),
+    builder: (dialogContext) =>
+        _AddPartyAdditionalPhoneDialog(initial: initial),
   );
 }
 

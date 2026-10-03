@@ -1,4 +1,12 @@
+import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { categories, items, parties } from '../../../db/schema';
+import {
+  contactActivities,
+  contacts,
+  deals,
+  leadActivities,
+  leads,
+} from '../../../db/schema/crm/tables';
 import {
   brands,
   godowns,
@@ -10,20 +18,13 @@ import {
   stockLevels,
   unitDefinitions,
 } from '../../../db/schema/inventory/tables';
+import { todos } from '../../../db/schema/notifications/tables';
 import {
-  contactActivities,
-  contacts,
-  deals,
-  leadActivities,
-  leads,
-} from '../../../db/schema/crm/tables';
-import {
-  expenses,
   expenseCategories,
+  expenses,
   purchaseDocumentLines,
   purchaseDocuments,
 } from '../../../db/schema/purchases/tables';
-import { todos } from '../../../db/schema/notifications/tables';
 import {
   salesDocumentLines,
   salesDocuments,
@@ -31,7 +32,6 @@ import {
 import { businessSettings, taxRates } from '../../../db/schema/settings/tables';
 import { guardDraftDocumentRow } from './document-row-guards';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
-import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
 
 export type SyncedRowBase = {

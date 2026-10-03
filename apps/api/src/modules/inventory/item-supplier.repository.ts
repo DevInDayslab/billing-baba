@@ -87,7 +87,10 @@ export class ItemSupplierRepository {
             syncVersion: sql`${itemSuppliers.syncVersion} + 1`,
           })
           .where(
-            and(activeFilter, notInArray(itemSuppliers.partyId, incomingPartyIds)),
+            and(
+              activeFilter,
+              notInArray(itemSuppliers.partyId, incomingPartyIds),
+            ),
           );
       }
 
@@ -151,10 +154,7 @@ export class ItemSupplierRepository {
           eq(parties.businessId, businessId),
           inArray(parties.id, partyIds),
           eq(parties.isDeleted, false),
-          or(
-            eq(parties.partyType, 'supplier'),
-            eq(parties.partyType, 'both'),
-          ),
+          or(eq(parties.partyType, 'supplier'), eq(parties.partyType, 'both')),
         ),
       );
 

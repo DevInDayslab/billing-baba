@@ -56,7 +56,10 @@ final class IndianDecimalInputFormatter extends TextInputFormatter {
   ) {
     final cleaned = newValue.text.replaceAll(',', '');
     if (cleaned.isEmpty) {
-      return const TextEditingValue(text: '', selection: TextSelection.collapsed(offset: 0));
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
     }
     if (!_partialPattern.hasMatch(cleaned)) {
       return oldValue;
@@ -80,7 +83,10 @@ final class IndianDecimalInputFormatter extends TextInputFormatter {
     }
 
     final formatted = formatCleanedDecimal(cleaned);
-    final digitIndex = _digitsBeforeCursor(newValue.text, newValue.selection.end);
+    final digitIndex = _digitsBeforeCursor(
+      newValue.text,
+      newValue.selection.end,
+    );
     final offset = _cursorForDigitIndex(formatted, digitIndex);
 
     return TextEditingValue(

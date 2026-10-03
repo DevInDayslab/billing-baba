@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
 import type { RowEntityDef, SyncedRowBase } from './row-entities';
+import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
 
 const FINALIZED_STATUSES = new Set(['finalized', 'cancelled', 'converted']);
 

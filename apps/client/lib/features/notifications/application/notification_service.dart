@@ -15,8 +15,8 @@ class NotificationService {
     required LocalNotificationPlatformService platformService,
     required NotificationPermissionService permissionService,
     required this._businessIdReader,
-  })  : _platform = platformService,
-        _permission = permissionService;
+  }) : _platform = platformService,
+       _permission = permissionService;
 
   final NotificationRepository _repository;
   final NotificationPreferencesLocalDataSource _preferencesDataSource;
@@ -212,8 +212,8 @@ class NotificationService {
       NotificationType.purchaseDue ||
       NotificationType.subscriptionExpiry ||
       NotificationType.backupReminder => NotificationChannelId.reminder,
-      NotificationType.syncFailed || NotificationType.syncCompleted =>
-        NotificationChannelId.sync,
+      NotificationType.syncFailed ||
+      NotificationType.syncCompleted => NotificationChannelId.sync,
       _ => NotificationChannelId.general,
     };
   }

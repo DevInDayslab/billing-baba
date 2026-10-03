@@ -31,9 +31,12 @@ class Deals extends _$Deals {
         .toServiceFilters()
         .copyWith(searchQuery: ref.read(dealSearchQueryProvider));
 
-    await service.syncFromRemote();
+    // Local-first: paint SQLite immediately, sync in background.
+    unawaited(
+      service.syncFromRemote().then<void>((_) {}, onError: (_, _) {}),
+    );
 
-    _subscription?.cancel();
+    unawaited(_subscription?.cancel() ?? Future<void>.value());
     _subscription = service
         .watchDeals(filters: filters)
         .listen(
@@ -49,13 +52,16 @@ class Deals extends _$Deals {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final service = await ref.read(dealServiceProvider.future);
       final filters = ref
           .read(dealFiltersProvider.notifier)
           .toServiceFilters()
           .copyWith(searchQuery: ref.read(dealSearchQueryProvider));
+      unawaited(service.syncFromRemote());
       return service.loadDeals(filters: filters);
     });
   }

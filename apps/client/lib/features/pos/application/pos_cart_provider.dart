@@ -27,18 +27,22 @@ class PosCart extends _$PosCart {
       PosLocalDataSource(ref.read(appDatabaseProvider));
 
   void _scheduleLoadHeldBills() {
-    unawaited(Future(() {
-      if (!ref.mounted) return;
-      unawaited(_loadHeldBills());
-    }));
+    unawaited(
+      Future(() {
+        if (!ref.mounted) return;
+        unawaited(_loadHeldBills());
+      }),
+    );
   }
 
   void _scheduleResetForBusinessChange() {
-    unawaited(Future(() {
-      if (!ref.mounted) return;
-      state = const PosCartState();
-      unawaited(_loadHeldBills());
-    }));
+    unawaited(
+      Future(() {
+        if (!ref.mounted) return;
+        state = const PosCartState();
+        unawaited(_loadHeldBills());
+      }),
+    );
   }
 
   @override

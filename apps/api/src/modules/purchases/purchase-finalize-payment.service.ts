@@ -1,7 +1,7 @@
 import type { Database } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import { PaymentRepository } from '../accounting/payment.repository';
+import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import type { PurchaseDocumentType } from './purchase-document.types';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];

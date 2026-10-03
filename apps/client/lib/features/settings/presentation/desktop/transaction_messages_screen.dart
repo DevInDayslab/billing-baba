@@ -62,7 +62,12 @@ class _TransactionMessagesScreenState
     final settingsAsync = ref.watch(transactionMessageSettingsProvider);
 
     final content = settingsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      // Local prefs — show defaults immediately instead of a full-screen spinner.
+      loading: () {
+        final draft = _draft ?? TransactionMessageSettings.defaults();
+        _syncEditors(draft);
+        return _buildBody(draft);
+      },
       error: (e, _) => Center(child: Text(OfflineUiMessages.messageFor(e))),
       data: (settings) {
         _draft ??= settings;
@@ -74,6 +79,7 @@ class _TransactionMessagesScreenState
 
     final saveBar = settingsAsync.maybeWhen(
       data: (_) => _buildSaveBar(),
+      loading: () => _draft != null ? _buildSaveBar() : const SizedBox.shrink(),
       orElse: () => const SizedBox.shrink(),
     );
 

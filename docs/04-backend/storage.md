@@ -99,12 +99,19 @@ Max size: `STORAGE_MAX_FILE_BYTES` (default 10 MB).
 | `S3_REGION` | No | Default `auto` |
 | `S3_FORCE_PATH_STYLE` | No | Default `true` |
 | `S3_SSL` | No | Default `true` |
-| `S3_PUBLIC_BASE_URL` | No | Public asset base |
+| `S3_PUBLIC_BASE_URL` | No | CDN/base URL for **download/display** of public (and denormalized) asset URLs |
+| `S3_PUBLIC_ENDPOINT` | No | Publicly reachable S3 host for **presigned PUT/GET** when `S3_ENDPOINT` is internal/VPC-only |
 | `STORAGE_MAX_FILE_BYTES` | No | Default `10485760` |
 | `STORAGE_UPLOAD_URL_TTL_SECONDS` | No | Default `900` |
 | `STORAGE_DOWNLOAD_URL_TTL_SECONDS` | No | Default `3600` |
 
 If **any** of the four required credentials is set, **all** must be set or the process fails at startup. If **none** are set, storage is disabled and `/storage/*` returns `503 STORAGE_NOT_CONFIGURED`.
+
+**Client uploads vs display URLs:**
+
+- Presigned **upload** URLs are signed against `S3_PUBLIC_ENDPOINT` when set, otherwise `S3_ENDPOINT`. Desktop/mobile clients PUT bytes directly to that host — it must be reachable from the internet.
+- Stable **download/display** URLs use `S3_PUBLIC_BASE_URL/{storageKey}` when configured (CDN or public bucket base).
+- Server-side `head` / `putObject` / `delete` continue to use `S3_ENDPOINT` (may be internal).
 
 ## API
 

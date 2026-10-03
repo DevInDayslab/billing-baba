@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Single inventory item card for the mobile items list.
 ///
 /// Layout mirrors common POS item rows: thumbnail + name/category on top,
@@ -42,8 +44,7 @@ class ItemListCard extends StatelessWidget {
     final stockQty = item.quantity;
     final reservedQty = item.reservedQuantity;
     final showReserved = reservedQty != null && reservedQty != 0;
-    final hasCategory =
-        categoryName != null && categoryName!.trim().isNotEmpty;
+    final hasCategory = categoryName != null && categoryName!.trim().isNotEmpty;
 
     return MobileCard(
       onTap: onTap,
@@ -77,7 +78,7 @@ class ItemListCard extends StatelessWidget {
                           if (item.alternativeItemIds.isNotEmpty) ...[
                             const Gap(AppSpacing.xs),
                             const Icon(
-                              Icons.inventory_2_outlined,
+                              LucideIcons.package,
                               size: AppIconSize.sm,
                               color: AppColors.textSecondary,
                             ),
@@ -173,7 +174,7 @@ class _ItemThumb extends StatelessWidget {
               ? const ColoredBox(
                   color: Color(0xFFF7F8FA),
                   child: Icon(
-                    Icons.image_outlined,
+                    LucideIcons.image,
                     size: 22,
                     color: AppColors.textSecondary,
                   ),
@@ -198,7 +199,7 @@ class _ItemThumb extends StatelessWidget {
                   errorWidget: const ColoredBox(
                     color: Color(0xFFF7F8FA),
                     child: Icon(
-                      Icons.broken_image_outlined,
+                      LucideIcons.imageOff,
                       size: 20,
                       color: AppColors.textSecondary,
                     ),

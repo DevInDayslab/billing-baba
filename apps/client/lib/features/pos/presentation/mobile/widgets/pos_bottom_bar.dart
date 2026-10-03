@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 final _currencyFormat = NumberFormat.currency(
   locale: 'en_IN',
   symbol: '₹',
@@ -87,7 +89,7 @@ class PosBottomBar extends ConsumerWidget {
                           width: 52,
                           height: 52,
                           child: Icon(
-                            Icons.qr_code_scanner_rounded,
+                            LucideIcons.scanBarcode,
                             color: AppColors.textSecondary,
                             size: AppIconSize.lg,
                           ),

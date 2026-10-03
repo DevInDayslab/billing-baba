@@ -5,6 +5,7 @@ export type ItemLocationHistoryRecord = {
   rack: string | null;
   shelf: string | null;
   photo_url: string | null;
+  photo_media_asset_id: string | null;
   employee_label: string | null;
   changed_by: string | null;
   created_at: string;
@@ -17,6 +18,7 @@ export type ItemLocationHistoryRow = {
   rack: string | null;
   shelf: string | null;
   photoUrl: string | null;
+  photoMediaAssetId: string | null;
   employeeLabel: string | null;
   changedBy: string | null;
   createdAt: Date;

@@ -3,6 +3,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Locks visible sheet height; filter list scrolls inside when needed.
 const mobileTransactionTypeFilterSheetHeightFraction = 0.58;
 
@@ -48,7 +50,7 @@ class _FilterSheetHeader extends StatelessWidget {
             IconButton(
               onPressed: () => Navigator.of(context).pop(),
               icon: Icon(
-                Icons.close_rounded,
+                LucideIcons.x,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
               ),
               visualDensity: VisualDensity.compact,

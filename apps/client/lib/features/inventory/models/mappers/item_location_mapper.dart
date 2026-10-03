@@ -11,6 +11,9 @@ abstract final class ItemLocationMapper {
       rack: dto.rack,
       shelf: dto.shelf,
       photoUrl: dto.photoUrl,
+      photoTakenAt: dto.photoTakenAt == null
+          ? null
+          : DateTime.parse(dto.photoTakenAt!),
     );
   }
 }

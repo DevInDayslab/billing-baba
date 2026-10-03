@@ -21,6 +21,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddCreditNotePage extends ConsumerStatefulWidget {
   const MobileAddCreditNotePage({
     super.key,
@@ -38,7 +40,8 @@ class MobileAddCreditNotePage extends ConsumerStatefulWidget {
 
 class _MobileAddCreditNotePageState
     extends ConsumerState<MobileAddCreditNotePage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.creditNote;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.creditNote;
   late final String _sessionKey;
   late final TextEditingController _phoneController;
   late final TextEditingController _descriptionController;
@@ -129,7 +132,9 @@ class _MobileAddCreditNotePageState
     final error = await _notifier().save();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final form = _form();
@@ -182,8 +187,7 @@ class _MobileAddCreditNotePageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Return No.',
-            documentNumberValue:
-                form.returnNo.isEmpty ? 'Auto' : form.returnNo,
+            documentNumberValue: form.returnNo.isEmpty ? 'Auto' : form.returnNo,
             documentNumberIsPlaceholder: form.returnNo.isEmpty,
             dateValue: formatSaleSingleDate(form.returnDate),
             dateIsPlaceholder: form.returnDate == null,
@@ -232,8 +236,9 @@ class _MobileAddCreditNotePageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),
@@ -251,7 +256,7 @@ class _MobileAddCreditNotePageState
                 ? formatSaleSingleDate(form.originalInvoiceDate)
                 : 'Select date',
             isPlaceholder: form.originalInvoiceDate == null,
-            trailingIcon: Icons.calendar_today_outlined,
+            trailingIcon: LucideIcons.calendar,
             onTap: () async {
               final date = await showMobileDatePicker(
                 context,

@@ -3,6 +3,8 @@ import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_s
 import 'package:billing_baba/shared/widgets/mobile/forms/mobile_document_visibility.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Shared mobile document create scaffold matching Add Sale visual language.
 class MobileDocumentFormScaffold extends StatefulWidget {
   const MobileDocumentFormScaffold({
@@ -81,7 +83,7 @@ class _MobileDocumentFormScaffoldState
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: const Icon(LucideIcons.arrowLeft),
             onPressed: _requestClose,
           ),
           title: Text(

@@ -394,7 +394,9 @@ class PurchaseBills extends _$PurchaseBills {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allBills = await _fetchAllBills();
       return _allBillsPage(allBills);

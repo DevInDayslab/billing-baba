@@ -326,118 +326,118 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
       ignoreWhenEditableFocused: true,
       onBarcode: (code) => unawaited(_onHidBarcode(code)),
       child: Focus(
-      focusNode: _focusNode,
-      autofocus: true,
-      onKeyEvent: _onKeyEvent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _PosToolbar(
-            heldCount: heldCount,
-            sessionLabel: session.backendSession?.id.substring(0, 8),
-            searchController: _searchController,
-            searchFocusNode: _searchFocusNode,
-            onSearchChanged: _onSearchChanged,
-            onHoldBillsTap: () => HoldBillsPanel.show(context),
-            onNewSale: () => ref.read(posCartProvider.notifier).clearCart(),
-            onBack: _exitTerminal,
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                final isMobile = width < PosBreakpoints.mobile;
-                final isTablet =
-                    width >= PosBreakpoints.mobile &&
-                    width < PosBreakpoints.tablet;
-                final isCompact = width < PosBreakpoints.laptop;
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: _onKeyEvent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _PosToolbar(
+              heldCount: heldCount,
+              sessionLabel: session.backendSession?.id.substring(0, 8),
+              searchController: _searchController,
+              searchFocusNode: _searchFocusNode,
+              onSearchChanged: _onSearchChanged,
+              onHoldBillsTap: () => HoldBillsPanel.show(context),
+              onNewSale: () => ref.read(posCartProvider.notifier).clearCart(),
+              onBack: _exitTerminal,
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth;
+                  final isMobile = width < PosBreakpoints.mobile;
+                  final isTablet =
+                      width >= PosBreakpoints.mobile &&
+                      width < PosBreakpoints.tablet;
+                  final isCompact = width < PosBreakpoints.laptop;
 
-                const itemGrid = PosPanel(
-                  padding: EdgeInsets.all(AppSpacing.sm),
-                  child: ItemGrid(),
-                );
-                final cartPanel = CartPanel(
-                  onHoldBill: _holdBill,
-                  onPrint: _printCurrentBill,
-                );
-                final paymentPanel = PaymentPanel(
-                  onCompleteSale: _completeSale,
-                );
-
-                if (isMobile) {
-                  return _MobilePosLayout(
-                    tabIndex: _mobileTabIndex,
-                    cartItemCount: cartItemCount,
-                    onTabChanged: (index) =>
-                        setState(() => _mobileTabIndex = index),
-                    itemGrid: itemGrid,
-                    cartPanel: cartPanel,
-                    paymentPanel: paymentPanel,
+                  const itemGrid = PosPanel(
+                    padding: EdgeInsets.all(AppSpacing.sm),
+                    child: ItemGrid(),
                   );
-                }
+                  final cartPanel = CartPanel(
+                    onHoldBill: _holdBill,
+                    onPrint: _printCurrentBill,
+                  );
+                  final paymentPanel = PaymentPanel(
+                    onCompleteSale: _completeSale,
+                  );
 
-                final gap = isCompact ? AppSpacing.sm : AppSpacing.md;
-                final padding = EdgeInsets.fromLTRB(
-                  isCompact ? AppSpacing.sm : AppSpacing.md,
-                  AppSpacing.sm,
-                  isCompact ? AppSpacing.sm : AppSpacing.md,
-                  isCompact ? AppSpacing.sm : AppSpacing.md,
-                );
+                  if (isMobile) {
+                    return _MobilePosLayout(
+                      tabIndex: _mobileTabIndex,
+                      cartItemCount: cartItemCount,
+                      onTabChanged: (index) =>
+                          setState(() => _mobileTabIndex = index),
+                      itemGrid: itemGrid,
+                      cartPanel: cartPanel,
+                      paymentPanel: paymentPanel,
+                    );
+                  }
 
-                if (isTablet) {
+                  final gap = isCompact ? AppSpacing.sm : AppSpacing.md;
+                  final padding = EdgeInsets.fromLTRB(
+                    isCompact ? AppSpacing.sm : AppSpacing.md,
+                    AppSpacing.sm,
+                    isCompact ? AppSpacing.sm : AppSpacing.md,
+                    isCompact ? AppSpacing.sm : AppSpacing.md,
+                  );
+
+                  if (isTablet) {
+                    return Padding(
+                      padding: padding,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Expanded(flex: 4, child: itemGrid),
+                                SizedBox(width: gap),
+                                Expanded(flex: 5, child: cartPanel),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: gap),
+                          Expanded(
+                            flex: 2,
+                            child: paymentPanel,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final paymentWidth = isCompact ? 280.0 : 320.0;
                   return Padding(
                     padding: padding,
-                    child: Column(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
-                          flex: 3,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Expanded(flex: 4, child: itemGrid),
-                              SizedBox(width: gap),
-                              Expanded(flex: 5, child: cartPanel),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: gap),
-                        Expanded(
-                          flex: 2,
+                        const Expanded(flex: 4, child: itemGrid),
+                        SizedBox(width: gap),
+                        Expanded(flex: 5, child: cartPanel),
+                        SizedBox(width: gap),
+                        SizedBox(
+                          width: paymentWidth,
                           child: paymentPanel,
                         ),
                       ],
                     ),
                   );
-                }
-
-                final paymentWidth = isCompact ? 280.0 : 320.0;
-                return Padding(
-                  padding: padding,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Expanded(flex: 4, child: itemGrid),
-                      SizedBox(width: gap),
-                      Expanded(flex: 5, child: cartPanel),
-                      SizedBox(width: gap),
-                      SizedBox(
-                        width: paymentWidth,
-                        child: paymentPanel,
-                      ),
-                    ],
-                  ),
-                );
-              },
+                },
+              ),
             ),
-          ),
-          _ShortcutHintsBar(
-            showHints: _showShortcutHints,
-            onToggleHints: () =>
-                setState(() => _showShortcutHints = !_showShortcutHints),
-          ),
-        ],
+            _ShortcutHintsBar(
+              showHints: _showShortcutHints,
+              onToggleHints: () =>
+                  setState(() => _showShortcutHints = !_showShortcutHints),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

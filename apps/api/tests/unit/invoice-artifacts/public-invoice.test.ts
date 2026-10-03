@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
-import { AppError } from '../../../src/shared/errors/app-error';
-import { InvoiceArtifactService } from '../../../src/modules/invoice-artifacts/invoice-artifact.service';
+import type { InvoiceArtifactService } from '../../../src/modules/invoice-artifacts/invoice-artifact.service';
 import { InvoiceShareService } from '../../../src/modules/invoice-share/invoice-share.service';
+import { AppError } from '../../../src/shared/errors/app-error';
 
 function baseConfig(): AppConfig {
   return {

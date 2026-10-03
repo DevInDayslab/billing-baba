@@ -240,8 +240,9 @@ class _PartyNotesAttachmentsSectionState
               () => _images = _images.where((item) => item.id != id).toList(),
             ),
             removeDocument: (id) => setState(
-              () =>
-                  _documents = _documents.where((item) => item.id != id).toList(),
+              () => _documents = _documents
+                  .where((item) => item.id != id)
+                  .toList(),
             ),
             updateImage: (id, name) => setState(
               () => _replaceAttachment(
@@ -268,7 +269,9 @@ class _PartyNotesAttachmentsSectionState
               child: FilledButton.tonal(
                 onPressed: _syncingAttachments ? null : _syncPendingAttachments,
                 child: Text(
-                  _syncingAttachments ? 'Syncing...' : 'Sync pending attachments',
+                  _syncingAttachments
+                      ? 'Syncing...'
+                      : 'Sync pending attachments',
                 ),
               ),
             ),

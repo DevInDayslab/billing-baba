@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Shared mobile app bar with business identity, notifications, and settings.
 ///
 /// Pass [title] to override the business header. Pass [actions] for page-specific
@@ -71,7 +73,7 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
     if (showBackButton) {
       return IconButton(
         tooltip: 'Back',
-        icon: const Icon(Icons.arrow_back_rounded),
+        icon: const Icon(LucideIcons.arrowLeft),
         onPressed: onBack ?? () => context.pop(),
       );
     }
@@ -157,7 +159,7 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
             ),
             if (onBusinessTap != null)
               Icon(
-                Icons.keyboard_arrow_down_rounded,
+                LucideIcons.chevronDown,
                 color: AppColors.textSecondary.withValues(alpha: 0.8),
                 size: AppIconSize.lg,
               ),
@@ -175,11 +177,11 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
         NotificationIconButton(
           onTap: onNotificationTap,
           unreadCount: unreadCount,
-          icon: Icons.notifications_outlined,
+          icon: LucideIcons.bell,
         ),
       if (showSettings)
         MobileIconActionButton(
-          icon: Icons.settings_outlined,
+          icon: LucideIcons.settings,
           tooltip: 'Settings',
           onPressed: onSettingsTap,
         ),

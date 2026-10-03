@@ -7,6 +7,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileLeadsScreen extends ConsumerWidget {
   const MobileLeadsScreen({super.key});
 
@@ -32,7 +34,7 @@ class MobileLeadsScreen extends ConsumerWidget {
             return const MobileEmptyState(
               title: 'No leads yet',
               message: 'New leads will appear here.',
-              icon: Icons.person_search_outlined,
+              icon: LucideIcons.userSearch,
             );
           }
 
@@ -59,10 +61,13 @@ class MobileLeadsScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       [
-                        lead.company,
-                        lead.phone,
-                        _leadStatusLabel(lead.status),
-                      ].whereType<String>().where((v) => v.isNotEmpty).join(' · '),
+                            lead.company,
+                            lead.phone,
+                            _leadStatusLabel(lead.status),
+                          ]
+                          .whereType<String>()
+                          .where((v) => v.isNotEmpty)
+                          .join(' · '),
                     ),
                   ),
                 );

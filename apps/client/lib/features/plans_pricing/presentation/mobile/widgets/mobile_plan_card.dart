@@ -4,6 +4,8 @@ import 'package:billing_baba/features/plans_pricing/presentation/mobile/applicat
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _animationDuration = Duration(milliseconds: 250);
 
 /// Vyapar-style expandable plan card for mobile Plans & Pricing.
@@ -124,7 +126,7 @@ class MobilePlanCard extends StatelessWidget {
                                   TextButton.icon(
                                     onPressed: onViewAllFeatures,
                                     icon: const Icon(
-                                      Icons.visibility_outlined,
+                                      LucideIcons.eye,
                                       size: 16,
                                     ),
                                     label: const Text('View All Features'),
@@ -204,7 +206,7 @@ class _PlanHeader extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            isGold ? Icons.change_history : Icons.flag_outlined,
+            isGold ? LucideIcons.triangle : LucideIcons.flag,
             color: isGold
                 ? MobilePlanCard._goldIconColor
                 : MobilePlanCard._platinumIconColor,
@@ -290,7 +292,7 @@ class _SelectionIndicator extends StatelessWidget {
         ),
       ),
       child: isSelected
-          ? const Icon(Icons.check, size: 14, color: Colors.white)
+          ? const Icon(LucideIcons.check, size: 14, color: Colors.white)
           : null,
     );
   }
@@ -322,7 +324,7 @@ class _FeatureListItem extends StatelessWidget {
     } else {
       final included = isGold ? feature.goldIncluded : feature.platinumIncluded;
       trailing = Icon(
-        included == true ? Icons.check : Icons.close,
+        included == true ? LucideIcons.check : LucideIcons.x,
         color: included == true
             ? MobilePlanCard._checkColor
             : MobilePlanCard._crossColor,

@@ -8,6 +8,7 @@ import 'package:billing_baba/features/pos/presentation/mobile/widgets/pos_item_c
 import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PosCatalogBody extends ConsumerWidget {
   const PosCatalogBody({
@@ -46,9 +47,7 @@ class PosCatalogBody extends ConsumerWidget {
                 message: hasSearch
                     ? 'Try a different search term or category.'
                     : 'Add inventory items to start selling from POS.',
-                icon: hasSearch
-                    ? Icons.search_off_rounded
-                    : Icons.inventory_2_outlined,
+                icon: hasSearch ? LucideIcons.searchX : LucideIcons.package,
               ),
             ),
           ],

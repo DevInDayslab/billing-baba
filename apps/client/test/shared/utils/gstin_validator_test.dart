@@ -61,12 +61,15 @@ void main() {
       );
     });
 
-    test('Vyapar-style GSTIN with non-checksum digit passes save validation', () {
-      const gstin = '29ARGDE1234F1Z5';
-      expect(GstinValidator.isValid(gstin), isTrue);
-      expect(Validators.gstin(gstin), isNull);
-      expect(GstinValidator.isStrictlyValid(gstin), isFalse);
-    });
+    test(
+      'Vyapar-style GSTIN with non-checksum digit passes save validation',
+      () {
+        const gstin = '29ARGDE1234F1Z5';
+        expect(GstinValidator.isValid(gstin), isTrue);
+        expect(Validators.gstin(gstin), isNull);
+        expect(GstinValidator.isStrictlyValid(gstin), isFalse);
+      },
+    );
 
     test('invalid checksum strict validation', () {
       expect(GstinValidator.isStrictlyValid('27AABCU9603R1Z8'), isFalse);

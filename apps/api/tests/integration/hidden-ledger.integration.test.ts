@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import type { FastifyInstance } from 'fastify';
 import { randomUUID } from 'node:crypto';
+import type { FastifyInstance } from 'fastify';
 import { loadAppConfig } from '../../src/config/app_config';
 import { HiddenLedgerService } from '../../src/modules/hidden-ledger/hidden-ledger.service';
 import {

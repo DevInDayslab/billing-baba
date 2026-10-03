@@ -6,8 +6,8 @@ import { resolveStorageProvider } from '../../providers/storage';
 import { AppError } from '../../shared/errors/app-error';
 import { buildStagingStoragePath } from '../media-processing/image/image-path.builder';
 import { shouldProcessAsset } from '../media-processing/media-processing.constants';
-import { MediaProcessingService } from '../media-processing/media-processing.service';
 import { scheduleMediaProcessing } from '../media-processing/media-processing.scheduler';
+import { MediaProcessingService } from '../media-processing/media-processing.service';
 import {
   ALLOWED_STORAGE_MIME_TYPES,
   type AllowedStorageMimeType,

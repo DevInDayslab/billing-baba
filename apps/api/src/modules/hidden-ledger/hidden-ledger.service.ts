@@ -1,8 +1,9 @@
-import { getDb } from '../../db/client';
 import type { Database } from '../../db/client';
+import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { canViewHiddenLedger } from '../../shared/hidden-ledger/hidden-ledger-access';
 import type { UserRole } from '../auth/auth.types';
+import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import { HiddenLedgerRepository } from './hidden-ledger.repository';
 import type {
   ListHiddenLedgerEntriesQuery,
@@ -14,7 +15,6 @@ import type {
   HiddenLedgerPartySummary,
   HiddenLedgerRecoveryRecord,
 } from './hidden-ledger.types';
-import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 
 export class HiddenLedgerService {
   private readonly db: NonNullable<ReturnType<typeof getDb>>;

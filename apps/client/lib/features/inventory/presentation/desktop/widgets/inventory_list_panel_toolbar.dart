@@ -227,16 +227,17 @@ class _InventoryListPanelToolbarState extends State<InventoryListPanelToolbar>
           focusNode: _focusNode,
           onChanged: _handleChanged,
           style: widget.textStyle ?? saleFieldTextStyle.copyWith(fontSize: 12),
-          decoration: buildSaleFieldDecoration(
-            hint: widget.searchHint,
-            suffixIcon: _buildSuffixIcon(),
-          ).copyWith(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
-            ),
-            isDense: true,
-          ),
+          decoration:
+              buildSaleFieldDecoration(
+                hint: widget.searchHint,
+                suffixIcon: _buildSuffixIcon(),
+              ).copyWith(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                isDense: true,
+              ),
         ),
       ),
     );

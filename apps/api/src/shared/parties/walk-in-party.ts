@@ -6,8 +6,7 @@ import { parties } from '../../db/schema/crm/tables';
 type DbLike = Pick<Database, 'select' | 'insert'>;
 
 /** Legacy client constant — one row per business when used. */
-export const LEGACY_WALK_IN_PARTY_ID =
-  'a0000000-0000-4000-8000-000000000001';
+export const LEGACY_WALK_IN_PARTY_ID = 'a0000000-0000-4000-8000-000000000001';
 
 export const WALK_IN_PARTY_NAME = 'Walk-in Customer';
 
@@ -64,9 +63,7 @@ export async function ensureWalkInParty(
 
   if (existing) {
     if (existing.businessId !== businessId) {
-      throw new Error(
-        `Walk-in party ${partyId} belongs to another business`,
-      );
+      throw new Error(`Walk-in party ${partyId} belongs to another business`);
     }
     return;
   }

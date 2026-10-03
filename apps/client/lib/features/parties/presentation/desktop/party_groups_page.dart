@@ -18,7 +18,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _compactBreakpoint = 800.0;
 const _partyListPanelWidth = 280.0;
 
-Future<void> openDesktopAddGroupDialog(BuildContext context, WidgetRef ref) async {
+Future<void> openDesktopAddGroupDialog(
+  BuildContext context,
+  WidgetRef ref,
+) async {
   final name = await showTextInputDialog(
     context,
     title: 'New Party Group',

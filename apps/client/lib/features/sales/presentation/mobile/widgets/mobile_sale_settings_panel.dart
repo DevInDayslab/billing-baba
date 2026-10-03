@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _panelBlue = AppColors.primary;
 const _badgeRed = Color(0xFFE53935);
 
@@ -84,9 +86,7 @@ class _MobileSaleSettingsPanelState
           TransactionMessageType.sale: enabled,
         },
       );
-      await ref
-          .read(transactionMessageSettingsProvider.notifier)
-          .save(updated);
+      await ref.read(transactionMessageSettingsProvider.notifier).save(updated);
     } finally {
       if (mounted) setState(() => _isSavingSms = false);
     }
@@ -97,9 +97,11 @@ class _MobileSaleSettingsPanelState
     setState(() => _isSavingPrefix = true);
 
     try {
-      await ref.read(saleInvoiceSettingsProvider.notifier).updateSettings(
-        (settings) => settings.copyWith(salePrefixEnabled: enabled),
-      );
+      await ref
+          .read(saleInvoiceSettingsProvider.notifier)
+          .updateSettings(
+            (settings) => settings.copyWith(salePrefixEnabled: enabled),
+          );
     } finally {
       if (mounted) setState(() => _isSavingPrefix = false);
     }
@@ -112,7 +114,8 @@ class _MobileSaleSettingsPanelState
     final settingsAsync = ref.watch(transactionMessageSettingsProvider);
     final saleSettingsAsync = ref.watch(saleInvoiceSettingsProvider);
     final transactionSmsEnabled = settingsAsync.maybeWhen(
-      data: (settings) => settings.isAutoSendEnabled(TransactionMessageType.sale),
+      data: (settings) =>
+          settings.isAutoSendEnabled(TransactionMessageType.sale),
       orElse: () => true,
     );
     final salePrefixEnabled = saleSettingsAsync.maybeWhen(
@@ -150,7 +153,7 @@ class _MobileSaleSettingsPanelState
                     IconButton(
                       onPressed: widget.onClose,
                       icon: Icon(
-                        Icons.close_rounded,
+                        LucideIcons.x,
                         color: AppColors.textSecondary.withValues(alpha: 0.75),
                       ),
                       visualDensity: VisualDensity.compact,
@@ -172,8 +175,7 @@ class _MobileSaleSettingsPanelState
                       description:
                           'Customize the Prefix to your Sale Invoice.Ex: INV',
                       value: salePrefixEnabled,
-                      isLoading:
-                          _isSavingPrefix || saleSettingsAsync.isLoading,
+                      isLoading: _isSavingPrefix || saleSettingsAsync.isLoading,
                       onChanged: (value) => unawaited(_setSalePrefix(value)),
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -183,7 +185,8 @@ class _MobileSaleSettingsPanelState
                           'Send an automatic SMS to your Customer with details of the Sale.',
                       value: transactionSmsEnabled,
                       isLoading: _isSavingSms || settingsAsync.isLoading,
-                      onChanged: (value) => unawaited(_setTransactionSms(value)),
+                      onChanged: (value) =>
+                          unawaited(_setTransactionSms(value)),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     _NavigationSettingTile(
@@ -213,7 +216,8 @@ class _MobileSaleSettingsPanelState
                     const SizedBox(height: AppSpacing.md),
                     _BillingTypeOption(
                       label: 'Full Sale',
-                      isSelected: _billingType == MobileSaleBillingType.fullSale,
+                      isSelected:
+                          _billingType == MobileSaleBillingType.fullSale,
                       onTap: () => setState(
                         () => _billingType = MobileSaleBillingType.fullSale,
                       ),
@@ -235,7 +239,7 @@ class _MobileSaleSettingsPanelState
                 top: false,
                 child: TextButton.icon(
                   onPressed: widget.onMoreSettings,
-                  icon: const Icon(Icons.settings_outlined, color: _panelBlue),
+                  icon: const Icon(LucideIcons.settings, color: _panelBlue),
                   label: Text(
                     'More Settings',
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -385,7 +389,7 @@ class _NavigationSettingTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: AppColors.textSecondary.withValues(alpha: 0.55),
               ),
             ],
@@ -421,9 +425,7 @@ class _BillingTypeOption extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                isSelected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_off_rounded,
+                isSelected ? LucideIcons.circleDot : LucideIcons.circle,
                 color: isSelected
                     ? _panelBlue
                     : AppColors.textSecondary.withValues(alpha: 0.45),

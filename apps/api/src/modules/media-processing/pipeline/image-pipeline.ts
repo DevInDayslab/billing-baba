@@ -1,24 +1,24 @@
-import type { ImagePolicy } from '../media-processing.constants';
 import {
   IMAGE_VARIANT_MAX_EDGE,
   IMAGE_VARIANTS,
   type ImageVariant,
 } from '../image/image.constants';
+import type { ImagePolicy } from '../media-processing.constants';
 import type {
   EncodedImage,
   ImagePipelineResult,
   ProcessedVariantOutput,
 } from '../media-processing.types';
+import { encodeImageBuffer } from './steps/encode-image.step';
 import {
-  rejectAnimatedImage,
   readImageMetadata,
+  rejectAnimatedImage,
   validateImageDimensions,
 } from './steps/read-metadata.step';
 import {
   validateBinarySignature,
   validateMimeType,
 } from './steps/validate-mime.step';
-import { encodeImageBuffer } from './steps/encode-image.step';
 
 export type RunImagePipelineInput = {
   buffer: Buffer;

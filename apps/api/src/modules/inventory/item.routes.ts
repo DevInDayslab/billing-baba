@@ -2,8 +2,8 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { AppConfig } from '../../config/app_config';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireBusiness } from '../../middleware/require-business.middleware';
-import { createItemAlternativesController } from './item-alternatives.controller';
 import { createItemController } from './item.controller';
+import { createItemAlternativesController } from './item-alternatives.controller';
 
 export const createItemRoutes = (config: AppConfig): FastifyPluginAsync => {
   const controller = createItemController(config);

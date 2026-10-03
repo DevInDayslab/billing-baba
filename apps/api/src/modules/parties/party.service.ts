@@ -6,7 +6,6 @@ import {
   applyHiddenLedgerVisibilityList,
 } from '../../shared/hidden-ledger/party-hidden-ledger';
 import { resolvePartyPricingTier } from '../../shared/pricing/pricing-tier';
-import { PartyProfileImageService } from './party-profile-image.service';
 import type { UserRole } from '../auth/auth.types';
 import { PartyRepository } from './party.repository';
 import type {
@@ -27,6 +26,7 @@ import {
   validateGstin,
   validateNormalizedMobile,
 } from './party.utils';
+import { PartyProfileImageService } from './party-profile-image.service';
 
 export class PartyService {
   private readonly repository: PartyRepository;

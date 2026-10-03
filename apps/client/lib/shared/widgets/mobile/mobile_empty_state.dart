@@ -2,13 +2,15 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Illustrated empty state for mobile list and detail screens.
 class MobileEmptyState extends StatelessWidget {
   const MobileEmptyState({
     required this.title,
     super.key,
     this.message,
-    this.icon = Icons.inbox_outlined,
+    this.icon = LucideIcons.inbox,
     this.actionLabel,
     this.onAction,
     this.action,

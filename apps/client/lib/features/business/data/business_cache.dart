@@ -130,6 +130,8 @@ class BusinessCache {
                   'phone': profile.phone,
                   'email': profile.email,
                   'address': profile.address,
+                  'owner_name': profile.ownerName,
+                  'logo_url': profile.logoUrl,
                 }
               : business,
         )

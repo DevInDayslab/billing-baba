@@ -4,14 +4,18 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_editor_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Result of the mobile item image preview flow.
 sealed class MobileItemImagePreviewOutcome {}
 
 /// User removed the photo from the add-item form.
-final class MobileItemImagePreviewDeleted extends MobileItemImagePreviewOutcome {}
+final class MobileItemImagePreviewDeleted
+    extends MobileItemImagePreviewOutcome {}
 
 /// User cropped or otherwise updated the photo.
-final class MobileItemImagePreviewUpdated extends MobileItemImagePreviewOutcome {
+final class MobileItemImagePreviewUpdated
+    extends MobileItemImagePreviewOutcome {
   MobileItemImagePreviewUpdated(this.bytes);
 
   final Uint8List bytes;
@@ -67,11 +71,11 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
   Future<void> _edit(BuildContext context) async {
     final cropped = await Navigator.of(context, rootNavigator: true)
         .push<Uint8List>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => MobileItemImageEditorScreen(imageBytes: imageBytes),
-      ),
-    );
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => MobileItemImageEditorScreen(imageBytes: imageBytes),
+          ),
+        );
     if (cropped == null || !context.mounted) return;
     _popWithOutcome(context, MobileItemImagePreviewUpdated(cropped));
   }
@@ -85,7 +89,7 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(LucideIcons.x),
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         ),
         title: const Text('Photo'),
@@ -125,7 +129,7 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
                           vertical: AppSpacing.md,
                         ),
                       ),
-                      icon: const Icon(Icons.delete_outline_rounded),
+                      icon: const Icon(LucideIcons.trash2),
                       label: const Text('Delete'),
                     ),
                   ),
@@ -140,7 +144,7 @@ class MobileItemImagePreviewScreen extends StatelessWidget {
                           vertical: AppSpacing.md,
                         ),
                       ),
-                      icon: const Icon(Icons.crop_rounded),
+                      icon: const Icon(LucideIcons.crop),
                       label: const Text('Edit'),
                     ),
                   ),
@@ -159,8 +163,10 @@ Future<MobileItemImagePreviewOutcome?> openMobileItemImagePreview(
   BuildContext context, {
   required Uint8List imageBytes,
 }) {
-  return Navigator.of(context, rootNavigator: true)
-      .push<MobileItemImagePreviewOutcome>(
+  return Navigator.of(
+    context,
+    rootNavigator: true,
+  ).push<MobileItemImagePreviewOutcome>(
     MaterialPageRoute(
       fullscreenDialog: true,
       builder: (_) => MobileItemImagePreviewScreen(imageBytes: imageBytes),

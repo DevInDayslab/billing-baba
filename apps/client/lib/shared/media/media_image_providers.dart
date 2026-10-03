@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/shared/media/image_variant.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/src/providers/future_provider.dart';
 
@@ -17,13 +18,20 @@ mediaVariantUrlProvider = FutureProvider.family<String, MediaVariantRequest>(
       request.sourceMediaAssetId,
       request.variant.apiValue,
     );
-    final response = await client.dio.get<Map<String, dynamic>>(path);
-    final data = response.data?['data'] as Map<String, dynamic>?;
-    final url = data?['url'] as String?;
-    if (url == null || url.isEmpty) {
-      throw StateError('Variant URL missing in response');
+    try {
+      final response = await client.dio.get<Map<String, dynamic>>(path);
+      final data = response.data?['data'] as Map<String, dynamic>?;
+      final url = data?['url'] as String?;
+      if (url == null || url.isEmpty) {
+        throw StateError('Variant URL missing in response');
+      }
+      return url;
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        throw StateError('Variant not found');
+      }
+      rethrow;
     }
-    return url;
   },
 );
 
@@ -35,15 +43,22 @@ final FutureProviderFamily<String, String> mediaSourceUrlProvider =
         throw StateError('Media asset id is empty');
       }
       final client = await ref.watch(apiClientProvider.future);
-      final response = await client.dio.get<Map<String, dynamic>>(
-        ApiEndpoints.storageFileUrl(assetId),
-      );
-      final data = response.data?['data'] as Map<String, dynamic>?;
-      final url = data?['url'] as String?;
-      if (url == null || url.isEmpty) {
-        throw StateError('Source URL missing in response');
+      try {
+        final response = await client.dio.get<Map<String, dynamic>>(
+          ApiEndpoints.storageFileUrl(assetId),
+        );
+        final data = response.data?['data'] as Map<String, dynamic>?;
+        final url = data?['url'] as String?;
+        if (url == null || url.isEmpty) {
+          throw StateError('Source URL missing in response');
+        }
+        return url;
+      } on DioException catch (error) {
+        if (error.response?.statusCode == 404) {
+          throw StateError('Storage asset not found');
+        }
+        rethrow;
       }
-      return url;
     });
 
 /// Drops cached signed URLs so the next read fetches a fresh variant URL.

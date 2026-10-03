@@ -15,7 +15,11 @@ class MobileHiddenLedgerListPage extends ConsumerWidget {
   static final _currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
   static final _dateFormat = DateFormat('dd MMM yyyy');
 
-  Future<void> _openEntry(BuildContext context, WidgetRef ref, String entryId) async {
+  Future<void> _openEntry(
+    BuildContext context,
+    WidgetRef ref,
+    String entryId,
+  ) async {
     try {
       final service = await ref.read(hiddenLedgerServiceProvider.future);
       final detail = await service.getEntry(entryId);
@@ -145,7 +149,10 @@ class _EntryTile extends StatelessWidget {
         onTap: onTap,
         title: Text(
           entry.partyName ?? 'Party',
-          style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+          style: AppTypography.inter(
+            fontSize: AppTypography.bodySize,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         subtitle: Text(
           '${entry.invoiceNumber ?? 'No invoice'} · ${entry.statusLabel}',
@@ -156,7 +163,10 @@ class _EntryTile extends StatelessWidget {
         ),
         trailing: Text(
           ChartAxisFormatters.formatCurrency(entry.remainingAmount),
-          style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w700),
+          style: AppTypography.inter(
+            fontSize: AppTypography.bodySize,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -180,14 +190,20 @@ class _DetailRow extends StatelessWidget {
             flex: 2,
             child: Text(
               label,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           Expanded(
             flex: 3,
             child: Text(
               value,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w500),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

@@ -77,9 +77,7 @@ describe('GstinService', () => {
   });
 
   test('verifyGSTIN returns mock when API key is whitespace', async () => {
-    const service = new GstinService(
-      baseConfig({ gstverifyApiKey: '   ' }),
-    );
+    const service = new GstinService(baseConfig({ gstverifyApiKey: '   ' }));
     const result = await service.verifyGSTIN(VALID_GSTIN);
 
     expect(result.credits_remaining).toBe(99);

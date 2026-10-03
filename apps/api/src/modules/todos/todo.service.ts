@@ -2,7 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { TodoRepository } from './todo.repository';
-import type { CreateTodoBody, ListTodosQuery, UpdateTodoBody } from './todo.schema';
+import type {
+  CreateTodoBody,
+  ListTodosQuery,
+  UpdateTodoBody,
+} from './todo.schema';
 import type { TodoRecord } from './todo.types';
 
 export class TodoService {

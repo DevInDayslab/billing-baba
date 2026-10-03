@@ -11,6 +11,7 @@ abstract final class ItemLocationHistoryMapper {
       rack: dto.rack,
       shelf: dto.shelf,
       photoUrl: dto.photoUrl,
+      photoMediaAssetId: dto.photoMediaAssetId,
       employeeLabel: dto.employeeLabel,
       changedBy: dto.changedBy,
     );

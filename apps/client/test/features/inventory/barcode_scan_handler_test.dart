@@ -57,13 +57,13 @@ void main() {
     var hits = 0;
 
     Future<void> scan() => handleBarcodeScan(
-          '8901234567890',
-          handler: handler,
-          engine: engine,
-          items: items,
-          onItemFound: (_, __) => hits++,
-          onNotFound: (_) {},
-        );
+      '8901234567890',
+      handler: handler,
+      engine: engine,
+      items: items,
+      onItemFound: (_, __) => hits++,
+      onNotFound: (_) {},
+    );
 
     await scan();
     await scan();

@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { AppConfig } from '../../config/app_config';
-import type { StorageProvider } from './storage-provider';
 import type {
   CopyObjectParams,
   CreateDownloadUrlParams,
@@ -15,6 +14,7 @@ import type {
   PutObjectParams,
   PutObjectResult,
 } from './storage.types';
+import type { StorageProvider } from './storage-provider';
 
 const DEV_BUCKET = 'local-dev';
 const META_SUFFIX = '.meta.json';

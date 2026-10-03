@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -341,7 +342,9 @@ class SaleReturns extends _$SaleReturns {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(_fetchPage);
   }
 
@@ -486,7 +489,9 @@ class SaleReturnFilters extends _$SaleReturnFilters {
 
 @riverpod
 List<SaleInvoiceModel> filteredSaleReturns(Ref ref) {
-  final allReturns = ref.watch(saleReturnsProvider).value?.items ?? [];
+  final allReturns = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleReturnsProvider),
+  );
   final filters = ref.watch(saleReturnFiltersProvider);
   return applySaleReturnClientFilters(allReturns, filters);
 }

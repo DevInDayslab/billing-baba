@@ -54,39 +54,42 @@ class PaymentRepository {
     String? paymentId,
     String? signature,
   }) async {
-    await _db.into(_db.gatewayPaymentSessionsLocal).insertOnConflictUpdate(
-      GatewayPaymentSessionsLocalCompanion.insert(
-        intentId: intentId,
-        razorpayOrderId: razorpayOrderId,
-        intentPayloadJson: intentPayloadJson,
-        status: 'pending_verification',
-        paymentId: Value(paymentId),
-        signature: Value(signature),
-        verifyAttempts: const Value(0),
-        lastRetryAt: Value(DateTime.now()),
-      ),
-    );
+    await _db
+        .into(_db.gatewayPaymentSessionsLocal)
+        .insertOnConflictUpdate(
+          GatewayPaymentSessionsLocalCompanion.insert(
+            intentId: intentId,
+            razorpayOrderId: razorpayOrderId,
+            intentPayloadJson: intentPayloadJson,
+            status: 'pending_verification',
+            paymentId: Value(paymentId),
+            signature: Value(signature),
+            verifyAttempts: const Value(0),
+            lastRetryAt: Value(DateTime.now()),
+          ),
+        );
   }
 
   Future<void> clearSession(String intentId) async {
-    await (_db.delete(_db.gatewayPaymentSessionsLocal)
-      ..where((t) => t.intentId.equals(intentId))).go();
+    await (_db.delete(
+      _db.gatewayPaymentSessionsLocal,
+    )..where((t) => t.intentId.equals(intentId))).go();
   }
 
   Future<List<GatewayPaymentSessionsLocalData>> listPendingSessions() {
-    return (_db.select(_db.gatewayPaymentSessionsLocal)
-          ..where((t) => t.status.equals('pending_verification')))
-        .get();
+    return (_db.select(
+      _db.gatewayPaymentSessionsLocal,
+    )..where((t) => t.status.equals('pending_verification'))).get();
   }
 
   Future<void> incrementRetry(String intentId) async {
-    final row = await (_db.select(_db.gatewayPaymentSessionsLocal)
-          ..where((t) => t.intentId.equals(intentId)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.gatewayPaymentSessionsLocal,
+    )..where((t) => t.intentId.equals(intentId))).getSingleOrNull();
     if (row == null) return;
-    await (_db.update(_db.gatewayPaymentSessionsLocal)
-          ..where((t) => t.intentId.equals(intentId)))
-        .write(
+    await (_db.update(
+      _db.gatewayPaymentSessionsLocal,
+    )..where((t) => t.intentId.equals(intentId))).write(
       GatewayPaymentSessionsLocalCompanion(
         verifyAttempts: Value(row.verifyAttempts + 1),
         lastRetryAt: Value(DateTime.now()),

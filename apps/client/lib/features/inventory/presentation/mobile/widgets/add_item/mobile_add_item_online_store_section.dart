@@ -5,6 +5,8 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style Online Store tab for mobile Add Item.
 class MobileAddItemOnlineStoreSection extends StatelessWidget {
   const MobileAddItemOnlineStoreSection({
@@ -35,7 +37,8 @@ class MobileAddItemOnlineStoreSection extends StatelessWidget {
         : 'Online Store Service Price';
     final serviceDescriptionController = descriptionController;
     final serviceOnDescriptionChanged = onDescriptionChanged;
-    final showServiceDescription = !_isProduct &&
+    final showServiceDescription =
+        !_isProduct &&
         serviceDescriptionController != null &&
         serviceOnDescriptionChanged != null;
 
@@ -55,11 +58,13 @@ class MobileAddItemOnlineStoreSection extends StatelessWidget {
               controller: priceController,
               label: priceLabel,
               hint: priceLabel,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [_decimalFormatter],
               onChanged: (v) => onPriceChanged(double.tryParse(v) ?? 0),
               suffixIcon: Icon(
-                Icons.info_outline_rounded,
+                LucideIcons.info,
                 size: 18,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
               ),
@@ -79,7 +84,7 @@ class MobileAddItemOnlineStoreSection extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 8, right: 4),
                     child: Icon(
-                      Icons.info_outline_rounded,
+                      LucideIcons.info,
                       size: 18,
                       color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),

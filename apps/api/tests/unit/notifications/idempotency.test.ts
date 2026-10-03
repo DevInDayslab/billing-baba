@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test';
-import type { NotificationSendLogRepository } from '../../../src/modules/notifications/notification-send-log.repository';
 import { NotificationService } from '../../../src/modules/notifications/notification.service';
+import type { NotificationSendLogRepository } from '../../../src/modules/notifications/notification-send-log.repository';
 import type {
   NotificationProvider,
   NotificationSendResult,

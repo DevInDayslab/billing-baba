@@ -294,7 +294,8 @@ class AlternativesSection extends ConsumerWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: OutlinedButton.icon(
-        onPressed: () => _showAlternativeItemsPicker(context, ref, alternatives),
+        onPressed: () =>
+            _showAlternativeItemsPicker(context, ref, alternatives),
         icon: const Icon(LucideIcons.plus, size: 16),
         label: const Text('Add Alternative'),
         style: OutlinedButton.styleFrom(

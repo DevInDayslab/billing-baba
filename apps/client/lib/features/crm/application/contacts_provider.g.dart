@@ -33,7 +33,7 @@ final class ContactsProvider
   Contacts create() => Contacts();
 }
 
-String _$contactsHash() => r'cac25e13deeff445b0c3d615d71beebb994de39c';
+String _$contactsHash() => r'3045b716c76e74ba52e450ac04d83cfe99f87bbe';
 
 abstract class _$Contacts extends $AsyncNotifier<List<Contact>> {
   FutureOr<List<Contact>> build();

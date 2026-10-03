@@ -10,6 +10,8 @@ import 'package:billing_baba/shared/widgets/gst_tax_rate_select_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style pricing tab for mobile Add Item.
 class MobileAddItemPricingSection extends StatelessWidget {
   const MobileAddItemPricingSection({
@@ -122,8 +124,7 @@ class MobileAddItemPricingSection extends StatelessWidget {
                     decimal: true,
                   ),
                   inputFormatters: _priceFormatters,
-                  onChanged: (v) =>
-                      onMrpChanged(parseIndianItemPriceInput(v)),
+                  onChanged: (v) => onMrpChanged(parseIndianItemPriceInput(v)),
                 ),
                 PriceAmountInWordsHint(
                   amount: mrpAmount,
@@ -331,21 +332,28 @@ class _DiscountTypeChip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(width: 2),
-            const Icon(Icons.arrow_drop_down, size: 18),
+            const Icon(LucideIcons.chevronDown, size: 18),
           ],
         ),
       ),
       itemBuilder: (context) => [
         PopupMenuItem(
           value: PriceDiscountKind.percentage,
-          child: Text(ItemPricingDiscount.labelForKind(PriceDiscountKind.percentage)),
+          child: Text(
+            ItemPricingDiscount.labelForKind(PriceDiscountKind.percentage),
+          ),
         ),
         PopupMenuItem(
           value: PriceDiscountKind.amount,
-          child: Text(ItemPricingDiscount.labelForKind(PriceDiscountKind.amount)),
+          child: Text(
+            ItemPricingDiscount.labelForKind(PriceDiscountKind.amount),
+          ),
         ),
       ],
     );
@@ -380,10 +388,13 @@ class _TaxModeChip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(width: 2),
-            const Icon(Icons.arrow_drop_down, size: 18),
+            const Icon(LucideIcons.chevronDown, size: 18),
           ],
         ),
       ),

@@ -39,8 +39,7 @@ class MobileHomeTransactionTypeTabs extends StatelessWidget {
                 label: _tabs[i].label,
                 isSelected: _tabs[i].type == null
                     ? selected.isEmpty
-                    : selected.length == 1 &&
-                          selected.contains(_tabs[i].type),
+                    : selected.length == 1 && selected.contains(_tabs[i].type),
                 activeColor: primary,
                 onTap: () {
                   if (_tabs[i].type == null) {

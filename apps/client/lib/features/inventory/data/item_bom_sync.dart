@@ -46,7 +46,9 @@ class ItemBomMaterialSync {
                     _double(payload, 'purchase_price') ??
                     0,
               ),
-              sortOrder: Value(existing?.sortOrder ?? _int(payload, 'sort_order') ?? 0),
+              sortOrder: Value(
+                existing?.sortOrder ?? _int(payload, 'sort_order') ?? 0,
+              ),
               syncVersion: Value(syncVersion),
               createdAt: (existing?.createdAt ?? updatedAt).toUtc(),
               updatedAt: updatedAt.toUtc(),
@@ -65,11 +67,14 @@ class ItemBomMaterialSync {
             id: entityId,
             businessId: businessId,
             itemId: _str(payload, 'item_id') ?? existing?.itemId ?? '',
-            rawItemId: _str(payload, 'raw_item_id') ?? existing?.rawItemId ?? '',
+            rawItemId:
+                _str(payload, 'raw_item_id') ?? existing?.rawItemId ?? '',
             qty: _double(payload, 'qty') ?? existing?.qty ?? 0,
             unitId: _str(payload, 'unit_id') ?? existing?.unitId ?? '',
             purchasePrice: Value(
-              _double(payload, 'purchase_price') ?? existing?.purchasePrice ?? 0,
+              _double(payload, 'purchase_price') ??
+                  existing?.purchasePrice ??
+                  0,
             ),
             sortOrder: Value(
               _int(payload, 'sort_order') ?? existing?.sortOrder ?? 0,
@@ -164,7 +169,9 @@ class ItemBomCostSync {
               amount: Value(
                 existing?.amount ?? _double(payload, 'amount') ?? 0,
               ),
-              sortOrder: Value(existing?.sortOrder ?? _int(payload, 'sort_order') ?? 0),
+              sortOrder: Value(
+                existing?.sortOrder ?? _int(payload, 'sort_order') ?? 0,
+              ),
               syncVersion: Value(syncVersion),
               createdAt: (existing?.createdAt ?? updatedAt).toUtc(),
               updatedAt: updatedAt.toUtc(),

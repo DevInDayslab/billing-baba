@@ -143,7 +143,9 @@ class _BulkCatalogStatusDialogState
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     Navigator.of(context).pop();
@@ -206,19 +208,25 @@ class _BulkAssignCodeDialogState extends ConsumerState<_BulkAssignCodeDialog> {
   Future<void> _apply(List<InventoryItem> selected) async {
     if (selected.isEmpty || _isSaving) return;
     setState(() => _isSaving = true);
-    final error = await ref.read(inventoryItemsProvider.notifier).bulkAssignBarcodes(
+    final error = await ref
+        .read(inventoryItemsProvider.notifier)
+        .bulkAssignBarcodes(
           items: selected,
           onlyWithoutBarcode: _onlyWithoutBarcode,
         );
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Barcodes assigned to ${selected.length} item(s).')),
+      SnackBar(
+        content: Text('Barcodes assigned to ${selected.length} item(s).'),
+      ),
     );
   }
 
@@ -276,7 +284,8 @@ class _BulkAssignUnitsDialog extends ConsumerStatefulWidget {
       _BulkAssignUnitsDialogState();
 }
 
-class _BulkAssignUnitsDialogState extends ConsumerState<_BulkAssignUnitsDialog> {
+class _BulkAssignUnitsDialogState
+    extends ConsumerState<_BulkAssignUnitsDialog> {
   final _selectedIds = <String>{};
   String? _unitId;
   var _isSaving = false;
@@ -287,19 +296,24 @@ class _BulkAssignUnitsDialogState extends ConsumerState<_BulkAssignUnitsDialog> 
   }
 
   Future<void> _apply(List<InventoryItem> selected) async {
-    final units = ref.read(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
+    final units =
+        ref.read(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
     final unit = units.where((u) => u.id == _unitId).firstOrNull;
     if (unit == null || selected.isEmpty || _isSaving) return;
 
     setState(() => _isSaving = true);
-    final error = await ref.read(inventoryItemsProvider.notifier).bulkAssignBaseUnit(
+    final error = await ref
+        .read(inventoryItemsProvider.notifier)
+        .bulkAssignBaseUnit(
           items: selected,
           baseUnitShortName: unit.shortName,
         );
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     Navigator.of(context).pop();
@@ -314,7 +328,8 @@ class _BulkAssignUnitsDialogState extends ConsumerState<_BulkAssignUnitsDialog> 
 
   @override
   Widget build(BuildContext context) {
-    final units = ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
+    final units =
+        ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
     final eligible = _eligibleItems(ref.watch(inventoryItemListProvider));
     final selected = eligible.where((i) => _selectedIds.contains(i.id));
 
@@ -418,10 +433,14 @@ class _BulkBaseUnitDropdownState extends State<_BulkBaseUnitDropdown> {
               consumeOutsideTap: true,
               alignmentOffset: const Offset(0, 4),
               style: MenuStyle(
-                backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
+                backgroundColor: const WidgetStatePropertyAll(
+                  AppColors.surface,
+                ),
                 elevation: const WidgetStatePropertyAll(6),
                 shadowColor: const WidgetStatePropertyAll(Colors.black26),
-                surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+                surfaceTintColor: const WidgetStatePropertyAll(
+                  Colors.transparent,
+                ),
                 shape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(
                     borderRadius: AppRadius.mdBorder,
@@ -562,7 +581,8 @@ class _BulkUpdateItemsDialog extends ConsumerStatefulWidget {
       _BulkUpdateItemsDialogState();
 }
 
-class _BulkUpdateItemsDialogState extends ConsumerState<_BulkUpdateItemsDialog> {
+class _BulkUpdateItemsDialogState
+    extends ConsumerState<_BulkUpdateItemsDialog> {
   final _selectedIds = <String>{};
   final _salePriceController = TextEditingController();
   final _purchasePriceController = TextEditingController();
@@ -597,8 +617,7 @@ class _BulkUpdateItemsDialogState extends ConsumerState<_BulkUpdateItemsDialog> 
       salePrice: sale.isEmpty ? null : sale,
       purchasePrice: purchase.isEmpty ? null : purchase,
       mrp: mrp.isEmpty ? null : mrp,
-      categoryId:
-          _categoryTouched && !_clearCategory ? _categoryId : null,
+      categoryId: _categoryTouched && !_clearCategory ? _categoryId : null,
       clearCategory: _categoryTouched && _clearCategory,
       hsnCode: hsn.isEmpty ? null : hsn,
     );
@@ -616,14 +635,18 @@ class _BulkUpdateItemsDialogState extends ConsumerState<_BulkUpdateItemsDialog> 
     }
 
     setState(() => _isSaving = true);
-    final error = await ref.read(inventoryItemsProvider.notifier).bulkUpdateItems(
+    final error = await ref
+        .read(inventoryItemsProvider.notifier)
+        .bulkUpdateItems(
           items: selected,
           payload: payload,
         );
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     Navigator.of(context).pop();
@@ -635,7 +658,8 @@ class _BulkUpdateItemsDialogState extends ConsumerState<_BulkUpdateItemsDialog> 
   @override
   Widget build(BuildContext context) {
     final categories =
-        ref.watch(inventoryCategoriesProvider).value ?? const <InventoryCategory>[];
+        ref.watch(inventoryCategoriesProvider).value ??
+        const <InventoryCategory>[];
     final eligible = _eligibleItems(ref.watch(inventoryItemListProvider));
     final selected = eligible.where((i) => _selectedIds.contains(i.id));
 
@@ -1032,7 +1056,8 @@ class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
   Widget build(BuildContext context) {
     final visible = _visibleItems;
     final allSelected =
-        visible.isNotEmpty && visible.every((i) => widget.selectedIds.contains(i.id));
+        visible.isNotEmpty &&
+        visible.every((i) => widget.selectedIds.contains(i.id));
 
     final primaryIcon = widget.primaryIcon ?? widget.heroIcon;
 
@@ -1048,150 +1073,152 @@ class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
             color: AppColors.surface,
             clipBehavior: Clip.antiAlias,
             child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _BulkDialogHeroPanel(
-                title: widget.title,
-                description: widget.description,
-                icon: widget.heroIcon,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.close, size: 20),
-                          tooltip: 'Close',
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ),
-                      if (widget.header != null) ...[
-                        widget.header!,
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      InventorySearchField(
-                        hint: 'Search items by name or code...',
-                        onChanged: (query) =>
-                            setState(() => _searchQuery = query),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: allSelected,
-                              onChanged:
-                                  visible.isEmpty ? null : (_) => _toggleAll(),
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            Text(
-                              'Select all',
-                              style: AppTypography.inter(
-                                fontSize: AppTypography.bodySmallSize,
-                                fontWeight: FontWeight.w500,
-                                height: 1.4,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              '${widget.selectedIds.length} selected',
-                              style: AppTypography.inter(
-                                fontSize: AppTypography.bodySmallSize,
-                                height: 1.4,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: listPanelCardBorder),
-                            borderRadius: AppRadius.mdBorder,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _BulkDialogHeroPanel(
+                  title: widget.title,
+                  description: widget.description,
+                  icon: widget.heroIcon,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.md,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close, size: 20),
+                            tooltip: 'Close',
+                            visualDensity: VisualDensity.compact,
                           ),
-                          child: ClipRRect(
-                            borderRadius: AppRadius.mdBorder,
-                            child: visible.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      widget.emptyMessage,
-                                      style: InventoryStyles.emptyStateStyle,
+                        ),
+                        if (widget.header != null) ...[
+                          widget.header!,
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        InventorySearchField(
+                          hint: 'Search items by name or code...',
+                          onChanged: (query) =>
+                              setState(() => _searchQuery = query),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: allSelected,
+                                onChanged: visible.isEmpty
+                                    ? null
+                                    : (_) => _toggleAll(),
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              Text(
+                                'Select all',
+                                style: AppTypography.inter(
+                                  fontSize: AppTypography.bodySmallSize,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.4,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '${widget.selectedIds.length} selected',
+                                style: AppTypography.inter(
+                                  fontSize: AppTypography.bodySmallSize,
+                                  height: 1.4,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: listPanelCardBorder),
+                              borderRadius: AppRadius.mdBorder,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: AppRadius.mdBorder,
+                              child: visible.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        widget.emptyMessage,
+                                        style: InventoryStyles.emptyStateStyle,
+                                      ),
+                                    )
+                                  : ListView.separated(
+                                      itemCount: visible.length,
+                                      separatorBuilder: (_, __) =>
+                                          const Divider(
+                                            height: 1,
+                                            color: listPanelCardBorder,
+                                          ),
+                                      itemBuilder: (context, index) {
+                                        final item = visible[index];
+                                        final isSelected = widget.selectedIds
+                                            .contains(item.id);
+                                        return _BulkDialogItemRow(
+                                          item: item,
+                                          isSelected: isSelected,
+                                          showQuantityBadge:
+                                              widget.showQuantityBadge,
+                                          onToggle: () => _toggleItem(item.id),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ),
+                        ),
+                        if (widget.footer != null) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          widget.footer!,
+                        ],
+                        const SizedBox(height: AppSpacing.md),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            widget.isSaving
+                                ? FilledButton(
+                                    onPressed: null,
+                                    child: const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     ),
                                   )
-                                : ListView.separated(
-                                    itemCount: visible.length,
-                                    separatorBuilder: (_, __) => const Divider(
-                                      height: 1,
-                                      color: listPanelCardBorder,
-                                    ),
-                                    itemBuilder: (context, index) {
-                                      final item = visible[index];
-                                      final isSelected = widget.selectedIds
-                                          .contains(item.id);
-                                      return _BulkDialogItemRow(
-                                        item: item,
-                                        isSelected: isSelected,
-                                        showQuantityBadge:
-                                            widget.showQuantityBadge,
-                                        onToggle: () => _toggleItem(item.id),
-                                      );
-                                    },
+                                : FilledButton.icon(
+                                    onPressed: widget.onPrimary,
+                                    icon: Icon(primaryIcon, size: 18),
+                                    label: Text(widget.primaryLabel),
                                   ),
-                          ),
+                          ],
                         ),
-                      ),
-                      if (widget.footer != null) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        widget.footer!,
                       ],
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          OutlinedButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Cancel'),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          widget.isSaving
-                              ? FilledButton(
-                                  onPressed: null,
-                                  child: const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                )
-                              : FilledButton.icon(
-                                  onPressed: widget.onPrimary,
-                                  icon: Icon(primaryIcon, size: 18),
-                                  label: Text(widget.primaryLabel),
-                                ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         ),
       ),
     );

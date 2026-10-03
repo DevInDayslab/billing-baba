@@ -45,13 +45,15 @@ class _MobileBarcodeGeneratorPageState
     String? noOfLabels,
   }) {
     final draft = ref.read(barcodeGeneratorProvider).draft;
-    ref.read(barcodeGeneratorProvider.notifier).updateDraft(
-      draft.copyWith(
-        itemName: itemName,
-        itemCode: itemCode,
-        noOfLabels: noOfLabels,
-      ),
-    );
+    ref
+        .read(barcodeGeneratorProvider.notifier)
+        .updateDraft(
+          draft.copyWith(
+            itemName: itemName,
+            itemCode: itemCode,
+            noOfLabels: noOfLabels,
+          ),
+        );
   }
 
   void _addLabel() {
@@ -106,13 +108,19 @@ class _MobileBarcodeGeneratorPageState
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Labels (${state.entries.length})',
-            style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+            style: AppTypography.inter(
+              fontSize: AppTypography.bodySize,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           if (state.entries.isEmpty)
             Text(
               'No labels yet',
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                color: AppColors.textSecondary,
+              ),
             )
           else
             for (final entry in state.entries)

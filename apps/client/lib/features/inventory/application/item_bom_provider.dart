@@ -17,7 +17,10 @@ class ItemBom extends _$ItemBom {
     return service.fetchItemBom(itemId);
   }
 
-  Future<void> replaceFromForm(String itemId, ReplaceItemBomRequest request) async {
+  Future<void> replaceFromForm(
+    String itemId,
+    ReplaceItemBomRequest request,
+  ) async {
     final service = await ref.read(inventoryServiceProvider.future);
     await service.replaceItemBom(itemId, request);
   }

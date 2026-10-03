@@ -18,9 +18,8 @@ class PaymentRecoveryBanner extends ConsumerWidget {
       ),
       actions: [
         TextButton(
-          onPressed: () => ref
-              .read(paymentRecoveryServiceProvider)
-              .recoverPending(),
+          onPressed: () =>
+              ref.read(paymentRecoveryServiceProvider).recoverPending(),
           child: const Text('Retry now'),
         ),
       ],

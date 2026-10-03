@@ -14,6 +14,10 @@ class DashboardViewState {
   final DateTime? snapshotSavedAt;
   final bool isRefreshing;
 
+  /// True when the UI should show the "Working offline" strip — not during
+  /// a normal cache-first load while a background refresh is in flight.
+  bool get showsOfflineBanner => isCachedSnapshot && !isRefreshing;
+
   DashboardViewState copyWith({
     DashboardModel? dashboard,
     bool? isCachedSnapshot,

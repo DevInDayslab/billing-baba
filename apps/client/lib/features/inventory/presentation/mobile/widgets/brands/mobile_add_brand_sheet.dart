@@ -5,6 +5,8 @@ import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile bottom sheet for creating or editing a brand.
 Future<BrandModel?> showMobileAddBrandSheet(
   BuildContext context, {
@@ -161,12 +163,15 @@ class _AddBrandSheetBodyState extends ConsumerState<_AddBrandSheetBody> {
               ),
               IconButton(
                 onPressed: () => Navigator.of(widget.sheetContext).pop(),
-                icon: const Icon(Icons.close_rounded),
+                icon: const Icon(LucideIcons.x),
                 color: AppColors.textSecondary,
                 iconSize: 22,
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                constraints: const BoxConstraints.tightFor(
+                  width: 36,
+                  height: 36,
+                ),
               ),
             ],
           ),
@@ -211,11 +216,11 @@ class _AddBrandSheetBodyState extends ConsumerState<_AddBrandSheetBody> {
                         )
                       : Text(
                           actionLabel,
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                 ),
               ),

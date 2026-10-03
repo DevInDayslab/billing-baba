@@ -1,12 +1,12 @@
 import sharp from 'sharp';
+import { ImageProcessingError } from '../../../images/image.errors';
 import {
   IMAGE_JPEG_QUALITY,
   IMAGE_WEBP_QUALITY,
-  type OutputImageFormat,
   mimeForFormat,
+  type OutputImageFormat,
 } from '../../image/image.constants';
 import type { EncodedImage } from '../../media-processing.types';
-import { ImageProcessingError } from '../../../images/image.errors';
 import { createSharpInstance } from './read-metadata.step';
 
 export type EncodeOptions = {

@@ -3,7 +3,7 @@ import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/core/sync/engine/sync_metadata_store.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,7 +47,9 @@ void main() {
       itemId: itemId,
       godownId: godownId,
     );
-    await db.into(db.stockLevelsLocal).insert(
+    await db
+        .into(db.stockLevelsLocal)
+        .insert(
           StockLevelsLocalCompanion.insert(
             id: compositeId,
             businessId: businessId,
@@ -55,9 +57,9 @@ void main() {
             godownId: godownId,
             currentQuantity: Value(quantity),
             reservedQuantity: Value(reserved),
-            availableQuantity: Value('0'),
+            availableQuantity: const Value('0'),
             averageCost: const Value('10'),
-            updatedAt: DateTime.utc(2026, 1, 1),
+            updatedAt: DateTime.utc(2026, 1),
           ),
         );
   }
@@ -89,9 +91,9 @@ void main() {
         },
       );
 
-      final rows = await (db.select(db.stockLevelsLocal)
-            ..where((t) => t.businessId.equals(businessId)))
-          .get();
+      final rows = await (db.select(
+        db.stockLevelsLocal,
+      )..where((t) => t.businessId.equals(businessId))).get();
       expect(rows, hasLength(1));
       expect(rows.single.godownId, godownA);
       expect(rows.single.currentQuantity, '11998.0000');
@@ -135,7 +137,7 @@ void main() {
       businessId: businessId,
       entityId: serverIdA,
       syncVersion: 2,
-      updatedAt: DateTime.utc(2026, 8, 1),
+      updatedAt: DateTime.utc(2026, 8),
       isDeleted: false,
       payload: {
         'item_id': itemId,
@@ -145,9 +147,9 @@ void main() {
       },
     );
 
-    final rows = await (db.select(db.stockLevelsLocal)
-          ..where((t) => t.businessId.equals(businessId)))
-        .get();
+    final rows = await (db.select(
+      db.stockLevelsLocal,
+    )..where((t) => t.businessId.equals(businessId))).get();
     expect(rows, hasLength(2));
     expect(
       rows.firstWhere((r) => r.id == serverIdA).currentQuantity,
@@ -156,45 +158,48 @@ void main() {
     expect(metadata.stockLevelsReconciledAtFor(businessId), isNotNull);
   });
 
-  test('pull upserts by business/item/godown and preserves reserved_quantity',
-      () async {
-    await markReconciled();
-    await seedLocalCompositeRow(godownId: godownA, quantity: '5', reserved: '2');
+  test(
+    'pull upserts by business/item/godown and preserves reserved_quantity',
+    () async {
+      await markReconciled();
+      await seedLocalCompositeRow(godownId: godownA, quantity: '5');
 
-    await sync.applyChange(
-      businessId: businessId,
-      entityId: serverIdA,
-      syncVersion: 2,
-      updatedAt: DateTime.utc(2026, 7, 31),
-      isDeleted: false,
-      payload: {
-        'item_id': itemId,
-        'godown_id': godownA,
-        'quantity': '35.0000',
-        'average_cost': '50.0000',
-      },
-    );
+      await sync.applyChange(
+        businessId: businessId,
+        entityId: serverIdA,
+        syncVersion: 2,
+        updatedAt: DateTime.utc(2026, 7, 31),
+        isDeleted: false,
+        payload: {
+          'item_id': itemId,
+          'godown_id': godownA,
+          'quantity': '35.0000',
+          'average_cost': '50.0000',
+        },
+      );
 
-    final row = await (db.select(db.stockLevelsLocal)
-          ..where((t) => t.id.equals(serverIdA)))
-        .getSingle();
-    expect(row.currentQuantity, '35.0000');
-    expect(row.reservedQuantity, '2');
-    expect(row.availableQuantity, '33');
-    expect(row.averageCost, '50.0000');
-    expect(
-      await (db.select(db.stockLevelsLocal)
-            ..where((t) => t.id.equals(
-                  stockLevelLocalId(
-                    businessId: businessId,
-                    itemId: itemId,
-                    godownId: godownA,
-                  ),
-                )))
-          .getSingleOrNull(),
-      isNull,
-    );
-  });
+      final row = await (db.select(
+        db.stockLevelsLocal,
+      )..where((t) => t.id.equals(serverIdA))).getSingle();
+      expect(row.currentQuantity, '35.0000');
+      expect(row.reservedQuantity, '2');
+      expect(row.availableQuantity, '33');
+      expect(row.averageCost, '50.0000');
+      expect(
+        await (db.select(db.stockLevelsLocal)..where(
+              (t) => t.id.equals(
+                stockLevelLocalId(
+                  businessId: businessId,
+                  itemId: itemId,
+                  godownId: godownA,
+                ),
+              ),
+            ))
+            .getSingleOrNull(),
+        isNull,
+      );
+    },
+  );
 
   test('multi-godown rows sum independently without overwriting', () async {
     await sync.applyChange(
@@ -227,9 +232,9 @@ void main() {
     final totals = await stockLocal.quantitiesByItem(businessId: businessId);
     expect(totals[itemId], 14);
     expect(
-      await (db.select(db.stockLevelsLocal)
-            ..where((t) => t.businessId.equals(businessId)))
-          .get(),
+      await (db.select(
+        db.stockLevelsLocal,
+      )..where((t) => t.businessId.equals(businessId))).get(),
       hasLength(2),
     );
   });
@@ -263,41 +268,43 @@ void main() {
       },
     );
 
-    final row = await (db.select(db.stockLevelsLocal)
-          ..where((t) => t.id.equals(serverIdA)))
-        .getSingle();
+    final row = await (db.select(
+      db.stockLevelsLocal,
+    )..where((t) => t.id.equals(serverIdA))).getSingle();
     expect(row.currentQuantity, '9.0000');
     expect(row.syncVersion, 3);
   });
 
-  test('collapse removes composite duplicate when server row exists for triple',
-      () async {
-    await markReconciled();
-    await seedLocalCompositeRow(godownId: godownA, quantity: '5222000');
+  test(
+    'collapse removes composite duplicate when server row exists for triple',
+    () async {
+      await markReconciled();
+      await seedLocalCompositeRow(godownId: godownA, quantity: '5222000');
 
-    await stockLocal.applyPullChange(
-      businessId: businessId,
-      entityId: serverIdA,
-      syncVersion: 2,
-      updatedAt: DateTime.utc(2026, 7, 31),
-      isDeleted: false,
-      itemId: itemId,
-      godownId: godownA,
-      quantity: '5222000.0000',
-      averageCost: '0',
-    );
+      await stockLocal.applyPullChange(
+        businessId: businessId,
+        entityId: serverIdA,
+        syncVersion: 2,
+        updatedAt: DateTime.utc(2026, 7, 31),
+        isDeleted: false,
+        itemId: itemId,
+        godownId: godownA,
+        quantity: '5222000.0000',
+        averageCost: '0',
+      );
 
-    final rows = await (db.select(db.stockLevelsLocal)
-          ..where((t) => t.businessId.equals(businessId)))
-        .get();
-    expect(rows, hasLength(1));
-    expect(rows.single.id, serverIdA);
-    expect(rows.single.currentQuantity, '5222000.0000');
+      final rows = await (db.select(
+        db.stockLevelsLocal,
+      )..where((t) => t.businessId.equals(businessId))).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.id, serverIdA);
+      expect(rows.single.currentQuantity, '5222000.0000');
 
-    final total = await stockLocal.totalQuantityForItem(
-      businessId: businessId,
-      itemId: itemId,
-    );
-    expect(total, 5222000);
-  });
+      final total = await stockLocal.totalQuantityForItem(
+        businessId: businessId,
+        itemId: itemId,
+      );
+      expect(total, 5222000);
+    },
+  );
 }

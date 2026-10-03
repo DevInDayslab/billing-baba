@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { index, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
-import { syncedBusinessColumns, money } from '../columns';
+import { money, syncedBusinessColumns } from '../columns';
 import { syncPullIndex } from '../sync-pull-index';
 import { items } from './tables';
 

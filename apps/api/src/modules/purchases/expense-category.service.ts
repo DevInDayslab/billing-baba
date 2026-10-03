@@ -1,13 +1,13 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { ExpenseCategoryRepository } from './expense-category.repository';
-import { ensureSystemExpenseCategories } from './expense-sync.service';
 import type {
   CreateExpenseCategoryBody,
   ListExpenseCategoriesQuery,
   UpdateExpenseCategoryBody,
 } from './expense-category.schema';
 import type { ExpenseCategoryRecord } from './expense-category.types';
+import { ensureSystemExpenseCategories } from './expense-sync.service';
 import { PurchasesServiceBase } from './purchases.base-service';
 
 export class ExpenseCategoryService extends PurchasesServiceBase {

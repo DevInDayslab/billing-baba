@@ -1,12 +1,12 @@
-import { and, asc, eq, gt, or } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+import { and, asc, eq, gt, or } from 'drizzle-orm';
 import type { Database } from '../../../db/client';
-import { salesDocuments } from '../../../db/schema/sales/tables';
 import { purchaseDocuments } from '../../../db/schema/purchases/tables';
-import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
-import type { RowEntityDef, SyncedRowBase } from './row-entities';
+import { salesDocuments } from '../../../db/schema/sales/tables';
 import { ensureWalkInParty } from '../../../shared/parties/walk-in-party';
+import type { RowEntityDef, SyncedRowBase } from './row-entities';
 import { getRowEntity, listRowEntities } from './row-entities';
+import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
 
 export type {
   AcceptedRowResult,

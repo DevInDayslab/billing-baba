@@ -377,9 +377,8 @@ class _AlternativeItemsPickerDialogState
     _selected = widget.initialSelection.toSet();
   }
 
-  List<InventoryItem> get _candidates => widget.items
-      .where((item) => item.id != widget.excludeItemId)
-      .toList();
+  List<InventoryItem> get _candidates =>
+      widget.items.where((item) => item.id != widget.excludeItemId).toList();
 
   List<InventoryItem> get _visibleItems {
     final engine = ref.read(inventorySearchEngineProvider);
@@ -494,8 +493,9 @@ class _AlternativeItemsPickerDialogState
                     children: [
                       Checkbox(
                         value: allSelected,
-                        onChanged:
-                            visible.isEmpty ? null : (_) => _toggleAll(visible),
+                        onChanged: visible.isEmpty
+                            ? null
+                            : (_) => _toggleAll(visible),
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),

@@ -12,6 +12,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileSyncSharePage extends ConsumerWidget {
   const MobileSyncSharePage({super.key});
 
@@ -29,7 +31,7 @@ class MobileSyncSharePage extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () => showAddMemberDialog(context, ref),
-            icon: const Icon(Icons.person_add_outlined),
+            icon: const Icon(LucideIcons.userPlus),
           ),
         ],
       ),
@@ -42,7 +44,8 @@ class MobileSyncSharePage extends ConsumerWidget {
             data: (status) {
               if (!status.isOffline) return const SizedBox.shrink();
               return const MobileOfflineBanner(
-                message: 'Collaboration sync is offline. Changes queue locally.',
+                message:
+                    'Collaboration sync is offline. Changes queue locally.',
               );
             },
           ),
@@ -82,8 +85,7 @@ class MobileSyncSharePage extends ConsumerWidget {
                   );
                 }
                 return RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(membersProvider.notifier).reload(),
+                  onRefresh: () => ref.read(membersProvider.notifier).reload(),
                   child: ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(AppSpacing.lg),

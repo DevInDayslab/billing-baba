@@ -3,6 +3,8 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Product Description tab for mobile Add Item (online store catalog copy).
 class MobileAddItemProductDescriptionSection extends StatelessWidget {
   const MobileAddItemProductDescriptionSection({
@@ -38,7 +40,7 @@ class MobileAddItemProductDescriptionSection extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8, right: 4),
               child: Icon(
-                Icons.info_outline_rounded,
+                LucideIcons.info,
                 size: 18,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
               ),

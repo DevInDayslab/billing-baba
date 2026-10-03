@@ -2,8 +2,8 @@ import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 import { buildApp } from './app';
 import { loadAppConfig } from './config/app_config';
-import { resolveGeminiModel } from './modules/purchases/purchase-document-gemini.parser';
 import { startPaymentReconciliationWorker } from './modules/payment-gateway/payment-reconciliation.worker';
+import { resolveGeminiModel } from './modules/purchases/purchase-document-gemini.parser';
 import { startSubscriptionScheduler } from './modules/subscription/subscription.scheduler';
 import {
   auditGeminiAuthEnvironment,

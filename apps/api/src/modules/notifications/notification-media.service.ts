@@ -6,8 +6,8 @@ import type {
   GeneratedDocumentKind,
   GeneratedDocumentSourceType,
 } from '../generated-documents/generated-document.constants';
-import { GeneratedDocumentRepository } from '../generated-documents/generated-document.repository';
 import { resolveGeneratedSourceVersion } from '../generated-documents/generated-document.entity-resolver';
+import { GeneratedDocumentRepository } from '../generated-documents/generated-document.repository';
 import type { SourceVersionSnapshot } from '../generated-documents/generated-document.types';
 import { StorageService } from '../storage/storage.service';
 

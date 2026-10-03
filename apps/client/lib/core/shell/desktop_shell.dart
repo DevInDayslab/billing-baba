@@ -39,6 +39,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 /// Visual tokens for the desktop sidebar chrome.
 abstract final class _SidebarTokens {
   static const background = Color(0xFF1C2333);
+
   /// Pearl white — sidebar nav labels (Home, Parties, …).
   static const text = Color(0xFFFDFCFA);
   static const textActive = Color(0xFFFFFFFF);
@@ -254,7 +255,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       iconColor: _SidebarTokens.home,
       label: 'Home',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.partyDetails,
       icon: LucideIcons.users,
       iconColor: _SidebarTokens.parties,
@@ -285,7 +286,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (!ShellSidebarVisibility.hidePos)
       const _NavItem(
         route: AppRoutes.pos,
-        icon: LucideIcons.store,
+        icon: Icons.point_of_sale_outlined,
         iconColor: _SidebarTokens.pos,
         label: 'POS',
       ),

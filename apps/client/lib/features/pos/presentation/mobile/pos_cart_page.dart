@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
-import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_quantity_pad_sheet.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_settings_panel.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/shared/widgets/app_text_field.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
@@ -18,6 +19,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _itemsHeaderColor = Color(0xFFE8456A);
 const _customerBorderColor = Color(0xFFE8E8E8);
@@ -81,7 +84,9 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
 
   void _onCustomerNameChanged() {
     final trimmed = _customerNameController.text.trim();
-    ref.read(posCartProvider.notifier).setCustomerName(
+    ref
+        .read(posCartProvider.notifier)
+        .setCustomerName(
           trimmed.isEmpty ? null : trimmed,
         );
   }
@@ -173,7 +178,7 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
                   ),
                 ),
                 trailing: isSelected
-                    ? const Icon(Icons.check, color: AppColors.primary)
+                    ? const Icon(LucideIcons.check, color: AppColors.primary)
                     : null,
                 onTap: () {
                   setState(() {
@@ -191,11 +196,11 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
   }
 
   String _paymentModeLabel(PaymentMode mode) => switch (mode) {
-        PaymentMode.cash => 'Cash',
-        PaymentMode.upi => 'UPI',
-        PaymentMode.card => 'Card',
-        PaymentMode.bank => 'Bank',
-      };
+    PaymentMode.cash => 'Cash',
+    PaymentMode.upi => 'UPI',
+    PaymentMode.card => 'Card',
+    PaymentMode.bank => 'Bank',
+  };
 
   String _selectedPaymentLabel(PosCartState cart) {
     if (cart.payments.isEmpty) return 'None';
@@ -242,8 +247,8 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
           backgroundColor: AppColors.error,
         ),
       );
-    // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
-    // ignore: avoid_catching_errors
+      // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
+      // ignore: avoid_catching_errors
     } on StateError catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -280,8 +285,8 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
           backgroundColor: AppColors.error,
         ),
       );
-    // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
-    // ignore: avoid_catching_errors
+      // Surface Drift/query StateErrors (e.g. duplicate stock rows) in the UI.
+      // ignore: avoid_catching_errors
     } on StateError catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -320,7 +325,7 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           color: AppColors.textPrimary,
           onPressed: () => context.pop(),
         ),
@@ -333,11 +338,11 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(LucideIcons.settings),
             color: AppColors.textSecondary,
-            onPressed: () {
-              // TODO(pos): POS cart settings
-            },
+            onPressed: () => unawaited(
+              showMobileSaleSettingsPanel(context: context, ref: ref),
+            ),
           ),
         ],
       ),
@@ -571,8 +576,8 @@ class _CustomerSectionState extends State<_CustomerSection> {
     return InputDecoration(
       hintText: hint,
       hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+        color: AppColors.textSecondary,
+      ),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       border: const UnderlineInputBorder(borderSide: borderSide),
@@ -617,7 +622,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                   child: Row(
                     children: [
                       const _CustomerIconContainer(
-                        icon: Icons.person_outline,
+                        icon: LucideIcons.user,
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -652,7 +657,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                         )
                       else
                         const Icon(
-                          Icons.add,
+                          LucideIcons.plus,
                           color: AppColors.primary,
                           size: AppIconSize.md,
                         ),
@@ -673,7 +678,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _CustomerFieldRow(
-                      icon: Icons.person_outline,
+                      icon: LucideIcons.user,
                       child: TextField(
                         controller: widget.nameController,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -684,7 +689,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _CustomerFieldRow(
-                      icon: Icons.phone_outlined,
+                      icon: LucideIcons.phone,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -715,7 +720,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _CustomerFieldRow(
-                      icon: Icons.location_on_outlined,
+                      icon: LucideIcons.mapPin,
                       child: TextField(
                         controller: widget.addressController,
                         maxLines: 2,
@@ -727,7 +732,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _CustomerFieldRow(
-                      icon: Icons.business_outlined,
+                      icon: LucideIcons.building2,
                       child: TextField(
                         controller: widget.gstinController,
                         textCapitalization: TextCapitalization.characters,
@@ -759,7 +764,7 @@ class _CustomerSectionState extends State<_CustomerSection> {
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             const Icon(
-                              Icons.keyboard_arrow_up_rounded,
+                              LucideIcons.chevronUp,
                               color: AppColors.primary,
                               size: AppIconSize.md,
                             ),
@@ -1039,7 +1044,7 @@ class _QuantityStepper extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _StepperButton(icon: Icons.remove_rounded, onPressed: onDecrease),
+          _StepperButton(icon: LucideIcons.minus, onPressed: onDecrease),
           InkWell(
             onTap: onQuantityTap,
             borderRadius: BorderRadius.circular(8),
@@ -1059,7 +1064,7 @@ class _QuantityStepper extends StatelessWidget {
               ),
             ),
           ),
-          _StepperButton(icon: Icons.add_rounded, onPressed: onIncrease),
+          _StepperButton(icon: LucideIcons.plus, onPressed: onIncrease),
         ],
       ),
     );
@@ -1145,10 +1150,9 @@ class _TotalsCardState extends State<_TotalsCard> {
       _showCustomDiscountInput = true;
       final current = widget.cartState.billDiscountPercent;
       if (current > 0 && !_billDiscountChips.contains(current)) {
-        _customDiscountController.text =
-            current == current.roundToDouble()
-                ? current.toStringAsFixed(0)
-                : current.toString();
+        _customDiscountController.text = current == current.roundToDouble()
+            ? current.toStringAsFixed(0)
+            : current.toString();
       } else {
         _customDiscountController.clear();
       }
@@ -1334,7 +1338,7 @@ class _TotalsCardState extends State<_TotalsCard> {
                   ),
                   IconButton(
                     onPressed: _hideCustomInput,
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(LucideIcons.x),
                     color: AppColors.textSecondary,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -1350,7 +1354,8 @@ class _TotalsCardState extends State<_TotalsCard> {
               const SizedBox(height: AppSpacing.sm),
               _TotalRow(
                 label: 'Bill Discount',
-                value: '-${_currencyFormat.format(cartState.billDiscountAmount)}',
+                value:
+                    '-${_currencyFormat.format(cartState.billDiscountAmount)}',
                 valueColor: AppColors.error,
               ),
             ],
@@ -1398,7 +1403,7 @@ class _TotalsCardState extends State<_TotalsCard> {
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         const Icon(
-                          Icons.keyboard_arrow_down,
+                          LucideIcons.chevronDown,
                           color: AppColors.textSecondary,
                           size: AppIconSize.md,
                         ),
@@ -1450,8 +1455,7 @@ class _TotalsCardState extends State<_TotalsCard> {
               color: Colors.transparent,
               child: CheckboxListTile(
                 value: widget.isFullyPaid,
-                onChanged: (value) =>
-                    widget.onFullyPaidChanged(value ?? false),
+                onChanged: (value) => widget.onFullyPaidChanged(value ?? false),
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 activeColor: AppColors.primary,
@@ -1621,7 +1625,7 @@ class _PaymentModeCard extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.payments_outlined,
+                    LucideIcons.banknote,
                     color: AppColors.textSecondary,
                     size: AppIconSize.md,
                   ),
@@ -1643,9 +1647,7 @@ class _PaymentModeCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Icon(
-                    expanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
+                    expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                     color: AppColors.textSecondary,
                   ),
                 ],
@@ -1765,7 +1767,7 @@ class _NotesCard extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.notes_outlined,
+                    LucideIcons.stickyNote,
                     color: AppColors.textSecondary,
                     size: AppIconSize.md,
                   ),
@@ -1779,7 +1781,7 @@ class _NotesCard extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    expanded ? Icons.remove : Icons.add,
+                    expanded ? LucideIcons.minus : LucideIcons.plus,
                     color: AppColors.textSecondary,
                   ),
                 ],
@@ -1917,8 +1919,8 @@ class _DashedDivider extends StatelessWidget {
       builder: (context, constraints) {
         const dashWidth = 4.0;
         const dashSpace = 4.0;
-        final dashCount =
-            (constraints.maxWidth / (dashWidth + dashSpace)).floor();
+        final dashCount = (constraints.maxWidth / (dashWidth + dashSpace))
+            .floor();
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

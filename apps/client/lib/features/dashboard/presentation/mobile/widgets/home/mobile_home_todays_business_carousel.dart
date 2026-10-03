@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Manual-swipe carousel: Total Sales · Total Purchase · Total Profit.
 class MobileHomeTodaysBusinessCarousel extends ConsumerStatefulWidget {
   const MobileHomeTodaysBusinessCarousel({super.key});
@@ -172,19 +174,19 @@ class _CarouselContent extends StatelessWidget {
         title: 'Total Sales',
         amount: dashboard.sales.totalAmount,
         trendPoints: dashboard.sales.trendPoints,
-        icon: Icons.bar_chart_rounded,
+        icon: LucideIcons.chartColumn,
       ),
       _CarouselPageData(
         title: 'Total Purchase',
         amount: dashboard.purchases.totalAmount,
         trendPoints: dashboard.purchases.trendPoints,
-        icon: Icons.shopping_bag_outlined,
+        icon: LucideIcons.shoppingBag,
       ),
       _CarouselPageData(
         title: 'Total Profit',
         amount: _profit,
         trendPoints: profitTrend,
-        icon: Icons.trending_up_rounded,
+        icon: LucideIcons.trendingUp,
       ),
     ];
 
@@ -249,7 +251,7 @@ class _CarouselContent extends StatelessWidget {
                             ),
                           ),
                           Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            LucideIcons.chevronDown,
                             size: 16,
                             color: AppColors.textSecondary.withValues(
                               alpha: 0.7,

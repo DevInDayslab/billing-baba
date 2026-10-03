@@ -33,7 +33,10 @@ const envSchema = z.object({
     z.string().min(1).optional(),
   ),
   MSG91_AUTH_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
-  GSTVERIFY_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GSTVERIFY_API_KEY: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
   RAZORPAY_KEY_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   RAZORPAY_KEY_SECRET: z.preprocess(
     emptyToUndefined,
@@ -118,6 +121,11 @@ const envSchema = z.object({
     emptyToUndefined,
     z.string().url('S3_PUBLIC_BASE_URL must be a valid URL').optional(),
   ),
+  /** Publicly reachable S3 endpoint used when signing client upload/download URLs. */
+  S3_PUBLIC_ENDPOINT: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
   STORAGE_MAX_FILE_BYTES: z.preprocess((value) => {
     if (value === '' || value === undefined) return 10_485_760;
     return Number(value);
@@ -169,6 +177,8 @@ export type AppConfig = {
   s3ForcePathStyle: boolean;
   s3Ssl: boolean;
   s3PublicBaseUrl?: string;
+  /** When set, presigned PUT/GET URLs use this host (clients cannot reach VPC-only S3_ENDPOINT). */
+  s3PublicEndpoint?: string;
   storageMaxFileBytes: number;
   storageUploadUrlTtlSeconds: number;
   storageDownloadUrlTtlSeconds: number;
@@ -281,6 +291,7 @@ export function loadAppConfig(): AppConfig {
     s3ForcePathStyle: env.S3_FORCE_PATH_STYLE,
     s3Ssl: env.S3_SSL,
     s3PublicBaseUrl: env.S3_PUBLIC_BASE_URL,
+    s3PublicEndpoint: env.S3_PUBLIC_ENDPOINT,
     storageMaxFileBytes: env.STORAGE_MAX_FILE_BYTES,
     storageUploadUrlTtlSeconds: env.STORAGE_UPLOAD_URL_TTL_SECONDS,
     storageDownloadUrlTtlSeconds: env.STORAGE_DOWNLOAD_URL_TTL_SECONDS,

@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 final _currencyFormat = NumberFormat.currency(
   locale: 'en_IN',
   symbol: '₹',
@@ -128,8 +130,7 @@ class PosItemCard extends ConsumerWidget {
                               context,
                               itemName: item.name,
                               initialQuantity: cartQty,
-                              maxQuantity:
-                                  item.stock > 0 ? item.stock : null,
+                              maxQuantity: item.stock > 0 ? item.stock : null,
                             );
                             if (qty == null || !context.mounted) return;
                             cart.updateQuantity(item.id, qty);
@@ -161,7 +162,7 @@ class _ItemImage extends StatelessWidget {
       return ColoredBox(
         color: AppColors.primary.withValues(alpha: 0.08),
         child: Icon(
-          Icons.inventory_2_outlined,
+          LucideIcons.package,
           color: AppColors.primary.withValues(alpha: 0.6),
           size: AppIconSize.xl,
         ),
@@ -195,7 +196,7 @@ class _CircleAddButton extends StatelessWidget {
           width: 32,
           height: 32,
           child: Icon(
-            Icons.add_rounded,
+            LucideIcons.plus,
             color: AppColors.primary,
             size: AppIconSize.md,
           ),
@@ -233,7 +234,7 @@ class _QuantityStepper extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _StepperButton(
-            icon: Icons.remove_rounded,
+            icon: LucideIcons.minus,
             onPressed: onDecrease,
           ),
           InkWell(
@@ -256,7 +257,7 @@ class _QuantityStepper extends StatelessWidget {
             ),
           ),
           _StepperButton(
-            icon: Icons.add_rounded,
+            icon: LucideIcons.plus,
             onPressed: onIncrease,
           ),
         ],

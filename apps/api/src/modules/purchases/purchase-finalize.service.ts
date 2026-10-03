@@ -12,8 +12,8 @@ import {
 import type { PurchaseDocumentRepository } from './purchase-document.repository';
 import type { PurchaseDocumentType } from './purchase-document.types';
 import {
-  recordPurchaseFinalizePayment,
   type FinalizePurchasePaymentInput,
+  recordPurchaseFinalizePayment,
 } from './purchase-finalize-payment.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];

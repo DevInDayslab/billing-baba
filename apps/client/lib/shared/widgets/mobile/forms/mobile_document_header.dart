@@ -3,6 +3,8 @@ import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_s
 import 'package:billing_baba/shared/widgets/mobile/forms/mobile_document_visibility.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Header row(s): document number, date, time, optional due/terms/godown/etc.
 class MobileDocumentHeader extends StatelessWidget {
   const MobileDocumentHeader({
@@ -120,7 +122,7 @@ class MobileDocumentHeader extends StatelessWidget {
                     label: 'Due On',
                     value: dueDateValue ?? 'Select date',
                     isPlaceholder: dueDateIsPlaceholder,
-                    trailingIcon: Icons.calendar_today_outlined,
+                    trailingIcon: LucideIcons.calendar,
                     onTap: onDueDateTap ?? () {},
                   ),
                 ),

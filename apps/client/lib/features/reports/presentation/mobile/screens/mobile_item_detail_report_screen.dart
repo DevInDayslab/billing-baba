@@ -19,6 +19,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style mobile item detail stock movement report.
 class MobileItemDetailReportScreen extends ConsumerStatefulWidget {
   const MobileItemDetailReportScreen({super.key});
@@ -58,7 +60,8 @@ class _MobileItemDetailReportScreenState
     final itemId = ref.read(reportFiltersProvider).itemId;
     if (itemId == null) return;
     final items =
-        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
+        ref.read(inventoryItemsProvider).value?.items ??
+        const <InventoryItem>[];
     final item = items.where((entry) => entry.id == itemId).firstOrNull;
     if (item != null) {
       _itemSearchController.text = item.name;
@@ -107,7 +110,8 @@ class _MobileItemDetailReportScreenState
 
   Future<void> _openItemPicker() async {
     final items =
-        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
+        ref.read(inventoryItemsProvider).value?.items ??
+        const <InventoryItem>[];
     if (items.isEmpty) return;
 
     final selected = await showModalBottomSheet<InventoryItem>(
@@ -208,7 +212,7 @@ class _MobileItemDetailReportScreenState
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: const Text(
@@ -263,8 +267,10 @@ class _MobileItemDetailReportScreenState
                             ),
                           ),
                           Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                            LucideIcons.chevronDown,
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                         ],
                       ),
@@ -289,7 +295,7 @@ class _MobileItemDetailReportScreenState
                       child: Row(
                         children: [
                           const Icon(
-                            Icons.calendar_today_outlined,
+                            LucideIcons.calendar,
                             size: 16,
                             color: AppColors.primary,
                           ),
@@ -380,7 +386,7 @@ class _MobileItemDetailReportScreenState
                   : const MobileEmptyState(
                       title: 'Select an item',
                       message: 'Choose an item to view daily stock movement.',
-                      icon: Icons.inventory_2_outlined,
+                      icon: LucideIcons.package,
                     ),
               error: (error, _) => AppError(
                 message: error.toString(),
@@ -392,14 +398,14 @@ class _MobileItemDetailReportScreenState
                   return const MobileEmptyState(
                     title: 'Select an item',
                     message: 'Choose an item to view daily stock movement.',
-                    icon: Icons.inventory_2_outlined,
+                    icon: LucideIcons.package,
                   );
                 }
                 if (displayRows.isEmpty) {
                   return const MobileEmptyState(
                     title: 'No data',
                     message: 'No movement for the selected period.',
-                    icon: Icons.assessment_outlined,
+                    icon: LucideIcons.chartBar,
                   );
                 }
                 return ListView.separated(
@@ -486,7 +492,11 @@ class _TableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text('Purchase qty', style: style, textAlign: TextAlign.right),
+            child: Text(
+              'Purchase qty',
+              style: style,
+              textAlign: TextAlign.right,
+            ),
           ),
           Expanded(
             flex: 2,
@@ -494,7 +504,11 @@ class _TableHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 2,
-            child: Text('Closing qty', style: style, textAlign: TextAlign.right),
+            child: Text(
+              'Closing qty',
+              style: style,
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),
@@ -591,8 +605,8 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
     final filtered = query.isEmpty
         ? widget.items
         : widget.items
-            .where((item) => item.name.toLowerCase().contains(query))
-            .toList();
+              .where((item) => item.name.toLowerCase().contains(query))
+              .toList();
 
     return SafeArea(
       child: Padding(
@@ -612,7 +626,7 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
               controller: _searchController,
               decoration: const InputDecoration(
                 hintText: 'Search item',
-                prefixIcon: Icon(Icons.search, size: 20),
+                prefixIcon: Icon(LucideIcons.search, size: 20),
                 isDense: true,
               ),
               onChanged: (value) => setState(() => _query = value),

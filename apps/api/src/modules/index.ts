@@ -11,6 +11,7 @@ import {
   generatedDocumentsModule,
   publicGeneratedDocumentsModule,
 } from './generated-documents';
+import { gstinModule } from './gstin';
 import { createHealthModule } from './health';
 import { hiddenLedgerModule } from './hidden-ledger';
 import { inventoryModule } from './inventory';
@@ -21,16 +22,15 @@ import {
 import { jobWorkModule } from './job-work';
 import { createNotificationsModule } from './notifications/notifications.routes';
 import { partiesModule } from './parties';
+import { createPaymentGatewayModule } from './payment-gateway';
 import { purchasesModule } from './purchases';
 import { reportsModule } from './reports';
-import { createPaymentGatewayModule } from './payment-gateway';
 import { createSalesModule } from './sales';
 import { settingsModule } from './settings';
 import { createStorageModule } from './storage';
 import { createSubscriptionModule } from './subscription';
-import { createTodoRoutes } from './todos/todo.routes';
 import { syncModule } from './sync';
-import { gstinModule } from './gstin';
+import { createTodoRoutes } from './todos/todo.routes';
 
 export async function registerModules(
   app: FastifyInstance,

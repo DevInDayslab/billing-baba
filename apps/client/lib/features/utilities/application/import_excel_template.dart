@@ -11,8 +11,9 @@ Uint8List? buildImportItemsSampleTemplateBytes() {
   excel.delete('Sheet1');
 
   for (var i = 0; i < ImportItemsExcelParser.templateHeaders.length; i++) {
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0)).value =
-        TextCellValue(
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+        .value = TextCellValue(
       ImportItemsExcelParser.templateHeaders[i],
     );
   }

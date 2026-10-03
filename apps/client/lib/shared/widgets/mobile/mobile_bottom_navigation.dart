@@ -88,7 +88,9 @@ class MobileBottomNavigation extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  border: const Border(top: BorderSide(color: AppColors.divider)),
+                  border: const Border(
+                    top: BorderSide(color: AppColors.divider),
+                  ),
                   boxShadow: AppShadows.navBar,
                 ),
                 child: Padding(

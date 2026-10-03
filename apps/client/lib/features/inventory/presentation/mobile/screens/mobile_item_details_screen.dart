@@ -27,6 +27,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile item ledger screen — pricing, stock metrics, and history/transactions.
 class MobileItemDetailsScreen extends ConsumerStatefulWidget {
   const MobileItemDetailsScreen({
@@ -64,10 +66,11 @@ class _MobileItemDetailsScreenState
   }
 
   InventoryItem? _resolveDisplayItem() {
-    final listItem = (ref.watch(inventoryItemsProvider).value?.items ??
-            const <InventoryItem>[])
-        .where((entry) => entry.id == widget.itemId)
-        .firstOrNull;
+    final listItem =
+        (ref.watch(inventoryItemsProvider).value?.items ??
+                const <InventoryItem>[])
+            .where((entry) => entry.id == widget.itemId)
+            .firstOrNull;
     final detailAsync = ref.watch(productDetailProvider(widget.itemId));
     final fallback = widget.fallbackItem ?? listItem ?? detailAsync.value;
     if (fallback == null) return null;
@@ -125,13 +128,12 @@ class _MobileItemDetailsScreenState
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => AppError(
             message: InventoryErrorMapper.messageFor(error),
-            onRetry: () =>
-                ref.invalidate(productDetailProvider(widget.itemId)),
+            onRetry: () => ref.invalidate(productDetailProvider(widget.itemId)),
           ),
           data: (_) => const MobileEmptyState(
             title: 'Item not found',
             message: 'This item may have been deleted or is unavailable.',
-            icon: Icons.inventory_2_outlined,
+            icon: LucideIcons.package,
           ),
         ),
       );
@@ -148,13 +150,16 @@ class _MobileItemDetailsScreenState
         : null;
     final contextData = ref.watch(productDetailContextProvider(widget.itemId));
     final unitLabel = displayItem.baseUnitShortName ?? 'pcs';
-    final transactionsAsync =
-        ref.watch(productTransactionsProvider(widget.itemId));
-    final paginated =
-        ref.watch(paginatedProductTransactionsProvider(widget.itemId));
+    final transactionsAsync = ref.watch(
+      productTransactionsProvider(widget.itemId),
+    );
+    final paginated = ref.watch(
+      paginatedProductTransactionsProvider(widget.itemId),
+    );
     final stockAfter = ref.watch(productStockAfterProvider(widget.itemId));
-    final hasSearch =
-        ref.watch(productTransactionSearchQueryProvider).isNotEmpty;
+    final hasSearch = ref
+        .watch(productTransactionSearchQueryProvider)
+        .isNotEmpty;
     final sectionTitle = isProduct ? 'Stock History' : 'Transactions';
 
     final permissions = ref.watch(permissionServiceProvider);
@@ -172,13 +177,13 @@ class _MobileItemDetailsScreenState
         actions: [
           if (canEdit)
             MobileIconActionButton(
-              icon: Icons.edit_outlined,
+              icon: LucideIcons.pencil,
               tooltip: 'Edit item',
               onPressed: () => unawaited(_editItem(displayItem)),
             ),
           if (canDelete)
             MobileIconActionButton(
-              icon: Icons.delete_outline_rounded,
+              icon: LucideIcons.trash2,
               tooltip: 'Delete item',
               onPressed: () => unawaited(_deleteItem(displayItem)),
             ),
@@ -279,7 +284,7 @@ class _MobileItemDetailsScreenState
                           : isProduct
                           ? 'No stock history yet'
                           : 'No transactions yet',
-                      icon: Icons.history_rounded,
+                      icon: LucideIcons.history,
                     ),
                   );
                 }
@@ -355,7 +360,7 @@ class _PaginationBar extends ConsumerWidget {
         IconButton(
           tooltip: 'Previous page',
           onPressed: canGoBack ? () => notifier.setPage(currentPage - 1) : null,
-          icon: const Icon(Icons.chevron_left_rounded),
+          icon: const Icon(LucideIcons.chevronLeft),
         ),
         Text(
           'Page ${currentPage + 1} of $totalPages',
@@ -365,9 +370,8 @@ class _PaginationBar extends ConsumerWidget {
         ),
         IconButton(
           tooltip: 'Next page',
-          onPressed:
-              canGoNext ? () => notifier.setPage(currentPage + 1) : null,
-          icon: const Icon(Icons.chevron_right_rounded),
+          onPressed: canGoNext ? () => notifier.setPage(currentPage + 1) : null,
+          icon: const Icon(LucideIcons.chevronRight),
         ),
       ],
     );

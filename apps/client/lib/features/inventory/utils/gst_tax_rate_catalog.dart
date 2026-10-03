@@ -60,18 +60,17 @@ abstract final class GstTaxRateCatalog {
     title: 'Exempt',
   );
 
-  static List<GstTaxRateOption> get standardSlabs =>
-      GstTaxSlabs.definitions()
-          .map(
-            (slab) => GstTaxRateOption(
-              value: slab.itemFormLabel,
-              title: slab.itemFormLabel,
-              percent: slab.percent,
-              badgeBackground: slab.badgeBackground,
-              badgeForeground: slab.badgeForeground,
-            ),
-          )
-          .toList();
+  static List<GstTaxRateOption> get standardSlabs => GstTaxSlabs.definitions()
+      .map(
+        (slab) => GstTaxRateOption(
+          value: slab.itemFormLabel,
+          title: slab.itemFormLabel,
+          percent: slab.percent,
+          badgeBackground: slab.badgeBackground,
+          badgeForeground: slab.badgeForeground,
+        ),
+      )
+      .toList();
 
   /// GST-only slabs not shown as IGST/GST pairs (e.g. 1.5%).
   static List<GstTaxRateOption> get gstOnlySlabs {

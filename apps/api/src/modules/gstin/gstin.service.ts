@@ -8,8 +8,8 @@ import {
 } from '../../shared/utils/gstin-validator';
 import type { GstinVerificationResponseDto } from './gstin.dto';
 import {
-  GstVerifyProvider,
   type GstinVerificationProvider,
+  GstVerifyProvider,
 } from './gstverify.provider';
 
 export class GstinService {
@@ -25,12 +25,9 @@ export class GstinService {
     const normalized = normalize(gstin);
     const error = validationError(gstin);
     if (!isValid(gstin)) {
-      throw new AppError(
-        'VALIDATION_ERROR',
-        error ?? 'Invalid GSTIN',
-        400,
-        { gstin: [error ?? 'Invalid GSTIN'] },
-      );
+      throw new AppError('VALIDATION_ERROR', error ?? 'Invalid GSTIN', 400, {
+        gstin: [error ?? 'Invalid GSTIN'],
+      });
     }
 
     const apiKey = this.config.gstverifyApiKey?.trim() ?? '';

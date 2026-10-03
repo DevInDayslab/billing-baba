@@ -161,7 +161,7 @@ final class FilteredJobWorkOrdersProvider
 }
 
 String _$filteredJobWorkOrdersHash() =>
-    r'cfc0a8376cada441c45a1bcf5a0d2dcca746b1d8';
+    r'bf0b637218b1e9bd2dca9ab8622971c11d14f374';
 
 @ProviderFor(JobWorkOrdersList)
 final jobWorkOrdersListProvider = JobWorkOrdersListProvider._();
@@ -187,7 +187,7 @@ final class JobWorkOrdersListProvider
   JobWorkOrdersList create() => JobWorkOrdersList();
 }
 
-String _$jobWorkOrdersListHash() => r'b71be0e80e31541f4474849f4736d09cd3fbffb9';
+String _$jobWorkOrdersListHash() => r'1034a8913493c3dbbb6a58a954050c648af862fb';
 
 abstract class _$JobWorkOrdersList
     extends $AsyncNotifier<PaginatedJobWorkOrders> {

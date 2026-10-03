@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { AppError } from '../../../src/shared/errors/app-error';
 import { assertCollaborationAction } from '../../../src/modules/collaboration/collaboration.permissions';
+import { AppError } from '../../../src/shared/errors/app-error';
 
 describe('collaboration permissions', () => {
   test('allows owners for member management actions', () => {

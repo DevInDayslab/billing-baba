@@ -2,25 +2,28 @@ import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { ImageVariantRepository } from '../images/image.repository';
+import { toStorageAsset } from '../storage/storage.mapper';
+import { MediaAssetRepository } from '../storage/storage.repository';
+import type { StorageService } from '../storage/storage.service';
+import type {
+  MediaAssetRow,
+  ProcessingStatus,
+  StorageAsset,
+} from '../storage/storage.types';
 import type { ImageVariant } from './image/image.constants';
 import { buildProcessedImagePath } from './image/image-path.builder';
+import {
+  IMAGE_POLICIES,
+  type ImagePolicyKey,
+  resolveImagePolicy,
+  shouldProcessAsset,
+} from './media-processing.constants';
 import {
   globalMediaProcessingMetrics,
   type MediaProcessingMetrics,
 } from './media-processing.metrics';
-import {
-  IMAGE_POLICIES,
-  resolveImagePolicy,
-  shouldProcessAsset,
-  type ImagePolicyKey,
-} from './media-processing.constants';
 import type { ProcessedVariantOutput } from './media-processing.types';
-import type { ProcessingStatus } from '../storage/storage.types';
 import { ImageMediaProcessor } from './processors/image.processor';
-import type { StorageService } from '../storage/storage.service';
-import type { MediaAssetRow, StorageAsset } from '../storage/storage.types';
-import { toStorageAsset } from '../storage/storage.mapper';
-import { MediaAssetRepository } from '../storage/storage.repository';
 
 export type MediaProcessingServiceDeps = {
   config: AppConfig;

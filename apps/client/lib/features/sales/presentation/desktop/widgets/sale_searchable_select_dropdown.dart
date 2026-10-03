@@ -107,10 +107,10 @@ class _SaleSearchableSelectDropdownState
                   width: double.infinity,
                   height: height,
                   decoration: BoxDecoration(
-                      color: const Color(0xFFF4F4F5),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFFE4E4E7)),
-                    ),
+                    color: const Color(0xFFF4F4F5),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFFE4E4E7)),
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: Row(
                     children: [
@@ -238,9 +238,7 @@ class _SaleSearchableSelectDropdownState
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.textPrimary,
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

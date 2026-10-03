@@ -585,12 +585,10 @@ class _BusinessSearchableDropdownControlState
   List<String> _filteredOptions(String query) {
     if (query.isEmpty) return _effectiveItems;
     final normalized = query.toLowerCase();
-    return _effectiveItems
-        .where((option) {
-          return option.toLowerCase().contains(normalized) ||
-              _labelFor(option).toLowerCase().contains(normalized);
-        })
-        .toList();
+    return _effectiveItems.where((option) {
+      return option.toLowerCase().contains(normalized) ||
+          _labelFor(option).toLowerCase().contains(normalized);
+    }).toList();
   }
 
   void _selectOption(String option) {

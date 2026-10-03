@@ -3,6 +3,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Category option shown in the stock summary filter sheet.
 class StockSummaryCategoryOption {
   const StockSummaryCategoryOption({
@@ -40,16 +42,17 @@ Future<StockSummaryMobileFilters?> showStockSummaryFilterSheet({
                 Expanded(
                   child: Text(
                     'Filters',
-                    style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: Theme.of(sheetContext).textTheme.titleMedium
+                        ?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
                   ),
                 ),
                 IconButton(
                   tooltip: 'Close',
                   onPressed: () => Navigator.of(sheetContext).pop(),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(LucideIcons.x),
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -164,22 +167,24 @@ class _StockSummaryFilterBodyState extends State<_StockSummaryFilterBody> {
           });
         },
       ),
-      StockSummaryFilterSection.stock => _RadioOptionList<StockSummaryStockFilter>(
-        options: [
-          for (final option in StockSummaryStockFilter.values)
-            _RadioOption(value: option, label: option.label),
-        ],
-        selected: _stock,
-        onSelected: (value) => setState(() => _stock = value),
-      ),
-      StockSummaryFilterSection.status => _RadioOptionList<StockSummaryStatusFilter>(
-        options: [
-          for (final option in StockSummaryStatusFilter.values)
-            _RadioOption(value: option, label: option.label),
-        ],
-        selected: _status,
-        onSelected: (value) => setState(() => _status = value),
-      ),
+      StockSummaryFilterSection.stock =>
+        _RadioOptionList<StockSummaryStockFilter>(
+          options: [
+            for (final option in StockSummaryStockFilter.values)
+              _RadioOption(value: option, label: option.label),
+          ],
+          selected: _stock,
+          onSelected: (value) => setState(() => _stock = value),
+        ),
+      StockSummaryFilterSection.status =>
+        _RadioOptionList<StockSummaryStatusFilter>(
+          options: [
+            for (final option in StockSummaryStatusFilter.values)
+              _RadioOption(value: option, label: option.label),
+          ],
+          selected: _status,
+          onSelected: (value) => setState(() => _status = value),
+        ),
     };
   }
 }
@@ -269,7 +274,8 @@ class _RadioOptionList<T> extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       itemCount: options.length,
-      separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFE8EAED)),
+      separatorBuilder: (_, _) =>
+          const Divider(height: 1, color: Color(0xFFE8EAED)),
       itemBuilder: (context, index) {
         final option = options[index];
         final isSelected = option.value == selected;
@@ -284,15 +290,15 @@ class _RadioOptionList<T> extends StatelessWidget {
                   child: Text(
                     option.label,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                       color: AppColors.textPrimary,
                     ),
                   ),
                 ),
                 Icon(
-                  isSelected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_off_rounded,
+                  isSelected ? LucideIcons.circleDot : LucideIcons.circle,
                   color: isSelected
                       ? AppColors.primary
                       : AppColors.textSecondary.withValues(alpha: 0.5),

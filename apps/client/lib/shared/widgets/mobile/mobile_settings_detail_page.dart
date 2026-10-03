@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Reusable mobile scaffold for a single global settings detail screen.
 ///
 /// Wrap any settings form or read-only content in [body]. Use [onSave] with
@@ -102,7 +104,7 @@ class MobileSettingsDetailPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.error_outline_rounded,
+                LucideIcons.circleAlert,
                 size: 40,
                 color: AppColors.error,
               ),

@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/models/otp_phase.dart';
+import 'package:billing_baba/features/auth/presentation/mobile/widgets/mobile_auth_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mobile OTP verification — full-bleed, scroll-safe, no fixed-width overflow.
 class MobileVerifyOtpPage extends ConsumerStatefulWidget {
@@ -206,213 +209,171 @@ class _MobileVerifyOtpPageState extends ConsumerState<MobileVerifyOtpPage> {
       value: AppTheme.lightSystemUi,
       child: Scaffold(
         backgroundColor: AppColors.surface,
-        body: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFEAF2FB),
-                AppColors.surface,
-                AppColors.surface,
-              ],
-              stops: [0, 0.38, 1],
-            ),
-          ),
-          child: SafeArea(
-            child: AnimatedPadding(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              padding: EdgeInsets.only(bottom: bottomInset > 0 ? 8 : 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      onPressed: auth.isOtpBusy ? null : _goBackToLogin,
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      tooltip: 'Back',
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            const MobileAuthBackdrop(),
+            SafeArea(
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.only(bottom: bottomInset > 0 ? 8 : 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
                       padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.xl,
                         AppSpacing.sm,
+                        AppSpacing.xs,
                         AppSpacing.xl,
-                        AppSpacing.lg,
+                        0,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const _BrandHeader(),
-                          const SizedBox(height: AppSpacing.xxl),
-                          Text(
-                            'Verify number',
-                            style: AppTypography.inter(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              height: 1.2,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text.rich(
-                            TextSpan(
-                              style: AppTypography.inter(
-                                fontSize: AppTypography.bodySize,
-                                color: AppColors.textSecondary,
-                                height: 1.45,
-                              ),
-                              children: [
-                                const TextSpan(
-                                  text: 'Enter the 6-digit code sent to ',
-                                ),
-                                TextSpan(
-                                  text: '+91 ${auth.phone}',
-                                  style: AppTypography.inter(
-                                    fontSize: AppTypography.bodySize,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (!isBackendLoginFailed) ...[
-                            const SizedBox(height: AppSpacing.sm),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton(
-                                onPressed:
-                                    auth.isOtpBusy ? null : _goBackToLogin,
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  'Change number',
-                                  style: AppTypography.inter(
-                                    fontSize: AppTypography.bodySize,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: AppSpacing.xl),
-                          _OtpDigitRow(
-                            length: _otpLength,
-                            controllers: _controllers,
-                            focusNodes: _focusNodes,
-                            enabled: inputsEnabled,
-                            onChanged: _onDigitChanged,
-                          ),
-                          if (auth.error != null) ...[
-                            const SizedBox(height: AppSpacing.md),
-                            Text(
-                              auth.error!,
-                              textAlign: TextAlign.center,
-                              style: AppTypography.inter(
-                                fontSize: AppTypography.bodySize,
-                                color: AppColors.error,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: AppSpacing.xl),
-                          _PrimaryActions(
-                            isBackendLoginFailed: isBackendLoginFailed,
-                            isSigningIn: isSigningIn,
-                            isVerifyingOtp: isVerifyingOtp,
-                            canVerify: canVerify,
-                            isOtpBusy: auth.isOtpBusy,
-                            canRetry: auth.canRetryBackendLogin,
-                            onBack: _goBackToLogin,
-                            onRetry: _retryBackendLogin,
-                            onVerify: _verify,
-                          ),
-                          if (auth.showResend) ...[
-                            const SizedBox(height: AppSpacing.lg),
-                            _ResendSection(
-                              isResending: isResending,
-                              secondsLeft: resendSecondsLeft,
-                              canResend: auth.canResendOtp,
-                              onResend: _resend,
-                            ),
-                          ],
-                          const SizedBox(height: AppSpacing.xxl),
-                          Text(
-                            'Secure verification',
-                            textAlign: TextAlign.center,
-                            style: AppTypography.inter(
-                              fontSize: AppTypography.captionSize,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                        ],
+                      child: MobileAuthBackButton(
+                        enabled: !auth.isOtpBusy,
+                        onPressed: _goBackToLogin,
                       ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.xl,
+                          0,
+                          AppSpacing.xl,
+                          AppSpacing.lg,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const MobileAuthBrandHero(
+                              showFeaturePills: false,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            MobileAuthGlassCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    'Verify number',
+                                    style: AppTypography.inter(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                      height: 1.2,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text.rich(
+                                    TextSpan(
+                                      style: AppTypography.inter(
+                                        fontSize: AppTypography.bodySize,
+                                        color: AppColors.textSecondary,
+                                        height: 1.45,
+                                      ),
+                                      children: [
+                                        const TextSpan(
+                                          text:
+                                              'Enter the 6-digit code sent to ',
+                                        ),
+                                        TextSpan(
+                                          text: '+91 ${auth.phone}',
+                                          style: AppTypography.inter(
+                                            fontSize: AppTypography.bodySize,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (!isBackendLoginFailed) ...[
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: TextButton(
+                                        onPressed: auth.isOtpBusy
+                                            ? null
+                                            : _goBackToLogin,
+                                        style: TextButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          minimumSize: Size.zero,
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        child: Text(
+                                          'Change number',
+                                          style: AppTypography.inter(
+                                            fontSize: AppTypography.bodySize,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _OtpDigitRow(
+                                    length: _otpLength,
+                                    controllers: _controllers,
+                                    focusNodes: _focusNodes,
+                                    enabled: inputsEnabled,
+                                    onChanged: _onDigitChanged,
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  const MobileAuthShieldHint(
+                                    message: 'Never share your OTP with anyone',
+                                  ),
+                                  if (auth.error != null) ...[
+                                    const SizedBox(
+                                      height: AppSpacing.md,
+                                    ),
+                                    Text(
+                                      auth.error!,
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.inter(
+                                        fontSize: AppTypography.bodySize,
+                                        color: AppColors.error,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _PrimaryActions(
+                                    isBackendLoginFailed: isBackendLoginFailed,
+                                    isSigningIn: isSigningIn,
+                                    isVerifyingOtp: isVerifyingOtp,
+                                    canVerify: canVerify,
+                                    isOtpBusy: auth.isOtpBusy,
+                                    canRetry: auth.canRetryBackendLogin,
+                                    onBack: _goBackToLogin,
+                                    onRetry: _retryBackendLogin,
+                                    onVerify: _verify,
+                                  ),
+                                  if (auth.showResend) ...[
+                                    const SizedBox(height: AppSpacing.lg),
+                                    _ResendSection(
+                                      isResending: isResending,
+                                      secondsLeft: resendSecondsLeft,
+                                      canResend: auth.canResendOtp,
+                                      onResend: _resend,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _BrandHeader extends StatelessWidget {
-  const _BrandHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Image.asset(
-          'assets/images/logo.png',
-          width: 40,
-          height: 40,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Flexible(
-          child: RichText(
-            overflow: TextOverflow.ellipsis,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Billing',
-                  style: AppTypography.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                TextSpan(
-                  text: ' Baba',
-                  style: AppTypography.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -471,25 +432,31 @@ class _OtpDigitRow extends StatelessWidget {
                       counterText: '',
                       contentPadding: EdgeInsets.zero,
                       filled: true,
-                      fillColor: AppColors.surface,
+                      fillColor: AppColors.background,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: AppColors.chipBorder,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: AppColors.chipBorder,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         borderSide: const BorderSide(
                           color: AppColors.primary,
                           width: 1.5,
                         ),
                       ),
                       disabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: AppColors.chipBorder,
+                        ),
                       ),
                     ),
                     onChanged: (value) => onChanged(i, value),
@@ -563,8 +530,9 @@ class _PrimaryActions extends StatelessWidget {
                 onPressed: canRetry && !isOtpBusy ? onRetry : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  disabledBackgroundColor:
-                      AppColors.primary.withValues(alpha: 0.45),
+                  disabledBackgroundColor: AppColors.primary.withValues(
+                    alpha: 0.45,
+                  ),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -592,65 +560,11 @@ class _PrimaryActions extends StatelessWidget {
         : (isVerifyingOtp ? 'Verifying...' : 'Verify OTP');
     final showSpinner = isSigningIn || isVerifyingOtp;
 
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: FilledButton(
-        onPressed: canVerify ? onVerify : null,
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        child: showSpinner
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Flexible(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(Icons.arrow_forward_rounded, size: 20),
-                ],
-              ),
-      ),
+    return MobileAuthGradientButton(
+      label: label,
+      enabled: canVerify,
+      loading: showSpinner,
+      onPressed: onVerify,
     );
   }
 }

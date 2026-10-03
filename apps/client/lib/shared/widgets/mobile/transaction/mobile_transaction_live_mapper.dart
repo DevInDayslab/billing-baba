@@ -14,6 +14,8 @@ import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transactio
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Maps desktop/live domain models into [MobileTransactionListItem] rows.
 abstract final class MobileTransactionLiveMapper {
   static final _currency = NumberFormat.currency(
@@ -29,7 +31,7 @@ abstract final class MobileTransactionLiveMapper {
 
   static MobileTransactionListItem fromSaleInvoice(
     SaleInvoiceModel invoice, {
-    IconData leadingIcon = Icons.receipt_long_outlined,
+    IconData leadingIcon = LucideIcons.receipt,
     bool useSaleOrderStatus = false,
   }) {
     final (statusLabel, statusColor) = useSaleOrderStatus
@@ -64,7 +66,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(payment.receivedAmount),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.payments_outlined,
+      leadingIcon: LucideIcons.banknote,
       sortAmount: payment.receivedAmount,
       sortDate: payment.date,
       sortTitle: payment.receiptNo,
@@ -86,7 +88,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(order.grandTotal),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.precision_manufacturing_outlined,
+      leadingIcon: LucideIcons.factory,
       sortAmount: order.grandTotal,
       sortDate: date,
       sortTitle: order.jobId,
@@ -103,7 +105,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(record.amount),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.account_balance_outlined,
+      leadingIcon: LucideIcons.landmark,
       sortAmount: record.amount,
       sortDate: record.date,
       sortTitle: record.invoiceNo,
@@ -120,7 +122,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(bill.amount),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.shopping_cart_outlined,
+      leadingIcon: LucideIcons.shoppingCart,
       sortAmount: bill.amount,
       sortDate: bill.date,
       sortTitle: bill.invoiceNo,
@@ -141,14 +143,16 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(payment.paidAmount),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.payments_outlined,
+      leadingIcon: LucideIcons.banknote,
       sortAmount: payment.paidAmount,
       sortDate: payment.date,
       sortTitle: payment.receiptNo,
     );
   }
 
-  static MobileTransactionListItem fromExpense(ExpenseTransactionModel expense) {
+  static MobileTransactionListItem fromExpense(
+    ExpenseTransactionModel expense,
+  ) {
     final amount = expense.amount ?? 0;
     final (label, color) = switch (expense.status) {
       ExpenseStatus.paid => ('Paid', const Color(0xFF2E7D32)),
@@ -164,7 +168,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(amount),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.money_off_outlined,
+      leadingIcon: LucideIcons.circleMinus,
       sortAmount: amount,
       sortDate: expense.date,
       sortTitle: expense.transactionNo,
@@ -192,7 +196,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(order.amount),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.assignment_outlined,
+      leadingIcon: LucideIcons.clipboardList,
       sortAmount: order.amount,
       sortDate: order.date,
       sortTitle: order.orderNo,
@@ -211,7 +215,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(note.total),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.undo_rounded,
+      leadingIcon: LucideIcons.undo2,
       sortAmount: note.total,
       sortDate: note.date,
       sortTitle: note.debitNoteNo,
@@ -234,7 +238,7 @@ abstract final class MobileTransactionLiveMapper {
       amountLabel: formatAmount(record.amount),
       statusLabel: label,
       statusColor: color,
-      leadingIcon: Icons.account_balance_outlined,
+      leadingIcon: LucideIcons.landmark,
       sortAmount: record.amount,
       sortDate: record.date,
       sortTitle: record.invoiceNo,
@@ -254,7 +258,10 @@ abstract final class MobileTransactionLiveMapper {
   static (String, Color) _saleOrderStatus(SaleInvoiceModel order) {
     return switch (saleOrderDisplayStatus(order)) {
       SaleOrderDisplayStatus.open => ('Open', AppColors.primary),
-      SaleOrderDisplayStatus.completed => ('Completed', const Color(0xFF2E7D32)),
+      SaleOrderDisplayStatus.completed => (
+        'Completed',
+        const Color(0xFF2E7D32),
+      ),
       SaleOrderDisplayStatus.overdue => ('Overdue', const Color(0xFFB71C1C)),
       SaleOrderDisplayStatus.draft => ('Draft', AppColors.textSecondary),
       SaleOrderDisplayStatus.cancelled => (

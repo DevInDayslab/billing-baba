@@ -6,6 +6,8 @@ import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transactio
     show MobileTransactionPage;
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Display model for a row on [MobileTransactionPage].
 class MobileTransactionListItem {
   const MobileTransactionListItem({
@@ -63,7 +65,7 @@ class MobileTransactionEmptyStateConfig {
   const MobileTransactionEmptyStateConfig({
     required this.title,
     this.message,
-    this.icon = Icons.receipt_long_outlined,
+    this.icon = LucideIcons.receipt,
     this.actionLabel,
     this.onAction,
   });
@@ -141,7 +143,7 @@ class MobileTransactionPageConfig {
       message: 'Create a new transaction to get started.',
     ),
     this.fabTooltip = 'Add',
-    this.fabIcon = Icons.add_rounded,
+    this.fabIcon = LucideIcons.plus,
     this.onFabPressed,
     this.moreActions = const [],
     this.showBusinessHeader = false,

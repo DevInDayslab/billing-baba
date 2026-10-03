@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileFormSection extends StatelessWidget {
   const MobileFormSection({
     required this.title,
@@ -136,7 +138,7 @@ class MobileFormPickerField extends StatelessWidget {
       readOnly: true,
       onTap: onTap,
       errorText: errorText,
-      suffixIcon: const Icon(Icons.chevron_right_rounded),
+      suffixIcon: const Icon(LucideIcons.chevronRight),
     );
   }
 }

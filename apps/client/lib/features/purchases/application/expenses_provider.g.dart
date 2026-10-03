@@ -34,7 +34,7 @@ final class ExpenseCategoriesProvider
   ExpenseCategories create() => ExpenseCategories();
 }
 
-String _$expenseCategoriesHash() => r'212c0549629048fdc5e45cedaa1f11c514f6e2f4';
+String _$expenseCategoriesHash() => r'7af632f2a8311b91a052e3442167b300240bc987';
 
 abstract class _$ExpenseCategories
     extends $AsyncNotifier<List<ExpenseCategoryModel>> {
@@ -92,7 +92,7 @@ final class ExpenseTransactionsProvider
 }
 
 String _$expenseTransactionsHash() =>
-    r'28c7a66088224d44f593844e463102f743e60581';
+    r'3efaf83c5aee82ba4b6fa644d401d875ab2651c2';
 
 abstract class _$ExpenseTransactions
     extends $AsyncNotifier<List<ExpenseTransactionModel>> {

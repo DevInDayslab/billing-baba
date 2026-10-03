@@ -288,7 +288,9 @@ class SaleFa extends _$SaleFa {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allRecords = await _fetchAllRecords();
       return _allSaleFaPage(allRecords);
@@ -438,7 +440,7 @@ List<String> saleFaFirmFilterOptions(Ref ref) {
 List<String> saleFaUserFilterOptions(Ref ref) {
   final authState = ref.watch(authProvider);
   final authUser = authState.session?.user;
-  final records = ref.watch(saleFaProvider).value?.items ?? [];
+  final records = _allSaleFaFromAsync(ref.watch(saleFaProvider));
 
   return _withAllOption(
     'All Users',

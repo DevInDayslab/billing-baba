@@ -142,15 +142,18 @@ export const paymentSourceEnum = pgEnum('payment_source', [
   'razorpay_gateway',
 ]);
 
-export const gatewayPaymentIntentTypeEnum = pgEnum('gateway_payment_intent_type', [
-  'payment_in',
-  'payment_out',
-  'sale_invoice',
-  'purchase_bill',
-  'pos',
-  'party_outstanding',
-  'advance',
-]);
+export const gatewayPaymentIntentTypeEnum = pgEnum(
+  'gateway_payment_intent_type',
+  [
+    'payment_in',
+    'payment_out',
+    'sale_invoice',
+    'purchase_bill',
+    'pos',
+    'party_outstanding',
+    'advance',
+  ],
+);
 
 export const gatewayPaymentIntentStatusEnum = pgEnum(
   'gateway_payment_intent_status',

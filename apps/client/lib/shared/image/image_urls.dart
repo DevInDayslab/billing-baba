@@ -22,6 +22,22 @@ String? normalizeImageUrl(String? url) {
   return trimmed;
 }
 
+/// Picks the media asset id used for storage API resolution.
+///
+/// When [storedMediaAssetId] disagrees with the object key in [imageUrl], the URL
+/// wins — history rows can outlive corrected uploads and stale column values.
+String? coalesceStorageMediaAssetId({
+  String? storedMediaAssetId,
+  String? imageUrl,
+}) {
+  final fromUrl = extractMediaAssetIdFromUrl(imageUrl);
+  final stored = storedMediaAssetId?.trim();
+  if (stored == null || stored.isEmpty) return fromUrl;
+  if (fromUrl == null || fromUrl.isEmpty) return stored;
+  if (stored == fromUrl) return stored;
+  return fromUrl;
+}
+
 /// Extracts a media asset UUID from our storage object keys (staging or variants).
 ///
 /// Signed URLs expire; the asset id is durable and can refresh via the storage API.
@@ -101,10 +117,10 @@ Future<String> resolveImageUrl({
   String? fallbackUrl,
   MediaImageUrlResolver? resolver,
 }) async {
-  final assetId =
-      sourceMediaAssetId?.trim().isNotEmpty == true
-      ? sourceMediaAssetId!.trim()
-      : extractMediaAssetIdFromUrl(fallbackUrl);
+  final assetId = coalesceStorageMediaAssetId(
+    storedMediaAssetId: sourceMediaAssetId,
+    imageUrl: fallbackUrl,
+  );
 
   if (assetId != null && resolver != null) {
     try {
@@ -150,7 +166,6 @@ List<String> mediaAssetCacheKeys(String mediaAssetId) {
   final assetId = mediaAssetId.trim();
   return [
     'media:$assetId:source',
-    ...ImageVariant.values
-      .map((variant) => 'media:$assetId:${variant.name}'),
+    ...ImageVariant.values.map((variant) => 'media:$assetId:${variant.name}'),
   ];
 }

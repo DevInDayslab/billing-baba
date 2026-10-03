@@ -1,6 +1,7 @@
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { itemLocationHistory } from '../../db/schema/inventory/tables';
+import { ITEM_LOCATION_HISTORY_RETENTION_COUNT } from './item-location-history.constants';
 import { toItemLocationHistoryRecord } from './item-location-history.mapper';
 import type {
   InsertItemLocationHistoryInput,
@@ -23,6 +24,41 @@ export class ItemLocationHistoryRepository {
       employeeLabel: input.employeeLabel ?? null,
       changedBy: input.changedBy ?? null,
     });
+
+    await this.pruneToRetentionCount(
+      input.businessId,
+      input.itemLocationId,
+      ITEM_LOCATION_HISTORY_RETENTION_COUNT,
+    );
+  }
+
+  async pruneToRetentionCount(
+    businessId: string,
+    itemLocationId: string,
+    retain: number,
+  ): Promise<void> {
+    const rows = await this.db
+      .select({ id: itemLocationHistory.id })
+      .from(itemLocationHistory)
+      .where(
+        and(
+          eq(itemLocationHistory.businessId, businessId),
+          eq(itemLocationHistory.itemLocationId, itemLocationId),
+        ),
+      )
+      .orderBy(desc(itemLocationHistory.createdAt));
+
+    if (rows.length <= retain) return;
+
+    const deleteIds = rows.slice(retain).map((row) => row.id);
+    await this.db
+      .delete(itemLocationHistory)
+      .where(
+        and(
+          eq(itemLocationHistory.businessId, businessId),
+          inArray(itemLocationHistory.id, deleteIds),
+        ),
+      );
   }
 
   async listByLocation(
@@ -49,6 +85,7 @@ export class ItemLocationHistoryRepository {
         rack: itemLocationHistory.rack,
         shelf: itemLocationHistory.shelf,
         photoUrl: itemLocationHistory.photoUrl,
+        photoMediaAssetId: itemLocationHistory.photoMediaAssetId,
         employeeLabel: itemLocationHistory.employeeLabel,
         changedBy: itemLocationHistory.changedBy,
         createdAt: itemLocationHistory.createdAt,

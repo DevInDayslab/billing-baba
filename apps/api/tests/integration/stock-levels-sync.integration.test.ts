@@ -40,8 +40,9 @@ async function devLogin(app: FastifyInstance): Promise<{
     payload: {},
   });
   expect(response.statusCode).toBe(200);
-  return (response.json() as { data: { access_token: string; refresh_token: string } })
-    .data;
+  return (
+    response.json() as { data: { access_token: string; refresh_token: string } }
+  ).data;
 }
 
 async function refreshForBusiness(
@@ -59,7 +60,8 @@ async function refreshForBusiness(
     },
   });
   expect(response.statusCode).toBe(200);
-  return (response.json() as { data: { access_token: string } }).data.access_token;
+  return (response.json() as { data: { access_token: string } }).data
+    .access_token;
 }
 
 type PullChange = {
@@ -221,9 +223,8 @@ describe.skipIf(!canRunDbTests)('Stock levels sync integration', () => {
         },
       });
       expect(createBusiness.statusCode).toBe(201);
-      const businessBId = (
-        createBusiness.json() as { data: { id: string } }
-      ).data.id;
+      const businessBId = (createBusiness.json() as { data: { id: string } })
+        .data.id;
       const tokenB = await refreshForBusiness(
         app,
         session.refresh_token,
@@ -249,7 +250,11 @@ describe.skipIf(!canRunDbTests)('Stock levels sync integration', () => {
         t: new Date(0).toISOString(),
         i: ZERO_UUID,
       });
-      const changesA = await pullStockLevels(session.access_token, deviceId, cursor);
+      const changesA = await pullStockLevels(
+        session.access_token,
+        deviceId,
+        cursor,
+      );
       const changesB = await pullStockLevels(tokenB, deviceB, cursor);
 
       expect(
@@ -287,9 +292,8 @@ describe.skipIf(!canRunDbTests)('Stock levels sync integration', () => {
         url: `${apiPrefix}/inventory/stock-levels?item_id=${itemId}`,
         headers: jsonAuthHeaders(token),
       });
-      const stockLevelId = (
-        stockRes.json() as { data: { id: string }[] }
-      ).data[0]!.id;
+      const stockLevelId = (stockRes.json() as { data: { id: string }[] })
+        .data[0]!.id;
 
       const partyRes = await app.inject({
         method: 'POST',
@@ -390,7 +394,9 @@ describe.skipIf(!canRunDbTests)('Stock levels sync integration', () => {
       expect(body.data.accepted).toEqual([]);
       expect(body.data.errors).toHaveLength(1);
       expect(body.data.errors[0]?.code).toBe('PULL_ONLY_ENTITY');
-      expect(body.data.errors[0]?.message).toContain('server-derived projection');
+      expect(body.data.errors[0]?.message).toContain(
+        'server-derived projection',
+      );
       expect(body.data.errors[0]?.message).toContain('stock_levels');
     },
     INTEGRATION_TIMEOUT_MS,

@@ -6,6 +6,8 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Full-screen 1:1 crop editor with rotate controls.
 class MobileItemImageEditorScreen extends StatefulWidget {
   const MobileItemImageEditorScreen({
@@ -85,9 +87,10 @@ class _MobileItemImageEditorScreenState
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed:
-              _isCropping ? null : () => Navigator.of(context, rootNavigator: true).pop(),
+          icon: const Icon(LucideIcons.x),
+          onPressed: _isCropping
+              ? null
+              : () => Navigator.of(context, rootNavigator: true).pop(),
         ),
         title: const Text('Edit Photo'),
         centerTitle: true,
@@ -142,13 +145,13 @@ class _MobileItemImageEditorScreenState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _EditorActionButton(
-                    icon: Icons.rotate_right_rounded,
+                    icon: LucideIcons.rotateCw,
                     label: 'Rotate',
                     onPressed: _isCropping ? null : _rotate,
                   ),
                   const SizedBox(width: AppSpacing.xl),
                   _EditorActionButton(
-                    icon: Icons.crop_rounded,
+                    icon: LucideIcons.crop,
                     label: 'Crop 1:1',
                     onPressed: _isCropping ? null : _applyCrop,
                   ),

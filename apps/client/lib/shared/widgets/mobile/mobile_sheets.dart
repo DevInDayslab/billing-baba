@@ -5,6 +5,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Quick Actions — icon grid for shortcuts (home, party detail, etc.).
 Future<void> showMobileQuickActionsSheet({
   required BuildContext context,
@@ -12,7 +14,8 @@ Future<void> showMobileQuickActionsSheet({
   List<MobileQuickActionSection>? sections,
   String title = 'Quick Actions',
 }) {
-  final resolvedSections = sections ??
+  final resolvedSections =
+      sections ??
       (actions.isEmpty
           ? null
           : [MobileQuickActionSection(title: '', actions: actions)]);
@@ -409,7 +412,7 @@ class _AddOptionTile extends StatelessWidget {
                   ),
                 ),
                 const Icon(
-                  Icons.chevron_right_rounded,
+                  LucideIcons.chevronRight,
                   color: AppColors.textSecondary,
                 ),
               ],
@@ -483,7 +486,7 @@ class _ActionTile extends StatelessWidget {
                 ),
                 if (showChevron || action.showChevron)
                   Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     color: AppColors.textSecondary.withValues(alpha: 0.7),
                   ),
               ],

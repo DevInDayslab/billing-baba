@@ -21,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile godowns list with search and add/edit/delete.
 class MobileGodownsScreen extends ConsumerStatefulWidget {
   const MobileGodownsScreen({super.key});
@@ -53,7 +55,9 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       unawaited(
-        ref.read(inventoryGodownsProvider.notifier).refresh(
+        ref
+            .read(inventoryGodownsProvider.notifier)
+            .refresh(
               searchQuery: query.trim().isEmpty ? null : query.trim(),
             ),
       );
@@ -61,7 +65,9 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryGodownsProvider.notifier).refresh(
+    return ref
+        .read(inventoryGodownsProvider.notifier)
+        .refresh(
           searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
         );
   }
@@ -116,13 +122,13 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
     final actions = <MobileSheetAction>[
       if (permissions.canEdit(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.edit_outlined,
+          icon: LucideIcons.pencil,
           label: 'Edit Godown',
           onTap: () => unawaited(_editGodown(godown)),
         ),
       if (permissions.canDelete(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.delete_outline_rounded,
+          icon: LucideIcons.trash2,
           label: 'Delete Godown',
           onTap: () => unawaited(_confirmDeleteGodown(godown)),
         ),
@@ -186,13 +192,15 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
                   (_, _, true) => MobileEmptyState(
                     title: 'No godowns found',
                     message: 'Add a godown to track stock by warehouse.',
-                    icon: Icons.warehouse_outlined,
-                    actionLabel: ref
+                    icon: LucideIcons.warehouse,
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Godown'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addGodown())
@@ -243,11 +251,11 @@ class _MobileGodownsScreenState extends ConsumerState<MobileGodownsScreen> {
             right: 0,
             bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
             child: Center(
-            child: PermissionGate(
-              module: PermissionModule.item,
-              action: PermissionAction.create,
-              child: _AddGodownFab(onPressed: () => unawaited(_addGodown())),
-            ),
+              child: PermissionGate(
+                module: PermissionModule.item,
+                action: PermissionAction.create,
+                child: _AddGodownFab(onPressed: () => unawaited(_addGodown())),
+              ),
             ),
           ),
         ],
@@ -323,11 +331,11 @@ class _GodownListRow extends StatelessWidget {
                       Flexible(
                         child: Text(
                           godown.name,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
                       ),
                       if (godown.isDefault) ...[
@@ -343,12 +351,12 @@ class _GodownListRow extends StatelessWidget {
                           ),
                           child: Text(
                             'DEFAULT',
-                            style:
-                                Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                ),
                           ),
                         ),
                       ],
@@ -404,7 +412,7 @@ class _AddGodownFab extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              const Icon(LucideIcons.plus, color: Colors.white, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Add Godown',

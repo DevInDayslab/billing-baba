@@ -42,7 +42,7 @@ final class CreateBusinessFormProvider
 }
 
 String _$createBusinessFormHash() =>
-    r'a38c4c0b24621a35da44f995590ae120a618dd6c';
+    r'01ce954fb9f8666f396a76fafa95740820c5e11e';
 
 abstract class _$CreateBusinessForm extends $Notifier<CreateBusinessFormState> {
   CreateBusinessFormState build();

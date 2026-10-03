@@ -53,7 +53,9 @@ const ROW_OPERATION_ACTION: Record<
   delete: 'delete',
 };
 
-export function moduleForEntityType(entityType: string): PermissionModule | null {
+export function moduleForEntityType(
+  entityType: string,
+): PermissionModule | null {
   return ENTITY_MODULE_MAP[entityType] ?? null;
 }
 

@@ -81,11 +81,24 @@ class PurchaseDocumentParseMapper {
 
     if (parsed.lines.isNotEmpty) {
       final items = <PurchaseLineItem>[];
+      var skipped = 0;
       for (final line in parsed.lines) {
         final mapped = _mapLine(line, itemNameToId, nextLineId);
         if (mapped != null) {
           items.add(mapped);
+        } else {
+          skipped++;
+          debugPrint(
+            '[PurchaseParse] skipped OCR line '
+            'name=${line.itemName} qty=${line.quantity} price=${line.unitPrice}',
+          );
         }
+      }
+      if (skipped > 0) {
+        debugPrint(
+          '[PurchaseParse] mapped ${items.length}/${parsed.lines.length} '
+          'lines ($skipped skipped)',
+        );
       }
       if (items.isNotEmpty) {
         next = next.copyWith(items: items);
@@ -146,8 +159,9 @@ class PurchaseDocumentParseMapper {
     final itemName = line.itemName?.trim();
     if (itemName == null || itemName.isEmpty) return null;
 
-    final qty = line.quantity;
-    if (qty == null || qty <= 0) return null;
+    // OCR often omits quantity on single-line bills — default to 1.
+    final rawQty = line.quantity;
+    final qty = (rawQty == null || rawQty <= 0) ? 1.0 : rawQty;
 
     final price = line.unitPrice;
     if (price == null || price < 0) return null;

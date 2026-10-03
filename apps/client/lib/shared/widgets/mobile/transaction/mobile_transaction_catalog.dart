@@ -5,6 +5,8 @@ import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transactio
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// High-level grouping for mobile transaction list pages.
 enum MobileTransactionCategory {
   sales,
@@ -57,7 +59,7 @@ class MobileTransactionScopeDefinition {
       emptyState: MobileTransactionEmptyStateConfig(
         title: emptyTitle ?? 'No $resolvedTitle yet',
         message: emptyMessage ?? 'Tap + to create your first entry.',
-        icon: leadingIcon ?? Icons.receipt_long_outlined,
+        icon: leadingIcon ?? LucideIcons.receipt,
         actionLabel: addRoute == null ? null : addFabLabel ?? 'Add',
         onAction: addRoute == null ? null : () => context.push(addRoute!),
       ),
@@ -166,9 +168,9 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleDeliveryChallan => AppRoutes.addDeliveryChallan,
     AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
     AppRoutes.saleFa => AppRoutes.addSaleFa,
-      AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
-      AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
-      AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
+    AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
+    AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
+    AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
     _ => null,
   };
 
@@ -183,16 +185,16 @@ abstract final class MobileTransactionCatalog {
   };
 
   static IconData _salesIcon(String route) => switch (route) {
-    AppRoutes.saleInvoices => Icons.receipt_long_outlined,
-    AppRoutes.saleEstimateQuotation => Icons.description_outlined,
-    AppRoutes.saleProformaInvoice => Icons.article_outlined,
-    AppRoutes.salePaymentIn => Icons.payments_outlined,
-    AppRoutes.saleOrder => Icons.shopping_bag_outlined,
-    AppRoutes.saleDeliveryChallan => Icons.local_shipping_outlined,
-    AppRoutes.saleJobWorkOut => Icons.precision_manufacturing_outlined,
-    AppRoutes.saleReturnCreditNote => Icons.undo_rounded,
-    AppRoutes.saleFa => Icons.account_balance_outlined,
-    _ => Icons.receipt_long_outlined,
+    AppRoutes.saleInvoices => LucideIcons.receipt,
+    AppRoutes.saleEstimateQuotation => LucideIcons.fileText,
+    AppRoutes.saleProformaInvoice => LucideIcons.fileText,
+    AppRoutes.salePaymentIn => LucideIcons.banknote,
+    AppRoutes.saleOrder => LucideIcons.shoppingBag,
+    AppRoutes.saleDeliveryChallan => LucideIcons.truck,
+    AppRoutes.saleJobWorkOut => LucideIcons.factory,
+    AppRoutes.saleReturnCreditNote => LucideIcons.undo2,
+    AppRoutes.saleFa => LucideIcons.landmark,
+    _ => LucideIcons.receipt,
   };
 
   static String? _purchaseAddRoute(String route) => switch (route) {
@@ -215,12 +217,12 @@ abstract final class MobileTransactionCatalog {
   };
 
   static IconData _purchaseIcon(String route) => switch (route) {
-    AppRoutes.purchaseBills => Icons.shopping_cart_outlined,
-    AppRoutes.purchasePaymentOut => Icons.payments_outlined,
-    AppRoutes.purchaseExpenses => Icons.money_off_outlined,
-    AppRoutes.purchaseOrder => Icons.assignment_outlined,
-    AppRoutes.purchaseReturnDebitNote => Icons.undo_rounded,
-    AppRoutes.purchaseFa => Icons.account_balance_outlined,
-    _ => Icons.shopping_cart_outlined,
+    AppRoutes.purchaseBills => LucideIcons.shoppingCart,
+    AppRoutes.purchasePaymentOut => LucideIcons.banknote,
+    AppRoutes.purchaseExpenses => LucideIcons.circleMinus,
+    AppRoutes.purchaseOrder => LucideIcons.clipboardList,
+    AppRoutes.purchaseReturnDebitNote => LucideIcons.undo2,
+    AppRoutes.purchaseFa => LucideIcons.landmark,
+    _ => LucideIcons.shoppingCart,
   };
 }

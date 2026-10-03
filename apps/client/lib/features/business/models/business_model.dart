@@ -70,8 +70,7 @@ class BusinessModel {
       address: address ?? this.address,
       role: role ?? this.role,
       logoUrl: logoUrl ?? this.logoUrl,
-      scheduledDeletionAt:
-          scheduledDeletionAt ?? this.scheduledDeletionAt,
+      scheduledDeletionAt: scheduledDeletionAt ?? this.scheduledDeletionAt,
     );
   }
 }

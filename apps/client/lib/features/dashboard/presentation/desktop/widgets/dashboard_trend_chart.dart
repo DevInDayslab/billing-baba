@@ -301,8 +301,8 @@ class _ChartConfig {
   }) {
     final hasPositiveAmount =
         points.isNotEmpty && points.any((point) => point.amount > 0);
-    final hasPlottableData = hasPositiveAmount ||
-        (showZeroBaseline && points.length >= 2);
+    final hasPlottableData =
+        hasPositiveAmount || (showZeroBaseline && points.length >= 2);
     final amounts = points.map((point) => point.amount);
     final yScale = ChartAxisFormatters.calculateYAxis(
       hasPlottableData ? amounts : const [0],

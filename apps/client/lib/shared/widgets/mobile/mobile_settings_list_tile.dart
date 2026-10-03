@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/settings/models/settings_nav_item.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Tappable row for a [SettingsNavItem] in the global settings list.
 class MobileSettingsListTile extends StatelessWidget {
   const MobileSettingsListTile({
@@ -64,7 +66,7 @@ class MobileSettingsListTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
               ),
             ],

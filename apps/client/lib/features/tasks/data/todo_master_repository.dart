@@ -308,7 +308,8 @@ class TodoMasterRepository {
       'priority': 'medium',
       if (category != null) 'category': category.toJson(),
       'party_id': ?partyId,
-      if (reminderAt != null) 'reminder_at': reminderAt.toUtc().toIso8601String(),
+      if (reminderAt != null)
+        'reminder_at': reminderAt.toUtc().toIso8601String(),
       'is_completed': isCompleted,
       if (completedAt != null)
         'completed_at': completedAt.toUtc().toIso8601String(),

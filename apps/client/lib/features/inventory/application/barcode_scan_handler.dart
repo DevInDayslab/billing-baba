@@ -29,8 +29,10 @@ class BarcodeScanResult {
     this.item,
   });
 
-  factory BarcodeScanResult.debounced(String barcode) =>
-      BarcodeScanResult._(status: BarcodeScanStatus.debounced, barcode: barcode);
+  factory BarcodeScanResult.debounced(String barcode) => BarcodeScanResult._(
+    status: BarcodeScanStatus.debounced,
+    barcode: barcode,
+  );
 
   factory BarcodeScanResult.invalid(String barcode) =>
       BarcodeScanResult._(status: BarcodeScanStatus.invalid, barcode: barcode);
@@ -61,7 +63,8 @@ enum BarcodeScanSuffix {
 
 extension BarcodeScanSuffixX on BarcodeScanSuffix {
   bool matches(LogicalKeyboardKey key) {
-    final isEnter = key == LogicalKeyboardKey.enter ||
+    final isEnter =
+        key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter;
     final isTab = key == LogicalKeyboardKey.tab;
     return switch (this) {
@@ -141,7 +144,7 @@ class BarcodeScanHandler {
     required InventorySearchEngine engine,
     required Iterable<InventoryItem> items,
     required FutureOr<void> Function(InventoryItem item, String barcode)
-        onItemFound,
+    onItemFound,
     required void Function(String barcode) onNotFound,
     void Function(String barcode)? onInvalid,
   }) async {
@@ -189,7 +192,7 @@ Future<BarcodeScanResult> handleBarcodeScan(
   required InventorySearchEngine engine,
   required Iterable<InventoryItem> items,
   required FutureOr<void> Function(InventoryItem item, String barcode)
-      onItemFound,
+  onItemFound,
   required void Function(String barcode) onNotFound,
   void Function(String barcode)? onInvalid,
 }) {

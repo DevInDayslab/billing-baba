@@ -2,7 +2,8 @@ import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/default_inventory_units.dart';
-import 'package:billing_baba/features/inventory/models/unit_model.dart' show InventoryUnit;
+import 'package:billing_baba/features/inventory/models/unit_model.dart'
+    show InventoryUnit;
 
 /// Seed catalog for report UI until Drift repositories are wired.
 abstract final class InventoryCatalog {

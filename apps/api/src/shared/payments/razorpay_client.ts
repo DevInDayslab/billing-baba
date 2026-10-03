@@ -57,7 +57,9 @@ export class RazorpayClient {
     return keyId;
   }
 
-  async createOrder(input: RazorpayCreateOrderInput): Promise<RazorpayOrderResult> {
+  async createOrder(
+    input: RazorpayCreateOrderInput,
+  ): Promise<RazorpayOrderResult> {
     const order = await this.getClient().orders.create({
       amount: input.amountPaise,
       currency: input.currency,
@@ -114,4 +116,7 @@ export class RazorpayClient {
 /** @deprecated Use RazorpayClient — kept for subscription module compatibility. */
 export class RazorpayService extends RazorpayClient {}
 
-export type { RazorpayOrderResult, RazorpayPaymentResult } from './razorpay_types';
+export type {
+  RazorpayOrderResult,
+  RazorpayPaymentResult,
+} from './razorpay_types';

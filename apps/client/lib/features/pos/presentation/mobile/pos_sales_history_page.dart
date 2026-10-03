@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobilePosSalesHistoryPage extends ConsumerWidget {
   const MobilePosSalesHistoryPage({super.key});
 
@@ -76,7 +78,7 @@ class MobilePosSalesHistoryPage extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.undo_rounded),
+              leading: const Icon(LucideIcons.undo2),
               title: const Text('Process return'),
               onTap: () {
                 Navigator.pop(sheetContext);

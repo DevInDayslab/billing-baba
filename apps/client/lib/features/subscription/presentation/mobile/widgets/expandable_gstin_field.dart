@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class ExpandableGstinField extends StatefulWidget {
   const ExpandableGstinField({
     required this.initialValue,
@@ -70,7 +72,7 @@ class _ExpandableGstinFieldState extends State<ExpandableGstinField> {
                         turns: _isExpanded ? 0.5 : 0,
                         duration: const Duration(milliseconds: 250),
                         child: const Icon(
-                          Icons.keyboard_arrow_down,
+                          LucideIcons.chevronDown,
                           color: AppColors.textSecondary,
                         ),
                       ),

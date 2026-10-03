@@ -2,10 +2,10 @@ import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import type { BusinessAccessContext } from '../../shared/permissions/collaboration-permission.types';
 import { canPermission } from '../../shared/permissions/role-permission-registry';
-import { canSyncPullEntity } from '../../shared/permissions/sync-permission.guard';
 import { listViewableEntityTypes } from '../../shared/permissions/sync-entity-permissions';
-import { isRegisteredRowEntity } from './apply/row-entities';
+import { canSyncPullEntity } from '../../shared/permissions/sync-permission.guard';
 import { RowApplier } from './apply/row-applier';
+import { isRegisteredRowEntity } from './apply/row-entities';
 import { decodeCursor, encodeCursor, watermarkCursor } from './cursor';
 import type { PullQuery } from './sync.schema';
 

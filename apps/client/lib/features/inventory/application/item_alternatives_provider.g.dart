@@ -99,7 +99,7 @@ final class ItemAlternativesNotifierProvider
 }
 
 String _$itemAlternativesNotifierHash() =>
-    r'11ea26be6a176acd54c3a2afebf53f73b2628f87';
+    r'fa1762770014fe970bac9edabd88d3901f534bc1';
 
 final class ItemAlternativesNotifierFamily extends $Family
     with

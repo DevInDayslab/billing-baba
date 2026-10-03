@@ -109,6 +109,9 @@ abstract final class DesktopMenuActions {
   static Future<void> openPrivacyPolicy() =>
       openExternalUrl(AppConfig.privacyPolicyUrl);
 
+  static Future<void> openTermsOfService() =>
+      openExternalUrl(AppConfig.termsOfServiceUrl);
+
   /// Refreshes in-memory app state (not Flutter hot reload).
   static Future<void> reload(WidgetRef ref) async {
     final auth = ref.read(authProvider);

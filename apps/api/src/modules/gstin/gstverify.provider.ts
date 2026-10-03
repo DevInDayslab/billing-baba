@@ -38,14 +38,17 @@ export class GstVerifyProvider implements GstinVerificationProvider {
     let response: Response;
 
     try {
-      response = await fetch(`${GSTVERIFY_BASE_URL}/${encodeURIComponent(gstin)}`, {
-        method: 'GET',
-        headers: {
-          'X-API-Key': apiKey,
-          accept: 'application/json',
+      response = await fetch(
+        `${GSTVERIFY_BASE_URL}/${encodeURIComponent(gstin)}`,
+        {
+          method: 'GET',
+          headers: {
+            'X-API-Key': apiKey,
+            accept: 'application/json',
+          },
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         },
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      });
+      );
     } catch {
       throw new AppError(
         'GST_VERIFY_UNAVAILABLE',

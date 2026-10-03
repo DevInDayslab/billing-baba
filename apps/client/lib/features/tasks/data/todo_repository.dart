@@ -5,7 +5,9 @@ class TodoDto {
   const TodoDto({
     required this.id,
     required this.title,
-    required this.createdAt, required this.updatedAt, this.description,
+    required this.createdAt,
+    required this.updatedAt,
+    this.description,
     this.priority = 'medium',
     this.category,
     this.partyId,

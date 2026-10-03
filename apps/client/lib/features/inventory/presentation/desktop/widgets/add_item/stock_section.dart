@@ -34,12 +34,20 @@ class StockSection extends StatelessWidget {
     required this.onMinStockUnitChanged,
     this.rackLocationId,
     this.rackPhotoUrl,
+    this.rackPhotoTakenAt,
     this.rackLastUpdatedAt,
     this.rackHistory = const [],
     this.onRackPhotoChanged,
     this.onRackHistoryRefresh,
     this.pendingRackPhotoBytes,
     this.onPendingRackPhotoChanged,
+    this.pendingRackPhotoRawBytes,
+    this.onPendingRackPhotoRawChanged,
+    this.initialRackLocation = '',
+    this.rackEmployeeError,
+    this.onRackEmployeeChanged,
+    this.onRackPhotoUploaded,
+    this.onRackLocationSynced,
     this.decimalInputFormatter,
     super.key,
   });
@@ -66,12 +74,20 @@ class StockSection extends StatelessWidget {
   final ValueChanged<String> onMinStockUnitChanged;
   final String? rackLocationId;
   final String? rackPhotoUrl;
+  final DateTime? rackPhotoTakenAt;
   final DateTime? rackLastUpdatedAt;
   final List<ItemLocationHistoryModel> rackHistory;
-  final ValueChanged<String?>? onRackPhotoChanged;
-  final VoidCallback? onRackHistoryRefresh;
+  final void Function(String? url, DateTime? takenAt)? onRackPhotoChanged;
+  final Future<void> Function()? onRackHistoryRefresh;
   final Uint8List? pendingRackPhotoBytes;
   final ValueChanged<Uint8List?>? onPendingRackPhotoChanged;
+  final Uint8List? pendingRackPhotoRawBytes;
+  final ValueChanged<Uint8List?>? onPendingRackPhotoRawChanged;
+  final String initialRackLocation;
+  final String? rackEmployeeError;
+  final VoidCallback? onRackEmployeeChanged;
+  final VoidCallback? onRackPhotoUploaded;
+  final ValueChanged<String>? onRackLocationSynced;
   final TextInputFormatter? decimalInputFormatter;
 
   static final _defaultDecimalFormatter = FilteringTextInputFormatter.allow(
@@ -246,19 +262,27 @@ class StockSection extends StatelessWidget {
           ),
         ),
         FormGridCell(
-          span: 4,
+          span: 12,
           child: RackShelfSection(
             locationController: locationController,
             employeeController: employeeController,
             onLocationChanged: onLocationChanged,
             locationId: rackLocationId,
             photoUrl: rackPhotoUrl,
+            photoTakenAt: rackPhotoTakenAt,
             lastUpdatedAt: rackLastUpdatedAt,
             history: rackHistory,
             onPhotoChanged: onRackPhotoChanged,
             onHistoryRefresh: onRackHistoryRefresh,
             pendingPhotoBytes: pendingRackPhotoBytes,
             onPendingPhotoChanged: onPendingRackPhotoChanged,
+            pendingRawPhotoBytes: pendingRackPhotoRawBytes,
+            onPendingRawPhotoChanged: onPendingRackPhotoRawChanged,
+            initialRackLocation: initialRackLocation,
+            employeeError: rackEmployeeError,
+            onEmployeeChanged: onRackEmployeeChanged,
+            onRackPhotoUploaded: onRackPhotoUploaded,
+            onRackLocationSynced: onRackLocationSynced,
           ),
         ),
       ],

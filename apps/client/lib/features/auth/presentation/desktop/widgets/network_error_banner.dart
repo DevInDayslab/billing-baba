@@ -50,16 +50,6 @@ class NetworkErrorBanner extends StatelessWidget {
             if (details.host != null && details.host!.isNotEmpty)
               _DetailRow(label: 'Host', value: details.host!),
             _DetailRow(label: 'Details', value: details.details),
-          ] else if (errorMessage != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              errorMessage!,
-              style: const TextStyle(
-                color: AppColors.error,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
           ],
           if (showDetails) ...[
             const SizedBox(height: AppSpacing.sm),

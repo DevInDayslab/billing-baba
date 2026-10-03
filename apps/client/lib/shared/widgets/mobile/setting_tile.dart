@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _settingsBlue = Color(0xFF42A5F5);
 const _dividerColor = Color(0xFFE8EAED);
 
@@ -20,17 +22,6 @@ class SettingTile extends StatelessWidget {
     this.value,
     this.showChevron = false,
   });
-
-  final String title;
-  final String? subtitle;
-  final bool showInfoIcon;
-  final VoidCallback? onInfoTap;
-  final bool enabled;
-  final double indent;
-  final VoidCallback? onTap;
-  final Widget? trailing;
-  final String? value;
-  final bool showChevron;
 
   factory SettingTile.switchTile({
     required String title,
@@ -88,6 +79,46 @@ class SettingTile extends StatelessWidget {
       ),
     );
   }
+
+  factory SettingTile.stepperTile({
+    required String title,
+    required int value,
+    required ValueChanged<int>? onChanged,
+    int min = 0,
+    int max = 4,
+    String? subtitle,
+    bool showInfoIcon = false,
+    VoidCallback? onInfoTap,
+    bool enabled = true,
+    double indent = 0,
+  }) {
+    return SettingTile(
+      title: title,
+      subtitle: subtitle,
+      showInfoIcon: showInfoIcon,
+      onInfoTap: onInfoTap,
+      enabled: enabled,
+      indent: indent,
+      trailing: _SettingStepper(
+        value: value,
+        min: min,
+        max: max,
+        enabled: enabled,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  final String title;
+  final String? subtitle;
+  final bool showInfoIcon;
+  final VoidCallback? onInfoTap;
+  final bool enabled;
+  final double indent;
+  final VoidCallback? onTap;
+  final Widget? trailing;
+  final String? value;
+  final bool showChevron;
 
   static SettingTile dropdown<T>({
     required BuildContext context,
@@ -182,35 +213,6 @@ class SettingTile extends StatelessWidget {
     );
   }
 
-  factory SettingTile.stepperTile({
-    required String title,
-    required int value,
-    required ValueChanged<int>? onChanged,
-    int min = 0,
-    int max = 4,
-    String? subtitle,
-    bool showInfoIcon = false,
-    VoidCallback? onInfoTap,
-    bool enabled = true,
-    double indent = 0,
-  }) {
-    return SettingTile(
-      title: title,
-      subtitle: subtitle,
-      showInfoIcon: showInfoIcon,
-      onInfoTap: onInfoTap,
-      enabled: enabled,
-      indent: indent,
-      trailing: _SettingStepper(
-        value: value,
-        min: min,
-        max: max,
-        enabled: enabled,
-        onChanged: onChanged,
-      ),
-    );
-  }
-
   static Future<void> _openDropdownPicker<T>({
     required BuildContext context,
     required String title,
@@ -249,7 +251,7 @@ class SettingTile extends StatelessWidget {
                 ListTile(
                   title: Text(labelBuilder(option)),
                   trailing: option == value
-                      ? const Icon(Icons.check_rounded, color: _settingsBlue)
+                      ? const Icon(LucideIcons.check, color: _settingsBlue)
                       : null,
                   onTap: () => Navigator.of(context).pop(option),
                 ),
@@ -295,7 +297,7 @@ class SettingTile extends StatelessWidget {
                         top: 2,
                       ),
                       child: Icon(
-                        Icons.info_outline_rounded,
+                        LucideIcons.info,
                         size: 18,
                         color: AppColors.textSecondary.withValues(alpha: 0.75),
                       ),
@@ -346,7 +348,7 @@ class SettingTile extends StatelessWidget {
                   trailing!,
                 ] else if (showChevron && onTap != null)
                   Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     color: AppColors.textSecondary.withValues(alpha: 0.55),
                   ),
               ],
@@ -379,7 +381,7 @@ class _SettingStepper extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _StepperButton(
-          icon: Icons.remove_rounded,
+          icon: LucideIcons.minus,
           enabled: enabled && value > min,
           onTap: () => onChanged?.call(value - 1),
         ),
@@ -394,7 +396,7 @@ class _SettingStepper extends StatelessWidget {
           ),
         ),
         _StepperButton(
-          icon: Icons.add_rounded,
+          icon: LucideIcons.plus,
           enabled: enabled && value < max,
           onTap: () => onChanged?.call(value + 1),
         ),
@@ -476,7 +478,7 @@ class AnimatedSettingGroup extends StatelessWidget {
       result.add(items[i]);
       if (i < items.length - 1) {
         result.add(
-          Divider(
+          const Divider(
             height: 1,
             thickness: 1,
             color: _dividerColor,

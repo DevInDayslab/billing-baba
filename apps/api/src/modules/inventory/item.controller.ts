@@ -3,16 +3,11 @@ import { ZodError } from 'zod';
 import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
 import { sendData, sendPaginated } from '../../shared/http/response';
+import { toUploadIntentResponse } from '../storage/storage.mapper';
 import {
   formatZodError,
   requireAuthContext,
 } from './inventory.controller-helpers';
-import { ItemMediaService } from './item-media.service';
-import {
-  itemImageUploadBodySchema,
-  reorderItemImagesBodySchema,
-} from './item-media.schema';
-import { toUploadIntentResponse } from '../storage/storage.mapper';
 import {
   createItemBodySchema,
   createItemImageBodySchema,
@@ -28,6 +23,11 @@ import {
 } from './item.schema';
 import { ItemService } from './item.service';
 import type { PaginatedItemsResponse } from './item.types';
+import {
+  itemImageUploadBodySchema,
+  reorderItemImagesBodySchema,
+} from './item-media.schema';
+import { ItemMediaService } from './item-media.service';
 
 export function createItemController(config: AppConfig) {
   const mediaService = new ItemMediaService({ config });

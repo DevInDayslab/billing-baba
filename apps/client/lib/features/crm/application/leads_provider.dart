@@ -52,8 +52,16 @@ class Leads extends _$Leads {
           .read(leadFiltersProvider.notifier)
           .toServiceFilters()
           .copyWith(searchQuery: ref.read(leadSearchQueryProvider));
-      await service.syncFromRemote();
-      _subscription?.cancel();
+      // Local-first: paint SQLite immediately, sync in background.
+      unawaited(
+        service.syncFromRemote().then<void>(
+          (_) {},
+          onError: (Object error, StackTrace st) {
+            debugPrint('🔴 LEADS REMOTE SYNC ERROR: $error\n$st');
+          },
+        ),
+      );
+      unawaited(_subscription?.cancel() ?? Future<void>.value());
       _subscription = service
           .watchLeads(filters: filters)
           .listen(
@@ -74,13 +82,16 @@ class Leads extends _$Leads {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final service = await ref.read(leadServiceProvider.future);
       final filters = ref
           .read(leadFiltersProvider.notifier)
           .toServiceFilters()
           .copyWith(searchQuery: ref.read(leadSearchQueryProvider));
+      unawaited(service.syncFromRemote());
       return service.loadLeads(filters: filters);
     });
   }

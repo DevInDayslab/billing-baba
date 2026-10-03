@@ -206,7 +206,9 @@ class _DesktopAddItemImageEditorDialogState
       return;
     }
 
-    Navigator.of(context).pop(ItemImageEditorSaved(List<Uint8List>.from(_completed)));
+    Navigator.of(
+      context,
+    ).pop(ItemImageEditorSaved(List<Uint8List>.from(_completed)));
   }
 
   @override
@@ -295,7 +297,9 @@ class _DesktopAddItemImageEditorDialogState
                   ),
                 ),
                 child: InkWell(
-                  onTap: _isCropping ? null : () => unawaited(_addAnotherImage()),
+                  onTap: _isCropping
+                      ? null
+                      : () => unawaited(_addAnotherImage()),
                   borderRadius: BorderRadius.circular(6),
                   child: SizedBox(
                     width: _thumbSize,

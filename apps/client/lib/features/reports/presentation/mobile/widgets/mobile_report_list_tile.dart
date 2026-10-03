@@ -4,6 +4,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Modern card row for report categories and subsections.
 class MobileReportListTile extends StatelessWidget {
   const MobileReportListTile({
@@ -116,7 +118,7 @@ class MobileReportListTile extends StatelessWidget {
               const Gap(AppSpacing.sm),
             ],
             Icon(
-              Icons.chevron_right_rounded,
+              LucideIcons.chevronRight,
               color: AppColors.textSecondary.withValues(alpha: 0.55),
             ),
           ],

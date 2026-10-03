@@ -253,9 +253,7 @@ class _GstTaxRateSelectDropdownState
                     ],
                     Expanded(
                       child: AppEllipsisText(
-                        widget.value.isEmpty
-                            ? 'Select tax rate'
-                            : displayTitle,
+                        widget.value.isEmpty ? 'Select tax rate' : displayTitle,
                         style: saleFieldTextStyle.copyWith(
                           color: widget.value.isEmpty
                               ? Colors.grey.shade400
@@ -522,8 +520,7 @@ class _GstTaxRateMenuRow extends StatelessWidget {
                   option.title,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: AppColors.textPrimary,
                   ),
                 ),

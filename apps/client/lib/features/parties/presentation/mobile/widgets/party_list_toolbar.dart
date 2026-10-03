@@ -5,6 +5,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dar
 import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Search + filter/sort controls for the mobile party list.
 class MobilePartyListToolbar extends StatelessWidget {
   const MobilePartyListToolbar({
@@ -54,7 +56,7 @@ class MobilePartyListToolbar extends StatelessWidget {
               if (onAddParty != null) ...[
                 const SizedBox(width: AppSpacing.sm),
                 MobileIconActionButton(
-                  icon: Icons.person_add_alt_1_outlined,
+                  icon: LucideIcons.userPlus,
                   tooltip: 'Add party',
                   onPressed: onAddParty,
                 ),
@@ -68,14 +70,14 @@ class MobilePartyListToolbar extends StatelessWidget {
                 label: activeFilter == PartyListFilter.all
                     ? 'Filter'
                     : activeFilter.label,
-                icon: Icons.filter_list_rounded,
+                icon: LucideIcons.listFilter,
                 isActive: activeFilter != PartyListFilter.all,
                 onTap: onFilterTap,
               ),
               const SizedBox(width: AppSpacing.sm),
               _ToolbarChip(
                 label: sortLabel,
-                icon: Icons.sort_rounded,
+                icon: LucideIcons.arrowUpDown,
                 isActive: sortState.direction != MobilePartySortDirection.none,
                 onTap: onSortTap,
               ),

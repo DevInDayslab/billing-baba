@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
-import { AppError } from '../../../src/shared/errors/app-error';
+import type { ItemRepository } from '../../../src/modules/inventory/item.repository';
+import type { ItemLocationRepository } from '../../../src/modules/inventory/item-location.repository';
+import { MAX_ITEM_GALLERY_IMAGES } from '../../../src/modules/inventory/item-media.constants';
+import { ItemMediaService } from '../../../src/modules/inventory/item-media.service';
 import { StorageNotFoundError } from '../../../src/modules/storage/storage.errors';
 import type { StorageService } from '../../../src/modules/storage/storage.service';
 import type { UploadIntent } from '../../../src/modules/storage/storage.types';
-import type { ItemLocationRepository } from '../../../src/modules/inventory/item-location.repository';
-import type { ItemRepository } from '../../../src/modules/inventory/item.repository';
-import { ItemMediaService } from '../../../src/modules/inventory/item-media.service';
-import { MAX_ITEM_GALLERY_IMAGES } from '../../../src/modules/inventory/item-media.constants';
+import { AppError } from '../../../src/shared/errors/app-error';
 
 function baseConfig(): AppConfig {
   return {
@@ -243,10 +243,24 @@ describe('ItemMediaService', () => {
     let deletedOld = false;
 
     const locations = {
-      findById: async () => ({ id: 'loc-1' }),
+      findById: async () => ({
+        id: 'loc-1',
+        item_id: 'item-1',
+        godown_id: 'godown-1',
+        rack: 'A1',
+        shelf: null,
+        photo_url: null,
+        photo_taken_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }),
       getPhotoMediaAssetId: async () => 'asset-old',
       bindPhotoAsset: async () => undefined,
     } as unknown as ItemLocationRepository;
+
+    const locationHistory = {
+      insert: async () => undefined,
+    } as unknown as import('../../../src/modules/inventory/item-location-history.repository').ItemLocationHistoryRepository;
 
     const storage = {
       completeUpload: async () => ({
@@ -276,6 +290,7 @@ describe('ItemMediaService', () => {
     const service = new ItemMediaService({
       config: baseConfig(),
       locationRepository: locations,
+      locationHistoryRepository: locationHistory,
       storage,
     });
 
@@ -289,7 +304,7 @@ describe('ItemMediaService', () => {
 
     expect(result.photo_media_asset_id).toBe('asset-new');
     expect(result.photo_url).toBe('https://cdn/rack.jpg');
-    expect(deletedOld).toBe(true);
+    expect(deletedOld).toBe(false);
   });
 
   test('createItemImageUploadIntent delegates to storage with item policy', async () => {

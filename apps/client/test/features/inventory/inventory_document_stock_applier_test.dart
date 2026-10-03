@@ -119,120 +119,122 @@ void main() {
     expect(qtyAfterReplay, 7);
   });
 
-  test('applySalesDocument uses default godown uuid when document has none',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      StorageKeys.lastOpenedBusinessId: 'biz-stock-2',
-    });
+  test(
+    'applySalesDocument uses default godown uuid when document has none',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        StorageKeys.lastOpenedBusinessId: 'biz-stock-2',
+      });
 
-    final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
 
-    const businessId = 'biz-stock-2';
-    const defaultGodownId = 'e9aaef60-1fc6-411a-99fb-c7d25806089e';
-    const documentId = 'sale-doc-2';
-    final now = DateTime.utc(2026, 1, 15);
+      const businessId = 'biz-stock-2';
+      const defaultGodownId = 'e9aaef60-1fc6-411a-99fb-c7d25806089e';
+      const documentId = 'sale-doc-2';
+      final now = DateTime.utc(2026, 1, 15);
 
-    final godowns = GodownLocalSource(db);
-    await godowns.upsertRow(
-      id: defaultGodownId,
-      businessId: businessId,
-      name: 'Main Warehouse',
-      isDefault: true,
-      syncVersion: 1,
-      createdAt: now,
-      updatedAt: now,
-    );
+      final godowns = GodownLocalSource(db);
+      await godowns.upsertRow(
+        id: defaultGodownId,
+        businessId: businessId,
+        name: 'Main Warehouse',
+        isDefault: true,
+        syncVersion: 1,
+        createdAt: now,
+        updatedAt: now,
+      );
 
-    final salesLocal = SalesLocalDataSource(db);
-    final stockLocal = InventoryStockLocalDataSource(db);
-    final applier = InventoryDocumentStockApplier(
-      stockLocal: stockLocal,
-      salesLocal: salesLocal,
-      purchaseLocal: PurchaseLocalDataSource(db),
-      godowns: godowns,
-    );
+      final salesLocal = SalesLocalDataSource(db);
+      final stockLocal = InventoryStockLocalDataSource(db);
+      final applier = InventoryDocumentStockApplier(
+        stockLocal: stockLocal,
+        salesLocal: salesLocal,
+        purchaseLocal: PurchaseLocalDataSource(db),
+        godowns: godowns,
+      );
 
-    await stockLocal.recordAdjustment(
-      movementId: 'opening-2',
-      businessId: businessId,
-      request: const CreateMovementRequest(
+      await stockLocal.recordAdjustment(
+        movementId: 'opening-2',
+        businessId: businessId,
+        request: const CreateMovementRequest(
+          itemId: 'item-2',
+          godownId: defaultGodownId,
+          movementType: 'opening',
+          quantityDelta: '5',
+        ),
+        now: now,
+      );
+
+      await salesLocal.upsertDocument(
+        id: documentId,
+        businessId: businessId,
+        documentType: 'tax_invoice',
+        status: 'finalized',
+        documentNumber: 'INV-002',
+        documentSeries: 'INV',
+        partyId: 'party-1',
+        isGstFormal: true,
+        subtotal: '100',
+        discountTotal: '0',
+        taxAmount: '0',
+        totalAmount: '100',
+        documentDate: '2026-01-15',
+        syncVersion: 0,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await salesLocal.replaceLines(
+        businessId: businessId,
+        salesDocumentId: documentId,
+        lines: [
+          SalesDocumentLineLocalData(
+            id: 'line-2',
+            businessId: businessId,
+            salesDocumentId: documentId,
+            itemId: 'item-2',
+            quantity: '2',
+            unit: 'pcs',
+            unitPrice: '100',
+            discountAmount: '0',
+            taxType: 'gst',
+            taxRate: '0',
+            cgstAmount: '0',
+            sgstAmount: '0',
+            igstAmount: '0',
+            lineTotal: '200',
+            sortOrder: 0,
+            createdAt: now,
+            updatedAt: now,
+            syncVersion: 0,
+            isDeleted: false,
+          ),
+        ],
+      );
+
+      await applier.applySalesDocument(
+        businessId: businessId,
+        documentId: documentId,
+      );
+
+      final defaultRows =
+          await (db.select(db.stockLevelsLocal)..where(
+                (t) =>
+                    t.businessId.equals(businessId) &
+                    t.godownId.equals('default'),
+              ))
+              .get();
+      expect(defaultRows, isEmpty);
+
+      final qty = await stockLocal.currentQuantity(
+        businessId: businessId,
         itemId: 'item-2',
         godownId: defaultGodownId,
-        movementType: 'opening',
-        quantityDelta: '5',
-      ),
-      now: now,
-    );
-
-    await salesLocal.upsertDocument(
-      id: documentId,
-      businessId: businessId,
-      documentType: 'tax_invoice',
-      status: 'finalized',
-      documentNumber: 'INV-002',
-      documentSeries: 'INV',
-      partyId: 'party-1',
-      isGstFormal: true,
-      subtotal: '100',
-      discountTotal: '0',
-      taxAmount: '0',
-      totalAmount: '100',
-      documentDate: '2026-01-15',
-      syncVersion: 0,
-      createdAt: now,
-      updatedAt: now,
-    );
-
-    await salesLocal.replaceLines(
-      businessId: businessId,
-      salesDocumentId: documentId,
-      lines: [
-        SalesDocumentLineLocalData(
-          id: 'line-2',
-          businessId: businessId,
-          salesDocumentId: documentId,
-          itemId: 'item-2',
-          quantity: '2',
-          unit: 'pcs',
-          unitPrice: '100',
-          discountAmount: '0',
-          taxType: 'gst',
-          taxRate: '0',
-          cgstAmount: '0',
-          sgstAmount: '0',
-          igstAmount: '0',
-          lineTotal: '200',
-          sortOrder: 0,
-          createdAt: now,
-          updatedAt: now,
-          syncVersion: 0,
-          isDeleted: false,
-        ),
-      ],
-    );
-
-    await applier.applySalesDocument(
-      businessId: businessId,
-      documentId: documentId,
-    );
-
-    final defaultRows = await (db.select(db.stockLevelsLocal)
-          ..where(
-            (t) =>
-                t.businessId.equals(businessId) &
-                t.godownId.equals('default'),
-          ))
-        .get();
-    expect(defaultRows, isEmpty);
-
-    final qty = await stockLocal.currentQuantity(
-      businessId: businessId,
-      itemId: 'item-2',
-      godownId: defaultGodownId,
-    );
-    expect(qty, 3);
-  });
+      );
+      expect(qty, 3);
+    },
+  );
 
   test('applySalesDocument updates server-synced stock row in place', () async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -330,9 +332,9 @@ void main() {
       documentId: documentId,
     );
 
-    final rows = await (db.select(db.stockLevelsLocal)
-          ..where((t) => t.businessId.equals(businessId)))
-        .get();
+    final rows = await (db.select(
+      db.stockLevelsLocal,
+    )..where((t) => t.businessId.equals(businessId))).get();
     expect(rows, hasLength(1));
     expect(rows.single.id, serverStockId);
     expect(rows.single.currentQuantity, '45');

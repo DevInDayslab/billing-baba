@@ -8,6 +8,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileDealsScreen extends ConsumerWidget {
   const MobileDealsScreen({super.key});
 
@@ -33,7 +35,7 @@ class MobileDealsScreen extends ConsumerWidget {
             return const MobileEmptyState(
               title: 'No deals yet',
               message: 'Deals in your pipeline will appear here.',
-              icon: Icons.handshake_outlined,
+              icon: LucideIcons.handshake,
             );
           }
 
@@ -60,9 +62,12 @@ class MobileDealsScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       [
-                        deal.stage.label,
-                        deal.accountName,
-                      ].whereType<String>().where((v) => v.isNotEmpty).join(' · '),
+                            deal.stage.label,
+                            deal.accountName,
+                          ]
+                          .whereType<String>()
+                          .where((v) => v.isNotEmpty)
+                          .join(' · '),
                     ),
                     trailing: Text(
                       ChartAxisFormatters.formatCurrency(deal.amount),

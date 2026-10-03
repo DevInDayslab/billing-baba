@@ -22,11 +22,7 @@ export function createItemSupplierController() {
         const { accountId, businessId } = requireAuthContext(request);
         const { itemId } = itemSupplierItemIdParamSchema.parse(request.params);
         const service = new ItemSupplierService();
-        const data = await service.listSuppliers(
-          businessId,
-          accountId,
-          itemId,
-        );
+        const data = await service.listSuppliers(businessId, accountId, itemId);
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {

@@ -5,6 +5,7 @@ import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/business/application/business_profile_sync.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card_menu.dart';
@@ -27,6 +28,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mobile company picker — Vyapar-style list with tap-to-select + Continue.
 class MobileBusinessListPage extends ConsumerStatefulWidget {
@@ -238,6 +240,7 @@ class _MobileBusinessListPageState
   Widget build(BuildContext context) {
     final directoryAsync = ref.watch(companyDirectoryProvider);
     final directoryServiceAsync = ref.watch(companyDirectoryServiceProvider);
+    final businesses = ref.watch(businessListProvider).asData?.value;
     final selection = ref.watch(mobileBusinessSelectionProvider);
     final phoneNumber = ref.watch(loggedInPhoneProvider);
 
@@ -250,7 +253,7 @@ class _MobileBusinessListPageState
           IconButton(
             tooltip: 'Create business',
             onPressed: _onCreateBusiness,
-            icon: const Icon(Icons.add_business_outlined),
+            icon: const Icon(LucideIcons.building2),
           ),
         ],
       ),
@@ -265,14 +268,18 @@ class _MobileBusinessListPageState
             return _EmptyState(onCreate: _onCreateBusiness);
           }
 
+          final mergedEntries = mergeDirectoryProfileFields(
+            allEntries,
+            businesses,
+          );
           final directoryService = directoryServiceAsync.value;
           final owned = CompanyListEntry.withPendingDeletionLast(
-            directoryService?.ownedCompanies(allEntries) ??
-                allEntries.where((e) => e.relationship.isOwner).toList(),
+            directoryService?.ownedCompanies(mergedEntries) ??
+                mergedEntries.where((e) => e.relationship.isOwner).toList(),
           );
           final shared =
-              directoryService?.sharedCompanies(allEntries) ??
-              allEntries.where((e) => e.isSharedTab).toList();
+              directoryService?.sharedCompanies(mergedEntries) ??
+              mergedEntries.where((e) => e.isSharedTab).toList();
 
           return Column(
             children: [

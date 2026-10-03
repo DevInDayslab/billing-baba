@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +17,77 @@ class SalesLoadingState extends StatelessWidget {
     return SizedBox(
       height: minHeight,
       child: const Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Keeps table content visible while a silent refresh runs.
+class SalesTableReloadArea extends StatelessWidget {
+  const SalesTableReloadArea({
+    required this.child,
+    required this.isReloading,
+    super.key,
+  });
+
+  final Widget child;
+  final bool isReloading;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isReloading) return child;
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: ColoredBox(
+            color: AppColors.background.withValues(alpha: 0.55),
+            child: const Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Standard list/table async section for sale desktop tables.
+class SalesPaginatedListAsyncBody extends StatelessWidget {
+  const SalesPaginatedListAsyncBody({
+    required this.listAsync,
+    required this.onRetry,
+    required this.hasStaleRows,
+    required this.table,
+    super.key,
+  });
+
+  final AsyncValue<Object?> listAsync;
+  final VoidCallback onRetry;
+  final bool hasStaleRows;
+  final Widget table;
+
+  @override
+  Widget build(BuildContext context) {
+    return listAsync.when(
+      skipLoadingOnReload: true,
+      loading: () {
+        if (hasStaleRows) {
+          return SalesTableReloadArea(isReloading: true, child: table);
+        }
+        return const SalesLoadingState();
+      },
+      error: (error, _) => SalesErrorState(
+        message: SalesErrorMapper.messageFor(error),
+        onRetry: onRetry,
+      ),
+      data: (_) => SalesTableReloadArea(
+        isReloading: listAsync.isReloading,
+        child: table,
+      ),
     );
   }
 }

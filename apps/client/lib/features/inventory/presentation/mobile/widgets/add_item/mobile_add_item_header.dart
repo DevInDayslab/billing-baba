@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style app bar for mobile Add Item.
 class MobileAddItemHeader extends StatelessWidget {
   const MobileAddItemHeader({
@@ -29,7 +31,7 @@ class MobileAddItemHeader extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back_rounded),
+                  icon: const Icon(LucideIcons.arrowLeft),
                   tooltip: 'Back',
                 ),
                 Expanded(
@@ -89,7 +91,9 @@ class _ProductServiceToggle extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: isProduct ? AppColors.textPrimary : AppColors.textSecondary,
+                color: isProduct
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
           ),
@@ -109,8 +113,9 @@ class _ProductServiceToggle extends StatelessWidget {
             child: AnimatedAlign(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              alignment:
-                  isProduct ? Alignment.centerLeft : Alignment.centerRight,
+              alignment: isProduct
+                  ? Alignment.centerLeft
+                  : Alignment.centerRight,
               child: Container(
                 width: _thumbSize,
                 height: _thumbSize,
@@ -141,7 +146,9 @@ class _ProductServiceToggle extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: !isProduct ? AppColors.textPrimary : AppColors.textSecondary,
+                color: !isProduct
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
           ),

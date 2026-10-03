@@ -32,7 +32,7 @@ final class DealsProvider extends $AsyncNotifierProvider<Deals, List<Deal>> {
   Deals create() => Deals();
 }
 
-String _$dealsHash() => r'88b70cc20f9c68b1fec31c0751e0fae559fda482';
+String _$dealsHash() => r'6f2e17268816e89d1cff70e29668d881688e7944';
 
 abstract class _$Deals extends $AsyncNotifier<List<Deal>> {
   FutureOr<List<Deal>> build();

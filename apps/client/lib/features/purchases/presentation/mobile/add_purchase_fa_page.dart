@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddPurchaseFaPage extends ConsumerStatefulWidget {
   const MobileAddPurchaseFaPage({
     super.key,
@@ -151,7 +153,7 @@ class _FaLinesSection extends StatelessWidget {
             const Spacer(),
             TextButton.icon(
               onPressed: onAdd,
-              icon: const Icon(Icons.add_rounded, size: 18),
+              icon: const Icon(LucideIcons.plus, size: 18),
               label: const Text('Add line'),
             ),
           ],
@@ -244,7 +246,7 @@ class _FaLineCardState extends State<_FaLineCard> {
                 const Spacer(),
                 IconButton(
                   onPressed: widget.onRemove,
-                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                  icon: const Icon(LucideIcons.trash2, size: 20),
                 ),
               ],
             ),

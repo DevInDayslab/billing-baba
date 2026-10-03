@@ -96,7 +96,7 @@ class _MobileSettingsScreenState extends ConsumerState<MobileSettingsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: MobileAppBar(
-        title: 'Menu',
+        title: 'Settings',
         showBackButton: Navigator.canPop(context),
         showBusinessHeader: false,
         showNotification: false,

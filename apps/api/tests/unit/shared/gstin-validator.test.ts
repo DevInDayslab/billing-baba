@@ -2,10 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import {
   calculateChecksum,
   isValid,
-  validationError,
+  validateChecksum,
   validatePattern,
   validateStateCode,
-  validateChecksum,
+  validationError,
 } from '../../../src/shared/utils/gstin-validator';
 
 describe('gstin-validator', () => {
@@ -47,9 +47,7 @@ describe('gstin-validator', () => {
 
   test('invalid checksum', () => {
     expect(isValid('27AABCU9603R1Z8')).toBe(false);
-    expect(validationError('27AABCU9603R1Z8')).toBe(
-      'Invalid GSTIN checksum',
-    );
+    expect(validationError('27AABCU9603R1Z8')).toBe('Invalid GSTIN checksum');
   });
 
   test('lowercase input normalizes to valid', () => {
@@ -62,9 +60,7 @@ describe('gstin-validator', () => {
 
   test('calculateChecksum matches expected character', () => {
     expect(calculateChecksum('27AABCU9603R1Z')).toBe('N');
-    expect(validGstin[14]).toBe(
-      calculateChecksum(validGstin.slice(0, 14)),
-    );
+    expect(validGstin[14]).toBe(calculateChecksum(validGstin.slice(0, 14)));
   });
 
   test('validatePattern and validateStateCode helpers', () => {

@@ -24,7 +24,6 @@ class _PurchaseBillsPageState extends ConsumerState<DesktopPurchaseBillsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(purchaseBillsProvider.notifier).refresh();
       _showPendingSuccessMessage();
     });
   }

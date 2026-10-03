@@ -1,13 +1,16 @@
-import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../../../../db/client';
 import { salesDocuments } from '../../../../db/schema/sales/tables';
 import { AppError } from '../../../../shared/errors/app-error';
-import { ensureWalkInParty, walkInPartyIdForBusiness } from '../../../../shared/parties/walk-in-party';
+import {
+  ensureWalkInParty,
+  walkInPartyIdForBusiness,
+} from '../../../../shared/parties/walk-in-party';
 import { SalesDocumentRepository } from '../../../sales/sales-document.repository';
+import { finalizeSalePaymentBodySchema } from '../../../sales/sales-document.schema';
 import { finalizeSalesDocument } from '../../../sales/sales-finalize.service';
 import type { FinalizeSalePaymentInput } from '../../../sales/sales-finalize-payment.service';
-import { finalizeSalePaymentBodySchema } from '../../../sales/sales-document.schema';
 import type {
   CommandApplyOutcome,
   CommandHandler,

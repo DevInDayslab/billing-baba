@@ -17,13 +17,15 @@ import 'package:billing_baba/features/inventory/application/inventory_units_prov
 import 'package:billing_baba/features/inventory/application/item_bom_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_suppliers_provider.dart';
-import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
+import 'package:billing_baba/features/inventory/application/rack_stock_image_warmup.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_summary_dto.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_history_model.dart';
+import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
@@ -34,11 +36,12 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/general_information_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/manufacturing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/online_store_section.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/pricing_section.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/stock_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/suppliers_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/tier_pricing_section.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/rack_shelf_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/select_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_preview_screen.dart';
@@ -48,8 +51,8 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_header.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_image_strip.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_online_store_section.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_pricing_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_stock_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
 import 'package:billing_baba/features/inventory/presentation/shared/item_image_pick_crop.dart';
@@ -57,10 +60,13 @@ import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate_preference.dart';
 import 'package:billing_baba/features/inventory/utils/item_unit_qty_conversion.dart';
 import 'package:billing_baba/features/inventory/utils/min_wholesale_qty_units.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/media/rack_photo_stamp.dart';
 import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
@@ -163,9 +169,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   String? _rackLocationId;
   String? _rackPhotoUrl;
   DateTime? _rackLastUpdatedAt;
+  DateTime? _rackPhotoTakenAt;
   List<ItemLocationHistoryModel> _rackHistory = const [];
   Uint8List? _pendingRackPhoto;
+  Uint8List? _pendingRackPhotoRaw;
   String _initialRackLocation = '';
+  String? _rackEmployeeError;
   double _initialOpeningQty = 0;
 
   String get _closeFormTitle =>
@@ -262,9 +271,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final form = ref.read(addItemFormProvider);
     final units = ref.read(unitsProvider);
     if (form.baseUnitId == null) return null;
-    return units
-        .where((unit) => unit.id == form.baseUnitId)
-        .firstOrNull;
+    return units.where((unit) => unit.id == form.baseUnitId).firstOrNull;
   }
 
   @override
@@ -400,6 +407,26 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final detailDto = await service.fetchItemDetailDto(item.id);
+
+      final detailLocation = detailDto.locations.firstOrNull;
+      final prefetchLocationId = detailLocation?.id.trim();
+      final rackPrefetchLocationId =
+          prefetchLocationId != null && prefetchLocationId.isNotEmpty
+          ? prefetchLocationId
+          : null;
+
+      final locationsFuture = service.fetchItemLocations(item.id);
+      final historyFuture = rackPrefetchLocationId != null
+          ? service.fetchItemLocationHistory(rackPrefetchLocationId)
+          : null;
+
+      if (detailLocation != null && mounted) {
+        _applyRackShellFromDetailLocation(detailLocation, notifier);
+      }
+      if (historyFuture != null) {
+        unawaited(_applyPrefetchedRackHistory(historyFuture));
+      }
+
       var tiers = const <TierPriceModel>[];
       try {
         tiers = await service.fetchItemTierPrices(item.id);
@@ -425,7 +452,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           _syncMrpSaleDiscountController();
         }
       }
-      if (detailDto.reorderLevel != null && detailDto.reorderLevel!.isNotEmpty) {
+      if (detailDto.reorderLevel != null &&
+          detailDto.reorderLevel!.isNotEmpty) {
         final reorderLevel = double.tryParse(detailDto.reorderLevel!);
         if (reorderLevel != null) {
           notifier.updateMinStock(reorderLevel);
@@ -466,26 +494,23 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       }
 
       final openingGodown = detailDto.openingStock?.godowns.firstOrNull;
-      final location = detailDto.locations.firstOrNull;
-      final godownId = openingGodown?.godownId ?? location?.godownId;
+      final godownId = openingGodown?.godownId ?? detailLocation?.godownId;
       if (godownId != null) {
         notifier.setGodown(godownId);
       }
-      if (location?.rack != null && location!.rack!.isNotEmpty) {
-        notifier.updateLocation(location.rack!);
-        _locationController.text = location.rack!;
-        _initialRackLocation = location.rack!;
-      }
 
-      final itemLocations = await service.fetchItemLocations(item.id);
+      final itemLocations = await locationsFuture;
       if (itemLocations.isNotEmpty && mounted) {
         final firstLocation = itemLocations.first;
-        setState(() {
-          _rackLocationId = firstLocation.id;
-          _rackPhotoUrl = firstLocation.photoUrl;
-          _rackLastUpdatedAt = firstLocation.updatedAt;
-        });
-        await _refreshRackHistory(firstLocation.id);
+        _applyRackLocationFromApi(firstLocation);
+        if (rackPrefetchLocationId != firstLocation.id &&
+            _rackHistory.isEmpty) {
+          await _refreshRackHistory(firstLocation.id);
+        }
+      } else if (rackPrefetchLocationId != null &&
+          mounted &&
+          _rackHistory.isEmpty) {
+        await _refreshRackHistory(rackPrefetchLocationId);
       }
 
       final wholesale = tiers
@@ -533,8 +558,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     try {
       await ref.read(itemSuppliersProvider.notifier).ensureInitialized();
-      final localSuppliers =
-          ref.read(itemSuppliersProvider.notifier).suppliersFor(item.id);
+      final localSuppliers = ref
+          .read(itemSuppliersProvider.notifier)
+          .suppliersFor(item.id);
       if (localSuppliers.isNotEmpty) {
         final formState = ref.read(addItemFormProvider);
         final parties = ref.read(partiesListProvider);
@@ -550,7 +576,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     }
 
     try {
-      final bom = await ref.read(itemBomProvider.notifier).fetchForItem(item.id);
+      final bom = await ref
+          .read(itemBomProvider.notifier)
+          .fetchForItem(item.id);
       notifier.setBomFromModel(bom);
     } on Object {
       // BOM cache is best-effort.
@@ -642,7 +670,28 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       return;
     }
 
-    setState(() => _isSaving = true);
+    final formForRack = ref.read(addItemFormProvider);
+    final rackEmployeeError = validateRackShelfEmployee(
+      rack: formForRack.location.trim(),
+      initialRack: _initialRackLocation,
+      employee: _rackEmployeeController.text.trim(),
+      pendingPhoto: _pendingRackPhoto,
+      locationId: _rackLocationId,
+    );
+    if (rackEmployeeError != null) {
+      setState(() => _rackEmployeeError = rackEmployeeError);
+      if (formForRack.itemType != ItemType.service) {
+        ref.read(addItemFormProvider.notifier).setActiveTab(1);
+        _tabController.index = 1;
+      }
+      showOverlaySnackBar(context, message: rackEmployeeError);
+      return;
+    }
+
+    setState(() {
+      _rackEmployeeError = null;
+      _isSaving = true;
+    });
 
     try {
       final form = ref.read(addItemFormProvider);
@@ -769,17 +818,58 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     showTransactionErrorToast(context, message: message);
   }
 
+  void _applyRackShellFromDetailLocation(
+    ItemLocationSummaryDto location,
+    AddItemForm notifier,
+  ) {
+    final rack = location.rack?.trim();
+    if (rack != null && rack.isNotEmpty) {
+      notifier.updateLocation(rack);
+      _locationController.text = rack;
+      _initialRackLocation = rack;
+    }
+    final locationId = location.id.trim();
+    if (locationId.isNotEmpty) {
+      setState(() => _rackLocationId = locationId);
+    }
+  }
+
+  Future<void> _applyPrefetchedRackHistory(
+    Future<List<ItemLocationHistoryModel>> future,
+  ) async {
+    try {
+      final history = await future;
+      if (!mounted) return;
+      setState(() => _rackHistory = history);
+      warmRackHistoryThumbnails(ref.read(imageServiceProvider), history);
+    } on Object {
+      // History is optional UI — ignore load failures.
+    }
+  }
+
+  void _applyRackLocationFromApi(ItemLocationModel firstLocation) {
+    final rackFromApi = firstLocation.rack?.trim();
+    if (rackFromApi != null && rackFromApi.isNotEmpty) {
+      ref.read(addItemFormProvider.notifier).updateLocation(rackFromApi);
+      _locationController.text = rackFromApi;
+      _initialRackLocation = rackFromApi;
+    }
+    setState(() {
+      _rackLocationId = firstLocation.id;
+      _rackPhotoUrl = firstLocation.photoUrl;
+      _rackPhotoTakenAt = firstLocation.photoTakenAt;
+      _rackLastUpdatedAt = firstLocation.updatedAt;
+    });
+    warmRackPhotoUrl(ref.read(imageServiceProvider), firstLocation.photoUrl);
+  }
+
   Future<void> _refreshRackHistory(String locationId) async {
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final history = await service.fetchItemLocationHistory(locationId);
       if (!mounted) return;
-      setState(() {
-        _rackHistory = history;
-        _rackLastUpdatedAt = history.isNotEmpty
-            ? history.first.createdAt
-            : _rackLastUpdatedAt;
-      });
+      setState(() => _rackHistory = history);
+      warmRackHistoryThumbnails(ref.read(imageServiceProvider), history);
     } on Object {
       // History is optional UI — ignore load failures.
     }
@@ -792,17 +882,33 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final rack = form.location.trim();
     final employee = _rackEmployeeController.text.trim();
     final rackChanged = rack != _initialRackLocation;
-    final hasWork =
-        rack.isNotEmpty ||
-        rackChanged ||
-        employee.isNotEmpty ||
-        _pendingRackPhoto != null;
+    final hasWork = rackShelfHasPendingWork(
+      rack: rack,
+      initialRack: _initialRackLocation,
+      employee: employee,
+      pendingPhoto: _pendingRackPhoto,
+      locationId: _rackLocationId,
+    );
 
     if (!hasWork) return;
 
+    final rackEmployeeError = validateRackShelfEmployee(
+      rack: rack,
+      initialRack: _initialRackLocation,
+      employee: employee,
+      pendingPhoto: _pendingRackPhotoRaw ?? _pendingRackPhoto,
+      locationId: _rackLocationId,
+    );
+    if (rackEmployeeError != null) {
+      if (!mounted) return;
+      showOverlaySnackBar(context, message: rackEmployeeError);
+      return;
+    }
+
     try {
       final service = await ref.read(inventoryServiceProvider.future);
-      final defaultGodown = form.godownId ?? (await service.getDefaultGodown())?.id;
+      final defaultGodown =
+          form.godownId ?? (await service.getDefaultGodown())?.id;
       if (defaultGodown == null) return;
 
       var locationId = _rackLocationId;
@@ -822,22 +928,32 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           );
           locationId = created.id;
         }
-      } else if (rackChanged || employee.isNotEmpty) {
+      } else if (rackChanged) {
         await service.updateItemLocation(
           locationId,
           rack: rack.isEmpty ? '' : rack,
-          employeeLabel: employee.isEmpty ? null : employee,
         );
       }
 
       if (locationId == null) return;
 
-      if (_pendingRackPhoto != null) {
+      if (_pendingRackPhotoRaw != null || _pendingRackPhoto != null) {
+        final ({Uint8List bytes, String mimeType}) stamped;
+        if (_pendingRackPhotoRaw != null) {
+          stamped = await stampRackPhoto(
+            bytes: _pendingRackPhotoRaw!,
+            takenAt: DateTime.now(),
+            rackShelfLabel: rack,
+            employeeLabel: employee.isEmpty ? null : employee,
+          );
+        } else {
+          stamped = (bytes: _pendingRackPhoto!, mimeType: 'image/jpeg');
+        }
         final prepared = await prepareMediaUploadBytes(
-          bytes: _pendingRackPhoto!,
-          mimeType: 'image/jpeg',
+          bytes: stamped.bytes,
+          mimeType: stamped.mimeType,
         );
-        final url = await service.uploadRackPhoto(
+        final upload = await service.uploadRackPhoto(
           locationId: locationId,
           bytes: prepared.bytes,
           mimeType: prepared.mimeType,
@@ -845,8 +961,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         );
         if (mounted) {
           setState(() {
-            _rackPhotoUrl = url;
+            _rackPhotoUrl = upload.url;
+            _rackPhotoTakenAt = upload.takenAt ?? DateTime.now();
             _pendingRackPhoto = null;
+            _pendingRackPhotoRaw = null;
+            _rackEmployeeController.clear();
           });
         }
       }
@@ -861,7 +980,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Item saved but rack/shelf update failed: $error'),
+          content: Text('Item saved but rack update failed: $error'),
         ),
       );
     }
@@ -925,7 +1044,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           isPrimary: isPrimary,
         );
         ref.read(itemImagesProvider(itemId).notifier).upsert(uploaded);
-        unawaited(ref.read(itemImagesProvider(itemId).notifier).refreshInBackground());
+        unawaited(
+          ref.read(itemImagesProvider(itemId).notifier).refreshInBackground(),
+        );
         if (isPrimary) {
           ref
               .read(inventoryItemsProvider.notifier)
@@ -1050,9 +1171,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _locationController.clear();
     _rackEmployeeController.clear();
     _pendingRackPhoto = null;
+    _pendingRackPhotoRaw = null;
+    _rackEmployeeError = null;
     _rackLocationId = null;
     _rackPhotoUrl = null;
     _rackLastUpdatedAt = null;
+    _rackPhotoTakenAt = null;
     _rackHistory = const [];
     _initialRackLocation = '';
     _onlineStorePriceController.clear();
@@ -1154,31 +1278,31 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     if (_isMobileFullPage) {
       return _wrapWithCloseGuard(
         AnnotatedRegion<SystemUiOverlayStyle>(
-        value: AppTheme.lightSystemUi,
-        child: Scaffold(
-          backgroundColor: AppColors.surface,
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildHeader(form),
-                Expanded(
-                  child: ColoredBox(
-                    color: AppColors.background,
-                    child: SingleChildScrollView(
-                      controller: _mobileFormScrollController,
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      child: formBody,
+          value: AppTheme.lightSystemUi,
+          child: Scaffold(
+            backgroundColor: AppColors.surface,
+            body: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(form),
+                  Expanded(
+                    child: ColoredBox(
+                      color: AppColors.background,
+                      child: SingleChildScrollView(
+                        controller: _mobileFormScrollController,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: formBody,
+                      ),
                     ),
                   ),
-                ),
-                _buildFooter(),
-              ],
+                  _buildFooter(),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       );
     }
 
@@ -1240,109 +1364,95 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       );
     }
 
-    final isService = form.itemType == ItemType.service;
-    final bodyPadding = EdgeInsets.fromLTRB(
-      FormSpacing.page,
-      FormSpacing.section,
-      FormSpacing.page,
-      isService ? FormSpacing.section : FormSpacing.page,
-    );
-
     return Padding(
-      padding: bodyPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Flexible(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GeneralInformationSection(
-                    itemType: form.itemType,
-                    itemNameController: _itemNameController,
-                    shortNameController: _shortNameController,
-                    searchKeywordsController: _searchKeywordsController,
-                    hsnController: _hsnController,
-                    itemCodeController: _itemCodeController,
-                    descriptionController: _descriptionController,
-                    itemNameError: form.itemNameError,
-                    baseUnitError: form.baseUnitError,
-                    onItemNameChanged: notifier.updateItemName,
-                    onShortNameChanged: notifier.updateShortName,
-                    onSearchKeywordsChanged: notifier.updateSearchKeywords,
-                    onHsnChanged: notifier.updateHsn,
-                    onItemCodeChanged: notifier.updateItemCode,
-                    onDescriptionChanged: notifier.updateDescription,
-                    onAssignCode: () {
-                      notifier.assignCode();
-                      _itemCodeController.text =
-                          ref.read(addItemFormProvider).itemCode;
-                    },
-                    selectedCategoryId: form.categoryId,
-                    selectedCategory: selectedCategory,
-                    categories: categories,
-                    onCategorySelected: notifier.setCategory,
-                    selectedBrandId: form.brandId,
-                    selectedBrand: selectedBrand,
-                    brands: brands,
-                    onBrandSelected: notifier.setBrand,
-                    unitLabel: _displayUnitLabel(),
-                    onSelectUnit: _openUnitPicker,
-                    alternativesInlineAddButton: widget.editItem == null
-                        ? Wrap(
-                            spacing: 12,
-                            runSpacing: 8,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              AlternativeItemsAddButton(
-                                selectedItemIds: form.alternativeItemIds,
-                                excludeItemId: widget.editItem?.id,
-                                onChanged: notifier.setAlternativeItemIds,
-                              ),
-                              AddItemImageLinkButton(
-                                itemType: form.itemType,
-                                onPressed: () => unawaited(_addItemPhoto()),
-                              ),
-                            ],
-                          )
-                        : AddItemImageLinkButton(
-                            itemType: form.itemType,
-                            onPressed: () => unawaited(_addItemPhoto()),
-                          ),
-                    alternativesListSection: widget.editItem == null
-                        ? AlternativeItemsListSection(
-                            selectedItemIds: form.alternativeItemIds,
-                            excludeItemId: widget.editItem?.id,
-                            onChanged: notifier.setAlternativeItemIds,
-                          )
-                        : null,
-                    itemId: widget.editItem?.id,
-                    seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
-                    pendingItemPhotos: _pendingItemPhotos,
-                    onPendingPhotoTap: (index) =>
-                        unawaited(_openPendingPhoto(index)),
-                  ),
-                  const SizedBox(height: FormSpacing.section),
-                  _buildTabBar(form),
-                  const Divider(height: 1, color: _cardBorder),
-                  const SizedBox(height: FormSpacing.section),
-                ],
-              ),
+      padding: const EdgeInsets.fromLTRB(
+        FormSpacing.page,
+        FormSpacing.section,
+        FormSpacing.page,
+        FormSpacing.section,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GeneralInformationSection(
+              itemType: form.itemType,
+              itemNameController: _itemNameController,
+              shortNameController: _shortNameController,
+              searchKeywordsController: _searchKeywordsController,
+              hsnController: _hsnController,
+              itemCodeController: _itemCodeController,
+              descriptionController: _descriptionController,
+              itemNameError: form.itemNameError,
+              baseUnitError: form.baseUnitError,
+              onItemNameChanged: notifier.updateItemName,
+              onShortNameChanged: notifier.updateShortName,
+              onSearchKeywordsChanged: notifier.updateSearchKeywords,
+              onHsnChanged: notifier.updateHsn,
+              onItemCodeChanged: notifier.updateItemCode,
+              onDescriptionChanged: notifier.updateDescription,
+              onAssignCode: () {
+                notifier.assignCode();
+                _itemCodeController.text = ref
+                    .read(addItemFormProvider)
+                    .itemCode;
+              },
+              selectedCategoryId: form.categoryId,
+              selectedCategory: selectedCategory,
+              categories: categories,
+              onCategorySelected: notifier.setCategory,
+              selectedBrandId: form.brandId,
+              selectedBrand: selectedBrand,
+              brands: brands,
+              onBrandSelected: notifier.setBrand,
+              unitLabel: _displayUnitLabel(),
+              onSelectUnit: _openUnitPicker,
+              alternativesInlineAddButton: widget.editItem == null
+                  ? Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        AlternativeItemsAddButton(
+                          selectedItemIds: form.alternativeItemIds,
+                          excludeItemId: widget.editItem?.id,
+                          onChanged: notifier.setAlternativeItemIds,
+                        ),
+                        AddItemImageLinkButton(
+                          itemType: form.itemType,
+                          onPressed: () => unawaited(_addItemPhoto()),
+                        ),
+                      ],
+                    )
+                  : AddItemImageLinkButton(
+                      itemType: form.itemType,
+                      onPressed: () => unawaited(_addItemPhoto()),
+                    ),
+              alternativesListSection: widget.editItem == null
+                  ? AlternativeItemsListSection(
+                      selectedItemIds: form.alternativeItemIds,
+                      excludeItemId: widget.editItem?.id,
+                      onChanged: notifier.setAlternativeItemIds,
+                    )
+                  : null,
+              itemId: widget.editItem?.id,
+              seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
+              pendingItemPhotos: _pendingItemPhotos,
+              onPendingPhotoTap: (index) => unawaited(_openPendingPhoto(index)),
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: KeyedSubtree(
-                key: ValueKey(
-                  'add-item-tab-${form.itemType.name}-${form.activeTab}',
-                ),
-                child: _buildActiveTabContent(form, notifier, itemSettings),
+            const SizedBox(height: FormSpacing.section),
+            _buildTabBar(form),
+            const Divider(height: 1, color: _cardBorder),
+            const SizedBox(height: FormSpacing.section),
+            KeyedSubtree(
+              key: ValueKey(
+                'add-item-tab-${form.itemType.name}-${form.activeTab}',
               ),
+              child: _buildActiveTabContent(form, notifier, itemSettings),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1358,7 +1468,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     String? selectedBrand,
     ItemSettings itemSettings,
   ) {
-    final showBarcodeScan = form.itemType == ItemType.product &&
+    final showBarcodeScan =
+        form.itemType == ItemType.product &&
         itemSettings.barcodeScanningEnabled;
 
     return Column(
@@ -1405,7 +1516,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           showDescription: itemSettings.descriptionEnabled,
           showManufacturing:
               form.itemType == ItemType.product && itemSettings.manufacturing,
-          showAlternatives: false,
           selectedAlternativeItemIds: form.alternativeItemIds,
           excludeAlternativeItemId: widget.editItem?.id,
           onAlternativeItemIdsChanged: notifier.setAlternativeItemIds,
@@ -1912,15 +2022,42 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       onMinStockUnitChanged: notifier.setMinStockUnitId,
       rackLocationId: _rackLocationId,
       rackPhotoUrl: _rackPhotoUrl,
+      rackPhotoTakenAt: _rackPhotoTakenAt,
       rackLastUpdatedAt: _rackLastUpdatedAt,
       rackHistory: _rackHistory,
-      onRackPhotoChanged: (url) => setState(() => _rackPhotoUrl = url),
+      onRackPhotoChanged: (url, takenAt) {
+        setState(() {
+          _rackPhotoUrl = url;
+          _rackPhotoTakenAt = url == null ? null : takenAt;
+        });
+      },
       onRackHistoryRefresh: _rackLocationId == null
           ? null
-          : () => unawaited(_refreshRackHistory(_rackLocationId!)),
+          : () => _refreshRackHistory(_rackLocationId!),
       pendingRackPhotoBytes: _pendingRackPhoto,
-      onPendingRackPhotoChanged: (bytes) =>
-          setState(() => _pendingRackPhoto = bytes),
+      onPendingRackPhotoChanged: (bytes) => setState(() {
+        _pendingRackPhoto = bytes;
+        if (bytes == null) _pendingRackPhotoRaw = null;
+        if (bytes != null) _rackEmployeeError = null;
+      }),
+      pendingRackPhotoRawBytes: _pendingRackPhotoRaw,
+      onPendingRackPhotoRawChanged: (bytes) =>
+          setState(() => _pendingRackPhotoRaw = bytes),
+      initialRackLocation: _initialRackLocation,
+      rackEmployeeError: _rackEmployeeError,
+      onRackEmployeeChanged: () {
+        if (_rackEmployeeError == null) return;
+        setState(() => _rackEmployeeError = null);
+      },
+      onRackPhotoUploaded: () {
+        setState(() {
+          _rackEmployeeController.clear();
+          _initialRackLocation = _locationController.text.trim();
+        });
+      },
+      onRackLocationSynced: (rack) {
+        setState(() => _initialRackLocation = rack);
+      },
     );
   }
 
@@ -2095,7 +2232,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textPrimary,
                 side: const BorderSide(color: _cardBorder),
-                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
+                minimumSize: Size(
+                  compact ? double.infinity : 0,
+                  FormSpacing.inputHeight,
+                ),
                 padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
@@ -2110,7 +2250,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               onPressed: _isSaving ? null : () => _save(saveAndNew: false),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
+                minimumSize: Size(
+                  compact ? double.infinity : 0,
+                  FormSpacing.inputHeight,
+                ),
                 padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 28),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),

@@ -2,11 +2,11 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
-import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/delivery_challan_convert_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/delivery_challan_status_badge.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_empty_state_card.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
@@ -114,30 +114,11 @@ class DeliveryChallanTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          challansAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    SalesErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) => _ChallanTransactionsTable(
-              items: paginated.items,
-            ),
+          SalesPaginatedListAsyncBody(
+            listAsync: challansAsync,
+            onRetry: notifier.refresh,
+            hasStaleRows: paginated.items.isNotEmpty,
+            table: _ChallanTransactionsTable(items: paginated.items),
           ),
           const Divider(height: 1, color: _cardBorder),
           if (paginated.totalPages > 1)

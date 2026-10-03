@@ -9,6 +9,8 @@ import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style horizontal image thumbnails with add button for Add Item.
 class MobileAddItemImageStrip extends ConsumerStatefulWidget {
   const MobileAddItemImageStrip({
@@ -37,7 +39,8 @@ class MobileAddItemImageStrip extends ConsumerStatefulWidget {
       _MobileAddItemImageStripState();
 }
 
-class _MobileAddItemImageStripState extends ConsumerState<MobileAddItemImageStrip> {
+class _MobileAddItemImageStripState
+    extends ConsumerState<MobileAddItemImageStrip> {
   bool _seedApplied = false;
 
   @override
@@ -75,7 +78,7 @@ class _MobileAddItemImageStripState extends ConsumerState<MobileAddItemImageStri
   Widget build(BuildContext context) {
     final remote = widget.itemId != null
         ? ref.watch(itemImagesProvider(widget.itemId!)).value ??
-            const <ItemImageModel>[]
+              const <ItemImageModel>[]
         : const <ItemImageModel>[];
     final sortedRemote = List<ItemImageModel>.from(remote)
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -94,7 +97,8 @@ class _MobileAddItemImageStripState extends ConsumerState<MobileAddItemImageStri
         height: MobileAddItemImageStrip.thumbSize,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          itemCount: sortedRemote.length +
+          itemCount:
+              sortedRemote.length +
               widget.pendingPhotos.length +
               (canAdd ? 1 : 0),
           separatorBuilder: (_, __) => const SizedBox(width: 10),
@@ -156,8 +160,7 @@ class _RemoteThumb extends StatelessWidget {
               sourceMediaAssetId: image.mediaAssetId,
               displayContext: ImageDisplayContext.galleryThumb,
               fit: BoxFit.cover,
-              memCacheWidth:
-                  (MobileAddItemImageStrip.thumbSize * 2).round(),
+              memCacheWidth: (MobileAddItemImageStrip.thumbSize * 2).round(),
               placeholder: ColoredBox(
                 color: Colors.grey.shade100,
                 child: const Center(
@@ -170,7 +173,7 @@ class _RemoteThumb extends StatelessWidget {
               ),
               errorWidget: ColoredBox(
                 color: Colors.grey.shade100,
-                child: const Icon(Icons.broken_image_outlined, size: 18),
+                child: const Icon(LucideIcons.imageOff, size: 18),
               ),
             ),
           ),
@@ -242,7 +245,7 @@ class _AddPhotoChip extends StatelessWidget {
             color: AppColors.surface,
           ),
           child: Icon(
-            Icons.add_rounded,
+            LucideIcons.plus,
             size: 24,
             color: AppColors.primary,
           ),

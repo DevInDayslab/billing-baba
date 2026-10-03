@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 final _timeFormat = DateFormat('hh:mm a');
 
 Future<void> showPosHeldBillsSheet(BuildContext context) {
@@ -85,7 +87,7 @@ class _HeldBillsSheetBody extends ConsumerWidget {
       return const MobileEmptyState(
         title: 'No bills on hold',
         message: 'Held bills will appear here when you tap Hold bill.',
-        icon: Icons.pause_circle_outline_rounded,
+        icon: LucideIcons.circlePause,
       );
     }
 
@@ -101,7 +103,8 @@ class _HeldBillsSheetBody extends ConsumerWidget {
               cart.resumeBill(heldBills[index]);
               Navigator.of(context).pop();
             },
-            onDiscard: () => unawaited(cart.discardHeldBill(heldBills[index].id)),
+            onDiscard: () =>
+                unawaited(cart.discardHeldBill(heldBills[index].id)),
           ),
         ],
       ],
@@ -226,7 +229,7 @@ class _HeldBillCard extends StatelessWidget {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints.tightFor(width: 32, height: 32),
               icon: Icon(
-                Icons.close_rounded,
+                LucideIcons.x,
                 color: AppColors.textSecondary.withValues(alpha: 0.8),
                 size: AppIconSize.md,
               ),

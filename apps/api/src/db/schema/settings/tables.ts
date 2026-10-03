@@ -6,7 +6,6 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns } from '../columns';
 import {
@@ -14,6 +13,7 @@ import {
   taxTypeEnum,
   valuationMethodEnum,
 } from '../enums';
+import { syncPullIndex } from '../sync-pull-index';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);

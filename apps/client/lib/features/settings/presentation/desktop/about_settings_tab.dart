@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/shared/widgets/legal/legal_consent_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -97,7 +98,9 @@ class AboutSettingsTab extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: AppSpacing.xxl),
+                          const SizedBox(height: AppSpacing.xl),
+                          const LegalDocumentLinksRow(),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             '© ${DateTime.now().year} Billing Baba',
                             textAlign: TextAlign.center,

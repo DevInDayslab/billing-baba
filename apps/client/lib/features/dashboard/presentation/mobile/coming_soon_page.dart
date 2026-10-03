@@ -2,6 +2,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_settings_detail_page.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileComingSoonPage extends StatelessWidget {
   const MobileComingSoonPage({
     required this.title,
@@ -17,7 +19,7 @@ class MobileComingSoonPage extends StatelessWidget {
       body: MobileEmptyState(
         title: '$title coming soon',
         message: 'This feature is under development.',
-        icon: Icons.construction_outlined,
+        icon: LucideIcons.construction,
       ),
     );
   }

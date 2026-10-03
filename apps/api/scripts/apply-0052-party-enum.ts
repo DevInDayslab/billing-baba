@@ -31,6 +31,9 @@ const labels = await sql`
   WHERE t.typname = 'document_attachment_entity_type'
   ORDER BY e.enumsortorder
 `;
-console.log('document_attachment_entity_type:', labels.map((r) => r.enumlabel));
+console.log(
+  'document_attachment_entity_type:',
+  labels.map((r) => r.enumlabel),
+);
 
 await sql.end();

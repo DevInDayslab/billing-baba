@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style contextual menu for a transaction row on the mobile home feed.
 Future<void> showMobileTransactionMoreOptionsSheet({
   required BuildContext context,
@@ -49,7 +51,7 @@ class _MoreOptionsSheetHeader extends StatelessWidget {
             IconButton(
               onPressed: () => Navigator.of(context).pop(),
               icon: Icon(
-                Icons.close_rounded,
+                LucideIcons.x,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
               ),
               visualDensity: VisualDensity.compact,

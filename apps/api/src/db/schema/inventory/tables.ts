@@ -9,7 +9,6 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import {
   money,
@@ -23,6 +22,7 @@ import {
   pricingTierEnum,
 } from '../enums';
 import { users } from '../identity/tables';
+import { syncPullIndex } from '../sync-pull-index';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);

@@ -99,15 +99,30 @@ class JobWorkOutTable extends ConsumerWidget {
           const Divider(height: 1, color: _cardBorder),
           ordersAsync.when(
             skipLoadingOnReload: true,
-            loading: () => const SalesLoadingState(),
+            loading: () {
+              if (items.isNotEmpty) {
+                return SalesTableReloadArea(
+                  isReloading: true,
+                  child: _JobWorkOutTransactionsTable(
+                    items: items,
+                    isFiltered: isFiltered,
+                    onEdit: (item) => _openForm(context, ref, orderId: item.id),
+                  ),
+                );
+              }
+              return const SalesLoadingState();
+            },
             error: (error, _) => SalesErrorState(
               message: SalesErrorMapper.messageFor(error),
               onRetry: listNotifier.refresh,
             ),
-            data: (_) => _JobWorkOutTransactionsTable(
-              items: items,
-              isFiltered: isFiltered,
-              onEdit: (item) => _openForm(context, ref, orderId: item.id),
+            data: (_) => SalesTableReloadArea(
+              isReloading: ordersAsync.isReloading,
+              child: _JobWorkOutTransactionsTable(
+                items: items,
+                isFiltered: isFiltered,
+                onEdit: (item) => _openForm(context, ref, orderId: item.id),
+              ),
             ),
           ),
         ],

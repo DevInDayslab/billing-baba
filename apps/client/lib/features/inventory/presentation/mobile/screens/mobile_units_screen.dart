@@ -24,6 +24,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile units list with search, conversions, and add/edit/delete.
 class MobileUnitsScreen extends ConsumerStatefulWidget {
   const MobileUnitsScreen({super.key});
@@ -57,7 +59,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
       final trimmed = query.trim();
       ref.read(unitBackendSearchProvider.notifier).query = trimmed;
       unawaited(
-        ref.read(inventoryUnitsProvider.notifier).refresh(
+        ref
+            .read(inventoryUnitsProvider.notifier)
+            .refresh(
               searchQuery: trimmed.isEmpty ? null : trimmed,
             ),
       );
@@ -65,7 +69,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryUnitsProvider.notifier).refresh(
+    return ref
+        .read(inventoryUnitsProvider.notifier)
+        .refresh(
           searchQuery: ref.read(unitBackendSearchProvider),
         );
   }
@@ -99,8 +105,9 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final error =
-        await ref.read(inventoryUnitsProvider.notifier).deleteUnit(unit.id);
+    final error = await ref
+        .read(inventoryUnitsProvider.notifier)
+        .deleteUnit(unit.id);
     if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,7 +192,8 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
 
   Future<void> _showItemsForUnit(InventoryUnit unit) async {
     final items =
-        ref.read(inventoryItemsProvider).value?.items ?? const <InventoryItem>[];
+        ref.read(inventoryItemsProvider).value?.items ??
+        const <InventoryItem>[];
     final shortName = unit.shortName.toLowerCase();
     final matching = items
         .where(
@@ -324,13 +332,15 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                   (_, _, true) => MobileEmptyState(
                     title: 'No units found',
                     message: 'Add a unit to measure your inventory items.',
-                    icon: Icons.straighten_outlined,
-                    actionLabel: ref
+                    icon: LucideIcons.ruler,
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Unit'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addUnit())
@@ -356,10 +366,13 @@ class _MobileUnitsScreenState extends ConsumerState<MobileUnitsScreen> {
                           ),
                           itemBuilder: (context, index) {
                             final unit = units[index];
-                            final isExpanded = _expandedUnitIds.contains(unit.id);
+                            final isExpanded = _expandedUnitIds.contains(
+                              unit.id,
+                            );
                             final hasConversions = _hasConversions(unit);
-                            final permissions =
-                                ref.read(permissionServiceProvider);
+                            final permissions = ref.read(
+                              permissionServiceProvider,
+                            );
                             return _UnitListTile(
                               unit: unit,
                               isExpanded: isExpanded,
@@ -502,8 +515,8 @@ class _UnitListTile extends StatelessWidget {
                   IconButton(
                     icon: Icon(
                       isExpanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
+                          ? LucideIcons.chevronUp
+                          : LucideIcons.chevronDown,
                     ),
                     color: AppColors.textSecondary,
                     onPressed: onToggleExpand,
@@ -525,17 +538,19 @@ class _UnitListTile extends StatelessWidget {
                       children: [
                         Text(
                           unit.fullName.toUpperCase(),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           unit.shortName,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                         ),
                       ],
                     ),
@@ -543,7 +558,7 @@ class _UnitListTile extends StatelessWidget {
                 ),
                 if (onEdit != null)
                   IconButton(
-                    icon: const Icon(Icons.edit_outlined),
+                    icon: const Icon(LucideIcons.pencil),
                     color: AppColors.textSecondary,
                     tooltip: 'Edit unit',
                     onPressed: onEdit,
@@ -577,9 +592,7 @@ class _UnitListTile extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   conversion.label,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: AppColors.textPrimary,
                                       ),
@@ -587,9 +600,7 @@ class _UnitListTile extends StatelessWidget {
                               ),
                               Text(
                                 '${conversion.factor}x',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -597,7 +608,7 @@ class _UnitListTile extends StatelessWidget {
                               if (onDeleteConversion != null)
                                 IconButton(
                                   icon: const Icon(
-                                    Icons.delete_outline,
+                                    LucideIcons.trash2,
                                     size: 18,
                                   ),
                                   color: AppColors.textSecondary,
@@ -622,7 +633,7 @@ class _UnitListTile extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
                   onPressed: onAddConversion,
-                  icon: const Icon(Icons.add_rounded, size: 18),
+                  icon: const Icon(LucideIcons.plus, size: 18),
                   label: const Text('Add Conversion'),
                 ),
               ),
@@ -664,7 +675,7 @@ class _AddUnitFab extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 1.5),
                 ),
                 child: const Icon(
-                  Icons.add_rounded,
+                  LucideIcons.plus,
                   color: Colors.white,
                   size: 14,
                 ),

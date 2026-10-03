@@ -5,6 +5,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style transaction picker opened from the center POS action.
 Future<void> showMobileTransactionMenuSheet({
   required BuildContext context,
@@ -39,43 +41,43 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
       items: [
         MobileTransactionMenuItem(
           label: 'Payment-In',
-          icon: Icons.call_received_rounded,
+          icon: LucideIcons.phoneIncoming,
           showHighlight: true,
           onTap: () => go(AppRoutes.addPaymentIn),
         ),
         MobileTransactionMenuItem(
           label: 'Sale Return',
-          icon: Icons.undo_rounded,
+          icon: LucideIcons.undo2,
           onTap: () => go(AppRoutes.addCreditNote),
         ),
         MobileTransactionMenuItem(
           label: 'Delivery Challan',
-          icon: Icons.local_shipping_outlined,
+          icon: LucideIcons.truck,
           onTap: () => go(AppRoutes.addDeliveryChallan),
         ),
         MobileTransactionMenuItem(
           label: 'Estimate/Quotation',
-          icon: Icons.calculate_outlined,
+          icon: LucideIcons.calculator,
           onTap: () => go(AppRoutes.addEstimate),
         ),
         MobileTransactionMenuItem(
           label: 'Proforma Invoice',
-          icon: Icons.article_outlined,
+          icon: LucideIcons.fileText,
           onTap: () => go(AppRoutes.addProforma),
         ),
         MobileTransactionMenuItem(
           label: 'Sale Order',
-          icon: Icons.assignment_outlined,
+          icon: LucideIcons.clipboardList,
           onTap: () => go(AppRoutes.addSaleOrder),
         ),
         MobileTransactionMenuItem(
           label: 'Sale Invoice',
-          icon: Icons.receipt_long_outlined,
+          icon: LucideIcons.receipt,
           onTap: () => go(AppRoutes.addSale),
         ),
         MobileTransactionMenuItem(
           label: 'Mobile POS',
-          icon: Icons.bolt_rounded,
+          icon: LucideIcons.zap,
           onTap: () => go(AppRoutes.pos),
         ),
       ],
@@ -85,23 +87,23 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
       items: [
         MobileTransactionMenuItem(
           label: 'Purchase',
-          icon: Icons.shopping_cart_outlined,
+          icon: LucideIcons.shoppingCart,
           onTap: () => go(AppRoutes.addPurchase),
         ),
         MobileTransactionMenuItem(
           label: 'Payment-Out',
-          icon: Icons.call_made_rounded,
+          icon: LucideIcons.phoneOutgoing,
           showHighlight: true,
           onTap: () => go(AppRoutes.addPaymentOut),
         ),
         MobileTransactionMenuItem(
           label: 'Purchase Return',
-          icon: Icons.shopping_cart_checkout_outlined,
+          icon: LucideIcons.shoppingCart,
           onTap: () => go(AppRoutes.addDebitNote),
         ),
         MobileTransactionMenuItem(
           label: 'Purchase Order',
-          icon: Icons.assignment_turned_in_outlined,
+          icon: LucideIcons.clipboardCheck,
           onTap: () => go(AppRoutes.addPurchaseOrder),
         ),
       ],
@@ -111,7 +113,7 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
       items: [
         MobileTransactionMenuItem(
           label: 'Expenses',
-          icon: Icons.account_balance_wallet_outlined,
+          icon: LucideIcons.wallet,
           showHighlight: true,
           onTap: () => go(AppRoutes.addExpense),
         ),
@@ -139,7 +141,7 @@ class _TransactionMenuSheetHeader extends StatelessWidget {
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: Icon(
-            Icons.close_rounded,
+            LucideIcons.x,
             color: AppColors.textSecondary.withValues(alpha: 0.7),
           ),
           visualDensity: VisualDensity.compact,
@@ -328,17 +330,17 @@ class _SparkleAccent extends StatelessWidget {
           Positioned(
             left: 0,
             top: 4,
-            child: Icon(Icons.star, size: 7, color: _color),
+            child: Icon(LucideIcons.star, size: 7, color: _color),
           ),
           Positioned(
             left: 6,
             top: 0,
-            child: Icon(Icons.star, size: 9, color: _color),
+            child: Icon(LucideIcons.star, size: 9, color: _color),
           ),
           Positioned(
             left: 11,
             top: 5,
-            child: Icon(Icons.star, size: 6, color: _color),
+            child: Icon(LucideIcons.star, size: 6, color: _color),
           ),
         ],
       ),

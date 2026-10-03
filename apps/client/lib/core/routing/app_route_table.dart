@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/cold_start_warm_provider.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
@@ -107,6 +108,7 @@ GoRouter createAppRouter({
   bool showSplash = true,
 }) {
   ref.watch(companySessionBootstrapProvider);
+  ref.watch(coldStartWarmProvider);
   ref.watch(syncEngineLifecycleProvider);
   return GoRouter(
     initialLocation: initialLocation,

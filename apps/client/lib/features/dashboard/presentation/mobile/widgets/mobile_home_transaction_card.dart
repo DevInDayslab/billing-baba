@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Compact transaction card for the home feed.
 class MobileHomeTransactionCard extends StatelessWidget {
   const MobileHomeTransactionCard({
@@ -106,12 +108,12 @@ class MobileHomeTransactionCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _ActionButton(
-                    icon: Icons.print_outlined,
+                    icon: LucideIcons.printer,
                     onTap: onPrint,
                     semanticLabel: 'Print ${item.documentNumber}',
                   ),
                   _ActionButton(
-                    icon: Icons.share_outlined,
+                    icon: LucideIcons.share2,
                     onTap: onShare,
                     semanticLabel: 'Share ${item.documentNumber}',
                   ),
@@ -131,13 +133,12 @@ class MobileHomeTransactionCard extends StatelessWidget {
 
   static IconData _iconForFilter(MobileHomeTransactionFilterType type) {
     return switch (type) {
-      MobileHomeTransactionFilterType.sale => Icons.shopping_cart_outlined,
-      MobileHomeTransactionFilterType.purchase => Icons.shopping_bag_outlined,
-      MobileHomeTransactionFilterType.paymentIn => Icons.arrow_upward_rounded,
-      MobileHomeTransactionFilterType.paymentOut => Icons.arrow_downward_rounded,
-      MobileHomeTransactionFilterType.expense =>
-        Icons.account_balance_wallet_outlined,
-      _ => Icons.receipt_long_outlined,
+      MobileHomeTransactionFilterType.sale => LucideIcons.shoppingCart,
+      MobileHomeTransactionFilterType.purchase => LucideIcons.shoppingBag,
+      MobileHomeTransactionFilterType.paymentIn => LucideIcons.arrowUp,
+      MobileHomeTransactionFilterType.paymentOut => LucideIcons.arrowDown,
+      MobileHomeTransactionFilterType.expense => LucideIcons.wallet,
+      _ => LucideIcons.receipt,
     };
   }
 }

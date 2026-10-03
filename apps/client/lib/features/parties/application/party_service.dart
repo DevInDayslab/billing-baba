@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
@@ -864,9 +865,13 @@ class PartyBackendSearch extends _$PartyBackendSearch {
 
 @riverpod
 bool partiesUsingCache(Ref ref) {
-  final serviceAsync = ref.watch(partyServiceProvider);
-  return serviceAsync.maybeWhen(
-    data: (service) => service.isShowingCachedData,
-    orElse: () => false,
-  );
+  if (!ref.watch(partyServiceProvider).hasValue) return false;
+  final service = ref.watch(partyServiceProvider).requireValue;
+  if (!service.isShowingCachedData) return false;
+
+  final listAsync = ref.watch(partyListProvider);
+  if (listAsync.isLoading || listAsync.isRefreshing) return false;
+
+  return listAsync.hasError &&
+      OfflineUiMessages.isOfflineError(listAsync.error!);
 }

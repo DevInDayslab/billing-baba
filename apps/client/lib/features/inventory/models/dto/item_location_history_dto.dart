@@ -7,19 +7,10 @@ class ItemLocationHistoryDto {
     this.rack,
     this.shelf,
     this.photoUrl,
+    this.photoMediaAssetId,
     this.employeeLabel,
     this.changedBy,
   });
-
-  final String id;
-  final String itemLocationId;
-  final String itemId;
-  final String createdAt;
-  final String? rack;
-  final String? shelf;
-  final String? photoUrl;
-  final String? employeeLabel;
-  final String? changedBy;
 
   factory ItemLocationHistoryDto.fromJson(Map<String, dynamic> json) {
     return ItemLocationHistoryDto(
@@ -30,10 +21,22 @@ class ItemLocationHistoryDto {
       rack: json['rack'] as String?,
       shelf: json['shelf'] as String?,
       photoUrl: json['photo_url'] as String?,
+      photoMediaAssetId: json['photo_media_asset_id'] as String?,
       employeeLabel: json['employee_label'] as String?,
       changedBy: json['changed_by'] as String?,
     );
   }
+
+  final String id;
+  final String itemLocationId;
+  final String itemId;
+  final String createdAt;
+  final String? rack;
+  final String? shelf;
+  final String? photoUrl;
+  final String? photoMediaAssetId;
+  final String? employeeLabel;
+  final String? changedBy;
 }
 
 class PaginatedItemLocationHistoryDto {
@@ -41,9 +44,6 @@ class PaginatedItemLocationHistoryDto {
     required this.records,
     required this.meta,
   });
-
-  final List<ItemLocationHistoryDto> records;
-  final ({int page, int limit, int total}) meta;
 
   factory PaginatedItemLocationHistoryDto.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
@@ -62,4 +62,7 @@ class PaginatedItemLocationHistoryDto {
       ),
     );
   }
+
+  final List<ItemLocationHistoryDto> records;
+  final ({int page, int limit, int total}) meta;
 }

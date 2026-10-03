@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Transaction-related settings panel (mobile adaptation of desktop sidebar).
 class MobilePartyTransactionSettingsPanel extends ConsumerWidget {
   const MobilePartyTransactionSettingsPanel({
@@ -48,37 +50,37 @@ class MobilePartyTransactionSettingsPanel extends ConsumerWidget {
                 _SettingsTile(
                   label: 'Party Type',
                   value: party.partyTypeLabel,
-                  icon: Icons.badge_outlined,
+                  icon: LucideIcons.idCard,
                 ),
                 const _Divider(),
                 _SettingsTile(
                   label: 'Outstanding Balance',
                   value: outstandingLabel,
-                  icon: Icons.account_balance_wallet_outlined,
+                  icon: LucideIcons.wallet,
                 ),
                 const _Divider(),
                 _SettingsTile(
                   label: 'Credit Limit',
                   value: creditLimitLabel,
-                  icon: Icons.credit_card_outlined,
+                  icon: LucideIcons.creditCard,
                 ),
                 const _Divider(),
                 _SettingsTile(
                   label: 'Default Price Tier',
                   value: PriceTier.labelFor(party.defaultPriceTier),
-                  icon: Icons.sell_outlined,
+                  icon: LucideIcons.tag,
                 ),
                 const _Divider(),
                 _SettingsTile(
                   label: 'Payment Reminder',
                   value: _reminderLabel(nextReminder),
-                  icon: Icons.notifications_active_outlined,
+                  icon: LucideIcons.bellRing,
                 ),
                 const _Divider(),
                 _SettingsTile(
                   label: 'Status',
                   value: party.isActive ? 'Active' : 'Inactive',
-                  icon: Icons.toggle_on_outlined,
+                  icon: LucideIcons.toggleRight,
                 ),
               ],
             ),
