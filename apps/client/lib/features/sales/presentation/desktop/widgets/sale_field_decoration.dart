@@ -50,6 +50,7 @@ class SaleFieldChrome extends StatelessWidget {
     this.compact = false,
     this.filled = false,
     this.onTap,
+    this.height,
     super.key,
   });
 
@@ -58,10 +59,11 @@ class SaleFieldChrome extends StatelessWidget {
   final bool compact;
   final bool filled;
   final VoidCallback? onTap;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
-    final height = saleFieldControlHeight(compact: compact);
+    final height = this.height ?? saleFieldControlHeight(compact: compact);
     final radius = saleFieldBorderRadius(compact: compact);
     final borderColor = saleFieldBorderSideColor(
       hasError: hasError,
@@ -119,6 +121,7 @@ class SaleTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.style,
     this.borderless = false,
+    this.controlHeight,
     super.key,
   });
 
@@ -144,9 +147,12 @@ class SaleTextField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final TextStyle? style;
   final bool borderless;
+  final double? controlHeight;
 
   @override
   Widget build(BuildContext context) {
+    final fieldHeight =
+        controlHeight ?? saleFieldControlHeight(compact: compact);
     final fontSize = compact ? 12.0 : 14.0;
     // Keep the editable line short, then center it in the chrome — stretching
     // the TextField makes desktop text sit at the top of the box.
@@ -229,7 +235,7 @@ class SaleTextField extends StatelessWidget {
 
     if (borderless) {
       return SizedBox(
-        height: saleFieldControlHeight(compact: compact),
+        height: fieldHeight,
         width: double.infinity,
         child: centered,
       );
@@ -239,6 +245,7 @@ class SaleTextField extends StatelessWidget {
       hasError: hasError,
       compact: compact,
       filled: filled,
+      height: controlHeight,
       child: centered,
     );
   }
@@ -392,18 +399,34 @@ class SaleCompactFieldBox extends StatelessWidget {
   const SaleCompactFieldBox({
     required this.child,
     this.width,
+    this.height,
+    this.bordered = false,
     super.key,
   });
 
   final Widget child;
   final double? width;
+  final double? height;
+
+  /// When true, paints the white bordered shell used in line-item grids.
+  final bool bordered;
 
   @override
   Widget build(BuildContext context) {
-    final field = SizedBox(
-      height: saleCompactFieldHeight,
-      child: child,
-    );
+    final boxHeight = height ?? saleCompactFieldHeight;
+    final Widget field;
+    if (bordered) {
+      field = SaleFieldChrome(
+        compact: true,
+        height: boxHeight,
+        child: child,
+      );
+    } else {
+      field = SizedBox(
+        height: boxHeight,
+        child: child,
+      );
+    }
 
     if (width != null) {
       return SizedBox(width: width, child: field);
@@ -448,6 +471,7 @@ class SaleFieldTrigger extends StatelessWidget {
     this.hasError = false,
     this.compact = false,
     this.borderless = false,
+    this.height,
     super.key,
   });
 
@@ -456,10 +480,11 @@ class SaleFieldTrigger extends StatelessWidget {
   final bool hasError;
   final bool compact;
   final bool borderless;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
-    final fieldHeight = saleFieldControlHeight(compact: compact);
+    final fieldHeight = height ?? saleFieldControlHeight(compact: compact);
 
     if (borderless) {
       return GestureDetector(
@@ -483,6 +508,7 @@ class SaleFieldTrigger extends StatelessWidget {
       onTap: onTap,
       hasError: hasError,
       compact: compact,
+      height: height,
       child: Align(
         alignment: Alignment.centerLeft,
         child: child,

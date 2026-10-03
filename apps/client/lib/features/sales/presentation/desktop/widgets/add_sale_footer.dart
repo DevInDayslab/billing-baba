@@ -7,6 +7,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fo
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_service.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +16,18 @@ import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _compactBreakpoint = 900.0;
+const _attachmentActionsWidthFactor = 0.5;
+// Shared outer height for terms card + attachment panel (scroll-safe; no IntrinsicHeight).
+const _termsSectionPadding = 12.0;
+const _termsNotesMinLines = 3;
+const _termsAndAttachmentPanelHeight =
+    _termsSectionPadding * 2 +
+    18.0 +
+    8.0 +
+    saleFieldHeight +
+    8.0 +
+    20.0 +
+    13.0 * 1.2 * _termsNotesMinLines;
 
 class AddSaleFooter extends ConsumerStatefulWidget {
   const AddSaleFooter({this.sessionKey = 'default', super.key});
@@ -72,91 +85,65 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       onTitleChanged: notifier.updateTermsTitle,
       onNotesChanged: notifier.updateTermsText,
     );
-    final attachmentsSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _AttachmentActionButton(
-          icon: Icons.description_outlined,
-          label: 'ADD DESCRIPTION',
-          onPressed: () => setState(() => _showDescription = true),
-        ),
-        if (_showDescription) ...[
-          const SizedBox(height: 8),
-          _DescriptionField(
-            initialValue: form.description,
-            onChanged: notifier.updateDescription,
-          ),
-        ],
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _AttachmentActionButton(
-                icon: Icons.camera_alt_outlined,
-                label: 'ADD IMAGE',
-                onPressed: () => _promptAddImage(
-                  context,
-                  notifier,
-                  form.attachedImages.length,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _AttachmentActionButton(
-                icon: Icons.attach_file_outlined,
-                label: 'ADD DOCUMENT',
-                filled: true,
-                onPressed: () => _promptAddDocument(
-                  context,
-                  notifier,
-                  form.attachedDocuments.length,
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (form.attachedImages.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          SaleFormAttachmentChipList(
-            attachments: form.attachedImages,
-            attachmentService: attachmentService,
-            onRemove: (id) => transactionRemoveAttachment(
-              ref: ref,
-              attachments: form.attachedImages,
-              id: id,
-              onRemoved: notifier.removeImage,
-            ),
-            onRename: (id, name) => transactionRenameAttachment(
-              ref: ref,
-              attachments: form.attachedImages,
-              id: id,
-              name: name,
-              onRenamed: notifier.updateImage,
-            ),
-          ),
-        ],
-        if (form.attachedDocuments.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          SaleFormAttachmentChipList(
-            attachments: form.attachedDocuments,
-            attachmentService: attachmentService,
-            onRemove: (id) => transactionRemoveAttachment(
-              ref: ref,
-              attachments: form.attachedDocuments,
-              id: id,
-              onRemoved: notifier.removeDocument,
-            ),
-            onRename: (id, name) => transactionRenameAttachment(
-              ref: ref,
-              attachments: form.attachedDocuments,
-              id: id,
-              name: name,
-              onRenamed: notifier.updateDocument,
-            ),
-          ),
-        ],
-      ],
+    final attachmentExtras = _AttachmentExtras(
+      showDescription: _showDescription,
+      form: form,
+      attachmentService: attachmentService,
+      onDescriptionChanged: notifier.updateDescription,
+      onRemoveImage: (id) => transactionRemoveAttachment(
+        ref: ref,
+        attachments: form.attachedImages,
+        id: id,
+        onRemoved: notifier.removeImage,
+      ),
+      onRenameImage: (id, name) => transactionRenameAttachment(
+        ref: ref,
+        attachments: form.attachedImages,
+        id: id,
+        name: name,
+        onRenamed: notifier.updateImage,
+      ),
+      onRemoveDocument: (id) => transactionRemoveAttachment(
+        ref: ref,
+        attachments: form.attachedDocuments,
+        id: id,
+        onRemoved: notifier.removeDocument,
+      ),
+      onRenameDocument: (id, name) => transactionRenameAttachment(
+        ref: ref,
+        attachments: form.attachedDocuments,
+        id: id,
+        name: name,
+        onRenamed: notifier.updateDocument,
+      ),
+    );
+    final attachmentActionsBox = _AttachmentActionsBox(
+      expandVertically: false,
+      onAddDescription: () => setState(() => _showDescription = true),
+      onAddImage: () => _promptAddImage(
+        context,
+        notifier,
+        form.attachedImages.length,
+      ),
+      onAddDocument: () => _promptAddDocument(
+        context,
+        notifier,
+        form.attachedDocuments.length,
+      ),
+    );
+    final attachmentActionsBoxTall = _AttachmentActionsBox(
+      expandVertically: true,
+      onAddDescription: () => setState(() => _showDescription = true),
+      onAddImage: () => _promptAddImage(
+        context,
+        notifier,
+        form.attachedImages.length,
+      ),
+      onAddDocument: () => _promptAddDocument(
+        context,
+        notifier,
+        form.attachedDocuments.length,
+      ),
     );
     final totalsSection = _TotalsSection(
       form: form,
@@ -177,21 +164,55 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
             children: [
               termsSection,
               const SizedBox(height: 16),
-              attachmentsSection,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FractionallySizedBox(
+                  widthFactor: _attachmentActionsWidthFactor,
+                  child: attachmentActionsBox,
+                ),
+              ),
+              attachmentExtras,
               const SizedBox(height: 16),
               totalsSection,
             ],
           );
         }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(flex: 2, child: termsSection),
-            const SizedBox(width: 16),
-            Expanded(flex: 2, child: attachmentsSection),
-            const SizedBox(width: 16),
-            SizedBox(width: 260, child: totalsSection),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: termsSection),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: _attachmentActionsWidthFactor,
+                      child: SizedBox(
+                        height: _termsAndAttachmentPanelHeight,
+                        child: attachmentActionsBoxTall,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                SizedBox(width: 260, child: totalsSection),
+              ],
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Expanded(flex: 2, child: SizedBox.shrink()),
+                const SizedBox(width: 16),
+                Expanded(flex: 2, child: attachmentExtras),
+                const SizedBox(width: 16),
+                const SizedBox(width: 260),
+              ],
+            ),
           ],
         );
       },
@@ -416,18 +437,20 @@ class _TermsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: _cardBorder),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Terms & Conditions',
+    return SizedBox(
+      height: _termsAndAttachmentPanelHeight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: _cardBorder),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(_termsSectionPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Terms & Conditions',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -442,11 +465,12 @@ class _TermsSection extends StatelessWidget {
               onSelected: onTitleChanged,
             ),
             const SizedBox(height: 8),
-            _NotesField(
-              initialValue: notes,
-              onChanged: onNotesChanged,
-            ),
-          ],
+              _NotesField(
+                initialValue: notes,
+                onChanged: onNotesChanged,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -506,23 +530,158 @@ class _NotesFieldState extends State<_NotesField> {
   }
 }
 
+class _AttachmentActionsBox extends StatelessWidget {
+  const _AttachmentActionsBox({
+    required this.expandVertically,
+    required this.onAddDescription,
+    required this.onAddImage,
+    required this.onAddDocument,
+  });
+
+  final bool expandVertically;
+  final VoidCallback onAddDescription;
+  final VoidCallback onAddImage;
+  final VoidCallback onAddDocument;
+
+  @override
+  Widget build(BuildContext context) {
+    final buttons = [
+      _AttachmentActionButton(
+        icon: Icons.description_outlined,
+        label: 'ADD DESCRIPTION',
+        onPressed: onAddDescription,
+        expand: expandVertically,
+      ),
+      _AttachmentActionButton(
+        icon: Icons.camera_alt_outlined,
+        label: 'ADD IMAGE',
+        onPressed: onAddImage,
+        expand: expandVertically,
+      ),
+      _AttachmentActionButton(
+        icon: Icons.attach_file_outlined,
+        label: 'ADD DOCUMENT',
+        filled: true,
+        onPressed: onAddDocument,
+        expand: expandVertically,
+      ),
+    ];
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: _cardBorder),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: expandVertically
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: buttons[0]),
+                  const SizedBox(height: 8),
+                  Expanded(child: buttons[1]),
+                  const SizedBox(height: 8),
+                  Expanded(child: buttons[2]),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  buttons[0],
+                  const SizedBox(height: 8),
+                  buttons[1],
+                  const SizedBox(height: 8),
+                  buttons[2],
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _AttachmentExtras extends StatelessWidget {
+  const _AttachmentExtras({
+    required this.showDescription,
+    required this.form,
+    required this.attachmentService,
+    required this.onDescriptionChanged,
+    required this.onRemoveImage,
+    required this.onRenameImage,
+    required this.onRemoveDocument,
+    required this.onRenameDocument,
+  });
+
+  final bool showDescription;
+  final AddSaleFormState form;
+  final DocumentAttachmentService? attachmentService;
+  final ValueChanged<String> onDescriptionChanged;
+  final ValueChanged<String> onRemoveImage;
+  final void Function(String id, String name) onRenameImage;
+  final ValueChanged<String> onRemoveDocument;
+  final void Function(String id, String name) onRenameDocument;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasExtras =
+        showDescription ||
+        form.attachedImages.isNotEmpty ||
+        form.attachedDocuments.isNotEmpty;
+    if (!hasExtras) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showDescription) ...[
+          const SizedBox(height: 8),
+          _DescriptionField(
+            initialValue: form.description,
+            onChanged: onDescriptionChanged,
+          ),
+        ],
+        if (form.attachedImages.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          SaleFormAttachmentChipList(
+            attachments: form.attachedImages,
+            attachmentService: attachmentService,
+            onRemove: onRemoveImage,
+            onRename: onRenameImage,
+          ),
+        ],
+        if (form.attachedDocuments.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          SaleFormAttachmentChipList(
+            attachments: form.attachedDocuments,
+            attachmentService: attachmentService,
+            onRemove: onRemoveDocument,
+            onRename: onRenameDocument,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _AttachmentActionButton extends StatelessWidget {
   const _AttachmentActionButton({
     required this.icon,
     required this.label,
     required this.onPressed,
     this.filled = false,
+    this.expand = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
   final bool filled;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: expand ? double.infinity : null,
       child: OutlinedButton.icon(
         onPressed: onPressed,
         icon: Icon(icon, size: 16),
@@ -535,9 +694,14 @@ class _AttachmentActionButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           backgroundColor: filled ? const Color(0xFFF5F8FA) : null,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          minimumSize: expand ? Size.zero : null,
+          tapTargetSize: expand ? MaterialTapTargetSize.shrinkWrap : null,
           side: const BorderSide(color: _cardBorder),
           alignment: Alignment.center,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
         ),
       ),
     );

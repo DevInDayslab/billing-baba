@@ -36,10 +36,15 @@ class ItemAlternativesRepository {
 
   Future<void> removeAlternative(
     String itemId,
-    String alternativeItemId,
-  ) async {
+    String alternativeItemId, {
+    String? relationId,
+  }) async {
     try {
-      await _master.removeAlternative(itemId, alternativeItemId);
+      await _master.removeAlternative(
+        itemId,
+        alternativeItemId,
+        relationId: relationId,
+      );
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }

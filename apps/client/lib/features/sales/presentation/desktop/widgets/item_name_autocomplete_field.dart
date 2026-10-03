@@ -56,6 +56,7 @@ class ItemNameAutocompleteField extends ConsumerStatefulWidget {
     required this.onItemSelected,
     this.onAfterItemSelected,
     this.borderless = false,
+    this.fieldHeight,
     super.key,
   });
 
@@ -64,6 +65,7 @@ class ItemNameAutocompleteField extends ConsumerStatefulWidget {
   final ValueChanged<SaleItemOption> onItemSelected;
   final VoidCallback? onAfterItemSelected;
   final bool borderless;
+  final double? fieldHeight;
 
   @override
   ConsumerState<ItemNameAutocompleteField> createState() =>
@@ -554,6 +556,7 @@ class ItemNameAutocompleteFieldState
         focusNode: _focusNode,
         hint: 'Item Name',
         compact: true,
+        controlHeight: widget.fieldHeight,
         borderless: widget.borderless,
         onChanged: (value) {
           widget.onChanged(value);

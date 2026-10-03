@@ -84,16 +84,41 @@ class ItemAlternativesNotifier extends _$ItemAlternativesNotifier {
     }
   }
 
-  Future<void> removeAlternative(String alternativeItemId) async {
+  Future<void> removeAlternative(
+    String alternativeItemId, {
+    String? relationId,
+  }) async {
+    final previous = state.value;
+    if (previous != null) {
+      state = AsyncData(
+        previous
+            .where(
+              (alt) =>
+                  alt.alternativeItemId != alternativeItemId &&
+                  (relationId == null || alt.id != relationId),
+            )
+            .toList(),
+      );
+    }
     try {
       final repository = await ref.read(
         itemAlternativesRepositoryProvider.future,
       );
-      await repository.removeAlternative(itemId, alternativeItemId);
-      ref.invalidateSelf();
+      await repository.removeAlternative(
+        itemId,
+        alternativeItemId,
+        relationId: relationId,
+      );
+      final updated = await repository.listAlternatives(itemId);
+      state = AsyncData(updated);
     } on InventoryOfflineException {
+      if (previous != null) state = AsyncData(previous);
       rethrow;
     } on InventoryException {
+      if (previous != null) state = AsyncData(previous);
+      rethrow;
+    } on Object {
+      if (previous != null) state = AsyncData(previous);
       rethrow;
     }
   }

@@ -128,6 +128,7 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
                 hasError: widget.hasError,
                 compact: widget.compact,
                 borderless: widget.borderless,
+                height: height,
                 child: Row(
                   children: [
                     Expanded(

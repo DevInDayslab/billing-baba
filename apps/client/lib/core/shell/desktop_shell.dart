@@ -441,6 +441,19 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     // rebuilds during company open.
     final permissions = ref.watch(permissionServiceProvider);
 
+    if (AppRoutes.isSaleInvoiceFormRoute(currentLocation)) {
+      return Scaffold(
+        body: _ShellShortcutScope(
+          quickCreateEnabled: false,
+          shortcutFocusNode: _shellShortcutFocusNode,
+          child: ColoredBox(
+            color: AppColors.background,
+            child: widget.child,
+          ),
+        ),
+      );
+    }
+
     return _ShellSidebarStateScope(
       builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
         return LayoutBuilder(

@@ -12,6 +12,9 @@ class SaleLineItemTableLayout {
   static const cellGap = 0.0;
   static const horizontalPadding = 0.0;
   static const rowHeight = 44.0;
+
+  /// White input chrome — matches [rowHeight] so fields fill the grid row.
+  static const double cellFieldHeight = rowHeight;
   static const gridBorderColor = Color(0xFFE0E0E0);
   static const headerBackground = Color(0xFFF5F7FA);
   static const activeRowBackground = Color(0xFFE8F0FE);
@@ -440,6 +443,8 @@ class SaleLineItemGridCell extends StatelessWidget {
           padding: padding,
           child: Align(
             alignment: alignment,
+            widthFactor: 1,
+            heightFactor: 1,
             child: wrapEllipsisTooltipChild(child),
           ),
         ),

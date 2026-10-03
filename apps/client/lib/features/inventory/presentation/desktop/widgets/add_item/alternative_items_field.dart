@@ -1,20 +1,27 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
+import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _alternativeRowMinHeight = 40.0;
-const _pickerDialogWidth = 560.0;
-const _pickerDialogHeight = 520.0;
+const _pickerDialogWidth = 720.0;
+const _pickerDialogHeight = 640.0;
+const _othersCategoryFilterId = '__uncategorized__';
+const _pickerThumbSize = 48.0;
 
 String alternativePickerStockLabel(InventoryItem item) {
   if (item.type == ItemType.service) {
@@ -27,6 +34,44 @@ String alternativePickerStockLabel(InventoryItem item) {
     return 'Stock: $quantityLabel $unit';
   }
   return 'Stock: $quantityLabel';
+}
+
+String alternativePickerItemCodesLine(InventoryItem item) {
+  final sku = item.shortName?.trim();
+  final barcode = item.barcode?.trim();
+  if (sku != null && sku.isNotEmpty && barcode != null && barcode.isNotEmpty) {
+    if (sku == barcode) return sku;
+    return '$sku | $barcode';
+  }
+  if (barcode != null && barcode.isNotEmpty) return barcode;
+  if (sku != null && sku.isNotEmpty) return sku;
+  return inventoryEmDash;
+}
+
+String alternativePickerStockQuantityLabel(InventoryItem item) {
+  if (item.type == ItemType.service) return inventoryEmDash;
+  final metrics = InventoryStockCalculator.metricsFromItem(item);
+  final quantityLabel = formatQuantityValue(metrics.availableForSale);
+  final unit = item.baseUnitShortName?.trim();
+  if (unit != null && unit.isNotEmpty) {
+    return '$quantityLabel ${unit.toUpperCase()}';
+  }
+  return quantityLabel;
+}
+
+({Color background, Color foreground}) alternativePickerCategoryColors(
+  String categoryName,
+) {
+  final palette = [
+    (AppColors.primary, AppColors.primary),
+    (const Color(0xFF2E7D32), const Color(0xFF2E7D32)),
+    (const Color(0xFF1565C0), const Color(0xFF1565C0)),
+    (const Color(0xFF6A1B9A), const Color(0xFF6A1B9A)),
+    (const Color(0xFFEF6C00), const Color(0xFFEF6C00)),
+  ];
+  final index = categoryName.hashCode.abs() % palette.length;
+  final (foreground, _) = palette[index];
+  return (background: foreground.withValues(alpha: 0.1), foreground: foreground);
 }
 
 /// Multi-select picker for alternative items (desktop).
@@ -370,6 +415,7 @@ class _AlternativeItemsPickerDialogState
     extends ConsumerState<_AlternativeItemsPickerDialog> {
   late Set<String> _selected;
   var _searchQuery = '';
+  String? _categoryFilterId;
 
   @override
   void initState() {
@@ -380,13 +426,73 @@ class _AlternativeItemsPickerDialogState
   List<InventoryItem> get _candidates =>
       widget.items.where((item) => item.id != widget.excludeItemId).toList();
 
+  Map<String, String> get _categoryNameById {
+    final categories =
+        ref.watch(inventoryCategoriesProvider).value ?? const <InventoryCategory>[];
+    return {for (final category in categories) category.id: category.name};
+  }
+
   List<InventoryItem> get _visibleItems {
     final engine = ref.read(inventorySearchEngineProvider);
-    return searchInventoryItems(
+    var items = searchInventoryItems(
       engine,
       _candidates,
       query: _searchQuery,
-    ).toList();
+    );
+    if (_categoryFilterId == _othersCategoryFilterId) {
+      items = items
+          .where(
+            (item) =>
+                item.categoryId == null || item.categoryId!.trim().isEmpty,
+          )
+          .toList();
+    } else if (_categoryFilterId != null) {
+      items =
+          items.where((item) => item.categoryId == _categoryFilterId).toList();
+    }
+    return items;
+  }
+
+  List<_CategoryFilterOption> get _categoryFilterOptions {
+    final names = _categoryNameById;
+    final usedCategoryIds = <String>{};
+    var hasUncategorized = false;
+    for (final item in _candidates) {
+      final categoryId = item.categoryId?.trim();
+      if (categoryId == null || categoryId.isEmpty) {
+        hasUncategorized = true;
+      } else {
+        usedCategoryIds.add(categoryId);
+      }
+    }
+
+    final options = <_CategoryFilterOption>[
+      const _CategoryFilterOption(id: null, label: 'All Items'),
+    ];
+
+    final sortedIds = usedCategoryIds.toList()
+      ..sort(
+        (a, b) => (names[a] ?? a).toLowerCase().compareTo(
+              (names[b] ?? b).toLowerCase(),
+            ),
+      );
+    for (final id in sortedIds) {
+      options.add(
+        _CategoryFilterOption(
+          id: id,
+          label: names[id] ?? 'Category',
+        ),
+      );
+    }
+    if (hasUncategorized) {
+      options.add(
+        const _CategoryFilterOption(
+          id: _othersCategoryFilterId,
+          label: 'Others',
+        ),
+      );
+    }
+    return options;
   }
 
   void _toggleAll(List<InventoryItem> visible) {
@@ -418,7 +524,10 @@ class _AlternativeItemsPickerDialogState
     final visible = _visibleItems;
     final allSelected =
         visible.isNotEmpty && visible.every((i) => _selected.contains(i.id));
+    final someSelected = visible.any((i) => _selected.contains(i.id));
     final selectionCount = _selected.length;
+    final categoryOptions = _categoryFilterOptions;
+    final categoryNames = _categoryNameById;
 
     return ClipRRect(
       borderRadius: AppRadius.lgBorder,
@@ -441,10 +550,20 @@ class _AlternativeItemsPickerDialogState
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      LucideIcons.package,
-                      size: 22,
-                      color: AppColors.primary,
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          LucideIcons.package,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -483,16 +602,42 @@ class _AlternativeItemsPickerDialogState
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 InventorySearchField(
-                  hint: 'Search items by name or code...',
+                  hint: 'Search items by name, code or barcode...',
                   onChanged: (query) => setState(() => _searchQuery = query),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                if (categoryOptions.length > 1) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categoryOptions.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        final option = categoryOptions[index];
+                        final isSelected = _categoryFilterId == option.id;
+                        return _AlternativeCategoryFilterChip(
+                          label: option.label,
+                          isSelected: isSelected,
+                          onTap: () => setState(() {
+                            _categoryFilterId = option.id;
+                          }),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.md),
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: Row(
                     children: [
                       Checkbox(
-                        value: allSelected,
+                        tristate: true,
+                        value: allSelected
+                            ? true
+                            : (someSelected ? null : false),
                         onChanged: visible.isEmpty
                             ? null
                             : (_) => _toggleAll(visible),
@@ -544,6 +689,9 @@ class _AlternativeItemsPickerDialogState
                                 final item = visible[index];
                                 return _AlternativePickerItemRow(
                                   item: item,
+                                  categoryName: item.categoryId == null
+                                      ? null
+                                      : categoryNames[item.categoryId],
                                   isSelected: _selected.contains(item.id),
                                   onToggle: () => _toggleItem(item.id),
                                 );
@@ -578,14 +726,64 @@ class _AlternativeItemsPickerDialogState
   }
 }
 
+class _CategoryFilterOption {
+  const _CategoryFilterOption({required this.id, required this.label});
+
+  final String? id;
+  final String label;
+}
+
+class _AlternativeCategoryFilterChip extends StatelessWidget {
+  const _AlternativeCategoryFilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isSelected
+          ? AppColors.primary.withValues(alpha: 0.08)
+          : AppColors.surface,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : _cardBorder,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text(
+            label,
+            style: AppTypography.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AlternativePickerItemRow extends StatefulWidget {
   const _AlternativePickerItemRow({
     required this.item,
+    required this.categoryName,
     required this.isSelected,
     required this.onToggle,
   });
 
   final InventoryItem item;
+  final String? categoryName;
   final bool isSelected;
   final VoidCallback onToggle;
 
@@ -605,6 +803,11 @@ class _AlternativePickerItemRowState extends State<_AlternativePickerItemRow> {
 
   @override
   Widget build(BuildContext context) {
+    final categoryName = widget.categoryName?.trim();
+    final hasCategory = categoryName != null && categoryName.isNotEmpty;
+    final statusLabel = stockStatusLabel(widget.item);
+    final statusColor = stockStatusColor(widget.item);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -620,12 +823,16 @@ class _AlternativePickerItemRowState extends State<_AlternativePickerItemRow> {
               vertical: AppSpacing.sm,
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(
-                  LucideIcons.package,
-                  size: 18,
-                  color: AppColors.textSecondary.withValues(alpha: 0.65),
+                Checkbox(
+                  value: widget.isSelected,
+                  onChanged: (_) => widget.onToggle(),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
+                const SizedBox(width: AppSpacing.xs),
+                _AlternativePickerItemThumb(imageUrl: widget.item.primaryImageUrl),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
@@ -637,35 +844,178 @@ class _AlternativePickerItemRowState extends State<_AlternativePickerItemRow> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.inter(
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          height: 1.45,
+                          height: 1.35,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        alternativePickerItemCodesLine(widget.item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.inter(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      if (hasCategory) ...[
+                        const SizedBox(height: 6),
+                        _AlternativePickerCategoryTag(label: categoryName),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                SizedBox(
+                  width: 92,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Stock',
+                        style: AppTypography.inter(
+                          fontSize: 11,
+                          height: 1.3,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        alternativePickerStockQuantityLabel(widget.item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: AppTypography.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
                           color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        alternativePickerStockLabel(widget.item),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.inter(
-                          fontSize: 11,
-                          height: 1.5,
-                          color: AppColors.textSecondary,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusLabel,
+                            style: AppTypography.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              height: 1.3,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                Checkbox(
-                  value: widget.isSelected,
-                  onChanged: (_) => widget.onToggle(),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AlternativePickerCategoryTag extends StatelessWidget {
+  const _AlternativePickerCategoryTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = alternativePickerCategoryColors(label);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: colors.foreground,
+        ),
+      ),
+    );
+  }
+}
+
+class _AlternativePickerItemThumb extends StatelessWidget {
+  const _AlternativePickerItemThumb({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = normalizeImageUrl(imageUrl);
+    final radius = BorderRadius.circular(8);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        border: Border.all(color: const Color(0xFFE8EAED)),
+        color: const Color(0xFFF7F8FA),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(7),
+        child: SizedBox(
+          width: _pickerThumbSize,
+          height: _pickerThumbSize,
+          child: url == null
+              ? const ColoredBox(
+                  color: Color(0xFFF7F8FA),
+                  child: Icon(
+                    LucideIcons.image,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : AppNetworkImage(
+                  imageUrl: url,
+                  displayContext: ImageDisplayContext.galleryThumb,
+                  width: _pickerThumbSize,
+                  height: _pickerThumbSize,
+                  memCacheWidth: (_pickerThumbSize * 2).round(),
+                  loadWhenVisible: false,
+                  placeholder: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  errorWidget: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Icon(
+                      LucideIcons.imageOff,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
         ),
       ),
     );

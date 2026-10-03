@@ -18,6 +18,7 @@ class CompactNumberField extends StatefulWidget {
     this.borderless = false,
     this.integerOnly = false,
     this.useFieldBox = true,
+    this.fieldHeight,
     super.key,
   });
 
@@ -29,6 +30,7 @@ class CompactNumberField extends StatefulWidget {
   final bool borderless;
   final bool integerOnly;
   final bool useFieldBox;
+  final double? fieldHeight;
 
   @override
   State<CompactNumberField> createState() => CompactNumberFieldState();
@@ -155,6 +157,7 @@ class CompactNumberFieldState extends State<CompactNumberField> {
       focusNode: _focusNode,
       hint: widget.hintText,
       compact: true,
+      controlHeight: widget.fieldHeight,
       borderless: widget.borderless || !widget.useFieldBox,
       keyboardType: widget.integerOnly
           ? SaleQuantityInput.integerKeyboardType
@@ -167,7 +170,11 @@ class CompactNumberFieldState extends State<CompactNumberField> {
     );
 
     if (!widget.useFieldBox || widget.borderless) {
-      return SaleCompactFieldBox(child: field);
+      return SaleCompactFieldBox(
+        height: widget.fieldHeight,
+        bordered: widget.fieldHeight != null,
+        child: field,
+      );
     }
     return field;
   }

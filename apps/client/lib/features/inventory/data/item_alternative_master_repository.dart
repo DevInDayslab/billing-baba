@@ -111,15 +111,29 @@ class ItemAlternativeMasterRepository {
 
   Future<void> removeAlternative(
     String itemId,
-    String alternativeItemId,
-  ) async {
+    String alternativeItemId, {
+    String? relationId,
+  }) async {
     final businessId = _requireBusinessId();
-    final existing = await _local.findActivePair(
+    ItemAlternativeTableData? existing;
+    final trimmedRelationId = relationId?.trim();
+    if (trimmedRelationId != null && trimmedRelationId.isNotEmpty) {
+      final row = await _local.getById(trimmedRelationId);
+      if (row != null &&
+          row.businessId == businessId &&
+          row.itemId == itemId &&
+          !row.isDeleted) {
+        existing = row;
+      }
+    }
+    existing ??= await _local.findActivePair(
       businessId: businessId,
       itemId: itemId,
       alternativeItemId: alternativeItemId,
     );
-    if (existing == null) return;
+    if (existing == null) {
+      throw StateError('Alternative link not found');
+    }
 
     final now = DateTime.now().toUtc();
     await _local.softDelete(id: existing.id, deletedAt: now);
@@ -321,7 +335,7 @@ class ItemAlternativeMasterRepository {
   }
 
   Future<void> _hydrateItemIfEmpty(String businessId, String itemId) async {
-    if (await _local.countActiveForItem(businessId, itemId) > 0) return;
+    if (await _local.hasLocalStateForItem(businessId, itemId)) return;
     try {
       final remote = await _remote.listAlternatives(itemId);
       for (final dto in remote) {
