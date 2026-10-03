@@ -102,6 +102,7 @@ class CompanyListEntry {
     String? email,
     String? address,
     String? logoUrl,
+    bool clearLogoUrl = false,
     DateTime? scheduledDeletionAt,
   }) {
     return CompanyListEntry(
@@ -123,7 +124,7 @@ class CompanyListEntry {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       address: address ?? this.address,
-      logoUrl: logoUrl ?? this.logoUrl,
+      logoUrl: clearLogoUrl ? null : (logoUrl ?? this.logoUrl),
       scheduledDeletionAt: scheduledDeletionAt ?? this.scheduledDeletionAt,
     );
   }

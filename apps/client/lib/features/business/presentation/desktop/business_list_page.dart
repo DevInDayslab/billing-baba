@@ -7,13 +7,14 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/business/application/business_profile_sync.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card_menu.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/create_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/delete_business_dialog.dart';
-import 'package:billing_baba/features/business/presentation/desktop/widgets/restore_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/edit_business_dialog.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/restore_business_dialog.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
@@ -299,6 +300,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
   Widget build(BuildContext context) {
     final directoryAsync = ref.watch(companyDirectoryProvider);
     final directoryServiceAsync = ref.watch(companyDirectoryServiceProvider);
+    final businesses = ref.watch(businessListProvider).asData?.value;
     final phoneNumber = ref.watch(loggedInPhoneProvider);
 
     SwitchCompanyDebugLog.lifecycle(
@@ -334,14 +336,16 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
             );
           }
 
+          final mergedEntries =
+              mergeDirectoryProfileFields(allEntries, businesses);
           final sharedCompanies = _filterEntries(
-            directoryService?.sharedCompanies(allEntries) ??
-                allEntries.where((e) => e.isSharedTab).toList(),
+            directoryService?.sharedCompanies(mergedEntries) ??
+                mergedEntries.where((e) => e.isSharedTab).toList(),
           );
           final myCompanies = CompanyListEntry.withPendingDeletionLast(
             _filterEntries(
-              directoryService?.ownedCompanies(allEntries) ??
-                  allEntries.where((e) => e.relationship.isOwner).toList(),
+              directoryService?.ownedCompanies(mergedEntries) ??
+                  mergedEntries.where((e) => e.relationship.isOwner).toList(),
             ),
           );
 

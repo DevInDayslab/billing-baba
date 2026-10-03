@@ -4,6 +4,7 @@ import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
+import 'package:billing_baba/features/business/application/business_profile_sync.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
@@ -25,7 +26,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MobileEditProfilePage extends ConsumerStatefulWidget {
@@ -175,14 +175,12 @@ class _MobileEditProfilePageState extends ConsumerState<MobileEditProfilePage> {
   void _patchLogoOnProfile(String? url) {
     final current = ref.read(businessProfileProvider).asData?.value;
     if (current == null) return;
-    ref
-        .read(businessProfileProvider.notifier)
-        .replaceWith(
-          url == null
-              ? current.copyWith(clearLogoUrl: true)
-              : current.copyWith(logoUrl: url),
-        );
+    final updated = url == null
+        ? current.copyWith(clearLogoUrl: true)
+        : current.copyWith(logoUrl: url);
+    ref.read(businessProfileProvider.notifier).replaceWith(updated);
     ref.invalidate(mobileBusinessProfileLoaderProvider);
+    unawaited(propagateBusinessProfileListUpdate(ref, updated));
   }
 
   void _patchSignatureOnProfile(String? url) {

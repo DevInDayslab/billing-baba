@@ -826,9 +826,21 @@ class BusinessList extends _$BusinessList {
       businesses
           .map(
             (business) => business.id == profile.id
-                ? business.copyWith(
+                ? BusinessModel(
+                    id: business.id,
                     name: profile.name,
+                    syncStatus: business.syncStatus,
+                    lastSaleAt: business.lastSaleAt,
+                    isCurrent: business.isCurrent,
+                    isShared: business.isShared,
+                    gstin: profile.gstin,
+                    ownerName: profile.ownerName,
+                    phone: profile.phone,
+                    email: profile.email,
+                    address: profile.address,
+                    role: business.role,
                     logoUrl: profile.logoUrl,
+                    scheduledDeletionAt: business.scheduledDeletionAt,
                   )
                 : business,
           )
