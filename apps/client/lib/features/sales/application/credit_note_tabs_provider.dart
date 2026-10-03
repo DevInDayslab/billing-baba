@@ -49,11 +49,17 @@ class CreditNoteTabsState {
   }
 }
 
-int _tabCounter = 0;
-
-int _nextCreditNoteNumber() {
-  _tabCounter += 1;
-  return _tabCounter;
+int _nextAvailableCreditNoteNumber(
+  List<CreditNoteTab> tabs, {
+  required int maxTabs,
+}) {
+  final used = tabs.map((tab) => tab.creditNoteNumber).toSet();
+  for (var number = 1; number <= maxTabs; number++) {
+    if (!used.contains(number)) {
+      return number;
+    }
+  }
+  return maxTabs;
 }
 
 String _sessionKeyForCreditNoteNumber(int creditNoteNumber) =>
@@ -67,7 +73,10 @@ class CreditNoteTabs extends _$CreditNoteTabs {
 
   @override
   CreditNoteTabsState build({String? initialDocumentId}) {
-    final creditNoteNumber = _nextCreditNoteNumber();
+    final creditNoteNumber = _nextAvailableCreditNoteNumber(
+      const [],
+      maxTabs: maxTabs,
+    );
     final sessionKey =
         initialDocumentId ?? _sessionKeyForCreditNoteNumber(creditNoteNumber);
     return CreditNoteTabsState(
@@ -90,7 +99,10 @@ class CreditNoteTabs extends _$CreditNoteTabs {
 
   void addTab() {
     if (!canAddTab) return;
-    final creditNoteNumber = _nextCreditNoteNumber();
+    final creditNoteNumber = _nextAvailableCreditNoteNumber(
+      state.tabs,
+      maxTabs: maxTabs,
+    );
     final newTab = CreditNoteTab(
       sessionKey: _sessionKeyForCreditNoteNumber(creditNoteNumber),
       label: 'Credit Note #$creditNoteNumber',
