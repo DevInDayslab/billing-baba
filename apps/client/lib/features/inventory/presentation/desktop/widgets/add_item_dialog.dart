@@ -17,7 +17,6 @@ import 'package:billing_baba/features/inventory/application/inventory_units_prov
 import 'package:billing_baba/features/inventory/application/item_bom_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_suppliers_provider.dart';
-import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
@@ -34,8 +33,8 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/general_information_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/manufacturing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/online_store_section.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/pricing_section.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/stock_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/suppliers_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/tier_pricing_section.dart';
@@ -48,8 +47,8 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_header.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_image_strip.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_online_store_section.dart';
-import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_pricing_section.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_product_description_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_stock_section.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_tab_bar.dart';
 import 'package:billing_baba/features/inventory/presentation/shared/item_image_pick_crop.dart';
@@ -57,10 +56,12 @@ import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate_preference.dart';
 import 'package:billing_baba/features/inventory/utils/item_unit_qty_conversion.dart';
 import 'package:billing_baba/features/inventory/utils/min_wholesale_qty_units.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/media/rack_photo_stamp.dart';
 import 'package:billing_baba/shared/utils/text_input_formatters.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
@@ -836,9 +837,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (locationId == null) return;
 
       if (_pendingRackPhoto != null) {
-        final prepared = await prepareMediaUploadBytes(
+        final stamped = await stampRackPhoto(
           bytes: _pendingRackPhoto!,
-          mimeType: 'image/jpeg',
+          takenAt: DateTime.now(),
+          rackShelfLabel: rack,
+          employeeLabel: employee.isEmpty ? null : employee,
+        );
+        final prepared = await prepareMediaUploadBytes(
+          bytes: stamped.bytes,
+          mimeType: stamped.mimeType,
         );
         final url = await service.uploadRackPhoto(
           locationId: locationId,
@@ -1412,7 +1419,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           showDescription: itemSettings.descriptionEnabled,
           showManufacturing:
               form.itemType == ItemType.product && itemSettings.manufacturing,
-          showAlternatives: false,
           selectedAlternativeItemIds: form.alternativeItemIds,
           excludeAlternativeItemId: widget.editItem?.id,
           onAlternativeItemIdsChanged: notifier.setAlternativeItemIds,

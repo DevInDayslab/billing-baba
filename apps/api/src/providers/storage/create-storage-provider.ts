@@ -41,6 +41,7 @@ export function createStorageProvider(config: AppConfig): StorageProvider {
     s3SecretAccessKey,
     s3ForcePathStyle,
     s3Ssl,
+    s3PublicEndpoint,
   } = config;
 
   if (!s3Endpoint || !s3Bucket || !s3AccessKeyId || !s3SecretAccessKey) {
@@ -59,5 +60,6 @@ export function createStorageProvider(config: AppConfig): StorageProvider {
     secretAccessKey: s3SecretAccessKey,
     forcePathStyle: s3ForcePathStyle,
     ssl: s3Ssl,
+    publicEndpoint: s3PublicEndpoint,
   });
 }

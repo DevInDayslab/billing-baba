@@ -9,6 +9,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fi
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/media/media_upload_client.dart';
+import 'package:billing_baba/shared/media/rack_photo_stamp.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:file_picker/file_picker.dart';
@@ -136,6 +137,7 @@ class _RackShelfSectionState extends ConsumerState<RackShelfSection> {
 
     final locationId = widget.locationId;
     if (locationId == null) {
+      // Keep raw bytes; stamp with latest rack/employee labels on save/upload.
       widget.onPendingPhotoChanged?.call(picked.bytes);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -151,11 +153,17 @@ class _RackShelfSectionState extends ConsumerState<RackShelfSection> {
     final previousUrl = _photoUrl;
     final employee = _logEmployee ? widget.employeeController.text.trim() : '';
     try {
+      final stamped = await stampRackPhoto(
+        bytes: picked.bytes,
+        takenAt: DateTime.now(),
+        rackShelfLabel: widget.locationController.text,
+        employeeLabel: employee.isEmpty ? null : employee,
+      );
       final service = await ref.read(inventoryServiceProvider.future);
       final url = await service.uploadRackPhoto(
         locationId: locationId,
-        bytes: picked.bytes,
-        mimeType: picked.mimeType,
+        bytes: stamped.bytes,
+        mimeType: stamped.mimeType,
         employeeLabel: employee.isEmpty ? null : employee,
       );
       setState(() => _photoUrl = url);

@@ -1,15 +1,19 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/add_purchase_form_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_document_desktop_import.dart';
+import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/add_purchase_footer.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_line_items_table.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_page_title_bar.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_label_selector.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -17,23 +21,63 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fi
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
-import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/shared/widgets/document_barcode_keyboard_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addPurchaseRed = Color(0xFFD32F2F);
 
-class DesktopAddPurchasePage extends ConsumerWidget {
+class DesktopAddPurchasePage extends ConsumerStatefulWidget {
   const DesktopAddPurchasePage({this.billId, super.key});
 
   final String? billId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DesktopAddPurchasePage> createState() =>
+      _DesktopAddPurchasePageState();
+}
+
+class _DesktopAddPurchasePageState
+    extends ConsumerState<DesktopAddPurchasePage> {
+  var _routeExtraConsumed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _consumeRouteExtra());
+  }
+
+  void _consumeRouteExtra() {
+    if (_routeExtraConsumed || !mounted || widget.billId != null) return;
+    final extra = GoRouterState.of(context).extra;
+    if (extra is! PurchaseDocumentParseDto) return;
+    _routeExtraConsumed = true;
+    // Pending provider may already have applied; skip duplicate if form dirty.
+    final form = ref.read(addPurchaseFormProvider());
+    if (form.isDirty && form.items.any((line) => line.itemName.isNotEmpty)) {
+      return;
+    }
+    unawaited(
+      ref.read(addPurchaseFormProvider().notifier).consumeRouteExtraParse(extra),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final billId = widget.billId;
     final form = ref.watch(addPurchaseFormProvider(billId: billId));
+
+    ref.listen(addPurchaseFormProvider(billId: billId), (previous, next) {
+      final error = next.saveError;
+      if (error == null || error == previous?.saveError) return;
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: _addPurchaseRed),
+      );
+    });
 
     return DocumentBarcodeKeyboardHost(
       onCatalogItem: (catalog) async {

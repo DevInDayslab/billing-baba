@@ -29,9 +29,15 @@ export type RailwayS3ProviderConfig = {
   secretAccessKey: string;
   forcePathStyle: boolean;
   ssl: boolean;
+  /**
+   * Optional publicly reachable endpoint for presigned PUT/GET URLs.
+   * When set, clients receive signed URLs against this host while the API
+   * continues to use `endpoint` for head/put/delete/copy.
+   */
+  publicEndpoint?: string;
 };
 
-function normalizeEndpoint(endpoint: string, ssl: boolean): string {
+export function normalizeEndpoint(endpoint: string, ssl: boolean): string {
   const trimmed = endpoint.trim().replace(/\/$/, '');
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return trimmed;
@@ -39,23 +45,56 @@ function normalizeEndpoint(endpoint: string, ssl: boolean): string {
   return `${ssl ? 'https' : 'http'}://${trimmed}`;
 }
 
+function createS3Client(params: {
+  endpoint: string;
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  forcePathStyle: boolean;
+  ssl: boolean;
+}): S3Client {
+  return new S3Client({
+    region: params.region,
+    endpoint: normalizeEndpoint(params.endpoint, params.ssl),
+    forcePathStyle: params.forcePathStyle,
+    credentials: {
+      accessKeyId: params.accessKeyId,
+      secretAccessKey: params.secretAccessKey,
+    },
+  });
+}
+
 export class RailwayS3Provider implements StorageProvider {
   readonly name = 'railway_s3';
   readonly bucket: string;
 
+  /** Server-side operations (head, put, delete, copy). */
   private readonly client: S3Client;
+  /** Client-facing signed URLs — may use a public endpoint. */
+  private readonly signingClient: S3Client;
 
   constructor(config: RailwayS3ProviderConfig) {
     this.bucket = config.bucket;
-    this.client = new S3Client({
+    this.client = createS3Client({
+      endpoint: config.endpoint,
       region: config.region,
-      endpoint: normalizeEndpoint(config.endpoint, config.ssl),
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
       forcePathStyle: config.forcePathStyle,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      },
+      ssl: config.ssl,
     });
+    const signingEndpoint = config.publicEndpoint?.trim() || config.endpoint;
+    this.signingClient =
+      signingEndpoint === config.endpoint
+        ? this.client
+        : createS3Client({
+            endpoint: signingEndpoint,
+            region: config.region,
+            accessKeyId: config.accessKeyId,
+            secretAccessKey: config.secretAccessKey,
+            forcePathStyle: config.forcePathStyle,
+            ssl: config.ssl,
+          });
   }
 
   async createUploadUrl(
@@ -70,7 +109,7 @@ export class RailwayS3Provider implements StorageProvider {
         : {}),
     });
 
-    const url = await getSignedUrl(this.client, command, {
+    const url = await getSignedUrl(this.signingClient, command, {
       expiresIn: params.expiresInSeconds,
     });
 
@@ -80,6 +119,9 @@ export class RailwayS3Provider implements StorageProvider {
       url,
       headers: {
         'Content-Type': params.mimeType,
+        ...(params.contentLength !== undefined
+          ? { 'Content-Length': String(params.contentLength) }
+          : {}),
       },
       expiresAt,
     };
@@ -93,7 +135,7 @@ export class RailwayS3Provider implements StorageProvider {
       Key: params.key,
     });
 
-    const url = await getSignedUrl(this.client, command, {
+    const url = await getSignedUrl(this.signingClient, command, {
       expiresIn: params.expiresInSeconds,
     });
 

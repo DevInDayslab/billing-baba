@@ -81,10 +81,19 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     }
   }
 
+  /// Applies a parse payload that arrived via GoRouter route `extra`.
+  Future<void> consumeRouteExtraParse(PurchaseDocumentParseDto parsed) async {
+    if (billId != null) return;
+    // Prefer route extra over a stale pending value.
+    ref.read(pendingPurchaseDocumentParseProvider.notifier).take();
+    await applyParsedDocument(parsed);
+  }
+
   Future<void> applyParsedDocument(PurchaseDocumentParseDto parsed) async {
     debugPrint(
       '[PurchaseParse] applyParsedDocument start lines=${parsed.lines.length}',
     );
+    state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
       final parties = await _partiesForParsedDocument(parsed);
 
