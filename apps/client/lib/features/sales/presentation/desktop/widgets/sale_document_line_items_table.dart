@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 
 const Color _addRowColor = AppColors.primary;
 const _gridBorderless = true;
+const double _cellFieldHeight = SaleLineItemTableLayout.cellFieldHeight;
 
 /// Full line items table for estimate/proforma forms.
 class SaleDocumentLineItemsTable extends ConsumerStatefulWidget {
@@ -331,9 +332,12 @@ class _LineItemRow extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: SaleCompactFieldBox(
+                          height: _cellFieldHeight,
+                          bordered: true,
                           child: ItemNameAutocompleteField(
                             value: item.itemName,
                             borderless: _gridBorderless,
+                            fieldHeight: _cellFieldHeight,
                             onChanged: (value) => notifier.updateLineItem(
                               index,
                               item.copyWith(itemName: value),
@@ -449,6 +453,7 @@ class _LineItemRow extends ConsumerWidget {
                     value: item.mrp,
                     hintText: '0',
                     borderless: _gridBorderless,
+                    fieldHeight: _cellFieldHeight,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
                       item.copyWith(mrp: value),
@@ -473,6 +478,7 @@ class _LineItemRow extends ConsumerWidget {
                     value: item.qty,
                     hintText: '0',
                     borderless: _gridBorderless,
+                    fieldHeight: _cellFieldHeight,
                     integerOnly: true,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
@@ -488,6 +494,7 @@ class _LineItemRow extends ConsumerWidget {
                     hintText: 'NOS',
                     highlight: SaleDropdownHighlight.red,
                     compact: true,
+                    triggerHeight: _cellFieldHeight,
                     minMenuWidth: 72,
                     borderless: _gridBorderless,
                     onSelected: (value) => notifier.updateLineItem(
@@ -502,6 +509,7 @@ class _LineItemRow extends ConsumerWidget {
                     value: item.pricePerUnit,
                     hintText: '0',
                     borderless: _gridBorderless,
+                    fieldHeight: _cellFieldHeight,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
                       item.copyWith(pricePerUnit: value),
@@ -515,6 +523,7 @@ class _LineItemRow extends ConsumerWidget {
                     options: SaleDropdownOptions.taxSlabs,
                     highlight: SaleDropdownHighlight.red,
                     compact: true,
+                    triggerHeight: _cellFieldHeight,
                     borderless: _gridBorderless,
                     minMenuWidth: 88,
                     onSelected: (value) => notifier.updateLineItem(
@@ -585,6 +594,7 @@ class _CompactDateTrigger extends StatelessWidget {
       onTap: onTap,
       compact: true,
       borderless: borderless,
+      height: _cellFieldHeight,
       child: Text(
         date != null
             ? '${date!.day.toString().padLeft(2, '0')}/${date!.month.toString().padLeft(2, '0')}/${date!.year}'
@@ -747,13 +757,23 @@ class _CompactTextFieldState extends State<_CompactTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return SaleTextField(
+    final field = SaleTextField(
       controller: _controller,
       hint: widget.hintText,
       compact: true,
       borderless: widget.borderless,
+      controlHeight: _cellFieldHeight,
       suffixIcon: widget.suffixIcon,
       onChanged: widget.onChanged,
     );
+
+    if (widget.borderless) {
+      return SaleCompactFieldBox(
+        height: _cellFieldHeight,
+        bordered: true,
+        child: field,
+      );
+    }
+    return field;
   }
 }

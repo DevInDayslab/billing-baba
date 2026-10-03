@@ -841,11 +841,44 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       if (subRoute == AppRoutes.saleInvoices &&
           (currentLocation == AppRoutes.addSale ||
               currentLocation.startsWith('${AppRoutes.editSale}/') ||
-              currentLocation.startsWith('${AppRoutes.viewSale}/'))) {
+              currentLocation.startsWith('${AppRoutes.viewSale}/') ||
+              currentLocation.startsWith('${AppRoutes.duplicateSale}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleEstimateQuotation &&
+          (currentLocation == AppRoutes.addEstimate ||
+              currentLocation.startsWith('${AppRoutes.editEstimate}/') ||
+              currentLocation.startsWith('${AppRoutes.duplicateEstimate}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleProformaInvoice &&
+          (currentLocation == AppRoutes.addProforma ||
+              currentLocation.startsWith('${AppRoutes.editProforma}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleOrder &&
+          (currentLocation == AppRoutes.addSaleOrder ||
+              currentLocation.startsWith('${AppRoutes.editSaleOrder}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleDeliveryChallan &&
+          (currentLocation == AppRoutes.addDeliveryChallan ||
+              currentLocation.startsWith('${AppRoutes.editDeliveryChallan}/'))) {
         return true;
       }
       if (subRoute == AppRoutes.saleReturnCreditNote &&
-          currentLocation == AppRoutes.addCreditNote) {
+          (currentLocation == AppRoutes.addCreditNote ||
+              currentLocation.startsWith('${AppRoutes.editCreditNote}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleFa &&
+          (currentLocation == AppRoutes.addSaleFa ||
+              currentLocation.startsWith('${AppRoutes.editSaleFa}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleJobWorkOut &&
+          (currentLocation == AppRoutes.addJobWork ||
+              currentLocation.startsWith('${AppRoutes.editJobWork}/'))) {
         return true;
       }
     }

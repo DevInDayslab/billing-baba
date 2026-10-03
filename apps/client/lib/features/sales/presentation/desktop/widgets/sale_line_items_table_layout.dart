@@ -411,7 +411,8 @@ Color saleLineItemRowBackground({
   required bool isActive,
   required bool isOdd,
 }) {
-  if (isActive) return SaleLineItemTableLayout.activeRowBackground;
+  // Neutral rows only — active state is shown via field focus / confirm control,
+  // not a full-row tint (matches Add Sale grid appearance).
   return isOdd ? SaleLineItemTableLayout.zebraRowBackground : Colors.white;
 }
 

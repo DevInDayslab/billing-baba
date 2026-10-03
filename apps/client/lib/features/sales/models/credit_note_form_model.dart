@@ -29,6 +29,8 @@ class CreditNoteFormState {
     this.isSaving = false,
     this.saveError,
     this.taxOption = 'NONE',
+    this.termsTitle = 'Credit Note',
+    this.termsText = 'Thanks for doing business with us!',
   });
 
   final String? documentId;
@@ -54,6 +56,8 @@ class CreditNoteFormState {
   final bool isSaving;
   final String? saveError;
   final String taxOption;
+  final String termsTitle;
+  final String termsText;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -130,6 +134,8 @@ class CreditNoteFormState {
     bool clearSaveError = false,
     bool clearPartyId = false,
     String? taxOption,
+    String? termsTitle,
+    String? termsText,
   }) {
     return CreditNoteFormState(
       documentId: documentId ?? this.documentId,
@@ -155,6 +161,8 @@ class CreditNoteFormState {
       isSaving: isSaving ?? this.isSaving,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
       taxOption: taxOption ?? this.taxOption,
+      termsTitle: termsTitle ?? this.termsTitle,
+      termsText: termsText ?? this.termsText,
     );
   }
 }

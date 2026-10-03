@@ -12,7 +12,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_page_title_bar.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/desktop_sale_form_page_layout.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
@@ -96,87 +96,45 @@ class _AddDeliveryChallanPageState
       },
       child: Stack(
         children: [
-          ColoredBox(
-            color: AppColors.background,
-            child: Column(
+          DesktopSaleFormPageLayout(
+            body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    AppSpacing.md,
+                    _sectionGap,
+                    _sectionGap,
+                    _sectionGap,
                     0,
                   ),
-                  child: SalePageTitleBar(
-                    currentRoute: AppRoutes.saleDeliveryChallan,
-                    onBack: _handleClose,
+                  child: _ChallanPageHeader(
+                    isEditing: _isEditing,
+                    onClose: _handleClose,
                   ),
                 ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: AppRadius.lgBorder,
-                        border: Border.all(color: _cardBorder),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x0A000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              _sectionGap,
-                              _sectionGap,
-                              _sectionGap,
-                              0,
-                            ),
-                            child: _ChallanPageHeader(
-                              isEditing: _isEditing,
-                              onClose: _handleClose,
-                            ),
-                          ),
-                          const SizedBox(height: _sectionGap),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: _sectionGap,
-                            ),
-                            child: _ChallanFormFields(),
-                          ),
-                          const SizedBox(height: _sectionGap),
-                          const DeliveryChallanLineItemsTable(embedded: true),
-                          const Divider(height: 1, color: _cardBorder),
-                          const Padding(
-                            padding: EdgeInsets.all(_sectionGap),
-                            child: DeliveryChallanFooter(),
-                          ),
-                          const Divider(height: 1, color: _cardBorder),
-                          _ChallanBottomActionBar(
-                            isEditing: _isEditing,
-                            onSaved: () {
-                              ref
-                                  .read(deliveryChallanFormProvider.notifier)
-                                  .resetForm();
-                              returnToTransactionList(
-                                context,
-                                AppRoutes.saleDeliveryChallan,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: _sectionGap),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: _sectionGap),
+                  child: _ChallanFormFields(),
+                ),
+                const SizedBox(height: _sectionGap),
+                const DeliveryChallanLineItemsTable(embedded: true),
+                const Divider(height: 1, color: desktopSaleFormCardBorder),
+                const Padding(
+                  padding: EdgeInsets.all(_sectionGap),
+                  child: DeliveryChallanFooter(),
                 ),
               ],
+            ),
+            pinnedFooter: _ChallanBottomActionBar(
+              isEditing: _isEditing,
+              onSaved: () {
+                ref.read(deliveryChallanFormProvider.notifier).resetForm();
+                returnToTransactionList(
+                  context,
+                  AppRoutes.saleDeliveryChallan,
+                );
+              },
             ),
           ),
           if (ref.watch(

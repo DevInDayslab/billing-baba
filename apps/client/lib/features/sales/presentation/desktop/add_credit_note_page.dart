@@ -14,7 +14,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_page_title_bar.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
@@ -94,7 +94,12 @@ class _AddCreditNotePageState extends ConsumerState<DesktopAddCreditNotePage> {
     }
   }
 
-  void _handleBack() {
+  Future<void> _handleClose() async {
+    final confirmed = await showCloseFormDialog(
+      context,
+      title: 'Close Credit Note',
+    );
+    if (!confirmed || !mounted) return;
     returnToTransactionList(context, AppRoutes.saleReturnCreditNote);
   }
 
@@ -131,87 +136,91 @@ class _AddCreditNotePageState extends ConsumerState<DesktopAddCreditNotePage> {
       );
     }
 
-    return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-              0,
-            ),
-            child: SalePageTitleBar(
-              currentRoute: AppRoutes.saleReturnCreditNote,
-              onBack: _handleBack,
-            ),
-          ),
-          if (_supportsTabs) ...[
-            const SizedBox(height: AppSpacing.sm),
-            const CreditNoteTabsBar(),
-          ],
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadius.lgBorder,
-                  border: Border.all(color: _cardBorder),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        _sectionGap,
-                        _sectionGap,
-                        _sectionGap,
-                        0,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleClose();
+      },
+      child: ColoredBox(
+        color: AppColors.background,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_supportsTabs) CreditNoteTabsBar(onFormClose: _handleClose),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.lgBorder,
+                    border: Border.all(color: _cardBorder),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
-                      child: _PageHeader(
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  _sectionGap,
+                                  _sectionGap,
+                                  _sectionGap,
+                                  0,
+                                ),
+                                child: _PageHeader(
+                                  sessionKey: sessionKey,
+                                  isEditing: widget.creditNoteId != null,
+                                  showTitle: !_supportsTabs,
+                                ),
+                              ),
+                              const SizedBox(height: _sectionGap),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: _sectionGap,
+                                ),
+                                child: _FormFields(sessionKey: sessionKey),
+                              ),
+                              const SizedBox(height: _sectionGap),
+                              CreditNoteLineItemsTable(
+                                sessionKey: sessionKey,
+                                embedded: true,
+                              ),
+                              const Divider(height: 1, color: _cardBorder),
+                              Padding(
+                                padding: const EdgeInsets.all(_sectionGap),
+                                child: CreditNoteFooter(
+                                  sessionKey: sessionKey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1, color: _cardBorder),
+                      _BottomActionBar(
                         sessionKey: sessionKey,
                         isEditing: widget.creditNoteId != null,
+                        supportsTabs: _supportsTabs,
                       ),
-                    ),
-                    const SizedBox(height: _sectionGap),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: _sectionGap,
-                      ),
-                      child: _FormFields(sessionKey: sessionKey),
-                    ),
-                    const SizedBox(height: _sectionGap),
-                    CreditNoteLineItemsTable(
-                      sessionKey: sessionKey,
-                      embedded: true,
-                    ),
-                    const Divider(height: 1, color: _cardBorder),
-                    Padding(
-                      padding: const EdgeInsets.all(_sectionGap),
-                      child: CreditNoteFooter(sessionKey: sessionKey),
-                    ),
-                    const Divider(height: 1, color: _cardBorder),
-                    _BottomActionBar(
-                      sessionKey: sessionKey,
-                      isEditing: widget.creditNoteId != null,
-                      supportsTabs: _supportsTabs,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -221,10 +230,12 @@ class _PageHeader extends ConsumerStatefulWidget {
   const _PageHeader({
     required this.sessionKey,
     this.isEditing = false,
+    this.showTitle = true,
   });
 
   final String sessionKey;
   final bool isEditing;
+  final bool showTitle;
 
   @override
   ConsumerState<_PageHeader> createState() => _PageHeaderState();
@@ -249,14 +260,17 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
       children: [
         Row(
           children: [
-            Text(
-              widget.isEditing ? 'Edit Credit Note' : 'Credit Note',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+            if (widget.showTitle) ...[
+              Text(
+                widget.isEditing ? 'Edit Credit Note' : 'Credit Note',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
+              const SizedBox(width: AppSpacing.md),
+            ],
             const Spacer(),
             _InlineHeaderField(
               label: 'Return No.',
@@ -756,12 +770,20 @@ class _PickerField extends StatelessWidget {
           Expanded(
             child: Text(
               value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: saleFieldTextStyle.copyWith(
+                fontSize: compact ? 12 : 14,
+                height: 1,
                 color: isPlaceholder ? saleFieldErrorColor : null,
               ),
             ),
           ),
-          Icon(icon, size: 15, color: AppColors.textSecondary),
+          Icon(
+            icon,
+            size: compact ? 14 : 15,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
     );
