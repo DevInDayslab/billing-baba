@@ -290,9 +290,9 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
       allowedExtensions: ['xlsx', 'xls'],
     );
 
-    if (!mounted || result == null || result.files.isEmpty) return;
+    if (!mounted || result.isEmpty) return;
 
-    final file = result.files.first;
+    final file = result.first;
     ref.read(importItemsExcelProvider.notifier).beginParsing(file.name);
 
     try {

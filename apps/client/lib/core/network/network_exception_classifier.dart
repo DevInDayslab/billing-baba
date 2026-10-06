@@ -171,7 +171,6 @@ abstract final class NetworkExceptionClassifier {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-      case DioExceptionType.transformTimeout:
         return NetworkErrorDetails(
           title: 'Connection failed',
           reason: 'Server Timeout',

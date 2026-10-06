@@ -88,11 +88,11 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
     final picked = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['biba'],
-      withData: true,
     );
-    if (picked == null || picked.files.isEmpty) return;
-    final bytes = picked.files.single.bytes;
-    if (bytes == null) {
+    if (picked.isEmpty) return;
+
+    final bytes = await picked.single.readAsBytes();
+    if (bytes.isEmpty) {
       setState(() => _statusMessage = 'Could not read backup file');
       return;
     }

@@ -56,14 +56,18 @@ abstract final class PlatformFileOutput {
     final normalizedExt = _normalizeExtension(extension);
     final safeName = _ensureExtension(_basename(filename), normalizedExt);
 
-    final path = await FilePicker.saveFile(
+    final savedUri = await FilePicker.saveFile(
       fileName: safeName,
       bytes: bytes,
       type: normalizedExt != null ? FileType.custom : FileType.any,
       allowedExtensions: normalizedExt != null ? [normalizedExt] : null,
     );
 
-    if (path == null) return null;
+    if (savedUri == null) return null;
+
+    final path = savedUri.scheme == 'file'
+        ? savedUri.toFilePath()
+        : savedUri.toString();
 
     final outputPath = _ensureExtension(path, normalizedExt);
     if (outputPath != path) {

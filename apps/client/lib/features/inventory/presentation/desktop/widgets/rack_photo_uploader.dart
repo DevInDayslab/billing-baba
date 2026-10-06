@@ -50,14 +50,16 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
   }
 
   Future<({Uint8List bytes, String mimeType})?> _pickImage() async {
-    final result = await FilePicker.pickFiles(
+    final picked = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
-      withData: true,
     );
 
-    final file = result?.files.single;
-    if (file == null || file.bytes == null) return null;
+    if (picked.isEmpty) return null;
+    final file = picked.single;
+
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) return null;
 
     final mime = mimeTypeFromFilename(file.name);
     if (!isAllowedMime(mime, _rackPhotoAllowedMimes)) {
@@ -69,7 +71,7 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
       return null;
     }
 
-    if (file.bytes!.length > _rackPhotoMaxBytes) {
+    if (bytes.length > _rackPhotoMaxBytes) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Image must be 2 MB or smaller')),
@@ -78,7 +80,7 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
       return null;
     }
 
-    return (bytes: file.bytes!, mimeType: mime);
+    return (bytes: bytes, mimeType: mime);
   }
 
   Future<void> _upload() async {

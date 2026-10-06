@@ -37,13 +37,12 @@ Future<void> runPurchaseDocumentDesktopImport({
   final picked = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: _allowedExtensions,
-    withData: true,
   );
-  debugPrint('$_logPrefix file picker complete picked=${picked != null}');
+  debugPrint('$_logPrefix file picker complete picked=${picked.isNotEmpty}');
 
-  if (picked == null || picked.files.isEmpty) return;
+  if (picked.isEmpty) return;
 
-  final file = picked.files.first;
+  final file = picked.first;
   final extension = _extensionFor(file.name);
   if (!_allowedExtensions.contains(extension)) {
     final snackContext = _routerOverlayContext(router);

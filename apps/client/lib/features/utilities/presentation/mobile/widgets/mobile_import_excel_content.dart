@@ -2,18 +2,17 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/utils/platform_file_output.dart';
-import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/mobile_home_fab.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/utilities/application/import_excel_template.dart';
 import 'package:billing_baba/features/utilities/application/import_items_excel_provider.dart';
 import 'package:billing_baba/features/utilities/models/import_item_preview_row.dart';
+import 'package:billing_baba/shared/utils/platform_file_output.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mobile Excel import flow — reuses [importItemsExcelProvider].
@@ -147,9 +146,9 @@ class _MobileImportExcelContentState
       allowedExtensions: ['xlsx', 'xls'],
     );
 
-    if (!mounted || result == null || result.files.isEmpty) return;
+    if (!mounted || result.isEmpty) return;
 
-    final file = result.files.first;
+    final file = result.first;
     ref.read(importItemsExcelProvider.notifier).beginParsing(file.name);
 
     try {
@@ -503,7 +502,7 @@ class _PreviewSection extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: state.rows.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final row = state.rows[index];
                 final color = _statusColor(row.status);

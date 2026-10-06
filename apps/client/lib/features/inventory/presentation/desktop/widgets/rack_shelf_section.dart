@@ -576,8 +576,8 @@ class _RackShelfSectionState extends ConsumerState<RackShelfSection> {
       allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
     );
 
-    final file = result?.files.single;
-    if (file == null) return null;
+    if (result.isEmpty) return null;
+    final file = result.single;
 
     final bytes = await file.readAsBytes();
     final mime = mimeTypeFromFilename(file.name);

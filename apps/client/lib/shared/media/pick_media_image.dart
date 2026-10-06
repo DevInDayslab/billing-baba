@@ -82,14 +82,16 @@ Future<({Uint8List bytes, String mimeType})?> _pickFromFilePicker({
   required Set<String> allowedMimes,
   required int maxBytes,
 }) async {
-  final result = await FilePicker.pickFiles(
+  final picked = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: _extensionsForMimes(allowedMimes),
-    withData: true,
   );
 
-  final file = result?.files.single;
-  if (file == null || file.bytes == null) return null;
+  if (picked.isEmpty) return null;
+  final file = picked.single;
+
+  final bytes = await file.readAsBytes();
+  if (bytes.isEmpty) return null;
 
   final mime = mimeTypeFromFilename(file.name);
   if (!isAllowedMime(mime, allowedMimes)) {
@@ -101,7 +103,7 @@ Future<({Uint8List bytes, String mimeType})?> _pickFromFilePicker({
     return null;
   }
 
-  if (file.bytes!.length > maxBytes) {
+  if (bytes.length > maxBytes) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -114,7 +116,7 @@ Future<({Uint8List bytes, String mimeType})?> _pickFromFilePicker({
     return null;
   }
 
-  return (bytes: file.bytes!, mimeType: mime);
+  return (bytes: bytes, mimeType: mime);
 }
 
 String _mimeForPickedImage(String name, String path) {

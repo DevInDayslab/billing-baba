@@ -87,14 +87,16 @@ class _UserProfilePageState extends ConsumerState<DesktopUserProfilePage> {
     final repo = _avatarRepository;
     if (repo == null) return;
 
-    final result = await FilePicker.pickFiles(
+    final picked = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
-      withData: true,
     );
 
-    final file = result?.files.single;
-    if (file == null || file.bytes == null) return;
+    if (picked.isEmpty) return;
+    final file = picked.single;
+
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) return;
 
     final mime = mimeTypeFromFilename(file.name);
     if (!isAllowedMime(mime, _avatarMimes)) {
@@ -106,7 +108,7 @@ class _UserProfilePageState extends ConsumerState<DesktopUserProfilePage> {
       return;
     }
 
-    if (file.bytes!.length > 2 * 1024 * 1024) {
+    if (bytes.length > 2 * 1024 * 1024) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Avatar must be 2 MB or smaller')),
@@ -117,7 +119,6 @@ class _UserProfilePageState extends ConsumerState<DesktopUserProfilePage> {
 
     final generation = ++_uploadGeneration;
     final previousUrl = _avatarUrl;
-    final bytes = file.bytes!;
 
     setState(() {
       _optimisticBytes = bytes;
