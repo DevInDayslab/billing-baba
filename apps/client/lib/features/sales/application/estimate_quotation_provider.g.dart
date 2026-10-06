@@ -91,7 +91,7 @@ final class EstimateUserFilterOptionsProvider
 }
 
 String _$estimateUserFilterOptionsHash() =>
-    r'15911bee258168e9bb80d4888a6eb2009ee2a633';
+    r'8346e849529a73d98ef547a4932b625190e24f84';
 
 @ProviderFor(estimateGodownFilterOptions)
 final estimateGodownFilterOptionsProvider =
@@ -134,7 +134,7 @@ final class EstimateGodownFilterOptionsProvider
 }
 
 String _$estimateGodownFilterOptionsHash() =>
-    r'fbd4863cbc87a8a3ed5689bed1094c48e802c8d4';
+    r'fdc15d011665b7545a95f9c62a28a145adc99a75';
 
 @ProviderFor(EstimateQuotationSearchQuery)
 final estimateQuotationSearchQueryProvider =
@@ -269,7 +269,7 @@ final class EstimateQuotationsProvider
 }
 
 String _$estimateQuotationsHash() =>
-    r'2992541bcf8c83b77f365ab946b1d99895fd2995';
+    r'af70eaf412f7e93c5c9acb8876f6ea37f59f7c13';
 
 abstract class _$EstimateQuotations
     extends $AsyncNotifier<PaginatedSaleInvoices> {
@@ -410,7 +410,7 @@ final class FilteredEstimateQuotationsProvider
 }
 
 String _$filteredEstimateQuotationsHash() =>
-    r'73457b8610b39a75a09506bbbb4a1fef43296eb5';
+    r'45545422d798813db1896f13767980d9cde02c3e';
 
 @ProviderFor(paginatedEstimateQuotations)
 final paginatedEstimateQuotationsProvider =

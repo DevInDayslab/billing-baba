@@ -33,7 +33,7 @@ final class InventoryItemsProvider
   InventoryItems create() => InventoryItems();
 }
 
-String _$inventoryItemsHash() => r'b1d6d70e1d73630fac6fdd395b2742eb7502ac2e';
+String _$inventoryItemsHash() => r'09ce9a52bb8a95308ebc615dfe4690fd5987a2f1';
 
 abstract class _$InventoryItems
     extends $AsyncNotifier<PaginatedInventoryItems> {

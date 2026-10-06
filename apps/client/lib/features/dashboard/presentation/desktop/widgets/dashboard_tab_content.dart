@@ -39,7 +39,7 @@ class DashboardTabContent extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (viewState.isCachedSnapshot)
+            if (viewState.showsOfflineBanner)
               DashboardOfflineBanner(
                 snapshotSavedAt: viewState.snapshotSavedAt,
                 isRefreshing: viewState.isRefreshing,

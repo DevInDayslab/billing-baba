@@ -6,14 +6,14 @@ import type { UserRole } from '../auth/auth.types';
 import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import type { UploadIntent } from '../storage/storage.types';
+import { BusinessRepository } from './business.repository';
+import type { BusinessListItem, BusinessProfile } from './business.types';
 import {
   AVATAR_POLICY,
   BRANDING_POLICIES,
   BRANDING_WRITE_ROLES,
   type BrandingKind,
 } from './business-branding.constants';
-import { BusinessRepository } from './business.repository';
-import type { BusinessListItem, BusinessProfile } from './business.types';
 
 export type BusinessListItemRow = BusinessListItem & {
   logoMediaAssetId: string | null;

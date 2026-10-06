@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Primary bottom-navigation destinations for the mobile shell.
 enum MobileNavTab {
@@ -40,15 +41,15 @@ abstract final class MobileNavDestinations {
       tab: MobileNavTab.home,
       label: 'Home',
       route: AppRoutes.home,
-      icon: Icons.home_outlined,
-      selectedIcon: Icons.home_rounded,
+      icon: LucideIcons.house,
+      selectedIcon: LucideIcons.house,
     ),
     MobileNavDestination(
       tab: MobileNavTab.items,
       label: 'Items',
       route: AppRoutes.items,
-      icon: Icons.inventory_2_outlined,
-      selectedIcon: Icons.inventory_2_rounded,
+      icon: LucideIcons.package,
+      selectedIcon: LucideIcons.package,
     ),
     MobileNavDestination(
       tab: MobileNavTab.pos,
@@ -62,15 +63,15 @@ abstract final class MobileNavDestinations {
       tab: MobileNavTab.parties,
       label: 'Parties',
       route: AppRoutes.parties,
-      icon: Icons.people_outline_rounded,
-      selectedIcon: Icons.people_rounded,
+      icon: LucideIcons.users,
+      selectedIcon: LucideIcons.users,
     ),
     MobileNavDestination(
       tab: MobileNavTab.reports,
       label: 'Reports',
       route: AppRoutes.reports,
-      icon: Icons.bar_chart_outlined,
-      selectedIcon: Icons.bar_chart_rounded,
+      icon: LucideIcons.chartColumn,
+      selectedIcon: LucideIcons.chartColumn,
     ),
   ];
 

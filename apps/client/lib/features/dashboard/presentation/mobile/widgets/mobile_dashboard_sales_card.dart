@@ -6,6 +6,8 @@ import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/das
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Sales overview card with amount, growth badge, and line chart.
 class MobileDashboardSalesCard extends StatelessWidget {
   const MobileDashboardSalesCard({
@@ -89,8 +91,8 @@ class MobileDashboardSalesCard extends StatelessWidget {
                   children: [
                     Icon(
                       isPositive
-                          ? Icons.trending_up_rounded
-                          : Icons.trending_down_rounded,
+                          ? LucideIcons.trendingUp
+                          : LucideIcons.trendingDown,
                       size: 14,
                       color: growthColor,
                     ),

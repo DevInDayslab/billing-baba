@@ -7,20 +7,30 @@ class LocalDocumentNumberService {
 
   final AppDatabase _db;
 
+  /// Returns the next counter value without consuming it.
+  Future<int> peekNext({
+    required String businessId,
+    required String documentSeries,
+  }) async {
+    final existing =
+        await (_db.select(_db.localDocumentCounters)..where(
+              (t) =>
+                  t.businessId.equals(businessId) &
+                  t.documentSeries.equals(documentSeries),
+            ))
+            .getSingleOrNull();
+    return existing?.nextNumber ?? 1;
+  }
+
   Future<String> allocate({
     required String businessId,
     required String documentSeries,
   }) {
     return _db.transaction(() async {
-      final existing =
-          await (_db.select(_db.localDocumentCounters)..where(
-                (t) =>
-                    t.businessId.equals(businessId) &
-                    t.documentSeries.equals(documentSeries),
-              ))
-              .getSingleOrNull();
-
-      final next = existing?.nextNumber ?? 1;
+      final next = await peekNext(
+        businessId: businessId,
+        documentSeries: documentSeries,
+      );
       await _db
           .into(_db.localDocumentCounters)
           .insertOnConflictUpdate(

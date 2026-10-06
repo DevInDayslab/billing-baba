@@ -389,6 +389,8 @@ class BusinessOutlinedField extends StatelessWidget {
     this.maxLines = 1,
     this.serverError,
     this.suffixIcon,
+    this.focusNode,
+    this.autofocus = false,
     super.key,
   });
 
@@ -402,11 +404,15 @@ class BusinessOutlinedField extends StatelessWidget {
   final int maxLines;
   final String? serverError;
   final Widget? suffixIcon;
+  final FocusNode? focusNode;
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
+      autofocus: autofocus,
       validator: (value) => serverError ?? validator?.call(value),
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
@@ -550,6 +556,7 @@ class _BusinessSearchableDropdownControlState
     extends State<_BusinessSearchableDropdownControl> {
   final LayerLink _layerLink = LayerLink();
   final GlobalKey _triggerKey = GlobalKey();
+  final FocusNode _searchFocusNode = FocusNode();
   OverlayEntry? _overlayEntry;
   String _searchQuery = '';
 
@@ -566,6 +573,7 @@ class _BusinessSearchableDropdownControlState
   @override
   void dispose() {
     _removeOverlay();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -577,12 +585,10 @@ class _BusinessSearchableDropdownControlState
   List<String> _filteredOptions(String query) {
     if (query.isEmpty) return _effectiveItems;
     final normalized = query.toLowerCase();
-    return _effectiveItems
-        .where((option) {
-          return option.toLowerCase().contains(normalized) ||
-              _labelFor(option).toLowerCase().contains(normalized);
-        })
-        .toList();
+    return _effectiveItems.where((option) {
+      return option.toLowerCase().contains(normalized) ||
+          _labelFor(option).toLowerCase().contains(normalized);
+    }).toList();
   }
 
   void _selectOption(String option) {
@@ -596,6 +602,7 @@ class _BusinessSearchableDropdownControlState
       return;
     }
     _searchQuery = '';
+    FocusManager.instance.primaryFocus?.unfocus();
     _showOverlay();
   }
 
@@ -647,6 +654,7 @@ class _BusinessSearchableDropdownControlState
                                 AppSpacing.xs,
                               ),
                               child: TextField(
+                                focusNode: _searchFocusNode,
                                 autofocus: true,
                                 decoration: InputDecoration(
                                   hintText: 'Search ${widget.hintText}',
@@ -732,6 +740,10 @@ class _BusinessSearchableDropdownControlState
     );
 
     overlay.insert(_overlayEntry!);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _overlayEntry == null) return;
+      _searchFocusNode.requestFocus();
+    });
   }
 
   @override

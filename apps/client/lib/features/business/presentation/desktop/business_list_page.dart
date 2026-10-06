@@ -7,12 +7,14 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/business/application/business_profile_sync.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_card_menu.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/create_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/delete_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/edit_business_dialog.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/restore_business_dialog.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
@@ -41,7 +43,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
     with SingleTickerProviderStateMixin {
   static const _headerColor = Color(0xFF1A1A2E);
   static const _maxContentWidth = 1040.0;
-  static const _supportPhone = '9333911911 / 080-68195500';
   static const _supportEmail = 'support@billingbaba.com';
 
   late final TabController _tabController;
@@ -141,10 +142,14 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
         try {
           await container
               .read(businessListProvider.notifier)
-              .deleteBusiness(entry.id);
+              .scheduleBusinessDeletion(entry.id);
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${entry.name} deleted')),
+            SnackBar(
+              content: Text(
+                '${entry.name} scheduled for deletion in 30 days',
+              ),
+            ),
           );
           ref.invalidate(companyDirectoryProvider);
         } on Object catch (error) {
@@ -184,6 +189,29 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
   Future<void> _openCompanyEntry(CompanyListEntry entry) async {
     final container = ProviderScope.containerOf(context, listen: false);
     if (container.read(businessSessionLoadingProvider) != null) return;
+
+    if (entry.isPendingDeletion) {
+      final restore = await showRestoreScheduledBusinessDialog(
+        context,
+        companyName: entry.name,
+      );
+      if (!mounted || restore != true) return;
+      try {
+        await container
+            .read(businessListProvider.notifier)
+            .restoreScheduledBusiness(entry.id);
+        ref.invalidate(companyDirectoryProvider);
+      } on Object catch (error) {
+        if (!mounted) return;
+        final message = error is DioException
+            ? ApiErrorParser.userFacingMessage(error)
+            : 'Could not restore company. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
+    }
 
     final messenger = ScaffoldMessenger.maybeOf(context);
 
@@ -272,6 +300,7 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
   Widget build(BuildContext context) {
     final directoryAsync = ref.watch(companyDirectoryProvider);
     final directoryServiceAsync = ref.watch(companyDirectoryServiceProvider);
+    final businesses = ref.watch(businessListProvider).asData?.value;
     final phoneNumber = ref.watch(loggedInPhoneProvider);
 
     SwitchCompanyDebugLog.lifecycle(
@@ -296,38 +325,39 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
           if (allEntries.isEmpty) {
             return Column(
               children: [
-                const _SupportBar(phone: _supportPhone),
                 Expanded(
                   child: _EmptyBusinessState(onCreate: _openCreateBusiness),
                 ),
                 _BottomBar(
                   phoneNumber: phoneNumber,
                   supportEmail: _supportEmail,
-                  onCreate: _openCreateBusiness,
-                  showNewCompany: false,
                 ),
               ],
             );
           }
 
-          final sharedCompanies = _filterEntries(
-            directoryService?.sharedCompanies(allEntries) ??
-                allEntries.where((e) => e.isSharedTab).toList(),
+          final mergedEntries = mergeDirectoryProfileFields(
+            allEntries,
+            businesses,
           );
-          final myCompanies = _filterEntries(
-            directoryService?.ownedCompanies(allEntries) ??
-                allEntries.where((e) => e.relationship.isOwner).toList(),
+          final sharedCompanies = _filterEntries(
+            directoryService?.sharedCompanies(mergedEntries) ??
+                mergedEntries.where((e) => e.isSharedTab).toList(),
+          );
+          final myCompanies = CompanyListEntry.withPendingDeletionLast(
+            _filterEntries(
+              directoryService?.ownedCompanies(mergedEntries) ??
+                  mergedEntries.where((e) => e.relationship.isOwner).toList(),
+            ),
           );
 
           return Column(
             children: [
-              const _SupportBar(phone: _supportPhone),
               _Header(
                 searchController: _searchController,
                 searchFocusNode: _searchFocusNode,
                 tabController: _tabController,
                 onSearchChanged: () => setState(() {}),
-                onCreate: _openCreateBusiness,
               ),
               Expanded(
                 child: RefreshIndicator(
@@ -363,7 +393,6 @@ class _BusinessListPageState extends ConsumerState<DesktopBusinessListPage>
               _BottomBar(
                 phoneNumber: phoneNumber,
                 supportEmail: _supportEmail,
-                onCreate: _openCreateBusiness,
               ),
             ],
           );
@@ -464,53 +493,18 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-class _SupportBar extends StatelessWidget {
-  const _SupportBar({required this.phone});
-
-  final String phone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm + 2,
-      ),
-      child: Center(
-        child: Text(
-          'Need help? Call $phone — Get Instant Online Support',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-
 class _Header extends StatelessWidget {
   const _Header({
     required this.searchController,
     required this.searchFocusNode,
     required this.tabController,
     required this.onSearchChanged,
-    required this.onCreate,
   });
 
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
   final TabController tabController;
   final VoidCallback onSearchChanged;
-  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -532,55 +526,23 @@ class _Header extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Company List',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.3,
-                                ),
+                    Text(
+                      'Company List',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            'Manage all your businesses from one place.',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                          ),
-                        ],
-                      ),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    FilledButton.icon(
-                      onPressed: onCreate,
-                      icon: const Icon(
-                        Icons.add,
-                        size: 18,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'New Company',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppRadius.mdBorder,
-                        ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Manage all your businesses from one place.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -778,10 +740,14 @@ class _MyCompaniesTab extends ConsumerWidget {
         ...entries.map(
           (entry) => Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: BusinessCard(
-              entry: entry,
-              onOpen: () => onOpen(entry),
-              onMenuAction: (action) => onAction(entry, action),
+            child: BusinessListCardMotion(
+              key: ValueKey(entry.id),
+              isPendingDeletion: entry.isPendingDeletion,
+              child: BusinessCard(
+                entry: entry,
+                onOpen: () => onOpen(entry),
+                onMenuAction: (action) => onAction(entry, action),
+              ),
             ),
           ),
         ),
@@ -902,14 +868,10 @@ class _BottomBar extends ConsumerWidget {
   const _BottomBar({
     required this.phoneNumber,
     required this.supportEmail,
-    required this.onCreate,
-    this.showNewCompany = true,
   });
 
   final String phoneNumber;
   final String supportEmail;
-  final VoidCallback onCreate;
-  final bool showNewCompany;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -962,27 +924,6 @@ class _BottomBar extends ConsumerWidget {
                     ],
                   ),
                 ),
-                if (showNewCompany) ...[
-                  FilledButton(
-                    onPressed: onCreate,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.mdBorder,
-                      ),
-                    ),
-                    child: const Text(
-                      'New Company',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                ],
                 TextButton(
                   onPressed: () async {
                     await ref.read(authProvider.notifier).logout();

@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -70,7 +71,12 @@ class _AddBrandDialogState extends ConsumerState<AddBrandDialog> {
       return;
     }
 
-    Navigator.of(context).pop(result.brand);
+    final brand = result.brand;
+    if (!_isEditing && brand != null) {
+      ref.read(selectedBrandIdProvider.notifier).selected = brand.id;
+    }
+
+    Navigator.of(context).pop(brand);
   }
 
   @override

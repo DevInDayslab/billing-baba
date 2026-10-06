@@ -8,6 +8,8 @@ import 'package:billing_baba/features/reports/models/reports_nav_intent.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 typedef MobileMoreOptionsReportOpener = void Function(ReportsNavIntent intent);
 
 /// Which home tab opened the More Options sheet.
@@ -71,7 +73,7 @@ List<MobileMenuGridItem> mobileTransactionMoreOptionsItems({
   return [
     MobileMenuGridItem(
       label: 'Bank Accounts',
-      icon: Icons.account_balance_outlined,
+      icon: LucideIcons.landmark,
       onTap: () => onOpenReport(
         ReportsNavIntent.businessStatus(
           BusinessStatusReportSubSection.bankStatement,
@@ -80,43 +82,43 @@ List<MobileMenuGridItem> mobileTransactionMoreOptionsItems({
     ),
     MobileMenuGridItem(
       label: 'Day Book',
-      icon: Icons.menu_book_outlined,
+      icon: LucideIcons.bookOpen,
       onTap: () => openTransactionReport(TransactionReportSubSection.dayBook),
     ),
     MobileMenuGridItem(
       label: 'All Txns Report',
-      icon: Icons.summarize_outlined,
+      icon: LucideIcons.fileSpreadsheet,
       onTap: () =>
           openTransactionReport(TransactionReportSubSection.allTransaction),
     ),
     MobileMenuGridItem(
       label: 'Profit & Loss',
-      icon: Icons.swap_vert_rounded,
+      icon: LucideIcons.arrowUpDown,
       onTap: () =>
           openTransactionReport(TransactionReportSubSection.profitLoss),
     ),
     MobileMenuGridItem(
       label: 'Balance Sheet',
-      icon: Icons.assignment_outlined,
+      icon: LucideIcons.clipboardList,
       showPremiumBadge: true,
       onTap: () =>
           openTransactionReport(TransactionReportSubSection.balanceSheet),
     ),
     MobileMenuGridItem(
       label: 'Billwise PnL',
-      icon: Icons.bookmark_border_rounded,
+      icon: LucideIcons.bookmark,
       showPremiumBadge: true,
       onTap: () =>
           openTransactionReport(TransactionReportSubSection.billWiseProfit),
     ),
     MobileMenuGridItem(
       label: 'Print Settings',
-      icon: Icons.print_outlined,
+      icon: LucideIcons.printer,
       onTap: () => onPushRoute(AppRoutes.settingsTab(SettingsTab.print.id)),
     ),
     MobileMenuGridItem(
       label: 'Txn Settings',
-      icon: Icons.sms_outlined,
+      icon: LucideIcons.messageSquare,
       onTap: () => onPushRoute(
         AppRoutes.settingsTab(SettingsTab.transactionMessages.id),
       ),
@@ -137,28 +139,28 @@ List<MobileMenuGridItem> mobilePartyMoreOptionsItems({
   return [
     MobileMenuGridItem(
       label: 'Invite Party',
-      icon: Icons.share_outlined,
+      icon: LucideIcons.share2,
       onTap: onInviteParty,
     ),
     MobileMenuGridItem(
       label: 'Partywise PnL',
-      icon: Icons.person_outline_rounded,
+      icon: LucideIcons.user,
       showPremiumBadge: true,
       onTap: () => openPartyReport(PartyReportSubSection.partyWiseProfitLoss),
     ),
     MobileMenuGridItem(
       label: 'All Parties Report',
-      icon: Icons.groups_outlined,
+      icon: LucideIcons.users,
       onTap: () => openPartyReport(PartyReportSubSection.allParties),
     ),
     MobileMenuGridItem(
       label: 'Reminder Settings',
-      icon: Icons.notifications_active_outlined,
+      icon: LucideIcons.bellRing,
       onTap: () => onPushRoute(AppRoutes.settingsPreferences),
     ),
     MobileMenuGridItem(
       label: 'Import Party',
-      icon: Icons.person_add_alt_1_outlined,
+      icon: LucideIcons.userPlus,
       onTap: onImportParty,
     ),
   ];

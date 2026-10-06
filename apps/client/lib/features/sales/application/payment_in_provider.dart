@@ -280,6 +280,17 @@ List<PaymentInModel> _applyClientFilters(
   }).toList();
 }
 
+List<PaymentInModel> _paymentInItemsFromAsync(
+  AsyncValue<PaginatedPaymentIn> async,
+) {
+  final previousItems = async.value?.items;
+  return async.when(
+    data: (page) => page.items,
+    loading: () => previousItems ?? const [],
+    error: (_, _) => previousItems ?? const [],
+  );
+}
+
 PaginatedPaymentIn _paginatePaymentInRecords(
   List<PaymentInModel> records,
   int currentPage,
@@ -349,7 +360,9 @@ class PaymentInRecords extends _$PaymentInRecords {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allRecords = await _fetchAllRecords();
       return _allPaymentInPage(allRecords);
@@ -468,8 +481,9 @@ class PaymentInFilters extends _$PaymentInFilters {
 
 @riverpod
 List<PaymentInModel> filteredPaymentInRecords(Ref ref) {
-  final allRecords =
-      ref.watch(paymentInRecordsProvider).value?.items ?? const [];
+  final allRecords = _paymentInItemsFromAsync(
+    ref.watch(paymentInRecordsProvider),
+  );
   final filters = ref.watch(paymentInFiltersProvider);
   return _applyClientFilters(allRecords, filters);
 }

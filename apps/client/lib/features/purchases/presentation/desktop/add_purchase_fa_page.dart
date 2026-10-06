@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/add_purchase_fa_form_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -198,9 +199,15 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
               child: _LabeledField(
                 label: 'Bill Number',
                 child: _PurchaseFaTextField(
-                  initialValue: form.billNumber,
+                  initialValue: resolveDocumentNumberDisplay(
+                    documentId: null,
+                    currentNumber: form.billNumber,
+                    preview: watchDocumentNumberPreview(ref, 'PFA'),
+                    forceAuto: isUnsetDocumentNumber(form.billNumber),
+                  ),
                   hintText: 'Bill number',
-                  onChanged: notifier.updateBillNumber,
+                  readOnly: true,
+                  onChanged: (_) {},
                 ),
               ),
             ),
@@ -503,11 +510,13 @@ class _PurchaseFaTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.readOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool readOnly;
 
   @override
   State<_PurchaseFaTextField> createState() => _PurchaseFaTextFieldState();
@@ -542,7 +551,11 @@ class _PurchaseFaTextFieldState extends State<_PurchaseFaTextField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(hint: widget.hintText),
+      readOnly: widget.readOnly,
+      decoration: buildSaleFieldDecoration(
+        hint: widget.hintText,
+        filled: widget.readOnly,
+      ),
       onChanged: widget.onChanged,
     );
   }

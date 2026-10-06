@@ -11,6 +11,7 @@ import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_editor_dialog.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_empty_state.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:billing_baba/shared/layout/dashboard_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,17 +55,10 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
     final wasCompleting = !previous.isCompleted;
     if (!wasCompleting) return;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Reminder completed'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            unawaited(ref.read(tasksProvider.notifier).restore(previous));
-          },
-        ),
-      ),
+    showTaskCompletionUndoRedoSnackBar(
+      context: context,
+      ref: ref,
+      snapshotBeforeComplete: previous,
     );
   }
 
@@ -94,6 +88,7 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
       DashboardTodoStatusChip.today => 'Nothing due today',
       DashboardTodoStatusChip.overdue => 'No overdue tasks',
       DashboardTodoStatusChip.pending => "You're all caught up!",
+      DashboardTodoStatusChip.completed => 'No completed tasks yet',
     };
 
     return Center(
@@ -110,12 +105,9 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
     final metrics = DashboardLayoutScope.of(context);
     final tasksAsync = ref.watch(tasksProvider);
     final allTasks = tasksAsync.value ?? const <TaskModel>[];
-    final scopedTasks = DashboardTodoFilterLogic.applyScope(
+    final tasks = DashboardTodoFilterLogic.applyStatusFilters(
       allTasks,
       scope: DashboardTodoScopeFilter.all,
-    );
-    final tasks = DashboardTodoFilterLogic.applyStatusChip(
-      scopedTasks,
       chip: _statusChip,
     );
     final summary = DashboardTodoFilterLogic.summaryCounts(allTasks);

@@ -7,6 +7,7 @@ import { ItemService } from '../../modules/inventory/item.service';
 import { UnitService } from '../../modules/inventory/unit.service';
 import { PartyService } from '../../modules/parties/party.service';
 import { ExpenseService } from '../../modules/purchases/expense.service';
+import { ensureSystemExpenseCategories } from '../../modules/purchases/expense-sync.service';
 import { PurchaseDocumentService } from '../../modules/purchases/purchase-document.service';
 import { SalesDocumentService } from '../../modules/sales/sales-document.service';
 import { currentFiscalYear } from '../../modules/sales/sales-numbering.service';
@@ -21,12 +22,11 @@ import {
   DEV_LOGIN_PHONE,
 } from '../../shared/dev-demo.constants';
 import type { Database } from '../client';
-import { parties } from '../schema/crm/tables';
 import { businesses } from '../schema/business/tables';
+import { parties } from '../schema/crm/tables';
 import { users } from '../schema/identity/tables';
 import { godowns, items } from '../schema/inventory/tables';
 import { expenseCategories } from '../schema/purchases/tables';
-import { ensureSystemExpenseCategories } from '../../modules/purchases/expense-sync.service';
 import {
   businessSettings,
   documentNumberSequences,

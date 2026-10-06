@@ -71,35 +71,39 @@ class MobileHomeTodoTaskTile extends StatelessWidget {
                   children: [
                     Text(
                       task.title,
-                      style: AppTypography.inter(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: isCompleted
-                            ? AppColors.textSecondary
-                            : AppColors.textPrimary,
-                        height: 1.2,
-                      ).copyWith(
-                        decoration: isCompleted
-                            ? TextDecoration.lineThrough
-                            : null,
-                        decorationColor: AppColors.textSecondary,
-                      ),
+                      style:
+                          AppTypography.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: isCompleted
+                                ? AppColors.textSecondary
+                                : AppColors.textPrimary,
+                            height: 1.2,
+                          ).copyWith(
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
+                            decorationColor: AppColors.textSecondary,
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),
                     Text(
                       category.label,
-                      style: AppTypography.inter(
-                        fontSize: 11,
-                        color: AppColors.textSecondary.withValues(alpha: 0.9),
-                        height: 1.2,
-                      ).copyWith(
-                        decoration: isCompleted
-                            ? TextDecoration.lineThrough
-                            : null,
-                        decorationColor: AppColors.textSecondary,
-                      ),
+                      style:
+                          AppTypography.inter(
+                            fontSize: 11,
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.9,
+                            ),
+                            height: 1.2,
+                          ).copyWith(
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
+                            decorationColor: AppColors.textSecondary,
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

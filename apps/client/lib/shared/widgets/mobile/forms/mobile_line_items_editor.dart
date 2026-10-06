@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Simple line list for mobile document forms.
 class MobileLineItemsEditor extends StatelessWidget {
   const MobileLineItemsEditor({
@@ -43,7 +45,7 @@ class MobileLineItemsEditor extends StatelessWidget {
             ),
             TextButton.icon(
               onPressed: onAdd,
-              icon: const Icon(Icons.add_rounded, size: 18),
+              icon: const Icon(LucideIcons.plus, size: 18),
               label: const Text('Add'),
             ),
           ],
@@ -85,7 +87,7 @@ class MobileLineItemsEditor extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded),
+                        icon: const Icon(LucideIcons.trash2),
                         onPressed: () => onRemove(index),
                       ),
                     ],

@@ -163,5 +163,55 @@ void main() {
       expect(line.taxPercent, 0);
       expect(line.lineTax, 0);
     });
+
+    test('defaults quantity to 1 when OCR omits quantity', () {
+      const parsed = PurchaseDocumentParseDto(
+        lines: [
+          PurchaseDocumentParseLineDto(
+            itemName: 'Bolt pack',
+            unitPrice: 25,
+          ),
+        ],
+      );
+
+      final result = PurchaseDocumentParseMapper.apply(
+        base: AddPurchaseFormState(
+          items: [PurchaseLineItem.empty(id: 'line_1')],
+        ),
+        parsed: parsed,
+        parties: const [],
+        itemNameToId: const {},
+        nextLineId: () => 'line_2',
+      );
+
+      final line = result.items.single;
+      expect(line.itemName, 'Bolt pack');
+      expect(line.qty, 1);
+      expect(line.pricePerUnit, 25);
+    });
+
+    test('skips lines without a unit price', () {
+      const parsed = PurchaseDocumentParseDto(
+        lines: [
+          PurchaseDocumentParseLineDto(
+            itemName: 'Mystery item',
+            quantity: 2,
+          ),
+        ],
+      );
+
+      final result = PurchaseDocumentParseMapper.apply(
+        base: AddPurchaseFormState(
+          items: [PurchaseLineItem.empty(id: 'line_1')],
+        ),
+        parsed: parsed,
+        parties: const [],
+        itemNameToId: const {},
+        nextLineId: () => 'line_2',
+      );
+
+      // No mapped lines — form keeps its base empty draft line.
+      expect(result.items.single.itemName, isEmpty);
+    });
   });
 }

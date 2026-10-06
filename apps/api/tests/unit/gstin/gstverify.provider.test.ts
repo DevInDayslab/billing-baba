@@ -27,11 +27,12 @@ describe('GstVerifyProvider', () => {
       },
     };
 
-    globalThis.fetch = mock(async () =>
-      new Response(JSON.stringify(providerBody), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(providerBody), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
     ) as unknown as typeof fetch;
 
     const provider = new GstVerifyProvider();
@@ -45,7 +46,9 @@ describe('GstVerifyProvider', () => {
   });
 
   test('maps 401 to auth failed error', async () => {
-    globalThis.fetch = mock(async () => new Response('', { status: 401 })) as unknown as typeof fetch;
+    globalThis.fetch = mock(
+      async () => new Response('', { status: 401 }),
+    ) as unknown as typeof fetch;
 
     const provider = new GstVerifyProvider();
 
@@ -65,7 +68,9 @@ describe('GstVerifyProvider', () => {
   });
 
   test('maps 402 to temporarily unavailable error', async () => {
-    globalThis.fetch = mock(async () => new Response('', { status: 402 })) as unknown as typeof fetch;
+    globalThis.fetch = mock(
+      async () => new Response('', { status: 402 }),
+    ) as unknown as typeof fetch;
 
     const provider = new GstVerifyProvider();
 
@@ -85,7 +90,9 @@ describe('GstVerifyProvider', () => {
   });
 
   test('maps 422 to invalid GSTIN error', async () => {
-    globalThis.fetch = mock(async () => new Response('', { status: 422 })) as unknown as typeof fetch;
+    globalThis.fetch = mock(
+      async () => new Response('', { status: 422 }),
+    ) as unknown as typeof fetch;
 
     const provider = new GstVerifyProvider();
 
@@ -103,7 +110,9 @@ describe('GstVerifyProvider', () => {
   });
 
   test('maps 429 to rate limited error', async () => {
-    globalThis.fetch = mock(async () => new Response('', { status: 429 })) as unknown as typeof fetch;
+    globalThis.fetch = mock(
+      async () => new Response('', { status: 429 }),
+    ) as unknown as typeof fetch;
 
     const provider = new GstVerifyProvider();
 
@@ -121,7 +130,9 @@ describe('GstVerifyProvider', () => {
   });
 
   test('maps 5xx to unavailable error', async () => {
-    globalThis.fetch = mock(async () => new Response('', { status: 503 })) as unknown as typeof fetch;
+    globalThis.fetch = mock(
+      async () => new Response('', { status: 503 }),
+    ) as unknown as typeof fetch;
 
     const provider = new GstVerifyProvider();
 

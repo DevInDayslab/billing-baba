@@ -104,7 +104,8 @@ class NotificationPreferences {
   }) {
     return NotificationPreferences(
       enabled: enabled ?? this.enabled,
-      reminderNotifications: reminderNotifications ?? this.reminderNotifications,
+      reminderNotifications:
+          reminderNotifications ?? this.reminderNotifications,
       syncNotifications: syncNotifications ?? this.syncNotifications,
       backupNotifications: backupNotifications ?? this.backupNotifications,
       subscriptionNotifications:
@@ -124,8 +125,8 @@ class NotificationPreferences {
       NotificationType.outstandingReminder ||
       NotificationType.saleDue ||
       NotificationType.purchaseDue => reminderNotifications,
-      NotificationType.syncFailed || NotificationType.syncCompleted =>
-        syncNotifications,
+      NotificationType.syncFailed ||
+      NotificationType.syncCompleted => syncNotifications,
       NotificationType.backupReminder => backupNotifications,
       NotificationType.subscriptionExpiry => subscriptionNotifications,
       NotificationType.lowStock => lowStockNotifications,

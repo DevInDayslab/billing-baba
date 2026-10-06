@@ -25,6 +25,9 @@ import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:billing_baba/features/search/application/search_dialog_provider.dart';
 import 'package:billing_baba/features/search/application/search_route_observer.dart';
 import 'package:billing_baba/features/search/application/search_shortcuts_handler.dart';
+import 'package:billing_baba/features/tasks/application/task_completion_undo_redo_provider.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_shortcuts.dart';
 import 'package:billing_baba/features/search/presentation/desktop/search_dialog.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
@@ -36,7 +39,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 /// Visual tokens for the desktop sidebar chrome.
 abstract final class _SidebarTokens {
   static const background = Color(0xFF1C2333);
-  static const text = Color(0xFFE2E8F0);
+
+  /// Pearl white — sidebar nav labels (Home, Parties, …).
+  static const text = Color(0xFFFDFCFA);
   static const textActive = Color(0xFFFFFFFF);
   static const textMuted = Color(0xFF94A3B8);
   static const searchField = Color(0xFF141B27);
@@ -97,7 +102,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   }
 
   static const Color _sidebarColor = _SidebarTokens.background;
-  static const Color _sidebarText = _SidebarTokens.textMuted;
+  static const Color _sidebarText = _SidebarTokens.text;
 
   bool _isSaleExpanded = false;
   bool _isPurchaseExpanded = false;
@@ -250,23 +255,11 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       iconColor: _SidebarTokens.home,
       label: 'Home',
     ),
-    _NavItem(
-      route: AppRoutes.parties,
+    const _NavItem(
+      route: AppRoutes.partyDetails,
       icon: LucideIcons.users,
       iconColor: _SidebarTokens.parties,
       label: 'Parties',
-    ),
-    const _NavItem(
-      route: AppRoutes.partyGroups,
-      icon: Icons.folder_outlined,
-      iconColor: _SidebarTokens.parties,
-      label: 'Groups',
-    ),
-    const _NavItem(
-      route: AppRoutes.partyHiddenLedger,
-      icon: Icons.visibility_off_outlined,
-      iconColor: _SidebarTokens.parties,
-      label: 'Hidden Ledger',
     ),
     _NavItem(
       icon: LucideIcons.heartHandshake,
@@ -293,7 +286,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (!ShellSidebarVisibility.hidePos)
       const _NavItem(
         route: AppRoutes.pos,
-        icon: LucideIcons.store,
+        icon: Icons.point_of_sale_outlined,
         iconColor: _SidebarTokens.pos,
         label: 'POS',
       ),
@@ -448,6 +441,19 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     // rebuilds during company open.
     final permissions = ref.watch(permissionServiceProvider);
 
+    if (AppRoutes.isSaleInvoiceFormRoute(currentLocation)) {
+      return Scaffold(
+        body: _ShellShortcutScope(
+          quickCreateEnabled: false,
+          shortcutFocusNode: _shellShortcutFocusNode,
+          child: ColoredBox(
+            color: AppColors.background,
+            child: widget.child,
+          ),
+        ),
+      );
+    }
+
     return _ShellSidebarStateScope(
       builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
         return LayoutBuilder(
@@ -526,29 +532,20 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             }
 
             return Scaffold(
-              body: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    width: isCollapsed
-                        ? _sidebarCollapsedWidth
-                        : _sidebarExpandedWidth,
-                    color: _sidebarColor,
-                    child: GestureDetector(
-                      onTap: isCollapsed ? sidebarNotifier.expand : null,
-                      behavior: HitTestBehavior.translucent,
-                      child: _buildSidebarPanel(
-                        currentLocation: currentLocation,
-                        collapsed: isCollapsed,
-                        permissions: permissions,
-                        sidebarNotifier: sidebarNotifier,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: mainContent),
-                ],
+              body: _PersistentSidebarLayout(
+                sidebarExpandedWidth: _sidebarExpandedWidth,
+                sidebarCollapsedWidth: _sidebarCollapsedWidth,
+                isCollapsed: isCollapsed,
+                sidebarColor: _sidebarColor,
+                onToggle: sidebarNotifier.toggleCollapsed,
+                onSidebarTap: isCollapsed ? sidebarNotifier.expand : null,
+                sidebar: _buildSidebarPanel(
+                  currentLocation: currentLocation,
+                  collapsed: isCollapsed,
+                  permissions: permissions,
+                  sidebarNotifier: sidebarNotifier,
+                ),
+                mainContent: mainContent,
               ),
             );
           },
@@ -607,12 +604,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       ),
       child: collapsed
           ? InkWell(
-              onTap: sidebarNotifier.expand,
+              onTap: () =>
+                  ref.read(searchDialogProvider.notifier).open(context),
               borderRadius: AppRadius.mdBorder,
               child: const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 child: Icon(
-                  LucideIcons.panelLeftOpen,
+                  LucideIcons.search,
                   color: _sidebarText,
                   size: AppIconSize.md,
                 ),
@@ -694,22 +692,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                     ),
                   ),
                 ),
-                if (!showCloseButton)
-                  IconButton(
-                    icon: const Icon(
-                      LucideIcons.panelLeftClose,
-                      color: _sidebarText,
-                      size: AppIconSize.md,
-                    ),
-                    onPressed: sidebarNotifier.toggleCollapsed,
-                    tooltip: 'Collapse sidebar',
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                  ),
               ],
             ),
     );
@@ -835,6 +817,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final isActive =
         item.route != null &&
         (currentLocation == item.route ||
+            (item.route == AppRoutes.partyDetails &&
+                currentLocation.startsWith(AppRoutes.parties)) ||
             (item.route == AppRoutes.reports &&
                 currentLocation.startsWith(AppRoutes.reports)));
 
@@ -857,11 +841,44 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       if (subRoute == AppRoutes.saleInvoices &&
           (currentLocation == AppRoutes.addSale ||
               currentLocation.startsWith('${AppRoutes.editSale}/') ||
-              currentLocation.startsWith('${AppRoutes.viewSale}/'))) {
+              currentLocation.startsWith('${AppRoutes.viewSale}/') ||
+              currentLocation.startsWith('${AppRoutes.duplicateSale}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleEstimateQuotation &&
+          (currentLocation == AppRoutes.addEstimate ||
+              currentLocation.startsWith('${AppRoutes.editEstimate}/') ||
+              currentLocation.startsWith('${AppRoutes.duplicateEstimate}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleProformaInvoice &&
+          (currentLocation == AppRoutes.addProforma ||
+              currentLocation.startsWith('${AppRoutes.editProforma}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleOrder &&
+          (currentLocation == AppRoutes.addSaleOrder ||
+              currentLocation.startsWith('${AppRoutes.editSaleOrder}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleDeliveryChallan &&
+          (currentLocation == AppRoutes.addDeliveryChallan ||
+              currentLocation.startsWith('${AppRoutes.editDeliveryChallan}/'))) {
         return true;
       }
       if (subRoute == AppRoutes.saleReturnCreditNote &&
-          currentLocation == AppRoutes.addCreditNote) {
+          (currentLocation == AppRoutes.addCreditNote ||
+              currentLocation.startsWith('${AppRoutes.editCreditNote}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleFa &&
+          (currentLocation == AppRoutes.addSaleFa ||
+              currentLocation.startsWith('${AppRoutes.editSaleFa}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleJobWorkOut &&
+          (currentLocation == AppRoutes.addJobWork ||
+              currentLocation.startsWith('${AppRoutes.editJobWork}/'))) {
         return true;
       }
     }
@@ -1060,9 +1077,8 @@ class _SidebarExpandableNavTile extends StatelessWidget {
                     style: TextStyle(
                       color: labelColor,
                       fontSize: 13,
-                      fontWeight: isActive
-                          ? FontWeight.w500
-                          : FontWeight.normal,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.15,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1074,7 +1090,7 @@ class _SidebarExpandableNavTile extends StatelessWidget {
                     LucideIcons.chevronDown,
                     color: isActive
                         ? _SidebarTokens.textActive
-                        : _SidebarTokens.textMuted,
+                        : _SidebarTokens.text,
                     size: AppIconSize.md,
                   ),
                 ),
@@ -1108,7 +1124,8 @@ class _SidebarNavSubTile extends StatelessWidget {
           style: TextStyle(
             color: isActive ? _SidebarTokens.textActive : _SidebarTokens.text,
             fontSize: 13,
-            fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.15,
           ),
           overflow: TextOverflow.ellipsis,
         ),
@@ -1166,9 +1183,8 @@ class _SidebarNavTile extends StatelessWidget {
                     style: TextStyle(
                       color: labelColor,
                       fontSize: 13,
-                      fontWeight: isActive
-                          ? FontWeight.w500
-                          : FontWeight.normal,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.15,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1206,7 +1222,7 @@ class _SidebarProfileFooter extends StatefulWidget {
 
 class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
   static const Color _sidebarColor = _SidebarTokens.background;
-  static const Color _sidebarText = _SidebarTokens.textMuted;
+  static const Color _sidebarText = _SidebarTokens.text;
   static const Color _sidebarTextActive = _SidebarTokens.textActive;
 
   final _layerLink = LayerLink();
@@ -1480,6 +1496,131 @@ class _ProfileMenuItem extends StatelessWidget {
   }
 }
 
+/// Persistent desktop row: sidebar + content, with a hover-revealed edge tab
+/// painted above the content area so it stays clickable on the border.
+class _PersistentSidebarLayout extends StatefulWidget {
+  const _PersistentSidebarLayout({
+    required this.sidebarExpandedWidth,
+    required this.sidebarCollapsedWidth,
+    required this.isCollapsed,
+    required this.sidebarColor,
+    required this.onToggle,
+    required this.onSidebarTap,
+    required this.sidebar,
+    required this.mainContent,
+  });
+
+  final double sidebarExpandedWidth;
+  final double sidebarCollapsedWidth;
+  final bool isCollapsed;
+  final Color sidebarColor;
+  final VoidCallback onToggle;
+  final VoidCallback? onSidebarTap;
+  final Widget sidebar;
+  final Widget mainContent;
+
+  @override
+  State<_PersistentSidebarLayout> createState() =>
+      _PersistentSidebarLayoutState();
+}
+
+class _PersistentSidebarLayoutState extends State<_PersistentSidebarLayout> {
+  static const _animationDuration = Duration(milliseconds: 200);
+  static const _handleTop = 34.0;
+  static const _handleProtrude = 12.0;
+
+  bool _sidebarHovered = false;
+  bool _handleHovered = false;
+
+  bool get _handleVisible => _sidebarHovered || _handleHovered;
+
+  double get _sidebarWidth => widget.isCollapsed
+      ? widget.sidebarCollapsedWidth
+      : widget.sidebarExpandedWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AnimatedContainer(
+              duration: _animationDuration,
+              curve: Curves.easeInOut,
+              width: _sidebarWidth,
+              color: widget.sidebarColor,
+              child: MouseRegion(
+                onEnter: (_) => setState(() => _sidebarHovered = true),
+                onExit: (_) => setState(() => _sidebarHovered = false),
+                child: GestureDetector(
+                  onTap: widget.onSidebarTap,
+                  behavior: HitTestBehavior.translucent,
+                  child: widget.sidebar,
+                ),
+              ),
+            ),
+            Expanded(child: widget.mainContent),
+          ],
+        ),
+        AnimatedPositioned(
+          duration: _animationDuration,
+          curve: Curves.easeInOut,
+          left: _sidebarWidth - _handleProtrude,
+          top: _handleTop,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _handleHovered = true),
+            onExit: (_) => setState(() => _handleHovered = false),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: IgnorePointer(
+                ignoring: !_handleVisible,
+                child: AnimatedOpacity(
+                  opacity: _handleVisible ? 1 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOut,
+                  child: Tooltip(
+                    message: widget.isCollapsed
+                        ? 'Expand sidebar'
+                        : 'Collapse sidebar',
+                    child: Material(
+                      color: _SidebarTokens.background,
+                      elevation: 2,
+                      shadowColor: Colors.black.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(6),
+                      child: InkWell(
+                        onTap: widget.onToggle,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          width: 22,
+                          height: 36,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: _SidebarTokens.divider),
+                          ),
+                          child: Icon(
+                            widget.isCollapsed
+                                ? LucideIcons.chevronRight
+                                : LucideIcons.chevronLeft,
+                            size: 16,
+                            color: _SidebarTokens.text,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ShellSidebarStateScope extends ConsumerWidget {
   const _ShellSidebarStateScope({
     required this.builder,
@@ -1521,6 +1662,7 @@ class _ShellShortcutScope extends ConsumerWidget {
       shortcuts: {
         ...buildQuickCreateShortcuts(),
         ...buildSearchShortcuts(),
+        ...buildTaskCompletionUndoRedoShortcuts(),
       },
       child: Actions(
         actions: {
@@ -1558,6 +1700,30 @@ class _ShellShortcutScope extends ConsumerWidget {
           OpenSearchDialogIntent: CallbackAction<OpenSearchDialogIntent>(
             onInvoke: (_) {
               ref.read(searchDialogProvider.notifier).open(context);
+              return null;
+            },
+          ),
+          TaskCompletionUndoIntent: CallbackAction<TaskCompletionUndoIntent>(
+            onInvoke: (_) {
+              if (shouldSuppressTaskCompletionUndoRedoShortcuts()) {
+                return null;
+              }
+              if (!ref.read(taskCompletionUndoRedoProvider).canUndo) {
+                return null;
+              }
+              performTaskCompletionUndo(context: context, ref: ref);
+              return null;
+            },
+          ),
+          TaskCompletionRedoIntent: CallbackAction<TaskCompletionRedoIntent>(
+            onInvoke: (_) {
+              if (shouldSuppressTaskCompletionUndoRedoShortcuts()) {
+                return null;
+              }
+              if (!ref.read(taskCompletionUndoRedoProvider).canRedo) {
+                return null;
+              }
+              performTaskCompletionRedo(context: context, ref: ref);
               return null;
             },
           ),

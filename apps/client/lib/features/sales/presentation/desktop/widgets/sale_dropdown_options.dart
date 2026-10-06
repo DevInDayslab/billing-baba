@@ -1,10 +1,14 @@
 import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
+import 'package:billing_baba/features/inventory/utils/gst_tax_slabs.dart';
 
 /// Dropdown option lists for the Add Sale page.
 abstract final class SaleDropdownOptions {
   static const units = ['NONE', 'PCS', 'KG', 'GM', 'LTR', 'MTR', 'BOX', 'BAG'];
 
-  static const taxSlabs = ['NONE', '5%', '12%', '18%', '28%'];
+  static List<String> get taxSlabs => [
+    ...GstTaxSlabs.saleDropdownLabels(),
+    '28%',
+  ];
 
   static const paymentTypes = ['Cash', 'Credit', 'UPI', 'Cheque'];
 
@@ -27,6 +31,7 @@ abstract final class SaleDropdownOptions {
     'Proforma Invoice',
     'Sale Order',
     'Delivery Challan',
+    'Credit Note',
   ];
 
   static const godowns = ['Main Location', 'Warehouse B'];

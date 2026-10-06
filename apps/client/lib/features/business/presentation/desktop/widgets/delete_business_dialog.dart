@@ -44,9 +44,10 @@ class _DeleteBusinessDialog extends StatelessWidget {
         textAlign: TextAlign.center,
       ),
       content: Text(
-        'Deleting "$companyName" permanently removes all business data '
-        'including invoices, inventory, customers, reports and settings.\n\n'
-        'This action cannot be undone.',
+        'Deleting "$companyName" starts a 30-day countdown. The company stays '
+        'in your list with a pending-delete status until then.\n\n'
+        'Open the company before 30 days to cancel deletion. After 30 days '
+        'with no activity, all business data is permanently removed.',
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondary,
           height: 1.5,

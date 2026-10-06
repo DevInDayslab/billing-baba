@@ -1,15 +1,18 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/credit_note_form_provider.dart';
-import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
+import 'package:billing_baba/features/sales/models/credit_note_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_attachments_section.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_footer_shared.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-const _cardBorder = Color(0xFFE0E0E0);
 
 class CreditNoteFooter extends ConsumerStatefulWidget {
   const CreditNoteFooter({this.sessionKey = 'default', super.key});
@@ -44,370 +47,257 @@ class _CreditNoteFooterState extends ConsumerState<CreditNoteFooter> {
     final notifier = ref.read(
       creditNoteFormProvider(sessionKey: widget.sessionKey).notifier,
     );
-    final totalTax = ref.watch(
-      creditNoteTotalTaxProvider(sessionKey: widget.sessionKey),
-    );
-    final grandTotal = ref.watch(
-      creditNoteGrandTotalProvider(sessionKey: widget.sessionKey),
-    );
+    final attachmentService = ref
+        .watch(documentAttachmentServiceProvider)
+        .value;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Payment Type',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 120,
-                    child: SaleGenericSelectDropdown(
-                      value: form.paymentType,
-                      options: SaleDropdownOptions.paymentTypes,
-                      highlight: SaleDropdownHighlight.blue,
-                      compact: true,
-                      onSelected: notifier.updatePaymentType,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              InkWell(
-                onTap: notifier.addPaymentType,
-                borderRadius: BorderRadius.circular(4),
-                child: const Text(
-                  '+ Add Payment type',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+    void onAddDescription() => setState(() => _showDescription = true);
+    void onAddImage() => unawaited(_promptAddImage(context, notifier));
+    void onAddDocument() => unawaited(_promptAddDocument(context, notifier));
+
+    return SaleFormFooterThreeColumnLayout(
+      termsSection: SaleFormFooterTermsSection(
+        title: form.termsTitle,
+        notes: form.termsText,
+        onTitleChanged: notifier.updateTermsTitle,
+        onNotesChanged: notifier.updateTermsText,
+      ),
+      attachmentActionsBox: SaleFormFooterAttachmentActionsBox(
+        expandVertically: false,
+        onAddDescription: onAddDescription,
+        onAddImage: onAddImage,
+        onAddDocument: onAddDocument,
+      ),
+      attachmentActionsBoxTall: SaleFormFooterAttachmentActionsBox(
+        expandVertically: true,
+        onAddDescription: onAddDescription,
+        onAddImage: onAddImage,
+        onAddDocument: onAddDocument,
+      ),
+      attachmentExtras: SaleFormFooterAttachmentExtras(
+        showDescription: _showDescription,
+        description: form.description,
+        attachedImages: form.attachedImages,
+        attachedDocuments: form.attachedDocuments,
+        attachmentService: attachmentService,
+        onDescriptionChanged: notifier.updateDescription,
+        onRemoveImage: (id) => transactionRemoveAttachment(
+          ref: ref,
+          attachments: form.attachedImages,
+          id: id,
+          onRemoved: notifier.removeImage,
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _AttachmentActionButton(
-                icon: Icons.description_outlined,
-                label: 'ADD DESCRIPTION',
-                onPressed: () => setState(() => _showDescription = true),
-              ),
-              if (_showDescription) ...[
-                const SizedBox(height: 8),
-                _DescriptionField(
-                  initialValue: form.description,
-                  onChanged: notifier.updateDescription,
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _AttachmentActionButton(
-                      icon: Icons.camera_alt_outlined,
-                      label: 'ADD IMAGE',
-                      onPressed: () => _promptAddImage(
-                        context,
-                        notifier,
-                        form.attachedImages.length,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _AttachmentActionButton(
-                      icon: Icons.attach_file_outlined,
-                      label: 'ADD DOCUMENT',
-                      filled: true,
-                      onPressed: () => _promptAddDocument(
-                        context,
-                        notifier,
-                        form.attachedDocuments.length,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (form.attachedImages.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _AttachmentChips(
-                  attachments: form.attachedImages,
-                  onRemove: notifier.removeImage,
-                  onRename: notifier.updateImage,
-                ),
-              ],
-              if (form.attachedDocuments.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _AttachmentChips(
-                  attachments: form.attachedDocuments,
-                  onRemove: notifier.removeDocument,
-                  onRename: notifier.updateDocument,
-                ),
-              ],
-            ],
-          ),
+        onRenameImage: (id, name) => transactionRenameAttachment(
+          ref: ref,
+          attachments: form.attachedImages,
+          id: id,
+          name: name,
+          onRenamed: notifier.updateImage,
         ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 260,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Tax',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 72,
-                    child: SaleGenericSelectDropdown(
-                      value: form.taxOption,
-                      options: SaleDropdownOptions.taxSlabs,
-                      highlight: SaleDropdownHighlight.red,
-                      compact: true,
-                      onSelected: notifier.updateTaxOption,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 72,
-                    child: _AmountField(
-                      value: totalTax,
-                      readOnly: true,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Checkbox(
-                    value: form.roundOff,
-                    onChanged: (value) =>
-                        notifier.toggleRoundOff(value: value ?? false),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  const Text(
-                    'Round Off',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 72,
-                    child: _AmountField(
-                      value: form.roundOffAmount,
-                      readOnly: !form.roundOff,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: _cardBorder),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  children: [
-                    const Text(
-                      'Total',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      width: 72,
-                      child: _AmountField(
-                        value: grandTotal,
-                        readOnly: true,
-                        onChanged: (_) {},
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        onRemoveDocument: (id) => transactionRemoveAttachment(
+          ref: ref,
+          attachments: form.attachedDocuments,
+          id: id,
+          onRemoved: notifier.removeDocument,
         ),
-      ],
+        onRenameDocument: (id, name) => transactionRenameAttachment(
+          ref: ref,
+          attachments: form.attachedDocuments,
+          id: id,
+          name: name,
+          onRenamed: notifier.updateDocument,
+        ),
+      ),
+      totalsSection: _TotalsSection(
+        sessionKey: widget.sessionKey,
+        form: form,
+        notifier: notifier,
+      ),
     );
   }
 
   Future<void> _promptAddImage(
     BuildContext context,
     CreditNoteForm notifier,
-    int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
+    await transactionAddImage(
+      context: context,
+      ref: ref,
+      entityType: DocumentAttachmentEntityType.sale.apiValue,
+      entityId: ref
+          .read(creditNoteFormProvider(sessionKey: widget.sessionKey))
+          .documentId,
+      onAdded: notifier.addImage,
     );
-    if (attachment != null) notifier.addImage(attachment);
   }
 
   Future<void> _promptAddDocument(
     BuildContext context,
     CreditNoteForm notifier,
-    int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
-    );
-    if (attachment != null) notifier.addDocument(attachment);
-  }
-}
-
-class _AttachmentActionButton extends StatelessWidget {
-  const _AttachmentActionButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    this.filled = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-  final bool filled;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16),
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-      ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: filled ? Colors.white : AppColors.primary,
-        backgroundColor: filled ? AppColors.primary : null,
-        side: BorderSide(
-          color: filled ? AppColors.primary : _cardBorder,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
+    await transactionAddDocument(
+      context: context,
+      ref: ref,
+      entityType: DocumentAttachmentEntityType.sale.apiValue,
+      entityId: ref
+          .read(creditNoteFormProvider(sessionKey: widget.sessionKey))
+          .documentId,
+      onAdded: notifier.addDocument,
     );
   }
 }
 
-class _DescriptionField extends StatefulWidget {
-  const _DescriptionField({
-    required this.initialValue,
-    required this.onChanged,
+class _TotalsSection extends ConsumerWidget {
+  const _TotalsSection({
+    required this.sessionKey,
+    required this.form,
+    required this.notifier,
   });
 
-  final String initialValue;
-  final ValueChanged<String> onChanged;
+  final String sessionKey;
+  final CreditNoteFormState form;
+  final CreditNoteForm notifier;
 
   @override
-  State<_DescriptionField> createState() => _DescriptionFieldState();
-}
-
-class _DescriptionFieldState extends State<_DescriptionField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
-  void didUpdateWidget(_DescriptionField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialValue != oldWidget.initialValue &&
-        widget.initialValue != _controller.text) {
-      _controller.text = widget.initialValue;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(
-        hint: 'Description',
-        fixedHeight: false,
-      ),
-      maxLines: 3,
-      onChanged: widget.onChanged,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalTax = ref.watch(
+      creditNoteTotalTaxProvider(sessionKey: sessionKey),
     );
-  }
-}
+    final grandTotal = ref.watch(
+      creditNoteGrandTotalProvider(sessionKey: sessionKey),
+    );
 
-class _AttachmentChips extends StatelessWidget {
-  const _AttachmentChips({
-    required this.attachments,
-    required this.onRemove,
-    required this.onRename,
-  });
-
-  final List<SaleFormAttachment> attachments;
-  final ValueChanged<String> onRemove;
-  final void Function(String id, String name) onRename;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final attachment in attachments)
-          Chip(
-            label: Text(
-              attachment.name,
-              style: const TextStyle(fontSize: 11),
+        Row(
+          children: [
+            const Text(
+              'Tax',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
             ),
-            deleteIcon: const Icon(Icons.close, size: 14),
-            onDeleted: () => onRemove(attachment.id),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 72,
+              child: SaleGenericSelectDropdown(
+                value: form.taxOption,
+                options: SaleDropdownOptions.taxSlabs,
+                highlight: SaleDropdownHighlight.red,
+                compact: true,
+                onSelected: notifier.updateTaxOption,
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 72,
+              child: _AmountField(
+                value: totalTax,
+                readOnly: true,
+                onChanged: (_) {},
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Checkbox(
+              value: form.roundOff,
+              onChanged: (value) =>
+                  notifier.toggleRoundOff(value: value ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+            const Text(
+              'Round Off',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 72,
+              child: _AmountField(
+                value: form.roundOffAmount,
+                readOnly: !form.roundOff,
+                onChanged: (_) {},
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
           ),
+          decoration: BoxDecoration(
+            border: Border.all(color: saleFormFooterCardBorder),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              const Text(
+                'Total',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: 100,
+                child: _AmountField(
+                  value: grandTotal,
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            SizedBox(
+              width: 120,
+              child: SaleGenericSelectDropdown(
+                value: form.paymentType,
+                options: SaleDropdownOptions.paymentTypes,
+                highlight: SaleDropdownHighlight.blue,
+                compact: true,
+                onSelected: notifier.updatePaymentType,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _AmountField(
+                value: form.paymentAmount,
+                onChanged: notifier.updatePaymentAmount,
+              ),
+            ),
+          ],
+        ),
+        InkWell(
+          onTap: notifier.addPaymentType,
+          borderRadius: BorderRadius.circular(4),
+          child: const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text(
+              '+ Add Payment type',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

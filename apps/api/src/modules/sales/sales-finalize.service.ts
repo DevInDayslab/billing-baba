@@ -10,16 +10,16 @@ import {
   recordMovementAndUpdateStock,
 } from '../inventory/inventory-stock.service';
 import { LoyaltyService } from '../loyalty/loyalty.service';
-import { RUPEES_PER_REDEEMED_POINT } from '../loyalty/loyalty.utils';
 import type { SaleLoyaltyResult } from '../loyalty/loyalty.types';
+import { RUPEES_PER_REDEEMED_POINT } from '../loyalty/loyalty.utils';
 import { syncLoyaltyRedeemedExpense } from '../purchases/expense-sync.service';
 import type { SalesDocumentRepository } from './sales-document.repository';
 import type { SalesDocumentType } from './sales-document.types';
-import { assignDocumentNumber } from './sales-numbering.service';
 import {
   type FinalizeSalePaymentInput,
   recordSaleFinalizePayment,
 } from './sales-finalize-payment.service';
+import { assignDocumentNumber } from './sales-numbering.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 

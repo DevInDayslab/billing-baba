@@ -4,6 +4,7 @@ import 'package:billing_baba/features/sales/application/estimate_quotation_provi
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -346,7 +347,9 @@ class SalesDocumentsList extends _$SalesDocumentsList {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(_fetchPage);
   }
 
@@ -457,7 +460,9 @@ List<SaleInvoiceModel> filteredSalesDocuments(
   Ref ref,
   SalesDocumentListScope scope,
 ) {
-  return ref.watch(salesDocumentsListProvider(scope)).value?.items ?? const [];
+  return saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(salesDocumentsListProvider(scope)),
+  );
 }
 
 @riverpod
@@ -465,17 +470,9 @@ PaginatedSaleInvoices paginatedSalesDocuments(
   Ref ref,
   SalesDocumentListScope scope,
 ) {
-  return ref
-      .watch(salesDocumentsListProvider(scope))
-      .maybeWhen(
-        data: (page) => page,
-        orElse: () => const PaginatedSaleInvoices(
-          items: [],
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: 0,
-        ),
-      );
+  return paginatedSaleInvoicesFromAsync(
+    ref.watch(salesDocumentsListProvider(scope)),
+  );
 }
 
 @Riverpod(keepAlive: true)

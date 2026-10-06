@@ -3,6 +3,8 @@ import 'package:billing_baba/features/notifications/application/notification_nav
 import 'package:billing_baba/features/notifications/domain/models/notification_model.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class NotificationCard extends StatelessWidget {
   const NotificationCard({
     required this.notification,
@@ -47,8 +49,7 @@ class NotificationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.button),
         child: InkWell(
           onTap: onTap,
-          onLongPress:
-              onDelete == null ? null : () => _confirmDelete(context),
+          onLongPress: onDelete == null ? null : () => _confirmDelete(context),
           borderRadius: BorderRadius.circular(AppRadius.button),
           child: Ink(
             decoration: BoxDecoration(
@@ -134,7 +135,7 @@ class NotificationCard extends StatelessWidget {
                   if (hasRoute) ...[
                     const SizedBox(width: AppSpacing.xs),
                     Icon(
-                      Icons.chevron_right_rounded,
+                      LucideIcons.chevronRight,
                       color: AppColors.textSecondary.withValues(alpha: 0.6),
                       size: 20,
                     ),

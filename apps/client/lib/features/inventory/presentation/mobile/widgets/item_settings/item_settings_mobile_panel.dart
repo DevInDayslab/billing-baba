@@ -60,7 +60,8 @@ class _ItemSettingsMobilePanelState
             left: AppSpacing.lg,
             right: AppSpacing.lg,
             top: AppSpacing.lg,
-            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.lg,
+            bottom:
+                MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.lg,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -195,16 +196,18 @@ class _ItemSettingsMobilePanelState
                         value: settings.barcodeScannerType,
                         options: BarcodeScannerType.values,
                         labelBuilder: (type) => type.label,
-                        onChanged: (type) =>
-                            _update((s) => s.copyWith(barcodeScannerType: type)),
+                        onChanged: (type) => _update(
+                          (s) => s.copyWith(barcodeScannerType: type),
+                        ),
                       ),
                       const ItemSettingsMobileDivider(),
                       ItemSettingsMobileCheckboxTile(
                         label: 'Make Mobile POS as my default billing type',
                         value: settings.mobilePosDefaultBilling,
                         onChanged: (value) => _update(
-                          (s) =>
-                              s.copyWith(mobilePosDefaultBilling: value ?? false),
+                          (s) => s.copyWith(
+                            mobilePosDefaultBilling: value ?? false,
+                          ),
                         ),
                       ),
                     ],
@@ -290,8 +293,9 @@ class _ItemSettingsMobilePanelState
                   infoTooltip: 'Track wholesale pricing tiers on items.',
                   isPremium: true,
                   value: settings.wholesalePrice,
-                  onChanged: (value) =>
-                      _update((s) => s.copyWith(wholesalePrice: value ?? false)),
+                  onChanged: (value) => _update(
+                    (s) => s.copyWith(wholesalePrice: value ?? false),
+                  ),
                 ),
                 const ItemSettingsMobileDivider(),
                 ItemSettingsMobileCounterTile(
@@ -336,6 +340,16 @@ class _ItemSettingsMobilePanelState
                   value: settings.updateSalePriceFromTxn,
                   onChanged: (value) =>
                       _update((s) => s.copyWith(updateSalePriceFromTxn: value)),
+                ),
+                const ItemSettingsMobileDivider(),
+                ItemSettingsMobileSwitchTile(
+                  label: 'Amount in words on pricing',
+                  infoTooltip:
+                      'Show each price in words below MRP, sale, wholesale, and purchase fields when adding items.',
+                  value: settings.showPriceAmountInWords,
+                  onChanged: (value) => _update(
+                    (s) => s.copyWith(showPriceAmountInWords: value),
+                  ),
                 ),
               ],
             ),

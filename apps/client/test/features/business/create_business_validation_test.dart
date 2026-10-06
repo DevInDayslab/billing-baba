@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/create_business_input.dart';
+import 'package:billing_baba/features/business/utils/create_business_error_messages.dart';
 import 'package:billing_baba/features/business/utils/create_business_validator.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:dio/dio.dart';
@@ -177,6 +179,76 @@ void main() {
         exception!.fieldErrors['gstin'],
         'Too big: expected string to have <=15 characters',
       );
+    });
+  });
+
+  group('CreateBusinessErrorMessages', () {
+    test('maps duplicate business name validation from API envelope', () {
+      final message = CreateBusinessErrorMessages.fromError(
+        DioException(
+          requestOptions: RequestOptions(path: '/businesses'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/businesses'),
+            statusCode: 400,
+            data: {
+              'error': {
+                'code': 'VALIDATION_ERROR',
+                'message': 'Invalid request body',
+                'details': {
+                  'name': [
+                    'You already have a business with this name. Use a different name or open the existing one from your company list.',
+                  ],
+                },
+              },
+            },
+          ),
+        ),
+      );
+
+      expect(
+        message,
+        contains('already have a business with this name'),
+      );
+    });
+
+    test('maps post-create session failure away from generic copy', () {
+      final message = CreateBusinessErrorMessages.fromError(
+        const BusinessSelectionFailed(
+          'Something went wrong. Please try again.',
+        ),
+      );
+
+      expect(message, contains('Your business was created'));
+      expect(message, isNot(contains('Something went wrong')));
+    });
+
+    test('maps invalid refresh token to session guidance', () {
+      final message = CreateBusinessErrorMessages.fromError(
+        const BusinessSelectionFailed('Invalid refresh token'),
+      );
+
+      expect(message, contains('session expired'));
+      expect(message, contains('company list'));
+    });
+
+    test('classifies server failures separately from user input issues', () {
+      final message = CreateBusinessErrorMessages.fromError(
+        DioException(
+          requestOptions: RequestOptions(path: '/businesses'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/businesses'),
+            statusCode: 500,
+            data: {
+              'error': {
+                'code': 'INTERNAL_SERVER_ERROR',
+                'message': 'An unexpected error occurred',
+              },
+            },
+          ),
+        ),
+      );
+
+      expect(message, contains('our servers'));
     });
   });
 }

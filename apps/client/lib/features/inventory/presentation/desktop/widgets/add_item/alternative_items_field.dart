@@ -1,13 +1,120 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
+import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/shared/widgets/forms/forms.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class AlternativeItemsField extends ConsumerWidget {
-  const AlternativeItemsField({
+const _cardBorder = Color(0xFFE0E0E0);
+const _alternativeRowMinHeight = 40.0;
+const _pickerDialogWidth = 720.0;
+const _pickerDialogHeight = 640.0;
+const _othersCategoryFilterId = '__uncategorized__';
+const _pickerThumbSize = 48.0;
+
+String alternativePickerStockLabel(InventoryItem item) {
+  if (item.type == ItemType.service) {
+    return 'Stock: $inventoryEmDash';
+  }
+  final metrics = InventoryStockCalculator.metricsFromItem(item);
+  final quantityLabel = formatQuantityValue(metrics.availableForSale);
+  final unit = item.baseUnitShortName?.trim();
+  if (unit != null && unit.isNotEmpty) {
+    return 'Stock: $quantityLabel $unit';
+  }
+  return 'Stock: $quantityLabel';
+}
+
+String alternativePickerItemCodesLine(InventoryItem item) {
+  final sku = item.shortName?.trim();
+  final barcode = item.barcode?.trim();
+  if (sku != null && sku.isNotEmpty && barcode != null && barcode.isNotEmpty) {
+    if (sku == barcode) return sku;
+    return '$sku | $barcode';
+  }
+  if (barcode != null && barcode.isNotEmpty) return barcode;
+  if (sku != null && sku.isNotEmpty) return sku;
+  return inventoryEmDash;
+}
+
+String alternativePickerStockQuantityLabel(InventoryItem item) {
+  if (item.type == ItemType.service) return inventoryEmDash;
+  final metrics = InventoryStockCalculator.metricsFromItem(item);
+  final quantityLabel = formatQuantityValue(metrics.availableForSale);
+  final unit = item.baseUnitShortName?.trim();
+  if (unit != null && unit.isNotEmpty) {
+    return '$quantityLabel ${unit.toUpperCase()}';
+  }
+  return quantityLabel;
+}
+
+({Color background, Color foreground}) alternativePickerCategoryColors(
+  String categoryName,
+) {
+  final palette = [
+    (AppColors.primary, AppColors.primary),
+    (const Color(0xFF2E7D32), const Color(0xFF2E7D32)),
+    (const Color(0xFF1565C0), const Color(0xFF1565C0)),
+    (const Color(0xFF6A1B9A), const Color(0xFF6A1B9A)),
+    (const Color(0xFFEF6C00), const Color(0xFFEF6C00)),
+  ];
+  final index = categoryName.hashCode.abs() % palette.length;
+  final (foreground, _) = palette[index];
+  return (background: foreground.withValues(alpha: 0.1), foreground: foreground);
+}
+
+/// Multi-select picker for alternative items (desktop).
+Future<List<String>?> showAlternativeItemsPickerDialog({
+  required BuildContext context,
+  required WidgetRef ref,
+  required List<String> initialSelection,
+  required String? excludeItemId,
+}) {
+  final items = ref.read(inventoryItemListProvider);
+  return showDialog<List<String>>(
+    context: context,
+    builder: (dialogContext) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: _AlternativeItemsPickerDialog(
+        items: items,
+        initialSelection: initialSelection,
+        excludeItemId: excludeItemId,
+      ),
+    ),
+  );
+}
+
+Future<void> _openAlternativeItemsPicker({
+  required BuildContext context,
+  required WidgetRef ref,
+  required List<String> selectedItemIds,
+  required String? excludeItemId,
+  required ValueChanged<List<String>> onChanged,
+}) async {
+  final picked = await showAlternativeItemsPickerDialog(
+    context: context,
+    ref: ref,
+    initialSelection: selectedItemIds,
+    excludeItemId: excludeItemId,
+  );
+  if (picked != null) onChanged(picked);
+}
+
+/// Pill button — sits inline to the right of the description field.
+class AlternativeItemsAddButton extends ConsumerWidget {
+  const AlternativeItemsAddButton({
     required this.selectedItemIds,
     required this.excludeItemId,
     required this.onChanged,
@@ -18,18 +125,32 @@ class AlternativeItemsField extends ConsumerWidget {
   final String? excludeItemId;
   final ValueChanged<List<String>> onChanged;
 
-  Future<void> _openPicker(BuildContext context, WidgetRef ref) async {
-    final items = ref.read(inventoryItemListProvider);
-    final picked = await showDialog<List<String>>(
-      context: context,
-      builder: (dialogContext) => _AlternativeItemsPickerDialog(
-        items: items,
-        initialSelection: selectedItemIds,
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AddAlternativeButton(
+      onPressed: () => _openAlternativeItemsPicker(
+        context: context,
+        ref: ref,
+        selectedItemIds: selectedItemIds,
         excludeItemId: excludeItemId,
+        onChanged: onChanged,
       ),
     );
-    if (picked != null) onChanged(picked);
   }
+}
+
+/// Selected alternatives list — shown below the form grid (party pattern).
+class AlternativeItemsListSection extends ConsumerWidget {
+  const AlternativeItemsListSection({
+    required this.selectedItemIds,
+    required this.excludeItemId,
+    required this.onChanged,
+    super.key,
+  });
+
+  final List<String> selectedItemIds;
+  final String? excludeItemId;
+  final ValueChanged<List<String>> onChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,36 +161,235 @@ class AlternativeItemsField extends ConsumerWidget {
         .whereType<InventoryItem>()
         .toList();
 
-    return AppFormField(
-      label: 'Alternative Items',
-      fixedHeight: false,
+    if (selectedItems.isEmpty) return const SizedBox.shrink();
+
+    return _AlternativesListCard(
+      items: selectedItems,
+      onEdit: () => _openAlternativeItemsPicker(
+        context: context,
+        ref: ref,
+        selectedItemIds: selectedItemIds,
+        excludeItemId: excludeItemId,
+        onChanged: onChanged,
+      ),
+      onRemove: (id) =>
+          onChanged(selectedItemIds.where((itemId) => itemId != id).toList()),
+    );
+  }
+}
+
+class _AlternativesListCard extends StatelessWidget {
+  const _AlternativesListCard({
+    required this.items,
+    required this.onEdit,
+    required this.onRemove,
+  });
+
+  final List<InventoryItem> items;
+  final VoidCallback onEdit;
+  final ValueChanged<String> onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: _cardBorder),
+        borderRadius: BorderRadius.circular(6),
+        color: AppColors.surface,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final item in selectedItems)
-                InputChip(
-                  label: Text(item.name),
-                  onDeleted: () => onChanged(
-                    selectedItemIds.where((id) => id != item.id).toList(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.package,
+                  size: 16,
+                  color: AppColors.textSecondary.withValues(alpha: 0.85),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                const Text(
+                  'Alternative Items',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-              ActionChip(
-                avatar: const Icon(Icons.add, size: 16),
-                label: const Text('Add alternative'),
-                onPressed: () => _openPicker(context, ref),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: _cardBorder),
+          for (var index = 0; index < items.length; index++) ...[
+            _AlternativeItemRow(
+              item: items[index],
+              onEdit: onEdit,
+              onRemove: () => onRemove(items[index].id),
+            ),
+            if (index < items.length - 1)
+              const Divider(height: 1, color: _cardBorder),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class AddAlternativeButton extends StatelessWidget {
+  const AddAlternativeButton({required this.onPressed, super.key});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary.withValues(alpha: 0.1),
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: AppColors.primary.withValues(alpha: 0.45),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.add,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                'Add alternative',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'Suggested when users search for this item on invoices.',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AlternativeItemRow extends StatelessWidget {
+  const _AlternativeItemRow({
+    required this.item,
+    required this.onEdit,
+    required this.onRemove,
+  });
+
+  final InventoryItem item;
+  final VoidCallback onEdit;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = item.shortName?.trim();
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: _alternativeRowMinHeight),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.gripVertical,
+              size: 18,
+              color: AppColors.textSecondary.withValues(alpha: 0.4),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Icon(
+              LucideIcons.package,
+              size: 18,
+              color: AppColors.textSecondary.withValues(alpha: 0.65),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (subtitle != null && subtitle.isNotEmpty) ...[
+                    const SizedBox(width: AppSpacing.md),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Edit alternatives',
+              onPressed: onEdit,
+              icon: Icon(
+                LucideIcons.pencil,
+                size: 17,
+                color: AppColors.textSecondary.withValues(alpha: 0.85),
+              ),
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.all(4),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
+            IconButton(
+              tooltip: 'Remove alternative',
+              onPressed: onRemove,
+              icon: Icon(
+                LucideIcons.trash2,
+                size: 17,
+                color: AppColors.error.withValues(alpha: 0.9),
+              ),
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.all(4),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -93,84 +413,611 @@ class _AlternativeItemsPickerDialog extends ConsumerStatefulWidget {
 
 class _AlternativeItemsPickerDialogState
     extends ConsumerState<_AlternativeItemsPickerDialog> {
-  late final TextEditingController _searchController;
   late Set<String> _selected;
+  var _searchQuery = '';
+  String? _categoryFilterId;
 
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController();
     _selected = widget.initialSelection.toSet();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  List<InventoryItem> get _candidates =>
+      widget.items.where((item) => item.id != widget.excludeItemId).toList();
+
+  Map<String, String> get _categoryNameById {
+    final categories =
+        ref.watch(inventoryCategoriesProvider).value ?? const <InventoryCategory>[];
+    return {for (final category in categories) category.id: category.name};
+  }
+
+  List<InventoryItem> get _visibleItems {
+    final engine = ref.read(inventorySearchEngineProvider);
+    var items = searchInventoryItems(
+      engine,
+      _candidates,
+      query: _searchQuery,
+    );
+    if (_categoryFilterId == _othersCategoryFilterId) {
+      items = items
+          .where(
+            (item) =>
+                item.categoryId == null || item.categoryId!.trim().isEmpty,
+          )
+          .toList();
+    } else if (_categoryFilterId != null) {
+      items =
+          items.where((item) => item.categoryId == _categoryFilterId).toList();
+    }
+    return items;
+  }
+
+  List<_CategoryFilterOption> get _categoryFilterOptions {
+    final names = _categoryNameById;
+    final usedCategoryIds = <String>{};
+    var hasUncategorized = false;
+    for (final item in _candidates) {
+      final categoryId = item.categoryId?.trim();
+      if (categoryId == null || categoryId.isEmpty) {
+        hasUncategorized = true;
+      } else {
+        usedCategoryIds.add(categoryId);
+      }
+    }
+
+    final options = <_CategoryFilterOption>[
+      const _CategoryFilterOption(id: null, label: 'All Items'),
+    ];
+
+    final sortedIds = usedCategoryIds.toList()
+      ..sort(
+        (a, b) => (names[a] ?? a).toLowerCase().compareTo(
+              (names[b] ?? b).toLowerCase(),
+            ),
+      );
+    for (final id in sortedIds) {
+      options.add(
+        _CategoryFilterOption(
+          id: id,
+          label: names[id] ?? 'Category',
+        ),
+      );
+    }
+    if (hasUncategorized) {
+      options.add(
+        const _CategoryFilterOption(
+          id: _othersCategoryFilterId,
+          label: 'Others',
+        ),
+      );
+    }
+    return options;
+  }
+
+  void _toggleAll(List<InventoryItem> visible) {
+    final allSelected =
+        visible.isNotEmpty && visible.every((i) => _selected.contains(i.id));
+    setState(() {
+      if (allSelected) {
+        for (final item in visible) {
+          _selected.remove(item.id);
+        }
+      } else {
+        _selected.addAll(visible.map((i) => i.id));
+      }
+    });
+  }
+
+  void _toggleItem(String id) {
+    setState(() {
+      if (_selected.contains(id)) {
+        _selected.remove(id);
+      } else {
+        _selected.add(id);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final query = _searchController.text.trim();
-    final engine = ref.watch(inventorySearchEngineProvider);
-    final candidates = widget.items
-        .where((item) => item.id != widget.excludeItemId)
-        .toList();
-    final filtered = query.isEmpty
-        ? candidates
-        : engine.searchItems(candidates, query: query);
+    final visible = _visibleItems;
+    final allSelected =
+        visible.isNotEmpty && visible.every((i) => _selected.contains(i.id));
+    final someSelected = visible.any((i) => _selected.contains(i.id));
+    final selectionCount = _selected.length;
+    final categoryOptions = _categoryFilterOptions;
+    final categoryNames = _categoryNameById;
 
-    return AlertDialog(
-      title: const Text('Select alternative items'),
-      content: SizedBox(
-        width: 480,
-        height: 420,
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: buildFormControlDecoration(hint: 'Search items'),
-              onChanged: (_) => setState(() {}),
+    return ClipRRect(
+      borderRadius: AppRadius.lgBorder,
+      child: SizedBox(
+        width: _pickerDialogWidth,
+        height: _pickerDialogHeight,
+        child: Material(
+          color: AppColors.surface,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.lg,
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filtered.length,
-                itemBuilder: (context, index) {
-                  final item = filtered[index];
-                  final checked = _selected.contains(item.id);
-                  return CheckboxListTile(
-                    value: checked,
-                    title: Text(item.name),
-                    subtitle: item.shortName?.isNotEmpty == true
-                        ? Text(item.shortName!)
-                        : null,
-                    onChanged: (value) {
-                      setState(() {
-                        if (value == true) {
-                          _selected.add(item.id);
-                        } else {
-                          _selected.remove(item.id);
-                        }
-                      });
-                    },
-                  );
-                },
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          LucideIcons.package,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Select alternative items',
+                            style: AppTypography.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              height: 1.3,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Choose items that can be suggested as alternatives '
+                            'for this product.',
+                            style: AppTypography.inter(
+                              fontSize: AppTypography.bodySmallSize,
+                              height: 1.45,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 20),
+                      tooltip: 'Close',
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                InventorySearchField(
+                  hint: 'Search items by name, code or barcode...',
+                  onChanged: (query) => setState(() => _searchQuery = query),
+                ),
+                if (categoryOptions.length > 1) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categoryOptions.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        final option = categoryOptions[index];
+                        final isSelected = _categoryFilterId == option.id;
+                        return _AlternativeCategoryFilterChip(
+                          label: option.label,
+                          isSelected: isSelected,
+                          onTap: () => setState(() {
+                            _categoryFilterId = option.id;
+                          }),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        tristate: true,
+                        value: allSelected
+                            ? true
+                            : (someSelected ? null : false),
+                        onChanged: visible.isEmpty
+                            ? null
+                            : (_) => _toggleAll(visible),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      Text(
+                        'Select all',
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySmallSize,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$selectionCount selected',
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySmallSize,
+                          height: 1.4,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: listPanelCardBorder),
+                      borderRadius: AppRadius.mdBorder,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: AppRadius.mdBorder,
+                      child: visible.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No items found',
+                                style: InventoryStyles.emptyStateStyle,
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: visible.length,
+                              separatorBuilder: (_, __) => const Divider(
+                                height: 1,
+                                color: listPanelCardBorder,
+                              ),
+                              itemBuilder: (context, index) {
+                                final item = visible[index];
+                                return _AlternativePickerItemRow(
+                                  item: item,
+                                  categoryName: item.categoryId == null
+                                      ? null
+                                      : categoryNames[item.categoryId],
+                                  isSelected: _selected.contains(item.id),
+                                  onToggle: () => _toggleItem(item.id),
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    FilledButton.icon(
+                      onPressed: () =>
+                          Navigator.of(context).pop(_selected.toList()),
+                      icon: const Icon(LucideIcons.check, size: 18),
+                      label: Text('Save ($selectionCount)'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+    );
+  }
+}
+
+class _CategoryFilterOption {
+  const _CategoryFilterOption({required this.id, required this.label});
+
+  final String? id;
+  final String label;
+}
+
+class _AlternativeCategoryFilterChip extends StatelessWidget {
+  const _AlternativeCategoryFilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isSelected
+          ? AppColors.primary.withValues(alpha: 0.08)
+          : AppColors.surface,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : _cardBorder,
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_selected.toList()),
-          child: const Text('Save'),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text(
+            label,
+            style: AppTypography.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            ),
+          ),
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _AlternativePickerItemRow extends StatefulWidget {
+  const _AlternativePickerItemRow({
+    required this.item,
+    required this.categoryName,
+    required this.isSelected,
+    required this.onToggle,
+  });
+
+  final InventoryItem item;
+  final String? categoryName;
+  final bool isSelected;
+  final VoidCallback onToggle;
+
+  @override
+  State<_AlternativePickerItemRow> createState() =>
+      _AlternativePickerItemRowState();
+}
+
+class _AlternativePickerItemRowState extends State<_AlternativePickerItemRow> {
+  var _isHovered = false;
+
+  Color get _backgroundColor {
+    if (widget.isSelected) return listPanelSelectedRowColor;
+    if (_isHovered) return listPanelRowHoverColor;
+    return Colors.transparent;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryName = widget.categoryName?.trim();
+    final hasCategory = categoryName != null && categoryName.isNotEmpty;
+    final statusLabel = stockStatusLabel(widget.item);
+    final statusColor = stockStatusColor(widget.item);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: _backgroundColor,
+        child: InkWell(
+          onTap: widget.onToggle,
+          hoverColor: Colors.transparent,
+          splashColor: AppColors.primary.withValues(alpha: 0.08),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Checkbox(
+                  value: widget.isSelected,
+                  onChanged: (_) => widget.onToggle(),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _AlternativePickerItemThumb(imageUrl: widget.item.primaryImageUrl),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        alternativePickerItemCodesLine(widget.item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.inter(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      if (hasCategory) ...[
+                        const SizedBox(height: 6),
+                        _AlternativePickerCategoryTag(label: categoryName),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                SizedBox(
+                  width: 92,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Stock',
+                        style: AppTypography.inter(
+                          fontSize: 11,
+                          height: 1.3,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        alternativePickerStockQuantityLabel(widget.item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: AppTypography.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusLabel,
+                            style: AppTypography.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              height: 1.3,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AlternativePickerCategoryTag extends StatelessWidget {
+  const _AlternativePickerCategoryTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = alternativePickerCategoryColors(label);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: colors.foreground,
+        ),
+      ),
+    );
+  }
+}
+
+class _AlternativePickerItemThumb extends StatelessWidget {
+  const _AlternativePickerItemThumb({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = normalizeImageUrl(imageUrl);
+    final radius = BorderRadius.circular(8);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        border: Border.all(color: const Color(0xFFE8EAED)),
+        color: const Color(0xFFF7F8FA),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(7),
+        child: SizedBox(
+          width: _pickerThumbSize,
+          height: _pickerThumbSize,
+          child: url == null
+              ? const ColoredBox(
+                  color: Color(0xFFF7F8FA),
+                  child: Icon(
+                    LucideIcons.image,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : AppNetworkImage(
+                  imageUrl: url,
+                  displayContext: ImageDisplayContext.galleryThumb,
+                  width: _pickerThumbSize,
+                  height: _pickerThumbSize,
+                  memCacheWidth: (_pickerThumbSize * 2).round(),
+                  loadWhenVisible: false,
+                  placeholder: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  errorWidget: const ColoredBox(
+                    color: Color(0xFFF7F8FA),
+                    child: Icon(
+                      LucideIcons.imageOff,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+        ),
+      ),
     );
   }
 }

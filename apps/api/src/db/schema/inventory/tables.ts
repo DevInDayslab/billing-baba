@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -8,7 +9,6 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { syncPullIndex } from '../sync-pull-index';
 import { businesses } from '../business/tables';
 import {
   money,
@@ -22,6 +22,7 @@ import {
   pricingTierEnum,
 } from '../enums';
 import { users } from '../identity/tables';
+import { syncPullIndex } from '../sync-pull-index';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
@@ -243,6 +244,36 @@ export const itemLocations = pgTable('item_locations', {
   photoMediaAssetId: uuid('photo_media_asset_id'),
   photoTakenAt: timestamptz('photo_taken_at'),
 });
+
+/** Immutable — rack/shelf placement and photo audit per item location */
+export const itemLocationHistory = pgTable(
+  'item_location_history',
+  {
+    id: uuidPrimaryKey(),
+    businessId: uuid('business_id')
+      .notNull()
+      .references(() => businesses.id),
+    itemLocationId: uuid('item_location_id')
+      .notNull()
+      .references(() => itemLocations.id),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id),
+    rack: text('rack'),
+    shelf: text('shelf'),
+    photoUrl: text('photo_url'),
+    photoMediaAssetId: uuid('photo_media_asset_id'),
+    employeeLabel: text('employee_label'),
+    changedBy: uuid('changed_by').references(() => users.id),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_item_location_history_location_created').on(
+      table.itemLocationId,
+      table.createdAt,
+    ),
+  ],
+);
 
 export const stockLevels = pgTable(
   'stock_levels',

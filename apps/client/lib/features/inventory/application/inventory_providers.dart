@@ -7,9 +7,12 @@ import 'package:billing_baba/features/inventory/application/inventory_service.da
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/default_inventory_units.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
+import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/mappers/brand_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
@@ -171,9 +174,77 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
   return result;
 });
 
+final brandsProvider = Provider<List<BrandModel>>((ref) {
+  final query = ref.watch(brandSearchQueryProvider).toLowerCase();
+  final brands = ref.watch(inventoryBrandsProvider).value ?? [];
+  final items = ref.watch(inventoryItemListProvider);
+
+  final withUnbranded = BrandMapper.withSyncedItemCounts(
+    brands: brands,
+    items: items,
+  );
+
+  return withUnbranded
+      .where(
+        (brand) => query.isEmpty || brand.name.toLowerCase().contains(query),
+      )
+      .toList();
+});
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final brandItemsProvider = Provider.family<List<InventoryItem>, String>((
+  ref,
+  brandId,
+) {
+  final query = ref.watch(brandItemSearchQueryProvider);
+  final filters = ref.watch(brandItemFiltersProvider);
+  final sort = ref.watch(brandItemSortProvider);
+  final items = ref.watch(inventoryItemListProvider);
+
+  final filteredItems = brandId == unbrandedBrandId
+      ? items.where((item) => item.brandId == null)
+      : items.where((item) => item.brandId == brandId);
+
+  final engine = ref.watch(inventorySearchEngineProvider);
+  final result = searchInventoryItems(engine, filteredItems, query: query)
+      .where(
+        (item) => InventoryItemFilterService.matches(item, filters: filters),
+      )
+      .toList();
+
+  if (sort.direction == CategoryItemSortDirection.none) {
+    return result;
+  }
+
+  final ascending = sort.direction == CategoryItemSortDirection.ascending;
+  result.sort((a, b) {
+    final comparison = switch (sort.column) {
+      CategoryItemSortColumn.name => a.name.toLowerCase().compareTo(
+        b.name.toLowerCase(),
+      ),
+      CategoryItemSortColumn.quantity => (a.quantity ?? 0).compareTo(
+        b.quantity ?? 0,
+      ),
+      CategoryItemSortColumn.stockValue => (a.stockValue ?? 0).compareTo(
+        b.stockValue ?? 0,
+      ),
+    };
+    return ascending ? comparison : -comparison;
+  });
+
+  return result;
+});
+
 final unitsProvider = Provider<List<InventoryUnit>>((ref) {
   final query = ref.watch(unitSearchQueryProvider).toLowerCase();
-  return (ref.watch(inventoryUnitsProvider).value ?? [])
+  final unitsAsync = ref.watch(inventoryUnitsProvider);
+  final units = unitsAsync.when(
+    data: (value) => value,
+    loading: () => catalogInventoryUnits(),
+    error: (_, _) => catalogInventoryUnits(),
+  );
+  return units
       .where(
         (unit) =>
             query.isEmpty ||
@@ -185,6 +256,9 @@ final unitsProvider = Provider<List<InventoryUnit>>((ref) {
 
 const inventoryProductsTabIndex = 0;
 const inventoryServicesTabIndex = 1;
+const inventoryCategoriesTabIndex = 2;
+const inventoryBrandsTabIndex = 3;
+const inventoryUnitsTabIndex = 4;
 
 final inventoryItemsTabIndexProvider =
     NotifierProvider<InventoryItemsTabIndex, int>(InventoryItemsTabIndex.new);
@@ -224,6 +298,10 @@ final selectedServiceIdProvider = NotifierProvider<SelectedServiceId, String?>(
 final selectedCategoryIdProvider =
     NotifierProvider<SelectedCategoryId, String?>(SelectedCategoryId.new);
 
+final selectedBrandIdProvider = NotifierProvider<SelectedBrandId, String?>(
+  SelectedBrandId.new,
+);
+
 final selectedUnitIdProvider = NotifierProvider<SelectedUnitId, String?>(
   SelectedUnitId.new,
 );
@@ -253,6 +331,21 @@ final categoryItemSortProvider =
     NotifierProvider<CategoryItemSort, CategoryItemSortState>(
       CategoryItemSort.new,
     );
+
+final brandSearchQueryProvider = NotifierProvider<BrandSearchQuery, String>(
+  BrandSearchQuery.new,
+);
+
+final brandItemSearchQueryProvider =
+    NotifierProvider<BrandItemSearchQuery, String>(BrandItemSearchQuery.new);
+
+final brandItemFiltersProvider =
+    NotifierProvider<BrandItemFilters, InventoryItemFiltersState>(
+      BrandItemFilters.new,
+    );
+
+final brandItemSortProvider =
+    NotifierProvider<BrandItemSort, CategoryItemSortState>(BrandItemSort.new);
 
 final unitSearchQueryProvider = NotifierProvider<UnitSearchQuery, String>(
   UnitSearchQuery.new,
@@ -631,12 +724,17 @@ class SelectedCategoryId extends Notifier<String?> {
   set selected(String? id) => state = id;
 }
 
+class SelectedBrandId extends Notifier<String?> {
+  @override
+  String? build() => unbrandedBrandId;
+
+  String? get selected => state;
+  set selected(String? id) => state = id;
+}
+
 class SelectedUnitId extends Notifier<String?> {
   @override
-  String? build() {
-    final units = ref.watch(inventoryUnitsProvider).value ?? [];
-    return units.isEmpty ? null : units.first.id;
-  }
+  String? build() => null;
 
   String? get selected => state;
   set selected(String? id) => state = id;
@@ -684,6 +782,54 @@ class CategoryItemFilters extends Notifier<InventoryItemFiltersState> {
 }
 
 class CategoryItemSort extends Notifier<CategoryItemSortState> {
+  @override
+  CategoryItemSortState build() => const CategoryItemSortState();
+
+  void toggle(CategoryItemSortColumn column) {
+    if (state.column == column) {
+      final nextDirection = switch (state.direction) {
+        CategoryItemSortDirection.none => CategoryItemSortDirection.ascending,
+        CategoryItemSortDirection.ascending =>
+          CategoryItemSortDirection.descending,
+        CategoryItemSortDirection.descending => CategoryItemSortDirection.none,
+      };
+      state = state.copyWith(direction: nextDirection);
+      return;
+    }
+
+    state = CategoryItemSortState(
+      column: column,
+      direction: CategoryItemSortDirection.ascending,
+    );
+  }
+}
+
+class BrandSearchQuery extends Notifier<String> {
+  @override
+  String build() => '';
+
+  String get query => state;
+  set query(String value) => state = value;
+}
+
+class BrandItemSearchQuery extends Notifier<String> {
+  @override
+  String build() => '';
+
+  String get query => state;
+  set query(String value) => state = value;
+}
+
+class BrandItemFilters extends Notifier<InventoryItemFiltersState> {
+  @override
+  InventoryItemFiltersState build() => const InventoryItemFiltersState();
+
+  void apply(InventoryItemFiltersState filters) => state = filters;
+
+  void clear() => state = const InventoryItemFiltersState();
+}
+
+class BrandItemSort extends Notifier<CategoryItemSortState> {
   @override
   CategoryItemSortState build() => const CategoryItemSortState();
 

@@ -333,7 +333,7 @@ class PaymentOutRecords extends _$PaymentOutRecords {
   }
 
   Future<void> refresh({bool silent = false}) async {
-    if (!silent) {
+    if (!silent && !state.hasValue) {
       state = const AsyncLoading();
     }
     state = await AsyncValue.guard(() async {

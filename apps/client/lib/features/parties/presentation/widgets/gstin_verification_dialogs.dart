@@ -10,6 +10,7 @@ Future<void> showGstinVerificationErrorDialog(
 }) {
   return showDialog<void>(
     context: context,
+    useRootNavigator: true,
     builder: (dialogContext) => AlertDialog(
       title: const Text('Unable to verify GSTIN'),
       content: Text(message),
@@ -90,6 +91,7 @@ void showGstinVerificationLoadingDialog(BuildContext context) {
 
   showDialog<void>(
     context: context,
+    useRootNavigator: true,
     barrierDismissible: false,
     barrierColor: const Color(0x99000000),
     builder: (dialogContext) => const GstinVerificationLoadingDialog(),
@@ -119,6 +121,7 @@ Future<bool?> showGstinVerificationConfirmationDialog(
 ) {
   return showDialog<bool>(
     context: context,
+    useRootNavigator: true,
     builder: (dialogContext) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -184,16 +187,14 @@ Future<bool?> showGstinVerificationConfirmationDialog(
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(false),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: const Text('Cancel'),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: FilledButton(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(true),
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: const Text('Use Details'),
                       ),
                     ),
@@ -238,7 +239,8 @@ class _GstinDetailRow extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
-            child: valueWidget ??
+            child:
+                valueWidget ??
                 Text(
                   value ?? '',
                   style: const TextStyle(

@@ -9,18 +9,18 @@ class OnlineStoreSection extends StatelessWidget {
   const OnlineStoreSection({
     required this.itemType,
     required this.priceController,
-    required this.descriptionController,
     required this.onPriceChanged,
-    required this.onDescriptionChanged,
+    this.descriptionController,
+    this.onDescriptionChanged,
     this.decimalInputFormatter,
     super.key,
   });
 
   final ItemType itemType;
   final TextEditingController priceController;
-  final TextEditingController descriptionController;
   final ValueChanged<double> onPriceChanged;
-  final ValueChanged<String> onDescriptionChanged;
+  final TextEditingController? descriptionController;
+  final ValueChanged<String>? onDescriptionChanged;
   final TextInputFormatter? decimalInputFormatter;
 
   static final _defaultDecimalFormatter = FilteringTextInputFormatter.allow(
@@ -35,41 +35,56 @@ class OnlineStoreSection extends StatelessWidget {
         ? 'Online Store Price'
         : 'Online Service Price';
 
-    return FormGrid(
-      cells: [
-        FormGridCell(
-          span: _isProduct ? 3 : 4,
-          child: AppFormField(
-            label: priceLabel,
-            child: TextField(
-              controller: priceController,
-              style: saleFieldTextStyle,
-              decoration: buildFormControlDecoration(hint: priceLabel),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                decimalInputFormatter ?? _defaultDecimalFormatter,
-              ],
-              onChanged: (v) => onPriceChanged(double.tryParse(v) ?? 0),
+    final cells = <FormGridCell>[
+      FormGridCell(
+        span: _isProduct ? 3 : 4,
+        child: AppFormField(
+          label: priceLabel,
+          floatingLabel: true,
+          child: TextField(
+            controller: priceController,
+            style: saleFieldTextStyle,
+            decoration: buildFormControlDecoration(labelText: priceLabel),
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
             ),
+            inputFormatters: [
+              decimalInputFormatter ?? _defaultDecimalFormatter,
+            ],
+            onChanged: (v) => onPriceChanged(double.tryParse(v) ?? 0),
           ),
         ),
+      ),
+    ];
+
+    if (!_isProduct &&
+        descriptionController != null &&
+        onDescriptionChanged != null) {
+      cells.add(
         FormGridCell(
-          span: _isProduct ? 9 : 8,
+          span: 8,
           child: AppFormField(
-            label: 'Online Description',
+            label: 'Online Service Description',
+            floatingLabel: true,
             child: TextField(
               controller: descriptionController,
               style: saleFieldTextStyle,
               decoration: buildFormControlDecoration(
+                labelText: 'Online Service Description',
                 hint: 'Description shown on online store',
               ),
+              minLines: 3,
+              maxLines: 6,
               onChanged: onDescriptionChanged,
             ),
           ),
         ),
-      ],
+      );
+    }
+
+    return FormGrid(
+      rowGap: 12,
+      cells: cells,
     );
   }
 }

@@ -8,7 +8,7 @@ abstract final class InventoryTransactionTableService {
   }) {
     final filtered = transactions.where((transaction) {
       if (filters.typeColumnFilter != null &&
-          !filters.typeColumnFilter!.matches(transaction.transactionType)) {
+          !filters.typeColumnFilter!.matches(typeDisplayLabel(transaction))) {
         return false;
       }
       if (filters.invoiceRefColumnFilter != null &&
@@ -49,9 +49,9 @@ abstract final class InventoryTransactionTableService {
     final sorted = [...filtered];
     sorted.sort((a, b) {
       final comparison = switch (filters.sortColumn) {
-        InventoryTransactionSortColumn.type => a.transactionType.compareTo(
-          b.transactionType,
-        ),
+        InventoryTransactionSortColumn.type => typeDisplayLabel(
+          a,
+        ).compareTo(typeDisplayLabel(b)),
         InventoryTransactionSortColumn.invoiceRef => _invoiceRefLabel(
           a,
         ).compareTo(_invoiceRefLabel(b)),
@@ -78,9 +78,18 @@ abstract final class InventoryTransactionTableService {
     return transaction.referenceNo.trim();
   }
 
+  static String typeDisplayLabel(ProductTransaction transaction) {
+    final type = transaction.transactionType.trim();
+    final godown = transaction.godownName?.trim();
+    if (godown != null && godown.isNotEmpty) {
+      return '$type ($godown)';
+    }
+    return type;
+  }
+
   static List<String> uniqueTypeOptions(List<ProductTransaction> transactions) {
     return transactions
-        .map((transaction) => transaction.transactionType)
+        .map(typeDisplayLabel)
         .where((value) => value.trim().isNotEmpty)
         .toSet()
         .toList()

@@ -5,13 +5,15 @@ import { getDb } from '../../db/client';
 import type { GatewayIntentPayload } from '../../db/schema/payments/gateway-tables';
 import { AppError } from '../../shared/errors/app-error';
 import {
+  type GatewayWebhookPayload,
   mapRazorpayMethodToAccountingMode,
   PaymentValidationService,
   RazorpayClient,
-  type GatewayWebhookPayload,
+  type RazorpayPaymentResult,
 } from '../../shared/payments';
 import { BusinessMembershipRepository } from '../../shared/repositories/business-membership.repository';
 import { PaymentService } from '../accounting/payment.service';
+import type { PaymentRecord } from '../accounting/payment.types';
 import { parseMoney } from '../inventory/inventory.utils';
 import {
   GATEWAY_WEBHOOK_EVENTS,
@@ -331,7 +333,10 @@ export class PaymentGatewayService {
         input.razorpaySignature,
       )
     ) {
-      logger?.warn({ intentId: input.intentId }, 'Verification failed: invalid signature');
+      logger?.warn(
+        { intentId: input.intentId },
+        'Verification failed: invalid signature',
+      );
       await repo.updateIntentStatus({
         intentId: intent.id,
         status: 'failed',
@@ -352,7 +357,7 @@ export class PaymentGatewayService {
       razorpayPaymentId: input.razorpayPaymentId,
     });
 
-    let razorpayPayment;
+    let razorpayPayment: RazorpayPaymentResult;
     try {
       razorpayPayment = await Promise.race([
         this.razorpay.fetchPayment(input.razorpayPaymentId),
@@ -364,7 +369,10 @@ export class PaymentGatewayService {
         ),
       ]);
     } catch {
-      logger?.warn({ intentId: input.intentId }, 'Verification pending: fetch timeout');
+      logger?.warn(
+        { intentId: input.intentId },
+        'Verification pending: fetch timeout',
+      );
       return { status: 'pending' };
     }
 
@@ -430,7 +438,7 @@ export class PaymentGatewayService {
       throw new AppError('PAYMENT_NOT_FOUND', 'Payment intent not found', 404);
     }
 
-    let payment;
+    let payment: PaymentRecord | undefined;
     if (intent.accountingPaymentId) {
       const paymentService = new PaymentService();
       payment = await paymentService.getPayment(
@@ -573,7 +581,9 @@ export class PaymentGatewayService {
         return;
       }
 
-      const accountId = await membershipRepo.findAnyAccountId(intent.businessId);
+      const accountId = await membershipRepo.findAnyAccountId(
+        intent.businessId,
+      );
       if (!accountId) {
         await repo.failReconciliationJob(job.id, 'No business account');
         return;
@@ -605,7 +615,10 @@ export class PaymentGatewayService {
       const message =
         error instanceof Error ? error.message : 'Reconciliation failed';
       await repo.failReconciliationJob(job.id, message);
-      logger?.warn({ jobId: job.id, err: message }, 'Webhook reconciliation failed');
+      logger?.warn(
+        { jobId: job.id, err: message },
+        'Webhook reconciliation failed',
+      );
     }
   }
 
@@ -629,7 +642,9 @@ export class PaymentGatewayService {
 
   private async finalizeVerifiedIntent(input: {
     repo: PaymentGatewayRepository;
-    intent: NonNullable<Awaited<ReturnType<PaymentGatewayRepository['findById']>>>;
+    intent: NonNullable<
+      Awaited<ReturnType<PaymentGatewayRepository['findById']>>
+    >;
     razorpayPaymentId: string;
     razorpayMethod: string | null;
     businessId: string;

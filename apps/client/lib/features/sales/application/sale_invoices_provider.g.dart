@@ -356,7 +356,7 @@ final class SaleInvoicesProvider
   SaleInvoices create() => SaleInvoices();
 }
 
-String _$saleInvoicesHash() => r'95d319dd4e01e7e948505693a793a24dc0008e07';
+String _$saleInvoicesHash() => r'8d6f68923d197896425c3836e4c28d9f025eb4f0';
 
 abstract class _$SaleInvoices extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -481,7 +481,7 @@ final class FilteredSaleInvoicesProvider
 }
 
 String _$filteredSaleInvoicesHash() =>
-    r'27579b63ce67c96ac1fd21c7040f9c27c07665fd';
+    r'f03cff9f2c5f94ac53ff4adb1126e6fb04960716';
 
 @ProviderFor(paginatedSaleInvoices)
 final paginatedSaleInvoicesProvider = PaginatedSaleInvoicesProvider._();

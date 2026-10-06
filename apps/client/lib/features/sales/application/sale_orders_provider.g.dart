@@ -93,7 +93,7 @@ final class SaleOrderUserFilterOptionsProvider
 }
 
 String _$saleOrderUserFilterOptionsHash() =>
-    r'a9034a7d61feedf307f88d545d13a2da778b76fc';
+    r'4aa0c602e31ffef8ac7cd3cda17aa05da44e9c80';
 
 @ProviderFor(saleOrderGodownFilterOptions)
 final saleOrderGodownFilterOptionsProvider =
@@ -136,7 +136,7 @@ final class SaleOrderGodownFilterOptionsProvider
 }
 
 String _$saleOrderGodownFilterOptionsHash() =>
-    r'fc2264eaec7c090e27b4d75bbcb8f70d5d948bfb';
+    r'da8810321afc74a185bea0017c28242436be5f3b';
 
 @ProviderFor(SaleOrderSearchQuery)
 final saleOrderSearchQueryProvider = SaleOrderSearchQueryProvider._();
@@ -321,7 +321,7 @@ final class SaleOrdersProvider
   SaleOrders create() => SaleOrders();
 }
 
-String _$saleOrdersHash() => r'bdfbada52e88ea08dfb79cd1d2115363042ae883';
+String _$saleOrdersHash() => r'bf273a28e760cc73500ddeeb695cf7295593c411';
 
 abstract class _$SaleOrders extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -444,7 +444,7 @@ final class FilteredSaleOrdersProvider
 }
 
 String _$filteredSaleOrdersHash() =>
-    r'121a349b6a69771f7d86af65c56ac5bd50a2333a';
+    r'0816cf7163122283e638749533183e208055822d';
 
 @ProviderFor(paginatedSaleOrders)
 final paginatedSaleOrdersProvider = PaginatedSaleOrdersProvider._();

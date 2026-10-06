@@ -90,10 +90,10 @@ class _ReportsChips extends StatelessWidget {
       builder: (context, constraints) {
         final separatorWidth = gap * 2;
         final totalGaps = separatorWidth * (reports.length - 1);
-        final equalWidth =
-            (constraints.maxWidth - totalGaps) / reports.length;
-        final chipWidth =
-            equalWidth >= _minChipWidth ? equalWidth : _minChipWidth;
+        final equalWidth = (constraints.maxWidth - totalGaps) / reports.length;
+        final chipWidth = equalWidth >= _minChipWidth
+            ? equalWidth
+            : _minChipWidth;
 
         return ListView.separated(
           scrollDirection: Axis.horizontal,

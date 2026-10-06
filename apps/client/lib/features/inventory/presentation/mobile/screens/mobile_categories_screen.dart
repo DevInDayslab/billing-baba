@@ -23,6 +23,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile categories list with search, item counts, and add/edit/delete.
 class MobileCategoriesScreen extends ConsumerStatefulWidget {
   const MobileCategoriesScreen({super.key});
@@ -32,7 +34,8 @@ class MobileCategoriesScreen extends ConsumerStatefulWidget {
       _MobileCategoriesScreenState();
 }
 
-class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen> {
+class _MobileCategoriesScreenState
+    extends ConsumerState<MobileCategoriesScreen> {
   late final TextEditingController _searchController;
   Timer? _debounce;
 
@@ -56,7 +59,9 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
       final trimmed = query.trim();
       ref.read(categoryBackendSearchProvider.notifier).query = trimmed;
       unawaited(
-        ref.read(inventoryCategoriesProvider.notifier).refresh(
+        ref
+            .read(inventoryCategoriesProvider.notifier)
+            .refresh(
               searchQuery: trimmed.isEmpty ? null : trimmed,
             ),
       );
@@ -64,7 +69,9 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryCategoriesProvider.notifier).refresh(
+    return ref
+        .read(inventoryCategoriesProvider.notifier)
+        .refresh(
           searchQuery: ref.read(categoryBackendSearchProvider),
         );
   }
@@ -122,13 +129,13 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
     final actions = <MobileSheetAction>[
       if (permissions.canEdit(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.edit_outlined,
+          icon: LucideIcons.pencil,
           label: 'Edit Category',
           onTap: () => unawaited(_editCategory(category)),
         ),
       if (permissions.canDelete(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.delete_outline_rounded,
+          icon: LucideIcons.trash2,
           label: 'Delete Category',
           onTap: () => unawaited(_confirmDeleteCategory(category)),
         ),
@@ -179,7 +186,11 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
               ),
               const _CategoryListHeader(),
               Expanded(
-                child: switch ((isInitialLoading, showError, categories.isEmpty)) {
+                child: switch ((
+                  isInitialLoading,
+                  showError,
+                  categories.isEmpty,
+                )) {
                   (true, _, _) => const Center(
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
@@ -192,13 +203,15 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
                   (_, _, true) => MobileEmptyState(
                     title: 'No categories found',
                     message: 'Add a category to organize your items.',
-                    icon: Icons.category_outlined,
-                    actionLabel: ref
+                    icon: LucideIcons.layoutGrid,
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Category'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addCategory())
@@ -251,11 +264,13 @@ class _MobileCategoriesScreenState extends ConsumerState<MobileCategoriesScreen>
             right: 0,
             bottom: MobileBottomNavigation.floatingActionBottomOffset(context),
             child: Center(
-            child: PermissionGate(
-              module: PermissionModule.item,
-              action: PermissionAction.create,
-              child: _AddCategoryFab(onPressed: () => unawaited(_addCategory())),
-            ),
+              child: PermissionGate(
+                module: PermissionModule.item,
+                action: PermissionAction.create,
+                child: _AddCategoryFab(
+                  onPressed: () => unawaited(_addCategory()),
+                ),
+              ),
             ),
           ),
         ],
@@ -375,7 +390,7 @@ class _AddCategoryFab extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 1.5),
                 ),
                 child: const Icon(
-                  Icons.add_rounded,
+                  LucideIcons.plus,
                   color: Colors.white,
                   size: 14,
                 ),

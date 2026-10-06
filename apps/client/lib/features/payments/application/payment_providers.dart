@@ -9,7 +9,9 @@ final paymentApiProvider = FutureProvider<PaymentApi>((ref) async {
   return PaymentApi(client.dio);
 });
 
-final paymentRepositoryProvider = FutureProvider<PaymentRepository>((ref) async {
+final paymentRepositoryProvider = FutureProvider<PaymentRepository>((
+  ref,
+) async {
   final api = await ref.watch(paymentApiProvider.future);
   final db = ref.watch(appDatabaseProvider);
   return PaymentRepository(api: api, database: db);

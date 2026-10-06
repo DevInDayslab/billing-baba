@@ -11,6 +11,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/pen
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/features/inventory/presentation/shared/item_image_pick_crop.dart';
 import 'package:billing_baba/shared/media/pick_media_image.dart';
 import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
@@ -26,12 +27,14 @@ class ItemImageGallerySection extends ConsumerStatefulWidget {
     required this.itemId,
     this.label = '',
     this.seedPrimaryImageUrl,
+    this.showEmptyAddAction = true,
     super.key,
   });
 
   final String itemId;
   final String label;
   final String? seedPrimaryImageUrl;
+  final bool showEmptyAddAction;
 
   @override
   ConsumerState<ItemImageGallerySection> createState() =>
@@ -159,12 +162,22 @@ class _ItemImageGallerySectionState
     final picked = await pickMediaImageBytes(context: context);
     if (picked == null) return false;
 
+    final cropOutcome = await cropItemImageBytes(
+      context,
+      imageBytes: picked.bytes,
+    );
+    final cropped = switch (cropOutcome) {
+      ItemImageBytesCropUpdated(:final bytes) => bytes,
+      _ => null,
+    };
+    if (cropped == null) return false;
+
     final generation = ++_uploadGeneration;
     final localId = 'local-$generation';
     final shouldBePrimary = isPrimary || remote.isEmpty;
     final pending = PendingItemImage(
       localId: localId,
-      bytes: picked.bytes,
+      bytes: cropped,
       replacesImageId: replacesImageId,
       isPrimary: shouldBePrimary,
     );
@@ -179,8 +192,8 @@ class _ItemImageGallerySectionState
       _completeUpload(
         localId: localId,
         generation: generation,
-        pickedBytes: picked.bytes,
-        pickedMime: picked.mimeType,
+        pickedBytes: cropped,
+        pickedMime: 'image/jpeg',
         replacesImageId: replacesImageId,
         isPrimary: shouldBePrimary,
         remote: remote,
@@ -363,6 +376,10 @@ class _ItemImageGallerySectionState
     final hasAny = visibleRemote.isNotEmpty || _pending.isNotEmpty;
 
     if (!hasAny) {
+      if (!widget.showEmptyAddAction) {
+        return const SizedBox.shrink();
+      }
+
       if (imagesAsync.isLoading) {
         return Align(
           alignment: Alignment.centerLeft,

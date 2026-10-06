@@ -1,10 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, pgTable, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  pgTable,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
-import { syncedBusinessColumns, money } from '../columns';
+import { money, syncedBusinessColumns } from '../columns';
 import { syncPullIndex } from '../sync-pull-index';
-import { unitDefinitions } from './tables';
-import { items } from './tables';
+import { items, unitDefinitions } from './tables';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);

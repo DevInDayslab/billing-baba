@@ -262,4 +262,11 @@ abstract final class Validators {
     final normalized = value.replaceAll(',', '').trim();
     return normalized.isEmpty ? null : normalized;
   }
+
+  /// Uppercases the first character of a trimmed name; rest is unchanged.
+  static String capitalizeFirstLetter(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return '${trimmed[0].toUpperCase()}${trimmed.substring(1)}';
+  }
 }

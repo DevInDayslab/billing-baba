@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Period, date range, filter chips, and filters button for mobile reports.
 class MobileReportFilterHeader extends ConsumerWidget {
   const MobileReportFilterHeader({
@@ -72,7 +74,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
                     flex: 2,
                     child: _FilterTapArea(
                       label: filters.periodLabel,
-                      icon: Icons.keyboard_arrow_down_rounded,
+                      icon: LucideIcons.chevronDown,
                       onTap: () => unawaited(_pickPeriod(context, ref)),
                     ),
                   ),
@@ -88,7 +90,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
                         range.start,
                         range.end,
                       ),
-                      icon: Icons.calendar_today_outlined,
+                      icon: LucideIcons.calendar,
                       iconSize: 15,
                       onTap: () => unawaited(_pickDateRange(context, ref)),
                     ),
@@ -109,7 +111,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
                 const Spacer(),
                 FilledButton.tonalIcon(
                   onPressed: () => unawaited(_openFilters(context, ref)),
-                  icon: const Icon(Icons.tune_rounded, size: 16),
+                  icon: const Icon(LucideIcons.slidersHorizontal, size: 16),
                   label: const Text('Filters'),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(

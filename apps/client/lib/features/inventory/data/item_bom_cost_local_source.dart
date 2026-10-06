@@ -101,8 +101,7 @@ class ItemBomCostLocalSource {
     final created =
         DateTime.tryParse(dto.createdAt ?? '')?.toUtc() ??
         DateTime.now().toUtc();
-    final updated =
-        DateTime.tryParse(dto.updatedAt ?? '')?.toUtc() ?? created;
+    final updated = DateTime.tryParse(dto.updatedAt ?? '')?.toUtc() ?? created;
     return upsertRow(
       id: dto.id,
       businessId: businessId,

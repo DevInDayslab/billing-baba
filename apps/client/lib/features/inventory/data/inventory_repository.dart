@@ -23,6 +23,7 @@ import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/godown_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_location_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/item_location_history_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_bom_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_supplier_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_tier_price_dto.dart';
@@ -275,28 +276,33 @@ class InventoryRepository {
         partyIds,
         defaultPartyId: defaultPartyId,
       ) ??
-      _remote.replaceItemSuppliers(
-        itemId,
-        ReplaceItemSuppliersRequest(
-          suppliers: partyIds
-              .map(
-                (partyId) => ItemSupplierInput(
-                  partyId: partyId,
-                  isDefault: partyId ==
-                      (defaultPartyId ??
-                          (partyIds.isEmpty ? null : partyIds.first)),
-                ),
-              )
-              .toList(),
-        ),
-      ).then((_) {});
+      _remote
+          .replaceItemSuppliers(
+            itemId,
+            ReplaceItemSuppliersRequest(
+              suppliers: partyIds
+                  .map(
+                    (partyId) => ItemSupplierInput(
+                      partyId: partyId,
+                      isDefault:
+                          partyId ==
+                          (defaultPartyId ??
+                              (partyIds.isEmpty ? null : partyIds.first)),
+                    ),
+                  )
+                  .toList(),
+            ),
+          )
+          .then((_) {});
 
   Future<void> removeItemSuppliers(String itemId) =>
       _itemSuppliers?.removeAllForItem(itemId) ??
-      _remote.replaceItemSuppliers(
-        itemId,
-        const ReplaceItemSuppliersRequest(suppliers: []),
-      ).then((_) {});
+      _remote
+          .replaceItemSuppliers(
+            itemId,
+            const ReplaceItemSuppliersRequest(suppliers: []),
+          )
+          .then((_) {});
 
   Future<void> ensureItemSuppliersMigrated() =>
       _itemSuppliers?.migrateFromLegacyStorageIfNeeded() ?? Future.value();
@@ -336,10 +342,12 @@ class InventoryRepository {
 
   Future<void> removeItemBom(String itemId) =>
       _itemBom?.removeAllForItem(itemId) ??
-      _remote.replaceItemBom(
-        itemId,
-        const ReplaceItemBomRequest(materials: [], costs: []),
-      ).then((_) {});
+      _remote
+          .replaceItemBom(
+            itemId,
+            const ReplaceItemBomRequest(materials: [], costs: []),
+          )
+          .then((_) {});
 
   Future<List<ItemTierPriceDto>> getItemTierPricesForItem(String itemId) =>
       _itemTierPrices?.listForItem(itemId) ?? Future.value([]);
@@ -373,7 +381,12 @@ class InventoryRepository {
       _itemTierPrices?.removeAllForItem(itemId) ??
       Future.wait(
         PriceTier.all
-            .map((tier) => _remote.deleteItemTierPrice(itemId, PriceTier.toApiTier(tier)))
+            .map(
+              (tier) => _remote.deleteItemTierPrice(
+                itemId,
+                PriceTier.toApiTier(tier),
+              ),
+            )
             .toList(),
       ).then((_) {});
 
@@ -439,12 +452,11 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) =>
-      _items.countActive(
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
-      );
+  }) => _items.countActive(
+    searchQuery: searchQuery,
+    type: type,
+    categoryId: categoryId,
+  );
 
   Future<List<ItemListDto>> listItemsPage({
     required int limit,
@@ -452,14 +464,13 @@ class InventoryRepository {
     String? searchQuery,
     ItemType? type,
     String? categoryId,
-  }) =>
-      _items.listPage(
-        limit: limit,
-        offset: offset,
-        searchQuery: searchQuery,
-        type: type,
-        categoryId: categoryId,
-      );
+  }) => _items.listPage(
+    limit: limit,
+    offset: offset,
+    searchQuery: searchQuery,
+    type: type,
+    categoryId: categoryId,
+  );
 
   Stream<List<ItemListDto>> watchItemsPage({
     required int limit,
@@ -559,7 +570,9 @@ class InventoryRepository {
   ) async {
     final all = await localStockQuantitiesByItem();
     final ids = itemIds.toSet();
-    return Map.fromEntries(all.entries.where((entry) => ids.contains(entry.key)));
+    return Map.fromEntries(
+      all.entries.where((entry) => ids.contains(entry.key)),
+    );
   }
 
   Future<ItemDetailDto> getItem(String id) async {
@@ -651,7 +664,15 @@ class InventoryRepository {
 
   Future<void> deleteItemLocation(String id) => _remote.deleteItemLocation(id);
 
-  Future<PaginatedStockLevelsDto> getStockLevels(StockLevelListQuery query) async {
+  Future<PaginatedItemLocationHistoryDto> getItemLocationHistory(
+    String locationId, {
+    int page = 1,
+    int limit = 50,
+  }) => _remote.listItemLocationHistory(locationId, page: page, limit: limit);
+
+  Future<PaginatedStockLevelsDto> getStockLevels(
+    StockLevelListQuery query,
+  ) async {
     final businessId = _requireBusinessId();
     if (query.itemId != null && query.itemId!.isNotEmpty) {
       final rows = await _stockLocal.listStockLevelRowsForItem(
@@ -713,7 +734,9 @@ class InventoryRepository {
     }
     final applier = _stockApplier;
     if (applier == null) return;
-    final hasMovements = await _stockLocal.hasAnyMovements(businessId: businessId);
+    final hasMovements = await _stockLocal.hasAnyMovements(
+      businessId: businessId,
+    );
     if (hasMovements) return;
     await applier.backfillBusinessStock(
       businessId: businessId,

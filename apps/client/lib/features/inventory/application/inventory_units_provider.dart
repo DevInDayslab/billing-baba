@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/default_inventory_units.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
@@ -39,6 +40,26 @@ class AddConversionResult {
   bool get isSuccess => conversion != null;
 }
 
+/// Existing conversion shown as `1 [base] = [displayRate] [secondary]`.
+class UnitPairConversionLookup {
+  const UnitPairConversionLookup({
+    required this.conversionId,
+    required this.displayRate,
+    required this.storedFromBase,
+  });
+
+  final String conversionId;
+  final double displayRate;
+
+  /// When false, API stores `1 secondary = factor base` (inverse of UI rate).
+  final bool storedFromBase;
+
+  double apiFactorForDisplayRate(double displayRate) {
+    if (displayRate <= 0) return displayRate;
+    return storedFromBase ? displayRate : 1 / displayRate;
+  }
+}
+
 Future<List<InventoryUnit>> fetchInventoryUnitsWithFallback(
   Ref ref, {
   String? searchQuery,
@@ -46,11 +67,29 @@ Future<List<InventoryUnit>> fetchInventoryUnitsWithFallback(
   try {
     final service = await ref.read(inventoryServiceProvider.future);
     final units = await service.fetchUnits(searchQuery: searchQuery);
-    if (units.isNotEmpty) return units;
+    return _filterUnits(
+      mergeUnitsWithCatalogDefaults(units),
+      searchQuery: searchQuery,
+    );
   } on Object {
     // Fall through to local catalog when API is empty or unavailable.
   }
   return _catalogUnits(searchQuery: searchQuery);
+}
+
+List<InventoryUnit> _filterUnits(
+  List<InventoryUnit> units, {
+  String? searchQuery,
+}) {
+  final query = searchQuery?.trim().toLowerCase() ?? '';
+  if (query.isEmpty) return units;
+  return units
+      .where(
+        (unit) =>
+            unit.fullName.toLowerCase().contains(query) ||
+            unit.shortName.toLowerCase().contains(query),
+      )
+      .toList();
 }
 
 List<InventoryUnit> _catalogUnits({String? searchQuery}) {
@@ -82,6 +121,72 @@ class InventoryUnits extends _$InventoryUnits {
     );
     if (state.hasError && previous.isNotEmpty) {
       state = AsyncData(previous);
+    }
+  }
+
+  Future<UnitPairConversionLookup?> lookupConversionForBaseSecondary({
+    required String baseUnitId,
+    required String secondaryUnitId,
+  }) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+
+      final forward = await service.fetchUnitConversions(
+        fromUnitId: baseUnitId,
+        toUnitId: secondaryUnitId,
+        limit: 1,
+      );
+      if (forward.isNotEmpty) {
+        final conversion = forward.first;
+        return UnitPairConversionLookup(
+          conversionId: conversion.id,
+          displayRate: conversion.factor,
+          storedFromBase: true,
+        );
+      }
+
+      final reverse = await service.fetchUnitConversions(
+        fromUnitId: secondaryUnitId,
+        toUnitId: baseUnitId,
+        limit: 1,
+      );
+      if (reverse.isNotEmpty) {
+        final conversion = reverse.first;
+        if (conversion.factor <= 0) return null;
+        return UnitPairConversionLookup(
+          conversionId: conversion.id,
+          displayRate: 1 / conversion.factor,
+          storedFromBase: false,
+        );
+      }
+
+      final baseUnit = await loadUnitDetail(baseUnitId);
+      final onBase = baseUnit?.conversions
+          .where((conversion) => conversion.toUnitId == secondaryUnitId)
+          .firstOrNull;
+      if (onBase != null && onBase.factor > 0) {
+        return UnitPairConversionLookup(
+          conversionId: onBase.id,
+          displayRate: onBase.factor,
+          storedFromBase: true,
+        );
+      }
+
+      final secondaryUnit = await loadUnitDetail(secondaryUnitId);
+      final onSecondary = secondaryUnit?.conversions
+          .where((conversion) => conversion.toUnitId == baseUnitId)
+          .firstOrNull;
+      if (onSecondary != null && onSecondary.factor > 0) {
+        return UnitPairConversionLookup(
+          conversionId: onSecondary.id,
+          displayRate: 1 / onSecondary.factor,
+          storedFromBase: false,
+        );
+      }
+
+      return null;
+    } on Object {
+      return null;
     }
   }
 
@@ -183,6 +288,36 @@ class InventoryUnits extends _$InventoryUnits {
     } catch (error) {
       state = previous;
       return InventoryErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<AddConversionResult> updateConversion({
+    required String conversionId,
+    required String baseUnitId,
+    required double apiFactor,
+  }) async {
+    if (apiFactor <= 0) {
+      return const AddConversionResult(
+        error: 'Conversion rate must be positive',
+      );
+    }
+
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final conversion = await service.updateUnitConversion(
+        id: conversionId,
+        factor: apiFactor,
+      );
+      await loadUnitDetail(baseUnitId);
+      return AddConversionResult(conversion: conversion);
+    } on ApiValidationException catch (error) {
+      return AddConversionResult(
+        error: error.fieldErrors['conversion_factor'] ?? error.message,
+      );
+    } on InventoryException catch (error) {
+      return AddConversionResult(error: error.message);
+    } catch (error) {
+      return AddConversionResult(error: InventoryErrorMapper.messageFor(error));
     }
   }
 

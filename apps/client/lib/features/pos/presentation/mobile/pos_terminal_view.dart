@@ -3,6 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mobile entry for POS terminal — redirects to the main POS route.
 class MobilePosTerminalView extends StatelessWidget {
@@ -32,12 +33,15 @@ class MobilePosTerminalView extends StatelessWidget {
               Text(
                 'Open the POS billing screen to start selling.',
                 textAlign: TextAlign.center,
-                style: AppTypography.inter(fontSize: AppTypography.bodySize, color: AppColors.textSecondary),
+                style: AppTypography.inter(
+                  fontSize: AppTypography.bodySize,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton.icon(
                 onPressed: () => context.go(AppRoutes.pos),
-                icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                icon: const Icon(LucideIcons.externalLink, size: 18),
                 label: const Text('Open POS'),
               ),
             ],

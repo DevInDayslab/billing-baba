@@ -33,10 +33,10 @@ export function createImagesModule(config: AppConfig): FastifyPluginAsync {
   return createImageRoutes(config);
 }
 
-export { ImageService } from './image.service';
 export {
-  IMAGE_VARIANTS,
   IMAGE_VARIANT_MAX_EDGE,
+  IMAGE_VARIANTS,
   type ImageVariant,
 } from './image.constants';
+export { ImageService } from './image.service';
 export { buildImageVariantStoragePath } from './image-path.builder';

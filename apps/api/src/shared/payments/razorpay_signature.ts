@@ -37,8 +37,7 @@ export function verifyRazorpayWebhookSignature(
       503,
     );
   }
-  const body =
-    typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8');
+  const body = typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8');
   const expected = crypto
     .createHmac('sha256', webhookSecret)
     .update(body)

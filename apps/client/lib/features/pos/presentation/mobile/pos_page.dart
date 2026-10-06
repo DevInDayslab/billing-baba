@@ -16,6 +16,7 @@ import 'package:billing_baba/features/pos/presentation/mobile/widgets/pos_bottom
 import 'package:billing_baba/features/pos/presentation/mobile/widgets/pos_catalog_body.dart';
 import 'package:billing_baba/features/pos/presentation/mobile/widgets/pos_category_rail.dart';
 import 'package:billing_baba/features/pos/presentation/mobile/widgets/pos_held_bills_sheet.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_settings_panel.dart';
 import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/app_loader.dart';
@@ -41,9 +42,7 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
 
   final _searchDebouncer = Debouncer();
   final _hidController = BarcodeKeyboardController();
-  final _hidHandler = BarcodeScanHandler(
-    debounce: BarcodeScanHandler.hidDebounce,
-  );
+  final _hidHandler = BarcodeScanHandler();
   String _searchQuery = '';
   String? _selectedCategoryId;
   bool _didRequestInitialRefresh = false;
@@ -147,7 +146,6 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
       enabled: scanningEnabled,
       autofocus: scanningEnabled,
       controller: _hidController,
-      ignoreWhenEditableFocused: true,
       onBarcode: (code) => unawaited(_onHidBarcode(code)),
       child: Stack(
         children: [
@@ -162,7 +160,9 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
               // Explicit per POS screen spec (defaults match but must be set).
               // ignore: avoid_redundant_argument_values
               showSettings: true,
-              onSettingsTap: () {},
+              onSettingsTap: () => unawaited(
+                showMobileSaleSettingsPanel(context: context, ref: ref),
+              ),
               actions: heldCount > 0
                   ? [
                       PosHeldBillsBadge(
@@ -175,8 +175,7 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_scannerOpen)
-                  const SizedBox(height: _stripHeight),
+                if (_scannerOpen) const SizedBox(height: _stripHeight),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

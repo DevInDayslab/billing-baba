@@ -314,7 +314,9 @@ class PurchaseOrders extends _$PurchaseOrders {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allOrders = await _fetchAllOrders();
       return _allOrdersPage(allOrders);

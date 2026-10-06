@@ -10,9 +10,7 @@ export const listTodosQuerySchema = z.object({
   is_completed: z
     .enum(['true', 'false'])
     .optional()
-    .transform((value) =>
-      value === undefined ? undefined : value === 'true',
-    ),
+    .transform((value) => (value === undefined ? undefined : value === 'true')),
 });
 
 export const createTodoBodySchema = z.object({
@@ -30,12 +28,10 @@ export const createTodoBodySchema = z.object({
   attachment_ids: z.array(z.string()).optional(),
 });
 
-export const updateTodoBodySchema = createTodoBodySchema
-  .partial()
-  .extend({
-    is_completed: z.boolean().optional(),
-    completed_at: z.string().datetime().optional().nullable(),
-  });
+export const updateTodoBodySchema = createTodoBodySchema.partial().extend({
+  is_completed: z.boolean().optional(),
+  completed_at: z.string().datetime().optional().nullable(),
+});
 
 export type CreateTodoBody = z.infer<typeof createTodoBodySchema>;
 export type UpdateTodoBody = z.infer<typeof updateTodoBodySchema>;

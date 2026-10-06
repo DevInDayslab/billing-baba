@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Result from picking an item and optional quantity/price for a line.
 class MobileItemPickResult {
   const MobileItemPickResult({
@@ -66,9 +68,7 @@ class _MobileItemPickerSheetState extends ConsumerState<MobileItemPickerSheet> {
     final item = _selected;
     if (item == null) return;
     final qty = double.tryParse(_qtyController.text) ?? 0;
-    final price = double.tryParse(_priceController.text) ??
-        item.salePrice ??
-        0;
+    final price = double.tryParse(_priceController.text) ?? item.salePrice ?? 0;
     if (qty <= 0) return;
     Navigator.of(context).pop(
       MobileItemPickResult(
@@ -115,7 +115,7 @@ class _MobileItemPickerSheetState extends ConsumerState<MobileItemPickerSheet> {
                 if (filtered.isEmpty) {
                   return const MobileEmptyState(
                     title: 'No items found',
-                    icon: Icons.inventory_2_outlined,
+                    icon: LucideIcons.package,
                   );
                 }
                 return ListView.separated(

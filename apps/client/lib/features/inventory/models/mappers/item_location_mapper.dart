@@ -7,9 +7,13 @@ abstract final class ItemLocationMapper {
       id: dto.id,
       itemId: dto.itemId,
       godownId: dto.godownId,
+      updatedAt: DateTime.parse(dto.updatedAt),
       rack: dto.rack,
       shelf: dto.shelf,
       photoUrl: dto.photoUrl,
+      photoTakenAt: dto.photoTakenAt == null
+          ? null
+          : DateTime.parse(dto.photoTakenAt!),
     );
   }
 }

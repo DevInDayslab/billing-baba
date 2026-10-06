@@ -40,7 +40,10 @@ class MobilePartyGroupsPage extends ConsumerWidget {
                   child: ListTile(
                     title: Text(
                       group,
-                      style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+                      style: AppTypography.inter(
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 );

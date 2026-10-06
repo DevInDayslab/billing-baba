@@ -102,9 +102,11 @@ class PaymentRecoveryService {
     }
 
     final remaining = await repo.listPendingSessions();
-    _ref.read(paymentRecoveryPendingProvider.notifier).setPending(
-      remaining.isNotEmpty,
-    );
+    _ref
+        .read(paymentRecoveryPendingProvider.notifier)
+        .setPending(
+          remaining.isNotEmpty,
+        );
   }
 
   void dispose() {
@@ -130,7 +132,8 @@ class PaymentRecoveryLifecycle extends ConsumerStatefulWidget {
       _PaymentRecoveryLifecycleState();
 }
 
-class _PaymentRecoveryLifecycleState extends ConsumerState<PaymentRecoveryLifecycle>
+class _PaymentRecoveryLifecycleState
+    extends ConsumerState<PaymentRecoveryLifecycle>
     with WidgetsBindingObserver {
   @override
   void initState() {

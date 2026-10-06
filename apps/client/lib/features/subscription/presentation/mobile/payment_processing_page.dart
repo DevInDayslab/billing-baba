@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Razorpay payment processing screen for mobile subscription checkout.
 class PaymentProcessingPage extends ConsumerStatefulWidget {
   const PaymentProcessingPage({super.key});
@@ -221,7 +223,7 @@ class _PaymentProcessingPageState extends ConsumerState<PaymentProcessingPage>
                       ],
                     ),
                     child: const Icon(
-                      Icons.account_balance_wallet_outlined,
+                      LucideIcons.wallet,
                       size: 40,
                       color: AppColors.primary,
                     ),

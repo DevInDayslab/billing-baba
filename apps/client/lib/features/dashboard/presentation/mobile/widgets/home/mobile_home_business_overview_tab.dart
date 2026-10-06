@@ -10,18 +10,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Business Overview tab — matches home mockup section order.
+///
+/// [scrollChrome] (search + home tabs) scrolls with content, like Items.
 class MobileHomeBusinessOverviewTab extends ConsumerWidget {
-  const MobileHomeBusinessOverviewTab({super.key});
+  const MobileHomeBusinessOverviewTab({
+    required this.scrollChrome,
+    super.key,
+  });
+
+  final Widget scrollChrome;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsync = ref.watch(dashboardProvider);
 
     return dashboardAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => AppError(
-        message: error.toString(),
-        onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
+      loading: () => RefreshIndicator(
+        onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: scrollChrome),
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      ),
+      error: (error, _) => RefreshIndicator(
+        onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: scrollChrome),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: AppError(
+                message: error.toString(),
+                onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
+              ),
+            ),
+          ],
+        ),
       ),
       data: (viewState) {
         final dashboard = viewState.dashboard;
@@ -31,6 +62,7 @@ class MobileHomeBusinessOverviewTab extends ConsumerWidget {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              SliverToBoxAdapter(child: scrollChrome),
               const SliverToBoxAdapter(child: MobileHomeQuickActions()),
               const SliverToBoxAdapter(
                 child: MobileHomeTodaysBusinessCarousel(),

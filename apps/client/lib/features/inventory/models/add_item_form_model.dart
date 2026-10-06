@@ -1,6 +1,9 @@
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
 
 enum PriceTaxMode { withoutTax, withTax }
+
+enum PriceDiscountKind { percentage, amount }
 
 class ItemTierPriceRow {
   const ItemTierPriceRow({
@@ -65,6 +68,79 @@ class RawMaterialRow {
   }
 }
 
+/// Product fields used to pre-fill supplier rows when parties are linked.
+class SuppliersProductSnapshot {
+  const SuppliersProductSnapshot({
+    this.itemId,
+    this.productImageUrl = '',
+    this.brandName = '',
+    this.mrp = 0,
+    this.pricing = 0,
+    this.minOrderQuantity = 0,
+    this.productNotes = '',
+  });
+
+  final String? itemId;
+  final String productImageUrl;
+  final String brandName;
+  final double mrp;
+  final double pricing;
+  final double minOrderQuantity;
+  final String productNotes;
+}
+
+/// Per-supplier purchase details on the add-item form (UI state; party link syncs).
+class ItemSupplierFormRow {
+  const ItemSupplierFormRow({
+    required this.partyId,
+    this.productImageUrl = '',
+    this.brandName = '',
+    this.mrp = 0,
+    this.pricing = 0,
+    this.minOrderQuantity = 1,
+    this.paymentPolicy = '',
+    this.qualityRating = 0,
+    this.notes = '',
+    this.sellerAddress = '',
+  });
+
+  final String partyId;
+  final String productImageUrl;
+  final String brandName;
+  final double mrp;
+  final double pricing;
+  final double minOrderQuantity;
+  final String paymentPolicy;
+  final int qualityRating;
+  final String notes;
+  final String sellerAddress;
+
+  ItemSupplierFormRow copyWith({
+    String? productImageUrl,
+    String? brandName,
+    double? mrp,
+    double? pricing,
+    double? minOrderQuantity,
+    String? paymentPolicy,
+    int? qualityRating,
+    String? notes,
+    String? sellerAddress,
+  }) {
+    return ItemSupplierFormRow(
+      partyId: partyId,
+      productImageUrl: productImageUrl ?? this.productImageUrl,
+      brandName: brandName ?? this.brandName,
+      mrp: mrp ?? this.mrp,
+      pricing: pricing ?? this.pricing,
+      minOrderQuantity: minOrderQuantity ?? this.minOrderQuantity,
+      paymentPolicy: paymentPolicy ?? this.paymentPolicy,
+      qualityRating: qualityRating ?? this.qualityRating,
+      notes: notes ?? this.notes,
+      sellerAddress: sellerAddress ?? this.sellerAddress,
+    );
+  }
+}
+
 class AdditionalCostRow {
   const AdditionalCostRow({
     required this.id,
@@ -103,11 +179,19 @@ class AddItemFormState {
     this.description = '',
     this.activeTab = 0,
     this.mrp = 0,
+    this.mrpSaleDiscount = 0,
+    this.mrpSaleDiscountKind = PriceDiscountKind.percentage,
     this.salePrice = 0,
+    this.salePriceDiscount = 0,
+    this.salePriceDiscountKind = PriceDiscountKind.percentage,
     this.salePriceTaxMode = PriceTaxMode.withoutTax,
     this.wholesalePrice = 0,
     this.wholesalePriceTaxMode = PriceTaxMode.withoutTax,
+    this.wholesaleSectionVisible = false,
     this.minWholesaleQty = 0,
+    this.minWholesaleQtyUnitId,
+    this.openingQtyUnitId,
+    this.minStockUnitId,
     this.openingQty = 0,
     this.atPrice = 0,
     this.purchasePriceTaxMode = PriceTaxMode.withoutTax,
@@ -122,6 +206,7 @@ class AddItemFormState {
     this.tierPrices = const [],
     this.alternativeItemIds = const [],
     this.supplierPartyIds = const [],
+    this.supplierRows = const [],
     this.defaultSupplierPartyId,
     this.itemNameError = false,
     this.baseUnitError = false,
@@ -145,11 +230,25 @@ class AddItemFormState {
   final String description;
   final int activeTab;
   final double mrp;
+  final double mrpSaleDiscount;
+  final PriceDiscountKind mrpSaleDiscountKind;
   final double salePrice;
+  final double salePriceDiscount;
+  final PriceDiscountKind salePriceDiscountKind;
   final PriceTaxMode salePriceTaxMode;
   final double wholesalePrice;
   final PriceTaxMode wholesalePriceTaxMode;
+  final bool wholesaleSectionVisible;
   final double minWholesaleQty;
+
+  /// Unit for [minWholesaleQty]; defaults to [baseUnitId] when null.
+  final String? minWholesaleQtyUnitId;
+
+  /// Display unit for [openingQty] (stored in [baseUnitId]); defaults to base.
+  final String? openingQtyUnitId;
+
+  /// Display unit for [minStock] (stored in base unit); defaults to base.
+  final String? minStockUnitId;
   final double openingQty;
   final double atPrice;
   final PriceTaxMode purchasePriceTaxMode;
@@ -164,9 +263,11 @@ class AddItemFormState {
   final List<ItemTierPriceRow> tierPrices;
   final List<String> alternativeItemIds;
   final List<String> supplierPartyIds;
+  final List<ItemSupplierFormRow> supplierRows;
   final String? defaultSupplierPartyId;
   final bool itemNameError;
   final bool baseUnitError;
+
   /// Server / extra validation messages keyed by API field name.
   final Map<String, String> fieldErrors;
   final bool isDirty;
@@ -185,6 +286,21 @@ class AddItemFormState {
     for (final row in tierPrices)
       if (row.price > 0) row.tierKey: row.price,
   };
+
+  /// Tier prices to persist, including wholesale from the pricing tab.
+  Map<String, double> get resolvedTierPriceMap {
+    final map = Map<String, double>.from(tierPriceMap);
+    if (wholesalePrice > 0) {
+      map[PriceTier.wholesale] = wholesalePrice;
+    }
+    return map;
+  }
+
+  bool get showWholesaleSection =>
+      wholesaleSectionVisible ||
+      wholesalePrice > 0 ||
+      minWholesaleQty > 0 ||
+      tierPrices.any((row) => row.tierKey == PriceTier.wholesale);
 
   AddItemFormState copyWith({
     ItemType? itemType,
@@ -208,11 +324,22 @@ class AddItemFormState {
     String? description,
     int? activeTab,
     double? mrp,
+    double? mrpSaleDiscount,
+    PriceDiscountKind? mrpSaleDiscountKind,
     double? salePrice,
+    double? salePriceDiscount,
+    PriceDiscountKind? salePriceDiscountKind,
     PriceTaxMode? salePriceTaxMode,
     double? wholesalePrice,
     PriceTaxMode? wholesalePriceTaxMode,
+    bool? wholesaleSectionVisible,
     double? minWholesaleQty,
+    String? minWholesaleQtyUnitId,
+    bool clearMinWholesaleQtyUnit = false,
+    String? openingQtyUnitId,
+    bool clearOpeningQtyUnit = false,
+    String? minStockUnitId,
+    bool clearMinStockUnit = false,
     double? openingQty,
     double? atPrice,
     PriceTaxMode? purchasePriceTaxMode,
@@ -227,6 +354,7 @@ class AddItemFormState {
     List<ItemTierPriceRow>? tierPrices,
     List<String>? alternativeItemIds,
     List<String>? supplierPartyIds,
+    List<ItemSupplierFormRow>? supplierRows,
     String? defaultSupplierPartyId,
     bool clearDefaultSupplier = false,
     bool? itemNameError,
@@ -254,12 +382,28 @@ class AddItemFormState {
       description: description ?? this.description,
       activeTab: activeTab ?? this.activeTab,
       mrp: mrp ?? this.mrp,
+      mrpSaleDiscount: mrpSaleDiscount ?? this.mrpSaleDiscount,
+      mrpSaleDiscountKind: mrpSaleDiscountKind ?? this.mrpSaleDiscountKind,
       salePrice: salePrice ?? this.salePrice,
+      salePriceDiscount: salePriceDiscount ?? this.salePriceDiscount,
+      salePriceDiscountKind:
+          salePriceDiscountKind ?? this.salePriceDiscountKind,
       salePriceTaxMode: salePriceTaxMode ?? this.salePriceTaxMode,
       wholesalePrice: wholesalePrice ?? this.wholesalePrice,
       wholesalePriceTaxMode:
           wholesalePriceTaxMode ?? this.wholesalePriceTaxMode,
+      wholesaleSectionVisible:
+          wholesaleSectionVisible ?? this.wholesaleSectionVisible,
       minWholesaleQty: minWholesaleQty ?? this.minWholesaleQty,
+      minWholesaleQtyUnitId: clearMinWholesaleQtyUnit
+          ? null
+          : (minWholesaleQtyUnitId ?? this.minWholesaleQtyUnitId),
+      openingQtyUnitId: clearOpeningQtyUnit
+          ? null
+          : (openingQtyUnitId ?? this.openingQtyUnitId),
+      minStockUnitId: clearMinStockUnit
+          ? null
+          : (minStockUnitId ?? this.minStockUnitId),
       openingQty: openingQty ?? this.openingQty,
       atPrice: atPrice ?? this.atPrice,
       purchasePriceTaxMode: purchasePriceTaxMode ?? this.purchasePriceTaxMode,
@@ -275,12 +419,15 @@ class AddItemFormState {
       tierPrices: tierPrices ?? this.tierPrices,
       alternativeItemIds: alternativeItemIds ?? this.alternativeItemIds,
       supplierPartyIds: supplierPartyIds ?? this.supplierPartyIds,
+      supplierRows: supplierRows ?? this.supplierRows,
       defaultSupplierPartyId: clearDefaultSupplier
           ? null
           : (defaultSupplierPartyId ?? this.defaultSupplierPartyId),
       itemNameError: itemNameError ?? this.itemNameError,
       baseUnitError: baseUnitError ?? this.baseUnitError,
-      fieldErrors: clearFieldErrors ? const {} : (fieldErrors ?? this.fieldErrors),
+      fieldErrors: clearFieldErrors
+          ? const {}
+          : (fieldErrors ?? this.fieldErrors),
       isDirty: isDirty ?? this.isDirty,
     );
   }

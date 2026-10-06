@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
@@ -10,6 +11,7 @@ import 'package:billing_baba/features/purchases/application/add_purchase_order_f
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
@@ -33,7 +35,8 @@ class MobileAddPurchaseOrderPage extends ConsumerStatefulWidget {
 
 class _MobileAddPurchaseOrderPageState
     extends ConsumerState<MobileAddPurchaseOrderPage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.purchaseOrder;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.purchaseOrder;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
 
@@ -43,8 +46,9 @@ class _MobileAddPurchaseOrderPageState
     _descriptionController = TextEditingController();
     _termsTextController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final form =
-          ref.read(addPurchaseOrderFormProvider(orderId: widget.orderId));
+      final form = ref.read(
+        addPurchaseOrderFormProvider(orderId: widget.orderId),
+      );
       _descriptionController.text = form.description;
       _termsTextController.text = form.termsNotes;
     });
@@ -61,8 +65,8 @@ class _MobileAddPurchaseOrderPageState
       ref.watch(addPurchaseOrderFormProvider(orderId: widget.orderId));
 
   AddPurchaseOrderForm _notifier() => ref.read(
-        addPurchaseOrderFormProvider(orderId: widget.orderId).notifier,
-      );
+    addPurchaseOrderFormProvider(orderId: widget.orderId).notifier,
+  );
 
   Future<bool> _handleClose() async {
     if (_form().isSaving) return false;
@@ -106,7 +110,9 @@ class _MobileAddPurchaseOrderPageState
     final error = await _notifier().saveOrder();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final docId = _form().documentId;
@@ -136,8 +142,9 @@ class _MobileAddPurchaseOrderPageState
   Widget build(BuildContext context) {
     final form = _form();
     final notifier = _notifier();
-    final confirmed =
-        form.items.where((item) => item.itemName.trim().isNotEmpty).toList();
+    final confirmed = form.items
+        .where((item) => item.itemName.trim().isNotEmpty)
+        .toList();
 
     return MobileDocumentFormScaffold(
       title: widget.orderId != null ? 'Edit Purchase Order' : 'Purchase Order',
@@ -151,13 +158,22 @@ class _MobileAddPurchaseOrderPageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (form.saveError != null)
-            Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
+            Text(
+              form.saveError!,
+              style: const TextStyle(color: AppColors.error),
+            ),
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Order No.',
-            documentNumberValue:
-                form.orderNumber.isEmpty ? 'Auto' : form.orderNumber,
-            documentNumberIsPlaceholder: form.orderNumber.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: form.documentId,
+              currentNumber: form.orderNumber,
+              preview: watchDocumentNumberPreview(
+                ref,
+                PurchaseConstants.purchaseOrderSeries,
+              ),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.orderDate),
             dateIsPlaceholder: form.orderDate == null,
             onDateTap: () async {
@@ -205,8 +221,9 @@ class _MobileAddPurchaseOrderPageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),
@@ -229,8 +246,9 @@ class _MobileAddPurchaseOrderPageState
                   name: item.itemName,
                   qtyLabel:
                       '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
-                  amountLabel:
-                      MobileDocumentItemsSection.formatAmount(item.amount),
+                  amountLabel: MobileDocumentItemsSection.formatAmount(
+                    item.amount,
+                  ),
                 ),
             ],
             onAddItems: () => unawaited(_addLine()),

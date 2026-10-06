@@ -44,7 +44,7 @@ final class ShellSidebarProvider
   }
 }
 
-String _$shellSidebarHash() => r'eda7ef0301aa121a2f7d0a3b90005e178924d42b';
+String _$shellSidebarHash() => r'acc577afe34d4c10da3aae51848f307f9351c8f8';
 
 /// Shell sidebar open/collapse state, persisted across sessions.
 

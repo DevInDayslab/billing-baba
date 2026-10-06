@@ -1,8 +1,9 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import { getSharedNotificationService } from '../notifications/notification-service.factory';
+import { accountMatchesInvitationContact } from '../../shared/permissions/invitation-account-match';
 import type { NotificationService } from '../notifications/notification.service';
+import { getSharedNotificationService } from '../notifications/notification-service.factory';
 import {
   buildInvitationUrl,
   toInvitationDto,
@@ -19,7 +20,6 @@ import type {
   InvitationPublicDto,
   InvitationRow,
 } from './collaboration.types';
-import { accountMatchesInvitationContact } from '../../shared/permissions/invitation-account-match';
 import {
   addDays,
   isExpired,

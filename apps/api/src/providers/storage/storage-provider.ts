@@ -4,9 +4,9 @@ import type {
   CreateDownloadUrlResult,
   CreateUploadUrlParams,
   CreateUploadUrlResult,
+  GetObjectResult,
   HeadObjectResult,
   MoveObjectParams,
-  GetObjectResult,
   PutObjectParams,
   PutObjectResult,
 } from './storage.types';

@@ -1,16 +1,16 @@
 import { describe, expect, test } from 'bun:test';
 import sharp from 'sharp';
+import { ImageValidationError } from '../../../src/modules/images/image.errors';
 import {
+  IMAGE_POLICIES,
   resolveImagePolicy,
   shouldProcessAsset,
 } from '../../../src/modules/media-processing/media-processing.constants';
+import { runImagePipeline } from '../../../src/modules/media-processing/pipeline/image-pipeline';
 import {
   validateBinarySignature,
   validateMimeType,
 } from '../../../src/modules/media-processing/pipeline/steps/validate-mime.step';
-import { runImagePipeline } from '../../../src/modules/media-processing/pipeline/image-pipeline';
-import { IMAGE_POLICIES } from '../../../src/modules/media-processing/media-processing.constants';
-import { ImageValidationError } from '../../../src/modules/images/image.errors';
 
 async function createTestJpeg(width: number, height: number): Promise<Buffer> {
   return sharp({

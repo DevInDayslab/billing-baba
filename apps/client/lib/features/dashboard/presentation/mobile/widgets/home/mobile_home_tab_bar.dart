@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Single-card segmented control with sliding active highlight and indicator.
 class MobileHomeTabBar extends StatelessWidget {
   const MobileHomeTabBar({
@@ -25,17 +27,17 @@ class MobileHomeTabBar extends StatelessWidget {
   _segments = [
     (
       view: MobileHomeView.businessOverview,
-      icon: Icons.bar_chart_rounded,
+      icon: LucideIcons.chartColumn,
       label: 'Business\nOverview',
     ),
     (
       view: MobileHomeView.transactionDetails,
-      icon: Icons.receipt_long_outlined,
+      icon: LucideIcons.receipt,
       label: 'Transaction\nDetails',
     ),
     (
       view: MobileHomeView.alerts,
-      icon: Icons.checklist_rounded,
+      icon: LucideIcons.listChecks,
       label: 'Todo',
     ),
   ];
@@ -114,7 +116,9 @@ class MobileHomeTabBar extends StatelessWidget {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeInOutCubic,
-                    left: activeIndex * tabWidth + (tabWidth - indicatorWidth) / 2,
+                    left:
+                        activeIndex * tabWidth +
+                        (tabWidth - indicatorWidth) / 2,
                     bottom: 6,
                     width: indicatorWidth,
                     height: 2.5,

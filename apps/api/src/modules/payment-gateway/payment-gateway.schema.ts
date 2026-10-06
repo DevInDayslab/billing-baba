@@ -47,7 +47,9 @@ export const createGatewayOrderBodySchema = z
     }
   });
 
-export type CreateGatewayOrderBody = z.infer<typeof createGatewayOrderBodySchema>;
+export type CreateGatewayOrderBody = z.infer<
+  typeof createGatewayOrderBodySchema
+>;
 
 export const verifyGatewayPaymentBodySchema = z.object({
   intent_id: z.uuid(),

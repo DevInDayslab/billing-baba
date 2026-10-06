@@ -27,61 +27,66 @@ class NotificationLocalDataSource {
         _db.notificationsLocal.businessId.equals(businessId) &
             _db.notificationsLocal.read.equals(false),
       );
-    return query.watchSingle().map((row) => row.read(_db.notificationsLocal.id.count()) ?? 0);
+    return query.watchSingle().map(
+      (row) => row.read(_db.notificationsLocal.id.count()) ?? 0,
+    );
   }
 
   Future<List<AppNotification>> getAll(String businessId) async {
-    final rows = await (_db.select(_db.notificationsLocal)
-          ..where((row) => row.businessId.equals(businessId))
-          ..orderBy([
-            (row) => OrderingTerm.desc(row.createdAt),
-          ]))
-        .get();
+    final rows =
+        await (_db.select(_db.notificationsLocal)
+              ..where((row) => row.businessId.equals(businessId))
+              ..orderBy([
+                (row) => OrderingTerm.desc(row.createdAt),
+              ]))
+            .get();
     return rows.map(_mapRow).toList();
   }
 
   Future<void> insert(AppNotification notification) {
-    return _db.into(_db.notificationsLocal).insert(
-      NotificationsLocalCompanion.insert(
-        id: notification.id,
-        businessId: notification.businessId,
-        title: notification.title,
-        body: notification.body,
-        type: notification.type.name,
-        createdAt: notification.createdAt,
-        read: Value(notification.read),
-        actionRoute: Value(notification.actionRoute),
-        actionPayload: Value(notification.actionPayload),
-        isLocal: Value(notification.isLocal),
-        futureRemoteId: Value(notification.futureRemoteId),
-      ),
-      mode: InsertMode.insertOrReplace,
-    );
+    return _db
+        .into(_db.notificationsLocal)
+        .insert(
+          NotificationsLocalCompanion.insert(
+            id: notification.id,
+            businessId: notification.businessId,
+            title: notification.title,
+            body: notification.body,
+            type: notification.type.name,
+            createdAt: notification.createdAt,
+            read: Value(notification.read),
+            actionRoute: Value(notification.actionRoute),
+            actionPayload: Value(notification.actionPayload),
+            isLocal: Value(notification.isLocal),
+            futureRemoteId: Value(notification.futureRemoteId),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
   }
 
   Future<void> markRead(String id) {
-    return (_db.update(_db.notificationsLocal)..where((row) => row.id.equals(id)))
+    return (_db.update(_db.notificationsLocal)
+          ..where((row) => row.id.equals(id)))
         .write(const NotificationsLocalCompanion(read: Value(true)));
   }
 
   Future<void> markAllRead(String businessId) {
-    return (_db.update(_db.notificationsLocal)
-          ..where(
-            (row) =>
-                row.businessId.equals(businessId) & row.read.equals(false),
-          ))
+    return (_db.update(_db.notificationsLocal)..where(
+          (row) => row.businessId.equals(businessId) & row.read.equals(false),
+        ))
         .write(const NotificationsLocalCompanion(read: Value(true)));
   }
 
   Future<void> delete(String id) {
-    return (_db.delete(_db.notificationsLocal)..where((row) => row.id.equals(id)))
-        .go();
+    return (_db.delete(
+      _db.notificationsLocal,
+    )..where((row) => row.id.equals(id))).go();
   }
 
   Future<void> deleteAll(String businessId) {
-    return (_db.delete(_db.notificationsLocal)
-          ..where((row) => row.businessId.equals(businessId)))
-        .go();
+    return (_db.delete(
+      _db.notificationsLocal,
+    )..where((row) => row.businessId.equals(businessId))).go();
   }
 
   AppNotification _mapRow(NotificationTableData row) {
@@ -90,7 +95,8 @@ class NotificationLocalDataSource {
       businessId: row.businessId,
       title: row.title,
       body: row.body,
-      type: NotificationType.tryParse(row.type) ??
+      type:
+          NotificationType.tryParse(row.type) ??
           NotificationType.businessReminder,
       createdAt: row.createdAt,
       read: row.read,

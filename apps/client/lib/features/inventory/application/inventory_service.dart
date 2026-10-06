@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
@@ -21,41 +22,44 @@ import 'package:billing_baba/features/inventory/data/inventory_movement_projecto
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_stock_local_data_source.dart';
-import 'package:billing_baba/features/inventory/data/item_local_source.dart';
-import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_alternative_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_alternative_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_alternatives_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_bom_cost_local_source.dart';
-import 'package:billing_baba/features/inventory/data/item_bom_material_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_bom_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_bom_material_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_local_source.dart';
+import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_supplier_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_supplier_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_tier_price_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_tier_price_master_repository.dart';
-import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
 import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
+import 'package:billing_baba/features/inventory/models/bulk_item_update_payload.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/unit_dto.dart';
 import 'package:billing_baba/features/inventory/models/godown_model.dart';
+import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
+import 'package:billing_baba/features/inventory/models/item_location_history_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/item_supplier_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/brand_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
-import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
-import 'package:billing_baba/features/inventory/models/mappers/item_bom_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/godown_mapper.dart';
+import 'package:billing_baba/features/inventory/models/mappers/item_bom_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_image_mapper.dart';
+import 'package:billing_baba/features/inventory/models/mappers/item_location_history_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_location_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_mapper.dart';
 import 'package:billing_baba/features/inventory/models/mappers/item_supplier_mapper.dart';
@@ -65,15 +69,16 @@ import 'package:billing_baba/features/inventory/models/mappers/unit_mapper.dart'
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/models/price_history_model.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
-import 'package:billing_baba/features/inventory/models/requests/item_bom_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/brand_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/category_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/godown_requests.dart';
+import 'package:billing_baba/features/inventory/models/requests/item_bom_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/unit_requests.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/utils/inventory_item_catalog_status.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:dio/dio.dart';
@@ -458,6 +463,25 @@ class InventoryService {
     }
   }
 
+  Future<List<UnitConversion>> fetchUnitConversions({
+    String? fromUnitId,
+    String? toUnitId,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _repository.getUnitConversions(
+        UnitConversionListQuery(
+          fromUnitId: fromUnitId,
+          toUnitId: toUnitId,
+          limit: limit,
+        ),
+      );
+      return response.conversions.map(UnitConversionMapper.fromDto).toList();
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
   Future<InventoryUnit> createUnit({
     required String fullName,
     required String shortName,
@@ -740,10 +764,11 @@ class InventoryService {
     }
   }
 
-  Future<String> uploadRackPhoto({
+  Future<({String url, DateTime? takenAt})> uploadRackPhoto({
     required String locationId,
     required Uint8List bytes,
     required String mimeType,
+    String? employeeLabel,
   }) async {
     final media = _media;
     if (media == null) {
@@ -755,12 +780,17 @@ class InventoryService {
         locationId: locationId,
         bytes: bytes,
         mimeType: mimeType,
+        employeeLabel: employeeLabel,
       );
       final url = result['photo_url'] as String?;
       if (url == null || url.isEmpty) {
         throw const InventoryException('Rack photo upload returned no URL.');
       }
-      return url;
+      final takenRaw = result['photo_taken_at'] as String?;
+      final takenAt = takenRaw == null
+          ? null
+          : DateTime.tryParse(takenRaw)?.toLocal();
+      return (url: url, takenAt: takenAt);
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
       if (validation != null) rethrow;
@@ -844,11 +874,29 @@ class InventoryService {
     }
   }
 
+  static const rackLocationHistoryLimit = 5;
+
+  Future<List<ItemLocationHistoryModel>> fetchItemLocationHistory(
+    String locationId, {
+    int limit = rackLocationHistoryLimit,
+  }) async {
+    try {
+      final response = await _repository.getItemLocationHistory(
+        locationId,
+        limit: limit,
+      );
+      return response.records.map(ItemLocationHistoryMapper.fromDto).toList();
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
   Future<ItemLocationModel> createItemLocation({
     required String itemId,
     required String godownId,
     String? rack,
     String? shelf,
+    String? employeeLabel,
   }) async {
     try {
       final dto = await _repository.createItemLocation(
@@ -857,6 +905,7 @@ class InventoryService {
           godownId: godownId,
           rack: rack,
           shelf: shelf,
+          employeeLabel: employeeLabel,
         ),
       );
       return ItemLocationMapper.fromDto(dto);
@@ -871,11 +920,16 @@ class InventoryService {
     String id, {
     String? rack,
     String? shelf,
+    String? employeeLabel,
   }) async {
     try {
       final dto = await _repository.updateItemLocation(
         id,
-        UpdateItemLocationRecordRequest(rack: rack, shelf: shelf),
+        UpdateItemLocationRecordRequest(
+          rack: rack,
+          shelf: shelf,
+          employeeLabel: employeeLabel,
+        ),
       );
       return ItemLocationMapper.fromDto(dto);
     } on DioException catch (error) {
@@ -1184,6 +1238,124 @@ class InventoryService {
   Future<void> deleteItem(String id) async {
     try {
       await _repository.deleteItem(id);
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> bulkSetCatalogActive({
+    required List<InventoryItem> items,
+    required bool active,
+  }) async {
+    try {
+      for (final item in items) {
+        final keywords = applyCatalogInactiveFlag(
+          item.searchKeywords,
+          inactive: !active,
+        );
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(searchKeywords: keywords),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> bulkAssignBarcodes({
+    required List<InventoryItem> items,
+    bool onlyWithoutBarcode = true,
+  }) async {
+    try {
+      for (final item in items) {
+        final existing = item.barcode?.trim();
+        if (onlyWithoutBarcode && existing != null && existing.isNotEmpty) {
+          continue;
+        }
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(barcode: _generateItemBarcode()),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> bulkAssignBaseUnit({
+    required List<InventoryItem> items,
+    required String baseUnitShortName,
+  }) async {
+    try {
+      for (final item in items) {
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(baseUnit: baseUnitShortName),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> bulkUpdateItems({
+    required List<InventoryItem> items,
+    required BulkItemUpdatePayload payload,
+  }) async {
+    if (!payload.hasChanges) return;
+
+    try {
+      for (final item in items) {
+        final apiCategoryId = payload.categoryId == null
+            ? null
+            : CategoryMapper.toApiCategoryId(payload.categoryId);
+        await _repository.updateItem(
+          item.id,
+          UpdateItemRequest(
+            salePrice: payload.salePrice,
+            purchasePrice: payload.purchasePrice,
+            mrp: payload.mrp,
+            categoryId: apiCategoryId,
+            clearCategory: payload.clearCategory,
+            hsnCode: payload.hsnCode,
+          ),
+        );
+      }
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  String _generateItemBarcode() {
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    final suffix = Random().nextInt(9000) + 1000;
+    return '$timestamp$suffix';
+  }
+
+  Future<void> moveItemsToBrand({
+    required List<String> itemIds,
+    required String brandId,
+    required bool removeFromExistingBrand,
+  }) async {
+    final apiBrandId = BrandMapper.toApiBrandId(brandId);
+    try {
+      for (final itemId in itemIds) {
+        final item = await getItem(itemId);
+        final hasExistingBrand =
+            item.brandId != null && item.brandId != unbrandedBrandId;
+        if (!removeFromExistingBrand && hasExistingBrand) {
+          continue;
+        }
+
+        await _repository.updateItem(
+          itemId,
+          UpdateItemRequest(
+            brandId: apiBrandId,
+            clearBrand: apiBrandId == null,
+          ),
+        );
+      }
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }

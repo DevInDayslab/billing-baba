@@ -10,6 +10,8 @@ import 'package:billing_baba/features/subscription/application/plans_pricing_map
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Opens the Vyapar-style feature comparison bottom sheet (~90% height).
 Future<void> showMobileFeatureComparisonSheet({
   required BuildContext context,
@@ -50,7 +52,7 @@ class _ComparisonSheetHeader extends StatelessWidget {
         ),
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(LucideIcons.x),
           color: AppColors.textSecondary,
           visualDensity: VisualDensity.compact,
         ),

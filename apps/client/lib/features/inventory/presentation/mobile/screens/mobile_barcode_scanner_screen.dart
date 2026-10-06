@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// How the scanner should behave after a barcode is detected.
 enum MobileBarcodeScannerMode {
   /// Returns the scanned barcode to the caller via [Navigator.pop].
@@ -33,7 +35,8 @@ class MobileBarcodeScannerScreen extends StatefulWidget {
       _MobileBarcodeScannerScreenState();
 }
 
-class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen> {
+class _MobileBarcodeScannerScreenState
+    extends State<MobileBarcodeScannerScreen> {
   final MobileScannerController _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     autoStart: false,
@@ -145,7 +148,9 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
   Future<void> _toggleTorch() async {
     await _controller.toggleTorch();
     if (!mounted) return;
-    setState(() => _torchEnabled = _controller.value.torchState == TorchState.on);
+    setState(
+      () => _torchEnabled = _controller.value.torchState == TorchState.on,
+    );
   }
 
   @override
@@ -166,7 +171,8 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
                   const ColoredBox(color: Colors.black)
                 else if (_cameraAvailable == false)
                   _ScannerErrorState(
-                    message: 'No camera is available on this device. '
+                    message:
+                        'No camera is available on this device. '
                         'Use a physical phone or connect a USB/Bluetooth scanner.',
                     onRetry: () => Navigator.of(context).pop(),
                     retryLabel: 'Go back',
@@ -177,7 +183,8 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
                     scanWindow: _scanWindow,
                     onDetect: _handleDetection,
                     errorBuilder: (context, error) => _ScannerErrorState(
-                      message: error.errorDetails?.message ??
+                      message:
+                          error.errorDetails?.message ??
                           'Unable to access the camera.',
                       onRetry: () => unawaited(_controller.start()),
                     ),
@@ -221,7 +228,7 @@ class _MobileBarcodeScannerScreenState extends State<MobileBarcodeScannerScreen>
         children: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close_rounded, color: Colors.white),
+            icon: const Icon(LucideIcons.x, color: Colors.white),
           ),
           const Spacer(),
           _CameraStatusBadge(isActive: _controller.value.isInitialized),
@@ -276,7 +283,7 @@ class _CameraStatusBadge extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: const Icon(
-        Icons.photo_camera_outlined,
+        LucideIcons.camera,
         color: Colors.white,
         size: 18,
       ),
@@ -306,7 +313,7 @@ class _TorchButton extends StatelessWidget {
           width: 52,
           height: 52,
           child: Icon(
-            enabled ? Icons.flashlight_on_rounded : Icons.flashlight_off_rounded,
+            enabled ? LucideIcons.flashlight : LucideIcons.flashlightOff,
             color: AppColors.primary,
             size: 26,
           ),
@@ -338,7 +345,7 @@ class _ScannerErrorState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.no_photography_outlined,
+                LucideIcons.cameraOff,
                 color: Colors.white70,
                 size: 48,
               ),

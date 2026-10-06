@@ -5,13 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile notification preferences screen.
 class MobileNotificationSettingsScreen extends ConsumerWidget {
   const MobileNotificationSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final preferencesAsync = ref.watch(notificationPreferencesControllerProvider);
+    final preferencesAsync = ref.watch(
+      notificationPreferencesControllerProvider,
+    );
     final permissionAsync = ref.watch(notificationPermissionStateProvider);
 
     return Scaffold(
@@ -22,7 +26,7 @@ class MobileNotificationSettingsScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -59,8 +63,12 @@ class MobileNotificationSettingsScreen extends ConsumerWidget {
                         if (!granted) return;
                       }
                       await ref
-                          .read(notificationPreferencesControllerProvider.notifier)
-                          .savePreferences(preferences.copyWith(enabled: value));
+                          .read(
+                            notificationPreferencesControllerProvider.notifier,
+                          )
+                          .savePreferences(
+                            preferences.copyWith(enabled: value),
+                          );
                     },
                   ),
                   const Divider(height: 1),

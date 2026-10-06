@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { PaymentValidationService } from '../../../src/shared/payments/payment-mode.mapper';
 import type { AppConfig } from '../../../src/config/app_config';
+import { PaymentValidationService } from '../../../src/shared/payments/payment-mode.mapper';
 
 const config = {
   razorpayKeyId: 'rzp_test_key',

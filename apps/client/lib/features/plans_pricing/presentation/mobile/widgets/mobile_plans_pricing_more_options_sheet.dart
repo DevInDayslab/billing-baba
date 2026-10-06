@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 void _openLicenseInfoAfterSheet(
   BuildContext context,
   MobileLicenseInfoSection section,
@@ -28,7 +30,7 @@ Future<void> showMobilePlansPricingMoreOptionsSheet(
     actions: [
       MobileSheetAction(
         label: 'License Info',
-        icon: Icons.info_outline_rounded,
+        icon: LucideIcons.info,
         onTap: () => _openLicenseInfoAfterSheet(
           context,
           MobileLicenseInfoSection.offlinePayment,
@@ -36,7 +38,7 @@ Future<void> showMobilePlansPricingMoreOptionsSheet(
       ),
       MobileSheetAction(
         label: 'Attach License',
-        icon: Icons.info_outline_rounded,
+        icon: LucideIcons.info,
         onTap: () => _openLicenseInfoAfterSheet(
           context,
           MobileLicenseInfoSection.attachLicense,
@@ -44,7 +46,7 @@ Future<void> showMobilePlansPricingMoreOptionsSheet(
       ),
       MobileSheetAction(
         label: 'Offline Payment',
-        icon: Icons.currency_rupee_rounded,
+        icon: LucideIcons.indianRupee,
         onTap: () => _openLicenseInfoAfterSheet(
           context,
           MobileLicenseInfoSection.offlinePayment,
@@ -52,12 +54,12 @@ Future<void> showMobilePlansPricingMoreOptionsSheet(
       ),
       MobileSheetAction(
         label: 'Buy Multiple Licenses',
-        icon: Icons.library_add_outlined,
+        icon: LucideIcons.libraryBig,
         onTap: () => showBuyLicensesDialog(context),
       ),
       MobileSheetAction(
         label: 'Version: 1.0.0',
-        icon: Icons.info_outline_rounded,
+        icon: LucideIcons.info,
         enabled: false,
         onTap: () {},
       ),

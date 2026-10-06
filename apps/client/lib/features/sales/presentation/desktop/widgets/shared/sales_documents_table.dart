@@ -4,7 +4,6 @@ import 'package:billing_baba/features/export/presentation/desktop/widgets/module
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_document_scope_permissions.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
-import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_document_actions.dart';
@@ -111,24 +110,16 @@ class SalesDocumentsTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: salesCardBorder),
-          documentsAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const SalesLoadingState(),
-            error: (error, _) => SalesErrorState(
-              message: SalesErrorMapper.messageFor(error),
-              onRetry: notifier.refresh,
+          SalesPaginatedListAsyncBody(
+            listAsync: documentsAsync,
+            onRetry: notifier.refresh,
+            hasStaleRows: paginated.items.isNotEmpty,
+            table: _SalesDocumentsTableBody(
+              config: config,
+              items: paginated.items,
+              statusOptions: statusOptions,
+              isFiltered: isFiltered,
             ),
-            data: (_) {
-              if (documentsAsync.isReloading) {
-                return const SalesLoadingState();
-              }
-              return _SalesDocumentsTableBody(
-                config: config,
-                items: paginated.items,
-                statusOptions: statusOptions,
-                isFiltered: isFiltered,
-              );
-            },
           ),
           const Divider(height: 1, color: salesCardBorder),
           SalesPaginationRow(scope: config.scope),

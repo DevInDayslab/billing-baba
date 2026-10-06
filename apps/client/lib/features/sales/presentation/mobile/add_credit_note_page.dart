@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
@@ -13,6 +14,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dr
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
@@ -20,6 +22,8 @@ import 'package:billing_baba/shared/widgets/mobile/forms/mobile_forms.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MobileAddCreditNotePage extends ConsumerStatefulWidget {
   const MobileAddCreditNotePage({
@@ -38,7 +42,8 @@ class MobileAddCreditNotePage extends ConsumerStatefulWidget {
 
 class _MobileAddCreditNotePageState
     extends ConsumerState<MobileAddCreditNotePage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.creditNote;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.creditNote;
   late final String _sessionKey;
   late final TextEditingController _phoneController;
   late final TextEditingController _descriptionController;
@@ -129,7 +134,9 @@ class _MobileAddCreditNotePageState
     final error = await _notifier().save();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final form = _form();
@@ -182,9 +189,15 @@ class _MobileAddCreditNotePageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Return No.',
-            documentNumberValue:
-                form.returnNo.isEmpty ? 'Auto' : form.returnNo,
-            documentNumberIsPlaceholder: form.returnNo.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: form.documentId,
+              currentNumber: form.returnNo,
+              preview: watchDocumentNumberPreview(
+                ref,
+                SalesConstants.creditNoteSeries,
+              ),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.returnDate),
             dateIsPlaceholder: form.returnDate == null,
             onDateTap: () async {
@@ -232,8 +245,9 @@ class _MobileAddCreditNotePageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),
@@ -251,7 +265,7 @@ class _MobileAddCreditNotePageState
                 ? formatSaleSingleDate(form.originalInvoiceDate)
                 : 'Select date',
             isPlaceholder: form.originalInvoiceDate == null,
-            trailingIcon: Icons.calendar_today_outlined,
+            trailingIcon: LucideIcons.calendar,
             onTap: () async {
               final date = await showMobileDatePicker(
                 context,

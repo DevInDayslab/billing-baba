@@ -33,7 +33,7 @@ final class SaleReturnsProvider
   SaleReturns create() => SaleReturns();
 }
 
-String _$saleReturnsHash() => r'ab4da2ec22c69cd09b5e21ca50e6e040375f2dec';
+String _$saleReturnsHash() => r'309a01ed9832cee2003e3b8619823e1bd4c95ebb';
 
 abstract class _$SaleReturns extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -157,7 +157,7 @@ final class FilteredSaleReturnsProvider
 }
 
 String _$filteredSaleReturnsHash() =>
-    r'6b0380b9eab4b08dcfee494c5c795032bf29f08f';
+    r'124dcf472f928264511788353bbed248eaa55965';
 
 @ProviderFor(paginatedSaleReturns)
 final paginatedSaleReturnsProvider = PaginatedSaleReturnsProvider._();

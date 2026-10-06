@@ -3,6 +3,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -313,7 +314,9 @@ List<String> saleOrderFirmFilterOptions(Ref ref) {
 List<String> saleOrderUserFilterOptions(Ref ref) {
   final authState = ref.watch(authProvider);
   final authUser = authState.session?.user;
-  final orders = ref.watch(saleOrdersProvider).value?.items ?? [];
+  final orders = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleOrdersProvider),
+  );
 
   return _withAllOption(
     'All Users',
@@ -328,7 +331,9 @@ List<String> saleOrderUserFilterOptions(Ref ref) {
 @riverpod
 List<String> saleOrderGodownFilterOptions(Ref ref) {
   final godownsAsync = ref.watch(inventoryGodownsProvider);
-  final orders = ref.watch(saleOrdersProvider).value?.items ?? [];
+  final orders = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleOrdersProvider),
+  );
 
   final godownNames = godownsAsync.maybeWhen(
     data: (godowns) => godowns.map((godown) => godown.name),
@@ -422,7 +427,9 @@ class SaleOrders extends _$SaleOrders {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(() async {
       final allOrders = await _fetchAllOrders();
       return PaginatedSaleInvoices(
@@ -585,7 +592,9 @@ class SaleOrderFilters extends _$SaleOrderFilters {
 
 @riverpod
 List<SaleInvoiceModel> filteredSaleOrders(Ref ref) {
-  final allOrders = ref.watch(saleOrdersProvider).value?.items ?? [];
+  final allOrders = saleInvoiceItemsFromPaginatedAsync(
+    ref.watch(saleOrdersProvider),
+  );
   final filters = ref.watch(saleOrderFiltersProvider);
   return applySaleOrderClientFilters(allOrders, filters);
 }

@@ -4,6 +4,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
 import 'package:billing_baba/features/business/utils/edit_business_profile_validator.dart';
+import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -82,6 +83,7 @@ class EditBusinessProfileForm extends _$EditBusinessProfileForm {
       final updated = await ref
           .read(businessProfileProvider.notifier)
           .updateProfile(input);
+      ref.invalidate(companyDirectoryProvider);
       state = state.copyWith(isSubmitting: false);
       return updated;
     } on ApiValidationException catch (e) {

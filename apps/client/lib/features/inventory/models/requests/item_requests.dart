@@ -430,6 +430,7 @@ class CreateItemLocationRecordRequest {
     this.rack,
     this.shelf,
     this.photoUrl,
+    this.employeeLabel,
   });
 
   final String itemId;
@@ -437,6 +438,7 @@ class CreateItemLocationRecordRequest {
   final String? rack;
   final String? shelf;
   final String? photoUrl;
+  final String? employeeLabel;
 
   Map<String, dynamic> toJson() => {
     'item_id': itemId,
@@ -444,6 +446,8 @@ class CreateItemLocationRecordRequest {
     if (rack != null) 'rack': rack,
     if (shelf != null) 'shelf': shelf,
     if (photoUrl != null) 'photo_url': photoUrl,
+    if (employeeLabel != null && employeeLabel!.isNotEmpty)
+      'employee_label': employeeLabel,
   };
 }
 
@@ -453,12 +457,14 @@ class UpdateItemLocationRecordRequest {
     this.rack,
     this.shelf,
     this.photoUrl,
+    this.employeeLabel,
   });
 
   final String? godownId;
   final String? rack;
   final String? shelf;
   final String? photoUrl;
+  final String? employeeLabel;
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -466,6 +472,9 @@ class UpdateItemLocationRecordRequest {
     if (rack != null) json['rack'] = rack;
     if (shelf != null) json['shelf'] = shelf;
     if (photoUrl != null) json['photo_url'] = photoUrl;
+    if (employeeLabel != null && employeeLabel!.isNotEmpty) {
+      json['employee_label'] = employeeLabel;
+    }
     return json;
   }
 }

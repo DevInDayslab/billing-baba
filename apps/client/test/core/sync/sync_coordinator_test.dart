@@ -392,7 +392,9 @@ void main() {
       payload: {'name': 'A', 'mobile': '9000000000', 'party_type': 'customer'},
     );
 
-    await db.into(db.partiesLocal).insert(
+    await db
+        .into(db.partiesLocal)
+        .insert(
           PartiesLocalCompanion.insert(
             id: '00000000-0000-0000-0000-0000000000p1',
             businessId: 'biz-1',

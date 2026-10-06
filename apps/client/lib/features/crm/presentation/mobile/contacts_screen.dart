@@ -6,6 +6,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileContactsScreen extends ConsumerWidget {
   const MobileContactsScreen({super.key});
 
@@ -31,7 +33,7 @@ class MobileContactsScreen extends ConsumerWidget {
             return const MobileEmptyState(
               title: 'No contacts yet',
               message: 'Contacts from CRM will appear here.',
-              icon: Icons.contacts_outlined,
+              icon: LucideIcons.contact,
             );
           }
 
@@ -58,10 +60,13 @@ class MobileContactsScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       [
-                        contact.phone,
-                        contact.email,
-                        contact.accountName,
-                      ].whereType<String>().where((v) => v.isNotEmpty).join(' · '),
+                            contact.phone,
+                            contact.email,
+                            contact.accountName,
+                          ]
+                          .whereType<String>()
+                          .where((v) => v.isNotEmpty)
+                          .join(' · '),
                     ),
                   ),
                 );

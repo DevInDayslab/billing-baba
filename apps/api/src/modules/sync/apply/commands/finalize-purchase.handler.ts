@@ -1,12 +1,12 @@
-import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../../../../db/client';
 import { purchaseDocuments } from '../../../../db/schema/purchases/tables';
 import { AppError } from '../../../../shared/errors/app-error';
 import { PurchaseDocumentRepository } from '../../../purchases/purchase-document.repository';
+import { finalizePurchasePaymentBodySchema } from '../../../purchases/purchase-document.schema';
 import { finalizePurchaseDocument } from '../../../purchases/purchase-finalize.service';
 import type { FinalizePurchasePaymentInput } from '../../../purchases/purchase-finalize-payment.service';
-import { finalizePurchasePaymentBodySchema } from '../../../purchases/purchase-document.schema';
 import type {
   CommandApplyOutcome,
   CommandHandler,

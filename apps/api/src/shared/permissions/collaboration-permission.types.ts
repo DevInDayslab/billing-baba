@@ -1,11 +1,6 @@
 import type { CollaborationRole } from '../../modules/collaboration/collaboration.types';
 
-export type PermissionAction =
-  | 'view'
-  | 'create'
-  | 'edit'
-  | 'share'
-  | 'delete';
+export type PermissionAction = 'view' | 'create' | 'edit' | 'share' | 'delete';
 
 export type PermissionLevel = 'allowed' | 'denied' | 'not_applicable';
 

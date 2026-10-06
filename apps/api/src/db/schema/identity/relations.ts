@@ -3,8 +3,8 @@ import { businesses } from '../business/tables';
 import {
   accounts,
   attendanceRecords,
-  deviceTrustTokens,
   devices,
+  deviceTrustTokens,
   refreshTokens,
   users,
 } from './tables';

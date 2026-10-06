@@ -10,6 +10,8 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_p
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 const _fieldBorder = Color(0xFFE0E0E0);
 const _saveBlue = AppColors.primary;
 
@@ -351,7 +353,9 @@ class _PartyRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: isSelected ? _saveBlue.withValues(alpha: 0.06) : Colors.transparent,
+      color: isSelected
+          ? _saveBlue.withValues(alpha: 0.06)
+          : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -393,7 +397,7 @@ class _PartyRow extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: AppColors.textSecondary.withValues(alpha: 0.55),
               ),
             ],

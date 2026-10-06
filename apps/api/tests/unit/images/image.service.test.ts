@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
-import { ImageService } from '../../../src/modules/images/image.service';
 import type { ImageVariantRepository } from '../../../src/modules/images/image.repository';
+import { ImageService } from '../../../src/modules/images/image.service';
 import type { MediaProcessingService } from '../../../src/modules/media-processing/media-processing.service';
 import type { StorageService } from '../../../src/modules/storage/storage.service';
 import type { StorageAsset } from '../../../src/modules/storage/storage.types';

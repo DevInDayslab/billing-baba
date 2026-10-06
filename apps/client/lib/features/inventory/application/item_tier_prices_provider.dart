@@ -19,7 +19,10 @@ class ItemTierPrices extends _$ItemTierPrices {
     return state.value?[itemId] ?? const {};
   }
 
-  Future<void> setTierPrices(String itemId, Map<String, double> tierPrices) async {
+  Future<void> setTierPrices(
+    String itemId,
+    Map<String, double> tierPrices,
+  ) async {
     final service = await ref.read(inventoryServiceProvider.future);
     await service.replaceItemTierPrices(itemId, tierPrices);
     final current = Map<String, Map<String, double>>.from(state.value ?? {});

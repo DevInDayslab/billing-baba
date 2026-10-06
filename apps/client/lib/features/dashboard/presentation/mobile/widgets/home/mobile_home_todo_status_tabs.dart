@@ -20,6 +20,7 @@ class MobileHomeTodoStatusTabs extends StatelessWidget {
     (label: 'Today', chip: DashboardTodoStatusChip.today),
     (label: 'Overdue', chip: DashboardTodoStatusChip.overdue),
     (label: 'Pending', chip: DashboardTodoStatusChip.pending),
+    (label: 'Completed', chip: DashboardTodoStatusChip.completed),
   ];
 
   int get _selectedIndex {
@@ -76,8 +77,7 @@ class MobileHomeTodoStatusTabs extends StatelessWidget {
                             isSelected: selectedIndex == i,
                             activeColor: primary,
                             badgeCount:
-                                _tabs[i].chip ==
-                                    DashboardTodoStatusChip.overdue
+                                _tabs[i].chip == DashboardTodoStatusChip.overdue
                                 ? overdueCount
                                 : 0,
                             onTap: () => onChanged(_tabs[i].chip),

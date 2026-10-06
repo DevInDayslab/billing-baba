@@ -11,7 +11,7 @@ const inventoryListHeaderHeight = 44.0;
 const inventoryListHeaderCompactHeight = 30.0;
 
 /// Fixed width for the trailing numeric column in left-panel lists (quantity, price).
-const inventoryListTrailingColumnWidth = 100.0;
+const inventoryListTrailingColumnWidth = 86.0;
 
 class InventoryListHeader extends StatelessWidget {
   const InventoryListHeader({
@@ -20,6 +20,7 @@ class InventoryListHeader extends StatelessWidget {
     this.showColumnSeparators = true,
     this.dividerAfterColumnIndex,
     this.height = inventoryListHeaderHeight,
+    this.labelStyle,
     super.key,
   });
 
@@ -31,6 +32,7 @@ class InventoryListHeader extends StatelessWidget {
   /// column at this index (e.g. `0` between the first and second columns).
   final int? dividerAfterColumnIndex;
   final double height;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,8 @@ class InventoryListHeader extends StatelessWidget {
           ? const SizedBox(width: 28)
           : const SizedBox.shrink(),
       children: [
-        for (final column in columns) _HeaderCell(column: column),
+        for (final column in columns)
+          _HeaderCell(column: column, labelStyle: labelStyle),
       ],
     );
 
@@ -201,9 +204,13 @@ class InventoryListRowLayout extends StatelessWidget {
 }
 
 class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({required this.column});
+  const _HeaderCell({
+    required this.column,
+    this.labelStyle,
+  });
 
   final InventoryListColumn column;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -214,6 +221,7 @@ class _HeaderCell extends StatelessWidget {
             child: _SortableHeaderContent(
               column: column,
               alignEnd: column.alignEnd,
+              labelStyle: labelStyle,
             ),
           ),
           const SizedBox(width: 4),
@@ -232,6 +240,7 @@ class _HeaderCell extends StatelessWidget {
           child: _SortableHeaderContent(
             column: column,
             alignEnd: column.alignEnd,
+            labelStyle: labelStyle,
           ),
         ),
         if (column.showFilter) ...[
@@ -251,17 +260,19 @@ class _SortableHeaderContent extends StatelessWidget {
   const _SortableHeaderContent({
     required this.column,
     this.alignEnd = false,
+    this.labelStyle,
   });
 
   final InventoryListColumn column;
   final bool alignEnd;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
     final label = Text(
       column.label,
       textAlign: alignEnd ? TextAlign.right : TextAlign.left,
-      style: InventoryStyles.listHeaderStyle,
+      style: labelStyle ?? InventoryStyles.listHeaderStyle,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );

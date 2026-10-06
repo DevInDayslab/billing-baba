@@ -1,9 +1,9 @@
+import type { CommandHandler } from './command.types';
 import { finalizeCreditNoteHandler } from './finalize-credit-note.handler';
 import { finalizeDebitNoteHandler } from './finalize-debit-note.handler';
 import { finalizePurchaseHandler } from './finalize-purchase.handler';
 import { finalizeSaleHandler } from './finalize-sale.handler';
 import { stockAdjustmentHandler } from './stock-adjustment.handler';
-import type { CommandHandler } from './command.types';
 
 export const SUPPORTED_SYNC_COMMAND_NAMES = [
   'finalize_sale',

@@ -11,11 +11,11 @@ import {
 } from './apply/command-ack.repository';
 import { CommandApplier } from './apply/commands/command-applier';
 import { MutationAckRepository } from './apply/mutation-ack.repository';
+import { RowApplier } from './apply/row-applier';
 import {
   isPullOnlyRowEntity,
   isRegisteredRowEntity,
 } from './apply/row-entities';
-import { RowApplier } from './apply/row-applier';
 import { SYNC_MAX_PUSH_MUTATIONS } from './sync.constants';
 import { syncBatchTooLarge } from './sync.errors';
 import type { PushBody } from './sync.schema';
@@ -179,11 +179,7 @@ export class PushService {
 
       if (
         access &&
-        !canSyncRowMutation(
-          access,
-          mutation.entity_type,
-          mutation.operation,
-        )
+        !canSyncRowMutation(access, mutation.entity_type, mutation.operation)
       ) {
         errors.push({
           mutation_id: mutation.mutation_id,

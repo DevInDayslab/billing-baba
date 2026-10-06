@@ -46,15 +46,16 @@ SaleLineItem preserveCatalogFieldsOnStaleLineUpdate(
     return incoming;
   }
 
-  final preservePrice = !incoming.priceManuallyOverridden &&
+  final preservePrice =
+      !incoming.priceManuallyOverridden &&
       (current.priceManuallyOverridden || incoming.pricePerUnit == 0);
 
   return incoming.copyWith(
     itemId: current.itemId,
     catalogUnitPrice: current.catalogUnitPrice,
     pricePerUnit: preservePrice ? current.pricePerUnit : incoming.pricePerUnit,
-    priceManuallyOverridden: incoming.priceManuallyOverridden ||
-        current.priceManuallyOverridden,
+    priceManuallyOverridden:
+        incoming.priceManuallyOverridden || current.priceManuallyOverridden,
     unit: incoming.unit == 'NONE' && current.unit != 'NONE'
         ? current.unit
         : incoming.unit,

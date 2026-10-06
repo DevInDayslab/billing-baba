@@ -1,11 +1,11 @@
 export {
-  IMAGE_VARIANTS,
-  IMAGE_VARIANT_MAX_EDGE,
-  IMAGE_WEBP_QUALITY,
   IMAGE_JPEG_QUALITY,
+  IMAGE_VARIANT_MAX_EDGE,
+  IMAGE_VARIANTS,
+  IMAGE_WEBP_QUALITY,
+  type ImageVariant,
   isSourceImageMimeType,
   mimeForFormat as imageMimeForFormat,
-  type ImageVariant,
   type SourceImageMimeType,
 } from '../media-processing/image/image.constants';
 

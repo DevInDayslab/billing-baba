@@ -18,6 +18,8 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddExpensePage extends ConsumerStatefulWidget {
   const MobileAddExpensePage({super.key, this.expenseId});
 
@@ -89,9 +91,11 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
   Future<void> _addLine(AddExpenseForm notifier) async {
     final result = await pickMobileDocumentItem(context);
     if (result == null) return;
-    final items = ref.read(
-      addExpenseFormProvider(expenseId: widget.expenseId),
-    ).items;
+    final items = ref
+        .read(
+          addExpenseFormProvider(expenseId: widget.expenseId),
+        )
+        .items;
     final index = items.isEmpty ? 0 : items.length - 1;
     final line = items[index];
     notifier.updateLineItem(
@@ -223,7 +227,7 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
                 label: 'Time',
                 value: formatSaleTime(form.expenseTime),
                 isPlaceholder: form.expenseTime == null,
-                trailingIcon: Icons.schedule_outlined,
+                trailingIcon: LucideIcons.clock,
                 onTap: () async {
                   final picked = await showTimePicker(
                     context: context,
@@ -294,8 +298,9 @@ class _MobileAddExpensePageState extends ConsumerState<MobileAddExpensePage> {
                   name: item.itemName,
                   qtyLabel:
                       '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
-                  amountLabel:
-                      MobileDocumentItemsSection.formatAmount(item.amount),
+                  amountLabel: MobileDocumentItemsSection.formatAmount(
+                    item.amount,
+                  ),
                 ),
             ],
             onAddItems: () => unawaited(_addLine(notifier)),

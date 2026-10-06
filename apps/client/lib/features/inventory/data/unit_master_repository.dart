@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/inventory/default_inventory_units.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
 import 'package:billing_baba/features/inventory/models/dto/pagination_meta_dto.dart';
@@ -175,6 +176,11 @@ class UnitMasterRepository {
   }
 
   Future<void> _hydrateIfEmpty(String businessId) async {
+    if (businessId == 'dev-business' || businessId == 'local-business') {
+      await _ensureDefaultLocalUnits(businessId);
+      return;
+    }
+
     final count = await _local.countActive(businessId);
     if (count > 0) return;
     try {
@@ -204,7 +210,30 @@ class UnitMasterRepository {
         page += 1;
       }
     } on Object {
-      // Offline / empty — leave empty.
+      // Offline / empty — seed defaults below.
+    }
+
+    if (await _local.countActive(businessId) == 0) {
+      await _ensureDefaultLocalUnits(businessId);
+    }
+  }
+
+  Future<void> _ensureDefaultLocalUnits(String businessId) async {
+    if (await _local.countActive(businessId) > 0) return;
+    final now = DateTime.now().toUtc();
+    for (final seed in defaultInventoryUnitSeeds) {
+      await _local.upsertRow(
+        id: seed.id,
+        businessId: businessId,
+        name: seed.fullName,
+        shortName: seed.shortName,
+        syncVersion: 0,
+        createdAt: now,
+        updatedAt: now,
+        isSystem: true,
+        isActive: true,
+        deviceId: _deviceIdReader?.call(),
+      );
     }
   }
 

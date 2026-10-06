@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Shows a compact, dropdown/spinner-style dialog for searchable selection.
 Future<T?> showMobileSelectSpinnerDialog<T>({
   required BuildContext context,
@@ -70,7 +72,7 @@ class MobileSelectSpinnerHeader extends StatelessWidget {
           ),
           IconButton(
             onPressed: onClose,
-            icon: const Icon(Icons.close_rounded),
+            icon: const Icon(LucideIcons.x),
             visualDensity: VisualDensity.compact,
           ),
         ],

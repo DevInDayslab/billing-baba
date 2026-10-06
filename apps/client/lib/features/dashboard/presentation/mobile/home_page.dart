@@ -16,6 +16,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// Purple-themed mobile home with Business Overview, Transactions, and Alerts.
+///
+/// App header stays pinned (like Items). Search + home tabs scroll with each
+/// tab's content inside that tab's [CustomScrollView].
 class MobileHomePage extends ConsumerStatefulWidget {
   const MobileHomePage({super.key});
 
@@ -68,6 +71,29 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
     ref.read(mobileHomeControllerProvider.notifier).setView(view);
   }
 
+  Widget _buildScrollChrome({
+    required MobileHomeView activeView,
+    required int alertsBadge,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        MobileHomeSearchBar(
+          controller: _searchController,
+          onChanged: ref.read(mobileHomeControllerProvider.notifier).setSearch,
+          hint: activeView == MobileHomeView.transactionDetails
+              ? 'Search by item, party or number'
+              : 'Search transactions, parties, invoices...',
+        ),
+        MobileHomeTabBar(
+          activeView: activeView,
+          onChanged: _onViewChanged,
+          alertsBadgeCount: alertsBadge,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeState = ref.watch(mobileHomeControllerProvider);
@@ -80,6 +106,13 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
       _syncSearchBarFromController();
     });
 
+    // Fresh chrome per tab so AnimatedSwitcher never parents the same element
+    // twice during the cross-fade.
+    Widget chromeFor(MobileHomeView view) => _buildScrollChrome(
+      activeView: view,
+      alertsBadge: alertsBadge,
+    );
+
     return MobilePlatformScope(
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: AppTheme.lightSystemUi,
@@ -91,47 +124,23 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                 color: AppColors.surface,
                 child: SafeArea(
                   bottom: false,
-                  child: Column(
-                    children: [
-                      MobileAppHeader(
-                        onBusinessTap: () =>
-                            context.push(AppRoutes.businessList),
-                        onSettingsTap: () => context.push(AppRoutes.settings),
-                        onNotificationTap: () =>
-                            context.push(AppRoutes.notifications),
-                      ),
-                      MobileHomeSearchBar(
-                        controller: _searchController,
-                        onChanged: ref
-                            .read(mobileHomeControllerProvider.notifier)
-                            .setSearch,
-                        hint: homeState.activeView ==
-                                MobileHomeView.transactionDetails
-                            ? 'Search by item, party or number'
-                            : 'Search transactions, parties, invoices...',
-                      ),
-                    ],
+                  child: MobileAppHeader(
+                    onBusinessTap: () => context.push(AppRoutes.businessList),
+                    onSettingsTap: () => context.push(AppRoutes.settings),
+                    onNotificationTap: () =>
+                        context.push(AppRoutes.notifications),
                   ),
                 ),
-              ),
-              MobileHomeTabBar(
-                activeView: homeState.activeView,
-                onChanged: _onViewChanged,
-                alertsBadgeCount: alertsBadge,
               ),
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 280),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
+                  // Only keep the active tab mounted so the shared search
+                  // TextEditingController is never attached to two fields.
                   layoutBuilder: (currentChild, previousChildren) {
-                    return Stack(
-                      alignment: Alignment.topCenter,
-                      children: [
-                        ...previousChildren,
-                        ?currentChild,
-                      ],
-                    );
+                    return currentChild ?? const SizedBox.shrink();
                   },
                   transitionBuilder: (child, animation) {
                     final enterOffset = Offset(0.14 * _slideDirection, 0);
@@ -153,20 +162,23 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
                     );
                   },
                   child: switch (homeState.activeView) {
-                    MobileHomeView.businessOverview => const Padding(
-                      key: ValueKey('overview'),
-                      padding: EdgeInsets.zero,
-                      child: MobileHomeBusinessOverviewTab(),
-                    ),
-                    MobileHomeView.transactionDetails => const Padding(
-                      key: ValueKey('transactions'),
-                      padding: EdgeInsets.zero,
-                      child: MobileHomeTransactionDetailsTab(),
-                    ),
-                    MobileHomeView.alerts => const Padding(
-                      key: ValueKey('alerts'),
-                      padding: EdgeInsets.zero,
-                      child: MobileHomeAlertsTab(),
+                    MobileHomeView.businessOverview =>
+                      MobileHomeBusinessOverviewTab(
+                        key: const ValueKey('overview'),
+                        scrollChrome: chromeFor(
+                          MobileHomeView.businessOverview,
+                        ),
+                      ),
+                    MobileHomeView.transactionDetails =>
+                      MobileHomeTransactionDetailsTab(
+                        key: const ValueKey('transactions'),
+                        scrollChrome: chromeFor(
+                          MobileHomeView.transactionDetails,
+                        ),
+                      ),
+                    MobileHomeView.alerts => MobileHomeAlertsTab(
+                      key: const ValueKey('alerts'),
+                      scrollChrome: chromeFor(MobileHomeView.alerts),
                     ),
                   },
                 ),

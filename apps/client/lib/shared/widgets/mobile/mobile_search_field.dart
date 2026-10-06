@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mobile-styled search field for list and picker screens.
 class MobileSearchField extends StatefulWidget {
@@ -76,7 +77,7 @@ class _MobileSearchFieldState extends State<MobileSearchField> {
           color: AppColors.textSecondary,
         ),
         prefixIcon: const Icon(
-          Icons.search_rounded,
+          LucideIcons.search,
           color: AppColors.textSecondary,
           size: AppIconSize.lg,
         ),
@@ -84,7 +85,7 @@ class _MobileSearchFieldState extends State<MobileSearchField> {
             ? IconButton(
                 tooltip: 'Clear',
                 onPressed: _clear,
-                icon: const Icon(Icons.close_rounded, size: AppIconSize.md),
+                icon: const Icon(LucideIcons.x, size: AppIconSize.md),
               )
             : null,
         filled: true,

@@ -9,8 +9,6 @@ import {
 } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
 import { expenseCategories } from '../../db/schema/purchases/tables';
-import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
-import { ensureSystemExpenseCategories } from '../purchases/expense-sync.service';
 import {
   DEV_BUSINESS_ADDRESS,
   DEV_BUSINESS_GSTIN,
@@ -18,6 +16,8 @@ import {
   DEV_BUSINESS_PHONE,
   DEV_BUSINESS_STATE_CODE,
 } from '../../shared/dev-demo.constants';
+import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
+import { ensureSystemExpenseCategories } from '../purchases/expense-sync.service';
 import type { AccountRecord, BusinessMembership } from './auth.types';
 
 export class AuthRepository {

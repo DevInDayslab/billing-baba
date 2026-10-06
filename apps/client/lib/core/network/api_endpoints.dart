@@ -3,6 +3,8 @@ abstract final class ApiEndpoints {
   static const auth = '/api/v1/auth';
   static const businesses = '/api/v1/businesses';
   static String business(String id) => '$businesses/$id';
+  static String businessCancelDeletion(String id) =>
+      '${business(id)}/cancel-deletion';
   static const businessProfile = '/api/v1/business/profile';
   static const businessCommerceSettings = '/api/v1/business/commerce-settings';
   static const businessLogo = '/api/v1/business/logo';
@@ -72,7 +74,8 @@ abstract final class ApiEndpoints {
   static String inventoryItem(String id) => '$inventoryItems/$id';
   static String inventoryItemSuppliers(String itemId) =>
       '${inventoryItem(itemId)}/suppliers';
-  static String inventoryItemBom(String itemId) => '${inventoryItem(itemId)}/bom';
+  static String inventoryItemBom(String itemId) =>
+      '${inventoryItem(itemId)}/bom';
   static String inventoryItemImages(String itemId) =>
       '${inventoryItem(itemId)}/images';
   static String inventoryItemImage(String itemId, String imageId) =>
@@ -118,6 +121,8 @@ abstract final class ApiEndpoints {
   static const inventoryItemLocations = '$inventory/item-locations';
   static String inventoryItemLocation(String id) =>
       '$inventoryItemLocations/$id';
+  static String inventoryItemLocationHistory(String id) =>
+      '${inventoryItemLocation(id)}/history';
 
   static const inventoryStockLevels = '$inventory/stock-levels';
   static String inventoryStockLevel(String id) => '$inventoryStockLevels/$id';

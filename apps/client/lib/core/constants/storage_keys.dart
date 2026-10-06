@@ -21,6 +21,7 @@ abstract final class StorageKeys {
   static const partyListFilter = 'party_list_filter';
   static const selectedPartyId = 'selected_party_id';
   static const partyGroupNames = 'party_group_names';
+  static const partyDetailUpperPaneRatio = 'party_detail_upper_pane_ratio';
   static const localItemTierPrices = 'local_item_tier_prices';
   static const localItemSuppliers = 'local_item_suppliers';
 

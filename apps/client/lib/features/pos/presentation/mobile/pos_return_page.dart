@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 final _currencyFormat = NumberFormat.currency(
   locale: 'en_IN',
   symbol: '₹',
@@ -237,7 +239,10 @@ class _ReturnItemRow extends StatelessWidget {
           children: [
             Text(
               item.name,
-              style: AppTypography.inter(fontSize: AppTypography.bodySize, fontWeight: FontWeight.w600),
+              style: AppTypography.inter(
+                fontSize: AppTypography.bodySize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -254,7 +259,7 @@ class _ReturnItemRow extends StatelessWidget {
                   onPressed: returnQty > 0
                       ? () => onQtyChanged(returnQty - 1)
                       : null,
-                  icon: const Icon(Icons.remove_circle_outline),
+                  icon: const Icon(LucideIcons.circleMinus),
                 ),
                 Text(
                   '$returnQty',
@@ -267,7 +272,7 @@ class _ReturnItemRow extends StatelessWidget {
                   onPressed: returnQty < maxQty
                       ? () => onQtyChanged(returnQty + 1)
                       : null,
-                  icon: const Icon(Icons.add_circle_outline),
+                  icon: const Icon(LucideIcons.circlePlus),
                 ),
               ],
             ),

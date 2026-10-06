@@ -3,6 +3,7 @@ import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/models/create_business_input.dart';
+import 'package:billing_baba/features/business/utils/create_business_error_messages.dart';
 import 'package:billing_baba/features/business/utils/create_business_validator.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,13 +15,13 @@ class CreateBusinessFormState {
     this.isSubmitting = false,
     this.fieldErrors = const {},
     this.generalError,
-    this.showGenericErrorDialog = false,
+    this.showErrorDialog = false,
   });
 
   final bool isSubmitting;
   final Map<String, String> fieldErrors;
   final String? generalError;
-  final bool showGenericErrorDialog;
+  final bool showErrorDialog;
 
   String? errorFor(String field) => fieldErrors[field];
 
@@ -28,10 +29,10 @@ class CreateBusinessFormState {
     bool? isSubmitting,
     Map<String, String>? fieldErrors,
     String? generalError,
-    bool? showGenericErrorDialog,
+    bool? showErrorDialog,
     bool clearFieldErrors = false,
     bool clearGeneralError = false,
-    bool clearGenericDialog = false,
+    bool clearErrorDialog = false,
   }) {
     return CreateBusinessFormState(
       isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -41,9 +42,8 @@ class CreateBusinessFormState {
       generalError: clearGeneralError
           ? null
           : generalError ?? this.generalError,
-      showGenericErrorDialog:
-          !clearGenericDialog &&
-          (showGenericErrorDialog ?? this.showGenericErrorDialog),
+      showErrorDialog:
+          !clearErrorDialog && (showErrorDialog ?? this.showErrorDialog),
     );
   }
 }
@@ -57,12 +57,22 @@ class CreateBusinessForm extends _$CreateBusinessForm {
     state = state.copyWith(
       clearFieldErrors: true,
       clearGeneralError: true,
-      clearGenericDialog: true,
+      clearErrorDialog: true,
     );
   }
 
-  void acknowledgeGenericDialog() {
-    state = state.copyWith(clearGenericDialog: true);
+  void acknowledgeErrorDialog() {
+    state = state.copyWith(clearErrorDialog: true);
+  }
+
+  void _failSubmit(Object error, {Map<String, String>? fieldErrors}) {
+    final message = CreateBusinessErrorMessages.fromError(error);
+    state = state.copyWith(
+      isSubmitting: false,
+      fieldErrors: fieldErrors ?? const {},
+      generalError: fieldErrors == null || fieldErrors.isEmpty ? message : null,
+      showErrorDialog: fieldErrors == null || fieldErrors.isEmpty,
+    );
   }
 
   Future<BusinessModel?> submit(CreateBusinessInput input) async {
@@ -73,7 +83,7 @@ class CreateBusinessForm extends _$CreateBusinessForm {
       state = state.copyWith(
         fieldErrors: clientErrors,
         clearGeneralError: true,
-        clearGenericDialog: true,
+        clearErrorDialog: true,
       );
       return null;
     }
@@ -82,7 +92,7 @@ class CreateBusinessForm extends _$CreateBusinessForm {
       isSubmitting: true,
       clearFieldErrors: true,
       clearGeneralError: true,
-      clearGenericDialog: true,
+      clearErrorDialog: true,
     );
 
     try {
@@ -95,14 +105,19 @@ class CreateBusinessForm extends _$CreateBusinessForm {
       state = state.copyWith(
         isSubmitting: false,
         fieldErrors: e.fieldErrors,
+        clearGeneralError: true,
+        clearErrorDialog: true,
       );
       return null;
-    } on BusinessOfflineException {
+    } on BusinessOfflineException catch (e) {
       state = state.copyWith(
         isSubmitting: false,
-        generalError:
-            'You are offline. Business creation has been queued and will sync when you reconnect.',
+        generalError: CreateBusinessErrorMessages.fromError(e),
+        showErrorDialog: false,
       );
+      return null;
+    } on BusinessSelectionFailed catch (e) {
+      _failSubmit(e);
       return null;
     } on DioException catch (e) {
       final validation = ApiErrorParser.parseValidation(e);
@@ -110,19 +125,15 @@ class CreateBusinessForm extends _$CreateBusinessForm {
         state = state.copyWith(
           isSubmitting: false,
           fieldErrors: validation.fieldErrors,
+          clearGeneralError: true,
+          clearErrorDialog: true,
         );
         return null;
       }
-      state = state.copyWith(
-        isSubmitting: false,
-        showGenericErrorDialog: true,
-      );
+      _failSubmit(e);
       return null;
-    } on Object catch (_) {
-      state = state.copyWith(
-        isSubmitting: false,
-        showGenericErrorDialog: true,
-      );
+    } on Object catch (e) {
+      _failSubmit(e);
       return null;
     }
   }

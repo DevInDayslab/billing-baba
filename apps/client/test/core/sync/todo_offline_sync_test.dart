@@ -163,13 +163,16 @@ void main() {
     await storage.write(
       '${StorageKeys.dashboardTasks}_biz-1',
       '[{"id":"legacy-1","title":"Legacy task","is_completed":false,'
-      '"created_at":"2026-01-01T00:00:00.000","updated_at":"2026-01-01T00:00:00.000"}]',
+          '"created_at":"2026-01-01T00:00:00.000","updated_at":"2026-01-01T00:00:00.000"}]',
     );
 
     final tasks = await repo.listActive();
     expect(tasks.map((t) => t.title), ['Legacy task']);
     expect(storage.read('${StorageKeys.dashboardTasks}_biz-1'), isNull);
-    expect(storage.read(StorageKeys.dashboardTasksMigratedFor('biz-1')), 'true');
+    expect(
+      storage.read(StorageKeys.dashboardTasksMigratedFor('biz-1')),
+      'true',
+    );
 
     final pending = await queue.listPending();
     expect(pending, hasLength(1));

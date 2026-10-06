@@ -68,8 +68,7 @@ class ItemTierPriceMasterRepository {
 
     final existing = await _local.listActiveRowsForItem(businessId, itemId);
     final existingByTierKey = {
-      for (final row in existing)
-        PriceTier.fromApiTier(row.pricingTier): row,
+      for (final row in existing) PriceTier.fromApiTier(row.pricingTier): row,
     };
     final now = DateTime.now().toUtc();
 
@@ -165,8 +164,7 @@ class ItemTierPriceMasterRepository {
       return;
     }
 
-    final raw =
-        _storage.read('${StorageKeys.localItemTierPrices}_$businessId');
+    final raw = _storage.read('${StorageKeys.localItemTierPrices}_$businessId');
     if (raw == null || raw.isEmpty) {
       await _storage.write(migratedKey, 'true');
       return;

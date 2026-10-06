@@ -14,6 +14,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile manufacturing / BOM editor for Add Item.
 class MobileItemManufacturingScreen extends ConsumerStatefulWidget {
   const MobileItemManufacturingScreen({super.key});
@@ -39,7 +41,8 @@ class _MobileItemManufacturingScreenState
   Widget build(BuildContext context) {
     final form = ref.watch(addItemFormProvider);
     final notifier = ref.read(addItemFormProvider.notifier);
-    final units = ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
+    final units =
+        ref.watch(inventoryUnitsProvider).value ?? const <InventoryUnit>[];
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(
@@ -94,7 +97,7 @@ class _MobileItemManufacturingScreenState
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: notifier.addRawMaterialRow,
-              icon: const Icon(Icons.add, size: 18),
+              icon: const Icon(LucideIcons.plus, size: 18),
               label: const Text('Add raw material'),
             ),
           ),
@@ -171,9 +174,11 @@ class _MobileItemManufacturingScreenState
                     Align(
                       alignment: Alignment.centerRight,
                       child: IconButton(
-                        onPressed: () =>
-                            notifier.removeAdditionalCost(row.id),
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => notifier.removeAdditionalCost(row.id),
+                        icon: const Icon(
+                          LucideIcons.trash2,
+                          color: Colors.red,
+                        ),
                       ),
                     ),
                   ],
@@ -185,7 +190,7 @@ class _MobileItemManufacturingScreenState
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: notifier.addAdditionalCost,
-              icon: const Icon(Icons.add, size: 18),
+              icon: const Icon(LucideIcons.plus, size: 18),
               label: const Text('Add additional cost'),
             ),
           ),
@@ -280,7 +285,7 @@ class _RawMaterialCard extends StatelessWidget {
               if (canRemove)
                 IconButton(
                   onPressed: onRemove,
-                  icon: const Icon(Icons.close, size: 20, color: Colors.red),
+                  icon: const Icon(LucideIcons.x, size: 20, color: Colors.red),
                 ),
             ],
           ),

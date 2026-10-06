@@ -5,22 +5,24 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style Online Store tab for mobile Add Item.
 class MobileAddItemOnlineStoreSection extends StatelessWidget {
   const MobileAddItemOnlineStoreSection({
     required this.itemType,
     required this.priceController,
-    required this.descriptionController,
     required this.onPriceChanged,
-    required this.onDescriptionChanged,
+    this.descriptionController,
+    this.onDescriptionChanged,
     super.key,
   });
 
   final ItemType itemType;
   final TextEditingController priceController;
-  final TextEditingController descriptionController;
   final ValueChanged<double> onPriceChanged;
-  final ValueChanged<String> onDescriptionChanged;
+  final TextEditingController? descriptionController;
+  final ValueChanged<String>? onDescriptionChanged;
 
   static final _decimalFormatter = FilteringTextInputFormatter.allow(
     RegExp(r'^\d*\.?\d*'),
@@ -33,9 +35,12 @@ class MobileAddItemOnlineStoreSection extends StatelessWidget {
     final priceLabel = _isProduct
         ? 'Online Store Item Price'
         : 'Online Store Service Price';
-    final descriptionLabel = _isProduct
-        ? 'Online Store Item Description'
-        : 'Online Store Service Description';
+    final serviceDescriptionController = descriptionController;
+    final serviceOnDescriptionChanged = onDescriptionChanged;
+    final showServiceDescription =
+        !_isProduct &&
+        serviceDescriptionController != null &&
+        serviceOnDescriptionChanged != null;
 
     return ColoredBox(
       color: AppColors.surface,
@@ -53,36 +58,40 @@ class MobileAddItemOnlineStoreSection extends StatelessWidget {
               controller: priceController,
               label: priceLabel,
               hint: priceLabel,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [_decimalFormatter],
               onChanged: (v) => onPriceChanged(double.tryParse(v) ?? 0),
               suffixIcon: Icon(
-                Icons.info_outline_rounded,
+                LucideIcons.info,
                 size: 18,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
               ),
             ),
-            const SizedBox(height: MobileAddItemTheme.fieldSpacing),
-            MobileAddItemField(
-              controller: descriptionController,
-              label: descriptionLabel,
-              hint: descriptionLabel,
-              maxLines: 4,
-              onChanged: onDescriptionChanged,
-              suffixIcon: Align(
-                alignment: Alignment.bottomRight,
-                widthFactor: 1,
-                heightFactor: 1,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8, right: 4),
-                  child: Icon(
-                    Icons.info_outline_rounded,
-                    size: 18,
-                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+            if (showServiceDescription) ...[
+              const SizedBox(height: MobileAddItemTheme.fieldSpacing),
+              MobileAddItemField(
+                controller: serviceDescriptionController,
+                label: 'Online Store Service Description',
+                hint: 'Online Store Service Description',
+                maxLines: 4,
+                onChanged: serviceOnDescriptionChanged,
+                suffixIcon: Align(
+                  alignment: Alignment.bottomRight,
+                  widthFactor: 1,
+                  heightFactor: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8, right: 4),
+                    child: Icon(
+                      LucideIcons.info,
+                      size: 18,
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),

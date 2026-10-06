@@ -10,14 +10,24 @@ import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_editor_dialog.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_empty_state.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-/// Todo tab — mobile home reminders and tasks.
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+/// Alerts / daily-todo tab — mobile home reminders and tasks.
+///
+/// [scrollChrome] (search + home tabs) scrolls with content, like Items.
 class MobileHomeAlertsTab extends ConsumerStatefulWidget {
-  const MobileHomeAlertsTab({super.key});
+  const MobileHomeAlertsTab({
+    required this.scrollChrome,
+    super.key,
+  });
+
+  final Widget scrollChrome;
 
   @override
   ConsumerState<MobileHomeAlertsTab> createState() =>
@@ -67,16 +77,89 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
     if (previous == null || !mounted) return;
     if (previous.isCompleted) return;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Reminder completed'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            unawaited(ref.read(tasksProvider.notifier).restore(previous));
-          },
-        ),
+    showTaskCompletionUndoRedoSnackBar(
+      context: context,
+      ref: ref,
+      snapshotBeforeComplete: previous,
+    );
+  }
+
+  Widget _sectionHeader({
+    required Color primary,
+    required int pendingCount,
+    required int overdueCount,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daily Todo',
+                  style: AppTypography.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    style: AppTypography.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                      height: 1.3,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '$pendingCount Pending',
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const TextSpan(text: '  •  '),
+                      TextSpan(
+                        text: '$overdueCount Overdue',
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Material(
+            color: primary,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: () => unawaited(_openEditor()),
+              borderRadius: BorderRadius.circular(12),
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  LucideIcons.plus,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -89,184 +172,130 @@ class _MobileHomeAlertsTabState extends ConsumerState<MobileHomeAlertsTab>
     final searchQuery = homeState.searchQuery.trim().toLowerCase();
     final tasksAsync = ref.watch(tasksProvider);
     final allTasks = tasksAsync.value ?? const <TaskModel>[];
-    final scopedTasks = DashboardTodoFilterLogic.applyScope(
+    final tasks = DashboardTodoFilterLogic.applyStatusFilters(
       allTasks,
       scope: DashboardTodoScopeFilter.all,
-    );
-    final tasks = DashboardTodoFilterLogic.applyStatusChip(
-      scopedTasks,
       chip: _statusChip,
     ).where((task) => _taskMatchesSearch(task, searchQuery)).toList();
     final summary = DashboardTodoFilterLogic.summaryCounts(allTasks);
     final overdueCount = DashboardTodoFilterLogic.overdueBadgeCount(allTasks);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.sm,
-            AppSpacing.lg,
-            AppSpacing.xs,
+    return RefreshIndicator(
+      onRefresh: _refreshTasks,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(child: widget.scrollChrome),
+          SliverToBoxAdapter(
+            child: _sectionHeader(
+              primary: primary,
+              pendingCount: summary.pending,
+              overdueCount: summary.overdue,
+            ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Todo',
-                      style: AppTypography.inter(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    RichText(
-                      text: TextSpan(
-                        style: AppTypography.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                          height: 1.3,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: '${summary.pending} Pending',
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const TextSpan(text: '  •  '),
-                          TextSpan(
-                            text: '${summary.overdue} Overdue',
-                            style: const TextStyle(
-                              color: AppColors.error,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
+          SliverToBoxAdapter(
+            child: MobileHomeTodoStatusTabs(
+              selected: _statusChip,
+              overdueCount: overdueCount,
+              onChanged: (value) => setState(() => _statusChip = value),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
+          ...tasksAsync.when(
+            loading: () => [
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator()),
               ),
-              Material(
-                color: primary,
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  onTap: () => unawaited(_openEditor()),
-                  borderRadius: BorderRadius.circular(12),
-                  child: const SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: Icon(
-                      Icons.add_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+            ],
+            error: (_, _) => [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: TextButton(
+                    onPressed: () => ref.invalidate(tasksProvider),
+                    child: const Text('Retry'),
                   ),
                 ),
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        MobileHomeTodoStatusTabs(
-          selected: _statusChip,
-          overdueCount: overdueCount,
-          onChanged: (value) => setState(() => _statusChip = value),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _refreshTasks,
-            child: tasksAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: [
-                  const SizedBox(height: 80),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => ref.invalidate(tasksProvider),
-                      child: const Text('Retry'),
+            data: (_) {
+              if (tasks.isEmpty) {
+                if (_statusChip == DashboardTodoStatusChip.pending &&
+                    searchQuery.isEmpty) {
+                  return [
+                    SliverToBoxAdapter(
+                      child: TaskEmptyState(
+                        onAdd: () => unawaited(_openEditor()),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              data: (_) {
-                if (tasks.isEmpty) {
-                  if (_statusChip == DashboardTodoStatusChip.pending &&
-                      searchQuery.isEmpty) {
-                    return ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        TaskEmptyState(
-                          onAdd: () => unawaited(_openEditor()),
-                        ),
-                      ],
-                    );
-                  }
-                  return ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      const SizedBox(height: 80),
-                      Center(
-                        child: Text(
-                          searchQuery.isNotEmpty
-                              ? 'No tasks match your search'
-                              : switch (_statusChip) {
-                                  DashboardTodoStatusChip.all =>
-                                    'No tasks yet',
-                                  DashboardTodoStatusChip.today =>
-                                    'Nothing due today',
-                                  DashboardTodoStatusChip.overdue =>
-                                    'No overdue tasks',
-                                  DashboardTodoStatusChip.pending =>
-                                    "You're all caught up!",
-                                },
-                          style: AppTypography.inter(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: MobileBottomNavigation.contentBottomPadding(
+                          context,
                         ),
                       ),
-                    ],
-                  );
+                    ),
+                  ];
                 }
+                return [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        searchQuery.isNotEmpty
+                            ? 'No tasks match your search'
+                            : switch (_statusChip) {
+                                DashboardTodoStatusChip.all => 'No tasks yet',
+                                DashboardTodoStatusChip.today =>
+                                  'Nothing due today',
+                                DashboardTodoStatusChip.overdue =>
+                                  'No overdue tasks',
+                                DashboardTodoStatusChip.pending =>
+                                  "You're all caught up!",
+                                DashboardTodoStatusChip.completed =>
+                                  'No completed tasks yet',
+                              },
+                        style: AppTypography.inter(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ];
+              }
 
-                return ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(),
+              return [
+                SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     AppSpacing.lg,
                     AppSpacing.xs,
                     AppSpacing.lg,
                     MobileBottomNavigation.contentBottomPadding(context),
                   ),
-                  itemCount: tasks.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return MobileHomeTodoTaskTile(
-                      key: ValueKey(task.id),
-                      task: task,
-                      onToggleComplete: () => unawaited(_toggleComplete(task)),
-                      onOpen: () => unawaited(_openEditor(editTask: task)),
-                    );
-                  },
-                );
-              },
-            ),
+                  sliver: SliverList.separated(
+                    itemCount: tasks.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      final task = tasks[index];
+                      return MobileHomeTodoTaskTile(
+                        key: ValueKey(task.id),
+                        task: task,
+                        onToggleComplete: () =>
+                            unawaited(_toggleComplete(task)),
+                        onOpen: () => unawaited(_openEditor(editTask: task)),
+                      );
+                    },
+                  ),
+                ),
+              ];
+            },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

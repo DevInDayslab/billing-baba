@@ -1,12 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
-import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
-import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
-import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
+import 'package:billing_baba/features/inventory/data/models/item_alternative_dto.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -70,48 +66,63 @@ class AlternativesSection extends ConsumerWidget {
     WidgetRef ref,
     List<dynamic> alternatives,
   ) {
+    if (alternatives.isEmpty) {
+      return _buildEmptyState(context, ref, alternatives);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (alternatives.isEmpty)
-          _buildEmptyState()
-        else
-          _buildAlternativesList(context, ref, alternatives),
+        _buildAlternativesList(context, ref, alternatives),
         const SizedBox(height: 16),
         _buildAddButton(context, ref, alternatives),
       ],
     );
   }
 
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            LucideIcons.arrowLeftRight,
-            size: 40,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'No alternatives added',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+  Widget _buildEmptyState(
+    BuildContext context,
+    WidgetRef ref,
+    List<dynamic> alternatives,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.arrowLeftRight,
+              size: 40,
+              color: Colors.grey.shade400,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Add items that can substitute this product',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
+            const SizedBox(height: 12),
+            const Text(
+              'No alternatives added',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              'Add items that can substitute this product',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildAddButton(
+              context,
+              ref,
+              alternatives,
+              centered: true,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -123,8 +134,8 @@ class AlternativesSection extends ConsumerWidget {
   ) {
     return Column(
       children: alternatives.map((alternative) {
-        final altItem = (alternative as dynamic).alternativeItem;
-        return _buildAlternativeCard(context, ref, alternative, altItem);
+        final dto = alternative as ItemAlternativeDto;
+        return _buildAlternativeCard(context, ref, dto, dto.alternativeItem);
       }).toList(),
     );
   }
@@ -132,17 +143,15 @@ class AlternativesSection extends ConsumerWidget {
   Widget _buildAlternativeCard(
     BuildContext context,
     WidgetRef ref,
-    dynamic alternative,
-    dynamic altItem,
+    ItemAlternativeDto alternative,
+    AlternativeItemDto altItem,
   ) {
-    final name = altItem.name as String;
-    final barcode = altItem.barcode as String?;
-    final brandName = altItem.brandName as String?;
-    final categoryName = altItem.categoryName as String?;
-    final salePrice = altItem.salePrice as double;
-    final stockQuantity = altItem.stockQuantity as double;
-    final alternativeItemId =
-        (alternative as dynamic).alternativeItemId as String;
+    final name = altItem.name;
+    final barcode = altItem.barcode;
+    final brandName = altItem.brandName;
+    final categoryName = altItem.categoryName;
+    final salePrice = altItem.salePrice;
+    final stockQuantity = altItem.stockQuantity;
 
     final subtitle = [
       ?brandName,
@@ -230,8 +239,7 @@ class AlternativesSection extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () =>
-                _confirmDelete(context, ref, alternativeItemId, name),
+            onPressed: () => _confirmDelete(context, ref, alternative),
             icon: Icon(
               LucideIcons.trash2,
               size: 16,
@@ -248,21 +256,25 @@ class AlternativesSection extends ConsumerWidget {
   Future<void> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
-    String alternativeItemId,
-    String itemName,
+    ItemAlternativeDto alternative,
   ) async {
+    final itemName = alternative.alternativeItem.name;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Remove Alternative'),
         content: Text('Remove "$itemName" from alternatives?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Remove'),
           ),
         ],
@@ -274,7 +286,10 @@ class AlternativesSection extends ConsumerWidget {
     try {
       await ref
           .read(itemAlternativesProvider(itemId!).notifier)
-          .removeAlternative(alternativeItemId);
+          .removeAlternative(
+            alternative.alternativeItemId,
+            relationId: alternative.id,
+          );
     } on InventoryOfflineException {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -286,6 +301,13 @@ class AlternativesSection extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
+      );
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not remove alternative. Please try again.'),
+        ),
       );
     }
   }
@@ -293,325 +315,60 @@ class AlternativesSection extends ConsumerWidget {
   Widget _buildAddButton(
     BuildContext context,
     WidgetRef ref,
-    List<dynamic> alternatives,
-  ) {
+    List<dynamic> alternatives, {
+    bool centered = false,
+  }) {
+    final button = AddAlternativeButton(
+      onPressed: () =>
+          _showAlternativeItemsPicker(context, ref, alternatives),
+    );
+
+    if (centered) return button;
+
     return Align(
       alignment: Alignment.centerLeft,
-      child: OutlinedButton.icon(
-        onPressed: () => _showAddAlternativeSheet(context, ref, alternatives),
-        icon: const Icon(LucideIcons.plus, size: 16),
-        label: const Text('Add Alternative'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          side: const BorderSide(color: _cardBorder),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
-      ),
+      child: button,
     );
   }
 
-  Future<void> _showAddAlternativeSheet(
+  Future<void> _showAlternativeItemsPicker(
     BuildContext context,
     WidgetRef ref,
     List<dynamic> alternatives,
   ) async {
-    await showModalBottomSheet<void>(
+    final existingIds = alternatives
+        .map((alt) => (alt as ItemAlternativeDto).alternativeItemId)
+        .toList();
+
+    final picked = await showAlternativeItemsPickerDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => _AddAlternativeSheet(
-        itemId: itemId!,
-        existingAlternatives: alternatives,
-      ),
+      ref: ref,
+      initialSelection: existingIds,
+      excludeItemId: itemId,
     );
 
-    ref.invalidate(itemAlternativesProvider(itemId!));
-  }
-}
+    if (picked == null || !context.mounted) return;
 
-class _AddAlternativeSheet extends ConsumerStatefulWidget {
-  const _AddAlternativeSheet({
-    required this.itemId,
-    required this.existingAlternatives,
-  });
-
-  final String itemId;
-  final List<dynamic> existingAlternatives;
-
-  @override
-  ConsumerState<_AddAlternativeSheet> createState() =>
-      _AddAlternativeSheetState();
-}
-
-class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final bottomPadding = mediaQuery.viewInsets.bottom;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottomPadding),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: mediaQuery.size.height * 0.75,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(),
-            const Divider(height: 1, color: _cardBorder),
-            _buildSearchField(),
-            const Divider(height: 1, color: _cardBorder),
-            Flexible(child: _buildItemsList()),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const Text(
-            'Add Alternative',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close, size: 20),
-            visualDensity: VisualDensity.compact,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchField() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: _searchController,
-        autofocus: true,
-        decoration: InputDecoration(
-          hintText: 'Search items...',
-          prefixIcon: const Icon(LucideIcons.search, size: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: _cardBorder),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: _cardBorder),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: AppColors.primary),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
-        ),
-        style: const TextStyle(fontSize: 13),
-        onChanged: (value) => setState(() => _searchQuery = value),
-      ),
-    );
-  }
-
-  Widget _buildItemsList() {
-    final itemsAsync = ref.watch(inventoryItemsProvider).itemsOnly;
-
-    return itemsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => const Center(
-        child: Text(
-          'Failed to load items',
-          style: TextStyle(fontSize: 13, color: AppColors.error),
-        ),
-      ),
-      data: (items) {
-        final existingIds = widget.existingAlternatives
-            .map((alt) => (alt as dynamic).alternativeItemId as String)
-            .toSet();
-
-        var filteredItems = items
-            .where(
-              (item) =>
-                  item.type == ItemType.product &&
-                  item.id != widget.itemId &&
-                  !existingIds.contains(item.id),
-            )
-            .toList();
-
-        if (_searchQuery.trim().isNotEmpty) {
-          final searchEngine = InventorySearchEngine.build(
-            items: filteredItems.map(
-              InventorySearchableFields.fromInventoryItem,
-            ),
-          );
-          filteredItems = searchEngine.searchItems(
-            filteredItems,
-            query: _searchQuery.trim(),
-          );
-        }
-
-        if (filteredItems.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Text(
-                _searchQuery.trim().isEmpty
-                    ? 'No items available'
-                    : 'No items found',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: filteredItems.length,
-          itemBuilder: (context, index) {
-            final item = filteredItems[index];
-            return _buildItemTile(item);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildItemTile(InventoryItem item) {
-    final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
-    final brands = ref.watch(inventoryBrandsProvider).value ?? [];
-
-    final categoryById = {for (final c in categories) c.id: c.name};
-    final brandById = {for (final b in brands) b.id: b.name};
-
-    final brandName = item.brandId != null ? brandById[item.brandId] : null;
-    final categoryName = item.categoryId != null
-        ? categoryById[item.categoryId]
-        : null;
-
-    final subtitle = [
-      ?brandName,
-      ?categoryName,
-    ].join(' · ');
-
-    final stockQty = item.quantity ?? 0;
-
-    return InkWell(
-      onTap: () => _addAlternative(item),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: _cardBorder)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  if (subtitle.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'Stock: ${stockQty.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                if (item.salePrice != null)
-                  Text(
-                    '₹${item.salePrice!.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _addAlternative(InventoryItem item) async {
     try {
       await ref
-          .read(itemAlternativesProvider(widget.itemId).notifier)
-          .addAlternative(item.id);
-
-      if (!mounted) return;
-      Navigator.of(context).pop();
+          .read(itemAlternativesProvider(itemId!).notifier)
+          .replaceAlternatives(picked);
     } on InventoryOfflineException {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Network unavailable. Please check your connection.'),
         ),
       );
     } on InventoryException catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add alternative: $e')),
+        SnackBar(content: Text('Failed to update alternatives: $e')),
       );
     }
   }

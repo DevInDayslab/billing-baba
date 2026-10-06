@@ -86,7 +86,7 @@ final class PurchaseBillsProvider
   PurchaseBills create() => PurchaseBills();
 }
 
-String _$purchaseBillsHash() => r'3e630906fcd3dd340ee4bcad9503e43af723318e';
+String _$purchaseBillsHash() => r'5141ddd372668a30484a819c6c9b947c326d2f57';
 
 abstract class _$PurchaseBills extends $AsyncNotifier<PaginatedPurchaseBills> {
   FutureOr<PaginatedPurchaseBills> build();

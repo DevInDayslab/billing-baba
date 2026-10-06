@@ -2,6 +2,8 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { expenseCategories } from '../../db/schema/purchases/tables';
 import { normalizeMoney } from '../inventory/inventory.utils';
+import { ExpenseRepository } from './expense.repository';
+import type { ExpenseRecord } from './expense.types';
 import {
   EXPENSE_SOURCE_TYPES,
   SYSTEM_EXPENSE_CATEGORIES,
@@ -11,8 +13,6 @@ import {
   postExpenseLedgerEntry,
   reverseExpenseLedgerEntry,
 } from './expense-ledger.service';
-import { ExpenseRepository } from './expense.repository';
-import type { ExpenseRecord } from './expense.types';
 
 type DbExecutor = Pick<
   Database,

@@ -1,45 +1,50 @@
-import { and, eq, ne, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, lte, ne, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { businesses } from '../../db/schema/business/tables';
 import { users } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
 import { expenseCategories } from '../../db/schema/purchases/tables';
-import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
 import {
   businessSettings,
   documentNumberSequences,
 } from '../../db/schema/settings/tables';
+import { seedWalkInPartyForBusiness } from '../../shared/parties/walk-in-party';
+import {
+  defaultPricingTierLabels,
+  PRICING_TIER_VALUES,
+} from '../../shared/pricing/pricing-tier';
+import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
 import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
 } from './business.schema';
-import type { BrandingKind } from './business-branding.constants';
 import type {
   BusinessDetail,
   BusinessListItem,
   BusinessProfile,
   CommerceSettings,
 } from './business.types';
-import { seedWalkInPartyForBusiness } from '../../shared/parties/walk-in-party';
-import {
-  defaultPricingTierLabels,
-  PRICING_TIER_VALUES,
-} from '../../shared/pricing/pricing-tier';
+import type { BrandingKind } from './business-branding.constants';
 import type { UpdateCommerceSettingsBody } from './business-commerce-settings.schema';
 
 export type BusinessListItemRow = BusinessListItem & {
   logoMediaAssetId: string | null;
 };
+
 import {
   currentFiscalYearLabel,
   resolveStateCode,
   resolveStateName,
 } from './business.utils';
 
+const BUSINESS_DELETION_GRACE_DAYS = 30;
+
 export class BusinessRepository {
   constructor(private readonly db: Database) {}
 
   async listByAccountId(accountId: string): Promise<BusinessListItemRow[]> {
+    await this.finalizeExpiredScheduledDeletions(accountId);
+
     const rows = await this.db
       .select({
         id: businesses.id,
@@ -52,6 +57,7 @@ export class BusinessRepository {
         address: businesses.address,
         logoUrl: businesses.logoUrl,
         logoMediaAssetId: businesses.logoMediaAssetId,
+        scheduledDeletionAt: businesses.scheduledDeletionAt,
       })
       .from(users)
       .innerJoin(businesses, eq(users.businessId, businesses.id))
@@ -81,7 +87,42 @@ export class BusinessRepository {
       is_shared: row.role !== 'owner',
       logo_url: row.logoUrl,
       logoMediaAssetId: row.logoMediaAssetId,
+      scheduled_deletion_at: row.scheduledDeletionAt?.toISOString() ?? null,
     }));
+  }
+
+  async finalizeExpiredScheduledDeletions(accountId: string): Promise<void> {
+    const now = new Date();
+    const candidates = await this.db
+      .select({
+        id: businesses.id,
+        updatedAt: businesses.updatedAt,
+        deletionRequestedAt: businesses.deletionRequestedAt,
+      })
+      .from(users)
+      .innerJoin(businesses, eq(users.businessId, businesses.id))
+      .where(
+        and(
+          eq(users.accountId, accountId),
+          eq(users.role, 'owner'),
+          eq(users.isActive, true),
+          eq(users.isDeleted, false),
+          eq(businesses.isDeleted, false),
+          isNotNull(businesses.scheduledDeletionAt),
+          lte(businesses.scheduledDeletionAt, now),
+        ),
+      );
+
+    for (const row of candidates) {
+      const hadActivity =
+        row.deletionRequestedAt != null &&
+        row.updatedAt.getTime() > row.deletionRequestedAt.getTime();
+      if (hadActivity) {
+        await this.clearScheduledDeletion(row.id);
+      } else {
+        await this.permanentlyDelete(row.id, accountId);
+      }
+    }
   }
 
   private async loadOwnerNamesByBusinessIds(
@@ -106,7 +147,14 @@ export class BusinessRepository {
     return map;
   }
 
-  async softDelete(businessId: string, accountId: string): Promise<boolean> {
+  async scheduleDeletion(
+    businessId: string,
+    accountId: string,
+  ): Promise<boolean> {
+    const now = new Date();
+    const scheduled = new Date(now);
+    scheduled.setDate(scheduled.getDate() + BUSINESS_DELETION_GRACE_DAYS);
+
     return this.db.transaction(async (tx) => {
       const [membership] = await tx
         .select({ role: users.role })
@@ -131,8 +179,91 @@ export class BusinessRepository {
       const [updated] = await tx
         .update(businesses)
         .set({
+          deletionRequestedAt: now,
+          scheduledDeletionAt: scheduled,
+          updatedAt: now,
+          syncVersion: sql`${businesses.syncVersion} + 1`,
+        })
+        .where(
+          and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+        )
+        .returning({ id: businesses.id });
+
+      return updated != null;
+    });
+  }
+
+  async cancelScheduledDeletion(
+    businessId: string,
+    accountId: string,
+  ): Promise<boolean> {
+    const [membership] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .innerJoin(businesses, eq(users.businessId, businesses.id))
+      .where(
+        and(
+          eq(users.businessId, businessId),
+          eq(users.accountId, accountId),
+          eq(users.isActive, true),
+          eq(users.isDeleted, false),
+          eq(businesses.isDeleted, false),
+          isNotNull(businesses.scheduledDeletionAt),
+        ),
+      )
+      .limit(1);
+
+    if (!membership) {
+      return false;
+    }
+
+    await this.clearScheduledDeletion(businessId);
+    return true;
+  }
+
+  private async clearScheduledDeletion(businessId: string): Promise<void> {
+    await this.db
+      .update(businesses)
+      .set({
+        deletionRequestedAt: null,
+        scheduledDeletionAt: null,
+        updatedAt: new Date(),
+        syncVersion: sql`${businesses.syncVersion} + 1`,
+      })
+      .where(eq(businesses.id, businessId));
+  }
+
+  async permanentlyDelete(
+    businessId: string,
+    accountId: string,
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const [membership] = await tx
+        .select({ role: users.role })
+        .from(users)
+        .innerJoin(businesses, eq(users.businessId, businesses.id))
+        .where(
+          and(
+            eq(users.businessId, businessId),
+            eq(users.accountId, accountId),
+            eq(users.role, 'owner'),
+            eq(users.isActive, true),
+            eq(users.isDeleted, false),
+          ),
+        )
+        .limit(1);
+
+      if (!membership) {
+        return false;
+      }
+
+      const [updated] = await tx
+        .update(businesses)
+        .set({
           isDeleted: true,
           deletedAt: new Date(),
+          deletionRequestedAt: null,
+          scheduledDeletionAt: null,
           updatedAt: new Date(),
           syncVersion: sql`${businesses.syncVersion} + 1`,
         })
@@ -547,12 +678,48 @@ export class BusinessRepository {
     const ownerPhone = input.phone?.trim() || accountPhone;
     const fiscalYear = currentFiscalYearLabel();
 
+    const normalizedName = input.name.trim();
+    const gstin = input.gstin?.trim() || null;
+
     return this.db.transaction(async (tx) => {
+      const [nameConflict] = await tx
+        .select({ id: businesses.id })
+        .from(businesses)
+        .innerJoin(users, eq(users.businessId, businesses.id))
+        .where(
+          and(
+            eq(users.accountId, accountId),
+            eq(users.isActive, true),
+            eq(users.isDeleted, false),
+            eq(businesses.isDeleted, false),
+            sql`lower(${businesses.name}) = lower(${normalizedName})`,
+          ),
+        )
+        .limit(1);
+
+      if (nameConflict) {
+        throw new Error('BUSINESS_NAME_ALREADY_EXISTS');
+      }
+
+      if (gstin) {
+        const [gstinConflict] = await tx
+          .select({ id: businesses.id })
+          .from(businesses)
+          .where(
+            and(eq(businesses.gstin, gstin), eq(businesses.isDeleted, false)),
+          )
+          .limit(1);
+
+        if (gstinConflict) {
+          throw new Error('GSTIN_ALREADY_EXISTS');
+        }
+      }
+
       const [business] = await tx
         .insert(businesses)
         .values({
-          name: input.name.trim(),
-          gstin: input.gstin?.trim() || null,
+          name: normalizedName,
+          gstin,
           stateCode,
           address: input.address?.trim() || null,
           phone: input.phone?.trim() || null,
@@ -645,6 +812,7 @@ export class BusinessRepository {
         owner_name: ownerName,
         logo_url: null,
         is_shared: false,
+        scheduled_deletion_at: null,
       };
     });
   }

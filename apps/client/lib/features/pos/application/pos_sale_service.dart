@@ -21,8 +21,9 @@ Future<PosSaleService> posSaleService(Ref ref) async {
   final sessionService = await ref.watch(posSessionServiceProvider.future);
   final localDataSource = PosLocalDataSource(ref.watch(appDatabaseProvider));
   final godownLocal = GodownLocalSource(ref.watch(appDatabaseProvider));
-  final commandRepository =
-      await ref.watch(salesInvoiceCommandRepositoryProvider.future);
+  final commandRepository = await ref.watch(
+    salesInvoiceCommandRepositoryProvider.future,
+  );
   return PosSaleService(
     sessionService: sessionService,
     localDataSource: localDataSource,
@@ -125,7 +126,8 @@ class PosSaleService {
     String? customerName,
     String? notes,
   }) {
-    final totalAmount = cart.subtotal - cart.totalDiscount - cart.billDiscountAmount;
+    final totalAmount =
+        cart.subtotal - cart.totalDiscount - cart.billDiscountAmount;
     final taxAmount = cart.totalTax;
     final finalAmount = cart.totalPayable;
     final completedAt =
@@ -134,8 +136,9 @@ class PosSaleService {
     final saleItems = <PosSaleLineItem>[];
     for (var i = 0; i < cart.items.length; i++) {
       final cartItem = cart.items[i];
-      final lineDto =
-          i < finalizedDto.lines.length ? finalizedDto.lines[i] : null;
+      final lineDto = i < finalizedDto.lines.length
+          ? finalizedDto.lines[i]
+          : null;
       saleItems.add(
         PosSaleLineItem(
           name: cartItem.item.name,

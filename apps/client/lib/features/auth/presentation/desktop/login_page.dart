@@ -5,6 +5,7 @@ import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/presentation/desktop/widgets/network_error_banner.dart';
+import 'package:billing_baba/shared/widgets/legal/legal_consent_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -660,32 +661,8 @@ class _LoginForm extends StatelessWidget {
 
           const SizedBox(height: AppSpacing.lg),
 
-          // Footer note
-          Center(
-            child: RichText(
-              textAlign: TextAlign.center,
-              text: const TextSpan(
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                children: [
-                  TextSpan(text: 'By continuing, you agree to our '),
-                  TextSpan(
-                    text: 'Terms of Service',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  TextSpan(text: ' and '),
-                  TextSpan(
-                    text: 'Privacy Policy',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          const LegalConsentFooter(
+            padding: EdgeInsets.only(top: AppSpacing.lg),
           ),
         ],
       ),

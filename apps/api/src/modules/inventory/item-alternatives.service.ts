@@ -10,8 +10,8 @@ import {
 import { AppError } from '../../shared/errors/app-error';
 import { InventoryServiceBase } from './inventory.base-service';
 import {
-  ItemAlternativesRepository,
   type AlternativeRecord,
+  ItemAlternativesRepository,
 } from './item-alternatives.repository';
 
 type RecommendedItem = {

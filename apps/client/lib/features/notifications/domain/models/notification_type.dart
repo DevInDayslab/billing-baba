@@ -44,7 +44,8 @@ enum NotificationType {
     NotificationType.invoiceShared ||
     NotificationType.saleDue ||
     NotificationType.purchaseDue ||
-    NotificationType.outstandingReminder => NotificationFilterCategory.transaction,
+    NotificationType.outstandingReminder =>
+      NotificationFilterCategory.transaction,
     _ => NotificationFilterCategory.app,
   };
 
@@ -58,7 +59,8 @@ enum NotificationType {
     NotificationType.importCompleted => Icons.file_download_outlined,
     NotificationType.exportCompleted => Icons.file_upload_outlined,
     NotificationType.lowStock => Icons.inventory_2_outlined,
-    NotificationType.outstandingReminder => Icons.account_balance_wallet_outlined,
+    NotificationType.outstandingReminder =>
+      Icons.account_balance_wallet_outlined,
     NotificationType.invoiceShared => Icons.share_outlined,
     NotificationType.invoicePaid => Icons.check_circle_outline,
     NotificationType.purchaseDue => Icons.shopping_cart_outlined,
@@ -108,7 +110,11 @@ enum ReminderRecurrence {
 /// Local notification channel identifiers.
 enum NotificationChannelId {
   general('billing_baba_general', 'Billing Baba', 'General business alerts'),
-  reminder('billing_baba_reminder', 'Reminders', 'Business and invoice reminders'),
+  reminder(
+    'billing_baba_reminder',
+    'Reminders',
+    'Business and invoice reminders',
+  ),
   sync('billing_baba_sync', 'Sync', 'Sync status notifications');
 
   const NotificationChannelId(this.id, this.name, this.description);

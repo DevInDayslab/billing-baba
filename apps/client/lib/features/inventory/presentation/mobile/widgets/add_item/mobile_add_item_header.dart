@@ -1,13 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Vyapar-style app bar for mobile Add Item.
 class MobileAddItemHeader extends StatelessWidget {
   const MobileAddItemHeader({
     required this.title,
     required this.isProduct,
     required this.onBack,
-    required this.onSettingsTap,
     required this.onProductServiceChanged,
     super.key,
   });
@@ -15,7 +16,6 @@ class MobileAddItemHeader extends StatelessWidget {
   final String title;
   final bool isProduct;
   final VoidCallback onBack;
-  final VoidCallback onSettingsTap;
   final ValueChanged<bool> onProductServiceChanged;
 
   @override
@@ -31,7 +31,7 @@ class MobileAddItemHeader extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back_rounded),
+                  icon: const Icon(LucideIcons.arrowLeft),
                   tooltip: 'Back',
                 ),
                 Expanded(
@@ -47,14 +47,7 @@ class MobileAddItemHeader extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
-                  onPressed: onSettingsTap,
-                  icon: const Icon(
-                    Icons.settings_outlined,
-                    color: AppColors.textSecondary,
-                  ),
-                  tooltip: 'Settings',
-                ),
+                const SizedBox(width: 48),
               ],
             ),
           ),
@@ -98,7 +91,9 @@ class _ProductServiceToggle extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: isProduct ? AppColors.textPrimary : AppColors.textSecondary,
+                color: isProduct
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
           ),
@@ -118,8 +113,9 @@ class _ProductServiceToggle extends StatelessWidget {
             child: AnimatedAlign(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              alignment:
-                  isProduct ? Alignment.centerLeft : Alignment.centerRight,
+              alignment: isProduct
+                  ? Alignment.centerLeft
+                  : Alignment.centerRight,
               child: Container(
                 width: _thumbSize,
                 height: _thumbSize,
@@ -150,7 +146,9 @@ class _ProductServiceToggle extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: !isProduct ? AppColors.textPrimary : AppColors.textSecondary,
+                color: !isProduct
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
           ),

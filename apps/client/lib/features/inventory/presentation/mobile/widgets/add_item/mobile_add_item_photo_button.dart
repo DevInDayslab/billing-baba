@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Circular photo picker / preview control for mobile Add Item header.
 class MobileAddItemPhotoButton extends StatelessWidget {
   static const double defaultSize = 36;
@@ -76,7 +78,7 @@ class MobileAddItemPhotoButton extends StatelessWidget {
                                 ),
                               ),
                               child: Icon(
-                                Icons.photo_camera_outlined,
+                                LucideIcons.camera,
                                 size: size * 0.22,
                                 color: Colors.white,
                               ),
@@ -85,7 +87,7 @@ class MobileAddItemPhotoButton extends StatelessWidget {
                         ],
                       )
                     : Icon(
-                        Icons.photo_camera_outlined,
+                        LucideIcons.camera,
                         color: Colors.white,
                         size: size * 0.5,
                       ),

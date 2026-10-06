@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { mapTwilioError } from '../../../src/providers/notification/twilio-whatsapp-provider';
 import { toSafeNotificationErrorMessage } from '../../../src/modules/notifications/notification-logging';
+import { mapTwilioError } from '../../../src/providers/notification/twilio-whatsapp-provider';
 
 describe('mapTwilioError', () => {
   test('maps authentication failures', () => {

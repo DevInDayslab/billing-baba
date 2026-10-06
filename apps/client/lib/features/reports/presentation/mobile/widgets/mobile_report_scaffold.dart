@@ -3,6 +3,8 @@ import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Shared scaffold for mobile report detail screens.
 class MobileReportScaffold extends StatelessWidget {
   const MobileReportScaffold({
@@ -29,7 +31,7 @@ class MobileReportScaffold extends StatelessWidget {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -109,7 +111,7 @@ class MobileReportInfoBanner extends StatelessWidget {
   const MobileReportInfoBanner({
     required this.message,
     super.key,
-    this.icon = Icons.info_outline_rounded,
+    this.icon = LucideIcons.info,
   });
 
   final String message;
@@ -128,7 +130,9 @@ class MobileReportInfoBanner extends StatelessWidget {
         decoration: BoxDecoration(
           color: MobileReportTheme.accentSoft,
           borderRadius: AppRadius.mdBorder,
-          border: Border.all(color: MobileReportTheme.accent.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: MobileReportTheme.accent.withValues(alpha: 0.2),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(

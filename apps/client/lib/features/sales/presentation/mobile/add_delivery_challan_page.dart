@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
@@ -12,6 +13,7 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
@@ -37,7 +39,8 @@ class MobileAddDeliveryChallanPage extends ConsumerStatefulWidget {
 
 class _MobileAddDeliveryChallanPageState
     extends ConsumerState<MobileAddDeliveryChallanPage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.deliveryChallan;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.deliveryChallan;
   late final TextEditingController _billingAddressController;
   late final TextEditingController _shippingAddressController;
   late final TextEditingController _descriptionController;
@@ -125,7 +128,9 @@ class _MobileAddDeliveryChallanPageState
     final error = await _notifier().save();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final form = _form();
@@ -184,9 +189,15 @@ class _MobileAddDeliveryChallanPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Challan No.',
-            documentNumberValue:
-                form.challanNo.isEmpty ? 'Auto' : form.challanNo,
-            documentNumberIsPlaceholder: form.challanNo.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: form.documentId,
+              currentNumber: form.challanNo,
+              preview: watchDocumentNumberPreview(
+                ref,
+                SalesConstants.challanSeries,
+              ),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.invoiceDate),
             dateIsPlaceholder: form.invoiceDate == null,
             onDateTap: () async {
@@ -245,8 +256,9 @@ class _MobileAddDeliveryChallanPageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),

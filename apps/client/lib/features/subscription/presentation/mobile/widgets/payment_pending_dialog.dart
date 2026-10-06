@@ -5,6 +5,8 @@ import 'package:billing_baba/features/subscription/presentation/mobile/utils/sub
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 Future<void> showPaymentPendingDialog(
   BuildContext context, {
   required WidgetRef ref,
@@ -39,7 +41,7 @@ Future<void> showPaymentPendingDialog(
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.schedule,
+                    LucideIcons.clock,
                     color: Colors.amber.shade800,
                     size: 36,
                   ),

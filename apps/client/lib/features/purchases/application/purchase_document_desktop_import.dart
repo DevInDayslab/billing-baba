@@ -219,14 +219,25 @@ Future<void> _showParseFailureDialog({
   }
 }
 
+bool _isOnAddPurchaseRoute(GoRouter router) {
+  final path = router.state.uri.path;
+  final matched = router.state.matchedLocation;
+  return path == AppRoutes.addPurchase ||
+      matched == AppRoutes.addPurchase ||
+      path.endsWith(AppRoutes.addPurchase);
+}
+
 Future<void> _applyParsedDocument({
   required GoRouter router,
   required ProviderContainer container,
   required String? billId,
   required PurchaseDocumentParseDto parsed,
 }) async {
-  final onAddPurchase = router.state.uri.path == AppRoutes.addPurchase;
-  debugPrint('$_logPrefix applyParsedDocument onAddPurchase=$onAddPurchase');
+  final onAddPurchase = _isOnAddPurchaseRoute(router);
+  debugPrint(
+    '$_logPrefix applyParsedDocument onAddPurchase=$onAddPurchase '
+    'path=${router.state.uri.path} matched=${router.state.matchedLocation}',
+  );
 
   try {
     if (onAddPurchase) {
@@ -242,11 +253,25 @@ Future<void> _applyParsedDocument({
       return;
     }
 
+    // Set pending before navigation so Add Purchase mount can consume it.
+    // Also pass via GoRouter extra as a backup if the provider race loses it.
     debugPrint('$_logPrefix before pendingPurchaseDocumentParseProvider.set');
     container.read(pendingPurchaseDocumentParseProvider.notifier).set(parsed);
     debugPrint('$_logPrefix before router.push ${AppRoutes.addPurchase}');
-    await router.push(AppRoutes.addPurchase);
+    await router.push(AppRoutes.addPurchase, extra: parsed);
     debugPrint('$_logPrefix after router.push ${AppRoutes.addPurchase}');
+
+    // If the form was already mounted/kept and missed the microtask, apply now.
+    // Use take() so we never double-apply against the mount consumer.
+    final leftover = container
+        .read(pendingPurchaseDocumentParseProvider.notifier)
+        .take();
+    if (leftover != null) {
+      debugPrint('$_logPrefix applying leftover pending parse after push');
+      await container
+          .read(addPurchaseFormProvider().notifier)
+          .applyParsedDocument(leftover);
+    }
   } on Object catch (error, stackTrace) {
     debugPrint('$_logPrefix applyParsedDocument failed: $error\n$stackTrace');
     rethrow;

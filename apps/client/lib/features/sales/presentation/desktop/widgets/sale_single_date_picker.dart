@@ -1,5 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/shared/widgets/forms/form_control_decoration.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 const _selectedDayFill = Color(0xFF212121);
@@ -127,9 +130,207 @@ class SaleSingleDatePickerAnchorState
   }
 }
 
+final _saleSingleDateDisplayFormat = DateFormat('dd/MM/yyyy');
+
 String formatSaleSingleDate(DateTime? date) {
   if (date == null) return 'Select date';
-  return DateFormat('dd/MM/yyyy').format(date);
+  return _saleSingleDateDisplayFormat.format(date);
+}
+
+/// Formats typed digits into `dd/MM/yyyy` (max 8 digits).
+class SaleSingleDateMaskFormatter extends TextInputFormatter {
+  const SaleSingleDateMaskFormatter();
+
+  static const _maxDigits = 8;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > _maxDigits) {
+      return oldValue;
+    }
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i == 2 || i == 4) buffer.write('/');
+      buffer.write(digits[i]);
+    }
+    final text = buffer.toString();
+
+    var offset = newValue.selection.end;
+    final oldDigits = oldValue.text.replaceAll(RegExp(r'\D'), '').length;
+    final newDigits = digits.length;
+    if (newDigits > oldDigits) {
+      offset = text.length;
+    } else {
+      offset = offset.clamp(0, text.length);
+    }
+
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: offset),
+    );
+  }
+}
+
+const saleSingleDateMaskFormatter = SaleSingleDateMaskFormatter();
+
+DateTime? parseSaleSingleDateInput(String value) {
+  final trimmed = value.trim();
+  if (trimmed.length != 10) return null;
+  try {
+    final parsed = _saleSingleDateDisplayFormat.parseStrict(trimmed);
+    if (parsed.year < 1900 || parsed.year > 2100) return null;
+    return parsed;
+  } on FormatException {
+    return null;
+  }
+}
+
+/// Single date field: type `dd/MM/yyyy` or open the calendar overlay.
+class SaleEditableSingleDateField extends StatefulWidget {
+  const SaleEditableSingleDateField({
+    required this.selectedDate,
+    required this.onDateSelected,
+    this.datePickerKey,
+    this.decoration,
+    this.hintText = 'DD/MM/YYYY',
+    super.key,
+  });
+
+  final DateTime? selectedDate;
+  final ValueChanged<DateTime> onDateSelected;
+  final GlobalKey<SaleSingleDatePickerAnchorState>? datePickerKey;
+  final InputDecoration? decoration;
+  final String hintText;
+
+  @override
+  State<SaleEditableSingleDateField> createState() =>
+      _SaleEditableSingleDateFieldState();
+}
+
+class _SaleEditableSingleDateFieldState
+    extends State<SaleEditableSingleDateField> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  DateTime? _lastCommittedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastCommittedDate = widget.selectedDate;
+    _controller = TextEditingController(
+      text: _textForDate(widget.selectedDate),
+    );
+    _focusNode = FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(SaleEditableSingleDateField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedDate != widget.selectedDate && !_focusNode.hasFocus) {
+      _lastCommittedDate = widget.selectedDate;
+      final nextText = _textForDate(widget.selectedDate);
+      if (_controller.text != nextText) {
+        _controller.text = nextText;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String _textForDate(DateTime? date) {
+    if (date == null) return '';
+    return _saleSingleDateDisplayFormat.format(date);
+  }
+
+  void _handleFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _commitTypedDateOrRevert();
+    }
+  }
+
+  void _commitTypedDateOrRevert() {
+    final parsed = parseSaleSingleDateInput(_controller.text);
+    if (parsed != null) {
+      final normalized = DateTime(parsed.year, parsed.month, parsed.day);
+      _lastCommittedDate = normalized;
+      _controller.text = _textForDate(normalized);
+      widget.onDateSelected(normalized);
+      return;
+    }
+
+    final fallback = _lastCommittedDate ?? widget.selectedDate;
+    _controller.text = _textForDate(fallback);
+  }
+
+  void _openPicker() {
+    widget.datePickerKey?.currentState?.toggle();
+  }
+
+  void _onTextChanged(String value) {
+    final parsed = parseSaleSingleDateInput(value);
+    if (parsed == null) return;
+    final normalized = DateTime(parsed.year, parsed.month, parsed.day);
+    _lastCommittedDate = normalized;
+    widget.onDateSelected(normalized);
+  }
+
+  void _onPickerDate(DateTime date) {
+    final normalized = DateTime(date.year, date.month, date.day);
+    _lastCommittedDate = normalized;
+    widget.onDateSelected(normalized);
+    _controller.text = _textForDate(normalized);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final calendarSuffix = IconButton(
+      onPressed: _openPicker,
+      icon: Icon(
+        Icons.calendar_today_outlined,
+        size: 16,
+        color: Colors.grey.shade600,
+      ),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      tooltip: 'Pick date',
+    );
+
+    final baseDecoration =
+        widget.decoration ?? buildFormControlDecoration(hint: widget.hintText);
+    final decoration = baseDecoration.copyWith(
+      suffixIcon: calendarSuffix,
+      hintText: baseDecoration.hintText ?? widget.hintText,
+    );
+
+    return SaleSingleDatePickerAnchor(
+      key: widget.datePickerKey,
+      selectedDate: widget.selectedDate,
+      onDateSelected: _onPickerDate,
+      child: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        style: saleFieldTextStyle,
+        decoration: decoration,
+        keyboardType: TextInputType.number,
+        inputFormatters: [saleSingleDateMaskFormatter],
+        onChanged: _onTextChanged,
+        onEditingComplete: _commitTypedDateOrRevert,
+        onTapOutside: (_) => _commitTypedDateOrRevert(),
+      ),
+    );
+  }
 }
 
 class _SaleSingleDatePickerPanel extends StatefulWidget {

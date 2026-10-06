@@ -54,9 +54,10 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
   late Future<String> _resolvedUrlFuture;
 
   String? get _effectiveMediaAssetId {
-    final explicit = widget.sourceMediaAssetId?.trim();
-    if (explicit != null && explicit.isNotEmpty) return explicit;
-    return extractMediaAssetIdFromUrl(widget.imageUrl);
+    return coalesceStorageMediaAssetId(
+      storedMediaAssetId: widget.sourceMediaAssetId,
+      imageUrl: widget.imageUrl,
+    );
   }
 
   String? get _cacheKey => buildImageCacheKey(
@@ -224,6 +225,14 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
     return FutureBuilder<String>(
       future: _resolvedUrlFuture,
       builder: (context, snapshot) {
+        final needsSignedResolve =
+            _effectiveMediaAssetId != null &&
+            _effectiveMediaAssetId!.isNotEmpty;
+        if (needsSignedResolve &&
+            snapshot.connectionState != ConnectionState.done) {
+          return widget.placeholder ?? _defaultPlaceholder();
+        }
+
         final url = normalizeImageUrl(snapshot.data) ?? fallback;
         if (url == null) {
           return widget.errorWidget ?? _defaultErrorWidget();

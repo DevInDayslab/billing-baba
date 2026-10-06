@@ -1,13 +1,15 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Compact red pill FAB used on the Vyapar-style mobile home screen.
 class MobileHomeAddSaleFab extends StatelessWidget {
   const MobileHomeAddSaleFab({
     required this.onPressed,
     super.key,
     this.label = 'Add New Sale',
-    this.icon = Icons.currency_rupee_rounded,
+    this.icon = LucideIcons.indianRupee,
   });
 
   final VoidCallback onPressed;

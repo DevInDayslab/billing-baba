@@ -14,11 +14,15 @@ class FormDialogShell extends StatelessWidget {
   const FormDialogShell({
     required this.child,
     this.size = FormDialogSize.large,
+    this.maxWidth,
+    this.maxHeightFactor,
     super.key,
   });
 
   final Widget child;
   final FormDialogSize size;
+  final double? maxWidth;
+  final double? maxHeightFactor;
 
   double get _maxWidth => switch (size) {
     FormDialogSize.compact => FormSpacing.dialogCompactMaxWidth,
@@ -38,8 +42,10 @@ class FormDialogShell extends StatelessWidget {
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: _maxWidth,
-          maxHeight: screen.height * FormSpacing.dialogMaxHeightFactor,
+          maxWidth: maxWidth ?? _maxWidth,
+          maxHeight:
+              screen.height *
+              (maxHeightFactor ?? FormSpacing.dialogMaxHeightFactor),
         ),
         child: child,
       ),
@@ -52,11 +58,18 @@ Future<T?> showFormDialog<T>({
   required BuildContext context,
   required Widget child,
   FormDialogSize size = FormDialogSize.large,
+  double? maxWidth,
+  double? maxHeightFactor,
   bool barrierDismissible = true,
 }) {
   return showDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    builder: (context) => FormDialogShell(size: size, child: child),
+    builder: (context) => FormDialogShell(
+      size: size,
+      maxWidth: maxWidth,
+      maxHeightFactor: maxHeightFactor,
+      child: child,
+    ),
   );
 }

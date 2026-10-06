@@ -110,7 +110,9 @@ class TodoSync {
               _str(payload, 'linked_product_id') ?? existing?.linkedProductId,
             ),
             attachmentIdsJson: Value(
-              _attachmentIdsJson(payload) ?? existing?.attachmentIdsJson ?? '[]',
+              _attachmentIdsJson(payload) ??
+                  existing?.attachmentIdsJson ??
+                  '[]',
             ),
             syncVersion: Value(syncVersion),
             createdAt: (existing?.createdAt ?? updatedAt).toUtc(),
@@ -128,14 +130,15 @@ class TodoSync {
     required DateTime updatedAt,
     String? deviceId,
   }) {
-    return (_db.update(_db.todosLocal)..where((t) => t.id.equals(entityId)))
-        .write(
-          TodosLocalCompanion(
-            syncVersion: Value(syncVersion),
-            updatedAt: Value(updatedAt.toUtc()),
-            deviceId: deviceId == null ? const Value.absent() : Value(deviceId),
-          ),
-        );
+    return (_db.update(
+      _db.todosLocal,
+    )..where((t) => t.id.equals(entityId))).write(
+      TodosLocalCompanion(
+        syncVersion: Value(syncVersion),
+        updatedAt: Value(updatedAt.toUtc()),
+        deviceId: deviceId == null ? const Value.absent() : Value(deviceId),
+      ),
+    );
   }
 
   static String? _str(Map<String, dynamic>? payload, String key) {

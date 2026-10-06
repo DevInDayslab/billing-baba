@@ -134,4 +134,38 @@ abstract final class AppRoutes {
   static const editProfile = '/edit-profile';
   static const userProfile = '/my-profile';
   static const accessDenied = '/access-denied';
+
+  /// Sale transaction add/edit/view flows use the full window (no shell sidebar/top bar).
+  static bool isSaleInvoiceFormRoute(String path) {
+    const exactFormRoutes = <String>{
+      addSale,
+      addEstimate,
+      addProforma,
+      addSaleOrder,
+      addDeliveryChallan,
+      addCreditNote,
+      addSaleFa,
+      addPaymentIn,
+      addJobWork,
+    };
+    if (exactFormRoutes.contains(path)) return true;
+
+    const pathPrefixes = <String>[
+      duplicateSale,
+      editSale,
+      viewSale,
+      duplicateEstimate,
+      editEstimate,
+      editProforma,
+      editSaleOrder,
+      editDeliveryChallan,
+      editCreditNote,
+      editSaleFa,
+      editJobWork,
+    ];
+    for (final prefix in pathPrefixes) {
+      if (path == prefix || path.startsWith('$prefix/')) return true;
+    }
+    return false;
+  }
 }

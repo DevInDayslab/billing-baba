@@ -34,13 +34,12 @@ enum DashboardSideWidget {
     return ids.map(fromId).whereType<DashboardSideWidget>().toList();
   }
 
-  /// Pins Low Stocks first so alerts are visible without changing saved order.
+  /// Pins Low Stocks first when enabled without changing saved order.
   static List<DashboardSideWidget> pinLowStockFirst(
-    List<DashboardSideWidget> widgets, {
-    required bool hasLowStock,
-  }) {
-    if (!hasLowStock) return widgets;
+    List<DashboardSideWidget> widgets,
+  ) {
     const target = DashboardSideWidget.lowStock;
+    if (!widgets.contains(target)) return widgets;
     final index = widgets.indexOf(target);
     if (index <= 0) return widgets;
     return [target, ...widgets.where((widget) => widget != target)];
@@ -53,6 +52,13 @@ enum DashboardHomeTab {
   searchProductOnline,
   myOnlineStore,
   messages;
+
+  static const tabBarTabs = <DashboardHomeTab>[
+    dashboard,
+    searchProductOnline,
+    myOnlineStore,
+    messages,
+  ];
 
   String get label => switch (this) {
     DashboardHomeTab.dashboard => 'Dashboard',

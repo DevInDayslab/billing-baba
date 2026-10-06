@@ -758,10 +758,9 @@ describe.skipIf(!canRunDbTests)('Sync row push/pull integration', () => {
       expect(byId.get(categoryId)?.payload?.name).toBe(`MD Cat ${suffix}`);
       expect(byId.get(partyId)?.payload?.name).toBe(`MD Party ${suffix}`);
       expect(byId.get(itemId)?.payload?.name).toBe(`MD Item ${suffix}`);
+      const mdEntityIds = new Set<string>([categoryId, partyId, itemId]);
       expect(
-        androidChanges.filter((c) =>
-          [categoryId, partyId, itemId].includes(c.entity_id),
-        ),
+        androidChanges.filter((c) => mdEntityIds.has(c.entity_id)),
       ).toHaveLength(3);
 
       // Android edits all three.

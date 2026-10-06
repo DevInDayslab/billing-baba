@@ -6,6 +6,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Date range + quick period filters for the transaction details tab.
 class MobileHomeTransactionDateFilters extends StatelessWidget {
   const MobileHomeTransactionDateFilters({
@@ -86,9 +88,9 @@ class MobileHomeTransactionDateFilters extends StatelessWidget {
           Expanded(
             flex: 3,
             child: _FilterButton(
-              icon: Icons.calendar_today_outlined,
+              icon: LucideIcons.calendar,
               label: _rangeLabel(),
-              trailing: Icons.keyboard_arrow_down_rounded,
+              trailing: LucideIcons.chevronDown,
               onTap: () => unawaited(_pickDateRange(context)),
             ),
           ),
@@ -97,7 +99,7 @@ class MobileHomeTransactionDateFilters extends StatelessWidget {
             flex: 2,
             child: _FilterButton(
               label: quickPeriod.label,
-              trailing: Icons.keyboard_arrow_down_rounded,
+              trailing: LucideIcons.chevronDown,
               onTap: () => unawaited(_pickQuickPeriod(context)),
               accent: primary,
             ),

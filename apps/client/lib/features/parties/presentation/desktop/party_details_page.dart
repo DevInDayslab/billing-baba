@@ -18,12 +18,14 @@ const _compactBreakpoint = 800.0;
 /// Narrower list column so transaction detail has more horizontal room.
 const _partyListPanelWidth = 280.0;
 
-Future<void> _openAddPartyDialog(BuildContext context, WidgetRef ref) async {
+Future<void> openDesktopAddPartyDialog(BuildContext context) async {
   await showAddPartyDialog(context);
 }
 
 class DesktopPartyDetailsPage extends ConsumerStatefulWidget {
-  const DesktopPartyDetailsPage({super.key});
+  const DesktopPartyDetailsPage({this.embedded = false, super.key});
+
+  final bool embedded;
 
   @override
   ConsumerState<DesktopPartyDetailsPage> createState() =>
@@ -72,6 +74,38 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final selectedId = ref.watch(selectedPartyIdProvider);
+    final body = LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < _compactBreakpoint;
+
+        if (isCompact) {
+          if (selectedId == null) {
+            return _buildInventoryShell(child: const PartyListPanel());
+          }
+          return _buildInventoryShell(
+            child: PartyDetailPanel(
+              partyId: selectedId,
+              onBack: _clearSelection,
+            ),
+          );
+        }
+
+        return InventorySplitLayout(
+          listWidth: _partyListPanelWidth,
+          listPanel: const PartyListPanel(),
+          detailPanel: selectedId == null
+              ? const InventoryDetailPlaceholder(
+                  message: 'Select a party to see details',
+                  icon: Icons.people_outline,
+                )
+              : PartyDetailPanel(partyId: selectedId),
+        );
+      },
+    );
+
+    if (widget.embedded) {
+      return body;
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -88,41 +122,9 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
             children: [
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyDetails,
-                onAddParty: () => _openAddPartyDialog(context, ref),
+                onAddParty: () => openDesktopAddPartyDialog(context),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = constraints.maxWidth < _compactBreakpoint;
-
-                    if (isCompact) {
-                      if (selectedId == null) {
-                        return _buildInventoryShell(
-                          child: const PartyListPanel(),
-                        );
-                      }
-                      return _buildInventoryShell(
-                        child: PartyDetailPanel(
-                          partyId: selectedId,
-                          onBack: _clearSelection,
-                        ),
-                      );
-                    }
-
-                    return InventorySplitLayout(
-                      listWidth: _partyListPanelWidth,
-                      listPanel: const PartyListPanel(),
-                      detailPanel: selectedId == null
-                          ? const InventoryDetailPlaceholder(
-                              message: 'Select a party to see details',
-                              icon: Icons.people_outline,
-                            )
-                          : PartyDetailPanel(partyId: selectedId),
-                    );
-                  },
-                ),
-              ),
+              Expanded(child: body),
             ],
           ),
         ),

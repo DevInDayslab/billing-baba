@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/shared/widgets/desktop/desktop_inline_action_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -27,64 +28,57 @@ class CustomerSupportStrip extends StatelessWidget {
     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
-  Widget get _content => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Contact Support',
-            style: DashboardTypography.supportStrip,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
+  Widget get _content => DefaultTextStyle(
+    style: const TextStyle(decoration: TextDecoration.none),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Contact Support',
+          style: DashboardTypography.supportStrip,
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              LucideIcons.phone,
+              size: _iconSize,
+              color: AppColors.primary,
+            ),
+            const Text(
+              ' : ',
+              style: DashboardTypography.supportStrip,
+            ),
+            DesktopInlineActionText(
+              label: supportPhone,
+              style: DashboardTypography.supportStripLink,
               onTap: () => _openUrl(_telUrl),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.phone,
-                    size: _iconSize,
-                    color: AppColors.primary,
-                  ),
-                  Text(
-                    ' : ',
-                    style: DashboardTypography.supportStrip,
-                  ),
-                  Text(
-                    supportPhone,
-                    style: DashboardTypography.supportStripLink,
-                  ),
-                ],
-              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          const Text('|', style: DashboardTypography.supportStrip),
-          const SizedBox(width: AppSpacing.sm),
-          MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
+          ],
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        const Text('|', style: DashboardTypography.supportStrip),
+        const SizedBox(width: AppSpacing.sm),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const FaIcon(
+              FontAwesomeIcons.whatsapp,
+              size: _iconSize,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            DesktopInlineActionText(
+              label: 'Get instant support',
+              style: DashboardTypography.supportStripLink,
               onTap: () => _openUrl(_whatsAppUrl),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.whatsapp,
-                    size: _iconSize,
-                    color: AppColors.primary,
-                  ),
-                  SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Get instant support',
-                    style: DashboardTypography.supportStripLink,
-                  ),
-                ],
-              ),
             ),
-          ),
-        ],
-      );
+          ],
+        ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {

@@ -6,6 +6,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Multi-select inventory item filter sheet with exclusive raw-material pairs.
 Future<InventoryItemFiltersState?> showMobileInventoryItemFilterSheet({
   required BuildContext context,
@@ -47,7 +49,7 @@ class _FilterSheetHeader extends StatelessWidget {
             IconButton(
               onPressed: () => Navigator.of(context).pop(),
               icon: Icon(
-                Icons.close_rounded,
+                LucideIcons.x,
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
               ),
               visualDensity: VisualDensity.compact,
@@ -135,11 +137,12 @@ class _InventoryItemFilterBodyState
   @override
   Widget build(BuildContext context) {
     final brands = ref.watch(inventoryBrandsProvider).value ?? const [];
-    final categories = ref
-        .watch(inventoryCategoriesProvider)
-        .value
-        ?.where((c) => !c.isUncategorized)
-        .toList() ??
+    final categories =
+        ref
+            .watch(inventoryCategoriesProvider)
+            .value
+            ?.where((c) => !c.isUncategorized)
+            .toList() ??
         const [];
 
     return Column(

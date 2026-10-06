@@ -37,6 +37,9 @@ add_definitions(-DUNICODE -D_UNICODE)
 # migrates to C++20 <coroutine>. Directory-scoped so plugin subdirs inherit it.
 if(MSVC)
   add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+  # Parallel cl.exe invocations otherwise contend on vc*.pdb (C1041), notably in
+  # large plugins such as flutter_inappwebview_windows.
+  add_compile_options(/FS)
 endif()
 
 # Compilation settings that should be applied to most targets.

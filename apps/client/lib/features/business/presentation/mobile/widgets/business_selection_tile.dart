@@ -4,6 +4,8 @@ import 'package:billing_baba/features/business/presentation/desktop/widgets/busi
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Selectable business row for the mobile company picker (Vyapar-style).
 class BusinessSelectionTile extends StatelessWidget {
   const BusinessSelectionTile({
@@ -36,11 +38,17 @@ class BusinessSelectionTile extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: entry.isPendingDeletion
+              ? AppColors.error.withValues(alpha: 0.04)
+              : AppColors.surface,
           borderRadius: AppRadius.lgBorder,
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFE8EAED),
-            width: isSelected ? 2 : 1,
+            color: entry.isPendingDeletion
+                ? AppColors.error.withValues(alpha: 0.4)
+                : isSelected
+                ? AppColors.primary
+                : const Color(0xFFE8EAED),
+            width: isSelected || entry.isPendingDeletion ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -122,6 +130,12 @@ class BusinessSelectionTile extends StatelessWidget {
   }
 
   String? _subtitleFor(CompanyListEntry entry) {
+    if (entry.isPendingDeletion && entry.scheduledDeletionAt != null) {
+      final days = entry.scheduledDeletionAt!.difference(DateTime.now()).inDays;
+      if (days <= 0) return 'Scheduled for deletion';
+      if (days == 1) return 'Deletes in 1 day — tap Continue to restore';
+      return 'Deletes in $days days — tap Continue to restore';
+    }
     if (entry.isSharedTab) {
       final owner = entry.ownerName ?? 'Business owner';
       return 'Shared by $owner';
@@ -183,7 +197,7 @@ class _SelectionIndicator extends StatelessWidget {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 180),
       child: Icon(
-        isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
+        isSelected ? LucideIcons.circleCheck : LucideIcons.circle,
         key: ValueKey(isSelected),
         color: color,
         size: AppIconSize.xl,

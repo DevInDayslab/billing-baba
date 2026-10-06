@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Selectable option for [showMobileOptionSheet].
 class MobileOption<T> {
   const MobileOption({
@@ -94,9 +96,7 @@ class _MobileOptionTile<T> extends StatelessWidget {
                 ),
               ),
               Icon(
-                isSelected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_off_rounded,
+                isSelected ? LucideIcons.circleDot : LucideIcons.circle,
                 color: isSelected
                     ? AppColors.primary
                     : AppColors.textSecondary.withValues(alpha: 0.5),

@@ -124,6 +124,8 @@ Set the API base URL at build time:
 flutter run --dart-define=API_BASE_URL=https://api.example.com
 ```
 
+**iOS local API:** the iOS runner allows local networking (`NSAllowsLocalNetworking`) so `http://127.0.0.1:3000` works on the simulator. Prefer an **HTTPS** `API_BASE_URL` in production. On a physical iPhone, set `API_BASE_URL` to your Mac’s LAN IP (e.g. `http://192.168.1.5:3000`).
+
 Copy environment variables for MSG91 and optional dev login:
 
 ```bash

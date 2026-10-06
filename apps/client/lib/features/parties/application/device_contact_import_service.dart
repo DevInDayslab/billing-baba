@@ -4,7 +4,8 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart' hide PermissionStatus;
+import 'package:permission_handler/permission_handler.dart'
+    hide PermissionStatus;
 
 /// Result of requesting device contacts access.
 enum DeviceContactPermissionResult {
@@ -62,8 +63,7 @@ class DeviceContactImportService {
     ContactProperty.address,
   };
 
-  bool get isSupported =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   Future<DeviceContactPermissionResult> requestAccess() async {
     if (!isSupported) return DeviceContactPermissionResult.unavailable;
@@ -169,8 +169,7 @@ class DeviceContactImportService {
     if (formatted != null && formatted.isNotEmpty) return formatted;
 
     final parts = <String>[
-      if ((address.street ?? '').trim().isNotEmpty)
-        address.street!.trim(),
+      if ((address.street ?? '').trim().isNotEmpty) address.street!.trim(),
       if ((address.city ?? '').trim().isNotEmpty) address.city!.trim(),
       if ((address.state ?? '').trim().isNotEmpty) address.state!.trim(),
       if ((address.postalCode ?? '').trim().isNotEmpty)

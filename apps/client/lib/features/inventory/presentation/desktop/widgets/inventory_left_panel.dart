@@ -1,7 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
-import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
-import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
@@ -9,8 +6,10 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_list_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_items_filter_trigger.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_primary_button.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_panel_toolbar.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,7 +21,7 @@ class InventoryLeftPanel extends ConsumerWidget {
     required this.selectedId,
     required this.focusedIndex,
     required this.searchQuery,
-    required this.searchFieldKey,
+    required this.searchResetToken,
     required this.searchHint,
     required this.addButtonLabel,
     required this.emptyMessage,
@@ -38,8 +37,10 @@ class InventoryLeftPanel extends ConsumerWidget {
     required this.onEnter,
     required this.onRefresh,
     required this.onItemSelected,
+    this.onItemDoubleTap,
     required this.onAddPressed,
     required this.onMenuSelected,
+    this.toolbarMenuItems = const [],
     this.onLoadMore,
     this.hasMore = false,
     this.isLoadingMore = false,
@@ -53,7 +54,7 @@ class InventoryLeftPanel extends ConsumerWidget {
   final String? selectedId;
   final int focusedIndex;
   final String searchQuery;
-  final Key searchFieldKey;
+  final int searchResetToken;
   final String searchHint;
   final String addButtonLabel;
   final String emptyMessage;
@@ -72,8 +73,10 @@ class InventoryLeftPanel extends ConsumerWidget {
   final bool hasMore;
   final bool isLoadingMore;
   final ValueChanged<String> onItemSelected;
+  final ValueChanged<InventoryItem>? onItemDoubleTap;
   final VoidCallback onAddPressed;
   final void Function(String value, InventoryItem item) onMenuSelected;
+  final List<SalesActionMenuItem> toolbarMenuItems;
   final IconData leadingIcon;
   final bool showListFilters;
 
@@ -85,41 +88,30 @@ class InventoryLeftPanel extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
+            AppSpacing.sm,
             AppSpacing.md,
-            AppSpacing.md,
-            0,
+            AppSpacing.sm,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              InventorySearchField(
-                key: searchFieldKey,
-                hint: searchHint,
-                initialValue: searchQuery,
-                debounceDuration: const Duration(milliseconds: 300),
-                onChanged: onSearchChanged,
-                onDebouncedChanged: onSearchDebounced,
-                onEscape: onSearchEscape,
-                onArrowDown: onArrowDown,
-                onArrowUp: onArrowUp,
-                onEnter: onEnter,
-              ),
-              const SizedBox(height: 12),
-              PermissionGate(
-                module: PermissionModule.item,
-                action: PermissionAction.create,
-                child: InventoryPrimaryButton(
-                  label: addButtonLabel,
-                  onPressed: onAddPressed,
-                ),
-              ),
-              const SizedBox(height: 14),
-            ],
+          child: InventoryListPanelToolbar(
+            searchResetToken: searchResetToken,
+            searchHint: searchHint,
+            addButtonLabel: addButtonLabel,
+            initialSearchQuery: searchQuery,
+            textStyle: saleFieldTextStyle.copyWith(fontSize: 12),
+            onSearchChanged: onSearchChanged,
+            onSearchDebounced: onSearchDebounced,
+            onSearchEscape: onSearchEscape,
+            onArrowDown: onArrowDown,
+            onArrowUp: onArrowUp,
+            onEnter: onEnter,
+            onAddPressed: onAddPressed,
+            toolbarMenuItems: toolbarMenuItems,
           ),
         ),
         InventoryListHeader(
           height: inventoryListHeaderCompactHeight,
           showColumnSeparators: false,
+          labelStyle: InventoryStyles.listPanelCompactHeaderStyle,
           columns: [
             InventoryListColumn(
               label: primaryColumnLabel,
@@ -167,6 +159,9 @@ class InventoryLeftPanel extends ConsumerWidget {
                 searchQuery: searchQuery,
                 leadingIcon: leadingIcon,
                 onTap: () => onItemSelected(item.id),
+                onDoubleTap: onItemDoubleTap == null
+                    ? null
+                    : () => onItemDoubleTap!(item),
                 onMenuSelected: (value) => onMenuSelected(value, item),
               );
             },

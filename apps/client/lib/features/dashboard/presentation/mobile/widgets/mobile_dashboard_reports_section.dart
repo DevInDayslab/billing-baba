@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Most Used Reports grid with See All action.
 class MobileDashboardReportsSection extends ConsumerWidget {
   const MobileDashboardReportsSection({
@@ -158,7 +160,7 @@ class _ReportTile extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  Icons.chevron_right_rounded,
+                  LucideIcons.chevronRight,
                   size: 18,
                   color: AppColors.textSecondary.withValues(alpha: 0.6),
                 ),
@@ -171,16 +173,16 @@ class _ReportTile extends StatelessWidget {
   }
 
   (IconData, Color) _iconFor(String key) => switch (key) {
-    'sale_report' => (Icons.bar_chart_rounded, AppColors.primary),
+    'sale_report' => (LucideIcons.chartColumn, AppColors.primary),
     'purchase_report' => (
-      Icons.shopping_cart_outlined,
+      LucideIcons.shoppingCart,
       const Color(0xFFEF6C00),
     ),
     'balance_sheet' => (
-      Icons.account_balance_outlined,
+      LucideIcons.landmark,
       const Color(0xFF00897B),
     ),
-    'profit_loss' => (Icons.pie_chart_outline_rounded, const Color(0xFF7B1FA2)),
-    _ => (Icons.description_outlined, AppColors.primary),
+    'profit_loss' => (LucideIcons.chartPie, const Color(0xFF7B1FA2)),
+    _ => (LucideIcons.fileText, AppColors.primary),
   };
 }

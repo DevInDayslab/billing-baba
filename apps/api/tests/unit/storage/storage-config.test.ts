@@ -27,6 +27,7 @@ function withEnv(
     'S3_SECRET_ACCESS_KEY',
     'S3_REGION',
     'S3_PUBLIC_BASE_URL',
+    'S3_PUBLIC_ENDPOINT',
     'NOTIFICATION_PROVIDER',
     'TWILIO_ACCOUNT_SID',
     'TWILIO_AUTH_TOKEN',
@@ -50,6 +51,7 @@ function withEnv(
     'S3_SECRET_ACCESS_KEY',
     'S3_REGION',
     'S3_PUBLIC_BASE_URL',
+    'S3_PUBLIC_ENDPOINT',
   ]) {
     if (!(key in overrides)) {
       delete process.env[key];
@@ -99,6 +101,22 @@ describe('loadAppConfig storage validation', () => {
         expect(config.storageConfigured).toBe(true);
         expect(config.s3Bucket).toBe('bucket');
         expect(config.storageMaxFileBytes).toBe(10_485_760);
+      },
+    );
+  });
+
+  test('S3_PUBLIC_ENDPOINT is loaded when set', () => {
+    withEnv(
+      {
+        S3_ENDPOINT: 'https://internal.s3.example.com',
+        S3_BUCKET: 'bucket',
+        S3_ACCESS_KEY_ID: 'ak',
+        S3_SECRET_ACCESS_KEY: 'sk',
+        S3_PUBLIC_ENDPOINT: 'https://public.s3.example.com',
+      },
+      () => {
+        const config = loadAppConfig();
+        expect(config.s3PublicEndpoint).toBe('https://public.s3.example.com');
       },
     );
   });

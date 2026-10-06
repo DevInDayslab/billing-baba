@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_table_row.dart';
@@ -7,11 +6,13 @@ import 'package:billing_baba/features/parties/application/parties_selection_prov
 import 'package:billing_baba/features/parties/application/party_group_providers.dart';
 import 'package:billing_baba/features/parties/models/party_group_summary.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_name_stack.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class PartyGroupDetailPanel extends ConsumerWidget {
   const PartyGroupDetailPanel({
@@ -28,6 +29,7 @@ class PartyGroupDetailPanel extends ConsumerWidget {
     final summary = ref.watch(selectedPartyGroupSummaryProvider);
     final parties = ref.watch(partiesInSelectedGroupProvider);
     final isLoading = ref.watch(partyGroupMembersLoadingProvider);
+    final selectedPartyId = ref.watch(selectedPartyIdProvider);
 
     if (summary == null) {
       return const SizedBox.shrink();
@@ -70,11 +72,16 @@ class PartyGroupDetailPanel extends ConsumerWidget {
                     return _PartyInGroupTile(
                       party: party,
                       index: index,
-                      onTap: () {
+                      isSelected: party.id == selectedPartyId,
+                      onTap: () async {
                         ref.read(selectedPartyIdProvider.notifier).selected =
                             party.id;
-                        context.go(AppRoutes.partyDetails);
+                        final service = await ref.read(
+                          partyServiceProvider.future,
+                        );
+                        await service.rememberSelectedParty(party.id);
                       },
+                      onDoubleTap: () => PartyActions.edit(context, ref, party),
                     );
                   },
                 ),
@@ -196,12 +203,16 @@ class _PartyInGroupTile extends StatelessWidget {
   const _PartyInGroupTile({
     required this.party,
     required this.index,
+    required this.isSelected,
     required this.onTap,
+    required this.onDoubleTap,
   });
 
   final PartyModel party;
   final int index;
+  final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback onDoubleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +225,9 @@ class _PartyInGroupTile extends StatelessWidget {
 
     return InventoryListTableRow(
       index: index,
+      isSelected: isSelected,
       onTap: onTap,
+      onDoubleTap: onDoubleTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
@@ -229,9 +242,9 @@ class _PartyInGroupTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: AppEllipsisText(
-                PartyModel.displayNameWithLegal(party),
-                style: InventoryStyles.listCellStyle.copyWith(
+              child: PartyNameStack(
+                party: party,
+                nameStyle: InventoryStyles.listCellStyle.copyWith(
                   fontWeight: FontWeight.w500,
                   color: party.isActive
                       ? AppColors.textPrimary

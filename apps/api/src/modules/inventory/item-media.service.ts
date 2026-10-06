@@ -7,14 +7,15 @@ import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import type { UploadIntent } from '../storage/storage.types';
 import { InventoryServiceBase } from './inventory.base-service';
+import { ItemRepository } from './item.repository';
+import type { ItemImageRecord } from './item.types';
+import { ItemLocationRepository } from './item-location.repository';
+import { ItemLocationHistoryRepository } from './item-location-history.repository';
 import {
   ITEM_IMAGE_POLICY,
   MAX_ITEM_GALLERY_IMAGES,
   RACK_PHOTO_POLICY,
 } from './item-media.constants';
-import { ItemLocationRepository } from './item-location.repository';
-import { ItemRepository } from './item.repository';
-import type { ItemImageRecord } from './item.types';
 
 export type ItemMediaAssetResponse = {
   id: string;
@@ -38,6 +39,7 @@ export type ItemMediaServiceDeps = {
   config: AppConfig;
   itemRepository?: ItemRepository;
   locationRepository?: ItemLocationRepository;
+  locationHistoryRepository?: ItemLocationHistoryRepository;
   storage?: StorageService;
   logger?: {
     info: (obj: object, msg?: string) => void;
@@ -59,6 +61,7 @@ function requireDb() {
 export class ItemMediaService extends InventoryServiceBase {
   private readonly items: ItemRepository;
   private readonly locations: ItemLocationRepository;
+  private readonly locationHistory: ItemLocationHistoryRepository;
   private readonly storage: StorageService;
   private readonly config: AppConfig;
   private readonly log: ItemMediaServiceDeps['logger'];
@@ -69,6 +72,8 @@ export class ItemMediaService extends InventoryServiceBase {
     this.config = deps.config;
     this.items = deps.itemRepository ?? new ItemRepository(db);
     this.locations = deps.locationRepository ?? new ItemLocationRepository(db);
+    this.locationHistory =
+      deps.locationHistoryRepository ?? new ItemLocationHistoryRepository(db);
     this.storage =
       deps.storage ??
       new StorageService({
@@ -383,6 +388,7 @@ export class ItemMediaService extends InventoryServiceBase {
     userId: string | undefined,
     locationId: string,
     intentId: string,
+    employeeLabel?: string,
   ): Promise<RackPhotoResponse> {
     await this.assertLocationExists(businessId, locationId);
 
@@ -400,11 +406,6 @@ export class ItemMediaService extends InventoryServiceBase {
       );
     }
 
-    const previousAssetId = await this.locations.getPhotoMediaAssetId(
-      businessId,
-      locationId,
-    );
-
     const url = await this.storage.resolveBusinessAssetUrl(
       businessId,
       accountId,
@@ -421,14 +422,22 @@ export class ItemMediaService extends InventoryServiceBase {
       userId ?? null,
     );
 
-    if (previousAssetId && previousAssetId !== asset.id) {
-      try {
-        await this.storage.deleteAsset(businessId, accountId, previousAssetId);
-      } catch (error) {
-        if (!(error instanceof StorageNotFoundError)) {
-          throw error;
-        }
-      }
+    // Keep superseded rack photo assets — item location history (last 5) still
+    // references their media ids and signed URLs for read-only audit thumbnails.
+
+    const location = await this.locations.findById(businessId, locationId);
+    if (location) {
+      await this.locationHistory.insert({
+        businessId,
+        itemLocationId: locationId,
+        itemId: location.item_id,
+        rack: location.rack,
+        shelf: location.shelf,
+        photoUrl: url,
+        photoMediaAssetId: asset.id,
+        employeeLabel: employeeLabel ?? null,
+        changedBy: userId ?? null,
+      });
     }
 
     return {
@@ -450,15 +459,16 @@ export class ItemMediaService extends InventoryServiceBase {
       businessId,
       locationId,
     );
-    if (!assetId) {
-      throw new AppError('NOT_FOUND', 'Rack photo not found', 404);
-    }
 
     await this.locations.clearPhotoAsset(
       businessId,
       locationId,
       userId ?? null,
     );
+
+    if (!assetId) {
+      return;
+    }
 
     try {
       await this.storage.deleteAsset(businessId, accountId, assetId);

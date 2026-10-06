@@ -125,4 +125,17 @@ abstract final class InventoryStyles {
     fontSize: AppTypography.bodySmallSize,
     color: AppColors.textPrimary,
   );
+
+  /// Narrow list panel (Products/Services sidebar).
+  static const double listPanelCompactFontSize = 11;
+
+  static TextStyle get listPanelCompactCellStyle => listCellStyle.copyWith(
+    fontSize: listPanelCompactFontSize,
+    height: 1.2,
+  );
+
+  static TextStyle get listPanelCompactHeaderStyle => listHeaderStyle.copyWith(
+    fontSize: listPanelCompactFontSize,
+    letterSpacing: 0.35,
+  );
 }

@@ -1,8 +1,8 @@
 import type { Database } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import { PaymentRepository } from '../accounting/payment.repository';
 import { HiddenLedgerService } from '../hidden-ledger/hidden-ledger.service';
+import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import type { SalesDocumentType } from './sales-document.types';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];

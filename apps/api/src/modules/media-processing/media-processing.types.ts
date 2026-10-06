@@ -1,7 +1,7 @@
 import type { StoragePurpose } from '../storage/storage.constants';
-import type { StorageAsset, MediaAssetRow } from '../storage/storage.types';
-import type { ImagePolicyKey } from './media-processing.constants';
+import type { MediaAssetRow, StorageAsset } from '../storage/storage.types';
 import type { ImageVariant, OutputImageFormat } from './image/image.constants';
+import type { ImagePolicyKey } from './media-processing.constants';
 
 export type ProcessingStatus =
   | 'pending'

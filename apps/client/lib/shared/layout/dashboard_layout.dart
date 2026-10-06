@@ -11,7 +11,7 @@ abstract final class DashboardLayout {
   static const minimumWindowWidth = 960.0;
   static const minimumWindowHeight = 640.0;
 
-  /// Default opening size as a fraction of the monitor work area (not maximized).
+  /// Fallback initial size before maximize, as a fraction of the monitor work area.
   /// Clamped to [minimumWindowWidth]/[minimumWindowHeight] so layout stays usable.
   static const defaultWindowWidthRatio = 0.85;
   static const defaultWindowHeightRatio = 0.88;

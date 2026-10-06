@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Transaction-details search row with filter settings button.
 class MobileHomeTransactionSearchRow extends StatelessWidget {
   const MobileHomeTransactionSearchRow({
@@ -40,7 +42,7 @@ class MobileHomeTransactionSearchRow extends StatelessWidget {
               child: Row(
                 children: [
                   const SizedBox(width: AppSpacing.md),
-                  Icon(Icons.search_rounded, color: primary, size: 20),
+                  Icon(LucideIcons.search, color: primary, size: 20),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: TextField(
@@ -84,7 +86,11 @@ class MobileHomeTransactionSearchRow extends StatelessWidget {
                     border: Border.all(color: AppColors.chipBorder),
                     boxShadow: AppShadows.subtle,
                   ),
-                  child: Icon(Icons.tune_rounded, color: primary, size: 18),
+                  child: Icon(
+                    LucideIcons.slidersHorizontal,
+                    color: primary,
+                    size: 18,
+                  ),
                 ),
               ),
             ),

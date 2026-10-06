@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Shared barcode scanner strip for mobile POS.
 ///
 /// Camera and HID both call [handleBarcodeScan] → POS cart add.
@@ -35,7 +37,8 @@ class PosBarcodeScannerLayer extends ConsumerStatefulWidget {
       _PosBarcodeScannerLayerState();
 }
 
-class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer> {
+class _PosBarcodeScannerLayerState
+    extends ConsumerState<PosBarcodeScannerLayer> {
   bool _isHardwareMode = false;
   bool? _cameraAvailable;
   final _cameraHandler = BarcodeScanHandler(
@@ -166,7 +169,8 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
                 controller: widget.controller,
                 onDetect: _onBarcodeDetected,
                 errorBuilder: (context, error) => _CameraScannerErrorState(
-                  message: error.errorDetails?.message ??
+                  message:
+                      error.errorDetails?.message ??
                       'Unable to access the camera.',
                   onRetry: () => unawaited(widget.controller.start()),
                 ),
@@ -195,7 +199,7 @@ class _PosBarcodeScannerLayerState extends ConsumerState<PosBarcodeScannerLayer>
               top: AppSpacing.xs,
               right: AppSpacing.xs,
               child: _StripIconButton(
-                icon: Icons.close_rounded,
+                icon: LucideIcons.x,
                 tooltip: 'Close scanner',
                 onPressed: widget.onClose,
               ),
@@ -225,8 +229,9 @@ class _ScannerModeToggle extends StatelessWidget {
     final shellColor = onDarkBackground
         ? Colors.black.withValues(alpha: 0.45)
         : Colors.grey.shade200;
-    final unselectedIconColor =
-        onDarkBackground ? Colors.white70 : AppColors.textSecondary;
+    final unselectedIconColor = onDarkBackground
+        ? Colors.white70
+        : AppColors.textSecondary;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -239,13 +244,13 @@ class _ScannerModeToggle extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _ToggleSegment(
-              icon: Icons.photo_camera_outlined,
+              icon: LucideIcons.camera,
               selected: !isHardwareMode,
               onTap: cameraEnabled ? () => onChanged(false) : null,
               unselectedIconColor: unselectedIconColor,
             ),
             _ToggleSegment(
-              icon: Icons.barcode_reader,
+              icon: LucideIcons.scanBarcode,
               selected: isHardwareMode,
               onTap: () => onChanged(true),
               unselectedIconColor: unselectedIconColor,
@@ -339,7 +344,7 @@ class _CameraScannerErrorState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.no_photography_outlined,
+                LucideIcons.cameraOff,
                 color: Colors.white70,
                 size: 40,
               ),

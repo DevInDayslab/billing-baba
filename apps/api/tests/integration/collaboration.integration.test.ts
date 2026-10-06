@@ -75,7 +75,10 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
       });
       expect(secondGet.statusCode).toBe(200);
 
-      const inviteeAccountId = await ensureAccount(inviteePhone, 'Invitee User');
+      const inviteeAccountId = await ensureAccount(
+        inviteePhone,
+        'Invitee User',
+      );
       const inviteeSession = await issueTestSession(app, inviteeAccountId);
 
       const accepted = await app.inject({
@@ -167,7 +170,10 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
         }
       ).data;
 
-      const reinviteAccountId = await ensureAccount(reinvitePhone, 'Reinvite User');
+      const reinviteAccountId = await ensureAccount(
+        reinvitePhone,
+        'Reinvite User',
+      );
       const reinviteSession = await issueTestSession(app, reinviteAccountId);
 
       await app.inject({
@@ -317,7 +323,10 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
         url: `${prefix}/invitations/${invite.invite_code}`,
       });
 
-      const memberAccountId = await ensureAccount(memberPhone, 'Member Mgmt User');
+      const memberAccountId = await ensureAccount(
+        memberPhone,
+        'Member Mgmt User',
+      );
       const memberSession = await issueTestSession(app, memberAccountId);
 
       const accepted = await app.inject({

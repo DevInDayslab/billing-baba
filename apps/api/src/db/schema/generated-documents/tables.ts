@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -7,7 +8,6 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
 import { businesses } from '../business/tables';
 import { timestamptz, uuidPrimaryKey } from '../columns';
 import {

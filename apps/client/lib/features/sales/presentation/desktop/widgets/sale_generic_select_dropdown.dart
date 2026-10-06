@@ -20,6 +20,7 @@ class SaleGenericSelectDropdown extends StatefulWidget {
     this.hasError = false,
     this.compact = false,
     this.borderless = false,
+    this.triggerHeight,
     this.footerActionLabel,
     this.onFooterAction,
     super.key,
@@ -35,6 +36,11 @@ class SaleGenericSelectDropdown extends StatefulWidget {
   final bool hasError;
   final bool compact;
   final bool borderless;
+
+  /// When set (e.g. inside [InputDecorator]), keeps the trigger aligned with
+  /// floating-label text fields without overflowing the decorator.
+  final double? triggerHeight;
+
   final String? footerActionLabel;
   final VoidCallback? onFooterAction;
 
@@ -105,8 +111,11 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
           ),
           menuChildren: _buildMenuChildren(),
           builder: (context, controller, child) {
+            final height =
+                widget.triggerHeight ??
+                (widget.compact ? saleCompactFieldHeight : saleFieldHeight);
             return SizedBox(
-              height: widget.compact ? saleCompactFieldHeight : saleFieldHeight,
+              height: height,
               width: double.infinity,
               child: SaleFieldTrigger(
                 onTap: () {
@@ -119,6 +128,7 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
                 hasError: widget.hasError,
                 compact: widget.compact,
                 borderless: widget.borderless,
+                height: height,
                 child: Row(
                   children: [
                     Expanded(

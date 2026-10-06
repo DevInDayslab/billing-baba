@@ -49,8 +49,9 @@ class SyncMetadataStore {
   }
 
   DateTime? stockLevelsReconciledAtFor(String businessId) {
-    final raw =
-        _storage.read(StorageKeys.syncStockLevelsReconciledAtFor(businessId));
+    final raw = _storage.read(
+      StorageKeys.syncStockLevelsReconciledAtFor(businessId),
+    );
     if (raw == null || raw.isEmpty) return null;
     return DateTime.tryParse(raw);
   }

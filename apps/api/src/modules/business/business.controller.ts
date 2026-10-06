@@ -7,8 +7,8 @@ import {
   createBusinessBodySchema,
   updateBusinessProfileBodySchema,
 } from './business.schema';
-import { updateCommerceSettingsBodySchema } from './business-commerce-settings.schema';
 import { BusinessService } from './business.service';
+import { updateCommerceSettingsBodySchema } from './business-commerce-settings.schema';
 
 function formatZodError(error: ZodError): Record<string, string[]> {
   const errors: Record<string, string[]> = {};
@@ -50,8 +50,17 @@ export function createBusinessController(config: AppConfig) {
         }
 
         const body = createBusinessBodySchema.parse(request.body);
+        const { refresh_token: refreshToken, ...businessInput } = body;
         const service = new BusinessService(config);
-        const data = await service.createBusiness(accountId, phone, body);
+        const data = await service.createBusiness(
+          accountId,
+          phone,
+          businessInput,
+          {
+            refreshToken,
+            app: request.server,
+          },
+        );
         return sendData(reply, data, 201);
       } catch (error) {
         if (error instanceof ZodError) {
@@ -163,7 +172,22 @@ export function createBusinessController(config: AppConfig) {
 
       const businessId = (request.params as { id: string }).id;
       const service = new BusinessService(config);
-      await service.deleteBusiness(businessId, accountId);
+      await service.scheduleBusinessDeletion(businessId, accountId);
+      return reply.status(204).send();
+    },
+
+    cancelDeletion: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      if (!accountId) {
+        throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+      }
+
+      const businessId = (request.params as { id: string }).id;
+      const service = new BusinessService(config);
+      await service.cancelScheduledBusinessDeletion(businessId, accountId);
       return reply.status(204).send();
     },
   };

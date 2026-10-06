@@ -2,9 +2,22 @@ import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'inventory_brands_provider.g.dart';
+
+final brandBackendSearchProvider = NotifierProvider<BrandBackendSearch, String>(
+  BrandBackendSearch.new,
+);
+
+class BrandBackendSearch extends Notifier<String> {
+  @override
+  String build() => '';
+
+  String get query => state;
+  set query(String value) => state = value;
+}
 
 class AddBrandResult {
   const AddBrandResult({this.brand, this.error});

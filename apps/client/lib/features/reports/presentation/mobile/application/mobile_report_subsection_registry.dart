@@ -147,8 +147,7 @@ abstract final class MobileReportSubsectionRegistry {
       ),
 
       // ── GST ──────────────────────────────────────────────────────
-      (ReportNavGroup.gst, 'gstr1') ||
-      (ReportNavGroup.gst, 'gstr2') => (
+      (ReportNavGroup.gst, 'gstr1') || (ReportNavGroup.gst, 'gstr2') => (
         const ['Invoices', 'Taxable', 'Invoice Value'],
         const ['Taxable', 'IGST', 'Value'],
       ),

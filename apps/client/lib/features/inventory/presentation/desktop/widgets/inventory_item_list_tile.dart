@@ -20,6 +20,7 @@ class InventoryItemListTile extends StatefulWidget {
     required this.searchQuery,
     required this.onTap,
     required this.onMenuSelected,
+    this.onDoubleTap,
     this.item,
     this.trailingColor,
     this.leadingIcon = Icons.inventory_2_outlined,
@@ -33,6 +34,7 @@ class InventoryItemListTile extends StatefulWidget {
   final bool isFocused;
   final String searchQuery;
   final VoidCallback onTap;
+  final VoidCallback? onDoubleTap;
   final ValueChanged<String> onMenuSelected;
   final InventoryItem? item;
   final IconData leadingIcon;
@@ -66,10 +68,6 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
     return Colors.transparent;
   }
 
-  static const _transparentOverlay = WidgetStatePropertyAll<Color?>(
-    Colors.transparent,
-  );
-
   Widget _buildHoverZone({required Widget child}) {
     final item = widget.item;
     if (item == null) return child;
@@ -93,17 +91,15 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
         ),
         child: Material(
           color: Colors.transparent,
-          child: InkWell(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: widget.onTap,
-            onHighlightChanged: (pressed) =>
-                setState(() => _isPressed = pressed),
-            hoverColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            overlayColor: _transparentOverlay,
+            onDoubleTap: widget.onDoubleTap,
+            onTapDown: (_) => setState(() => _isPressed = true),
+            onTapUp: (_) => setState(() => _isPressed = false),
+            onTapCancel: () => setState(() => _isPressed = false),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               child: Row(
                 children: [
                   Expanded(
@@ -112,20 +108,21 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
                       children: [
                         Icon(
                           widget.leadingIcon,
-                          size: 16,
+                          size: 14,
                           color: Colors.grey.shade500,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: _buildHoverZone(
                             child: InventoryHighlightedText(
                               text: widget.title,
                               query: widget.searchQuery,
-                              style: InventoryStyles.listCellStyle.copyWith(
-                                fontWeight: widget.isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                              ),
+                              style: InventoryStyles.listPanelCompactCellStyle
+                                  .copyWith(
+                                    fontWeight: widget.isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
                             ),
                           ),
                         ),
@@ -137,8 +134,7 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
                     child: AppEllipsisText(
                       widget.trailingValue,
                       textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 13,
+                      style: InventoryStyles.listPanelCompactCellStyle.copyWith(
                         fontWeight: FontWeight.w600,
                         color: widget.trailingColor ?? AppColors.textPrimary,
                       ),

@@ -54,25 +54,23 @@ abstract final class MobileDocumentRoutes {
     String? paymentId,
     String? partyId,
     String? partyName,
-  }) =>
-      _withQuery(
-        AppRoutes.addPaymentIn,
-        paymentId: paymentId,
-        partyId: partyId,
-        partyName: partyName,
-      );
+  }) => _withQuery(
+    AppRoutes.addPaymentIn,
+    paymentId: paymentId,
+    partyId: partyId,
+    partyName: partyName,
+  );
 
   static String addPaymentOut({
     String? paymentId,
     String? partyId,
     String? partyName,
-  }) =>
-      _withQuery(
-        AppRoutes.addPaymentOut,
-        paymentId: paymentId,
-        partyId: partyId,
-        partyName: partyName,
-      );
+  }) => _withQuery(
+    AppRoutes.addPaymentOut,
+    paymentId: paymentId,
+    partyId: partyId,
+    partyName: partyName,
+  );
 
   static String _withQuery(
     String path, {

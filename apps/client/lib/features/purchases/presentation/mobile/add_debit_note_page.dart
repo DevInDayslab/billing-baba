@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
@@ -9,6 +10,7 @@ import 'package:billing_baba/features/print/presentation/desktop/widgets/documen
 import 'package:billing_baba/features/purchases/application/debit_note_form_provider.dart';
 import 'package:billing_baba/features/purchases/models/debit_note_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
@@ -22,6 +24,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class MobileAddDebitNotePage extends ConsumerStatefulWidget {
   const MobileAddDebitNotePage({super.key, this.debitNoteId});
 
@@ -34,7 +38,8 @@ class MobileAddDebitNotePage extends ConsumerStatefulWidget {
 
 class _MobileAddDebitNotePageState
     extends ConsumerState<MobileAddDebitNotePage> {
-  static const MobileDocumentVisibility _visibility = MobileDocumentVisibility.debitNote;
+  static const MobileDocumentVisibility _visibility =
+      MobileDocumentVisibility.debitNote;
   late final TextEditingController _descriptionController;
   late final TextEditingController _billNumberController;
 
@@ -44,8 +49,9 @@ class _MobileAddDebitNotePageState
     _descriptionController = TextEditingController();
     _billNumberController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final form =
-          ref.read(debitNoteFormProvider(debitNoteId: widget.debitNoteId));
+      final form = ref.read(
+        debitNoteFormProvider(debitNoteId: widget.debitNoteId),
+      );
       _descriptionController.text = form.description;
       _billNumberController.text = form.billNumber;
     });
@@ -108,7 +114,9 @@ class _MobileAddDebitNotePageState
     final error = await _notifier().saveDebitNote();
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final docId = _form().documentId;
@@ -137,12 +145,14 @@ class _MobileAddDebitNotePageState
   Widget build(BuildContext context) {
     final form = _form();
     final notifier = _notifier();
-    final confirmed =
-        form.items.where((item) => item.itemName.trim().isNotEmpty).toList();
+    final confirmed = form.items
+        .where((item) => item.itemName.trim().isNotEmpty)
+        .toList();
 
     return MobileDocumentFormScaffold(
-      title:
-          widget.debitNoteId != null ? 'Edit Purchase Return' : 'Purchase Return',
+      title: widget.debitNoteId != null
+          ? 'Edit Purchase Return'
+          : 'Purchase Return',
       visibility: _visibility,
       isSaving: form.isSaving,
       onClose: _handleClose,
@@ -152,13 +162,22 @@ class _MobileAddDebitNotePageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (form.saveError != null)
-            Text(form.saveError!, style: const TextStyle(color: AppColors.error)),
+            Text(
+              form.saveError!,
+              style: const TextStyle(color: AppColors.error),
+            ),
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Return No.',
-            documentNumberValue:
-                form.returnNo.isEmpty ? 'Auto' : form.returnNo,
-            documentNumberIsPlaceholder: form.returnNo.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: form.documentId,
+              currentNumber: form.returnNo,
+              preview: watchDocumentNumberPreview(
+                ref,
+                PurchaseConstants.purchaseReturnSeries,
+              ),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.returnDate),
             dateIsPlaceholder: form.returnDate == null,
             onDateTap: () async {
@@ -206,8 +225,9 @@ class _MobileAddDebitNotePageState
                 ],
               );
               if (selected == null) return;
-              final match =
-                  godowns.where((g) => g.name == selected).firstOrNull;
+              final match = godowns
+                  .where((g) => g.name == selected)
+                  .firstOrNull;
               notifier.updateGodown(selected, godownId: match?.id);
             },
           ),
@@ -225,7 +245,7 @@ class _MobileAddDebitNotePageState
                 ? formatSaleSingleDate(form.billDate)
                 : 'Select date',
             isPlaceholder: form.billDate == null,
-            trailingIcon: Icons.calendar_today_outlined,
+            trailingIcon: LucideIcons.calendar,
             onTap: () async {
               final date = await showMobileDatePicker(
                 context,
@@ -253,8 +273,9 @@ class _MobileAddDebitNotePageState
                   name: item.itemName,
                   qtyLabel:
                       '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
-                  amountLabel:
-                      MobileDocumentItemsSection.formatAmount(item.amount),
+                  amountLabel: MobileDocumentItemsSection.formatAmount(
+                    item.amount,
+                  ),
                 ),
             ],
             onAddItems: () => unawaited(_addLine()),

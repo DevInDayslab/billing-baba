@@ -2,8 +2,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
-import type { GatewayWebhookPayload } from '../../shared/payments';
 import { sendData } from '../../shared/http/response';
+import type { GatewayWebhookPayload } from '../../shared/payments';
 import {
   createGatewayOrderBodySchema,
   gatewayIntentIdParamSchema,
@@ -38,7 +38,9 @@ function requireAuthContext(request: FastifyRequest): {
 
 function readIdempotencyKey(request: FastifyRequest): string | undefined {
   const key = request.headers['idempotency-key'];
-  return typeof key === 'string' && key.trim().length > 0 ? key.trim() : undefined;
+  return typeof key === 'string' && key.trim().length > 0
+    ? key.trim()
+    : undefined;
 }
 
 export function createPaymentGatewayController(config: AppConfig) {

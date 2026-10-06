@@ -12,3 +12,6 @@ PRODUCT_BUNDLE_IDENTIFIER = com.billingbaba.app
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 com.billingbaba.app. All rights reserved.
+
+// Xcode 16+ / macOS 27 SDK require deployment target >= 12.0 for CocoaPods targets.
+MACOSX_DEPLOYMENT_TARGET = 12.0

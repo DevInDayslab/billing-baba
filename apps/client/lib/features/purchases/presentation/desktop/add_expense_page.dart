@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
@@ -239,9 +240,17 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
               child: _LabeledField(
                 label: 'Expense No',
                 child: _ExpenseTextField(
-                  initialValue: form.expenseNumber,
+                  initialValue: resolveDocumentNumberDisplay(
+                    documentId: form.expenseId,
+                    currentNumber: form.expenseNumber,
+                    preview: watchDocumentNumberPreview(
+                      ref,
+                      expenseDocumentSeries,
+                    ),
+                  ),
                   hintText: 'Expense number',
-                  onChanged: notifier.updateExpenseNumber,
+                  readOnly: true,
+                  onChanged: (_) {},
                 ),
               ),
             ),
@@ -532,11 +541,13 @@ class _ExpenseTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.readOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool readOnly;
 
   @override
   State<_ExpenseTextField> createState() => _ExpenseTextFieldState();
@@ -571,7 +582,11 @@ class _ExpenseTextFieldState extends State<_ExpenseTextField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(hint: widget.hintText),
+      readOnly: widget.readOnly,
+      decoration: buildSaleFieldDecoration(
+        hint: widget.hintText,
+        filled: widget.readOnly,
+      ),
       onChanged: widget.onChanged,
     );
   }

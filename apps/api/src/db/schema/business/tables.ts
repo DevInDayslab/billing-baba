@@ -45,6 +45,8 @@ export const businesses = pgTable(
       .notNull()
       .default('active'),
     planExpiresAt: timestamptz('plan_expires_at'),
+    deletionRequestedAt: timestamptz('deletion_requested_at'),
+    scheduledDeletionAt: timestamptz('scheduled_deletion_at'),
   },
   (table) => [
     uniqueIndex('uq_businesses_gstin')

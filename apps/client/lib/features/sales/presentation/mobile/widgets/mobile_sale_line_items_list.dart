@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Compact line-item row for mobile sale/purchase create forms.
 class MobileTransactionLineTile extends StatelessWidget {
   const MobileTransactionLineTile({
@@ -73,7 +75,7 @@ class MobileTransactionLineTile extends StatelessWidget {
             ),
             IconButton(
               onPressed: onRemove,
-              icon: const Icon(Icons.close_rounded, size: 20),
+              icon: const Icon(LucideIcons.x, size: 20),
               color: AppColors.textSecondary.withValues(alpha: 0.7),
               visualDensity: VisualDensity.compact,
               tooltip: 'Remove item',

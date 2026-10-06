@@ -18,7 +18,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _compactBreakpoint = 800.0;
 const _partyListPanelWidth = 280.0;
 
-Future<void> _openAddGroupDialog(BuildContext context, WidgetRef ref) async {
+Future<void> openDesktopAddGroupDialog(
+  BuildContext context,
+  WidgetRef ref,
+) async {
   final name = await showTextInputDialog(
     context,
     title: 'New Party Group',
@@ -42,7 +45,9 @@ Future<void> _openAddGroupDialog(BuildContext context, WidgetRef ref) async {
 }
 
 class DesktopPartyGroupsPage extends ConsumerStatefulWidget {
-  const DesktopPartyGroupsPage({super.key});
+  const DesktopPartyGroupsPage({this.embedded = false, super.key});
+
+  final bool embedded;
 
   @override
   ConsumerState<DesktopPartyGroupsPage> createState() =>
@@ -96,6 +101,38 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
 
     final selectedGroup = ref.watch(selectedPartyGroupProvider);
 
+    final body = LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < _compactBreakpoint;
+
+        if (isCompact) {
+          if (selectedGroup == null) {
+            return _buildInventoryShell(child: const PartyGroupListPanel());
+          }
+          return _buildInventoryShell(
+            child: PartyGroupDetailPanel(
+              groupName: selectedGroup,
+              onBack: _clearSelection,
+            ),
+          );
+        }
+
+        return InventorySplitLayout(
+          listWidth: _partyListPanelWidth,
+          listPanel: const PartyGroupListPanel(),
+          detailPanel: selectedGroup == null
+              ? const InventoryDetailPlaceholder(
+                  message: 'Select a group to view parties',
+                )
+              : PartyGroupDetailPanel(groupName: selectedGroup),
+        );
+      },
+    );
+
+    if (widget.embedded) {
+      return body;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -111,40 +148,9 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
             children: [
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyGroups,
-                onAddGroup: () => _openAddGroupDialog(context, ref),
+                onAddGroup: () => openDesktopAddGroupDialog(context, ref),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = constraints.maxWidth < _compactBreakpoint;
-
-                    if (isCompact) {
-                      if (selectedGroup == null) {
-                        return _buildInventoryShell(
-                          child: const PartyGroupListPanel(),
-                        );
-                      }
-                      return _buildInventoryShell(
-                        child: PartyGroupDetailPanel(
-                          groupName: selectedGroup,
-                          onBack: _clearSelection,
-                        ),
-                      );
-                    }
-
-                    return InventorySplitLayout(
-                      listWidth: _partyListPanelWidth,
-                      listPanel: const PartyGroupListPanel(),
-                      detailPanel: selectedGroup == null
-                          ? const InventoryDetailPlaceholder(
-                              message: 'Select a group to view parties',
-                            )
-                          : PartyGroupDetailPanel(groupName: selectedGroup),
-                    );
-                  },
-                ),
-              ),
+              Expanded(child: body),
             ],
           ),
         ),

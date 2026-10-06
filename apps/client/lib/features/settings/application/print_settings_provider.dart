@@ -17,7 +17,14 @@ Future<PrintSettingsRepository> printSettingsRepository(Ref ref) async {
 class PrintSettingsNotifier extends _$PrintSettingsNotifier {
   @override
   Future<PrintSettings> build() async {
-    ref.watch(currentBusinessProvider);
+    final businessId = ref.watch(currentBusinessProvider)?.id ?? '';
+
+    // Prefer sync path when SharedPreferences is already initialized.
+    final storageReady = ref.watch(storageServiceProvider).asData?.value;
+    if (storageReady != null) {
+      return PrintSettingsRepository(storageReady, businessId).load();
+    }
+
     final repository = await ref.watch(printSettingsRepositoryProvider.future);
     return repository.load();
   }

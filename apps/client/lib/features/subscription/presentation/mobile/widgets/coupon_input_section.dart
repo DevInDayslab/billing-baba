@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 class CouponInputSection extends StatefulWidget {
   const CouponInputSection({
     required this.appliedCouponCode,
@@ -66,7 +68,7 @@ class _CouponInputSectionState extends State<CouponInputSection> {
         child: Row(
           children: [
             const Icon(
-              Icons.local_offer_outlined,
+              LucideIcons.tag,
               size: 18,
               color: Color(0xFF2E7D32),
             ),
@@ -126,7 +128,7 @@ class _CouponInputSectionState extends State<CouponInputSection> {
                         turns: _isExpanded ? 0.5 : 0,
                         duration: const Duration(milliseconds: 250),
                         child: const Icon(
-                          Icons.keyboard_arrow_down,
+                          LucideIcons.chevronDown,
                           color: AppColors.textSecondary,
                         ),
                       ),

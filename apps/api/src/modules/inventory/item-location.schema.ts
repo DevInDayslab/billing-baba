@@ -15,9 +15,17 @@ export type ListItemLocationsQuery = z.infer<
   typeof listItemLocationsQuerySchema
 >;
 
+const employeeLabelSchema = z
+  .string()
+  .trim()
+  .max(120, 'Employee name or ID is too long')
+  .optional()
+  .transform((value) => (value === '' ? undefined : value));
+
 export const createItemLocationBodySchema = z.object({
   item_id: z.uuid('Invalid item ID'),
   godown_id: z.uuid('Invalid godown ID'),
+  employee_label: employeeLabelSchema,
   rack: z
     .string()
     .trim()
@@ -43,6 +51,7 @@ export type CreateItemLocationBody = z.infer<
 export const updateItemLocationBodySchema = z
   .object({
     godown_id: z.uuid('Invalid godown ID').optional(),
+    employee_label: employeeLabelSchema,
     rack: z
       .string()
       .trim()
@@ -76,3 +85,12 @@ export const itemLocationIdParamSchema = z.object({
 });
 
 export type ItemLocationIdParam = z.infer<typeof itemLocationIdParamSchema>;
+
+export const listItemLocationHistoryQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export type ListItemLocationHistoryQuery = z.infer<
+  typeof listItemLocationHistoryQuerySchema
+>;

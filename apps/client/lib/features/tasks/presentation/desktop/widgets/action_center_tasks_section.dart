@@ -7,6 +7,7 @@ import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_editor_dialog.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_empty_state.dart';
 import 'package:billing_baba/features/tasks/presentation/desktop/widgets/task_list.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:billing_baba/shared/widgets/app_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,17 +44,10 @@ class ActionCenterTasksSection extends ConsumerWidget {
     final wasCompleting = !previous.isCompleted;
     if (!wasCompleting) return;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Reminder completed'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            unawaited(ref.read(tasksProvider.notifier).restore(previous));
-          },
-        ),
-      ),
+    showTaskCompletionUndoRedoSnackBar(
+      context: context,
+      ref: ref,
+      snapshotBeforeComplete: previous,
     );
   }
 

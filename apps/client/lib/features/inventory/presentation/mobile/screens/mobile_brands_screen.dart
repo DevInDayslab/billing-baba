@@ -21,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile brands list with search and add/edit/delete.
 class MobileBrandsScreen extends ConsumerStatefulWidget {
   const MobileBrandsScreen({super.key});
@@ -52,7 +54,9 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       unawaited(
-        ref.read(inventoryBrandsProvider.notifier).refresh(
+        ref
+            .read(inventoryBrandsProvider.notifier)
+            .refresh(
               searchQuery: query.trim().isEmpty ? null : query.trim(),
             ),
       );
@@ -60,7 +64,9 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
   }
 
   Future<void> _onRefresh() {
-    return ref.read(inventoryBrandsProvider.notifier).refresh(
+    return ref
+        .read(inventoryBrandsProvider.notifier)
+        .refresh(
           searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
         );
   }
@@ -99,8 +105,9 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final error =
-        await ref.read(inventoryBrandsProvider.notifier).deleteBrand(brand.id);
+    final error = await ref
+        .read(inventoryBrandsProvider.notifier)
+        .deleteBrand(brand.id);
     if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -114,13 +121,13 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
     final actions = <MobileSheetAction>[
       if (permissions.canEdit(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.edit_outlined,
+          icon: LucideIcons.pencil,
           label: 'Edit Brand',
           onTap: () => unawaited(_editBrand(brand)),
         ),
       if (permissions.canDelete(PermissionModule.item))
         MobileSheetAction(
-          icon: Icons.delete_outline_rounded,
+          icon: LucideIcons.trash2,
           label: 'Delete Brand',
           onTap: () => unawaited(_confirmDeleteBrand(brand)),
         ),
@@ -184,13 +191,15 @@ class _MobileBrandsScreenState extends ConsumerState<MobileBrandsScreen> {
                   (_, _, true) => MobileEmptyState(
                     title: 'No brands found',
                     message: 'Add a brand to organize your items.',
-                    icon: Icons.branding_watermark_outlined,
-                    actionLabel: ref
+                    icon: LucideIcons.tag,
+                    actionLabel:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? 'Add Brand'
                         : null,
-                    onAction: ref
+                    onAction:
+                        ref
                             .read(permissionServiceProvider)
                             .canCreate(PermissionModule.item)
                         ? () => unawaited(_addBrand())
@@ -355,7 +364,7 @@ class _AddBrandFab extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              const Icon(LucideIcons.plus, color: Colors.white, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Add Brand',

@@ -3,6 +3,8 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Shortcut shown in the items "More Options" bottom sheet.
 class ItemMoreOption {
   const ItemMoreOption({
@@ -70,7 +72,7 @@ class _MoreOptionsHeader extends StatelessWidget {
             ),
             IconButton(
               onPressed: onClose,
-              icon: const Icon(Icons.close_rounded),
+              icon: const Icon(LucideIcons.x),
               color: AppColors.textSecondary,
               iconSize: 22,
               visualDensity: VisualDensity.compact,

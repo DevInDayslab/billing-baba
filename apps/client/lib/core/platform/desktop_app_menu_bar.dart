@@ -6,6 +6,8 @@ import 'package:billing_baba/core/platform/desktop_menu_actions.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/customer_support_strip.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/sync_toolbar_controls.dart';
+import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,7 +35,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
   /// Compact style for MenuBar labels only (not dropdown items).
   static const _barButtonStyle = ButtonStyle(
     padding: WidgetStatePropertyAll(
-      EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+      EdgeInsets.symmetric(horizontal: 8),
     ),
     minimumSize: WidgetStatePropertyAll(
       Size(0, DashboardSpacing.menuBarHeight),
@@ -96,29 +98,36 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: MenuBar(
-                        style: const MenuStyle(
-                          backgroundColor: WidgetStatePropertyAll(
-                            Colors.transparent,
-                          ),
-                          elevation: WidgetStatePropertyAll(0),
-                          padding: WidgetStatePropertyAll(
-                            EdgeInsets.symmetric(horizontal: 2),
-                          ),
-                          minimumSize: WidgetStatePropertyAll(
-                            Size(0, DashboardSpacing.menuBarHeight),
-                          ),
-                          maximumSize: WidgetStatePropertyAll(
-                            Size(
-                              double.infinity,
-                              DashboardSpacing.menuBarHeight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          MenuBar(
+                            style: const MenuStyle(
+                              backgroundColor: WidgetStatePropertyAll(
+                                Colors.transparent,
+                              ),
+                              elevation: WidgetStatePropertyAll(0),
+                              padding: WidgetStatePropertyAll(
+                                EdgeInsets.symmetric(horizontal: 2),
+                              ),
+                              minimumSize: WidgetStatePropertyAll(
+                                Size(0, DashboardSpacing.menuBarHeight),
+                              ),
+                              maximumSize: WidgetStatePropertyAll(
+                                Size(
+                                  double.infinity,
+                                  DashboardSpacing.menuBarHeight,
+                                ),
+                              ),
+                            ),
+                            children: _materialMenus(
+                              canBusiness: host.canBusiness,
+                              canLogout: host.canLogout,
                             ),
                           ),
-                        ),
-                        children: _materialMenus(
-                          canBusiness: host.canBusiness,
-                          canLogout: host.canLogout,
-                        ),
+                          const SyncNowToolbarButton(),
+                          const CloudSyncToolbarButton(),
+                        ],
                       ),
                     ),
                   ),
@@ -248,6 +257,11 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
             onSelected: () => unawaited(DesktopMenuActions.reportIssue()),
           ),
           PlatformMenuItem(
+            label: 'Terms of Service',
+            onSelected: () =>
+                unawaited(DesktopMenuActions.openTermsOfService()),
+          ),
+          PlatformMenuItem(
             label: 'Privacy Policy',
             onSelected: () => unawaited(DesktopMenuActions.openPrivacyPolicy()),
           ),
@@ -287,9 +301,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   LogicalKeyboardKey.keyZ,
                   meta: true,
                 ),
-                onSelected: () => _invokeEditIntent(
-                  const UndoTextIntent(SelectionChangedCause.toolbar),
-                ),
+                onSelected: _handleUndo,
               ),
               PlatformMenuItem(
                 label: 'Redo',
@@ -298,9 +310,7 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
                   meta: true,
                   shift: true,
                 ),
-                onSelected: () => _invokeEditIntent(
-                  const RedoTextIntent(SelectionChangedCause.toolbar),
-                ),
+                onSelected: _handleRedo,
               ),
             ],
           ),
@@ -362,6 +372,30 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
         ],
       ),
     ];
+  }
+
+  void _handleUndo() {
+    if (tryTaskCompletionUndo(ref, context)) return;
+    _invokeEditIntent(const UndoTextIntent(SelectionChangedCause.toolbar));
+  }
+
+  void _handleRedo() {
+    if (tryTaskCompletionRedo(ref, context)) return;
+    _invokeEditIntent(const RedoTextIntent(SelectionChangedCause.toolbar));
+  }
+
+  static void _handleEditUndoRedo(
+    WidgetRef ref,
+    BuildContext context, {
+    required bool isUndo,
+  }) {
+    if (isUndo) {
+      if (tryTaskCompletionUndo(ref, context)) return;
+      _invokeEditIntent(const UndoTextIntent(SelectionChangedCause.toolbar));
+      return;
+    }
+    if (tryTaskCompletionRedo(ref, context)) return;
+    _invokeEditIntent(const RedoTextIntent(SelectionChangedCause.toolbar));
   }
 
   static void _invokeEditIntent(Intent intent) {
@@ -440,6 +474,10 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
             child: const Text('Report an Issue'),
           ),
           MenuItemButton(
+            onPressed: () => unawaited(DesktopMenuActions.openTermsOfService()),
+            child: const Text('Terms of Service'),
+          ),
+          MenuItemButton(
             onPressed: () => unawaited(DesktopMenuActions.openPrivacyPolicy()),
             child: const Text('Privacy Policy'),
           ),
@@ -467,14 +505,18 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
         label: const Text('Edit'),
         menuChildren: [
           MenuItemButton(
-            onPressed: () => _DesktopAppMenuBarState._invokeEditIntent(
-              const UndoTextIntent(SelectionChangedCause.toolbar),
+            onPressed: () => _DesktopAppMenuBarState._handleEditUndoRedo(
+              ref,
+              context,
+              isUndo: true,
             ),
             child: const Text('Undo'),
           ),
           MenuItemButton(
-            onPressed: () => _DesktopAppMenuBarState._invokeEditIntent(
-              const RedoTextIntent(SelectionChangedCause.toolbar),
+            onPressed: () => _DesktopAppMenuBarState._handleEditUndoRedo(
+              ref,
+              context,
+              isUndo: false,
             ),
             child: const Text('Redo'),
           ),

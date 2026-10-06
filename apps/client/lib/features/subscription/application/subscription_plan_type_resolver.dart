@@ -3,5 +3,7 @@ import 'package:billing_baba/features/subscription/domain/models/subscription_pl
 
 /// Maps mobile Plans & Pricing selection to subscription API plan codes.
 SubscriptionPlanType subscriptionPlanTypeFor(PricingPlan plan) {
-  return plan.isGold ? SubscriptionPlanType.gold : SubscriptionPlanType.platinum;
+  return plan.isGold
+      ? SubscriptionPlanType.gold
+      : SubscriptionPlanType.platinum;
 }

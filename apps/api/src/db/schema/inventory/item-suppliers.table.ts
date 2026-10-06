@@ -8,8 +8,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
-import { parties } from '../crm/tables';
 import { syncedBusinessColumns } from '../columns';
+import { parties } from '../crm/tables';
 import { syncPullIndex } from '../sync-pull-index';
 import { items } from './tables';
 

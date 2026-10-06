@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_service.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_view_state.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
@@ -28,8 +29,9 @@ class Dashboard extends _$Dashboard {
     final query = DashboardQuery(period: period);
     final cached = service.readCachedViewState(query);
     if (cached != null) {
+      final initial = cached.copyWith(isRefreshing: true);
       unawaited(_refreshInBackground(period, hadCache: true));
-      return cached;
+      return initial;
     }
     return service.fetchDashboard(query);
   }
@@ -47,13 +49,23 @@ class Dashboard extends _$Dashboard {
       state = AsyncData(
         hadCache ? fresh.copyWith(isRefreshing: false) : fresh,
       );
-    } on Object {
-      // Keep showing cached snapshot when background refresh fails.
+    } on Object catch (error) {
       if (!ref.mounted || !hadCache) return;
       final current = state.value;
-      if (current != null && current.isCachedSnapshot) {
+      if (current == null) return;
+
+      if (!OfflineUiMessages.isOfflineError(error)) {
         state = AsyncData(current.copyWith(isRefreshing: false));
+        return;
       }
+
+      // Network/server unreachable — keep last synced numbers and show offline UX.
+      state = AsyncData(
+        current.copyWith(
+          isCachedSnapshot: true,
+          isRefreshing: false,
+        ),
+      );
     }
   }
 
@@ -74,7 +86,9 @@ class Dashboard extends _$Dashboard {
     final service = await ref.read(dashboardServiceProvider.future);
     final cached = service.readCachedViewState(DashboardQuery(period: period));
     if (cached != null) {
-      state = AsyncData(cached.copyWith(isRefreshing: true));
+      state = AsyncData(
+        cached.copyWith(isRefreshing: true, isCachedSnapshot: false),
+      );
       unawaited(_refreshInBackground(period, hadCache: true));
       return;
     }

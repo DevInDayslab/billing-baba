@@ -30,6 +30,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 /// Mobile party detail view (info, quick actions, transactions).
 class MobilePartyDetailScreen extends ConsumerWidget {
   const MobilePartyDetailScreen({
@@ -59,8 +61,8 @@ class MobilePartyDetailScreen extends ConsumerWidget {
           showSettings: false,
         ),
         body: _PartyDetailError(
-        message: PartyErrorMapper.messageFor(error),
-        onRetry: () => ref.invalidate(partyDetailProvider(partyId)),
+          message: PartyErrorMapper.messageFor(error),
+          onRetry: () => ref.invalidate(partyDetailProvider(partyId)),
         ),
       ),
       data: (party) => _PartyDetailBody(
@@ -265,24 +267,24 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
         showSettings: false,
         backgroundColor: const Color(0xFFEAF4FF),
         actions: [
-              MobileIconActionButton(
-                icon: Icons.edit_outlined,
-                tooltip: 'Edit party',
+          MobileIconActionButton(
+            icon: LucideIcons.pencil,
+            tooltip: 'Edit party',
             onPressed: canEditParty
                 ? () => PartyActions.edit(context, ref, party)
                 : null,
-              ),
-              MobileIconActionButton(
-                icon: Icons.more_horiz_rounded,
-                tooltip: 'More actions',
-                onPressed: () => showPartyMoreActionsSheet(
-                  context: context,
-                  ref: ref,
-                  party: party,
-                  outstanding: outstanding,
-                ),
-              ),
-            ],
+          ),
+          MobileIconActionButton(
+            icon: LucideIcons.ellipsis,
+            tooltip: 'More actions',
+            onPressed: () => showPartyMoreActionsSheet(
+              context: context,
+              ref: ref,
+              party: party,
+              outstanding: outstanding,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Material(
         type: MaterialType.transparency,
@@ -341,33 +343,33 @@ class _PartyDetailBodyState extends ConsumerState<_PartyDetailBody> {
         ),
       ),
       body: RefreshIndicator(
-            onRefresh: () async {
+        onRefresh: () async {
           final detail = partyDetailProvider(party.id);
           ref
             ..invalidate(detail)
             ..invalidate(partyTimelineProvider(party.id));
-              await ref.read(partyDetailProvider(party.id).future);
+          await ref.read(partyDetailProvider(party.id).future);
           if (mounted) setState(_resetPagination);
-            },
-            child: ListView(
+        },
+        child: ListView(
           controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
             AppSpacing.sm,
             AppSpacing.md,
             120,
           ),
-              children: [
+          children: [
             _MinimalPartySummaryCard(
-                  party: party,
-                  outstandingLabel: outstandingLabel,
-                  creditLimitLabel: creditLimitLabel,
+              party: party,
+              outstandingLabel: outstandingLabel,
+              creditLimitLabel: creditLimitLabel,
               onAvatarTap: canEditParty
                   ? () => PartyActions.edit(context, ref, party)
                   : null,
-                ),
-                const SizedBox(height: AppSpacing.md),
+            ),
+            const SizedBox(height: AppSpacing.md),
             _MinimalActionRow(
               onReminderTap: canShareMessaging
                   ? () => PartyWhatsAppActions.sendPaymentReminderNow(
@@ -480,7 +482,7 @@ class _TransactionSearchBar extends StatelessWidget {
                 ),
               ),
               child: Icon(
-                Icons.filter_list_rounded,
+                LucideIcons.listFilter,
                 color: isFilterActive
                     ? AppColors.primary
                     : AppColors.textSecondary,
@@ -505,7 +507,7 @@ class _TransactionSearchBar extends StatelessWidget {
                   border: Border.all(color: const Color(0xFFD9E7F6)),
                 ),
                 child: const Icon(
-                  Icons.print_outlined,
+                  LucideIcons.printer,
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -569,14 +571,13 @@ class _PartyTransactionsSection extends ConsumerWidget {
           );
         }
         return Column(
-                  children: [
+          children: [
             for (final tx in visibleTransactions)
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
                 child: MobileHomeTransactionCard(
                   item: _mapLedgerTransaction(party: party, transaction: tx),
-                  onTap: () =>
-                      navigateToPartyLedgerTransaction(context, tx),
+                  onTap: () => navigateToPartyLedgerTransaction(context, tx),
                   onPrint: () => unawaited(
                     PartyLedgerTransactionTableActions.handleAction(
                       context: context,
@@ -711,8 +712,7 @@ MobileHomeTransactionFilterType _filterType(PartyLedgerTransactionKind kind) {
     PartyLedgerTransactionKind.saleInvoice ||
     PartyLedgerTransactionKind.proforma ||
     PartyLedgerTransactionKind.deliveryChallan ||
-    PartyLedgerTransactionKind.saleFa =>
-      MobileHomeTransactionFilterType.sale,
+    PartyLedgerTransactionKind.saleFa => MobileHomeTransactionFilterType.sale,
     PartyLedgerTransactionKind.saleOrder =>
       MobileHomeTransactionFilterType.saleOrder,
     PartyLedgerTransactionKind.saleReturn =>
@@ -799,7 +799,7 @@ class _MinimalPartySummaryCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
-                      ),
+                    ),
                   ],
                 ),
               ),
@@ -854,7 +854,7 @@ class _MinimalActionRow extends StatelessWidget {
           Expanded(
             child: TextButton.icon(
               onPressed: onReminderTap,
-              icon: const Icon(Icons.notifications_none_rounded),
+              icon: const Icon(LucideIcons.bell),
               label: const Text('Send Reminder'),
             ),
           ),
@@ -862,11 +862,11 @@ class _MinimalActionRow extends StatelessWidget {
           Expanded(
             child: TextButton.icon(
               onPressed: onStatementTap,
-              icon: const Icon(Icons.receipt_long_outlined),
+              icon: const Icon(LucideIcons.receipt),
               label: const Text('Send Statement'),
+            ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }
@@ -902,8 +902,8 @@ class _OpeningBalanceCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Total',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -931,20 +931,20 @@ class _PartyDetailError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(message, textAlign: TextAlign.center),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton(
-                    onPressed: onRetry,
-                    child: const Text('Try again'),
-                  ),
-                ],
-              ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text('Try again'),
             ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -19,7 +19,17 @@ class TransactionMessageSettingsNotifier
     extends _$TransactionMessageSettingsNotifier {
   @override
   Future<TransactionMessageSettings> build() async {
-    ref.watch(currentBusinessProvider);
+    final businessId = ref.watch(currentBusinessProvider)?.id ?? '';
+
+    // Prefer sync path when SharedPreferences is already initialized.
+    final storageReady = ref.watch(storageServiceProvider).asData?.value;
+    if (storageReady != null) {
+      return TransactionMessageSettingsRepository(
+        storageReady,
+        businessId,
+      ).load();
+    }
+
     final repository = await ref.watch(
       transactionMessageSettingsRepositoryProvider.future,
     );
