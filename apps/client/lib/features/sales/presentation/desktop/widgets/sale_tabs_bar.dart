@@ -12,9 +12,17 @@ const _tabMinWidth = 80.0;
 const _tabMaxWidth = 200.0;
 const _tabHeight = 34.0;
 
+/// Outer height of [SaleTabsBar] (tab chips plus top inset).
+const double saleTabsBarOuterHeight = _tabHeight + 6;
+
+/// Top inset before tab chips and trailing controls in [SaleTabsBar].
+const double saleTabsBarTopInset = 6.0;
+
 /// Chrome-style tab strip for running multiple add-sale sessions (up to 10).
 class SaleTabsBar extends ConsumerWidget {
-  const SaleTabsBar({super.key});
+  const SaleTabsBar({this.onFormClose, super.key});
+
+  final VoidCallback? onFormClose;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,8 +44,10 @@ class SaleTabsBar extends ConsumerWidget {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final addButtonSpace = tabsNotifier.canAddTab ? 36.0 : 0.0;
-                    final available = constraints.maxWidth - addButtonSpace;
+                    var trailingSpace = 0.0;
+                    if (tabsNotifier.canAddTab) trailingSpace += 36.0;
+                    if (onFormClose != null) trailingSpace += 36.0;
+                    final available = constraints.maxWidth - trailingSpace;
                     final idealWidth = tabCount == 0
                         ? _tabMaxWidth
                         : (available / tabCount).clamp(
@@ -81,6 +91,10 @@ class SaleTabsBar extends ConsumerWidget {
               if (tabsNotifier.canAddTab) ...[
                 const SizedBox(width: 4),
                 _AddTabButton(onTap: tabsNotifier.addTab),
+              ],
+              if (onFormClose != null) ...[
+                const SizedBox(width: 4),
+                _CloseFormButton(onTap: onFormClose!),
               ],
             ],
           ),
@@ -227,6 +241,40 @@ class _AddTabButton extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.add, size: 18, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class _CloseFormButton extends StatelessWidget {
+  const _CloseFormButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Close',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: _activeTabBackground,
+              shape: BoxShape.circle,
+              border: Border.all(color: _tabBorderColor),
+            ),
+            child: const Icon(
+              Icons.close,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ),
       ),
     );

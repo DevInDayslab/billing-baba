@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/export/presentation/desktop/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
@@ -670,6 +671,15 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
     final notifier = ref.read(
       saleDocumentFormProvider(widget.documentType).notifier,
     );
+    final preview = watchDocumentNumberPreview(
+      ref,
+      widget.documentType.documentSeries,
+    );
+    final displayNumber = resolveDocumentNumberDisplay(
+      documentId: form.documentId,
+      currentNumber: form.refNo,
+      preview: preview,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,9 +709,11 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
               _LabeledField(
                 label: 'Ref No.',
                 child: _SaleTextField(
-                  initialValue: form.refNo,
+                  initialValue: displayNumber,
                   hintText: 'Ref No.',
-                  onChanged: notifier.updateRefNo,
+                  readOnly: true,
+                  filled: true,
+                  onChanged: (_) {},
                 ),
               ),
               const SizedBox(height: _sectionGap),
@@ -991,11 +1003,15 @@ class _SaleTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.readOnly = false,
+    this.filled = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool readOnly;
+  final bool filled;
 
   @override
   State<_SaleTextField> createState() => _SaleTextFieldState();
@@ -1030,6 +1046,8 @@ class _SaleTextFieldState extends State<_SaleTextField> {
     return SaleTextField(
       controller: _controller,
       hint: widget.hintText,
+      readOnly: widget.readOnly,
+      filled: widget.filled,
       onChanged: widget.onChanged,
     );
   }

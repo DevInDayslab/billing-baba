@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
@@ -215,8 +216,15 @@ class _MobileAddSaleDocumentPageState
           MobileDocumentHeader(
             visibility: _visibility,
             documentNumberLabel: 'Ref No.',
-            documentNumberValue: form.refNo.isEmpty ? 'Auto' : form.refNo,
-            documentNumberIsPlaceholder: form.refNo.isEmpty,
+            documentNumberValue: resolveDocumentNumberDisplay(
+              documentId: form.documentId,
+              currentNumber: form.refNo,
+              preview: watchDocumentNumberPreview(
+                ref,
+                widget.documentType.documentSeries,
+              ),
+            ),
+            documentNumberIsPlaceholder: false,
             dateValue: formatSaleSingleDate(form.invoiceDate),
             dateIsPlaceholder: form.invoiceDate == null,
             onDateTap: () async {

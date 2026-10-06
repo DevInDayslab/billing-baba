@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/debit_note_form_provider.dart';
@@ -9,6 +10,7 @@ import 'package:billing_baba/features/purchases/presentation/desktop/widgets/deb
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_page_title_bar.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_label_selector.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -192,9 +194,17 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
               _LabeledField(
                 label: 'Return No.',
                 child: _DebitNoteTextField(
-                  initialValue: form.returnNo,
+                  initialValue: resolveDocumentNumberDisplay(
+                    documentId: form.documentId,
+                    currentNumber: form.returnNo,
+                    preview: watchDocumentNumberPreview(
+                      ref,
+                      PurchaseConstants.purchaseReturnSeries,
+                    ),
+                  ),
                   hintText: 'Return number',
-                  onChanged: notifier.updateReturnNo,
+                  readOnly: true,
+                  onChanged: (_) {},
                 ),
               ),
               const SizedBox(height: _sectionGap),
@@ -424,11 +434,13 @@ class _DebitNoteTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.readOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool readOnly;
 
   @override
   State<_DebitNoteTextField> createState() => _DebitNoteTextFieldState();
@@ -463,7 +475,11 @@ class _DebitNoteTextFieldState extends State<_DebitNoteTextField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(hint: widget.hintText),
+      readOnly: widget.readOnly,
+      decoration: buildSaleFieldDecoration(
+        hint: widget.hintText,
+        filled: widget.readOnly,
+      ),
       onChanged: widget.onChanged,
     );
   }

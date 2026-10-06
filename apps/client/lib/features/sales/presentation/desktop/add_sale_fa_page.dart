@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/add_sale_fa_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_tabs_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/add_sale_fa_footer.dart';
@@ -231,10 +232,16 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
           label: 'Invoice Number',
           fieldWidth: 80,
           child: _SaleFaTextField(
-            initialValue: form.invoiceNumber,
+            initialValue: resolveDocumentNumberDisplay(
+              documentId: null,
+              currentNumber: form.invoiceNumber,
+              preview: watchDocumentNumberPreview(ref, 'SFA'),
+              forceAuto: isUnsetDocumentNumber(form.invoiceNumber),
+            ),
             hintText: 'Invoice number',
             compact: true,
-            onChanged: notifier.updateInvoiceNumber,
+            readOnly: true,
+            onChanged: (_) {},
           ),
         ),
         const SizedBox(width: _sectionGap),
@@ -498,12 +505,14 @@ class _SaleFaTextField extends StatefulWidget {
     required this.onChanged,
     this.hintText,
     this.compact = false,
+    this.readOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
   final bool compact;
+  final bool readOnly;
 
   @override
   State<_SaleFaTextField> createState() => _SaleFaTextFieldState();
@@ -540,9 +549,11 @@ class _SaleFaTextFieldState extends State<_SaleFaTextField> {
       style: saleFieldTextStyle.copyWith(
         fontSize: widget.compact ? 13 : 14,
       ),
+      readOnly: widget.readOnly,
       decoration: buildSaleFieldDecoration(
         hint: widget.hintText,
         compact: widget.compact,
+        filled: widget.readOnly,
       ),
       onChanged: widget.onChanged,
     );

@@ -28,6 +28,19 @@ class ItemAlternativeLocalSource {
     return rows.length;
   }
 
+  /// True when any row exists for [itemId], including soft-deleted rows.
+  /// Used to avoid re-hydrating from remote after local deletes (which would
+  /// revive tombstoned links via upsert).
+  Future<bool> hasLocalStateForItem(String businessId, String itemId) async {
+    final row = await (_db.select(_db.itemAlternativesLocal)
+          ..where(
+            (t) => t.businessId.equals(businessId) & t.itemId.equals(itemId),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    return row != null;
+  }
+
   Future<List<ItemAlternativeTableData>> listActiveRowsForItem(
     String businessId,
     String itemId,

@@ -66,48 +66,63 @@ class AlternativesSection extends ConsumerWidget {
     WidgetRef ref,
     List<dynamic> alternatives,
   ) {
+    if (alternatives.isEmpty) {
+      return _buildEmptyState(context, ref, alternatives);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (alternatives.isEmpty)
-          _buildEmptyState()
-        else
-          _buildAlternativesList(context, ref, alternatives),
+        _buildAlternativesList(context, ref, alternatives),
         const SizedBox(height: 16),
         _buildAddButton(context, ref, alternatives),
       ],
     );
   }
 
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            LucideIcons.arrowLeftRight,
-            size: 40,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'No alternatives added',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+  Widget _buildEmptyState(
+    BuildContext context,
+    WidgetRef ref,
+    List<dynamic> alternatives,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.arrowLeftRight,
+              size: 40,
+              color: Colors.grey.shade400,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Add items that can substitute this product',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
+            const SizedBox(height: 12),
+            const Text(
+              'No alternatives added',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              'Add items that can substitute this product',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildAddButton(
+              context,
+              ref,
+              alternatives,
+              centered: true,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -119,8 +134,8 @@ class AlternativesSection extends ConsumerWidget {
   ) {
     return Column(
       children: alternatives.map((alternative) {
-        final altItem = (alternative as dynamic).alternativeItem;
-        return _buildAlternativeCard(context, ref, alternative, altItem);
+        final dto = alternative as ItemAlternativeDto;
+        return _buildAlternativeCard(context, ref, dto, dto.alternativeItem);
       }).toList(),
     );
   }
@@ -128,17 +143,15 @@ class AlternativesSection extends ConsumerWidget {
   Widget _buildAlternativeCard(
     BuildContext context,
     WidgetRef ref,
-    dynamic alternative,
-    dynamic altItem,
+    ItemAlternativeDto alternative,
+    AlternativeItemDto altItem,
   ) {
-    final name = altItem.name as String;
-    final barcode = altItem.barcode as String?;
-    final brandName = altItem.brandName as String?;
-    final categoryName = altItem.categoryName as String?;
-    final salePrice = altItem.salePrice as double;
-    final stockQuantity = altItem.stockQuantity as double;
-    final alternativeItemId =
-        (alternative as dynamic).alternativeItemId as String;
+    final name = altItem.name;
+    final barcode = altItem.barcode;
+    final brandName = altItem.brandName;
+    final categoryName = altItem.categoryName;
+    final salePrice = altItem.salePrice;
+    final stockQuantity = altItem.stockQuantity;
 
     final subtitle = [
       ?brandName,
@@ -226,8 +239,7 @@ class AlternativesSection extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () =>
-                _confirmDelete(context, ref, alternativeItemId, name),
+            onPressed: () => _confirmDelete(context, ref, alternative),
             icon: Icon(
               LucideIcons.trash2,
               size: 16,
@@ -244,21 +256,25 @@ class AlternativesSection extends ConsumerWidget {
   Future<void> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
-    String alternativeItemId,
-    String itemName,
+    ItemAlternativeDto alternative,
   ) async {
+    final itemName = alternative.alternativeItem.name;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Remove Alternative'),
         content: Text('Remove "$itemName" from alternatives?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Remove'),
           ),
         ],
@@ -270,7 +286,10 @@ class AlternativesSection extends ConsumerWidget {
     try {
       await ref
           .read(itemAlternativesProvider(itemId!).notifier)
-          .removeAlternative(alternativeItemId);
+          .removeAlternative(
+            alternative.alternativeItemId,
+            relationId: alternative.id,
+          );
     } on InventoryOfflineException {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -283,30 +302,32 @@ class AlternativesSection extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
       );
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not remove alternative. Please try again.'),
+        ),
+      );
     }
   }
 
   Widget _buildAddButton(
     BuildContext context,
     WidgetRef ref,
-    List<dynamic> alternatives,
-  ) {
+    List<dynamic> alternatives, {
+    bool centered = false,
+  }) {
+    final button = AddAlternativeButton(
+      onPressed: () =>
+          _showAlternativeItemsPicker(context, ref, alternatives),
+    );
+
+    if (centered) return button;
+
     return Align(
       alignment: Alignment.centerLeft,
-      child: OutlinedButton.icon(
-        onPressed: () =>
-            _showAlternativeItemsPicker(context, ref, alternatives),
-        icon: const Icon(LucideIcons.plus, size: 16),
-        label: const Text('Add Alternative'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          side: const BorderSide(color: _cardBorder),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
-      ),
+      child: button,
     );
   }
 

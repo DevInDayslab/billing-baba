@@ -3,6 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/delivery_challan_form_provider.dart';
 import 'package:billing_baba/features/sales/models/delivery_challan_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
@@ -12,9 +13,10 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_page_title_bar.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/desktop_sale_form_page_layout.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:billing_baba/shared/widgets/share_menu_button.dart';
@@ -23,6 +25,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
+/// Party field at 40% of prior width (60% reduction).
+const _partyWidthFactor = 0.4;
 
 class DesktopAddDeliveryChallanPage extends ConsumerStatefulWidget {
   const DesktopAddDeliveryChallanPage({
@@ -96,87 +100,45 @@ class _AddDeliveryChallanPageState
       },
       child: Stack(
         children: [
-          ColoredBox(
-            color: AppColors.background,
-            child: Column(
+          DesktopSaleFormPageLayout(
+            body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    AppSpacing.md,
+                    _sectionGap,
+                    _sectionGap,
+                    _sectionGap,
                     0,
                   ),
-                  child: SalePageTitleBar(
-                    currentRoute: AppRoutes.saleDeliveryChallan,
-                    onBack: _handleClose,
+                  child: _ChallanPageHeader(
+                    isEditing: _isEditing,
+                    onClose: _handleClose,
                   ),
                 ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: AppRadius.lgBorder,
-                        border: Border.all(color: _cardBorder),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x0A000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              _sectionGap,
-                              _sectionGap,
-                              _sectionGap,
-                              0,
-                            ),
-                            child: _ChallanPageHeader(
-                              isEditing: _isEditing,
-                              onClose: _handleClose,
-                            ),
-                          ),
-                          const SizedBox(height: _sectionGap),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: _sectionGap,
-                            ),
-                            child: _ChallanFormFields(),
-                          ),
-                          const SizedBox(height: _sectionGap),
-                          const DeliveryChallanLineItemsTable(embedded: true),
-                          const Divider(height: 1, color: _cardBorder),
-                          const Padding(
-                            padding: EdgeInsets.all(_sectionGap),
-                            child: DeliveryChallanFooter(),
-                          ),
-                          const Divider(height: 1, color: _cardBorder),
-                          _ChallanBottomActionBar(
-                            isEditing: _isEditing,
-                            onSaved: () {
-                              ref
-                                  .read(deliveryChallanFormProvider.notifier)
-                                  .resetForm();
-                              returnToTransactionList(
-                                context,
-                                AppRoutes.saleDeliveryChallan,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: _sectionGap),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: _sectionGap),
+                  child: _ChallanFormFields(),
+                ),
+                const SizedBox(height: _sectionGap),
+                const DeliveryChallanLineItemsTable(embedded: true),
+                const Divider(height: 1, color: desktopSaleFormCardBorder),
+                const Padding(
+                  padding: EdgeInsets.all(_sectionGap),
+                  child: DeliveryChallanFooter(),
                 ),
               ],
+            ),
+            pinnedFooter: _ChallanBottomActionBar(
+              isEditing: _isEditing,
+              onSaved: () {
+                ref.read(deliveryChallanFormProvider.notifier).resetForm();
+                returnToTransactionList(
+                  context,
+                  AppRoutes.saleDeliveryChallan,
+                );
+              },
             ),
           ),
           if (ref.watch(
@@ -277,24 +239,46 @@ class _ChallanFormFieldsState extends ConsumerState<_ChallanFormFields> {
   Widget build(BuildContext context) {
     final form = ref.watch(deliveryChallanFormProvider);
     final notifier = ref.read(deliveryChallanFormProvider.notifier);
+    final preview = watchDocumentNumberPreview(
+      ref,
+      SalesConstants.challanSeries,
+    );
+    final displayNumber = resolveDocumentNumberDisplay(
+      documentId: form.documentId,
+      currentNumber: form.challanNo,
+      preview: preview,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           flex: 3,
-          child: _RequiredLabeledField(
-            label: 'Party',
-            child: BillingNamePartySearchField(
-              value: form.party,
-              selectedPartyId: form.partyId,
-              hasError: form.partyHasError,
-              emptyPlaceholder: 'Search Party Name',
-              errorMessage: 'Party is required',
-              onSelected: notifier.updateParty,
-              onPartySelectedWithId: (partyId, name) =>
-                  notifier.updatePartyWithId(partyId: partyId, partyName: name),
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: constraints.maxWidth * _partyWidthFactor,
+                  child: _RequiredLabeledField(
+                    label: 'Party',
+                    child: BillingNamePartySearchField(
+                      value: form.party,
+                      selectedPartyId: form.partyId,
+                      hasError: form.partyHasError,
+                      emptyPlaceholder: 'Search Party Name',
+                      errorMessage: 'Party is required',
+                      onSelected: notifier.updateParty,
+                      onPartySelectedWithId: (partyId, name) =>
+                          notifier.updatePartyWithId(
+                            partyId: partyId,
+                            partyName: name,
+                          ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(width: _sectionGap),
@@ -306,9 +290,11 @@ class _ChallanFormFieldsState extends ConsumerState<_ChallanFormFields> {
               _LabeledField(
                 label: 'Challan No.',
                 child: _SaleTextField(
-                  initialValue: form.challanNo,
-                  hintText: '1',
-                  onChanged: notifier.updateChallanNo,
+                  initialValue: displayNumber,
+                  hintText: 'Challan number',
+                  readOnly: true,
+                  filled: true,
+                  onChanged: (_) {},
                 ),
               ),
               const SizedBox(height: _sectionGap),
@@ -667,11 +653,15 @@ class _SaleTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.readOnly = false,
+    this.filled = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool readOnly;
+  final bool filled;
 
   @override
   State<_SaleTextField> createState() => _SaleTextFieldState();
@@ -706,7 +696,11 @@ class _SaleTextFieldState extends State<_SaleTextField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle,
-      decoration: buildSaleFieldDecoration(hint: widget.hintText),
+      readOnly: widget.readOnly,
+      decoration: buildSaleFieldDecoration(
+        hint: widget.hintText,
+        filled: widget.filled,
+      ),
       onChanged: widget.onChanged,
     );
   }

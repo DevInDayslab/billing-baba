@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
@@ -9,6 +10,7 @@ import 'package:billing_baba/features/print/presentation/desktop/widgets/documen
 import 'package:billing_baba/features/purchases/application/add_purchase_form_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/inventory/application/barcode_scan_handler.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
@@ -237,10 +239,15 @@ class _MobileAddPurchasePageState extends ConsumerState<MobileAddPurchasePage> {
             MobileDocumentHeader(
               visibility: visibility,
               documentNumberLabel: 'Bill No.',
-              documentNumberValue: form.billNumber.isEmpty
-                  ? 'Auto'
-                  : form.billNumber,
-              documentNumberIsPlaceholder: form.billNumber.isEmpty,
+              documentNumberValue: resolveDocumentNumberDisplay(
+                documentId: form.documentId,
+                currentNumber: form.billNumber,
+                preview: watchDocumentNumberPreview(
+                  ref,
+                  PurchaseConstants.purchaseBillSeries,
+                ),
+              ),
+              documentNumberIsPlaceholder: false,
               dateValue: formatSaleSingleDate(form.billDate),
               dateIsPlaceholder: form.billDate == null,
               onDateTap: () async {

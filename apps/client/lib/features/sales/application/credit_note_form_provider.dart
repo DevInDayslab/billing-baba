@@ -183,6 +183,14 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(description: value, isDirty: true);
   }
 
+  void updateTermsTitle(String value) {
+    state = state.copyWith(termsTitle: value);
+  }
+
+  void updateTermsText(String value) {
+    state = state.copyWith(termsText: value);
+  }
+
   void updatePaymentType(String type) {
     final payments = [...state.payments];
     if (payments.isEmpty) {

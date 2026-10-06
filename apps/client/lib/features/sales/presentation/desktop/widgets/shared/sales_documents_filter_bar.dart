@@ -14,8 +14,8 @@ const _addSaleOrange = Color(0xFFFF9800);
 class SalesDocumentsFilterBar extends ConsumerStatefulWidget {
   const SalesDocumentsFilterBar({
     required this.scope,
-    required this.onAdd,
-    required this.addButtonLabel,
+    this.onAdd,
+    this.addButtonLabel,
     this.statusOptions = const [
       'All Status',
       'Cancelled',
@@ -26,8 +26,8 @@ class SalesDocumentsFilterBar extends ConsumerStatefulWidget {
   });
 
   final SalesDocumentListScope scope;
-  final VoidCallback onAdd;
-  final String addButtonLabel;
+  final VoidCallback? onAdd;
+  final String? addButtonLabel;
   final List<String> statusOptions;
 
   @override
@@ -124,21 +124,27 @@ class _SalesDocumentsFilterBarState
             ],
           ),
         ),
-        const SizedBox(width: AppSpacing.md),
-        PermissionGate(
-          module: permissionModuleForScope(widget.scope),
-          action: PermissionAction.create,
-          child: FilledButton.icon(
-            onPressed: widget.onAdd,
-            icon: const Icon(Icons.add, size: 18),
-            label: Text(widget.addButtonLabel),
-            style: FilledButton.styleFrom(
-              backgroundColor: _addSaleOrange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        if (widget.onAdd != null &&
+            (widget.addButtonLabel?.trim().isNotEmpty ?? false)) ...[
+          const SizedBox(width: AppSpacing.md),
+          PermissionGate(
+            module: permissionModuleForScope(widget.scope),
+            action: PermissionAction.create,
+            child: FilledButton.icon(
+              onPressed: widget.onAdd,
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(widget.addButtonLabel!),
+              style: FilledButton.styleFrom(
+                backgroundColor: _addSaleOrange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

@@ -35,7 +35,9 @@ class AppFormField extends StatelessWidget {
           FormFieldLabel(label: label, hasError: hasError),
           const SizedBox(height: FormSpacing.label),
         ],
-        if (fixedHeight)
+        // Floating outlined labels need room above the border; a tight
+        // fixed-height box compresses them into a thin unreadable line.
+        if (fixedHeight && !floatingLabel)
           SizedBox(
             height: FormSpacing.inputHeight,
             width: double.infinity,
@@ -49,7 +51,7 @@ class AppFormField extends StatelessWidget {
             ),
           )
         else
-          child,
+          SizedBox(width: double.infinity, child: child),
         if (hasError && errorText != null)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.xs, left: 2),

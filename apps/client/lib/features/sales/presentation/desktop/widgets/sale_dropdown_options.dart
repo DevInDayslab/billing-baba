@@ -31,6 +31,7 @@ abstract final class SaleDropdownOptions {
     'Proforma Invoice',
     'Sale Order',
     'Delivery Challan',
+    'Credit Note',
   ];
 
   static const godowns = ['Main Location', 'Warehouse B'];

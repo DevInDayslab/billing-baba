@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/add_purchase_form_provider.dart';
@@ -13,6 +14,7 @@ import 'package:billing_baba/features/purchases/presentation/desktop/widgets/pur
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_page_title_bar.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_label_selector.dart';
@@ -266,8 +268,15 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
               child: _LabeledField(
                 label: 'Bill Number',
                 child: _PurchaseTextField(
-                  initialValue: form.billNumber,
-                  hintText: 'Assigned on save',
+                  initialValue: resolveDocumentNumberDisplay(
+                    documentId: form.documentId,
+                    currentNumber: form.billNumber,
+                    preview: watchDocumentNumberPreview(
+                      ref,
+                      PurchaseConstants.purchaseBillSeries,
+                    ),
+                  ),
+                  hintText: 'Bill number',
                   readOnly: true,
                   onChanged: (_) {},
                 ),
