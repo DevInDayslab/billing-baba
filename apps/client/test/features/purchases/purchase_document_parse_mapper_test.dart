@@ -190,6 +190,37 @@ void main() {
       expect(line.pricePerUnit, 25);
     });
 
+    test('applies line discount before GST and yields exclusive subtotal', () {
+      const parsed = PurchaseDocumentParseDto(
+        lines: [
+          PurchaseDocumentParseLineDto(
+            itemName: 'Sample',
+            quantity: 1,
+            unitPrice: 1050,
+            discountAmount: 420,
+            taxRate: 18,
+            taxInclusive: true,
+          ),
+        ],
+      );
+
+      final result = PurchaseDocumentParseMapper.apply(
+        base: AddPurchaseFormState(
+          items: [PurchaseLineItem.empty(id: 'line_1')],
+        ),
+        parsed: parsed,
+        parties: const [],
+        itemNameToId: const {},
+        nextLineId: () => 'line_2',
+      );
+
+      final line = result.items.single;
+      expect(line.priceIsTaxInclusive, isTrue);
+      expect(line.taxPercent, 18);
+      expect(line.pricePerUnit, closeTo(630, 0.01));
+      expect(line.lineSubtotal, closeTo(533.90, 0.05));
+    });
+
     test('skips lines without a unit price', () {
       const parsed = PurchaseDocumentParseDto(
         lines: [
