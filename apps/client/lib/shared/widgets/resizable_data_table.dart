@@ -49,6 +49,7 @@ class ResizableDataTable extends StatefulWidget {
     required this.rows,
     this.headerBackgroundColor = const Color(0xFFF5F7FA),
     this.rowBorderColor = _gridBorderColor,
+    this.shrinkToFit = false,
     super.key,
   });
 
@@ -56,6 +57,10 @@ class ResizableDataTable extends StatefulWidget {
   final List<ResizableDataRow> rows;
   final Color headerBackgroundColor;
   final Color rowBorderColor;
+
+  /// When true, proportionally narrows columns to fit the viewport instead of
+  /// showing a horizontal scrollbar (until the user manually resizes a column).
+  final bool shrinkToFit;
 
   @override
   State<ResizableDataTable> createState() => _ResizableDataTableState();
@@ -96,15 +101,128 @@ class _ResizableDataTableState extends State<ResizableDataTable> {
   double get _tableWidth =>
       _columnWidths.fold<double>(0, (sum, width) => sum + width);
 
+  List<double> _shrinkColumnWidthsToFit(
+    List<double> widths,
+    double availableWidth,
+  ) {
+    var total = widths.fold<double>(0, (sum, w) => sum + w);
+    if (total <= availableWidth) {
+      return widths;
+    }
+
+    final fitted = List<double>.from(widths);
+    final scale = availableWidth / total;
+    for (var i = 0; i < fitted.length; i++) {
+      final column = widget.columns[i];
+      fitted[i] = (fitted[i] * scale).clamp(column.minWidth, column.maxWidth);
+    }
+
+    total = fitted.fold<double>(0, (sum, w) => sum + w);
+    var deficit = total - availableWidth;
+    var guard = 0;
+    while (deficit > 0.5 && guard < 32) {
+      guard++;
+      final shrinkable = <int>[];
+      for (var i = 0; i < fitted.length; i++) {
+        if (fitted[i] > widget.columns[i].minWidth) {
+          shrinkable.add(i);
+        }
+      }
+      if (shrinkable.isEmpty) {
+        break;
+      }
+      final slice = deficit / shrinkable.length;
+      var reduced = 0.0;
+      for (final index in shrinkable) {
+        final column = widget.columns[index];
+        final maxReduce = fitted[index] - column.minWidth;
+        final reduce = math.min(slice, maxReduce);
+        fitted[index] -= reduce;
+        reduced += reduce;
+      }
+      deficit -= reduced;
+      if (reduced < 0.5) {
+        break;
+      }
+    }
+
+    return _normalizeWidthsToTarget(fitted, availableWidth);
+  }
+
+  List<double> _normalizeWidthsToTarget(
+    List<double> widths,
+    double targetWidth,
+  ) {
+    if (!targetWidth.isFinite || targetWidth <= 0 || widths.isEmpty) {
+      return widths;
+    }
+
+    var total = widths.fold<double>(0, (sum, w) => sum + w);
+    var delta = targetWidth - total;
+    if (delta.abs() < 0.5) {
+      return widths;
+    }
+
+    final normalized = List<double>.from(widths);
+    if (delta > 0) {
+      for (var i = normalized.length - 1; i >= 0; i--) {
+        if (!widget.columns[i].resizable) continue;
+        final column = widget.columns[i];
+        final room = column.maxWidth - normalized[i];
+        if (room <= 0) continue;
+        final add = math.min(delta, room);
+        normalized[i] += add;
+        delta -= add;
+        if (delta < 0.5) break;
+      }
+      return normalized;
+    }
+
+    delta = -delta;
+    var guard = 0;
+    while (delta > 0.5 && guard < 32) {
+      guard++;
+      final shrinkable = <int>[];
+      for (var i = 0; i < normalized.length; i++) {
+        if (normalized[i] > widget.columns[i].minWidth) {
+          shrinkable.add(i);
+        }
+      }
+      if (shrinkable.isEmpty) break;
+
+      final slice = delta / shrinkable.length;
+      var reduced = 0.0;
+      for (final index in shrinkable) {
+        final column = widget.columns[index];
+        final maxReduce = normalized[index] - column.minWidth;
+        final reduce = math.min(slice, maxReduce);
+        normalized[index] -= reduce;
+        reduced += reduce;
+      }
+      delta -= reduced;
+      if (reduced < 0.5) break;
+    }
+
+    return normalized;
+  }
+
   /// Expands resizable columns proportionally when the viewport is wider than
   /// the natural table width so the grid fills available space (e.g. when the
-  /// sidebar collapses).
+  /// sidebar collapses). When shrink-to-fit is enabled, narrows columns to avoid
+  /// horizontal scroll when the table is wider than the viewport.
   List<double> _displayColumnWidths(double availableWidth) {
     if (_hasManualResize || !availableWidth.isFinite || availableWidth <= 0) {
       return List<double>.from(_columnWidths);
     }
 
     final naturalWidth = _tableWidth;
+    if (naturalWidth > availableWidth && widget.shrinkToFit) {
+      return _shrinkColumnWidthsToFit(
+        List<double>.from(_columnWidths),
+        availableWidth,
+      );
+    }
+
     if (naturalWidth >= availableWidth) {
       return List<double>.from(_columnWidths);
     }

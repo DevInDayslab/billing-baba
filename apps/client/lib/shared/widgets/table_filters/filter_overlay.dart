@@ -229,11 +229,12 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
+        horizontal: 4,
         vertical: AppSpacing.sm,
       ),
       child: Align(
         alignment: alignment,
+        widthFactor: 1,
         child: Row(
           children: [
             Expanded(
@@ -241,13 +242,12 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
                 label,
                 style: headerStyle ?? TableFilterTheme.defaultHeaderStyle,
                 overflow: TextOverflow.ellipsis,
-                maxLines: 2,
+                maxLines: 1,
                 textAlign: alignment == Alignment.centerRight
                     ? TextAlign.right
                     : TextAlign.left,
               ),
             ),
-            const SizedBox(width: 2),
             _buildIconButton(),
           ],
         ),

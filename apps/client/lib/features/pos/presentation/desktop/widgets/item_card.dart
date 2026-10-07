@@ -16,12 +16,60 @@ final _currencyFormat = NumberFormat.currency(
 );
 
 class ItemCard extends ConsumerWidget {
-  const ItemCard({required this.item, super.key});
+  const ItemCard({
+    required this.item,
+    this.useFlexibleImage = false,
+    super.key,
+  });
 
   final PosItem item;
+  final bool useFlexibleImage;
 
   /// Image area height — dominates the card so product photos read clearly.
   static const imageHeight = 118.0;
+
+  Widget _buildImageArea(bool isOutOfStock) {
+    final image = Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: PosCategoryStyle.backgroundColor(item.categoryStyleKey),
+            borderRadius: AppRadius.smBorder,
+          ),
+          child: ClipRRect(
+            borderRadius: AppRadius.smBorder,
+            child: PosItemThumbnail(item: item),
+          ),
+        ),
+        if (isOutOfStock)
+          Positioned(
+            left: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: posNegativeColor,
+                borderRadius: AppRadius.smBorder,
+              ),
+              child: const Text(
+                'Out of Stock',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+
+    if (useFlexibleImage) {
+      return Expanded(child: image);
+    }
+    return SizedBox(height: imageHeight, child: image);
+  }
 
   void _handleItemTap(BuildContext context, WidgetRef ref) {
     if (item.stock == 0) {
@@ -83,49 +131,7 @@ class ItemCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
-                  height: imageHeight,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: PosCategoryStyle.backgroundColor(
-                            item.categoryStyleKey,
-                          ),
-                          borderRadius: AppRadius.smBorder,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: AppRadius.smBorder,
-                          child: PosItemThumbnail(item: item),
-                        ),
-                      ),
-                      if (isOutOfStock)
-                        Positioned(
-                          left: 6,
-                          top: 6,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: posNegativeColor,
-                              borderRadius: AppRadius.smBorder,
-                            ),
-                            child: const Text(
-                              'Out of Stock',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                _buildImageArea(isOutOfStock),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   item.name,
