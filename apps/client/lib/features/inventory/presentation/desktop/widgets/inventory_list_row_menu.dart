@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,12 @@ class InventoryListRowMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final labels = items ?? _defaultItems;
     return SalesActionMenuButton(
+      iconButtonConstraints: const BoxConstraints(
+        minWidth: inventoryListRowMenuWidth,
+        minHeight: inventoryListRowMenuWidth,
+        maxWidth: inventoryListRowMenuWidth,
+        maxHeight: inventoryListRowMenuWidth,
+      ),
       items: [
         for (final label in labels)
           SalesActionMenuItem(
