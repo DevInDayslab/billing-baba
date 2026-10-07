@@ -768,10 +768,46 @@ class InventoryRepository {
       businessId: businessId,
       itemId: itemId,
     );
+    return _mergeStoredAndProjectedMovements(stored: stored, projected: projected);
+  }
 
+  /// Rebuilds local stock levels from the merged movement ledger (all types).
+  Future<double> reconcileLocalItemStockFromLedger(String itemId) async {
+    final businessId = _requireBusinessId();
+    final movements = await listLocalMovementsForItem(itemId);
+    final defaultGodownId = await _godowns?.local.getDefaultGodownId(businessId);
+
+    final byGodown = <String, double>{};
+    for (final movement in movements) {
+      final godownId = _resolveMovementGodownId(
+        movement.godownId,
+        defaultGodownId: defaultGodownId,
+      );
+      final delta = double.tryParse(movement.quantityDelta) ?? 0;
+      byGodown[godownId] = (byGodown[godownId] ?? 0) + delta;
+    }
+
+    return _stockLocal.applyStockQuantitiesFromLedger(
+      businessId: businessId,
+      itemId: itemId,
+      quantitiesByGodown: byGodown,
+    );
+  }
+
+  static List<MovementDto> _mergeStoredAndProjectedMovements({
+    required List<MovementDto> stored,
+    required List<MovementDto> projected,
+  }) {
     final byId = <String, MovementDto>{};
     for (final movement in stored) {
       byId[movement.id] = movement;
+    }
+    for (final movement in projected) {
+      final storedDocId = _storedMovementIdForProjection(movement.id);
+      if (storedDocId != null && byId.containsKey(storedDocId)) {
+        continue;
+      }
+      byId.putIfAbsent(movement.id, () => movement);
     }
 
     final storedPurchaseLineIds = stored
@@ -802,6 +838,29 @@ class InventoryRepository {
         ),
       );
     return merged;
+  }
+
+  static String? _storedMovementIdForProjection(String projectionId) {
+    const salePrefix = 'proj-sale-';
+    const purchasePrefix = 'proj-purchase-';
+    if (projectionId.startsWith(salePrefix)) {
+      return 'doc-sale-${projectionId.substring(salePrefix.length)}';
+    }
+    if (projectionId.startsWith(purchasePrefix)) {
+      return 'doc-purchase-${projectionId.substring(purchasePrefix.length)}';
+    }
+    return null;
+  }
+
+  static String _resolveMovementGodownId(
+    String godownId, {
+    String? defaultGodownId,
+  }) {
+    final trimmed = godownId.trim();
+    if (trimmed.isEmpty || trimmed == 'default') {
+      return defaultGodownId ?? trimmed;
+    }
+    return trimmed;
   }
 
   Future<double> localStockQuantityForItem(String itemId) async {
