@@ -770,8 +770,29 @@ class InventoryRepository {
     );
 
     final byId = <String, MovementDto>{};
-    for (final movement in [...stored, ...projected]) {
+    for (final movement in stored) {
       byId[movement.id] = movement;
+    }
+
+    final storedPurchaseLineIds = stored
+        .where((m) => m.id.startsWith('doc-purchase-'))
+        .map((m) => m.id.substring('doc-purchase-'.length))
+        .toSet();
+    final storedSaleLineIds = stored
+        .where((m) => m.id.startsWith('doc-sale-'))
+        .map((m) => m.id.substring('doc-sale-'.length))
+        .toSet();
+
+    for (final movement in projected) {
+      if (movement.id.startsWith('proj-purchase-')) {
+        final lineId = movement.id.substring('proj-purchase-'.length);
+        if (storedPurchaseLineIds.contains(lineId)) continue;
+      }
+      if (movement.id.startsWith('proj-sale-')) {
+        final lineId = movement.id.substring('proj-sale-'.length);
+        if (storedSaleLineIds.contains(lineId)) continue;
+      }
+      byId.putIfAbsent(movement.id, () => movement);
     }
 
     final merged = byId.values.toList()

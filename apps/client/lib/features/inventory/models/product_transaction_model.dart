@@ -18,6 +18,8 @@ class ProductTransaction {
     this.godownName,
     this.createdByName,
     this.notes,
+    this.referenceDocumentId,
+    this.referenceDocumentType,
   });
 
   final String id;
@@ -38,6 +40,8 @@ class ProductTransaction {
   final String? godownName;
   final String? createdByName;
   final String? notes;
+  final String? referenceDocumentId;
+  final String? referenceDocumentType;
 
   double get signedQuantity => isInbound ? quantity : -quantity;
 

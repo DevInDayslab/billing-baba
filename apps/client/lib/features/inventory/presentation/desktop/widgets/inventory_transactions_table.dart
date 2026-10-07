@@ -1,11 +1,13 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_ledger_column_header.dart';
 import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_product_transaction_detail.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
@@ -151,9 +153,18 @@ class _TransactionsTableShell extends ConsumerWidget {
           unitLabel: unitLabel,
           isOdd: i.isOdd,
           isSelected: rows[i].id == selectedId,
-          onTap: () => ref
-              .read(selectedProductTransactionIdProvider.notifier)
-              .select(rows[i].id),
+          onTap: () {
+            ref
+                .read(selectedProductTransactionIdProvider.notifier)
+                .select(rows[i].id);
+            unawaited(
+              showInventoryProductTransactionDetail(
+                context,
+                transaction: rows[i],
+                unitLabel: unitLabel,
+              ),
+            );
+          },
         ),
     ];
 
@@ -211,9 +222,8 @@ class InventoryTransactionTableRows {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final quantityColor = transaction.isInbound
-        ? inventoryPositiveColor
-        : inventoryNegativeColor;
+    final quantityColor =
+        transaction.isInbound ? AppColors.success : AppColors.error;
     final signedPrefix = transaction.isInbound ? '+' : '-';
     final unit = transaction.unit ?? unitLabel;
     final quantityText =

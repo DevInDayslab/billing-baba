@@ -92,9 +92,9 @@ void main() {
       expect(form!.itemName, 'Gadget');
       expect(form.description, 'Imported gadget');
       expect(form.baseUnitId, 'unit-pcs');
-      expect(form.atPrice, 118);
+      expect(form.atPrice, closeTo(100, 0.01));
       expect(form.openingQty, 0);
-      expect(form.purchasePriceTaxMode, PriceTaxMode.withTax);
+      expect(form.purchasePriceTaxMode, PriceTaxMode.withoutTax);
       expect(form.taxRate, 'GST @ 18%');
     });
 

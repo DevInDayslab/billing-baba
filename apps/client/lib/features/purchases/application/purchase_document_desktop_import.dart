@@ -6,6 +6,7 @@ import 'package:billing_baba/features/purchases/application/pending_purchase_doc
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_document_parsing_dialog.dart';
+import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_document_review_dialog.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -120,12 +121,27 @@ Future<void> _parseAndApply({
     // Dismiss before apply/navigation so router.push does not leave the overlay up.
     await dismissLoading('parse succeeded');
 
+    final reviewContext = _routerOverlayContext(router);
+    if (reviewContext == null || !reviewContext.mounted) {
+      debugPrint('$_logPrefix abort: no context for review dialog');
+      return;
+    }
+
+    final reviewed = await showPurchaseDocumentReviewDialog(
+      reviewContext,
+      parsed: parsed,
+    );
+    if (reviewed == null) {
+      debugPrint('$_logPrefix import cancelled at review step');
+      return;
+    }
+
     debugPrint('$_logPrefix before applyParsedDocument');
     await _applyParsedDocument(
       router: router,
       container: container,
       billId: billId,
-      parsed: parsed,
+      parsed: reviewed,
     );
     debugPrint('$_logPrefix after applyParsedDocument');
 
