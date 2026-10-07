@@ -27,7 +27,9 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
   int _visibleCount = 9;
 
   static const double _gridSpacing = AppSpacing.sm;
-  static const _cardHeight = 228.0;
+  static const int _searchResultColumns = 3;
+  static const _catalogCardHeight = 228.0;
+  static const _searchCardAspectRatio = 0.72;
 
   @override
   void dispose() {
@@ -54,6 +56,28 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
     if (panelWidth >= 560) return 178;
     if (panelWidth >= 380) return 165;
     return panelWidth - _gridSpacing;
+  }
+
+  bool get _isSearchResults => _effectiveQuery.trim().isNotEmpty;
+
+  SliverGridDelegate _gridDelegate(double maxWidth) {
+    if (_isSearchResults) {
+      final totalSpacing = _gridSpacing * (_searchResultColumns - 1);
+      final cellWidth = (maxWidth - totalSpacing) / _searchResultColumns;
+      return SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _searchResultColumns,
+        mainAxisSpacing: _gridSpacing,
+        crossAxisSpacing: _gridSpacing,
+        mainAxisExtent: cellWidth / _searchCardAspectRatio,
+      );
+    }
+
+    return SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: _maxCrossAxisExtent(maxWidth),
+      mainAxisExtent: _catalogCardHeight,
+      mainAxisSpacing: _gridSpacing,
+      crossAxisSpacing: _gridSpacing,
+    );
   }
 
   @override
@@ -241,19 +265,14 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
+                        final isSearchResults = _isSearchResults;
                         return GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: _maxCrossAxisExtent(
-                                  constraints.maxWidth,
-                                ),
-                                mainAxisExtent: _cardHeight,
-                                mainAxisSpacing: _gridSpacing,
-                                crossAxisSpacing: _gridSpacing,
-                              ),
+                          gridDelegate: _gridDelegate(constraints.maxWidth),
                           itemCount: visibleItems.length,
-                          itemBuilder: (context, index) =>
-                              ItemCard(item: visibleItems[index]),
+                          itemBuilder: (context, index) => ItemCard(
+                            item: visibleItems[index],
+                            useFlexibleImage: isSearchResults,
+                          ),
                         );
                       },
                     ),
