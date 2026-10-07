@@ -379,6 +379,7 @@ class InventoryStockLocalDataSource {
       referenceId: movementId,
       referenceType: 'stock_adjustment',
       costPerUnit: request.costPerUnit,
+      unit: request.unit,
       notes: request.notes,
       createdAt: now,
       updatedAt: now,

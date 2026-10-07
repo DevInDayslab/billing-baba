@@ -27,7 +27,7 @@ class StockAdjustmentCommandRepository {
     }
 
     final adjustmentId = _uuid.v4();
-    final now = DateTime.now().toUtc();
+    final now = (request.adjustmentAt ?? DateTime.now()).toUtc();
 
     await _local.recordAdjustment(
       movementId: adjustmentId,
