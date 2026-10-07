@@ -513,6 +513,38 @@ class InventoryStockLocalDataSource {
     ];
   }
 
+  /// Sets per-godown stock from ledger totals; zeroes godowns with no movements.
+  Future<double> applyStockQuantitiesFromLedger({
+    required String businessId,
+    required String itemId,
+    required Map<String, double> quantitiesByGodown,
+  }) async {
+    final existingRows = await listStockLevelRowsForItem(
+      businessId: businessId,
+      itemId: itemId,
+    );
+    final now = DateTime.now().toUtc();
+    final resolvedGodowns = <String>{
+      ...quantitiesByGodown.keys,
+      ...existingRows.map((row) => row.godownId),
+    };
+
+    for (final godownId in resolvedGodowns) {
+      if (godownId.isEmpty) continue;
+      final quantity = quantitiesByGodown[godownId] ?? 0;
+      await _upsertStockLevel(
+        businessId: businessId,
+        itemId: itemId,
+        godownId: godownId,
+        quantity: quantity,
+        averageCost: 0,
+        updatedAt: now,
+      );
+    }
+
+    return quantitiesByGodown.values.fold<double>(0, (sum, qty) => sum + qty);
+  }
+
   Future<void> reconcileItemStock({
     required String businessId,
     required String itemId,
