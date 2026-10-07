@@ -1,15 +1,12 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
-import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
-import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_list_thumbnail.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_toolbar_add_item_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +14,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _toolbarControlHeight = 36.0;
-const _expandDuration = Duration(milliseconds: 280);
 const _maxSearchSuggestions = 8;
 
 /// Products/Services left panel — search (expandable), add, overflow menu.
@@ -28,6 +24,7 @@ class InventoryListPanelToolbar extends ConsumerStatefulWidget {
     required this.onSearchChanged,
     required this.onSearchDebounced,
     required this.onAddPressed,
+    required this.onImportItems,
     this.initialSearchQuery = '',
     this.onSearchEscape,
     this.onArrowDown,
@@ -48,6 +45,7 @@ class InventoryListPanelToolbar extends ConsumerStatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onSearchDebounced;
   final VoidCallback onAddPressed;
+  final VoidCallback onImportItems;
   final VoidCallback? onSearchEscape;
   final VoidCallback? onArrowDown;
   final VoidCallback? onArrowUp;
@@ -64,29 +62,23 @@ class InventoryListPanelToolbar extends ConsumerStatefulWidget {
       _InventoryListPanelToolbarState();
 }
 
-class _InventoryListPanelToolbarState
-    extends ConsumerState<InventoryListPanelToolbar>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _expandController;
+class _InventoryListPanelToolbarState extends ConsumerState<InventoryListPanelToolbar> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
   final LayerLink _searchLayerLink = LayerLink();
   OverlayEntry? _suggestionsOverlay;
   Timer? _debounce;
-  var _hasText = false;
+  /// Inline search field visible (not collapsed to icon-only).
+  late bool _searchFieldExpanded;
 
   @override
   void initState() {
     super.initState();
-    _expandController = AnimationController(
-      vsync: this,
-      duration: _expandDuration,
-    );
     _controller = TextEditingController(text: widget.initialSearchQuery);
-    _hasText = widget.initialSearchQuery.isNotEmpty;
+    _searchFieldExpanded = widget.initialSearchQuery.isNotEmpty;
     _focusNode = FocusNode();
     _focusNode.addListener(_onFocusChange);
-    _controller.addListener(_syncHasText);
+    _controller.addListener(_onControllerChanged);
   }
 
   @override
@@ -99,10 +91,7 @@ class _InventoryListPanelToolbarState
     if (widget.initialSearchQuery != oldWidget.initialSearchQuery &&
         widget.initialSearchQuery != _controller.text) {
       _controller.text = widget.initialSearchQuery;
-      _hasText = widget.initialSearchQuery.isNotEmpty;
-      if (widget.initialSearchQuery.isEmpty) {
-        _collapseSearch(animate: false);
-      }
+      _syncSearchFieldExpanded();
     }
     if (widget.searchMatches != oldWidget.searchMatches) {
       _suggestionsOverlay?.markNeedsBuild();
@@ -111,34 +100,54 @@ class _InventoryListPanelToolbarState
 
   void _resetSearchField() {
     _controller.text = widget.initialSearchQuery;
-    _hasText = widget.initialSearchQuery.isNotEmpty;
     _focusNode.unfocus();
-    _expandController.value = 0;
     _removeSuggestionsOverlay();
+    _syncSearchFieldExpanded();
   }
 
   @override
   void dispose() {
     _removeSuggestionsOverlay();
     _debounce?.cancel();
-    _expandController.dispose();
     _focusNode
       ..removeListener(_onFocusChange)
       ..dispose();
     _controller
-      ..removeListener(_syncHasText)
+      ..removeListener(_onControllerChanged)
       ..dispose();
     super.dispose();
+  }
+
+  bool get _hasActiveQuery =>
+      _controller.text.isNotEmpty || widget.initialSearchQuery.isNotEmpty;
+
+  bool get _keepSearchFieldVisible =>
+      _searchFieldExpanded || _hasActiveQuery || _focusNode.hasFocus;
+
+  void _onControllerChanged() {
+    if (_controller.text.isNotEmpty && !_searchFieldExpanded) {
+      setState(() => _searchFieldExpanded = true);
+    }
+  }
+
+  void _syncSearchFieldExpanded() {
+    final expanded = _hasActiveQuery || _focusNode.hasFocus;
+    if (expanded != _searchFieldExpanded) {
+      setState(() => _searchFieldExpanded = expanded);
+    }
   }
 
   void _onFocusChange() {
     if (!mounted) return;
     if (_focusNode.hasFocus) {
+      if (!_searchFieldExpanded) {
+        setState(() => _searchFieldExpanded = true);
+      }
       _syncSuggestionsOverlay();
     } else {
       _removeSuggestionsOverlay();
-      if (_expandController.value > 0) {
-        _expandController.reverse();
+      if (!_hasActiveQuery && _searchFieldExpanded) {
+        setState(() => _searchFieldExpanded = false);
       }
     }
   }
@@ -187,38 +196,22 @@ class _InventoryListPanelToolbarState
     Overlay.of(context, rootOverlay: true).insert(_suggestionsOverlay!);
   }
 
-  void _collapseSearch({bool animate = true}) {
-    if (_expandController.value == 0) {
+  void _collapseSearch() {
+    if (_hasActiveQuery) {
       _focusNode.unfocus();
+      if (!_searchFieldExpanded) {
+        setState(() => _searchFieldExpanded = true);
+      }
       return;
     }
-    if (animate) {
-      if (_focusNode.hasFocus) {
-        _focusNode.unfocus();
-      } else {
-        _expandController.reverse();
-      }
-    } else {
-      _focusNode.unfocus();
-      _expandController.value = 0;
+    _focusNode.unfocus();
+    if (_searchFieldExpanded) {
+      setState(() => _searchFieldExpanded = false);
     }
-  }
-
-  double _expandProgress() {
-    final t = _expandController.value;
-    final reversing = _expandController.status == AnimationStatus.reverse;
-    final curve = reversing ? Curves.easeInCubic : Curves.easeOutCubic;
-    return curve.transform(t);
-  }
-
-  void _syncHasText() {
-    final hasText = _controller.text.isNotEmpty;
-    if (hasText == _hasText) return;
-    setState(() => _hasText = hasText);
   }
 
   void _expandSearch() {
-    _expandController.forward();
+    setState(() => _searchFieldExpanded = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
@@ -258,15 +251,15 @@ class _InventoryListPanelToolbarState
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
         widget.onArrowDown?.call();
-        _collapseSearch();
+        _focusNode.unfocus();
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowUp:
         widget.onArrowUp?.call();
-        _collapseSearch();
+        _focusNode.unfocus();
         return KeyEventResult.handled;
       case LogicalKeyboardKey.enter:
         widget.onEnter?.call();
-        _collapseSearch();
+        _focusNode.unfocus();
         return KeyEventResult.handled;
       default:
         return KeyEventResult.ignored;
@@ -274,7 +267,7 @@ class _InventoryListPanelToolbarState
   }
 
   Widget? _buildSuffixIcon() {
-    if (_hasText) {
+    if (_controller.text.isNotEmpty) {
       return IconButton(
         onPressed: _clearSearch,
         icon: const Icon(Icons.close, size: 18),
@@ -296,7 +289,16 @@ class _InventoryListPanelToolbarState
             controller: _controller,
             focusNode: _focusNode,
             onChanged: _handleChanged,
-            onTap: _syncSuggestionsOverlay,
+            onTap: () {
+              if (!_searchFieldExpanded) {
+                setState(() => _searchFieldExpanded = true);
+              }
+              _syncSuggestionsOverlay();
+            },
+            showCursor: true,
+            cursorColor: AppColors.textPrimary,
+            cursorWidth: 2,
+            cursorHeight: 18,
             style: widget.textStyle ?? saleFieldTextStyle.copyWith(fontSize: 12),
             decoration:
                 buildSaleFieldDecoration(
@@ -330,50 +332,11 @@ class _InventoryListPanelToolbarState
   }
 
   Widget _buildAddButton({required bool iconOnly}) {
-    return PermissionGate(
-      module: PermissionModule.item,
-      action: PermissionAction.create,
-      child: Tooltip(
-        message: widget.addButtonLabel,
-        child: FilledButton(
-          onPressed: widget.onAddPressed,
-          style: FilledButton.styleFrom(
-            backgroundColor: inventoryPrimaryOrange,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            minimumSize: Size(iconOnly ? _toolbarControlHeight : 0, _toolbarControlHeight),
-            maximumSize: Size(
-              iconOnly ? _toolbarControlHeight : double.infinity,
-              _toolbarControlHeight,
-            ),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            padding: EdgeInsets.symmetric(horizontal: iconOnly ? 0 : 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-          child: iconOnly
-              ? const Icon(Icons.add, size: 18)
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.add, size: 18),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        widget.addButtonLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ),
+    return InventoryToolbarAddItemButton(
+      label: widget.addButtonLabel,
+      iconOnly: iconOnly,
+      onAddPressed: widget.onAddPressed,
+      onImportItems: widget.onImportItems,
     );
   }
 
@@ -381,9 +344,13 @@ class _InventoryListPanelToolbarState
     final hasMenu = widget.toolbarMenuItems.isNotEmpty;
     final menuWidth = hasMenu ? inventoryListRowMenuWidth : 0.0;
     const labeledAddMinWidth = 88.0;
+    const dropdownWidth = inventoryDropdownWidth + 1;
     const gap = 4.0;
-    final required =
-        _toolbarControlHeight + labeledAddMinWidth + menuWidth + gap;
+    final required = _toolbarControlHeight +
+        labeledAddMinWidth +
+        dropdownWidth +
+        menuWidth +
+        gap;
     return maxWidth < required;
   }
 
@@ -427,55 +394,23 @@ class _InventoryListPanelToolbarState
     );
   }
 
+  /// Full-width search only — Add Item and overflow menu return when collapsed.
+  Widget _buildExpandedToolbar() => _buildSearchField();
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _expandController,
-      builder: (context, _) {
-        final expand = _expandProgress();
-        final collapsedFade = 1 - expand;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fullWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : 280.0;
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final fullWidth = constraints.maxWidth.isFinite
-                ? constraints.maxWidth
-                : 280.0;
-
-            return SizedBox(
-              height: _toolbarControlHeight,
-              width: fullWidth,
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  if (collapsedFade > 0)
-                    Positioned.fill(
-                      child: Opacity(
-                        opacity: collapsedFade.clamp(0, 1),
-                        child: IgnorePointer(
-                          ignoring: expand > 0.05,
-                          child: _buildCollapsedToolbar(fullWidth),
-                        ),
-                      ),
-                    ),
-                  Positioned.fill(
-                    child: ClipRect(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: math.max(expand, 0.001),
-                        child: Opacity(
-                          opacity: expand.clamp(0, 1),
-                          child: IgnorePointer(
-                            ignoring: expand < 0.95,
-                            child: _buildSearchField(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+        return SizedBox(
+          height: _toolbarControlHeight,
+          width: fullWidth,
+          child: _keepSearchFieldVisible
+              ? _buildExpandedToolbar()
+              : _buildCollapsedToolbar(fullWidth),
         );
       },
     );

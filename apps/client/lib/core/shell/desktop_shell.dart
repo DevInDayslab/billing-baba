@@ -79,6 +79,9 @@ String _searchShortcutBadge() {
   return AppPlatform.current.isMacOS ? '⌘F' : 'Ctrl+F';
 }
 
+/// Expanded desktop sidebar width — fits longest nav labels (e.g. Purchase & Expense).
+const _desktopSidebarExpandedWidth = 256.0;
+
 /// Desktop app shell with collapsible sidebar and top action bar.
 class DesktopShell extends ConsumerStatefulWidget {
   const DesktopShell({required this.child, super.key});
@@ -90,7 +93,7 @@ class DesktopShell extends ConsumerStatefulWidget {
 }
 
 class _DesktopShellState extends ConsumerState<DesktopShell> {
-  static const _sidebarExpandedWidth = 220.0;
+  static const _sidebarExpandedWidth = _desktopSidebarExpandedWidth;
   static const _sidebarCollapsedWidth = 60.0;
   static const _sidebarCompactLayoutMaxWidth = 140.0;
   static const _overlayBreakpoint = 800.0;
@@ -1392,7 +1395,7 @@ class _ProfileMenuCard extends StatelessWidget {
       borderRadius: AppRadius.mdBorder,
       color: AppColors.surface,
       child: SizedBox(
-        width: 220,
+        width: _desktopSidebarExpandedWidth,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
