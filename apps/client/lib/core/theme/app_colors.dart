@@ -27,6 +27,8 @@ abstract final class AppColors {
 
   // UI chrome
   static const divider = Color(0xFFE8ECF1);
+  /// Outer frame and split dividers for desktop workspace panels (inventory, parties).
+  static const workspacePanelBorder = Color(0xFFCFDBE6);
   static const chipBackground = Color(0xFFF0F1F5);
   static const chipInactive = Color(0xFFF0F1F5);
   static const chipBorder = Color(0xFFE2E8F0);

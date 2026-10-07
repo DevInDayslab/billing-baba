@@ -199,6 +199,7 @@ class _InventoryItemWorkspaceState
           hasMore: widget.hasMore,
           isLoadingMore: widget.isLoadingMore,
           onItemSelected: _selectItem,
+          onSearchMatchSelected: (item) => _selectItem(item.id),
           onItemDoubleTap: widget.onItemDoubleTap,
           onAddPressed: widget.onAddPressed,
           onMenuSelected: widget.onMenuSelected,

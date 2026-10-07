@@ -66,7 +66,7 @@ class ProductsTabContent extends ConsumerWidget {
                 : 'No products found',
             placeholderMessage: 'Select an item to view ledger',
             primaryColumnLabel: 'ITEM',
-            secondaryColumnLabel: 'QUANTITY',
+            secondaryColumnLabel: 'QTY',
             trailingValueBuilder: (item) {
               final metrics = InventoryStockCalculator.metricsFromItem(item);
               return formatQuantityValue(metrics.physicalQuantity);

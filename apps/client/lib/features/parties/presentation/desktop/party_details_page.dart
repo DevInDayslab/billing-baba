@@ -16,8 +16,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _compactBreakpoint = 800.0;
 
 /// Narrower list column so transaction detail has more horizontal room.
-const _partyListPanelWidth = 280.0;
-
 Future<void> openDesktopAddPartyDialog(BuildContext context) async {
   await showAddPartyDialog(context);
 }
@@ -91,7 +89,6 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
         }
 
         return InventorySplitLayout(
-          listWidth: _partyListPanelWidth,
           listPanel: const PartyListPanel(),
           detailPanel: selectedId == null
               ? const InventoryDetailPlaceholder(

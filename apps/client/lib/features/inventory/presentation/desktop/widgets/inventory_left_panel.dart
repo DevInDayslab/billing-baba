@@ -40,6 +40,7 @@ class InventoryLeftPanel extends ConsumerWidget {
     this.onItemDoubleTap,
     required this.onAddPressed,
     required this.onMenuSelected,
+    this.onSearchMatchSelected,
     this.toolbarMenuItems = const [],
     this.onLoadMore,
     this.hasMore = false,
@@ -76,6 +77,7 @@ class InventoryLeftPanel extends ConsumerWidget {
   final ValueChanged<InventoryItem>? onItemDoubleTap;
   final VoidCallback onAddPressed;
   final void Function(String value, InventoryItem item) onMenuSelected;
+  final ValueChanged<InventoryItem>? onSearchMatchSelected;
   final List<SalesActionMenuItem> toolbarMenuItems;
   final IconData leadingIcon;
   final bool showListFilters;
@@ -87,9 +89,9 @@ class InventoryLeftPanel extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
             AppSpacing.sm,
-            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.sm,
             AppSpacing.sm,
           ),
           child: InventoryListPanelToolbar(
@@ -97,6 +99,7 @@ class InventoryLeftPanel extends ConsumerWidget {
             searchHint: searchHint,
             addButtonLabel: addButtonLabel,
             initialSearchQuery: searchQuery,
+            searchMatches: searchQuery.trim().isEmpty ? const [] : items,
             textStyle: saleFieldTextStyle.copyWith(fontSize: 12),
             onSearchChanged: onSearchChanged,
             onSearchDebounced: onSearchDebounced,
@@ -105,6 +108,7 @@ class InventoryLeftPanel extends ConsumerWidget {
             onArrowUp: onArrowUp,
             onEnter: onEnter,
             onAddPressed: onAddPressed,
+            onSearchMatchSelected: onSearchMatchSelected,
             toolbarMenuItems: toolbarMenuItems,
           ),
         ),
@@ -115,7 +119,7 @@ class InventoryLeftPanel extends ConsumerWidget {
           columns: [
             InventoryListColumn(
               label: primaryColumnLabel,
-              flex: 3,
+              flex: inventoryListPrimaryColumnFlex,
               trailing: showListFilters
                   ? InventoryItemsFilterTrigger(
                       compact: true,
@@ -128,7 +132,7 @@ class InventoryLeftPanel extends ConsumerWidget {
             ),
             InventoryListColumn(
               label: secondaryColumnLabel,
-              fixedWidth: inventoryListTrailingColumnWidth,
+              fixedWidth: inventoryListQtyColumnMaxWidth,
               alignEnd: true,
             ),
           ],

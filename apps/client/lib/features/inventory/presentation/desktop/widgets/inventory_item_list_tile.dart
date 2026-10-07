@@ -1,14 +1,18 @@
+import 'dart:math' as math;
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_highlighted_text.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_hover_tooltip.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_list_thumbnail.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
-import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 
-const inventoryItemListRowHeight = 44.0;
+const inventoryItemListRowHeight = 48.0;
+
+/// Gap between ellipsized item name and quantity value.
+const inventoryListQtyNameGap = 6.0;
 
 /// Left sidebar list row used by Products and Services.
 class InventoryItemListTile extends StatefulWidget {
@@ -68,11 +72,40 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
     return Colors.transparent;
   }
 
-  Widget _buildHoverZone({required Widget child}) {
-    final item = widget.item;
-    if (item == null) return child;
-    return InventoryItemRowPreviewTooltip(item: item, child: child);
+  double _resolveThumbSize(double rowContentWidth) {
+    if (rowContentWidth < 48) return 0;
+    if (rowContentWidth < 72) return 24;
+    if (rowContentWidth < 96) return 28;
+    return math.min(
+      inventoryItemListThumbSize,
+      rowContentWidth * 0.22,
+    ).toDouble();
   }
+
+  Widget _buildLeading(double thumbSize) {
+    if (thumbSize <= 0) {
+      return const SizedBox.shrink();
+    }
+    final item = widget.item;
+    if (item != null) {
+      return InventoryItemListThumbnail(item: item, size: thumbSize);
+    }
+    return Icon(
+      widget.leadingIcon,
+      size: thumbSize * 0.45,
+      color: Colors.grey.shade500,
+    );
+  }
+
+  TextStyle get _nameStyle =>
+      InventoryStyles.listPanelCompactCellStyle.copyWith(
+        fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+      );
+
+  TextStyle get _qtyStyle => InventoryStyles.listPanelCompactCellStyle.copyWith(
+    fontWeight: FontWeight.w600,
+    color: widget.trailingColor ?? AppColors.textPrimary,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -100,48 +133,65 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
             onTapCancel: () => setState(() => _isPressed = false),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Row(
-                      children: [
-                        Icon(
-                          widget.leadingIcon,
-                          size: 14,
-                          color: Colors.grey.shade500,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildHoverZone(
-                            child: InventoryHighlightedText(
-                              text: widget.title,
-                              query: widget.searchQuery,
-                              style: InventoryStyles.listPanelCompactCellStyle
-                                  .copyWith(
-                                    fontWeight: widget.isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.w500,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final rowWidth = constraints.maxWidth;
+                  final contentWidth = math.max(
+                    0,
+                    rowWidth - inventoryListRowMenuWidth,
+                  ).toDouble();
+                  final thumbSize = _resolveThumbSize(contentWidth);
+                  final double thumbGap =
+                      thumbSize > 0 ? AppSpacing.xs.toDouble() : 0.0;
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            if (thumbSize > 0) ...[
+                              _buildLeading(thumbSize),
+                              SizedBox(width: thumbGap),
+                            ],
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: InventoryHighlightedText(
+                                      text: widget.title,
+                                      query: widget.searchQuery,
+                                      style: _nameStyle,
+                                    ),
                                   ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: inventoryListQtyNameGap,
+                                    ),
+                                    child: Text(
+                                      widget.trailingValue,
+                                      maxLines: 1,
+                                      textAlign: TextAlign.right,
+                                      style: _qtyStyle,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: inventoryListRowMenuWidth,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: InventoryListRowMenu(
+                            onSelected: widget.onMenuSelected,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: inventoryListTrailingColumnWidth,
-                    child: AppEllipsisText(
-                      widget.trailingValue,
-                      textAlign: TextAlign.right,
-                      style: InventoryStyles.listPanelCompactCellStyle.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: widget.trailingColor ?? AppColors.textPrimary,
                       ),
-                    ),
-                  ),
-                  InventoryListRowMenu(onSelected: widget.onMenuSelected),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),

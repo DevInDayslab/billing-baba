@@ -16,8 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _compactBreakpoint = 800.0;
-const _partyListPanelWidth = 280.0;
-
 Future<void> openDesktopAddGroupDialog(
   BuildContext context,
   WidgetRef ref,
@@ -118,7 +116,6 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
         }
 
         return InventorySplitLayout(
-          listWidth: _partyListPanelWidth,
           listPanel: const PartyGroupListPanel(),
           detailPanel: selectedGroup == null
               ? const InventoryDetailPlaceholder(
