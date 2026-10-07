@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_item_image_utils.dart';
+import 'package:billing_baba/features/inventory/presentation/shared/item_image_crop_chrome.dart';
 import 'package:billing_baba/shared/media/pick_media_image.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
@@ -176,6 +177,14 @@ class _DesktopAddItemImageEditorDialogState
     Navigator.of(context).pop(ItemImageEditorSaved(results));
   }
 
+  Future<void> _requestClose() async {
+    if (_isCropping) return;
+    final discard = await showDiscardItemImageChangesDialog(context);
+    if (discard && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _removeImage() async {
     if (_isCropping) return;
 
@@ -213,7 +222,13 @@ class _DesktopAddItemImageEditorDialogState
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        unawaited(_requestClose());
+      },
+      child: Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -241,6 +256,7 @@ class _DesktopAddItemImageEditorDialogState
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -260,7 +276,7 @@ class _DesktopAddItemImageEditorDialogState
             ),
           ),
           IconButton(
-            onPressed: _isCropping ? null : () => Navigator.of(context).pop(),
+            onPressed: _isCropping ? null : () => unawaited(_requestClose()),
             icon: const Icon(Icons.close, size: 22),
             color: AppColors.textSecondary,
             tooltip: 'Close',
@@ -326,8 +342,8 @@ class _DesktopAddItemImageEditorDialogState
         padding: const EdgeInsets.all(20),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(4),
-          child: Crop(
-            key: ValueKey(_cropKey),
+          child: ItemImageCropSurface(
+            cropKey: ValueKey(_cropKey),
             image: _currentBytes,
             controller: _cropController,
             initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
