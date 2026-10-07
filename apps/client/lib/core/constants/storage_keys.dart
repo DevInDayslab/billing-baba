@@ -13,6 +13,8 @@ abstract final class StorageKeys {
   static const lastOpenedBusinessId = 'last_opened_business_id';
   static const pendingBusinessCreates = 'pending_business_creates';
   static const cachedBusinessProfile = 'cached_business_profile';
+  static const bulkItemsUpdateCalloutDismissed =
+      'bulk_items_update_callout_dismissed';
   static const sidebarCollapsed = 'sidebar_collapsed';
   static const sidebarExpandedSections = 'sidebar_expanded_sections';
   static const cachedParties = 'cached_parties';

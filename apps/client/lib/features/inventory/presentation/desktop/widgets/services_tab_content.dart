@@ -9,8 +9,10 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_bulk_menu.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_workspace.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class ServicesTabContent extends ConsumerWidget {
@@ -78,6 +80,8 @@ class ServicesTabContent extends ConsumerWidget {
           initialType: ItemType.service,
         ),
       ),
+      onImportItems: () => context.push(AppRoutes.utilitiesImportItems),
+      itemType: ItemType.service,
       onItemDoubleTap: (item) => unawaited(
         showAddItemDialog(
           context,
