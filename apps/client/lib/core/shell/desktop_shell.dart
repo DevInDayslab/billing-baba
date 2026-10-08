@@ -61,6 +61,7 @@ abstract final class _SidebarTokens {
   static const developer = Color(0xFFC4B5FD);
   static const settings = Color(0xFF94A3B8);
   static const plans = Color(0xFFF472B6);
+  static const saleScreen = Color(0xFF60A5FA);
 
   static const activeGradient = LinearGradient(
     colors: [Color(0xFF6338E0), Color(0xFF5B4FCF)],
@@ -174,7 +175,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (!_expandInitialized) {
       _expandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
-      if (location.startsWith(AppRoutes.sale)) {
+      if (_isSaleGroupLocation(location)) {
         _isSaleExpanded = true;
       }
       if (location.startsWith(AppRoutes.purchase)) {
@@ -347,6 +348,12 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       iconColor: _SidebarTokens.plans,
       label: 'Plans & Pricing',
     ),
+    const _NavItem(
+      route: AppRoutes.saleScreen,
+      icon: LucideIcons.layoutGrid,
+      iconColor: _SidebarTokens.saleScreen,
+      label: 'Sale Screen',
+    ),
   ];
 
   List<_NavItem> _visibleNavItems(PermissionService permissions) {
@@ -390,12 +397,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     );
   }
 
+  /// `/sale/...` documents only. `/sale-screen` must not open the Sale group.
+  bool _isSaleGroupLocation(String location) {
+    return location == AppRoutes.sale ||
+        location.startsWith('${AppRoutes.sale}/');
+  }
+
   void _navigateTo(String route) {
     final overlayLayout = _useOverlaySidebar;
     final sidebarNotifier = ref.read(shellSidebarProvider.notifier);
 
     setState(() {
-      _isSaleExpanded = route.startsWith(AppRoutes.sale);
+      _isSaleExpanded = _isSaleGroupLocation(route);
       _isPurchaseExpanded = route.startsWith(AppRoutes.purchase);
       _isCrmExpanded = route.startsWith(AppRoutes.crm);
       _isUtilitiesExpanded = route.startsWith(AppRoutes.utilities);
@@ -734,7 +747,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
-          ? currentLocation.startsWith(AppRoutes.sale)
+          ? _isSaleGroupLocation(currentLocation)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
           : isCrm

@@ -52,6 +52,7 @@ abstract final class NavigationPermissionRegistry {
       return PermissionModule.item;
     }
     if (route.startsWith(AppRoutes.pos)) return PermissionModule.sale;
+    if (route == AppRoutes.saleScreen) return PermissionModule.sale;
     if (route.startsWith(AppRoutes.sale)) {
       if (route.contains('payment-in')) return PermissionModule.paymentIn;
       if (route.contains('estimate')) return PermissionModule.estimate;

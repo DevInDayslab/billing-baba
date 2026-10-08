@@ -126,6 +126,10 @@ abstract final class AppRoutes {
   static String settingsTab(String tabId) => '$settingsPreferences?tab=$tabId';
 
   static const plansPricing = '/plans-pricing';
+
+  /// Fast counter billing. Kept off the `/sale` prefix so it does not expand
+  /// the Sale document group in the sidebar.
+  static const saleScreen = '/sale-screen';
   static const subscriptionReview = '/plans-pricing/review';
   static const subscriptionPaymentProcessing =
       '/plans-pricing/payment-processing';

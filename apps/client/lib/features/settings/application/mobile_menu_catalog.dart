@@ -332,6 +332,14 @@ abstract final class MobileMenuCatalog {
       section: MobileMenuSection.account,
     ),
     MobileMenuItem(
+      id: 'sale-screen',
+      title: 'Sale Screen',
+      subtitle: 'Search products and bill customers quickly',
+      icon: LucideIcons.layoutGrid,
+      route: AppRoutes.saleScreen,
+      section: MobileMenuSection.account,
+    ),
+    MobileMenuItem(
       id: 'logout',
       title: 'Logout',
       subtitle: 'Sign out of this device',

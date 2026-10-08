@@ -19,6 +19,7 @@ class PosCategoryOption {
 PosItem mapInventoryItemToPosItem(
   InventoryItem item, {
   String categoryName = 'Uncategorized',
+  String? brandName,
 }) {
   final stock = InventoryStockCalculator.metricsFromItem(
     item,
@@ -36,6 +37,7 @@ PosItem mapInventoryItemToPosItem(
     unit: item.baseUnitShortName ?? 'pcs',
     imageUrl: resolvePosItemImageUrl(item),
     hsnCode: item.hsnCode,
+    brandName: brandName,
   );
 }
 
@@ -63,14 +65,16 @@ String? resolvePosItemImageUrl(InventoryItem item) {
 /// Builds POS catalog from the shared inventory list (products only).
 List<PosItem> mapInventoryItemsToPosItems(
   Iterable<InventoryItem> items,
-  Map<String, String> categoryNamesById,
-) {
+  Map<String, String> categoryNamesById, {
+  Map<String, String> brandNamesById = const {},
+}) {
   return items
       .where((item) => item.type == ItemType.product)
       .map(
         (item) => mapInventoryItemToPosItem(
           item,
           categoryName: categoryNamesById[item.categoryId] ?? 'Uncategorized',
+          brandName: item.brandId == null ? null : brandNamesById[item.brandId],
         ),
       )
       .toList();
