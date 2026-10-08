@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+const _searchFieldFontSize = 15.0;
 
 class InventorySearchField extends StatefulWidget {
   const InventorySearchField({
@@ -142,25 +145,52 @@ class _InventorySearchFieldState extends State<InventorySearchField> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: Focus(
-        onKeyEvent: _handleKey,
-        child: TextField(
-          controller: _controller,
-          focusNode: _focusNode,
-          onChanged: _handleChanged,
-          style: widget.textStyle ?? saleFieldTextStyle,
-          decoration:
-              buildSaleFieldDecoration(
-                hint: widget.hint,
-                suffixIcon: _buildSuffixIcon(),
-              ).copyWith(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-              ),
+    final textStyle = (widget.textStyle ?? saleFieldTextStyle).copyWith(
+      fontSize: _searchFieldFontSize,
+      height: 1.25,
+    );
+
+    final decoration = buildSaleFieldDecoration(
+      hint: widget.hint,
+      suffixIcon: _buildSuffixIcon(),
+      filled: true,
+    ).copyWith(
+      filled: true,
+      fillColor: AppColors.surface,
+      hintStyle: TextStyle(
+        color: Colors.grey.shade400,
+        fontSize: _searchFieldFontSize,
+        height: 1.25,
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 11,
+      ),
+    );
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
+          filled: true,
+          fillColor: WidgetStateColor.resolveWith(
+            (_) => AppColors.surface,
+          ),
+        ),
+      ),
+      child: SizedBox(
+        height: 44,
+        child: Focus(
+          onKeyEvent: _handleKey,
+          child: TextField(
+            controller: _controller,
+            focusNode: _focusNode,
+            onChanged: _handleChanged,
+            style: textStyle,
+            decoration: decoration,
+          ),
         ),
       ),
     );

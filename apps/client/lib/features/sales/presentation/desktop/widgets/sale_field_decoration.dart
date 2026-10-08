@@ -153,7 +153,8 @@ class SaleTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final fieldHeight =
         controlHeight ?? saleFieldControlHeight(compact: compact);
-    final fontSize = compact ? 12.0 : 14.0;
+    final fontSize =
+        style?.fontSize ?? (compact ? 12.0 : 14.0);
     // Keep the editable line short, then center it in the chrome — stretching
     // the TextField makes desktop text sit at the top of the box.
     final lineBoxHeight = fontSize + 4;

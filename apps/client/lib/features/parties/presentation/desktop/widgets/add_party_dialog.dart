@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
@@ -52,9 +53,183 @@ const _gstLeftColumnWidth = 220.0;
 const _defaultDecimal = '0.00';
 const _defaultState = 'Andhra Pradesh';
 const _saveBlue = Color(0xFF42A5F5);
-const _partyTopFieldRowGap = 20.0;
-const _partySectionGap = 20.0;
+const _vyaparReceiveRadioColor = Color(0xFF00897B);
+const _creditBalanceFieldMaxWidth = 280.0;
 const _partyAdditionalRowMinHeight = 40.0;
+
+enum _PartyDialogDensityTier { comfortable, compact, tight }
+
+/// Responsive spacing and control sizes so the party dialog fits with less scrolling.
+class _PartyDialogDensity {
+  const _PartyDialogDensity({
+    required this.tier,
+    required this.pagePaddingH,
+    required this.pagePaddingTop,
+    required this.pagePaddingBottom,
+    required this.sectionGap,
+    required this.gridRowGap,
+    required this.profileImageSize,
+    required this.addressMinLines,
+    required this.showHeaderSubtitle,
+    required this.headerTitleSize,
+    required this.gstTwoColumnMinWidth,
+    required this.gstLeftColumnWidth,
+    required this.tabIconSize,
+    required this.footerVerticalPadding,
+    required this.controlHeight,
+    required this.fieldFontSize,
+  });
+
+  final _PartyDialogDensityTier tier;
+  final double pagePaddingH;
+  final double pagePaddingTop;
+  final double pagePaddingBottom;
+  final double sectionGap;
+  final double gridRowGap;
+  final double profileImageSize;
+  final int addressMinLines;
+  final bool showHeaderSubtitle;
+  final double headerTitleSize;
+  final double gstTwoColumnMinWidth;
+  final double gstLeftColumnWidth;
+  final double tabIconSize;
+  final double footerVerticalPadding;
+  final double controlHeight;
+  final double fieldFontSize;
+
+  bool get useCompactFields => tier != _PartyDialogDensityTier.comfortable;
+  bool get isTight => tier == _PartyDialogDensityTier.tight;
+
+  _PartyDialogDensity copyWith({
+    double? controlHeight,
+    double? fieldFontSize,
+  }) {
+    return _PartyDialogDensity(
+      tier: tier,
+      pagePaddingH: pagePaddingH,
+      pagePaddingTop: pagePaddingTop,
+      pagePaddingBottom: pagePaddingBottom,
+      sectionGap: sectionGap,
+      gridRowGap: gridRowGap,
+      profileImageSize: profileImageSize,
+      addressMinLines: addressMinLines,
+      showHeaderSubtitle: showHeaderSubtitle,
+      headerTitleSize: headerTitleSize,
+      gstTwoColumnMinWidth: gstTwoColumnMinWidth,
+      gstLeftColumnWidth: gstLeftColumnWidth,
+      tabIconSize: tabIconSize,
+      footerVerticalPadding: footerVerticalPadding,
+      controlHeight: controlHeight ?? this.controlHeight,
+      fieldFontSize: fieldFontSize ?? this.fieldFontSize,
+    );
+  }
+
+  static const comfortable = _PartyDialogDensity(
+    tier: _PartyDialogDensityTier.comfortable,
+    pagePaddingH: FormSpacing.page,
+    pagePaddingTop: FormSpacing.section + 4,
+    pagePaddingBottom: FormSpacing.section + 8,
+    sectionGap: FormSpacing.section,
+    gridRowGap: 20,
+    profileImageSize: 108,
+    addressMinLines: 4,
+    showHeaderSubtitle: true,
+    headerTitleSize: 18,
+    gstTwoColumnMinWidth: 720,
+    gstLeftColumnWidth: _gstLeftColumnWidth,
+    tabIconSize: 16,
+    footerVerticalPadding: AppSpacing.sm,
+    controlHeight: saleFieldHeight,
+    fieldFontSize: 14,
+  );
+
+  static const compact = _PartyDialogDensity(
+    tier: _PartyDialogDensityTier.compact,
+    pagePaddingH: 14,
+    pagePaddingTop: 8,
+    pagePaddingBottom: 8,
+    sectionGap: 6,
+    gridRowGap: 10,
+    profileImageSize: 80,
+    addressMinLines: 2,
+    showHeaderSubtitle: true,
+    headerTitleSize: 16,
+    gstTwoColumnMinWidth: 920,
+    gstLeftColumnWidth: 188,
+    tabIconSize: 14,
+    footerVerticalPadding: 5,
+    controlHeight: 36,
+    fieldFontSize: 13,
+  );
+
+  static const tight = _PartyDialogDensity(
+    tier: _PartyDialogDensityTier.tight,
+    pagePaddingH: 10,
+    pagePaddingTop: 6,
+    pagePaddingBottom: 6,
+    sectionGap: 4,
+    gridRowGap: 6,
+    profileImageSize: 64,
+    addressMinLines: 1,
+    showHeaderSubtitle: false,
+    headerTitleSize: 15,
+    gstTwoColumnMinWidth: 10000,
+    gstLeftColumnWidth: 180,
+    tabIconSize: 13,
+    footerVerticalPadding: 3,
+    controlHeight: saleCompactFieldHeight,
+    fieldFontSize: 12,
+  );
+
+  static _PartyDialogDensity from(BoxConstraints constraints) {
+    final height = constraints.maxHeight;
+    final width = constraints.maxWidth;
+    if (!height.isFinite || height <= 0) return comfortable;
+
+    final minSide = math.min(height, width);
+    final _PartyDialogDensity base;
+    if (minSide < 660 || height < 680 || width < 860) {
+      base = tight;
+    } else if (minSide < 820 || height < 820 || width < 1000) {
+      base = compact;
+    } else {
+      base = comfortable;
+    }
+
+    // Scale single-line control height and text with viewport height.
+    final h = height.clamp(560.0, 1040.0);
+    final t = (h - 560) / (1040 - 560);
+    final controlHeight =
+        saleCompactFieldHeight + t * (saleFieldHeight - saleCompactFieldHeight);
+    final fieldFontSize = 12.0 + t * 2.0;
+
+    return base.copyWith(
+      controlHeight: controlHeight,
+      fieldFontSize: fieldFontSize,
+    );
+  }
+}
+
+class _PartyDialogDensityScope extends InheritedWidget {
+  const _PartyDialogDensityScope({
+    required this.density,
+    required super.child,
+  });
+
+  final _PartyDialogDensity density;
+
+  static _PartyDialogDensity of(BuildContext context) {
+    return context
+            .dependOnInheritedWidgetOfExactType<_PartyDialogDensityScope>()
+            ?.density ??
+        _PartyDialogDensity.comfortable;
+  }
+
+  @override
+  bool updateShouldNotify(_PartyDialogDensityScope oldWidget) {
+    return density != oldWidget.density;
+  }
+}
 
 /// Wider/taller than default ERP modals — party form has tabs and address blocks.
 const _addPartyDialogWidth = 1280.0;
@@ -719,6 +894,29 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     });
   }
 
+  void _promoteAdditionalPhoneToPrimary(int index) {
+    if (index < 0 || index >= _additionalPhoneEntries.length) return;
+    setState(() {
+      final selected = _additionalPhoneEntries[index];
+      final formerPrimary = PartyModel.normalizePhone(_phoneController.text);
+      _phoneController.text = PartyModel.normalizePhone(selected.phone);
+      _additionalPhoneEntries[index] = PartyAdditionalPhoneDetail(
+        phone: formerPrimary,
+        label: selected.label,
+      );
+      if (index < _additionalPhoneErrors.length) {
+        _additionalPhoneErrors[index] = null;
+      }
+      _phoneError = null;
+    });
+  }
+
+  String _phoneWithRoleSuffix(String phone, {required bool isPrimary}) {
+    final digits = phone.trim();
+    if (digits.isEmpty) return '';
+    return '$digits ${isPrimary ? 'P' : 'S'}';
+  }
+
   void _populateFromParty(PartyModel party, {String? duplicateNameSuffix}) {
     _partyNameController.text = Validators.capitalizeFirstLetter(
       duplicateNameSuffix == null
@@ -1119,9 +1317,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         color: verifiedColor,
         tooltip: 'View GST details',
         padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(
-          width: saleFieldHeight - 8,
-          height: saleFieldHeight - 2,
+        constraints: BoxConstraints.tightFor(
+          width: _partyDensity().controlHeight - 8,
+          height: _partyDensity().controlHeight - 2,
         ),
         visualDensity: VisualDensity.compact,
       );
@@ -1133,9 +1331,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       color: AppColors.textSecondary,
       tooltip: 'Verify GSTIN',
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(
-        width: saleFieldHeight - 8,
-        height: saleFieldHeight - 2,
+      constraints: BoxConstraints.tightFor(
+        width: _partyDensity().controlHeight - 8,
+        height: _partyDensity().controlHeight - 2,
       ),
       visualDensity: VisualDensity.compact,
     );
@@ -1708,11 +1906,21 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         ? _addPartyDialogWidth
         : availableWidth.clamp(0, _addPartyDialogMaxWidth);
 
+    final fallbackHeight = media.height * _addPartyDialogMaxHeightFactor;
+
     return _wrapWithCloseGuard(
-      SizedBox(
-        width: preferredWidth.toDouble(),
-        height: media.height * _addPartyDialogMaxHeightFactor,
-        child: content,
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final height = constraints.hasBoundedHeight
+              ? constraints.maxHeight
+              : fallbackHeight;
+
+          return SizedBox(
+            width: preferredWidth.toDouble(),
+            height: height,
+            child: content,
+          );
+        },
       ),
     );
   }
@@ -1725,84 +1933,141 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       color: AppColors.surface,
       borderRadius: rounded ? AppRadius.lgBorder : BorderRadius.zero,
       clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (showHeader) ...[
-                _buildHeader(),
-                const Divider(height: 1, color: _cardBorder),
-              ],
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          FormSpacing.page,
-                          FormSpacing.section + 4,
-                          FormSpacing.page,
-                          FormSpacing.section + 8,
-                        ),
-                        child: _buildTopFields(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: FormSpacing.page,
-                        ),
-                        child: _buildTabBar(),
-                      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final density = _PartyDialogDensity.from(constraints);
+          return _PartyDialogDensityScope(
+            density: density,
+            child: Stack(
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (showHeader) ...[
+                      _buildHeader(),
                       const Divider(height: 1, color: _cardBorder),
-                      Padding(
-                        padding: const EdgeInsets.all(FormSpacing.page),
-                        child: AnimatedBuilder(
-                          animation: _tabController,
-                          builder: (context, _) {
-                            return switch (_tabController.index) {
-                              0 => _buildGstAddressTab(),
-                              1 => _buildCreditBalanceTab(),
-                              _ => _buildAdditionalFieldsTab(),
-                            };
-                          },
+                    ],
+                    Expanded(
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        child: SingleChildScrollView(
+                          primary: true,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  density.pagePaddingH,
+                                  density.pagePaddingTop,
+                                  density.pagePaddingH,
+                                  density.pagePaddingBottom,
+                                ),
+                                child: _buildTopFields(),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: density.pagePaddingH,
+                                ),
+                                child: _buildTabBar(),
+                              ),
+                              const Divider(height: 1, color: _cardBorder),
+                              Padding(
+                                padding: EdgeInsets.all(density.pagePaddingH),
+                                child: AnimatedBuilder(
+                                  animation: _tabController,
+                                  builder: (context, _) {
+                                    return switch (_tabController.index) {
+                                      0 => _buildGstAddressTab(),
+                                      1 => _buildCreditBalanceTab(),
+                                      _ => _buildAdditionalFieldsTab(),
+                                    };
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const Divider(height: 1, color: _cardBorder),
+                    _buildFooter(),
+                  ],
                 ),
-              ),
-              const Divider(height: 1, color: _cardBorder),
-              _buildFooter(),
-            ],
-          ),
-          if (_isSaving)
-            Positioned.fill(
-              child: AbsorbPointer(
-                child: ColoredBox(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  child: const Center(
-                    child: CircularProgressIndicator(),
+                if (_isSaving)
+                  Positioned.fill(
+                    child: AbsorbPointer(
+                      child: ColoredBox(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+              ],
             ),
-        ],
+          );
+        },
       ),
     );
   }
 
+  _PartyDialogDensity _partyDensity() => _PartyDialogDensityScope.of(context);
+
+  TextStyle _partyFieldTextStyle() =>
+      saleFieldTextStyle.copyWith(fontSize: _partyDensity().fieldFontSize);
+
+  SaleTextField _partySaleTextField({
+    required TextEditingController controller,
+    String? hint,
+    bool hasError = false,
+    bool enabled = true,
+    bool autofocus = false,
+    FocusNode? focusNode,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    int? maxLength,
+    Widget? prefix,
+    Widget? suffixIcon,
+    ValueChanged<String>? onChanged,
+    VoidCallback? onTap,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+  }) {
+    final density = _partyDensity();
+    return SaleTextField(
+      controller: controller,
+      hint: hint,
+      hasError: hasError,
+      enabled: enabled,
+      compact: density.useCompactFields,
+      controlHeight: density.controlHeight,
+      style: _partyFieldTextStyle(),
+      autofocus: autofocus,
+      focusNode: focusNode,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      maxLength: maxLength,
+      prefix: prefix,
+      suffixIcon: suffixIcon,
+      onChanged: onChanged,
+      onTap: onTap,
+      textCapitalization: textCapitalization,
+    );
+  }
+
   Widget _buildHeader() {
+    final density = _partyDensity();
     final subtitle = _isEditMode
         ? 'Update contact, tax, and address details for this party.'
         : 'Enter party details to create a new party.';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        FormSpacing.page,
-        AppSpacing.md,
-        FormSpacing.page,
-        AppSpacing.md,
+      padding: EdgeInsets.fromLTRB(
+        density.pagePaddingH,
+        density.footerVerticalPadding + 4,
+        density.pagePaddingH,
+        density.footerVerticalPadding + 4,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1813,21 +2078,23 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               children: [
                 Text(
                   _isEditMode ? 'Edit Party' : 'Add Party',
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: density.headerTitleSize,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.35,
-                    color: AppColors.textSecondary,
+                if (density.showHeaderSubtitle) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.3,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -1842,6 +2109,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildTopFields() {
+    final density = _PartyDialogDensityScope.of(context);
+
     final partyNameField = _buildInlineTextField(
       controller: _partyNameController,
       hint: 'Party Name *',
@@ -1935,7 +2204,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               partyId: widget.partyToEdit?.id,
               partyName: _partyNameController.text,
               seed: seed.isEmpty ? 'party' : seed,
-              size: 108,
+              size: density.profileImageSize,
               initialImageUrl: _profileImageUrl,
               initialMediaAssetId: _profileMediaAssetId,
               onChanged: ({required imageUrl, required mediaAssetId}) {
@@ -1959,17 +2228,17 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             const SizedBox(width: FormSpacing.gutter),
             Expanded(
               child: FormGrid(
-                rowGap: _partyTopFieldRowGap,
+                rowGap: density.gridRowGap,
                 cells: primaryCells,
               ),
             ),
           ],
         ),
         if (_additionalPhoneEntries.isNotEmpty) ...[
-          const SizedBox(height: _partySectionGap),
+          SizedBox(height: density.sectionGap),
           _buildAdditionalPhoneEntriesList(),
         ],
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: density.sectionGap),
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: _partyNameController,
           builder: (context, value, _) {
@@ -2078,7 +2347,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                     children: [
                       Flexible(
                         child: Text(
-                          entry.phone,
+                          _phoneWithRoleSuffix(entry.phone, isPrimary: false),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -2184,6 +2453,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       );
     }
 
+    if (_additionalPhoneEntries.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: _buildPartyPhonesDropdownSuffix(),
+      );
+    }
+
     final addAnother = IconButton(
       icon: Icon(
         Icons.add_circle_outline,
@@ -2223,8 +2499,89 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     );
   }
 
+  Widget _buildPartyPhonesDropdownSuffix() {
+    final primary = PartyModel.normalizePhone(_phoneController.text);
+
+    return MenuAnchor(
+      alignmentOffset: const Offset(0, 4),
+      style: MenuStyle(
+        backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
+        elevation: const WidgetStatePropertyAll(6),
+        shadowColor: const WidgetStatePropertyAll(Colors.black26),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+        ),
+        padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 4)),
+      ),
+      menuChildren: [
+        MenuItemButton(
+          onPressed: () {},
+          child: _PartyPhoneMenuRow(
+            phone: primary,
+            role: 'P',
+            isSelected: true,
+          ),
+        ),
+        for (var i = 0; i < _additionalPhoneEntries.length; i++)
+          MenuItemButton(
+            onPressed: () => _promoteAdditionalPhoneToPrimary(i),
+            child: _PartyPhoneMenuRow(
+              phone: _additionalPhoneEntries[i].phone,
+              role: 'S',
+              label: _additionalPhoneEntries[i].label,
+            ),
+          ),
+        if (_additionalPhoneEntries.length < kMaxPartyAdditionalPhones) ...[
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Divider(height: 1, color: _cardBorder),
+          ),
+          MenuItemButton(
+            onPressed: () => unawaited(_promptAdditionalPhone()),
+            child: const Row(
+              children: [
+                Icon(Icons.add, size: 18, color: AppColors.primary),
+                SizedBox(width: 8),
+                Text(
+                  'Add another number',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+      builder: (context, controller, child) {
+        return IconButton(
+          icon: Icon(
+            Icons.arrow_drop_down_circle_outlined,
+            size: 22,
+            color: AppColors.primary.withValues(alpha: 0.95),
+          ),
+          tooltip: 'All numbers',
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          onPressed: () {
+            if (controller.isOpen) {
+              controller.close();
+            } else {
+              controller.open();
+            }
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildDefaultPriceTierField() {
     final tierLabels = ref.watch(pricingTierLabelsProvider);
+    final density = _partyDensity();
     return SaleGenericSelectDropdown(
       value: PriceTier.labelFor(
         _defaultPriceTier,
@@ -2232,6 +2589,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       ),
       options: PriceTier.dropdownOptionsFor(apiTierLabels: tierLabels),
       hintText: 'Default Price Tier',
+      compact: density.useCompactFields,
+      triggerHeight: density.controlHeight,
       footerActionLabel: 'Customize tier names',
       onFooterAction: _showCustomizeTierNamesDialog,
       onSelected: (label) => setState(
@@ -2250,6 +2609,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   Widget _buildPartyGroupControls() {
     final partyGroups = ref.watch(partyGroupsProvider);
+    final density = _partyDensity();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2259,6 +2619,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           options: partyGroups,
           hintText: 'Party Group *',
           hasError: _partyGroupError != null,
+          compact: density.useCompactFields,
+          triggerHeight: density.controlHeight,
           footerActionLabel: 'Add new group',
           onFooterAction: _showAddPartyGroupDialog,
           onSelected: (value) => setState(() {
@@ -2314,7 +2676,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SaleTextField(
+        _partySaleTextField(
           controller: controller,
           hint: hint,
           hasError: hasError,
@@ -2340,6 +2702,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildTabBar() {
+    final density = _PartyDialogDensityScope.of(context);
+    final tabIconSize = density.tabIconSize;
+
     return TabBar(
       controller: _tabController,
       onTap: (_) => setState(() {}),
@@ -2348,23 +2713,26 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.textSecondary,
       indicatorColor: AppColors.primary,
-      labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-      labelStyle: const TextStyle(
-        fontSize: 13,
+      labelPadding: EdgeInsets.symmetric(
+        horizontal: density.isTight ? 8 : 12,
+      ),
+      labelStyle: TextStyle(
+        fontSize: density.isTight ? 12 : 13,
         fontWeight: FontWeight.w600,
       ),
-      unselectedLabelStyle: const TextStyle(
-        fontSize: 13,
+      unselectedLabelStyle: TextStyle(
+        fontSize: density.isTight ? 12 : 13,
         fontWeight: FontWeight.w500,
       ),
       tabs: [
         Tab(
+          height: density.isTight ? 32 : (density.useCompactFields ? 36 : 40),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 LucideIcons.landmark,
-                size: 16,
+                size: tabIconSize,
                 color: _tabController.index == 0
                     ? AppColors.primary
                     : AppColors.textSecondary,
@@ -2375,12 +2743,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           ),
         ),
         Tab(
+          height: density.isTight ? 32 : (density.useCompactFields ? 36 : 40),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 LucideIcons.creditCard,
-                size: 16,
+                size: tabIconSize,
                 color: _tabController.index == 1
                     ? AppColors.primary
                     : AppColors.textSecondary,
@@ -2407,12 +2776,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           ),
         ),
         Tab(
+          height: density.isTight ? 32 : (density.useCompactFields ? 36 : 40),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 LucideIcons.settings,
-                size: 16,
+                size: tabIconSize,
                 color: _tabController.index == 2
                     ? AppColors.primary
                     : AppColors.textSecondary,
@@ -2429,7 +2799,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   Widget _buildGstAddressTab() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 560;
+        final density = _PartyDialogDensityScope.of(context);
+        final gap = density.sectionGap;
+        final isNarrow = constraints.maxWidth < density.gstTwoColumnMinWidth;
         final leftColumn = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -2441,6 +2813,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                     .map((type) => _partyTypeLabels[type]!)
                     .toList(),
                 hintText: 'Party Type',
+                compact: density.useCompactFields,
+                triggerHeight: density.controlHeight,
                 onSelected: (label) {
                   final type = _partyTypeLabels.entries
                       .where((entry) => entry.value == label)
@@ -2450,12 +2824,14 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 },
               ),
             ),
-            const SizedBox(height: FormSpacing.section),
+            SizedBox(height: gap),
             _LabeledField(
               label: 'GST Type',
               child: SaleGenericSelectDropdown(
                 value: _gstType,
                 options: _gstTypes,
+                compact: density.useCompactFields,
+                triggerHeight: density.controlHeight,
                 onSelected: (value) => setState(() {
                   _gstType = value;
                   if (!_requiresGstin && _gstinError != null) {
@@ -2464,22 +2840,24 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 }),
               ),
             ),
-            const SizedBox(height: FormSpacing.section),
+            SizedBox(height: gap),
             _LabeledField(
               label: 'State',
               child: SaleGenericSelectDropdown(
                 value: _state,
                 options: SaleDropdownOptions.indianStates,
+                compact: density.useCompactFields,
+                triggerHeight: density.controlHeight,
                 onSelected: (value) => setState(() => _state = value),
               ),
             ),
-            const SizedBox(height: FormSpacing.section),
+            SizedBox(height: gap),
             _LabeledField(
               label: 'Email ID',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SaleTextField(
+                  _partySaleTextField(
                     controller: _emailController,
                     hasError: _emailError != null,
                     keyboardType: TextInputType.emailAddress,
@@ -2574,7 +2952,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           children: [
             billingSection,
             if (shippingSection != null) ...[
-              const SizedBox(height: FormSpacing.section),
+              SizedBox(height: gap),
               shippingSection,
             ],
           ],
@@ -2585,9 +2963,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               leftColumn,
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: FormSpacing.section),
-                child: Divider(height: 1, thickness: 1, color: _cardBorder),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: gap),
+                child: const Divider(height: 1, thickness: 1, color: _cardBorder),
               ),
               rightColumn,
             ],
@@ -2597,8 +2975,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: _gstLeftColumnWidth, child: leftColumn),
-            const SizedBox(width: FormSpacing.gutter),
+            SizedBox(width: density.gstLeftColumnWidth, child: leftColumn),
+            SizedBox(width: density.isTight ? 10 : FormSpacing.gutter),
             Expanded(
               child: DecoratedBox(
                 decoration: const BoxDecoration(
@@ -2607,7 +2985,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(left: FormSpacing.gutter),
+                  padding: EdgeInsets.only(
+                    left: density.isTight ? 10 : FormSpacing.gutter,
+                  ),
                   child: rightColumn,
                 ),
               ),
@@ -2642,6 +3022,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     required Widget detailedFields,
     Widget? labelTrailing,
   }) {
+    final density = _PartyDialogDensityScope.of(context);
+    final addressLines = density.addressMinLines;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -2661,25 +3044,26 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             if (labelTrailing != null) labelTrailing,
           ],
         ),
-        const SizedBox(height: FormSpacing.label),
+        SizedBox(height: density.isTight ? 4 : FormSpacing.label),
         TextField(
           controller: addressController,
-          style: saleFieldTextStyle,
+          style: _partyFieldTextStyle(),
           decoration: buildSaleFieldDecoration(
             fixedHeight: false,
+            compact: density.useCompactFields,
             hint: label == 'Billing Address'
                 ? 'Enter billing address'
                 : 'Enter shipping address',
           ),
-          minLines: 4,
-          maxLines: 4,
+          minLines: addressLines,
+          maxLines: addressLines,
         ),
         _buildDetailedAddressToggle(
           showDetailed: showDetailed,
           onPressed: onToggleDetailed,
         ),
         if (showDetailed) ...[
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: density.sectionGap),
           detailedFields,
         ],
       ],
@@ -2727,9 +3111,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 400;
 
+        final density = _partyDensity();
+        final detailGap = density.sectionGap;
+
         final addressLineField = _LabeledField(
           label: 'Address',
-          child: SaleTextField(
+          child: _partySaleTextField(
             controller: addressLineController,
             hint: 'Street, building, area',
             textCapitalization: TextCapitalization.sentences,
@@ -2738,7 +3125,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
         final cityField = _LabeledField(
           label: 'City',
-          child: SaleTextField(
+          child: _partySaleTextField(
             controller: cityController,
             hint: 'City',
             textCapitalization: TextCapitalization.words,
@@ -2750,13 +3137,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: SaleGenericSelectDropdown(
             value: detailState,
             options: SaleDropdownOptions.indianStates,
+            compact: density.useCompactFields,
+            triggerHeight: density.controlHeight,
             onSelected: onStateChanged,
           ),
         );
 
         final pincodeField = _LabeledField(
           label: 'Pincode',
-          child: SaleTextField(
+          child: _partySaleTextField(
             controller: pincodeController,
             hint: 'Pincode',
             keyboardType: TextInputType.number,
@@ -2769,6 +3158,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: SaleGenericSelectDropdown(
             value: country,
             options: SaleDropdownOptions.countries,
+            compact: density.useCompactFields,
+            triggerHeight: density.controlHeight,
             onSelected: onCountryChanged,
           ),
         );
@@ -2862,197 +3253,63 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildCreditBalanceTab() {
+    final gap = _PartyDialogDensityScope.of(context).sectionGap;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildBalanceWithDateRow(
-          amountLabel: 'Opening Balance',
-          amountController: _openingBalanceController,
-          amountError: _openingBalanceError,
-          onAmountChanged: () {
-            if (_openingBalanceError != null) {
-              setState(() => _openingBalanceError = null);
-            }
-          },
-          selectedDate: _openingBalanceAsOfDate,
-          datePickerKey: _openingBalanceAsOfDatePickerKey,
-          onDateSelected: (date) =>
-              setState(() => _openingBalanceAsOfDate = _dateOnly(date)),
+        _buildVyaparOpeningBalanceDateRow(),
+        SizedBox(height: gap),
+        _buildVyaparOpeningBalanceTypeRadios(),
+        SizedBox(height: gap),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
+          child: _buildVyaparLoyaltyPointsField(),
         ),
-        const SizedBox(height: FormSpacing.section),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isNarrow = constraints.maxWidth < 720;
-            final openingBalanceType = _buildOpeningBalanceTypeField();
-            final loyaltyPoints = _buildLoyaltyPointsOpeningBalanceField();
-            final creditLimit = _buildCreditLimitSection();
-
-            if (isNarrow) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  openingBalanceType,
-                  const SizedBox(height: AppSpacing.md),
-                  loyaltyPoints,
-                  const SizedBox(height: AppSpacing.md),
-                  creditLimit,
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 2, child: openingBalanceType),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(flex: 3, child: loyaltyPoints),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(flex: 2, child: creditLimit),
-              ],
-            );
-          },
-        ),
+        SizedBox(height: gap),
+        _buildVyaparCreditLimitSection(),
       ],
     );
   }
 
-  Widget _buildOpeningBalanceTypeField() {
-    return _LabeledField(
-      label: 'Opening Balance Type',
-      child: SegmentedButton<OpeningBalanceDirection>(
-        segments: [
-          for (final direction in OpeningBalanceDirection.values)
-            ButtonSegment(
-              value: direction,
-              label: Text(direction.label),
-            ),
-        ],
-        selected: {_openingBalanceDirection},
-        onSelectionChanged: (selection) {
-          if (selection.isEmpty) return;
-          setState(() => _openingBalanceDirection = selection.first);
-        },
-      ),
-    );
-  }
-
-  Widget _buildLoyaltyPointsOpeningBalanceField() {
-    return _LabeledField(
-      label: 'Loyalty Points Opening Balance',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SaleTextField(
-            controller: _loyaltyPointsOpeningBalanceController,
-            focusNode: _loyaltyPointsFocusNode,
-            hint: _defaultDecimal,
-            hasError: _loyaltyBalanceError != null,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
-            inputFormatters: [nonNegativeDecimalInputFormatter],
-            onChanged: (_) {
-              if (_loyaltyBalanceError != null) {
-                setState(() => _loyaltyBalanceError = null);
-              }
-            },
-          ),
-          if (_loyaltyBalanceError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4, left: 2),
-              child: Text(
-                _loyaltyBalanceError!,
-                style: const TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBalanceWithDateRow({
-    required String amountLabel,
-    required TextEditingController amountController,
-    required DateTime selectedDate,
-    required GlobalKey<SaleSingleDatePickerAnchorState> datePickerKey,
-    required ValueChanged<DateTime> onDateSelected,
-    String? amountError,
-    VoidCallback? onAmountChanged,
-  }) {
+  Widget _buildVyaparOpeningBalanceDateRow() {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 560;
-
-        final asOfDateField = _LabeledField(
-          label: 'As of Date',
-          child: SaleSingleDatePickerAnchor(
-            key: datePickerKey,
-            selectedDate: selectedDate,
-            onDateSelected: onDateSelected,
-            child: SaleFieldTrigger(
-              onTap: () => datePickerKey.currentState?.toggle(),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      formatSaleSingleDate(selectedDate),
-                      style: saleFieldTextStyle,
-                    ),
-                  ),
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                ],
-              ),
-            ),
+        final openingBalance = ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
+          child: _buildVyaparOutlinedAmountField(
+            label: 'Opening Balance',
+            controller: _openingBalanceController,
+            focusNode: _openingBalanceFocusNode,
+            errorText: _openingBalanceError,
+            onChanged: () {
+              if (_openingBalanceError != null) {
+                setState(() => _openingBalanceError = null);
+              }
+            },
+          ),
+        );
+        final asOfDate = ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
+          child: _buildVyaparOutlinedDateField(
+            label: 'As Of Date',
+            selectedDate: _openingBalanceAsOfDate,
+            datePickerKey: _openingBalanceAsOfDatePickerKey,
+            onDateSelected: (date) =>
+                setState(() => _openingBalanceAsOfDate = _dateOnly(date)),
           ),
         );
 
-        final amountField = _LabeledField(
-          label: amountLabel,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SaleTextField(
-                controller: amountController,
-                focusNode: amountLabel == 'Opening Balance'
-                    ? _openingBalanceFocusNode
-                    : null,
-                hint: _defaultDecimal,
-                hasError: amountError != null,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [nonNegativeDecimalInputFormatter],
-                onChanged: (_) => onAmountChanged?.call(),
-              ),
-              if (amountError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 2),
-                  child: Text(
-                    amountError,
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
+        final gap = _partyDensity().sectionGap;
 
         if (isNarrow) {
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              asOfDateField,
-              const SizedBox(height: AppSpacing.md),
-              amountField,
+              openingBalance,
+              SizedBox(height: gap),
+              asOfDate,
             ],
           );
         }
@@ -3060,143 +3317,267 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 2, child: asOfDateField),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(flex: 3, child: amountField),
+            openingBalance,
+            SizedBox(width: gap + 4),
+            asOfDate,
           ],
         );
       },
     );
   }
 
-  Widget _buildCreditLimitSection() {
-    return _LabeledField(
-      label: 'Credit Limit',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildCreditLimitToggleBar(),
-          if (_useCustomCreditLimit) ...[
-            const SizedBox(height: AppSpacing.md),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SaleTextField(
-                  controller: _creditLimitController,
-                  focusNode: _creditLimitFocusNode,
-                  hint: _defaultDecimal,
-                  hasError: _creditLimitError != null,
-                  prefix: const Text('₹ ', style: saleFieldTextStyle),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [nonNegativeDecimalInputFormatter],
-                  onChanged: (_) {
-                    if (_creditLimitError != null) {
-                      setState(() => _creditLimitError = null);
-                    }
-                  },
-                ),
-                if (_creditLimitError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, left: 2),
-                    child: Text(
-                      _creditLimitError!,
-                      style: const TextStyle(
-                        color: AppColors.error,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreditLimitToggleBar() {
-    return Container(
-      height: 32,
-      width: double.infinity,
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _cardBorder),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildCreditLimitToggleSegment(
-              label: 'No limit',
-              isSelected: !_useCustomCreditLimit,
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(4),
-              ),
-              onTap: () => setState(() => _useCustomCreditLimit = false),
-            ),
-          ),
-          Expanded(
-            child: _buildCreditLimitToggleSegment(
-              label: 'Custom limit',
-              isSelected: _useCustomCreditLimit,
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(4),
-              ),
-              onTap: () => setState(() {
-                _useCustomCreditLimit = true;
-                if (_creditLimitController.text.trim().isEmpty) {
-                  _creditLimitController.text = _defaultDecimal;
-                }
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreditLimitToggleSegment({
+  Widget _buildVyaparOutlinedAmountField({
     required String label,
-    required bool isSelected,
-    required BorderRadius borderRadius,
-    required VoidCallback onTap,
+    required TextEditingController controller,
+    FocusNode? focusNode,
+    String? errorText,
+    Widget? prefix,
+    VoidCallback? onChanged,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: borderRadius,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: borderRadius,
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
+    final density = _partyDensity();
+    final verticalPad = density.isTight ? 8.0 : (density.useCompactFields ? 10.0 : 12.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: controller,
+          focusNode: focusNode,
+          style: _partyFieldTextStyle(),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [nonNegativeDecimalInputFormatter],
+          onChanged: (_) => onChanged?.call(),
+          decoration: buildFormControlDecoration(
+            labelText: label,
+            hasError: errorText != null,
+            fixedHeight: false,
+            compact: density.useCompactFields,
+          ).copyWith(
+            prefix: prefix,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: verticalPad),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 2),
+            child: Text(
+              errorText,
+              style: const TextStyle(color: AppColors.error, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildVyaparOutlinedDateField({
+    required String label,
+    required DateTime selectedDate,
+    required GlobalKey<SaleSingleDatePickerAnchorState> datePickerKey,
+    required ValueChanged<DateTime> onDateSelected,
+  }) {
+    final density = _partyDensity();
+    final innerHeight = math.max(20.0, density.controlHeight - 10);
+
+    return SaleSingleDatePickerAnchor(
+      key: datePickerKey,
+      selectedDate: selectedDate,
+      onDateSelected: onDateSelected,
+      child: InputDecorator(
+        decoration: buildFormControlDecoration(
+          labelText: label,
+          fixedHeight: false,
+          compact: density.useCompactFields,
+        ),
+        child: InkWell(
+          onTap: () => datePickerKey.currentState?.toggle(),
+          child: SizedBox(
+            height: innerHeight,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    formatSaleSingleDate(selectedDate),
+                    style: _partyFieldTextStyle(),
+                  ),
+                ),
+                Icon(
+                  Icons.calendar_today_outlined,
+                  size: density.isTight ? 14 : 16,
+                  color: Colors.grey.shade600,
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildVyaparOpeningBalanceTypeRadios() {
+    final gap = _partyDensity().sectionGap + 4;
+    return Row(
+      children: [
+        _buildVyaparBalanceDirectionRadio(OpeningBalanceDirection.toPay),
+        SizedBox(width: gap),
+        _buildVyaparBalanceDirectionRadio(OpeningBalanceDirection.toReceive),
+      ],
+    );
+  }
+
+  Widget _buildVyaparBalanceDirectionRadio(OpeningBalanceDirection direction) {
+    final density = _partyDensity();
+    final selected = _openingBalanceDirection == direction;
+    final selectedColor = direction == OpeningBalanceDirection.toReceive
+        ? _vyaparReceiveRadioColor
+        : AppColors.primary;
+
+    return InkWell(
+      onTap: () => setState(() => _openingBalanceDirection = direction),
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Radio<OpeningBalanceDirection>(
+              value: direction,
+              groupValue: _openingBalanceDirection,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              fillColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return selectedColor;
+                }
+                return AppColors.primary;
+              }),
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _openingBalanceDirection = value);
+              },
+            ),
+            Text(
+              direction.label,
+              style: TextStyle(
+                fontSize: density.fieldFontSize,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVyaparLoyaltyPointsField() {
+    return _buildVyaparOutlinedAmountField(
+      label: 'Loyalty Points Opening Balance',
+      controller: _loyaltyPointsOpeningBalanceController,
+      focusNode: _loyaltyPointsFocusNode,
+      errorText: _loyaltyBalanceError,
+      onChanged: () {
+        if (_loyaltyBalanceError != null) {
+          setState(() => _loyaltyBalanceError = null);
+        }
+      },
+    );
+  }
+
+  Widget _buildVyaparCreditLimitSection() {
+    final noLimitActive = !_useCustomCreditLimit;
+    final density = _partyDensity();
+    final gap = density.sectionGap;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Credit Limit',
+              style: TextStyle(
+                fontSize: density.fieldFontSize,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Tooltip(
+              message:
+                  'Set a maximum outstanding amount for this party. '
+                  'Choose Custom Limit to enter an amount.',
+              child: Icon(
+                Icons.info_outline,
+                size: 16,
+                color: AppColors.textSecondary.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: gap),
+        Row(
+          children: [
+            Text(
+              'No Limit',
+              style: TextStyle(
+                fontSize: density.fieldFontSize,
+                fontWeight: noLimitActive ? FontWeight.w700 : FontWeight.w500,
+                color: noLimitActive
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+              ),
+            ),
+            Switch(
+              value: _useCustomCreditLimit,
+              activeColor: AppColors.primary,
+              trackOutlineColor: WidgetStateProperty.all(
+                AppColors.primary.withValues(alpha: 0.35),
+              ),
+              onChanged: (useCustom) {
+                setState(() {
+                  _useCustomCreditLimit = useCustom;
+                  if (useCustom &&
+                      _creditLimitController.text.trim().isEmpty) {
+                    _creditLimitController.text = _defaultDecimal;
+                  }
+                });
+              },
+            ),
+            Text(
+              'Custom Limit',
+              style: TextStyle(
+                fontSize: density.fieldFontSize,
+                fontWeight: !noLimitActive ? FontWeight.w700 : FontWeight.w500,
+                color: !noLimitActive
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        if (_useCustomCreditLimit) ...[
+          SizedBox(height: gap),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
+            child: _buildVyaparOutlinedAmountField(
+              label: 'Credit Limit Amount',
+              controller: _creditLimitController,
+              focusNode: _creditLimitFocusNode,
+              errorText: _creditLimitError,
+              prefix: const Padding(
+                padding: EdgeInsets.only(left: 4),
+                child: Text('₹', style: saleFieldTextStyle),
+              ),
+              onChanged: () {
+                if (_creditLimitError != null) {
+                  setState(() => _creditLimitError = null);
+                }
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -3240,10 +3621,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         ),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
-          child: SaleTextField(
+          child: _partySaleTextField(
             controller: controller,
-            enabled: enabled,
             hint: label,
+            enabled: enabled,
           ),
         ),
       ],
@@ -3259,14 +3640,18 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       return _buildMobileEditFooter();
     }
 
+    final density = _PartyDialogDensityScope.of(context);
+    final compactFooter = density.useCompactFields;
+    final buttonHeight = density.controlHeight;
+
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          FormSpacing.page,
-          AppSpacing.sm,
-          FormSpacing.page,
-          AppSpacing.sm,
+        padding: EdgeInsets.fromLTRB(
+          density.pagePaddingH,
+          density.footerVerticalPadding,
+          density.pagePaddingH,
+          density.footerVerticalPadding,
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -3276,11 +3661,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               onPressed: _isSaving ? null : () => _save(saveAndNew: false),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 10,
+                padding: EdgeInsets.symmetric(
+                  horizontal: compactFooter ? 18 : 24,
+                  vertical: compactFooter ? 8 : 10,
                 ),
-                minimumSize: const Size(0, FormSpacing.inputHeight),
+                minimumSize: Size(0, buttonHeight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -3296,11 +3681,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
+                padding: EdgeInsets.symmetric(
+                  horizontal: compactFooter ? 16 : 20,
+                  vertical: compactFooter ? 8 : 10,
                 ),
-                minimumSize: const Size(0, FormSpacing.inputHeight),
+                minimumSize: Size(0, buttonHeight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -3316,11 +3701,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
+                padding: EdgeInsets.symmetric(
+                  horizontal: compactFooter ? 16 : 20,
+                  vertical: compactFooter ? 8 : 10,
                 ),
-                minimumSize: const Size(0, FormSpacing.inputHeight),
+                minimumSize: Size(0, buttonHeight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -3523,12 +3908,104 @@ class _LabeledField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final density = _PartyDialogDensityScope.of(context);
+    final labelGap = density.isTight
+        ? 3.0
+        : (density.useCompactFields ? 4.0 : FormSpacing.label);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: saleFieldLabelStyle),
-        const SizedBox(height: FormSpacing.label),
+        Text(
+          label,
+          style: saleFieldLabelStyle.copyWith(
+            fontSize: density.fieldFontSize,
+          ),
+        ),
+        SizedBox(height: labelGap),
         child,
+      ],
+    );
+  }
+}
+
+class _PartyPhoneMenuRow extends StatelessWidget {
+  const _PartyPhoneMenuRow({
+    required this.phone,
+    required this.role,
+    this.label = '',
+    this.isSelected = false,
+  });
+
+  final String phone;
+  final String role;
+  final String label;
+  final bool isSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final tag = label.trim();
+    return Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  phone.trim(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                role,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                ),
+              ),
+              if (tag.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      tag,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (isSelected)
+          const Icon(
+            Icons.check,
+            size: 18,
+            color: AppColors.primary,
+          ),
       ],
     );
   }
