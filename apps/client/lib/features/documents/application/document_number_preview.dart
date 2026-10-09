@@ -21,9 +21,9 @@ String formatDocumentNumberPreview({
   required int nextNumber,
 }) {
   final trimmed = prefix.trim();
-  final safePrefix = trimmed.isEmpty ? 'DOC' : trimmed;
   final safeNumber = nextNumber < 1 ? 1 : nextNumber;
-  return '$safePrefix$safeNumber';
+  if (trimmed.isEmpty) return '$safeNumber';
+  return '$trimmed$safeNumber';
 }
 
 /// Whether [currentNumber] is an unset auto placeholder on a new form.

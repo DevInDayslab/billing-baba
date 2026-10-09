@@ -145,9 +145,6 @@ class _WhatsAppSettingsScreenState
     try {
       await ref.read(whatsAppSettingsProvider.notifier).save(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('WhatsApp settings saved')),
-      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

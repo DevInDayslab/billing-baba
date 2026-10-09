@@ -27,9 +27,6 @@ class _MobilePrintSettingsScreenState
     try {
       await ref.read(printSettingsProvider.notifier).save(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Print settings saved')),
-      );
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

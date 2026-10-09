@@ -11,7 +11,8 @@ class TransactionMessagesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const AdaptivePage(
-      desktop: DesktopTransactionMessagesScreen(),
+      // Same body as the legacy Settings → Transaction Messages tab.
+      desktop: DesktopTransactionMessagesScreen(embedded: true),
       mobile: MobileTransactionMessagesScreen(),
     );
   }

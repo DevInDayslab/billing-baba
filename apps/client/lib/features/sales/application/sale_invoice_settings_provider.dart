@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
+import 'package:billing_baba/features/settings/application/settings_save_messages.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_settings.dart';
 import 'package:billing_baba/features/sales/repositories/sale_invoice_settings_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -34,7 +36,10 @@ class SaleInvoiceSettingsNotifier extends _$SaleInvoiceSettingsNotifier {
     return repository.load(firmId: firmId);
   }
 
-  Future<void> updateSettings(SaleInvoiceSettingsUpdater updater) async {
+  Future<void> updateSettings(
+    SaleInvoiceSettingsUpdater updater, {
+    bool silent = true,
+  }) async {
     final current = state;
     if (!current.hasValue) return;
 
@@ -45,5 +50,8 @@ class SaleInvoiceSettingsNotifier extends _$SaleInvoiceSettingsNotifier {
       saleInvoiceSettingsRepositoryProvider.future,
     );
     await repository.save(next);
+    if (!silent) {
+      notifySettingsSaved(ref, message: SettingsSaveMessages.transaction);
+    }
   }
 }

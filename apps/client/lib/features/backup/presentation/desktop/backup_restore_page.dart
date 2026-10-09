@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/backup/application/backup_service.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/features/backup/data/backup_importer.dart';
 import 'package:billing_baba/features/backup/presentation/mobile/mobile_backup_export_sheet.dart';
 import 'package:billing_baba/shared/utils/platform_file_output.dart';
@@ -53,6 +54,11 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
                   ? 'Export cancelled'
                   : 'Backup saved to $path';
             });
+            if (path != null) {
+              await ref
+                  .read(generalSettingsProvider.notifier)
+                  .recordLocalBackupNow();
+            }
           case MobileBackupExportAction.share:
             await PlatformFileOutput.shareFromTemp(
               filename: result.suggestedFilename,
@@ -62,6 +68,9 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
             );
             if (!mounted) return;
             setState(() => _statusMessage = 'Backup ready to share');
+            await ref
+                .read(generalSettingsProvider.notifier)
+                .recordLocalBackupNow();
         }
         return;
       }
@@ -76,6 +85,9 @@ class _BackupRestorePageState extends ConsumerState<BackupRestorePage> {
             ? 'Export cancelled'
             : 'Backup saved to $path';
       });
+      if (path != null) {
+        await ref.read(generalSettingsProvider.notifier).recordLocalBackupNow();
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() => _statusMessage = 'Export failed: $error');

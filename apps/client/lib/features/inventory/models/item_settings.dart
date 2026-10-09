@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/inventory/models/item_vyapar_settings.dart';
+
 enum ItemTypeScope {
   productsAndServices,
   productsOnly,
@@ -15,6 +17,19 @@ extension ItemTypeScopeX on ItemTypeScope {
     ItemTypeScope.productsOnly => 'Products Only',
     ItemTypeScope.servicesOnly => 'Services Only',
   };
+
+  String get vyaparLabel => switch (this) {
+    ItemTypeScope.productsAndServices => 'Product/Service',
+    ItemTypeScope.productsOnly => 'Products Only',
+    ItemTypeScope.servicesOnly => 'Services Only',
+  };
+
+  static ItemTypeScope fromVyaparLabel(String? label) {
+    return ItemTypeScope.values.firstWhere(
+      (scope) => scope.vyaparLabel == label || scope.label == label,
+      orElse: () => ItemTypeScope.productsAndServices,
+    );
+  }
 
   String get storageKey => switch (this) {
     ItemTypeScope.productsAndServices => 'products_and_services',
@@ -51,7 +66,7 @@ typedef ItemSettingsUpdater = ItemSettings Function(ItemSettings settings);
 
 /// Business-level item feature toggles and defaults.
 class ItemSettings {
-  const ItemSettings({
+  ItemSettings({
     required this.enableItem,
     required this.itemTypeScope,
     required this.barcodeScanningEnabled,
@@ -75,9 +90,10 @@ class ItemSettings {
     required this.hsnSacCode,
     required this.additionalCess,
     required this.showPriceAmountInWords,
+    required this.vyapar,
   });
 
-  factory ItemSettings.defaults() => const ItemSettings(
+  factory ItemSettings.defaults() => ItemSettings(
     enableItem: true,
     itemTypeScope: ItemTypeScope.productsAndServices,
     barcodeScanningEnabled: true,
@@ -101,6 +117,7 @@ class ItemSettings {
     hsnSacCode: true,
     additionalCess: false,
     showPriceAmountInWords: true,
+    vyapar: ItemVyaparExtension.defaults(),
   );
 
   factory ItemSettings.fromJson(Map<String, dynamic> json) {
@@ -154,6 +171,20 @@ class ItemSettings {
       showPriceAmountInWords:
           json['show_price_amount_in_words'] as bool? ??
           defaults.showPriceAmountInWords,
+      vyapar: _parseVyapar(json),
+    );
+  }
+
+  static ItemVyaparExtension _parseVyapar(Map<String, dynamic> json) {
+    final defaults = ItemVyaparExtension.defaults();
+    final parsed = ItemVyaparExtension.fromJson(
+      json['vyapar'] as Map<String, dynamic>?,
+    );
+    if (json['vyapar'] != null) return parsed;
+    return parsed.copyWith(
+      directBarcodeScan:
+          json['mobile_pos_default_billing'] as bool? ??
+          defaults.directBarcodeScan,
     );
   }
 
@@ -180,6 +211,7 @@ class ItemSettings {
   final bool hsnSacCode;
   final bool additionalCess;
   final bool showPriceAmountInWords;
+  final ItemVyaparExtension vyapar;
 
   Map<String, dynamic> toJson() => {
     'enable_item': enableItem,
@@ -205,6 +237,7 @@ class ItemSettings {
     'hsn_sac_code': hsnSacCode,
     'additional_cess': additionalCess,
     'show_price_amount_in_words': showPriceAmountInWords,
+    'vyapar': vyapar.toJson(),
   };
 
   ItemSettings copyWith({
@@ -232,6 +265,7 @@ class ItemSettings {
     bool? hsnSacCode,
     bool? additionalCess,
     bool? showPriceAmountInWords,
+    ItemVyaparExtension? vyapar,
   }) {
     return ItemSettings(
       enableItem: enableItem ?? this.enableItem,
@@ -265,6 +299,13 @@ class ItemSettings {
       additionalCess: additionalCess ?? this.additionalCess,
       showPriceAmountInWords:
           showPriceAmountInWords ?? this.showPriceAmountInWords,
+      vyapar: vyapar ?? this.vyapar,
     );
+  }
+
+  ItemSettings copyWithVyapar(
+    ItemVyaparExtension Function(ItemVyaparExtension current) update,
+  ) {
+    return copyWith(vyapar: update(vyapar));
   }
 }

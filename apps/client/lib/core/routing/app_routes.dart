@@ -108,10 +108,16 @@ abstract final class AppRoutes {
   static const developerComponentsEmptyStates =
       '/developer/components/empty-states';
   static const settings = '/settings';
+  static const settingsGeneral = '/settings/general';
+  static const settingsTransaction = '/settings/transaction';
   static const settingsTaxes = '/settings/taxes';
   static const settingsPreferences = '/settings/preferences';
   static const settingsPrint = '/settings/print';
   static const settingsTransactionMessages = '/settings/transaction-messages';
+  static const settingsParty = '/settings/party';
+  static const settingsServiceReminders = '/settings/service-reminders';
+  static const settingsAccounting = '/settings/accounting';
+  static const settingsMultiCurrency = '/settings/multi-currency';
   static const settingsBackup = '/settings/backup';
   static const settingsNotifications = '/settings/notifications';
   static const settingsReports = '/settings/reports';

@@ -1,3 +1,30 @@
+import 'package:billing_baba/features/sales/models/transaction_form_extras.dart';
+
+/// Sale invoice form density on desktop.
+enum SaleBillingFormMode {
+  liteSale,
+  fullSale;
+
+  static SaleBillingFormMode fromStorage(String? value) {
+    return SaleBillingFormMode.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => SaleBillingFormMode.fullSale,
+    );
+  }
+}
+
+/// Prefix types shown on Settings → Transaction.
+const transactionSettingsPrefixTypes = <SaleTransactionPrefixType>[
+  SaleTransactionPrefixType.sale,
+  SaleTransactionPrefixType.saleOrder,
+  SaleTransactionPrefixType.estimate,
+  SaleTransactionPrefixType.deliveryChallan,
+  SaleTransactionPrefixType.creditNote,
+  SaleTransactionPrefixType.purchaseOrder,
+  SaleTransactionPrefixType.proformaInvoice,
+  SaleTransactionPrefixType.paymentIn,
+];
+
 /// How sale transactions are shared from mobile.
 enum SaleInvoiceShareFormat {
   image,
@@ -70,15 +97,24 @@ class SaleInvoiceSettings {
     required this.billingNameOfParties,
     required this.poDetailsForCustomer,
     required this.addTimeOnTransactions,
+    required this.printTimeOnInvoices,
     required this.allowInclusiveExclusiveTax,
     required this.displayPurchasePrice,
     required this.showLast5SalePrice,
+    required this.showLast5PurchasePrice,
     required this.freeItemQuantity,
+    required this.countColumnEnabled,
+    required this.countColumnLabel,
     required this.itemsTableCount,
     required this.barcodeScanningForItems,
     required this.transactionWiseTax,
     required this.transactionWiseDiscount,
     required this.roundOffTransactionAmount,
+    required this.roundOffToValue,
+    required this.quickEntry,
+    required this.repeatInvoices,
+    required this.wholesalePriceToggleOnInvoice,
+    required this.billingFormMode,
     required this.shareTransactionAs,
     required this.passcodeForEditDeleteEnabled,
     required this.passcode,
@@ -98,6 +134,7 @@ class SaleInvoiceSettings {
     required this.salePrefixEnabled,
     required this.selectedFirmId,
     required this.transactionPrefixes,
+    required this.formExtras,
   });
 
   factory SaleInvoiceSettings.defaults({String? firmId}) {
@@ -107,15 +144,24 @@ class SaleInvoiceSettings {
       billingNameOfParties: false,
       poDetailsForCustomer: false,
       addTimeOnTransactions: false,
+      printTimeOnInvoices: false,
       allowInclusiveExclusiveTax: true,
       displayPurchasePrice: false,
       showLast5SalePrice: false,
+      showLast5PurchasePrice: false,
       freeItemQuantity: false,
+      countColumnEnabled: false,
+      countColumnLabel: 'Count',
       itemsTableCount: 1,
       barcodeScanningForItems: true,
       transactionWiseTax: false,
       transactionWiseDiscount: false,
       roundOffTransactionAmount: true,
+      roundOffToValue: 1,
+      quickEntry: false,
+      repeatInvoices: false,
+      wholesalePriceToggleOnInvoice: false,
+      billingFormMode: SaleBillingFormMode.fullSale,
       shareTransactionAs: SaleInvoiceShareFormat.image,
       passcodeForEditDeleteEnabled: false,
       passcode: '',
@@ -135,6 +181,7 @@ class SaleInvoiceSettings {
       salePrefixEnabled: false,
       selectedFirmId: firmId,
       transactionPrefixes: SaleInvoiceSettings.defaultPrefixes(),
+      formExtras: TransactionFormExtras.defaults(),
     );
   }
 
@@ -150,15 +197,24 @@ class SaleInvoiceSettings {
   final bool billingNameOfParties;
   final bool poDetailsForCustomer;
   final bool addTimeOnTransactions;
+  final bool printTimeOnInvoices;
   final bool allowInclusiveExclusiveTax;
   final bool displayPurchasePrice;
   final bool showLast5SalePrice;
+  final bool showLast5PurchasePrice;
   final bool freeItemQuantity;
+  final bool countColumnEnabled;
+  final String countColumnLabel;
   final int itemsTableCount;
   final bool barcodeScanningForItems;
   final bool transactionWiseTax;
   final bool transactionWiseDiscount;
   final bool roundOffTransactionAmount;
+  final int roundOffToValue;
+  final bool quickEntry;
+  final bool repeatInvoices;
+  final bool wholesalePriceToggleOnInvoice;
+  final SaleBillingFormMode billingFormMode;
   final SaleInvoiceShareFormat shareTransactionAs;
   final bool passcodeForEditDeleteEnabled;
   final String passcode;
@@ -178,11 +234,17 @@ class SaleInvoiceSettings {
   final bool salePrefixEnabled;
   final String? selectedFirmId;
   final Map<SaleTransactionPrefixType, String> transactionPrefixes;
+  final TransactionFormExtras formExtras;
 
   String prefixFor(SaleTransactionPrefixType type) {
     final value = transactionPrefixes[type]?.trim();
-    if (value == null || value.isEmpty) return type.defaultPrefix;
+    if (value == null || value.isEmpty) return '';
     return value;
+  }
+
+  String prefixDisplayFor(SaleTransactionPrefixType type) {
+    final value = transactionPrefixes[type]?.trim() ?? '';
+    return value.isEmpty ? 'None' : value;
   }
 
   SaleInvoiceSettings copyWith({
@@ -191,15 +253,24 @@ class SaleInvoiceSettings {
     bool? billingNameOfParties,
     bool? poDetailsForCustomer,
     bool? addTimeOnTransactions,
+    bool? printTimeOnInvoices,
     bool? allowInclusiveExclusiveTax,
     bool? displayPurchasePrice,
     bool? showLast5SalePrice,
+    bool? showLast5PurchasePrice,
     bool? freeItemQuantity,
+    bool? countColumnEnabled,
+    String? countColumnLabel,
     int? itemsTableCount,
     bool? barcodeScanningForItems,
     bool? transactionWiseTax,
     bool? transactionWiseDiscount,
     bool? roundOffTransactionAmount,
+    int? roundOffToValue,
+    bool? quickEntry,
+    bool? repeatInvoices,
+    bool? wholesalePriceToggleOnInvoice,
+    SaleBillingFormMode? billingFormMode,
     SaleInvoiceShareFormat? shareTransactionAs,
     bool? passcodeForEditDeleteEnabled,
     String? passcode,
@@ -219,6 +290,7 @@ class SaleInvoiceSettings {
     bool? salePrefixEnabled,
     String? selectedFirmId,
     Map<SaleTransactionPrefixType, String>? transactionPrefixes,
+    TransactionFormExtras? formExtras,
   }) {
     return SaleInvoiceSettings(
       invoiceBillNumberEnabled:
@@ -228,11 +300,16 @@ class SaleInvoiceSettings {
       poDetailsForCustomer: poDetailsForCustomer ?? this.poDetailsForCustomer,
       addTimeOnTransactions:
           addTimeOnTransactions ?? this.addTimeOnTransactions,
+      printTimeOnInvoices: printTimeOnInvoices ?? this.printTimeOnInvoices,
       allowInclusiveExclusiveTax:
           allowInclusiveExclusiveTax ?? this.allowInclusiveExclusiveTax,
       displayPurchasePrice: displayPurchasePrice ?? this.displayPurchasePrice,
       showLast5SalePrice: showLast5SalePrice ?? this.showLast5SalePrice,
+      showLast5PurchasePrice:
+          showLast5PurchasePrice ?? this.showLast5PurchasePrice,
       freeItemQuantity: freeItemQuantity ?? this.freeItemQuantity,
+      countColumnEnabled: countColumnEnabled ?? this.countColumnEnabled,
+      countColumnLabel: countColumnLabel ?? this.countColumnLabel,
       itemsTableCount: itemsTableCount ?? this.itemsTableCount,
       barcodeScanningForItems:
           barcodeScanningForItems ?? this.barcodeScanningForItems,
@@ -241,6 +318,12 @@ class SaleInvoiceSettings {
           transactionWiseDiscount ?? this.transactionWiseDiscount,
       roundOffTransactionAmount:
           roundOffTransactionAmount ?? this.roundOffTransactionAmount,
+      roundOffToValue: roundOffToValue ?? this.roundOffToValue,
+      quickEntry: quickEntry ?? this.quickEntry,
+      repeatInvoices: repeatInvoices ?? this.repeatInvoices,
+      wholesalePriceToggleOnInvoice:
+          wholesalePriceToggleOnInvoice ?? this.wholesalePriceToggleOnInvoice,
+      billingFormMode: billingFormMode ?? this.billingFormMode,
       shareTransactionAs: shareTransactionAs ?? this.shareTransactionAs,
       passcodeForEditDeleteEnabled:
           passcodeForEditDeleteEnabled ?? this.passcodeForEditDeleteEnabled,
@@ -271,6 +354,7 @@ class SaleInvoiceSettings {
       salePrefixEnabled: salePrefixEnabled ?? this.salePrefixEnabled,
       selectedFirmId: selectedFirmId ?? this.selectedFirmId,
       transactionPrefixes: transactionPrefixes ?? this.transactionPrefixes,
+      formExtras: formExtras ?? this.formExtras,
     );
   }
 }

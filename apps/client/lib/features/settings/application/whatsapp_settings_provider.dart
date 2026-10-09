@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
+import 'package:billing_baba/features/settings/application/settings_save_messages.dart';
 import 'package:billing_baba/features/settings/models/whatsapp_settings.dart';
 import 'package:billing_baba/features/settings/repositories/whatsapp_settings_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -30,5 +32,6 @@ class WhatsAppSettingsNotifier extends _$WhatsAppSettingsNotifier {
     );
     await repository.save(settings);
     state = AsyncData(settings);
+    notifySettingsSaved(ref, message: SettingsSaveMessages.whatsApp);
   }
 }
