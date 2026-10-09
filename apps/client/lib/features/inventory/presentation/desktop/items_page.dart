@@ -94,15 +94,23 @@ class _ItemsPageState extends ConsumerState<DesktopItemsPage>
             ),
           ),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: const [
-                ProductsTabContent(),
-                ServicesTabContent(),
-                CategoriesTabContent(),
-                BrandsTabContent(),
-                UnitsTabContent(),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
+              child: TabBarView(
+                controller: _tabController,
+                children: const [
+                  ProductsTabContent(),
+                  ServicesTabContent(),
+                  CategoriesTabContent(),
+                  BrandsTabContent(),
+                  UnitsTabContent(),
+                ],
+              ),
             ),
           ),
         ],

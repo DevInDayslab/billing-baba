@@ -277,6 +277,9 @@ class PartyService {
   }
 
   Future<void> rememberListFilter(PartyListFilter filter) async {
+    if (filter == PartyListFilter.toReceive || filter == PartyListFilter.toPay) {
+      return;
+    }
     final businessId = _businessId;
     if (businessId == null) return;
     await _cache.saveListFilter(businessId, filter.name);
@@ -476,6 +479,9 @@ class PartyList extends _$PartyList {
   @override
   Future<List<PartyModel>> build() async {
     ref.watch(currentBusinessProvider);
+    ref.watch(partyListFilterProvider);
+    ref.watch(partyBackendSearchProvider);
+    ref.watch(partyTypeFilterProvider);
 
     final service = await ref.read(partyServiceProvider.future);
     final filter = ref.read(partyListFilterProvider);

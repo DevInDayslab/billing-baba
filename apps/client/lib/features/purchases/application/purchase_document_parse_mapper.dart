@@ -166,12 +166,10 @@ class PurchaseDocumentParseMapper {
     final price = line.unitPrice;
     if (price == null || price < 0) return null;
 
-    final netUnitPrice = _unitPriceAfterLineDiscount(line, qty, price);
-
     var itemId = line.itemId;
     itemId ??= itemNameToId[itemName.trim().toLowerCase()];
 
-    final tax = _resolveWithTaxMapping(line, qty, netUnitPrice);
+    final tax = _resolveWithTaxMapping(line, qty, price);
 
     return PurchaseLineItem(
       id: nextLineId(),
@@ -184,19 +182,6 @@ class PurchaseDocumentParseMapper {
       taxPercent: tax.taxPercent,
       priceIsTaxInclusive: tax.withTax,
     );
-  }
-
-  static double _unitPriceAfterLineDiscount(
-    PurchaseDocumentParseLineDto line,
-    double qty,
-    double unitPrice,
-  ) {
-    final discount = line.discountAmount;
-    if (discount == null || discount <= 0 || qty <= 0) return unitPrice;
-    final gross = qty * unitPrice;
-    final net = gross - discount;
-    if (net <= 0) return 0;
-    return net / qty;
   }
 
   /// When the bill has GST on a line, map it to **With Tax** mode and align the

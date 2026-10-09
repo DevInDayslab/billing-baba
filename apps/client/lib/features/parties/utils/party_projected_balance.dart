@@ -7,5 +7,7 @@ double projectedPartyBalance(
 ) {
   final projected = outstandingIndex?[party.id];
   if (projected != null) return projected;
+  final cachedBalance = party.balance;
+  if (cachedBalance != 0) return cachedBalance;
   return party.openingBalance;
 }

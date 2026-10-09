@@ -382,29 +382,9 @@ final filteredProductTransactionsProvider =
     Provider.family<List<ProductTransaction>, String>((ref, itemId) {
       final transactions =
           ref.watch(productTransactionsProvider(itemId)).value ?? [];
-      final query = ref
-          .watch(productTransactionSearchQueryProvider)
-          .toLowerCase();
-      final searched = query.isEmpty
-          ? transactions
-          : transactions
-                .where(
-                  (txn) =>
-                      txn.typeLabel.toLowerCase().contains(query) ||
-                      txn.documentLabel.toLowerCase().contains(query) ||
-                      txn.transactionType.toLowerCase().contains(query) ||
-                      txn.referenceNo.toLowerCase().contains(query) ||
-                      txn.partyName.toLowerCase().contains(query) ||
-                      (txn.godownName?.toLowerCase().contains(query) ?? false) ||
-                      (txn.createdByName?.toLowerCase().contains(query) ??
-                          false) ||
-                      (txn.notes?.toLowerCase().contains(query) ?? false) ||
-                      txn.status.toLowerCase().contains(query),
-                )
-                .toList();
       final filters = ref.watch(productTransactionFiltersProvider);
       return InventoryTransactionTableService.applyFiltersAndSort(
-        transactions: searched,
+        transactions: transactions,
         filters: filters,
       );
     });
@@ -502,18 +482,6 @@ final itemStockMetricsProvider = Provider.family<ItemStockMetrics, String>((
       .watch(inventoryItemListProvider)
       .where((entry) => entry.id == itemId)
       .firstOrNull;
-  final ledgerTransactions =
-      ref.watch(productTransactionsProvider(itemId)).value;
-  if (ledgerTransactions != null) {
-    final ledgerQty = InventoryStockCalculator.ledgerQuantityFromTransactions(
-      ledgerTransactions,
-    );
-    final reserved = item?.reservedQuantity ?? 0;
-    return ItemStockMetrics(
-      physicalQuantity: ledgerQty,
-      reservedQuantity: reserved,
-    );
-  }
   return InventoryStockCalculator.metricsFromItem(item);
 });
 
@@ -666,15 +634,26 @@ final productTransactionsProvider =
       ref,
       itemId,
     ) async {
+      final query = ref
+          .watch(productTransactionSearchQueryProvider)
+          .toLowerCase();
       final service = await ref.watch(inventoryServiceProvider.future);
       final transactions = await service.fetchProductTransactions(itemId);
-      final ledgerQty = InventoryStockCalculator.ledgerQuantityFromTransactions(
-        transactions,
-      );
-      ref
-          .read(inventoryItemsProvider.notifier)
-          .patchItemQuantity(itemId, ledgerQty);
-      return transactions;
+      return transactions
+          .where(
+            (txn) =>
+                query.isEmpty ||
+                txn.typeLabel.toLowerCase().contains(query) ||
+                txn.documentLabel.toLowerCase().contains(query) ||
+                txn.transactionType.toLowerCase().contains(query) ||
+                txn.referenceNo.toLowerCase().contains(query) ||
+                txn.partyName.toLowerCase().contains(query) ||
+                (txn.godownName?.toLowerCase().contains(query) ?? false) ||
+                (txn.createdByName?.toLowerCase().contains(query) ?? false) ||
+                (txn.notes?.toLowerCase().contains(query) ?? false) ||
+                txn.status.toLowerCase().contains(query),
+          )
+          .toList();
     });
 
 // Provider.family's family type is not publicly exported by Riverpod.

@@ -41,8 +41,6 @@ abstract final class MovementMapper {
       godownName: dto.godownName,
       createdByName: dto.createdByName?.trim(),
       notes: dto.notes?.trim(),
-      referenceDocumentId: dto.referenceId?.trim(),
-      referenceDocumentType: dto.referenceType?.trim(),
     );
   }
 

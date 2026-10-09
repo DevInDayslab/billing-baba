@@ -1394,18 +1394,7 @@ class InventoryService {
     String itemId,
   ) async {
     final movements = await _repository.listLocalMovementsForItem(itemId);
-    await _repository.reconcileLocalItemStockFromLedger(itemId);
     return movements.map(MovementMapper.toProductTransaction).toList();
-  }
-
-  /// Sum of signed movement deltas for an item (matches transaction ledger).
-  Future<double> ledgerStockQuantityForItem(String itemId) async {
-    final movements = await _repository.listLocalMovementsForItem(itemId);
-    return movements.fold<double>(
-      0,
-      (sum, movement) =>
-          sum + (double.tryParse(movement.quantityDelta) ?? 0),
-    );
   }
 
   List<InventoryCategory> withUncategorizedCategory({

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/adjust_stock_form.dart';
@@ -32,31 +30,52 @@ class AdjustStockDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final media = MediaQuery.of(context);
     final maxDialogHeight = (media.size.height - media.viewInsets.bottom) * 0.9;
-    final maxDialogWidth = math.min<double>(media.size.width * 0.92, 1080);
 
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: maxDialogWidth,
-        maxHeight: maxDialogHeight,
-      ),
+      constraints: BoxConstraints(maxWidth: 420, maxHeight: maxDialogHeight),
       child: Material(
         color: AppColors.surface,
         borderRadius: AppRadius.lgBorder,
         clipBehavior: Clip.antiAlias,
-        child: AdjustStockForm(
-          item: item,
-          variant: AdjustStockFormVariant.desktop,
-          onClose: () => Navigator.of(context).pop(),
-          onSuccess: () {
-            Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Stock updated. Changes will sync when online.',
-                ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Adjust Stock — ${item.name}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-            );
-          },
+              const SizedBox(height: AppSpacing.md),
+              AdjustStockForm(
+                item: item,
+                onSuccess: () {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Stock updated. Changes will sync when online.',
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

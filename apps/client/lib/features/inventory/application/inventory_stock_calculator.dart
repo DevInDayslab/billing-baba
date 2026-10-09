@@ -44,15 +44,6 @@ abstract final class InventoryStockCalculator {
     );
   }
 
-  static double ledgerQuantityFromTransactions(
-    List<ProductTransaction> transactions,
-  ) {
-    return transactions.fold<double>(
-      0,
-      (sum, transaction) => sum + transaction.signedQuantity,
-    );
-  }
-
   static Map<String, double> stockAfterByTransactionId(
     List<ProductTransaction> transactions,
   ) {

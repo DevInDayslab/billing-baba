@@ -42,7 +42,7 @@ final partiesListProvider = Provider<List<PartyModel>>((ref) {
 final partyOutstandingIndexProvider = FutureProvider<Map<String, double>>((
   ref,
 ) async {
-  ref.watch(partyListProvider);
+  ref.watch(allPartiesListProvider);
   final service = await ref.watch(partyLedgerServiceProvider.future);
   final businessId = await ref.watch(partyLedgerBusinessIdProvider.future);
   return service.fetchOutstandingIndex(businessId: businessId);
@@ -73,12 +73,7 @@ class PartyBalanceSummary {
 }
 
 final partyBalanceSummaryProvider = Provider<PartyBalanceSummary>((ref) {
-  final parties = ref
-      .watch(partyListProvider)
-      .maybeWhen(
-        data: (items) => items,
-        orElse: () => const <PartyModel>[],
-      );
+  final parties = ref.watch(allPartiesListProvider).value ?? const <PartyModel>[];
   final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
 
   var totalReceivable = 0.0;

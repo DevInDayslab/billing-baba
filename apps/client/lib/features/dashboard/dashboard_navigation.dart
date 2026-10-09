@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_side_widget.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
@@ -12,6 +14,7 @@ import 'package:billing_baba/features/reports/models/reports_nav_intent.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/shared/layout/dashboard_layout.dart'
     show DashboardLayout;
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -87,14 +90,20 @@ abstract final class DashboardNavigation {
     context.go(AppRoutes.items);
   }
 
-  static void _openParties(
+  static Future<void> _openParties(
     BuildContext context,
     WidgetRef ref,
     PartyListFilter filter,
-  ) {
+  ) async {
     ref.read(partyListFilterProvider.notifier).filter = filter;
     ref.read(partySearchQueryProvider.notifier).query = '';
+    ref.read(partyBackendSearchProvider.notifier).query = '';
     ref.read(selectedPartyIdProvider.notifier).selected = null;
+    await ref.read(partyListProvider.notifier).refresh(
+      filter: filter,
+      searchQuery: '',
+    );
+    if (!context.mounted) return;
     context.go(AppRoutes.partyDetails);
   }
 

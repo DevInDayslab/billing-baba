@@ -31,9 +31,7 @@ const _balanceColWidth = 96.0;
 const _dueDateColWidth = 108.0;
 const _statusColWidth = 88.0;
 const _actionsColWidth = 120.0;
-const _actionsColWidthCompact = 88.0;
 const double _cellHorizontalPadding = AppSpacing.sm;
-const double _cellHorizontalPaddingCompact = 6;
 
 class SaleInvoiceTable extends ConsumerWidget {
   const SaleInvoiceTable({super.key});
@@ -58,82 +56,49 @@ class SaleInvoiceTable extends ConsumerWidget {
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compactToolbar = constraints.maxWidth < 520;
-                return Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Transactions',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerRight,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ExpandableTableSearchField(
-                              hint: 'Search Data',
-                              initialQuery:
-                                  ref.read(saleInvoiceSearchQueryProvider),
-                              onQueryChanged: ref
-                                  .read(saleInvoiceSearchQueryProvider.notifier)
-                                  .setQuery,
-                            ),
-                            IconButton(
-                              onPressed: () => ModuleExportActions
-                                  .exportSaleInvoices(context, ref),
-                              icon: Icon(
-                                Icons.bar_chart_outlined,
-                                size: compactToolbar ? 18 : 20,
-                              ),
-                              color: AppColors.textSecondary,
-                              tooltip: 'Report',
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            _XlsChip(
-                              onTap: () => ModuleExportActions.exportSaleInvoices(
-                                context,
-                                ref,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => ModulePrintActions.printSaleInvoices(
-                                context,
-                                ref,
-                              ),
-                              icon: Icon(
-                                Icons.print_outlined,
-                                size: compactToolbar ? 18 : 20,
-                              ),
-                              color: AppColors.textSecondary,
-                              tooltip: 'Print',
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            if (!compactToolbar)
-                              IconButton(
-                                onPressed: notifier.refresh,
-                                icon: const Icon(Icons.refresh, size: 20),
-                                color: AppColors.textSecondary,
-                                tooltip: 'Refresh',
-                                visualDensity: VisualDensity.compact,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+            child: Row(
+              children: [
+                const Text(
+                  'Transactions',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                ExpandableTableSearchField(
+                  hint: 'Search Data',
+                  initialQuery: ref.read(saleInvoiceSearchQueryProvider),
+                  onQueryChanged: ref
+                      .read(saleInvoiceSearchQueryProvider.notifier)
+                      .setQuery,
+                ),
+                IconButton(
+                  onPressed: () =>
+                      ModuleExportActions.exportSaleInvoices(context, ref),
+                  icon: const Icon(Icons.bar_chart_outlined, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Report',
+                ),
+                _XlsChip(
+                  onTap: () =>
+                      ModuleExportActions.exportSaleInvoices(context, ref),
+                ),
+                IconButton(
+                  onPressed: () =>
+                      ModulePrintActions.printSaleInvoices(context, ref),
+                  icon: const Icon(Icons.print_outlined, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Print',
+                ),
+                IconButton(
+                  onPressed: notifier.refresh,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Refresh',
+                ),
+              ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
@@ -175,60 +140,42 @@ class _SaleInvoiceTransactionsTableState
         needsSaleInvoiceClientSideFiltering(filters) ||
         ref.watch(saleInvoiceSearchQueryProvider).trim().isNotEmpty;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 900;
-        final cellPadding = compact
-            ? _cellHorizontalPaddingCompact
-            : _cellHorizontalPadding;
-
-        final rows = [
-          for (var i = 0; i < widget.items.length; i++)
-            SaleInvoiceTableRows.buildDataRow(
-              context: context,
-              ref: ref,
-              invoice: widget.items[i],
-              isOdd: i.isOdd,
-              isSelected: widget.items[i].id == selectedId,
-              compact: compact,
-              cellPadding: cellPadding,
-              onTap: () {
-                final invoice = widget.items[i];
-                ref
-                    .read(selectedSaleInvoiceIdProvider.notifier)
-                    .select(invoice.id);
-                context.push('${AppRoutes.viewSale}/${invoice.id}');
-              },
-            ),
-        ];
-
-        final columns = _SaleInvoiceTableColumns.build(
+    final rows = [
+      for (var i = 0; i < widget.items.length; i++)
+        SaleInvoiceTableRows.buildDataRow(
           context: context,
           ref: ref,
-          compact: compact,
-          cellPadding: cellPadding,
-          onStatusFilter: (status) =>
-              ref.read(saleInvoiceFiltersProvider.notifier).setStatus(status),
-        );
+          invoice: widget.items[i],
+          isOdd: i.isOdd,
+          isSelected: widget.items[i].id == selectedId,
+          onTap: () {
+            final invoice = widget.items[i];
+            ref.read(selectedSaleInvoiceIdProvider.notifier).select(invoice.id);
+            context.push('${AppRoutes.viewSale}/${invoice.id}');
+          },
+        ),
+    ];
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: compact ? AppSpacing.xs : AppSpacing.sm,
-              ),
-              child: ResizableDataTable(
-                shrinkToFit: true,
-                columns: columns,
-                rows: rows,
-              ),
-            ),
-            if (widget.items.isEmpty)
-              _EmptyTransactionsState(isFiltered: hasActiveFilters),
-          ],
-        );
-      },
+    final columns = _SaleInvoiceTableColumns.build(
+      context: context,
+      ref: ref,
+      onStatusFilter: (status) =>
+          ref.read(saleInvoiceFiltersProvider.notifier).setStatus(status),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: ResizableDataTable(
+            columns: columns,
+            rows: rows,
+          ),
+        ),
+        if (widget.items.isEmpty)
+          _EmptyTransactionsState(isFiltered: hasActiveFilters),
+      ],
     );
   }
 }
@@ -237,9 +184,7 @@ class SaleInvoiceTableRows {
   const SaleInvoiceTableRows._();
 
   static final _dateFormat = DateFormat('dd/MM/yyyy, HH:mm');
-  static final _dateFormatCompact = DateFormat('dd/MM/yy');
   static final _dueDateFormat = DateFormat('dd/MM/yyyy');
-  static final _dueDateFormatCompact = DateFormat('dd/MM/yy');
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹ ',
@@ -253,69 +198,40 @@ class SaleInvoiceTableRows {
     required bool isOdd,
     required bool isSelected,
     required VoidCallback onTap,
-    bool compact = false,
-    double cellPadding = _cellHorizontalPadding,
   }) {
-    final dateText = compact
-        ? _dateFormatCompact.format(invoice.date)
-        : _dateFormat.format(invoice.date);
-    final dueText = invoice.dueDate != null
-        ? (compact
-              ? _dueDateFormatCompact.format(invoice.dueDate!)
-              : _dueDateFormat.format(invoice.dueDate!))
-        : '';
-
     return ResizableDataRow(
       isSelected: isSelected,
       onTap: onTap,
       backgroundColor: isOdd ? _zebraRowBg : Colors.transparent,
       cells: [
+        _DataCell(child: Text(_dateFormat.format(invoice.date))),
         _DataCell(
-          padding: cellPadding,
-          child: Text(dateText, overflow: TextOverflow.ellipsis),
-        ),
-        _DataCell(
-          padding: cellPadding,
           child: Row(
             children: [
-              Expanded(
+              Flexible(
                 child: Text(
                   invoice.invoiceNo,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (!compact && invoice.syncState != SaleInvoiceSyncState.none)
+              if (invoice.syncState != SaleInvoiceSyncState.none)
                 Padding(
-                  padding: const EdgeInsets.only(left: 4),
+                  padding: const EdgeInsets.only(left: 6),
                   child: _SyncStateBadge(state: invoice.syncState),
                 ),
             ],
           ),
         ),
         _DataCell(
-          padding: cellPadding,
           child: Text(
             invoice.partyName,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
         ),
+        _DataCell(child: Text(invoice.transactionType)),
+        _DataCell(child: Text(invoice.paymentType)),
         _DataCell(
-          padding: cellPadding,
-          child: Text(
-            invoice.transactionType,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        _DataCell(
-          padding: cellPadding,
-          child: Text(
-            invoice.paymentType,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        _DataCell(
-          padding: cellPadding,
           alignment: Alignment.centerRight,
           child: Text(
             _currencyFormat.format(invoice.amount),
@@ -328,15 +244,10 @@ class SaleInvoiceTableRows {
           ),
         ),
         _DataCell(
-          padding: cellPadding,
           alignment: Alignment.centerRight,
-          child: Text(
-            _currencyFormat.format(invoice.loyaltyRedeemed),
-            overflow: TextOverflow.ellipsis,
-          ),
+          child: Text(_currencyFormat.format(invoice.loyaltyRedeemed)),
         ),
         _DataCell(
-          padding: cellPadding,
           alignment: Alignment.centerRight,
           child: Text(
             _currencyFormat.format(invoice.balance),
@@ -355,61 +266,50 @@ class SaleInvoiceTableRows {
           ),
         ),
         _DataCell(
-          padding: cellPadding,
-          child: Text(dueText, overflow: TextOverflow.ellipsis),
+          child: Text(
+            invoice.dueDate != null
+                ? _dueDateFormat.format(invoice.dueDate!)
+                : '',
+          ),
         ),
         _DataCell(
-          padding: cellPadding,
           child: SaleInvoiceStatusBadge(status: invoice.status, plain: true),
         ),
         _DataCell(
-          padding: cellPadding,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              const tightIcon = BoxConstraints(minWidth: 24, minHeight: 24);
-              final showInlineActions =
-                  !compact && constraints.maxWidth >= 100;
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (showInlineActions)
-                    IconButton(
-                      onPressed: () => SaleInvoicePrintActions.preview(
-                        context,
-                        ref,
-                        invoice.id,
-                        filename: SaleInvoicePrintActions.filenameFor(
-                          invoice.invoiceNo,
-                        ),
-                      ),
-                      icon: const Icon(Icons.print_outlined, size: 18),
-                      color: AppColors.textSecondary,
-                      padding: EdgeInsets.zero,
-                      constraints: tightIcon,
-                      tooltip: 'Print',
-                    ),
-                  if (showInlineActions)
-                    IconButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Sharing is not available yet'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.share_outlined, size: 18),
-                      color: AppColors.textSecondary,
-                      padding: EdgeInsets.zero,
-                      constraints: tightIcon,
-                      tooltip: 'Share',
-                    ),
-                  SaleInvoiceActionsMenuButton(
-                    invoice: invoice,
-                    iconButtonConstraints: tightIcon,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () => SaleInvoicePrintActions.preview(
+                  context,
+                  ref,
+                  invoice.id,
+                  filename: SaleInvoicePrintActions.filenameFor(
+                    invoice.invoiceNo,
                   ),
-                ],
-              );
-            },
+                ),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Print',
+              ),
+              IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Sharing is not available yet'),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Share',
+              ),
+              SaleInvoiceActionsMenuButton(invoice: invoice),
+            ],
           ),
         ),
       ],
@@ -424,22 +324,7 @@ class _SaleInvoiceTableColumns {
     required BuildContext context,
     required WidgetRef ref,
     required ValueChanged<String> onStatusFilter,
-    bool compact = false,
-    double cellPadding = _cellHorizontalPadding,
   }) {
-    final dateWidth = compact ? 88.0 : _dateColWidth;
-    final invoiceWidth = compact ? 72.0 : _invoiceColWidth;
-    final partyWidth = compact ? 100.0 : _partyColWidth;
-    final transactionWidth = compact ? 72.0 : _transactionColWidth;
-    final paymentWidth = compact ? 72.0 : _paymentColWidth;
-    final amountWidth = compact ? 72.0 : _amountColWidth;
-    final loyaltyWidth = compact ? 72.0 : _loyaltyColWidth;
-    final balanceWidth = compact ? 68.0 : _balanceColWidth;
-    final dueWidth = compact ? 72.0 : _dueDateColWidth;
-    final statusWidth = compact ? 64.0 : _statusColWidth;
-    final actionsWidth =
-        compact ? _actionsColWidthCompact : _actionsColWidth;
-    final colMin = compact ? 40.0 : 48.0;
     final filters = ref.watch(saleInvoiceFiltersProvider);
     final filtersNotifier = ref.read(saleInvoiceFiltersProvider.notifier);
     final transactionOptions = ref.watch(
@@ -451,8 +336,8 @@ class _SaleInvoiceTableColumns {
 
     return [
       ResizableDataColumn(
-        initialWidth: dateWidth,
-        minWidth: compact ? 64 : 96,
+        initialWidth: _dateColWidth,
+        minWidth: 96,
         maxWidth: 280,
         header: TableColumnFilterTrigger(
           config: const ColumnFilter(
@@ -467,12 +352,11 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: invoiceWidth,
-        minWidth: colMin,
+        initialWidth: _invoiceColWidth,
         header: TableColumnFilterTrigger(
-          config: ColumnFilter(
+          config: const ColumnFilter(
             id: 'invoiceNo',
-            title: compact ? 'Inv…' : 'Invoice no',
+            title: 'Invoice no',
             type: FilterType.text,
             hintText: 'Invoice number',
           ),
@@ -483,12 +367,12 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: partyWidth,
-        minWidth: compact ? 72 : 100,
+        initialWidth: _partyColWidth,
+        minWidth: 100,
         header: TableColumnFilterTrigger(
-          config: ColumnFilter(
+          config: const ColumnFilter(
             id: 'partyName',
-            title: compact ? 'Party' : 'Party Name',
+            title: 'Party Name',
             type: FilterType.text,
             hintText: 'Party name',
           ),
@@ -499,12 +383,11 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: transactionWidth,
-        minWidth: colMin,
+        initialWidth: _transactionColWidth,
         header: TableColumnFilterTrigger(
           config: ColumnFilter(
             id: 'transaction',
-            title: compact ? 'Txn' : 'Transaction',
+            title: 'Transaction',
             type: FilterType.singleSelect,
             values: transactionOptions,
           ),
@@ -519,12 +402,11 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: paymentWidth,
-        minWidth: colMin,
+        initialWidth: _paymentColWidth,
         header: TableColumnFilterTrigger(
           config: ColumnFilter(
             id: 'paymentType',
-            title: compact ? 'Pay…' : 'Payment Type',
+            title: 'Payment Type',
             type: FilterType.singleSelect,
             values: paymentOptions,
           ),
@@ -539,12 +421,11 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: amountWidth,
-        minWidth: colMin,
+        initialWidth: _amountColWidth,
         header: TableColumnFilterTrigger(
-          config: ColumnFilter(
+          config: const ColumnFilter(
             id: 'amount',
-            title: compact ? 'Amt' : 'Amount',
+            title: 'Amount',
             type: FilterType.number,
           ),
           alignment: Alignment.centerRight,
@@ -555,12 +436,11 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: loyaltyWidth,
-        minWidth: colMin,
+        initialWidth: _loyaltyColWidth,
         header: TableColumnFilterTrigger(
-          config: ColumnFilter(
+          config: const ColumnFilter(
             id: 'loyalty',
-            title: compact ? 'Loyal…' : 'Loyalty redee...',
+            title: 'Loyalty redee...',
             type: FilterType.rangeSlider,
             maxValue: 5000,
             rangeLabel: 'Loyalty points',
@@ -573,12 +453,11 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: balanceWidth,
-        minWidth: colMin,
+        initialWidth: _balanceColWidth,
         header: TableColumnFilterTrigger(
-          config: ColumnFilter(
+          config: const ColumnFilter(
             id: 'balance',
-            title: compact ? 'Bal' : 'Balance',
+            title: 'Balance',
             type: FilterType.number,
           ),
           alignment: Alignment.centerRight,
@@ -589,12 +468,11 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: dueWidth,
-        minWidth: colMin,
+        initialWidth: _dueDateColWidth,
         header: TableColumnFilterTrigger(
-          config: ColumnFilter(
+          config: const ColumnFilter(
             id: 'dueDate',
-            title: compact ? 'Due' : 'Due date',
+            title: 'Due date',
             type: FilterType.date,
           ),
           initialValue: filters.dueDateColumnFilter,
@@ -604,23 +482,16 @@ class _SaleInvoiceTableColumns {
         ),
       ),
       ResizableDataColumn(
-        initialWidth: statusWidth,
-        minWidth: colMin,
+        initialWidth: _statusColWidth,
         header: _StatusColumnFilterHeader(
           onStatusFilter: onStatusFilter,
           selectedStatus: filters.selectedStatus,
-          compact: compact,
-          horizontalPadding: cellPadding,
         ),
       ),
-      ResizableDataColumn(
-        initialWidth: actionsWidth,
-        minWidth: compact ? 56 : 88,
+      const ResizableDataColumn(
+        initialWidth: _actionsColWidth,
         resizable: false,
-        header: _HeaderCell(
-          label: compact ? '' : 'Actions',
-          horizontalPadding: cellPadding,
-        ),
+        header: _HeaderCell(label: 'Actions'),
       ),
     ];
   }
@@ -630,14 +501,10 @@ class _StatusColumnFilterHeader extends StatefulWidget {
   const _StatusColumnFilterHeader({
     required this.onStatusFilter,
     required this.selectedStatus,
-    this.compact = false,
-    this.horizontalPadding = _cellHorizontalPadding,
   });
 
   final ValueChanged<String> onStatusFilter;
   final String selectedStatus;
-  final bool compact;
-  final double horizontalPadding;
 
   @override
   State<_StatusColumnFilterHeader> createState() =>
@@ -746,38 +613,35 @@ class _StatusColumnFilterHeaderState extends State<_StatusColumnFilterHeader> {
     return CompositedTransformTarget(
       link: _layerLink,
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: widget.horizontalPadding,
+        padding: const EdgeInsets.symmetric(
+          horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: SizedBox(
-          width: double.infinity,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.compact ? 'Sts' : 'Status',
-                  style: _headerStyle,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+        child: Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Status',
+                style: _headerStyle,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
+            const SizedBox(width: 2),
+            InkWell(
+              key: _triggerKey,
+              onTap: _toggleMenu,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Icon(
+                  Icons.filter_list,
+                  size: 14,
+                  color: isActive ? AppColors.primary : AppColors.textSecondary,
                 ),
               ),
-              InkWell(
-                key: _triggerKey,
-                onTap: _toggleMenu,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: Padding(
-                  padding: const EdgeInsets.all(2),
-                  child: Icon(
-                    Icons.filter_list,
-                    size: 14,
-                    color:
-                        isActive ? AppColors.primary : AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -842,10 +706,7 @@ class _StatusFilterMenuItem extends StatelessWidget {
 }
 
 class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({
-    required this.label,
-    this.horizontalPadding = _cellHorizontalPadding,
-  });
+  const _HeaderCell({required this.label});
 
   static const _headerStyle = TextStyle(
     fontSize: 13,
@@ -854,24 +715,19 @@ class _HeaderCell extends StatelessWidget {
   );
 
   final String label;
-  final double horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
-    if (label.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
+      padding: const EdgeInsets.symmetric(
+        horizontal: _cellHorizontalPadding,
         vertical: AppSpacing.sm,
       ),
       child: Text(
         label,
         style: _headerStyle,
         overflow: TextOverflow.ellipsis,
-        maxLines: 1,
+        maxLines: 2,
       ),
     );
   }
@@ -881,12 +737,10 @@ class _DataCell extends StatelessWidget {
   const _DataCell({
     required this.child,
     this.alignment = Alignment.centerLeft,
-    this.padding = _cellHorizontalPadding,
   });
 
   final Widget child;
   final Alignment alignment;
-  final double padding;
 
   static const _dataStyle = TextStyle(
     fontSize: 13,
@@ -900,13 +754,12 @@ class _DataCell extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: padding,
+        padding: const EdgeInsets.symmetric(
+          horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
         child: Align(
           alignment: alignment,
-          widthFactor: 1,
           child: wrapEllipsisTooltipChild(child),
         ),
       ),

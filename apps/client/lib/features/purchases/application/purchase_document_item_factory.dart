@@ -81,16 +81,14 @@ class PurchaseDocumentItemFactory {
     final unitLabel = _unitLabelForLine(line.unit);
     final resolvedUnit = _resolveUnit(unitLabel, units) ?? defaultUnit;
 
-    final exclusiveUnitPrice = line.qty > 0
-        ? line.lineSubtotal / line.qty
-        : line.pricePerUnit;
-
     return AddItemFormState(
       itemName: name,
       description: line.description.trim(),
       baseUnitId: resolvedUnit.id,
-      atPrice: exclusiveUnitPrice > 0 ? exclusiveUnitPrice : 0,
-      purchasePriceTaxMode: PriceTaxMode.withoutTax,
+      atPrice: line.pricePerUnit > 0 ? line.pricePerUnit : 0,
+      purchasePriceTaxMode: line.priceIsTaxInclusive
+          ? PriceTaxMode.withTax
+          : PriceTaxMode.withoutTax,
       taxRate: _inventoryTaxRateLabel(line.taxPercent),
     );
   }

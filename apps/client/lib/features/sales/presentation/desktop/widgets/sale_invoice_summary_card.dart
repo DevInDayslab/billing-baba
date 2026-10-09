@@ -23,8 +23,7 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stackVertically = constraints.maxWidth < 900;
-        final compact = constraints.maxWidth < 480;
+        final stackVertically = constraints.maxWidth < 640;
 
         final salesPanel = _SummaryPanel(
           title: 'Total Sales Amount',
@@ -32,7 +31,6 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
           secondaryLine:
               'Received: ${_currencyFormat.format(summary.receivedAmount)} | '
               'Balance: ${_currencyFormat.format(summary.balanceAmount)}',
-          compact: compact,
         );
 
         final loyaltyPanel = _SummaryPanel(
@@ -41,7 +39,6 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
           secondaryLine:
               'Total Discount Redeemed: '
               '${_currencyFormat.format(summary.totalDiscountRedeemed)}',
-          compact: compact,
         );
 
         if (stackVertically) {
@@ -72,13 +69,11 @@ class _SummaryPanel extends StatelessWidget {
     required this.title,
     required this.primaryValue,
     required this.secondaryLine,
-    this.compact = false,
   });
 
   final String title;
   final String primaryValue;
   final String secondaryLine;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -98,8 +93,6 @@ class _SummaryPanel extends StatelessWidget {
           children: [
             Text(
               title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,
@@ -108,10 +101,8 @@ class _SummaryPanel extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               primaryValue,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: compact ? 22 : 28,
+              style: const TextStyle(
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
@@ -119,8 +110,6 @@ class _SummaryPanel extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               secondaryLine,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,

@@ -75,7 +75,7 @@ class MobileMoneyCards extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MoneyCard(
-                    title: 'To Collect',
+                    title: 'To Receive',
                     amount: _currency.format(overview.totalReceivable),
                     subtitle: '${overview.receivablePartyCount} Parties',
                     progress: receiveRatio.clamp(0.0, 1.0),

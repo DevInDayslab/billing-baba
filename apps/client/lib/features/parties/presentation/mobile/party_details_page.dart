@@ -5,6 +5,7 @@ import 'package:billing_baba/features/dashboard/presentation/mobile/application/
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/parties_navigation.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
@@ -82,13 +83,19 @@ class _MobilePartyDetailsPageState
   }
 
   Future<void> _initialize() async {
-    await ref.read(partyListProvider.notifier).refresh();
-    if (!mounted) return;
+    final current = ref.read(partyListFilterProvider);
+    if (PartiesNavigation.isDashboardBalanceFilter(current)) {
+      await ref.read(partyListProvider.notifier).refresh(filter: current);
+      return;
+    }
+
     final service = await ref.read(partyServiceProvider.future);
-    final filter = service.readRememberedListFilter();
-    if (filter != null && mounted) {
+    final remembered = service.readRememberedListFilter();
+    final filter = PartiesNavigation.filterForPageRestore(remembered);
+    if (mounted) {
       ref.read(partyListFilterProvider.notifier).filter = filter;
     }
+    await ref.read(partyListProvider.notifier).refresh(filter: filter);
   }
 
   void _onSearchChanged(String query) {

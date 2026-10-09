@@ -45,10 +45,19 @@ class _SaleInvoiceFilterBarState extends ConsumerState<SaleInvoiceFilterBar> {
       ),
       child: Padding(
         padding: const EdgeInsets.only(bottom: AppSpacing.md),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final stackLabel = constraints.maxWidth < 520;
-            final filterRow = Wrap(
+        child: Row(
+          children: [
+            const Text(
+              'Filter by :',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Wrap(
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
                 crossAxisAlignment: WrapCrossAlignment.center,
@@ -146,42 +155,9 @@ class _SaleInvoiceFilterBarState extends ConsumerState<SaleInvoiceFilterBar> {
                     onSelected: filtersNotifier.setGodown,
                   ),
                 ],
-            );
-
-            if (stackLabel) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Filter by :',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  filterRow,
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Filter by :',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(child: filterRow),
-              ],
-            );
-          },
+              ),
+            ),
+          ],
         ),
       ),
     );

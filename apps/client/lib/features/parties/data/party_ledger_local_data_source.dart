@@ -47,6 +47,17 @@ class PartyLedgerLocalDataSource {
         .getSingleOrNull();
   }
 
+  Future<List<PartyTableData>> listActiveParties(String businessId) {
+    return (_db.select(_db.partiesLocal)
+          ..where(
+            (t) =>
+                t.businessId.equals(businessId) &
+                t.isActive.equals(true) &
+                t.isDeleted.equals(false),
+          ))
+        .get();
+  }
+
   Future<List<PartyDocumentSnapshot>> listSalesDocumentsForParty({
     required String businessId,
     required String partyId,

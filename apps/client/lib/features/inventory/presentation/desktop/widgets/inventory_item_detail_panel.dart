@@ -4,7 +4,6 @@ import 'package:billing_baba/features/inventory/application/inventory_stock_calc
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/adjust_stock_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_transactions_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,26 +45,32 @@ class InventoryItemDetailPanel extends ConsumerWidget {
     final contextData = ref.watch(productDetailContextProvider(itemId));
     final unitLabel = displayItem.baseUnitShortName ?? 'pcs';
 
-    return InventoryWorkspaceDetailSplit(
+    return Column(
       key: ValueKey(itemId),
-      header: InventoryDetailHeader(
-        item: displayItem,
-        mode: mode,
-        stockMetrics: stockMetrics,
-        stockSummary: stockSummary,
-        latestStockUpdate: latestStockUpdate,
-        categoryName: contextData.categoryName,
-        actionLabel: mode == InventoryDetailHeaderMode.product
-            ? 'Adjust Stock'
-            : null,
-        onAction: mode == InventoryDetailHeaderMode.product
-            ? () => showAdjustStockDialog(context, item: displayItem)
-            : null,
-      ),
-      body: InventoryTransactionsTable(
-        itemId: itemId,
-        unitLabel: unitLabel,
-      ),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InventoryDetailHeader(
+          item: displayItem,
+          mode: mode,
+          stockMetrics: stockMetrics,
+          stockSummary: stockSummary,
+          latestStockUpdate: latestStockUpdate,
+          categoryName: contextData.categoryName,
+          actionLabel: mode == InventoryDetailHeaderMode.product
+              ? 'Adjust Stock'
+              : null,
+          onAction: mode == InventoryDetailHeaderMode.product
+              ? () => showAdjustStockDialog(context, item: displayItem)
+              : null,
+        ),
+        const Divider(height: 1, thickness: 1),
+        Expanded(
+          child: InventoryTransactionsTable(
+            itemId: itemId,
+            unitLabel: unitLabel,
+          ),
+        ),
+      ],
     );
   }
 }
