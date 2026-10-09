@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/providers/cold_start_warm_provider.dart';
+import 'package:billing_baba/core/routing/app_navigator_key.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
@@ -80,8 +81,15 @@ import 'package:billing_baba/features/sales/presentation/sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_return_page.dart';
+import 'package:billing_baba/features/settings/models/settings_sub_route.dart';
 import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/settings/presentation/print_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/general_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/accounting_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/party_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/gst_tax_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/transaction_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/settings_placeholder_screen.dart';
 import 'package:billing_baba/features/settings/presentation/settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/transaction_messages_screen.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/payment_processing_page.dart';
@@ -111,6 +119,7 @@ GoRouter createAppRouter({
   ref.watch(coldStartWarmProvider);
   ref.watch(syncEngineLifecycleProvider);
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: initialLocation,
     refreshListenable: RouterRefreshListenable(ref),
     redirect: (context, state) {
@@ -674,8 +683,34 @@ GoRouter createAppRouter({
                 AppRoutes.settingsTab(SettingsTab.transactionMessages.id),
           ),
           GoRoute(
+            path: AppRoutes.settingsGeneral,
+            builder: (context, state) => const GeneralSettingsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsTransaction,
+            builder: (context, state) => const TransactionSettingsScreen(),
+          ),
+          GoRoute(
             path: AppRoutes.settingsTaxes,
-            redirect: (context, state) => AppRoutes.settingsPreferences,
+            builder: (context, state) => const GstTaxSettingsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsParty,
+            builder: (context, state) => const PartySettingsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsServiceReminders,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Service Reminders'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsAccounting,
+            builder: (context, state) => const AccountingSettingsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsMultiCurrency,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Multi Currency'),
           ),
           GoRoute(
             path: AppRoutes.settingsPreferences,

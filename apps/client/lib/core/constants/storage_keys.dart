@@ -37,6 +37,12 @@ abstract final class StorageKeys {
   static const saleLineItemColumnVisibility =
       'sale_line_item_column_visibility';
   static const itemSettings = 'item_settings';
+  static const generalSettings = 'general_settings';
+  static const partySettings = 'party_settings';
+  static const accountingSettings = 'accounting_settings';
+  static const gstTaxSettings = 'gst_tax_settings';
+  static const gstTaxCatalogSeeded = 'gst_tax_catalog_seeded';
+  static const lastLocalBackupAt = 'last_local_backup_at';
   static const saleInvoiceSettings = 'sale_invoice_settings';
   static const dashboardTasks = 'dashboard_tasks';
 

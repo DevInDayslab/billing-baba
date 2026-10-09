@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
+import 'package:billing_baba/features/settings/application/settings_save_messages.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/repositories/item_settings_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,9 +24,17 @@ class ItemSettingsNotifier extends _$ItemSettingsNotifier {
     return repository.load();
   }
 
-  Future<void> save(ItemSettings settings) async {
+  Future<void> save(ItemSettings settings, {bool silent = false}) async {
     final repository = await ref.read(itemSettingsRepositoryProvider.future);
     await repository.save(settings);
     state = AsyncData(settings);
+    if (!silent) {
+      notifySettingsSaved(ref, message: SettingsSaveMessages.item);
+    }
+  }
+
+  Future<void> patch(ItemSettingsUpdater update) async {
+    final current = state.value ?? ItemSettings.defaults();
+    await save(update(current));
   }
 }

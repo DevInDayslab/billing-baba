@@ -4,6 +4,7 @@ import 'package:billing_baba/features/collaboration/application/permission_servi
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/parties/application/parties_tab_provider.dart';
+import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/party_groups_page.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
@@ -50,7 +51,10 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
     super.dispose();
   }
 
-  List<_PartiesTabSpec> _buildVisibleTabs(bool showHiddenLedger) {
+  List<_PartiesTabSpec> _buildVisibleTabs(
+    bool showHiddenLedger,
+    bool partyGroupingEnabled,
+  ) {
     return [
       const _PartiesTabSpec(
         icon: LucideIcons.users,
@@ -58,12 +62,13 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
         route: AppRoutes.partyDetails,
         tabIndex: partiesTabPartiesIndex,
       ),
-      const _PartiesTabSpec(
-        icon: LucideIcons.folder,
-        label: 'Groups',
-        route: AppRoutes.partyGroups,
-        tabIndex: partiesTabGroupsIndex,
-      ),
+      if (partyGroupingEnabled)
+        const _PartiesTabSpec(
+          icon: LucideIcons.folder,
+          label: 'Groups',
+          route: AppRoutes.partyGroups,
+          tabIndex: partiesTabGroupsIndex,
+        ),
       if (showHiddenLedger)
         const _PartiesTabSpec(
           icon: LucideIcons.eyeOff,
@@ -103,7 +108,8 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
   Widget build(BuildContext context) {
     final permissions = ref.watch(permissionServiceProvider);
     final showHiddenLedger = permissions.canViewHiddenLedger;
-    final tabs = _buildVisibleTabs(showHiddenLedger);
+    final partyGroupingEnabled = ref.watch(partyGroupingEnabledProvider);
+    final tabs = _buildVisibleTabs(showHiddenLedger, partyGroupingEnabled);
     _visibleTabs = tabs;
 
     final location = GoRouterState.of(context).uri.path;

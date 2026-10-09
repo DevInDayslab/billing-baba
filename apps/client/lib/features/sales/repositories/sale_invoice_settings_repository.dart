@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_settings.dart';
+import 'package:billing_baba/features/sales/models/transaction_form_extras.dart';
 
 class SaleInvoiceSettingsRepository {
   SaleInvoiceSettingsRepository(this._storage, this._businessId);
@@ -37,15 +38,24 @@ class SaleInvoiceSettingsRepository {
       'billingNameOfParties': settings.billingNameOfParties,
       'poDetailsForCustomer': settings.poDetailsForCustomer,
       'addTimeOnTransactions': settings.addTimeOnTransactions,
+      'printTimeOnInvoices': settings.printTimeOnInvoices,
       'allowInclusiveExclusiveTax': settings.allowInclusiveExclusiveTax,
       'displayPurchasePrice': settings.displayPurchasePrice,
       'showLast5SalePrice': settings.showLast5SalePrice,
+      'showLast5PurchasePrice': settings.showLast5PurchasePrice,
       'freeItemQuantity': settings.freeItemQuantity,
+      'countColumnEnabled': settings.countColumnEnabled,
+      'countColumnLabel': settings.countColumnLabel,
       'itemsTableCount': settings.itemsTableCount,
       'barcodeScanningForItems': settings.barcodeScanningForItems,
       'transactionWiseTax': settings.transactionWiseTax,
       'transactionWiseDiscount': settings.transactionWiseDiscount,
       'roundOffTransactionAmount': settings.roundOffTransactionAmount,
+      'roundOffToValue': settings.roundOffToValue,
+      'quickEntry': settings.quickEntry,
+      'repeatInvoices': settings.repeatInvoices,
+      'wholesalePriceToggleOnInvoice': settings.wholesalePriceToggleOnInvoice,
+      'billingFormMode': settings.billingFormMode.name,
       'shareTransactionAs': settings.shareTransactionAs.name,
       'passcodeForEditDeleteEnabled': settings.passcodeForEditDeleteEnabled,
       'passcode': settings.passcode,
@@ -68,6 +78,7 @@ class SaleInvoiceSettingsRepository {
         for (final entry in settings.transactionPrefixes.entries)
           entry.key.name: entry.value,
       },
+      'formExtras': settings.formExtras.toJson(),
     };
   }
 
@@ -104,6 +115,8 @@ class SaleInvoiceSettingsRepository {
       addTimeOnTransactions:
           json['addTimeOnTransactions'] as bool? ??
           defaults.addTimeOnTransactions,
+      printTimeOnInvoices:
+          json['printTimeOnInvoices'] as bool? ?? defaults.printTimeOnInvoices,
       allowInclusiveExclusiveTax:
           json['allowInclusiveExclusiveTax'] as bool? ??
           defaults.allowInclusiveExclusiveTax,
@@ -112,8 +125,15 @@ class SaleInvoiceSettingsRepository {
           defaults.displayPurchasePrice,
       showLast5SalePrice:
           json['showLast5SalePrice'] as bool? ?? defaults.showLast5SalePrice,
+      showLast5PurchasePrice:
+          json['showLast5PurchasePrice'] as bool? ??
+          defaults.showLast5PurchasePrice,
       freeItemQuantity:
           json['freeItemQuantity'] as bool? ?? defaults.freeItemQuantity,
+      countColumnEnabled:
+          json['countColumnEnabled'] as bool? ?? defaults.countColumnEnabled,
+      countColumnLabel:
+          json['countColumnLabel'] as String? ?? defaults.countColumnLabel,
       itemsTableCount:
           (json['itemsTableCount'] as num?)?.toInt() ??
           defaults.itemsTableCount,
@@ -128,6 +148,18 @@ class SaleInvoiceSettingsRepository {
       roundOffTransactionAmount:
           json['roundOffTransactionAmount'] as bool? ??
           defaults.roundOffTransactionAmount,
+      roundOffToValue:
+          (json['roundOffToValue'] as num?)?.toInt() ??
+          defaults.roundOffToValue,
+      quickEntry: json['quickEntry'] as bool? ?? defaults.quickEntry,
+      repeatInvoices:
+          json['repeatInvoices'] as bool? ?? defaults.repeatInvoices,
+      wholesalePriceToggleOnInvoice:
+          json['wholesalePriceToggleOnInvoice'] as bool? ??
+          defaults.wholesalePriceToggleOnInvoice,
+      billingFormMode: SaleBillingFormMode.fromStorage(
+        json['billingFormMode'] as String?,
+      ),
       shareTransactionAs: SaleInvoiceShareFormat.fromStorage(
         json['shareTransactionAs'] as String?,
       ),
@@ -177,6 +209,11 @@ class SaleInvoiceSettingsRepository {
           firmId ??
           defaults.selectedFirmId,
       transactionPrefixes: prefixes,
+      formExtras: TransactionFormExtras.fromJson(
+        json['formExtras'] is Map
+            ? Map<String, dynamic>.from(json['formExtras'] as Map)
+            : null,
+      ),
     );
   }
 }

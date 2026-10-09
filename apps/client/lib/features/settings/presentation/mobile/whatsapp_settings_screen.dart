@@ -28,9 +28,6 @@ class _MobileWhatsAppSettingsScreenState
           .read(whatsAppSettingsProvider.notifier)
           .save(current.copyWith(enabled: enabled));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('WhatsApp settings saved')),
-      );
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

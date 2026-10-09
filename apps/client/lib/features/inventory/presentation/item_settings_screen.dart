@@ -9,7 +9,7 @@ class ItemSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const AdaptivePage(
-      desktop: DesktopItemSettingsScreen(),
+      desktop: DesktopItemSettingsScreen(embedded: true),
       mobile: MobileItemSettingsScreen(),
     );
   }

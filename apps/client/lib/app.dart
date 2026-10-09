@@ -5,6 +5,7 @@ import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/platform/desktop_app_menu_bar.dart';
 import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
+import 'package:billing_baba/core/routing/app_messenger_key.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_opening_overlay.dart';
@@ -61,6 +62,7 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
         title: AppConfig.appName,
         theme: AppTheme.light,
         themeMode: ThemeMode.light,
+        scaffoldMessengerKey: rootScaffoldMessengerKey,
         routerConfig: router,
         debugShowCheckedModeBanner: false,
         builder: (context, child) {

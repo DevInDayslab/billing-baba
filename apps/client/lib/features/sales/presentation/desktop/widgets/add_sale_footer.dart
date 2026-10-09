@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -145,6 +146,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
         form.attachedDocuments.length,
       ),
     );
+    final loyaltyPointsEnabled = ref.watch(partyLoyaltyPointsEnabledProvider);
     final totalsSection = _TotalsSection(
       form: form,
       notifier: notifier,
@@ -152,6 +154,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       grandTotal: grandTotal,
       isCredit: isCredit,
       currencyFormat: _currencyFormat,
+      loyaltyPointsEnabled: loyaltyPointsEnabled,
     );
 
     return LayoutBuilder(
@@ -260,6 +263,7 @@ class _TotalsSection extends StatelessWidget {
     required this.grandTotal,
     required this.isCredit,
     required this.currencyFormat,
+    required this.loyaltyPointsEnabled,
   });
 
   final AddSaleFormState form;
@@ -268,6 +272,7 @@ class _TotalsSection extends StatelessWidget {
   final double grandTotal;
   final bool isCredit;
   final NumberFormat currencyFormat;
+  final bool loyaltyPointsEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -333,7 +338,7 @@ class _TotalsSection extends StatelessWidget {
             ),
           ],
         ),
-        if (form.showLoyaltySection) ...[
+        if (loyaltyPointsEnabled && form.showLoyaltySection) ...[
           const SizedBox(height: 8),
           _LoyaltyPointsSection(
             form: form,

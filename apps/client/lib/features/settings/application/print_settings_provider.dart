@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
+import 'package:billing_baba/features/settings/application/settings_save_messages.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/repositories/print_settings_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -33,6 +35,7 @@ class PrintSettingsNotifier extends _$PrintSettingsNotifier {
     final repository = await ref.read(printSettingsRepositoryProvider.future);
     await repository.save(settings);
     state = AsyncData(settings);
+    notifySettingsSaved(ref, message: SettingsSaveMessages.print);
   }
 
   Future<void> updateField(
