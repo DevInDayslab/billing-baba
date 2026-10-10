@@ -1,9 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
 
 /// Sale invoices workspace frame width (inventory items use 9px).
 const saleInvoicesWorkspaceBorderWidth = 5.0;
+
+/// Matches the inner clip, which only rounds the right edge.
+const saleInvoicesWorkspaceOuterRadius = BorderRadius.only(
+  topRight: Radius.circular(AppRadius.lg),
+  bottomRight: Radius.circular(AppRadius.lg),
+);
 
 BorderRadius _saleInvoicesWorkspaceInnerRadius() {
   final inner = AppRadius.lg - saleInvoicesWorkspaceBorderWidth;
@@ -25,7 +30,7 @@ class SaleInvoicesWorkspaceFrame extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.workspacePanelBorder,
-        borderRadius: inventoryWorkspacePanelOuterRadius,
+        borderRadius: saleInvoicesWorkspaceOuterRadius,
       ),
       child: Padding(
         padding: const EdgeInsets.all(saleInvoicesWorkspaceBorderWidth),
