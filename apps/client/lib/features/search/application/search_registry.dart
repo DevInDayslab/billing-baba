@@ -437,6 +437,29 @@ abstract final class SearchRegistry {
           'excel',
           'items',
         ],
+        if (route.route == AppRoutes.utilitiesExportItems) ...const [
+          'export',
+          'excel',
+          'items',
+          'download',
+        ],
+        if (route.route == AppRoutes.utilitiesImportParties) ...const [
+          'import',
+          'excel',
+          'parties',
+          'party',
+          'customers',
+          'suppliers',
+        ],
+        if (route.route == AppRoutes.utilitiesBulkUpdateItems) ...const [
+          'bulk',
+          'update',
+          'edit',
+          'items',
+          'price',
+          'hsn',
+          'category',
+        ],
       ],
     );
   }

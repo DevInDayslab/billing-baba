@@ -1,29 +1,28 @@
 import 'dart:typed_data';
 
-import 'package:justkawal_excel_updated/justkawal_excel_updated.dart';
 import 'package:billing_baba/features/utilities/application/import_items_excel_parser.dart';
+import 'package:billing_baba/features/utilities/application/import_parties_excel_parser.dart';
+import 'package:justkawal_excel_updated/justkawal_excel_updated.dart';
 
-/// Builds the sample Excel template bytes for item import.
-Uint8List? buildImportItemsSampleTemplateBytes() {
+/// Builds sample Excel template bytes for import utilities.
+Uint8List? buildImportSampleTemplateBytes({
+  required String sheetName,
+  required List<String> headers,
+  required List<List<String>> sampleRows,
+  int numericColumnStartIndex = 2,
+}) {
   final excel = Excel.createExcel();
-  const sheetName = 'Items';
   final sheet = excel[sheetName];
   excel.delete('Sheet1');
 
-  for (var i = 0; i < ImportItemsExcelParser.templateHeaders.length; i++) {
+  for (var i = 0; i < headers.length; i++) {
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-        .value = TextCellValue(
-      ImportItemsExcelParser.templateHeaders[i],
-    );
+        .value = TextCellValue(headers[i]);
   }
 
-  for (
-    var rowIndex = 0;
-    rowIndex < ImportItemsExcelParser.sampleRows.length;
-    rowIndex++
-  ) {
-    final sampleRow = ImportItemsExcelParser.sampleRows[rowIndex];
+  for (var rowIndex = 0; rowIndex < sampleRows.length; rowIndex++) {
+    final sampleRow = sampleRows[rowIndex];
     for (var colIndex = 0; colIndex < sampleRow.length; colIndex++) {
       final cellValue = sampleRow[colIndex];
       final excelRow = rowIndex + 1;
@@ -35,7 +34,7 @@ Uint8List? buildImportItemsSampleTemplateBytes() {
               rowIndex: excelRow,
             ),
           )
-          .value = parsed != null && colIndex >= 2
+          .value = parsed != null && colIndex >= numericColumnStartIndex
           ? DoubleCellValue(parsed)
           : TextCellValue(cellValue);
     }
@@ -44,4 +43,24 @@ Uint8List? buildImportItemsSampleTemplateBytes() {
   final bytes = excel.encode();
   if (bytes == null) return null;
   return Uint8List.fromList(bytes);
+}
+
+/// Builds the sample Excel template bytes for item import.
+Uint8List? buildImportItemsSampleTemplateBytes() {
+  return buildImportSampleTemplateBytes(
+    sheetName: 'Items',
+    headers: ImportItemsExcelParser.templateHeaders,
+    sampleRows: ImportItemsExcelParser.sampleRows,
+    numericColumnStartIndex: 2,
+  );
+}
+
+/// Builds the sample Excel template bytes for party import.
+Uint8List? buildImportPartiesSampleTemplateBytes() {
+  return buildImportSampleTemplateBytes(
+    sheetName: 'Parties',
+    headers: ImportPartiesExcelParser.templateHeaders,
+    sampleRows: ImportPartiesExcelParser.sampleRows,
+    numericColumnStartIndex: 7,
+  );
 }

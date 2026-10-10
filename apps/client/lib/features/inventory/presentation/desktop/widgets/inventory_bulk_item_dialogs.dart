@@ -94,8 +94,202 @@ Future<void> showBulkUpdateItemsDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (context) => _BulkUpdateItemsDialog(itemType: itemType),
+    builder: (context) => BulkUpdateItemsPanel(itemType: itemType),
   );
+}
+
+Future<bool> showBulkUpdateConfirmation(
+  BuildContext context, {
+  required List<InventoryItem> items,
+  required BulkItemUpdatePayload payload,
+  required List<InventoryCategory> categories,
+}) async {
+  final changes = <String>[
+    if (payload.salePrice != null) 'Sale price: ₹${payload.salePrice}',
+    if (payload.purchasePrice != null)
+      'Purchase price: ₹${payload.purchasePrice}',
+    if (payload.mrp != null) 'MRP: ₹${payload.mrp}',
+    if (payload.hsnCode != null) 'HSN / SAC code: ${payload.hsnCode}',
+    if (payload.clearCategory) 'Category: Remove category',
+    if (payload.categoryId != null)
+      'Category: ${_bulkCategoryLabel(payload.categoryId!, categories)}',
+  ];
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => _BulkUpdateConfirmationDialog(
+      items: items,
+      changes: changes,
+    ),
+  );
+  return confirmed == true;
+}
+
+String _bulkCategoryLabel(
+  String categoryId,
+  List<InventoryCategory> categories,
+) {
+  if (categoryId == uncategorizedCategoryId) return 'Uncategorized';
+  for (final category in categories) {
+    if (category.id == categoryId) return category.name;
+  }
+  return 'Selected category';
+}
+
+class _BulkUpdateConfirmationDialog extends StatelessWidget {
+  const _BulkUpdateConfirmationDialog({
+    required this.items,
+    required this.changes,
+  });
+
+  final List<InventoryItem> items;
+  final List<String> changes;
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = items.take(5).toList();
+    final remaining = items.length - preview.length;
+    final itemLabel = items.length == 1 ? '1 item' : '${items.length} items';
+
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Confirm update',
+                style: AppTypography.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Update $itemLabel with these changes? Other fields will stay as they are.',
+                style: AppTypography.inter(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Items',
+                style: AppTypography.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              for (final item in preview)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.inter(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              if (remaining > 0)
+                Text(
+                  '+ $remaining more',
+                  style: AppTypography.inter(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              const SizedBox(height: 12),
+              Text(
+                'Changes',
+                style: AppTypography.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F6FF),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE4DCF8)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final change in changes)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3),
+                          child: Text(
+                            change,
+                            style: AppTypography.inter(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(
+                      'Cancel',
+                      style: AppTypography.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF667085),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(LucideIcons.pencil, size: 16),
+                    label: const Text('Update Items'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _BulkCatalogStatusDialog extends ConsumerStatefulWidget {
@@ -571,18 +765,25 @@ class _BulkBaseUnitDropdownState extends State<_BulkBaseUnitDropdown> {
   }
 }
 
-class _BulkUpdateItemsDialog extends ConsumerStatefulWidget {
-  const _BulkUpdateItemsDialog({required this.itemType});
+/// Item picker and field form used by the items-tab dialog and Utilities.
+class BulkUpdateItemsPanel extends ConsumerStatefulWidget {
+  const BulkUpdateItemsPanel({
+    required this.itemType,
+    this.embedded = false,
+    super.key,
+  });
 
   final ItemType itemType;
 
+  /// Fills the parent instead of opening as a dialog.
+  final bool embedded;
+
   @override
-  ConsumerState<_BulkUpdateItemsDialog> createState() =>
-      _BulkUpdateItemsDialogState();
+  ConsumerState<BulkUpdateItemsPanel> createState() =>
+      _BulkUpdateItemsPanelState();
 }
 
-class _BulkUpdateItemsDialogState
-    extends ConsumerState<_BulkUpdateItemsDialog> {
+class _BulkUpdateItemsPanelState extends ConsumerState<BulkUpdateItemsPanel> {
   final _selectedIds = <String>{};
   final _salePriceController = TextEditingController();
   final _purchasePriceController = TextEditingController();
@@ -592,6 +793,7 @@ class _BulkUpdateItemsDialogState
   var _clearCategory = false;
   var _categoryTouched = false;
   var _isSaving = false;
+  var _resetToken = 0;
 
   @override
   void dispose() {
@@ -623,16 +825,43 @@ class _BulkUpdateItemsDialogState
     );
   }
 
+  void _resetForm() {
+    _salePriceController.clear();
+    _purchasePriceController.clear();
+    _mrpController.clear();
+    _hsnController.clear();
+    setState(() {
+      _selectedIds.clear();
+      _categoryId = null;
+      _clearCategory = false;
+      _categoryTouched = false;
+      _resetToken++;
+    });
+  }
+
   Future<void> _apply(List<InventoryItem> selected) async {
     final payload = _buildPayload();
-    if (!payload.hasChanges || selected.isEmpty || _isSaving) {
-      if (!payload.hasChanges && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Enter at least one field to update.')),
-        );
-      }
+    if (selected.isEmpty || !payload.hasChanges || _isSaving) {
+      if (!mounted || _isSaving) return;
+      final message = selected.isEmpty
+          ? 'Select at least one item.'
+          : 'Enter at least one field to update.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
       return;
     }
+
+    final categories =
+        ref.read(inventoryCategoriesProvider).value ??
+        const <InventoryCategory>[];
+    final confirmed = await showBulkUpdateConfirmation(
+      context,
+      items: selected,
+      payload: payload,
+      categories: categories,
+    );
+    if (!confirmed || !mounted) return;
 
     setState(() => _isSaving = true);
     final error = await ref
@@ -649,9 +878,14 @@ class _BulkUpdateItemsDialogState
       ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
-    Navigator.of(context).pop();
+    final updatedCount = selected.length;
+    if (widget.embedded) {
+      _resetForm();
+    } else {
+      Navigator.of(context).pop();
+    }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Updated ${selected.length} item(s).')),
+      SnackBar(content: Text('Updated $updatedCount item(s).')),
     );
   }
 
@@ -680,6 +914,9 @@ class _BulkUpdateItemsDialogState
       primaryIcon: LucideIcons.pencil,
       showQuantityBadge: widget.itemType == ItemType.product,
       isSaving: _isSaving,
+      embedded: widget.embedded,
+      resetToken: _resetToken,
+      onCancel: widget.embedded ? _resetForm : null,
       onPrimary: () => _apply(selected.toList()),
       footer: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -992,6 +1229,9 @@ class _BulkDialogShell extends ConsumerStatefulWidget {
     this.primaryIcon,
     this.showQuantityBadge = false,
     this.isSaving = false,
+    this.embedded = false,
+    this.resetToken = 0,
+    this.onCancel,
     this.header,
     this.footer,
   });
@@ -1008,6 +1248,9 @@ class _BulkDialogShell extends ConsumerStatefulWidget {
   final bool showQuantityBadge;
   final VoidCallback? onPrimary;
   final bool isSaving;
+  final bool embedded;
+  final int resetToken;
+  final VoidCallback? onCancel;
   final Widget? header;
   final Widget? footer;
 
@@ -1017,6 +1260,14 @@ class _BulkDialogShell extends ConsumerStatefulWidget {
 
 class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
   var _searchQuery = '';
+
+  @override
+  void didUpdateWidget(_BulkDialogShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.resetToken != oldWidget.resetToken) {
+      _searchQuery = '';
+    }
+  }
 
   List<InventoryItem> get _visibleItems {
     final engine = ref.read(inventorySearchEngineProvider);
@@ -1052,6 +1303,15 @@ class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
     widget.onSelectionChanged(next);
   }
 
+  void _dismiss() {
+    final onCancel = widget.onCancel;
+    if (onCancel != null) {
+      onCancel();
+      return;
+    }
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final visible = _visibleItems;
@@ -1061,40 +1321,37 @@ class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
 
     final primaryIcon = widget.primaryIcon ?? widget.heroIcon;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: ClipRRect(
-        borderRadius: AppRadius.lgBorder,
-        child: SizedBox(
-          width: _dialogWidth,
-          height: _dialogHeight,
-          child: Material(
-            color: AppColors.surface,
-            clipBehavior: Clip.antiAlias,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow = widget.embedded && constraints.maxWidth < 800;
+        final surface = Material(
+          color: AppColors.surface,
+          clipBehavior: Clip.antiAlias,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!narrow)
                 _BulkDialogHeroPanel(
                   title: widget.title,
                   description: widget.description,
                   icon: widget.heroIcon,
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.md,
-                      AppSpacing.lg,
-                      AppSpacing.lg,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (!widget.embedded)
                         Align(
                           alignment: Alignment.centerRight,
                           child: IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: _dismiss,
                             icon: const Icon(Icons.close, size: 20),
                             tooltip: 'Close',
                             visualDensity: VisualDensity.compact,
@@ -1106,6 +1363,7 @@ class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
                         ],
                         InventorySearchField(
                           hint: 'Search items by name or code...',
+                          initialValue: _searchQuery,
                           onChanged: (query) =>
                               setState(() => _searchQuery = query),
                         ),
@@ -1183,15 +1441,24 @@ class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
                         ),
                         if (widget.footer != null) ...[
                           const SizedBox(height: AppSpacing.md),
-                          widget.footer!,
+                          if (narrow)
+                            Flexible(
+                              child: SingleChildScrollView(
+                                child: widget.footer,
+                              ),
+                            )
+                          else
+                            widget.footer!,
                         ],
                         const SizedBox(height: AppSpacing.md),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             OutlinedButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Cancel'),
+                              onPressed: widget.isSaving ? null : _dismiss,
+                              child: Text(
+                                widget.embedded ? 'Clear' : 'Cancel',
+                              ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             widget.isSaving
@@ -1218,9 +1485,26 @@ class _BulkDialogShellState extends ConsumerState<_BulkDialogShell> {
                 ),
               ],
             ),
+          );
+        if (widget.embedded) {
+          return ClipRRect(
+            borderRadius: AppRadius.lgBorder,
+            child: surface,
+          );
+        }
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: ClipRRect(
+            borderRadius: AppRadius.lgBorder,
+            child: SizedBox(
+              width: _dialogWidth,
+              height: _dialogHeight,
+              child: surface,
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

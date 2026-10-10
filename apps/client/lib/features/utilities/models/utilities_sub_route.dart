@@ -19,6 +19,18 @@ abstract final class UtilitiesSubRoutes {
       label: 'Import Items',
     ),
     UtilitiesSubRoute(
+      route: AppRoutes.utilitiesExportItems,
+      label: 'Export Items',
+    ),
+    UtilitiesSubRoute(
+      route: AppRoutes.utilitiesImportParties,
+      label: 'Import Parties',
+    ),
+    UtilitiesSubRoute(
+      route: AppRoutes.utilitiesBulkUpdateItems,
+      label: 'Bulk Update Items',
+    ),
+    UtilitiesSubRoute(
       route: AppRoutes.utilitiesBarcodeGenerator,
       label: 'Barcode Generator',
     ),

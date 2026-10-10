@@ -85,7 +85,10 @@ abstract final class AppRoutes {
   static const collaborationSyncShare = '/collaboration/sync-share';
   static const utilities = '/utilities';
   static const utilitiesImportItems = '/utilities/import-items';
+  static const utilitiesExportItems = '/utilities/export-items';
+  static const utilitiesImportParties = '/utilities/import-parties';
   static const utilitiesAddItemsBarcode = '/utilities/import-items/barcode';
+  static const utilitiesBulkUpdateItems = '/utilities/bulk-update-items';
   static const utilitiesBarcodeGenerator = '/utilities/barcode-generator';
   static const developer = '/developer';
   static const developerDiagnostics = '/developer/diagnostics';
