@@ -3,6 +3,31 @@ import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:flutter/material.dart';
 
 const inventoryCardBorder = Color(0xFFE0E0E0);
+
+/// Split workspace chrome — frame + dividers (see [InventorySplitLayout]).
+const inventoryWorkspacePanelBorderWidth = 9.0;
+
+BorderSide get inventoryWorkspacePanelBorderSide => BorderSide(
+  color: AppColors.workspacePanelBorder,
+  width: inventoryWorkspacePanelBorderWidth,
+);
+
+/// Flush to sidebar (left) and viewport edges; round only the outer-right corners.
+BorderRadius get inventoryWorkspacePanelOuterRadius => BorderRadius.only(
+  topRight: Radius.circular(AppRadius.lg),
+  bottomRight: Radius.circular(AppRadius.lg),
+);
+
+/// Inner surface radius after the inset workspace frame.
+BorderRadius inventoryWorkspacePanelInnerRadius() {
+  final inner = AppRadius.lg - inventoryWorkspacePanelBorderWidth;
+  if (inner <= 0) return BorderRadius.zero;
+  return BorderRadius.only(
+    topRight: Radius.circular(inner),
+    bottomRight: Radius.circular(inner),
+  );
+}
+
 const inventoryTabActiveColor = Color(0xFF1565C0);
 const inventoryPrimaryOrange = Color(0xFFFF9800);
 const Color inventorySelectedRowColor = listPanelSelectedRowColor;
@@ -10,6 +35,16 @@ const inventoryNegativeColor = Color(0xFFD32F2F);
 const inventoryPositiveColor = Color(0xFF2E7D32);
 const inventoryButtonHeight = 48.0;
 const inventoryDropdownWidth = 36.0;
+
+/// Reserved width for compact list row overflow menus.
+const inventoryListRowMenuWidth = 32.0;
+
+/// Max width for quantity / numeric cells in compact list rows.
+const inventoryListQtyColumnMaxWidth = 40.0;
+
+/// Flex weights for item name vs trailing value columns in compact list panels.
+const inventoryListPrimaryColumnFlex = 5;
+const inventoryListTrailingColumnFlex = 1;
 
 const inventoryPopupMenuShape = RoundedRectangleBorder(
   borderRadius: BorderRadius.all(Radius.circular(6)),

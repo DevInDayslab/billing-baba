@@ -13,8 +13,10 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_bulk_menu.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_workspace.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductsTabContent extends ConsumerWidget {
   const ProductsTabContent({super.key});
@@ -66,7 +68,7 @@ class ProductsTabContent extends ConsumerWidget {
                 : 'No products found',
             placeholderMessage: 'Select an item to view ledger',
             primaryColumnLabel: 'ITEM',
-            secondaryColumnLabel: 'QUANTITY',
+            secondaryColumnLabel: 'QTY',
             trailingValueBuilder: (item) {
               final metrics = InventoryStockCalculator.metricsFromItem(item);
               return formatQuantityValue(metrics.physicalQuantity);
@@ -106,6 +108,8 @@ class ProductsTabContent extends ConsumerWidget {
                   searchQuery: ref.read(productBackendSearchProvider),
                 ),
             onAddPressed: () => unawaited(showAddItemDialog(context)),
+            onImportItems: () => context.push(AppRoutes.utilitiesImportItems),
+            itemType: ItemType.product,
             onItemDoubleTap: (item) => unawaited(
               showAddItemDialog(
                 context,

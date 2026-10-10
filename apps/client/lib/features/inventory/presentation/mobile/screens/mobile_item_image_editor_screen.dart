@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_item_image_utils.dart';
+import 'package:billing_baba/features/inventory/presentation/shared/item_image_crop_chrome.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 
@@ -66,6 +67,14 @@ class _MobileItemImageEditorScreenState
     setState(() => _isCropping = false);
   }
 
+  Future<void> _requestClose() async {
+    if (_isCropping) return;
+    final discard = await showDiscardItemImageChangesDialog(context);
+    if (discard && mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+  }
+
   void _handleCropped(CropResult result) {
     final completer = _pendingCropCompleter;
     if (completer == null || completer.isCompleted) return;
@@ -80,7 +89,13 @@ class _MobileItemImageEditorScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        unawaited(_requestClose());
+      },
+      child: Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -88,9 +103,7 @@ class _MobileItemImageEditorScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(LucideIcons.x),
-          onPressed: _isCropping
-              ? null
-              : () => Navigator.of(context, rootNavigator: true).pop(),
+          onPressed: _isCropping ? null : () => unawaited(_requestClose()),
         ),
         title: const Text('Edit Photo'),
         centerTitle: true,
@@ -119,7 +132,7 @@ class _MobileItemImageEditorScreenState
       body: Column(
         children: [
           Expanded(
-            child: Crop(
+            child: ItemImageCropSurface(
               image: _imageBytes,
               controller: _cropController,
               aspectRatio: 1,
@@ -161,6 +174,7 @@ class _MobileItemImageEditorScreenState
           ),
         ],
       ),
+    ),
     );
   }
 }

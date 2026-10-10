@@ -33,6 +33,8 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
     required this.onSelectionChangedSideEffects,
     required this.onRefresh,
     required this.onAddPressed,
+    required this.onImportItems,
+    required this.itemType,
     required this.onMenuSelected,
     this.onItemDoubleTap,
     this.hasMore = false,
@@ -68,6 +70,8 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
   onSelectionChangedSideEffects;
   final Future<void> Function() onRefresh;
   final VoidCallback onAddPressed;
+  final VoidCallback onImportItems;
+  final ItemType itemType;
   final void Function(String value, InventoryItem item) onMenuSelected;
   final ValueChanged<InventoryItem>? onItemDoubleTap;
   final IconData leadingIcon;
@@ -199,8 +203,11 @@ class _InventoryItemWorkspaceState
           hasMore: widget.hasMore,
           isLoadingMore: widget.isLoadingMore,
           onItemSelected: _selectItem,
+          onSearchMatchSelected: (item) => _selectItem(item.id),
           onItemDoubleTap: widget.onItemDoubleTap,
           onAddPressed: widget.onAddPressed,
+          onImportItems: widget.onImportItems,
+          itemType: widget.itemType,
           onMenuSelected: widget.onMenuSelected,
           toolbarMenuItems: widget.toolbarMenuItems,
         ),
