@@ -7,6 +7,7 @@ import 'package:billing_baba/features/parties/application/party_error_mapper.dar
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -256,16 +257,17 @@ class _MobileSalePartyPickerFieldState
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        onTap: _addNewParty,
-                        child: Text(
-                          'Add new party',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: _saveBlue,
-                            fontWeight: FontWeight.w600,
+                      if (!ref.watch(blockNewPartiesFromTxnProvider))
+                        GestureDetector(
+                          onTap: _addNewParty,
+                          child: Text(
+                            'Add new party',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: _saveBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),

@@ -435,9 +435,6 @@ class _TransactionMessagesScreenState
     try {
       await ref.read(transactionMessageSettingsProvider.notifier).save(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction message settings saved')),
-      );
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

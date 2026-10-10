@@ -29,6 +29,8 @@ import 'package:billing_baba/features/tasks/application/task_completion_undo_red
 import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar.dart';
 import 'package:billing_baba/features/tasks/presentation/task_undo_redo_shortcuts.dart';
 import 'package:billing_baba/features/search/presentation/desktop/search_dialog.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/models/settings_sub_route.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:flutter/material.dart';
@@ -118,6 +120,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _collaborationExpandInitialized = false;
   bool _isDeveloperExpanded = false;
   bool _developerExpandInitialized = false;
+  bool _isSettingsExpanded = false;
+  bool _settingsExpandInitialized = false;
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
@@ -209,6 +213,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         _isDeveloperExpanded = true;
       }
     }
+    if (!_settingsExpandInitialized) {
+      _settingsExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (_isSettingsLocation(location)) {
+        _isSettingsExpanded = true;
+      }
+    }
+  }
+
+  static bool _isSettingsLocation(String location) {
+    return location.startsWith(AppRoutes.settings) ||
+        location == AppRoutes.itemsSettings;
   }
 
   static final List<_NavSubItem> _crmSubItems = CrmSubRoutes.items
@@ -234,6 +250,16 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   static final List<_NavSubItem> _collaborationSubItems = CollaborationSubRoutes
       .items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
+
+  static final List<_NavSubItem> _settingsSubItems = SettingsSubRoutes.items
+      .map(
+        (item) => _NavSubItem(
+          route: item.route,
+          label: item.label,
+          showProBadge: item.showProBadge,
+        ),
+      )
       .toList();
 
   static final List<_NavSubItem> _developerSubItems = [
@@ -335,11 +361,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         subItems: _developerSubItems,
       ),
     if (!ShellSidebarVisibility.hideSettings)
-      const _NavItem(
-        route: AppRoutes.settings,
+      _NavItem(
         icon: LucideIcons.settings,
         iconColor: _SidebarTokens.settings,
         label: 'Settings',
+        isExpandable: true,
+        routePrefix: AppRoutes.settings,
+        subItems: _settingsSubItems,
       ),
     const _NavItem(
       route: AppRoutes.plansPricing,
@@ -371,12 +399,20 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
     if (!item.isExpandable) return item;
 
-    final subItems = item.subItems
+    var subItems = item.subItems
         .where(
           (sub) =>
               NavigationPermissionRegistry.isVisible(sub.route, permissions),
         )
         .toList();
+    final general = ref.watch(generalSettingsProvider).value;
+    if (general != null &&
+        (item.routePrefix == AppRoutes.sale ||
+            item.routePrefix == AppRoutes.purchase)) {
+      subItems = subItems
+          .where((sub) => general.isNavRouteVisible(sub.route))
+          .toList();
+    }
     if (subItems.isEmpty) return null;
 
     return _NavItem(
@@ -401,6 +437,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       _isUtilitiesExpanded = route.startsWith(AppRoutes.utilities);
       _isCollaborationExpanded = route.startsWith(AppRoutes.collaboration);
       _isDeveloperExpanded = route.startsWith(AppRoutes.developer);
+      _isSettingsExpanded = _isSettingsLocation(route);
     });
     context.go(route);
     _scheduleSidebarCloseAfterNavigation(
@@ -485,7 +522,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                   children: [
                     if (showTopBar)
                       AppTopBar(showMenuButton: useOverlaySidebar),
-                    Expanded(child: widget.child),
+                    Expanded(child: _ScaledShellContent(child: widget.child)),
                   ],
                 ),
               ),
@@ -731,6 +768,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       final isUtilities = item.routePrefix == AppRoutes.utilities;
       final isCollaboration = item.routePrefix == AppRoutes.collaboration;
       final isDeveloper = item.routePrefix == AppRoutes.developer;
+      final isSettings = item.routePrefix == AppRoutes.settings;
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
@@ -743,7 +781,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ? currentLocation.startsWith(AppRoutes.utilities)
           : isCollaboration
           ? currentLocation.startsWith(AppRoutes.collaboration)
-          : isDeveloper && currentLocation.startsWith(AppRoutes.developer);
+          : isDeveloper
+          ? currentLocation.startsWith(AppRoutes.developer)
+          : isSettings && _isSettingsLocation(currentLocation);
 
       final isExpanded = isSale
           ? _isSaleExpanded
@@ -755,7 +795,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ? _isUtilitiesExpanded
           : isCollaboration
           ? _isCollaborationExpanded
-          : isDeveloper && _isDeveloperExpanded;
+          : isDeveloper
+          ? _isDeveloperExpanded
+          : isSettings && _isSettingsExpanded;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -779,6 +821,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 _isCollaborationExpanded = !_isCollaborationExpanded;
               } else if (isDeveloper) {
                 _isDeveloperExpanded = !_isDeveloperExpanded;
+              } else if (isSettings) {
+                _isSettingsExpanded = !_isSettingsExpanded;
               }
             }),
             onCollapsedTap: () {
@@ -796,20 +840,28 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                   _isCollaborationExpanded = true;
                 } else if (isDeveloper) {
                   _isDeveloperExpanded = true;
+                } else if (isSettings) {
+                  _isSettingsExpanded = true;
                 }
               });
             },
           ),
           if (isExpanded && !collapsed)
             ...item.subItems.map((sub) {
-              final isSubActive = _isSubItemActive(
-                routePrefix: routePrefix,
-                subRoute: sub.route,
-                currentLocation: currentLocation,
-              );
+              final isSubActive = isSettings
+                  ? _isSettingsSubItemActive(
+                      subRoute: sub.route,
+                      currentLocation: currentLocation,
+                    )
+                  : _isSubItemActive(
+                      routePrefix: routePrefix,
+                      subRoute: sub.route,
+                      currentLocation: currentLocation,
+                    );
               return _SidebarNavSubTile(
                 label: sub.label,
                 isActive: isSubActive,
+                showProBadge: sub.showProBadge,
                 onTap: () => _navigateTo(sub.route),
               );
             }),
@@ -831,6 +883,14 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       isActive: isActive,
       onTap: item.route != null ? () => _navigateTo(item.route!) : null,
     );
+  }
+
+  bool _isSettingsSubItemActive({
+    required String subRoute,
+    required String currentLocation,
+  }) {
+    if (currentLocation == subRoute) return true;
+    return false;
   }
 
   bool _isSubItemActive({
@@ -963,10 +1023,15 @@ class _NavItem {
 }
 
 class _NavSubItem {
-  const _NavSubItem({required this.route, required this.label});
+  const _NavSubItem({
+    required this.route,
+    required this.label,
+    this.showProBadge = false,
+  });
 
   final String route;
   final String label;
+  final bool showProBadge;
 }
 
 class _SidebarTileSurface extends StatelessWidget {
@@ -1108,11 +1173,13 @@ class _SidebarNavSubTile extends StatelessWidget {
     required this.label,
     required this.isActive,
     required this.onTap,
+    this.showProBadge = false,
   });
 
   final String label;
   final bool isActive;
   final VoidCallback onTap;
+  final bool showProBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -1122,15 +1189,39 @@ class _SidebarNavSubTile extends StatelessWidget {
       verticalPadding: AppSpacing.sm,
       child: Padding(
         padding: const EdgeInsets.only(left: 20),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? _SidebarTokens.textActive : _SidebarTokens.text,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.15,
-          ),
-          overflow: TextOverflow.ellipsis,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isActive
+                      ? _SidebarTokens.textActive
+                      : _SidebarTokens.text,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.4,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (showProBadge) ...[
+              const SizedBox(width: 6),
+              Container(
+                width: 18,
+                height: 18,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF2563EB),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  LucideIcons.crown,
+                  size: 10,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -1738,6 +1829,34 @@ class _ShellShortcutScope extends ConsumerWidget {
           child: child,
         ),
       ),
+    );
+  }
+}
+
+class _ScaledShellContent extends ConsumerWidget {
+  const _ScaledShellContent({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scale = ref.watch(desktopUiScaleProvider);
+    if (scale == 1.0) return child;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ClipRect(
+          child: Transform.scale(
+            scale: scale,
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: constraints.maxWidth / scale,
+              height: constraints.maxHeight / scale,
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 }

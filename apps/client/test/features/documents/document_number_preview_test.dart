@@ -10,10 +10,10 @@ void main() {
       );
     });
 
-    test('falls back when prefix empty', () {
+    test('uses number only when prefix empty', () {
       expect(
         formatDocumentNumberPreview(prefix: '  ', nextNumber: 1),
-        'DOC1',
+        '1',
       );
     });
 

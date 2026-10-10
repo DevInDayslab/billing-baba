@@ -11,7 +11,8 @@ class PrintSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const AdaptivePage(
-      desktop: DesktopPrintSettingsScreen(),
+      // Same body as the legacy Settings → Print tab (inside desktop shell).
+      desktop: DesktopPrintSettingsScreen(embedded: true),
       mobile: MobilePrintSettingsScreen(),
     );
   }

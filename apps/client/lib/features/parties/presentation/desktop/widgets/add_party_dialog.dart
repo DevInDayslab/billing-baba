@@ -24,6 +24,9 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/party
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/device_contact_picker_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/gstin_verification_dialogs.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
+import 'package:billing_baba/features/settings/models/party_settings.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -1389,10 +1392,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     final phoneError = Validators.requiredPhone(_phoneController.text);
     final emailError = Validators.email(_emailController.text);
     final gstinError = _validateGstinField();
-    final partyGroupError = Validators.requiredSelection(
-      _partyGroup,
-      fieldName: 'Party group',
-    );
+    final partyGroupingEnabled = ref.read(partyGroupingEnabledProvider);
+    final partyGroupError = partyGroupingEnabled
+        ? Validators.requiredSelection(
+            _partyGroup,
+            fieldName: 'Party group',
+          )
+        : null;
     final openingBalanceError = Validators.nonNegativeDecimalAmount(
       _openingBalanceController.text,
     );
@@ -2178,12 +2184,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     );
 
     const gridSpan = 4;
+    final showGstinField = ref.watch(enableGstinOnPartyProvider);
+    final partyGroupingEnabled = ref.watch(partyGroupingEnabledProvider);
 
     final primaryCells = <FormGridCell>[
       FormGridCell(span: gridSpan, child: partyNameField),
-      FormGridCell(span: gridSpan, child: gstinField),
+      if (showGstinField) FormGridCell(span: gridSpan, child: gstinField),
       FormGridCell(span: gridSpan, child: phoneField),
-      FormGridCell(span: gridSpan, child: _buildPartyGroupControls()),
+      if (partyGroupingEnabled)
+        FormGridCell(span: gridSpan, child: _buildPartyGroupControls()),
       FormGridCell(span: gridSpan, child: legalNameField),
       FormGridCell(span: gridSpan, child: _buildDefaultPriceTierField()),
     ];
@@ -2512,7 +2521,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
         ),
-        padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 4)),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(vertical: 4),
+        ),
       ),
       menuChildren: [
         MenuItemButton(
@@ -2797,6 +2808,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildGstAddressTab() {
+    final shippingAddressEnabled = ref.watch(
+      partyShippingAddressEnabledProvider,
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final density = _PartyDialogDensityScope.of(context);
@@ -2888,7 +2903,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           label: 'Billing Address',
           addressController: _billingAddressController,
           showDetailed: _showDetailedBillingAddress,
-          labelTrailing: _showShippingAddress
+          labelTrailing: !shippingAddressEnabled || _showShippingAddress
               ? null
               : _buildEnableShippingAddressLink(),
           onToggleDetailed: () {
@@ -2916,7 +2931,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           ),
         );
 
-        final shippingSection = _showShippingAddress
+        final shippingSection = shippingAddressEnabled && _showShippingAddress
             ? _buildAddressSection(
                 label: 'Shipping Address',
                 addressController: _shippingAddressController,
@@ -2965,7 +2980,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               leftColumn,
               Padding(
                 padding: EdgeInsets.symmetric(vertical: gap),
-                child: const Divider(height: 1, thickness: 1, color: _cardBorder),
+                child: const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: _cardBorder,
+                ),
               ),
               rightColumn,
             ],
@@ -3254,20 +3273,56 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   Widget _buildCreditBalanceTab() {
     final gap = _PartyDialogDensityScope.of(context).sectionGap;
+    final loyaltyEnabled = ref.watch(partyLoyaltyPointsEnabledProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildVyaparOpeningBalanceDateRow(),
         SizedBox(height: gap),
-        _buildVyaparOpeningBalanceTypeRadios(),
-        SizedBox(height: gap),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
-          child: _buildVyaparLoyaltyPointsField(),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 720;
+            final openingBalanceType = _buildVyaparOpeningBalanceTypeRadios();
+            final loyaltyPoints = loyaltyEnabled
+                ? ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: _creditBalanceFieldMaxWidth,
+                    ),
+                    child: _buildVyaparLoyaltyPointsField(),
+                  )
+                : const SizedBox.shrink();
+            final creditLimit = _buildVyaparCreditLimitSection();
+
+            if (isNarrow) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  openingBalanceType,
+                  if (loyaltyEnabled) ...[
+                    SizedBox(height: gap),
+                    loyaltyPoints,
+                  ],
+                  SizedBox(height: gap),
+                  creditLimit,
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: openingBalanceType),
+                if (loyaltyEnabled) ...[
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(flex: 3, child: loyaltyPoints),
+                ],
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(flex: 2, child: creditLimit),
+              ],
+            );
+          },
         ),
-        SizedBox(height: gap),
-        _buildVyaparCreditLimitSection(),
       ],
     );
   }
@@ -3277,7 +3332,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 560;
         final openingBalance = ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
+          constraints: const BoxConstraints(
+            maxWidth: _creditBalanceFieldMaxWidth,
+          ),
           child: _buildVyaparOutlinedAmountField(
             label: 'Opening Balance',
             controller: _openingBalanceController,
@@ -3291,7 +3348,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           ),
         );
         final asOfDate = ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
+          constraints: const BoxConstraints(
+            maxWidth: _creditBalanceFieldMaxWidth,
+          ),
           child: _buildVyaparOutlinedDateField(
             label: 'As Of Date',
             selectedDate: _openingBalanceAsOfDate,
@@ -3335,7 +3394,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     VoidCallback? onChanged,
   }) {
     final density = _partyDensity();
-    final verticalPad = density.isTight ? 8.0 : (density.useCompactFields ? 10.0 : 12.0);
+    final verticalPad = density.isTight
+        ? 8.0
+        : (density.useCompactFields ? 10.0 : 12.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3347,15 +3408,18 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [nonNegativeDecimalInputFormatter],
           onChanged: (_) => onChanged?.call(),
-          decoration: buildFormControlDecoration(
-            labelText: label,
-            hasError: errorText != null,
-            fixedHeight: false,
-            compact: density.useCompactFields,
-          ).copyWith(
-            prefix: prefix,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: verticalPad),
-          ),
+          decoration:
+              buildFormControlDecoration(
+                labelText: label,
+                hasError: errorText != null,
+                fixedHeight: false,
+              ).copyWith(
+                prefix: prefix,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: verticalPad,
+                ),
+              ),
         ),
         if (errorText != null)
           Padding(
@@ -3386,7 +3450,6 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         decoration: buildFormControlDecoration(
           labelText: label,
           fixedHeight: false,
-          compact: density.useCompactFields,
         ),
         child: InkWell(
           onTap: () => datePickerKey.currentState?.toggle(),
@@ -3460,7 +3523,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               style: TextStyle(
                 fontSize: density.fieldFontSize,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+                color: selected
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
           ],
@@ -3537,8 +3602,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               onChanged: (useCustom) {
                 setState(() {
                   _useCustomCreditLimit = useCustom;
-                  if (useCustom &&
-                      _creditLimitController.text.trim().isEmpty) {
+                  if (useCustom && _creditLimitController.text.trim().isEmpty) {
                     _creditLimitController.text = _defaultDecimal;
                   }
                 });
@@ -3559,7 +3623,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         if (_useCustomCreditLimit) ...[
           SizedBox(height: gap),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _creditBalanceFieldMaxWidth),
+            constraints: const BoxConstraints(
+              maxWidth: _creditBalanceFieldMaxWidth,
+            ),
             child: _buildVyaparOutlinedAmountField(
               label: 'Credit Limit Amount',
               controller: _creditLimitController,
@@ -3582,25 +3648,56 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildAdditionalFieldsTab() {
+    final partySettings = ref.watch(partySettingsProvider).value;
+    final configs =
+        partySettings?.additionalFields ??
+        PartyAdditionalFieldCatalog.defaultFields();
+
+    final rows = <Widget>[];
+    for (var i = 0; i < configs.length && i < 2; i++) {
+      final config = configs[i];
+      if (!config.enabled) continue;
+      final label = config.label.trim().isEmpty
+          ? PartyAdditionalFieldCatalog.defaultLabelForIndex(i)
+          : config.label.trim();
+      if (i == 0) {
+        rows.add(
+          _buildAdditionalFieldRow(
+            label: label,
+            enabled: _additionalField1Enabled,
+            controller: _additionalField1Controller,
+            onEnabledChanged: (value) =>
+                setState(() => _additionalField1Enabled = value),
+          ),
+        );
+      } else if (i == 1) {
+        rows.add(
+          _buildAdditionalFieldRow(
+            label: label,
+            enabled: _additionalField2Enabled,
+            controller: _additionalField2Controller,
+            onEnabledChanged: (value) =>
+                setState(() => _additionalField2Enabled = value),
+          ),
+        );
+      }
+      rows.add(const SizedBox(height: AppSpacing.md));
+    }
+    if (rows.isNotEmpty) rows.removeLast();
+
+    if (rows.isEmpty) {
+      return Text(
+        'Enable additional fields in Settings → Party.',
+        style: AppTypography.inter(
+          fontSize: AppTypography.bodyMediumSize,
+          color: AppColors.textSecondary,
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildAdditionalFieldRow(
-          label: 'Additional Field 1',
-          enabled: _additionalField1Enabled,
-          controller: _additionalField1Controller,
-          onEnabledChanged: (value) =>
-              setState(() => _additionalField1Enabled = value),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _buildAdditionalFieldRow(
-          label: 'Additional Field 2',
-          enabled: _additionalField2Enabled,
-          controller: _additionalField2Controller,
-          onEnabledChanged: (value) =>
-              setState(() => _additionalField2Enabled = value),
-        ),
-      ],
+      children: rows,
     );
   }
 
