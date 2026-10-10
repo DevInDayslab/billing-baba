@@ -75,7 +75,12 @@ class PartyProjectionService {
       purchaseByParty.putIfAbsent(partyId, () => []).add(doc);
     }
 
-    final partyIds = {...salesByParty.keys, ...purchaseByParty.keys};
+    final activeParties = await _local.listActiveParties(businessId);
+    final partyIds = {
+      ...salesByParty.keys,
+      ...purchaseByParty.keys,
+      ...activeParties.map((party) => party.id),
+    };
     final index = <String, double>{};
 
     for (final partyId in partyIds) {

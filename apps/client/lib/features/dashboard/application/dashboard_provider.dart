@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_service.dart';
+import 'package:billing_baba/features/dashboard/application/local_business_metrics_provider.dart';
+import 'package:billing_baba/features/dashboard/models/dashboard_model_merger.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_view_state.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
+import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_provider.g.dart';
@@ -29,11 +32,14 @@ class Dashboard extends _$Dashboard {
     final query = DashboardQuery(period: period);
     final cached = service.readCachedViewState(query);
     if (cached != null) {
-      final initial = cached.copyWith(isRefreshing: true);
+      final initial = await _mergeLocalMetrics(
+        cached.copyWith(isRefreshing: true),
+        period,
+      );
       unawaited(_refreshInBackground(period, hadCache: true));
       return initial;
     }
-    return service.fetchDashboard(query);
+    return _mergeLocalMetrics(await service.fetchDashboard(query), period);
   }
 
   Future<void> _refreshInBackground(
@@ -42,8 +48,9 @@ class Dashboard extends _$Dashboard {
   }) async {
     try {
       final service = await ref.read(dashboardServiceProvider.future);
-      final fresh = await service.fetchDashboard(
-        DashboardQuery(period: period),
+      final fresh = await _mergeLocalMetrics(
+        await service.fetchDashboard(DashboardQuery(period: period)),
+        period,
       );
       if (!ref.mounted) return;
       state = AsyncData(
@@ -87,7 +94,10 @@ class Dashboard extends _$Dashboard {
     final cached = service.readCachedViewState(DashboardQuery(period: period));
     if (cached != null) {
       state = AsyncData(
-        cached.copyWith(isRefreshing: true, isCachedSnapshot: false),
+        await _mergeLocalMetrics(
+          cached.copyWith(isRefreshing: true, isCachedSnapshot: false),
+          period,
+        ),
       );
       unawaited(_refreshInBackground(period, hadCache: true));
       return;
@@ -100,7 +110,30 @@ class Dashboard extends _$Dashboard {
 
   Future<DashboardViewState> _loadFresh(DashboardPeriod period) async {
     final service = await ref.read(dashboardServiceProvider.future);
-    return service.fetchDashboard(DashboardQuery(period: period));
+    final viewState = await service.fetchDashboard(DashboardQuery(period: period));
+    return _mergeLocalMetrics(viewState, period);
+  }
+
+  Future<DashboardViewState> _mergeLocalMetrics(
+    DashboardViewState viewState,
+    DashboardPeriod period,
+  ) async {
+    final metricsService = await ref.read(
+      localBusinessMetricsServiceProvider.future,
+    );
+    final query = DashboardQuery(period: period);
+    final localOverview = await metricsService.loadOutstandingOverview();
+    final localPeriod = await metricsService.loadPeriodMetrics(query);
+    final inventoryItems = ref.read(inventoryItemListProvider);
+    return viewState.copyWith(
+      dashboard: DashboardModelMerger.merge(
+        remote: viewState.dashboard,
+        localOverview: localOverview,
+        localPeriod: localPeriod,
+        inventoryItems: inventoryItems,
+        metrics: metricsService,
+      ),
+    );
   }
 
   void seedCached(DashboardViewState cached) {

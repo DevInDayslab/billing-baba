@@ -9,13 +9,13 @@ import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_detail_panel.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_list_panel.dart';
+import 'package:billing_baba/features/parties/parties_navigation.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _compactBreakpoint = 800.0;
 
-/// Narrower list column so transaction detail has more horizontal room.
 Future<void> openDesktopAddPartyDialog(BuildContext context) async {
   await showAddPartyDialog(context);
 }
@@ -49,10 +49,19 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
   }
 
   Future<void> _restorePreferences() async {
-    final service = await ref.read(partyServiceProvider.future);
-    final filter = service.readRememberedListFilter();
-    if (filter == null || !mounted) return;
     final current = ref.read(partyListFilterProvider);
+    if (PartiesNavigation.isDashboardBalanceFilter(current)) {
+      await ref.read(partyListProvider.notifier).refresh(
+        filter: current,
+        searchQuery: ref.read(partyBackendSearchProvider),
+      );
+      return;
+    }
+
+    final service = await ref.read(partyServiceProvider.future);
+    final remembered = service.readRememberedListFilter();
+    final filter = PartiesNavigation.filterForPageRestore(remembered);
+    if (!mounted) return;
     if (filter == current) return;
     ref.read(partyListFilterProvider.notifier).filter = filter;
     await ref.read(partyListProvider.notifier).refresh(filter: filter);

@@ -34,7 +34,7 @@ class DashboardOverviewSection extends StatelessWidget {
       children: [
         Expanded(
           child: _OverviewMetricCard(
-            title: 'Total Receivable',
+            title: 'To Receive',
             amount: overview.totalReceivable,
             subtitle: overview.receivablePartyCount == 0
                 ? "You don't have any receivables as of now."
@@ -50,7 +50,7 @@ class DashboardOverviewSection extends StatelessWidget {
         SizedBox(width: metrics.gap),
         Expanded(
           child: _OverviewMetricCard(
-            title: 'Total Payable',
+            title: 'To Pay',
             amount: overview.totalPayable,
             subtitle: overview.payablePartyCount == 0
                 ? "You don't have any payables as of now."

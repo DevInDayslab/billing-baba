@@ -36,7 +36,6 @@ class InventoryHighlightedText extends StatelessWidget {
           style: baseStyle,
           maxLines: maxLines,
           overflow: overflow,
-          softWrap: false,
         ),
       );
     }
@@ -56,7 +55,6 @@ class InventoryHighlightedText extends StatelessWidget {
           style: baseStyle,
           maxLines: maxLines,
           overflow: overflow,
-          softWrap: false,
         ),
       );
     }
@@ -97,7 +95,6 @@ class InventoryHighlightedText extends StatelessWidget {
         TextSpan(children: spans),
         maxLines: maxLines,
         overflow: overflow,
-        softWrap: false,
       ),
     );
   }

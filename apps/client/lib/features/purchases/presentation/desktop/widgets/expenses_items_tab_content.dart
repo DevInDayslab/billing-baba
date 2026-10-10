@@ -52,6 +52,7 @@ class ExpensesItemsTabContent extends ConsumerWidget {
         : allItems.where((item) => item.id == selectedId).firstOrNull;
 
     return InventorySplitLayout(
+      listWidth: 340,
       listPanel: _ItemListPanel(
         items: items,
         selectedId: selectedId,

@@ -1313,39 +1313,28 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         : availableWidth.clamp(0, _addItemDialogMaxWidth);
 
     final dialogWidth = preferredWidth.toDouble();
-    final fallbackHeight = media.height * _addItemDialogMaxHeightFactor;
+    final dialogHeight = media.height * _addItemDialogMaxHeightFactor;
     const dividerHeight = 1.0;
 
     return _wrapWithCloseGuard(
-      LayoutBuilder(
-        builder: (context, constraints) {
-          // Respect [FormDialogShell] max height (insets + short windows). A
-          // fixed 93% screen height overflows and clips fields instead of scrolling.
-          final height = constraints.hasBoundedHeight
-              ? constraints.maxHeight
-              : fallbackHeight;
-
-          return SizedBox(
-            width: dialogWidth,
-            height: height,
-            child: Material(
-              color: AppColors.surface,
-              borderRadius: AppRadius.lgBorder,
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHeader(form),
-                  const Divider(height: dividerHeight, color: _cardBorder),
-                  Expanded(child: formBody),
-                  const Divider(height: dividerHeight, color: _cardBorder),
-                  _buildFooter(),
-                ],
-              ),
-            ),
-          );
-        },
+      SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
+        child: Material(
+          color: AppColors.surface,
+          borderRadius: AppRadius.lgBorder,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(form),
+              const Divider(height: dividerHeight, color: _cardBorder),
+              Expanded(child: formBody),
+              const Divider(height: dividerHeight, color: _cardBorder),
+              _buildFooter(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1375,16 +1364,14 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       );
     }
 
-    return Scrollbar(
-      thumbVisibility: true,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        FormSpacing.page,
+        FormSpacing.section,
+        FormSpacing.page,
+        FormSpacing.section,
+      ),
       child: SingleChildScrollView(
-        primary: true,
-        padding: const EdgeInsets.fromLTRB(
-          FormSpacing.page,
-          FormSpacing.section,
-          FormSpacing.page,
-          FormSpacing.section,
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,

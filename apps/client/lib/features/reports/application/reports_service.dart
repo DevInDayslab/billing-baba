@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/features/dashboard/application/local_business_metrics_provider.dart';
+import 'package:billing_baba/features/dashboard/application/local_business_metrics_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
 import 'package:billing_baba/features/reports/data/reports_remote_data_source.dart';
@@ -18,10 +20,12 @@ part 'reports_service.g.dart';
 @Riverpod(keepAlive: true)
 Future<ReportsService> reportsService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
+  final localMetrics = await ref.watch(localBusinessMetricsServiceProvider.future);
   return ReportsService(
     repository: ReportsRepository(
       remote: ReportsRemoteDataSource(api.dio),
     ),
+    localMetrics: localMetrics,
   );
 }
 
@@ -438,22 +442,29 @@ class LoanStatementReportData {
 }
 
 class ReportsService {
-  ReportsService({required this._repository});
+  ReportsService({
+    required this._repository,
+    this._localMetrics,
+  });
 
   final ReportsRepository _repository;
+  final LocalBusinessMetricsService? _localMetrics;
 
   Future<SaleReportData> fetchSaleReport(ReportQuery query) async {
     try {
       final response = await _repository.getSaleReport(query);
       final payload = response.data;
-      return SaleReportData(
+      final remote = SaleReportData(
         rows: payload.rows.map(ReportMapper.toSaleInvoice).toList(),
         totalSalesAmount: _amount(payload.summary.totalAmount),
         receivedAmount: _amount(payload.summary.receivedAmount ?? '0'),
         balanceAmount: _amount(payload.summary.balanceAmount ?? '0'),
         meta: response.meta,
       );
+      return _preferLocalSaleReport(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildSaleReport(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
   }
@@ -462,16 +473,39 @@ class ReportsService {
     try {
       final response = await _repository.getPurchaseReport(query);
       final payload = response.data;
-      return PurchaseReportData(
+      final remote = PurchaseReportData(
         rows: payload.rows.map(ReportMapper.toPurchaseRow).toList(),
         totalAmount: _amount(payload.summary.totalAmount),
         paidAmount: _amount(payload.summary.paidAmount ?? '0'),
         balanceAmount: _amount(payload.summary.balanceAmount ?? '0'),
         meta: response.meta,
       );
+      return _preferLocalPurchaseReport(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildPurchaseReport(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<SaleReportData> _preferLocalSaleReport(
+    SaleReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.totalSalesAmount != 0 && remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildSaleReport(query);
+    if (local == null) return remote;
+    return local;
+  }
+
+  Future<PurchaseReportData> _preferLocalPurchaseReport(
+    PurchaseReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.totalAmount != 0 && remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildPurchaseReport(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<StockSummaryReportData> fetchStockSummary(ReportQuery query) async {

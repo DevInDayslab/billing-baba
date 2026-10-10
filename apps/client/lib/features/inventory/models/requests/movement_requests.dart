@@ -8,8 +8,6 @@ class CreateMovementRequest {
     this.referenceId,
     this.referenceType,
     this.notes,
-    this.unit,
-    this.adjustmentAt,
   });
 
   final String itemId;
@@ -20,10 +18,6 @@ class CreateMovementRequest {
   final String? referenceId;
   final String? referenceType;
   final String? notes;
-  /// Display unit short name (e.g. Pcs, Pkt) for ledger display.
-  final String? unit;
-  /// Local adjustment timestamp; defaults to now when omitted.
-  final DateTime? adjustmentAt;
 
   Map<String, dynamic> toJson() => {
     'item_id': itemId,

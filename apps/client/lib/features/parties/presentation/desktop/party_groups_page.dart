@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _compactBreakpoint = 800.0;
+
 Future<void> openDesktopAddGroupDialog(
   BuildContext context,
   WidgetRef ref,

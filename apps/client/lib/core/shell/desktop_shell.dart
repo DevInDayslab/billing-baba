@@ -19,6 +19,7 @@ import 'package:billing_baba/features/dashboard/application/shell_sidebar_provid
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/app_top_bar.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
+import 'package:billing_baba/features/parties/parties_navigation.dart';
 import 'package:billing_baba/features/pos/application/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
@@ -442,6 +443,10 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   void _navigateTo(String route) {
     final overlayLayout = _useOverlaySidebar;
     final sidebarNotifier = ref.read(shellSidebarProvider.notifier);
+
+    if (route == AppRoutes.partyDetails) {
+      PartiesNavigation.prepareSidebarEntry(ref);
+    }
 
     setState(() {
       _isSaleExpanded = _isSaleGroupLocation(route);

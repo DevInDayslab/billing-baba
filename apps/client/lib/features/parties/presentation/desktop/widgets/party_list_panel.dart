@@ -154,12 +154,18 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
   Widget build(BuildContext context) {
     final partiesAsync = ref.watch(partyListProvider);
     final outstandingIndex = ref.watch(partyOutstandingIndexProvider).value;
+    final activeFilter = ref.watch(partyListFilterProvider);
+    final fallbackParties = ref.watch(partiesListProvider);
+    final rawParties = partiesAsync.asData?.value;
     final parties = _sortedParties(
-      partiesAsync.asData?.value ?? ref.watch(partiesListProvider),
+      rawParties ??
+          (activeFilter == PartyListFilter.toReceive ||
+                  activeFilter == PartyListFilter.toPay
+              ? const <PartyModel>[]
+              : fallbackParties),
       outstandingIndex,
     );
     final selectedId = ref.watch(selectedPartyIdProvider);
-    final activeFilter = ref.watch(partyListFilterProvider);
     final searchQuery = ref.watch(partySearchQueryProvider);
     final usingCache = ref.watch(partiesUsingCacheProvider);
     final isFiltered =

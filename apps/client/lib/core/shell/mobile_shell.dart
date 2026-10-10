@@ -6,6 +6,7 @@ import 'package:billing_baba/core/routing/mobile_document_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_controller.dart';
+import 'package:billing_baba/features/parties/parties_navigation.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
@@ -57,6 +58,10 @@ class _MobileShellState extends ConsumerState<MobileShell> {
       ref
           .read(mobileHomeControllerProvider.notifier)
           .setView(MobileHomeView.transactionDetails);
+    }
+
+    if (tab == MobileNavTab.parties) {
+      PartiesNavigation.prepareSidebarEntry(ref);
     }
 
     if (!alreadyAtRoot) {
