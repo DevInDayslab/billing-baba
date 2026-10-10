@@ -173,6 +173,15 @@ abstract final class SearchRegistry {
       route: AppRoutes.plansPricing,
       keywords: ['subscription', 'plans', 'pricing', 'premium'],
     ),
+    const SearchItem(
+      id: 'page_sale_screen',
+      title: 'Sale Screen',
+      subtitle: 'Fast counter billing',
+      icon: Icons.grid_view_outlined,
+      category: SearchCategory.page,
+      route: AppRoutes.saleScreen,
+      keywords: ['sale screen', 'pos', 'counter', 'billing', 'checkout'],
+    ),
   ];
 
   static List<SearchItem> _buildCommands() => [

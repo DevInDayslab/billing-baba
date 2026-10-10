@@ -12,6 +12,7 @@ class PosItem {
     this.imageUrl,
     this.imageMediaAssetId,
     this.hsnCode,
+    this.brandName,
   });
 
   final String id;
@@ -26,6 +27,7 @@ class PosItem {
   final String? imageUrl;
   final String? imageMediaAssetId;
   final String? hsnCode;
+  final String? brandName;
 
   bool get isOutOfStock => stock <= 0;
 

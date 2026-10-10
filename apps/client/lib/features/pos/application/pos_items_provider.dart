@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
@@ -22,9 +23,11 @@ class PosItemSearchQuery extends _$PosItemSearchQuery {
 List<PosItem> posCatalog(Ref ref) {
   final inventoryItems = ref.watch(inventoryItemListProvider);
   final categories = ref.watch(inventoryCategoriesProvider).value ?? const [];
+  final brands = ref.watch(inventoryBrandsProvider).value ?? const [];
   return mapInventoryItemsToPosItems(
     inventoryItems,
     categoryNamesById(categories),
+    brandNamesById: {for (final brand in brands) brand.id: brand.name},
   );
 }
 

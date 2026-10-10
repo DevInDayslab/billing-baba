@@ -18,6 +18,7 @@ abstract final class RoutePermissionRegistry {
     AppRoutes.itemsGodowns: PermissionModule.item,
     AppRoutes.itemsStockTransfer: PermissionModule.stockTransfer,
     AppRoutes.pos: PermissionModule.sale,
+    AppRoutes.saleScreen: PermissionModule.sale,
     AppRoutes.sale: PermissionModule.sale,
     AppRoutes.saleInvoices: PermissionModule.sale,
     AppRoutes.saleEstimateQuotation: PermissionModule.estimate,

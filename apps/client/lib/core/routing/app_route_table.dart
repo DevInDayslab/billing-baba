@@ -43,6 +43,7 @@ import 'package:billing_baba/features/plans_pricing/application/plans_pricing_li
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
 import 'package:billing_baba/features/pos/presentation/pos_page.dart';
+import 'package:billing_baba/features/sale_screen/presentation/sale_screen_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_expense_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_payment_out_page.dart';
@@ -771,6 +772,10 @@ GoRouter createAppRouter({
                 builder: (context, state) => const PaymentSuccessPage(),
               ),
             ],
+          ),
+          GoRoute(
+            path: AppRoutes.saleScreen,
+            builder: (context, state) => const SaleScreenPage(),
           ),
           GoRoute(
             path: AppRoutes.plansPricingLicenseInfo,
