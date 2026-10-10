@@ -799,11 +799,44 @@ class InventoryRepository {
     return qty;
   }
 
+  Future<double> reconcileLocalItemStockFromLedger(String itemId) async {
+    final businessId = _requireBusinessId();
+    final movements = await listLocalMovementsForItem(itemId);
+    final defaultGodownId = await _godowns?.local.getDefaultGodownId(businessId);
+
+    final byGodown = <String, double>{};
+    for (final movement in movements) {
+      final godownId = _resolveMovementGodownId(
+        movement.godownId,
+        defaultGodownId: defaultGodownId,
+      );
+      final delta = double.tryParse(movement.quantityDelta) ?? 0;
+      byGodown[godownId] = (byGodown[godownId] ?? 0) + delta;
+    }
+
+    return _stockLocal.applyStockQuantitiesFromLedger(
+      businessId: businessId,
+      itemId: itemId,
+      quantitiesByGodown: byGodown,
+    );
+  }
+
   Future<void> reconcileLocalItemStock(String itemId) {
     return _stockLocal.reconcileItemStock(
       businessId: _requireBusinessId(),
       itemId: itemId,
     );
+  }
+
+  static String _resolveMovementGodownId(
+    String godownId, {
+    String? defaultGodownId,
+  }) {
+    final trimmed = godownId.trim();
+    if (trimmed.isEmpty || trimmed == 'default') {
+      return defaultGodownId ?? trimmed;
+    }
+    return trimmed;
   }
 
   Future<MovementDto> createMovementRemote(CreateMovementRequest request) =>
