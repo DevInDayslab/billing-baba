@@ -14,6 +14,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fi
 import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 const _compactBreakpoint = 800.0;
 
@@ -147,6 +148,7 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyGroups,
                 onAddGroup: () => openDesktopAddGroupDialog(context, ref),
+                onSettingsTap: () => context.push(AppRoutes.settingsParty),
               ),
               Expanded(child: body),
             ],

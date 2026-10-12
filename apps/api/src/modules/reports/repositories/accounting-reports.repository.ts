@@ -19,7 +19,9 @@ import {
 import type { ReportBaseQuery } from '../reports.schema';
 import type {
   BalanceSheetPayload,
+  ProfitLossPayload,
   ReportBalanceSheetItem,
+  ReportProfitLossItem,
   ReportTrialBalanceRow,
   TrialBalancePayload,
 } from '../reports.types';
@@ -317,6 +319,89 @@ export class AccountingReportsRepository {
       opening_equity: money(openingEquity),
       closing_equity: money(closingEquity),
       is_balanced: Math.abs(assetsTotal - liabilitiesAndEquityTotal) < 0.02,
+    };
+  }
+
+  async getProfitLoss(
+    businessId: string,
+    query: ReportBaseQuery,
+  ): Promise<ProfitLossPayload> {
+    const range = resolveRange(query);
+
+    const [
+      salesTotal,
+      salesReturnTotal,
+      purchaseTotal,
+      purchaseReturnTotal,
+      expenseTotal,
+      stockValue,
+      netProfit,
+    ] = await Promise.all([
+      sumSalesAmount(this.db, businessId, range, REVENUE_SALES_TYPES),
+      sumSalesAmount(this.db, businessId, range, [SALES_RETURN_TYPE]),
+      sumPurchasesAmount(this.db, businessId, range, PURCHASE_BILL_TYPE),
+      sumPurchasesAmount(this.db, businessId, range, PURCHASE_RETURN_TYPE),
+      sumExpensesAmount(this.db, businessId, range),
+      getStockValue(this.db, businessId),
+      calculateNetProfit(this.db, businessId, range),
+    ]);
+
+    const netSales = salesTotal - salesReturnTotal;
+    const netPurchases = purchaseTotal - purchaseReturnTotal;
+    const openingStock = Math.max(0, stockValue - netPurchases);
+    const closingStock = stockValue;
+
+    const saleAccountsTotal = netSales;
+    const otherDirectTotal = 0;
+    const otherIndirectTotal = 0;
+    const totalIncomes =
+      saleAccountsTotal + otherDirectTotal + otherIndirectTotal;
+
+    const costOfGoodsSold = openingStock + netPurchases - closingStock;
+    const directExpenses = 0;
+    const indirectExpenses = expenseTotal;
+    const totalExpenses =
+      costOfGoodsSold + directExpenses + indirectExpenses;
+
+    const row = (
+      particular: string,
+      amount: number,
+      isHeader: boolean,
+      indent: number,
+    ): ReportProfitLossItem => ({
+      particular,
+      amount: money(amount),
+      is_header: isHeader,
+      indent,
+    });
+
+    const items: ReportProfitLossItem[] = [
+      row('Incomes', totalIncomes, true, 0),
+      row('Sale Accounts', saleAccountsTotal, true, 1),
+      row('Sale (Revenue) Account', netSales, false, 2),
+      row('Additional Charges on Sale', 0, false, 2),
+      row('Other Incomes (Direct)', otherDirectTotal, true, 1),
+      row('Payment-out Discount', 0, false, 2),
+      row('Other Direct Incomes', 0, false, 2),
+      row('Other Incomes (Indirect)', otherIndirectTotal, true, 1),
+      row('Interest Received', 0, false, 2),
+      row('Other Indirect Incomes', 0, false, 2),
+      row('Expenses', totalExpenses, true, 0),
+      row('Cost of Goods Sold', costOfGoodsSold, true, 1),
+      row('Purchase Accounts', netPurchases, false, 2),
+      row('Opening Stock', openingStock, false, 2),
+      row('Closing Stock', closingStock, false, 2),
+      row('Direct Expenses', directExpenses, true, 1),
+      row('Indirect Expenses', indirectExpenses, true, 1),
+      row('Cost of Financing', 0, false, 2),
+      row('Other Expenses', expenseTotal, false, 2),
+      row('Net Profit (Incomes - Expenses)', netProfit, true, 0),
+    ];
+
+    return {
+      period: toPeriodMeta(range),
+      net_profit: money(netProfit),
+      items,
     };
   }
 }

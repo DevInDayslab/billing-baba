@@ -64,7 +64,7 @@ SaleLineItem _mapCartItemToSaleLine(
     itemName: cartItem.item.name,
     qty: cartItem.quantity.toDouble(),
     unit: cartItem.item.unit,
-    pricePerUnit: cartItem.item.price,
+    pricePerUnit: cartItem.unitPrice,
     discountPercent: discountPercent,
     mrp: cartItem.item.mrp ?? 0,
   );

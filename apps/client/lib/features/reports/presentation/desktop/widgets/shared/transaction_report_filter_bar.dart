@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class TransactionReportFilterBar extends ConsumerStatefulWidget {
 class _TransactionReportFilterBarState
     extends ConsumerState<TransactionReportFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
+  final _periodDropdownKey = GlobalKey<SaleFilterDropdownState>();
 
   static const _periodOptions = [
     'All Time',
@@ -62,6 +64,7 @@ class _TransactionReportFilterBarState
             ),
           ),
           SaleFilterDropdown(
+            key: _periodDropdownKey,
             label: filters.periodLabel,
             options: _periodOptions,
             selected: filters.periodLabel,
@@ -69,16 +72,19 @@ class _TransactionReportFilterBarState
               notifier.setPeriod(ReportPeriod.fromLabel(value));
             },
           ),
-          if (filters.period == ReportPeriod.custom)
-            SaleDateRangePickerAnchor(
-              key: _datePickerKey,
-              initialRange: dateRange,
-              onRangeSelected: notifier.setCustomDateRange,
-              child: SaleFilterChip(
-                label: formatSaleDateRangeLabel(dateRange),
-                onTap: () => _datePickerKey.currentState?.toggle(),
-              ),
+          ReportDateRangePickerAnchor(
+            anchorKey: _datePickerKey,
+            initialRange: dateRange,
+            onRangeSelected: notifier.setCustomDateRange,
+            child: SaleFilterChip(
+              label: formatSaleDateRangeLabel(dateRange),
+              leadingIcon: Icons.calendar_today_outlined,
+              onTap: () {
+                _periodDropdownKey.currentState?.closeMenu();
+                _datePickerKey.currentState?.toggle();
+              },
             ),
+          ),
         ],
       ),
     );

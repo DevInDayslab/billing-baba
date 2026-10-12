@@ -29,7 +29,7 @@ class PosItemCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final cart = ref.read(posCartProvider.notifier);
+    final cart = ref.read(posCartProvider().notifier);
     final isOutOfStock = item.isOutOfStock;
     final primaryTint = AppColors.primary.withValues(alpha: 0.08);
 

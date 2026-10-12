@@ -85,7 +85,7 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
   void _onCustomerNameChanged() {
     final trimmed = _customerNameController.text.trim();
     ref
-        .read(posCartProvider.notifier)
+        .read(posCartProvider().notifier)
         .setCustomerName(
           trimmed.isEmpty ? null : trimmed,
         );
@@ -210,7 +210,7 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
   Future<void> _completeSaleFlow() async {
     // TODO(pos): Wire selectedTaxRate through to PosSaleService when tax
     // override is supported. Sale currently uses hardcoded 18% GST.
-    final cart = ref.read(posCartProvider.notifier);
+    final cart = ref.read(posCartProvider().notifier);
     await cart.completeSale(clearCartOnSuccess: false);
     // Push finalize_sale to server immediately.
     unawaited(
@@ -310,8 +310,8 @@ class _PosCartPageState extends ConsumerState<PosCartPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cartState = ref.watch(posCartProvider);
-    final cart = ref.read(posCartProvider.notifier);
+    final cartState = ref.watch(posCartProvider());
+    final cart = ref.read(posCartProvider().notifier);
     final theme = Theme.of(context);
     final taxAmount = _taxAmount(cartState);
     final cgst = _cgst(cartState);

@@ -129,8 +129,7 @@ List<PosItem> filterPosCatalog({
   final query = searchQuery.trim();
   if (query.isEmpty) return result.toList();
 
-  final barcodeMatch = findInventoryItemByBarcodeOrQuery(
-    searchEngine,
+  final barcodeMatch = findInventoryItemByExactBarcode(
     products,
     query: query,
   );

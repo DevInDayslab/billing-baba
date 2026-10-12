@@ -10,22 +10,29 @@ part of 'pos_cart_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(PosCart)
-final posCartProvider = PosCartProvider._();
+final posCartProvider = PosCartFamily._();
 
 final class PosCartProvider extends $NotifierProvider<PosCart, PosCartState> {
-  PosCartProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'posCartProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  PosCartProvider._({
+    required PosCartFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'posCartProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$posCartHash();
+
+  @override
+  String toString() {
+    return r'posCartProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -38,12 +45,50 @@ final class PosCartProvider extends $NotifierProvider<PosCart, PosCartState> {
       providerOverride: $SyncValueProvider<PosCartState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PosCartProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
-String _$posCartHash() => r'9983ce2a183fb0590817bde583f5311558982e39';
+String _$posCartHash() => r'5b999166722b4cdbdf531608dc560d234864a465';
+
+final class PosCartFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          PosCart,
+          PosCartState,
+          PosCartState,
+          PosCartState,
+          String
+        > {
+  PosCartFamily._()
+    : super(
+        retry: null,
+        name: r'posCartProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  PosCartProvider call({String sessionKey = defaultPosCartSessionKey}) =>
+      PosCartProvider._(argument: sessionKey, from: this);
+
+  @override
+  String toString() => r'posCartProvider';
+}
 
 abstract class _$PosCart extends $Notifier<PosCartState> {
-  PosCartState build();
+  late final _$args = ref.$arg as String;
+  String get sessionKey => _$args;
+
+  PosCartState build({String sessionKey = defaultPosCartSessionKey});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -56,6 +101,6 @@ abstract class _$PosCart extends $Notifier<PosCartState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, build);
+    return element.handleCreate(ref, () => build(sessionKey: _$args));
   }
 }

@@ -24,11 +24,20 @@ class SaleDateRangePickerAnchor extends StatefulWidget {
     required this.child,
     required this.onRangeSelected,
     this.initialRange,
+    this.lastSelectableDate,
+    this.singleDate = false,
     super.key,
   });
 
   final Widget child;
   final DateTimeRange? initialRange;
+
+  /// When set, days after this date (inclusive upper bound) cannot be selected.
+  final DateTime? lastSelectableDate;
+
+  /// One click selects a day and completes (start and end are the same).
+  final bool singleDate;
+
   final ValueChanged<DateTimeRange> onRangeSelected;
 
   @override
@@ -63,6 +72,7 @@ class SaleDateRangePickerAnchorState extends State<SaleDateRangePickerAnchor> {
 
   void _onRangeComplete(DateTimeRange range) {
     widget.onRangeSelected(range);
+    _removeOverlay();
   }
 
   void _handleDismissTap() {
@@ -96,6 +106,8 @@ class SaleDateRangePickerAnchorState extends State<SaleDateRangePickerAnchor> {
               offset: followerOffset,
               child: _SaleDateRangePickerPanel(
                 initialRange: widget.initialRange,
+                lastSelectableDate: widget.lastSelectableDate,
+                singleDate: widget.singleDate,
                 onRangeSelected: _onRangeComplete,
               ),
             ),
@@ -158,9 +170,13 @@ class _SaleDateRangePickerPanel extends StatefulWidget {
   const _SaleDateRangePickerPanel({
     required this.onRangeSelected,
     this.initialRange,
+    this.lastSelectableDate,
+    this.singleDate = false,
   });
 
   final DateTimeRange? initialRange;
+  final DateTime? lastSelectableDate;
+  final bool singleDate;
   final ValueChanged<DateTimeRange> onRangeSelected;
 
   @override
@@ -181,9 +197,27 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
     super.initState();
     final initial = widget.initialRange;
     if (initial != null) {
-      _leftMonth = DateTime(initial.start.year, initial.start.month);
       _rangeStart = _dateOnly(initial.start);
       _rangeEnd = _dateOnly(initial.end);
+    }
+
+    final last = widget.lastSelectableDate;
+    if (last != null) {
+      final lastMonth = DateTime(last.year, last.month);
+      var rightMonth = lastMonth;
+      if (initial != null) {
+        var anchor = _dateOnly(initial.end);
+        final lastDay = _dateOnly(last);
+        if (anchor.isAfter(lastDay)) anchor = lastDay;
+        final candidate = DateTime(anchor.year, anchor.month);
+        if (!_monthIsAfter(candidate, lastMonth)) {
+          rightMonth = candidate;
+        }
+      }
+      // Right pane = focus month; left pane = previous month (no future month).
+      _leftMonth = DateTime(rightMonth.year, rightMonth.month - 1);
+    } else if (initial != null) {
+      _leftMonth = DateTime(initial.start.year, initial.start.month);
     } else {
       final now = DateTime.now();
       _leftMonth = DateTime(now.year, now.month);
@@ -195,15 +229,44 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
   DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 
+  bool _monthIsAfter(DateTime month, DateTime other) {
+    return month.year > other.year ||
+        (month.year == other.year && month.month > other.month);
+  }
+
   void _shiftMonths(int delta) {
+    if (delta > 0 && !_canShiftForward) return;
     setState(() {
       _leftMonth = DateTime(_leftMonth.year, _leftMonth.month + delta);
     });
   }
 
+  bool get _canShiftForward {
+    final last = widget.lastSelectableDate;
+    if (last == null) return true;
+    final lastMonth = DateTime(last.year, last.month);
+    return _monthIsAfter(lastMonth, _rightMonth);
+  }
+
+  bool _isDaySelectable(DateTime day) {
+    final last = widget.lastSelectableDate;
+    if (last == null) return true;
+    return !_dateOnly(day).isAfter(_dateOnly(last));
+  }
+
   void _onDayTap(DateTime day) {
+    if (!_isDaySelectable(day)) return;
     final tapped = _dateOnly(day);
     DateTimeRange? completedRange;
+
+    if (widget.singleDate) {
+      setState(() {
+        _rangeStart = tapped;
+        _rangeEnd = tapped;
+      });
+      widget.onRangeSelected(DateTimeRange(start: tapped, end: tapped));
+      return;
+    }
 
     setState(() {
       if (_rangeStart == null || (_rangeStart != null && _rangeEnd != null)) {
@@ -297,7 +360,7 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
                   ),
                   _MonthNavButton(
                     icon: Icons.chevron_right,
-                    onPressed: () => _shiftMonths(1),
+                    onPressed: _canShiftForward ? () => _shiftMonths(1) : null,
                   ),
                 ],
               ),
@@ -315,6 +378,7 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
                     isRangeStart: _isRangeStart,
                     isRangeEnd: _isRangeEnd,
                     isInRange: _isInRange,
+                    isDaySelectable: _isDaySelectable,
                     onDayTap: _onDayTap,
                   ),
                   const SizedBox(width: AppSpacing.lg),
@@ -326,6 +390,7 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
                     isRangeStart: _isRangeStart,
                     isRangeEnd: _isRangeEnd,
                     isInRange: _isInRange,
+                    isDaySelectable: _isDaySelectable,
                     onDayTap: _onDayTap,
                   ),
                   const SizedBox(width: _navButtonSize),
@@ -346,10 +411,11 @@ class _MonthNavButton extends StatelessWidget {
   });
 
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onPressed != null;
     return SizedBox(
       width: _navButtonSize,
       height: _navButtonSize,
@@ -358,7 +424,13 @@ class _MonthNavButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(_navButtonSize / 2),
-          child: Icon(icon, size: 20, color: AppColors.textSecondary),
+          child: Icon(
+            icon,
+            size: 20,
+            color: enabled
+                ? AppColors.textSecondary
+                : AppColors.textSecondary.withValues(alpha: 0.35),
+          ),
         ),
       ),
     );
@@ -374,6 +446,7 @@ class _MonthCalendar extends StatelessWidget {
     required this.isRangeStart,
     required this.isRangeEnd,
     required this.isInRange,
+    required this.isDaySelectable,
     required this.onDayTap,
   });
 
@@ -384,6 +457,7 @@ class _MonthCalendar extends StatelessWidget {
   final bool Function(DateTime day) isRangeStart;
   final bool Function(DateTime day) isRangeEnd;
   final bool Function(DateTime day) isInRange;
+  final bool Function(DateTime day) isDaySelectable;
   final ValueChanged<DateTime> onDayTap;
 
   @override
@@ -435,6 +509,7 @@ class _MonthCalendar extends StatelessWidget {
     }
 
     final day = DateTime(month.year, month.month, dayNumber);
+    final selectable = isDaySelectable(day);
     final isStart = isRangeStart(day);
     final isEnd = isRangeEnd(day);
     final inRange = isInRange(day);
@@ -443,8 +518,10 @@ class _MonthCalendar extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: () => onDayTap(day),
-        hoverColor: _rangeHighlight.withValues(alpha: 0.5),
+        onTap: selectable ? () => onDayTap(day) : null,
+        hoverColor: selectable
+            ? _rangeHighlight.withValues(alpha: 0.5)
+            : Colors.transparent,
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -464,7 +541,11 @@ class _MonthCalendar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isEndpoint ? FontWeight.w600 : FontWeight.w400,
-                color: isEndpoint ? Colors.white : AppColors.textPrimary,
+                color: isEndpoint
+                    ? Colors.white
+                    : selectable
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary.withValues(alpha: 0.45),
               ),
             ),
           ),

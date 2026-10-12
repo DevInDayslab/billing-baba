@@ -60,7 +60,7 @@ class _PartyListSortState {
 }
 
 /// Fixed width for the Amount column in the Parties left list header.
-const partyListAmountHeaderWidth = 72.0;
+const partyListAmountHeaderWidth = 112.0;
 
 const _partyListFilterConfig = ColumnFilter(
   id: 'party_status',
@@ -119,7 +119,11 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
     Map<String, double>? outstandingIndex,
   ) {
     if (_sort.direction == PartyListSortDirection.none) {
-      return parties;
+      final sorted = List<PartyModel>.from(parties)
+        ..sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+      return sorted;
     }
 
     final ascending = _sort.direction == PartyListSortDirection.ascending;
@@ -207,7 +211,16 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
           columns: [
             InventoryListColumn(
               label: 'PARTY NAME',
-              trailing: TableColumnFilterTrigger(
+              sortable: true,
+              isSorted: _sort.isSorted(PartyListSortColumn.name),
+              sortAscending: _sort.isAscending(PartyListSortColumn.name),
+              onSort: () => _toggleSort(PartyListSortColumn.name),
+            ),
+            InventoryListColumn(
+              label: 'AMOUNT',
+              fixedWidth: partyListAmountHeaderWidth,
+              alignEnd: true,
+              leading: TableColumnFilterTrigger(
                 config: _partyListFilterConfig,
                 iconOnly: true,
                 iconColor: AppColors.error,
@@ -216,14 +229,9 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                     _onFilterSelected(_fromSelectFilter(result)),
               ),
               sortable: true,
-              isSorted: _sort.isSorted(PartyListSortColumn.name),
-              sortAscending: _sort.isAscending(PartyListSortColumn.name),
-              onSort: () => _toggleSort(PartyListSortColumn.name),
-            ),
-            const InventoryListColumn(
-              label: 'AMOUNT',
-              fixedWidth: partyListAmountHeaderWidth,
-              alignEnd: true,
+              isSorted: _sort.isSorted(PartyListSortColumn.amount),
+              sortAscending: _sort.isAscending(PartyListSortColumn.amount),
+              onSort: () => _toggleSort(PartyListSortColumn.amount),
             ),
           ],
         ),

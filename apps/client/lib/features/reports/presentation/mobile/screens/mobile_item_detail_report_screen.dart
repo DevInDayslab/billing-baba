@@ -100,7 +100,7 @@ class _MobileItemDetailReportScreenState
     final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now(),
       initialDateRange: range,
     );
     if (picked == null || !mounted) return;

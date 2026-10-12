@@ -195,6 +195,7 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
                     currentRoute: currentRoute,
                     onAddParty: () => openDesktopAddPartyDialog(context),
                     onAddGroup: () => openDesktopAddGroupDialog(context, ref),
+                    onSettingsTap: () => context.push(AppRoutes.settingsParty),
                   ),
                   Expanded(
                     child: TabBarView(

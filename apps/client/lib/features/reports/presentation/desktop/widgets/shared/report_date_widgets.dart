@@ -2,11 +2,41 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/utils/report_date_bounds.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+/// Date range picker for reports — days after today cannot be selected.
+class ReportDateRangePickerAnchor extends StatelessWidget {
+  const ReportDateRangePickerAnchor({
+    required this.anchorKey,
+    required this.child,
+    required this.onRangeSelected,
+    this.initialRange,
+    this.singleDate = false,
+    super.key,
+  });
+
+  final GlobalKey<SaleDateRangePickerAnchorState> anchorKey;
+  final Widget child;
+  final DateTimeRange? initialRange;
+  final bool singleDate;
+  final ValueChanged<DateTimeRange> onRangeSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SaleDateRangePickerAnchor(
+      key: anchorKey,
+      initialRange: initialRange,
+      lastSelectableDate: reportLastSelectableDay(),
+      singleDate: singleDate,
+      onRangeSelected: (range) =>
+          onRangeSelected(clampReportDateRange(range)),
+      child: child,
+    );
+  }
+}
 
 class ReportPeriodFilterBar extends ConsumerStatefulWidget {
   const ReportPeriodFilterBar({
@@ -25,6 +55,7 @@ class ReportPeriodFilterBar extends ConsumerStatefulWidget {
 
 class _ReportPeriodFilterBarState extends ConsumerState<ReportPeriodFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
+  final _periodDropdownKey = GlobalKey<SaleFilterDropdownState>();
 
   static const _periodOptions = [
     'All Time',
@@ -51,6 +82,7 @@ class _ReportPeriodFilterBarState extends ConsumerState<ReportPeriodFilterBar> {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         SaleFilterDropdown(
+          key: _periodDropdownKey,
           label: filters.periodLabel,
           options: _periodOptions,
           selected: filters.periodLabel,
@@ -58,21 +90,23 @@ class _ReportPeriodFilterBarState extends ConsumerState<ReportPeriodFilterBar> {
             notifier.setPeriod(ReportPeriod.fromLabel(value));
           },
         ),
-        if (filters.period == ReportPeriod.custom) ...[
-          const Text(
-            'Between',
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        const Text(
+          'Between',
+          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        ),
+        ReportDateRangePickerAnchor(
+          anchorKey: _datePickerKey,
+          initialRange: dateRange,
+          onRangeSelected: notifier.setCustomDateRange,
+          child: SaleFilterChip(
+            label: formatSaleDateRangeLabel(dateRange),
+            leadingIcon: Icons.calendar_today_outlined,
+            onTap: () {
+              _periodDropdownKey.currentState?.closeMenu();
+              _datePickerKey.currentState?.toggle();
+            },
           ),
-          SaleDateRangePickerAnchor(
-            key: _datePickerKey,
-            initialRange: dateRange,
-            onRangeSelected: notifier.setCustomDateRange,
-            child: SaleFilterChip(
-              label: formatSaleDateRangeLabel(dateRange),
-              onTap: () => _datePickerKey.currentState?.toggle(),
-            ),
-          ),
-        ],
+        ),
         if (widget.showFirmFilter)
           Tooltip(
             message: 'Multi-firm filtering is not available.',
@@ -130,8 +164,8 @@ class _ReportDateRangeChipFilterState
             color: AppColors.textSecondary,
           ),
         ),
-        SaleDateRangePickerAnchor(
-          key: _datePickerKey,
+        ReportDateRangePickerAnchor(
+          anchorKey: _datePickerKey,
           initialRange: dateRange,
           onRangeSelected: notifier.setCustomDateRange,
           child: SaleFilterChip(
@@ -165,7 +199,6 @@ class ReportFromToDateFilter extends ConsumerStatefulWidget {
 class _ReportFromToDateFilterState
     extends ConsumerState<ReportFromToDateFilter> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
 
   @override
   Widget build(BuildContext context) {
@@ -186,50 +219,14 @@ class _ReportFromToDateFilterState
           ),
           const SizedBox(width: AppSpacing.sm),
         ],
-        const Icon(
-          Icons.calendar_today_outlined,
-          size: 16,
-          color: AppColors.textSecondary,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          _dateFormat.format(dateRange.start),
-          style: const TextStyle(fontSize: 13),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        const Text(
-          'to',
-          style: TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        SaleDateRangePickerAnchor(
-          key: _datePickerKey,
+        ReportDateRangePickerAnchor(
+          anchorKey: _datePickerKey,
           initialRange: dateRange,
           onRangeSelected: notifier.setCustomDateRange,
-          child: InkWell(
+          child: SaleFilterChip(
+            label: formatSaleDateRangeLabel(dateRange),
+            leadingIcon: Icons.calendar_today_outlined,
             onTap: () => _datePickerKey.currentState?.toggle(),
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _dateFormat.format(dateRange.end),
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
           ),
         ),
       ],
@@ -239,14 +236,13 @@ class _ReportFromToDateFilterState
 
 class ReportDateRangeBar extends ConsumerStatefulWidget {
   const ReportDateRangeBar({
-    this.fromLabel = 'From:',
-    this.toLabel = 'To:',
+    this.selectRangeLabel = '',
     this.trailing,
     super.key,
   });
 
-  final String fromLabel;
-  final String toLabel;
+  /// Optional label shown before the range chip (e.g. "Select range").
+  final String selectRangeLabel;
   final Widget? trailing;
 
   @override
@@ -261,7 +257,6 @@ class _ReportDateRangeBarState extends ConsumerState<ReportDateRangeBar> {
     final filters = ref.watch(reportFiltersProvider);
     final notifier = ref.read(reportFiltersProvider.notifier);
     final dateRange = filters.effectiveDateRange;
-    final dateFormat = DateFormat('dd/MM/yyyy');
 
     return Row(
       children: [
@@ -282,45 +277,23 @@ class _ReportDateRangeBarState extends ConsumerState<ReportDateRangeBar> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      widget.fromLabel,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
+                    if (widget.selectRangeLabel.isNotEmpty) ...[
+                      Text(
+                        widget.selectRangeLabel,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    const Icon(
-                      Icons.calendar_today_outlined,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      dateFormat.format(dateRange.start),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Text(
-                      widget.toLabel,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    const Icon(
-                      Icons.calendar_today_outlined,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    SaleDateRangePickerAnchor(
-                      key: _datePickerKey,
+                      const SizedBox(width: AppSpacing.sm),
+                    ],
+                    ReportDateRangePickerAnchor(
+                      anchorKey: _datePickerKey,
                       initialRange: dateRange,
                       onRangeSelected: notifier.setCustomDateRange,
                       child: SaleFilterChip(
-                        label: dateFormat.format(dateRange.end),
+                        label: formatSaleDateRangeLabel(dateRange),
+                        leadingIcon: Icons.calendar_today_outlined,
                         onTap: () => _datePickerKey.currentState?.toggle(),
                       ),
                     ),

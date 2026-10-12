@@ -13,6 +13,7 @@ import 'package:billing_baba/features/parties/parties_navigation.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 const _compactBreakpoint = 800.0;
 
@@ -129,6 +130,7 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => openDesktopAddPartyDialog(context),
+                onSettingsTap: () => context.push(AppRoutes.settingsParty),
               ),
               Expanded(child: body),
             ],

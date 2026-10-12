@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/utils/report_date_bounds.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,7 +54,7 @@ class _GstrMonthFilterBarState extends ConsumerState<GstrMonthFilterBar> {
       context: context,
       initialDate: initial,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      lastDate: reportLastSelectableDay(),
     );
     if (picked == null || !mounted) return;
     setState(() {

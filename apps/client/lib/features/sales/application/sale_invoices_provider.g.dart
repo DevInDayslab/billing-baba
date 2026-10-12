@@ -93,7 +93,7 @@ final class SaleInvoiceUserFilterOptionsProvider
 }
 
 String _$saleInvoiceUserFilterOptionsHash() =>
-    r'29a73b4c1fa7ca72accc8c54590c8185271bbf88';
+    r'9fa37af03011cfb4ab05e60242f36e0db52c11db';
 
 @ProviderFor(saleInvoiceTransactionTypeFilterOptions)
 final saleInvoiceTransactionTypeFilterOptionsProvider =
@@ -137,7 +137,7 @@ final class SaleInvoiceTransactionTypeFilterOptionsProvider
 }
 
 String _$saleInvoiceTransactionTypeFilterOptionsHash() =>
-    r'92cae03be331c0c6352b608bcfef79044e82b74d';
+    r'51771cc178a8ccaedcd76cc9564c474156327336';
 
 @ProviderFor(saleInvoicePaymentTypeFilterOptions)
 final saleInvoicePaymentTypeFilterOptionsProvider =
@@ -181,7 +181,7 @@ final class SaleInvoicePaymentTypeFilterOptionsProvider
 }
 
 String _$saleInvoicePaymentTypeFilterOptionsHash() =>
-    r'a425f1338de67ce116ce66e1a1323d6535c2f4a8';
+    r'7cab050d1fcc26fafb0cb888e558dde1e824a87a';
 
 @ProviderFor(saleInvoiceGodownFilterOptions)
 final saleInvoiceGodownFilterOptionsProvider =
@@ -224,7 +224,7 @@ final class SaleInvoiceGodownFilterOptionsProvider
 }
 
 String _$saleInvoiceGodownFilterOptionsHash() =>
-    r'8e83996a7db3573da16adb6871409b8aabaf847d';
+    r'2c9a84dddc416db4c693edf8acf6312b6c2de130';
 
 @ProviderFor(SaleInvoiceSearchQuery)
 final saleInvoiceSearchQueryProvider = SaleInvoiceSearchQueryProvider._();

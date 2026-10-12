@@ -11,6 +11,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_list_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_items_filter_trigger.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_panel_sort.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_panel_toolbar.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -56,6 +57,8 @@ class InventoryLeftPanel extends ConsumerStatefulWidget {
     this.leadingIcon = Icons.inventory_2_outlined,
     this.showListFilters = true,
     this.showBulkItemsUpdateCallout = true,
+    this.qtySort = const InventoryListPanelQtySort(),
+    this.onQtySortToggle,
     super.key,
   });
 
@@ -93,6 +96,8 @@ class InventoryLeftPanel extends ConsumerStatefulWidget {
   final bool showListFilters;
   final ItemType itemType;
   final bool showBulkItemsUpdateCallout;
+  final InventoryListPanelQtySort qtySort;
+  final VoidCallback? onQtySortToggle;
 
   @override
   ConsumerState<InventoryLeftPanel> createState() => _InventoryLeftPanelState();
@@ -196,7 +201,12 @@ class _InventoryLeftPanelState extends ConsumerState<InventoryLeftPanel> {
             InventoryListColumn(
               label: widget.primaryColumnLabel,
               flex: inventoryListPrimaryColumnFlex,
-              trailing: widget.showListFilters
+            ),
+            InventoryListColumn(
+              label: widget.secondaryColumnLabel,
+              fixedWidth: inventoryListQtyHeaderWidth,
+              alignEnd: true,
+              leading: widget.showListFilters
                   ? InventoryItemsFilterTrigger(
                       compact: true,
                       initialFilters: ref.watch(inventoryItemFiltersProvider),
@@ -205,11 +215,10 @@ class _InventoryLeftPanelState extends ConsumerState<InventoryLeftPanel> {
                           .apply,
                     )
                   : null,
-            ),
-            InventoryListColumn(
-              label: widget.secondaryColumnLabel,
-              fixedWidth: inventoryListQtyColumnMaxWidth,
-              alignEnd: true,
+              sortable: widget.onQtySortToggle != null,
+              isSorted: widget.qtySort.isSorted,
+              sortAscending: widget.qtySort.isAscending,
+              onSort: widget.onQtySortToggle,
             ),
           ],
         ),

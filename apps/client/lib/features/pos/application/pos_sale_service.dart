@@ -148,7 +148,7 @@ class PosSaleService {
               : cartItem.lineTotal,
           itemId: cartItem.item.id,
           unit: cartItem.item.unit,
-          unitPrice: cartItem.item.price,
+          unitPrice: cartItem.unitPrice,
           cgstAmount: double.tryParse(lineDto?.cgstAmount ?? '0'),
           sgstAmount: double.tryParse(lineDto?.sgstAmount ?? '0'),
           igstAmount: double.tryParse(lineDto?.igstAmount ?? '0'),

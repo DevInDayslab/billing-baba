@@ -89,8 +89,9 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    SaleDateRangePickerAnchor(
-                      key: _datePickerKey,
+                    ReportDateRangePickerAnchor(
+                      anchorKey: _datePickerKey,
+                      singleDate: true,
                       initialRange: DateTimeRange(
                         start: _selectedDate,
                         end: _selectedDate,

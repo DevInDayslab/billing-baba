@@ -55,7 +55,7 @@ class _SplitPaymentSheetState extends ConsumerState<SplitPaymentSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final notifier = ref.read(posCartProvider.notifier);
+    final notifier = ref.read(posCartProvider().notifier);
 
     final activeModes = widget.payments.map((payment) => payment.mode).toSet();
     final staleModes = _controllers.keys

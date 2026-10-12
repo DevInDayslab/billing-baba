@@ -3,6 +3,7 @@ import 'package:billing_baba/features/inventory/models/paginated_inventory_items
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_detail_panel.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_left_panel.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_panel_sort.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:collection/collection.dart';
@@ -88,6 +89,7 @@ class _InventoryItemWorkspaceState
   final FocusNode _listFocusNode = FocusNode();
   int _focusedIndex = 0;
   int _searchResetToken = 0;
+  InventoryListPanelQtySort _qtySort = const InventoryListPanelQtySort();
 
   @override
   void dispose() {
@@ -113,8 +115,24 @@ class _InventoryItemWorkspaceState
     });
   }
 
+  void _toggleQtySort() {
+    setState(() {
+      _qtySort = _qtySort.cycle();
+      _syncFocusedIndexToSelection(
+        sortInventoryListPanelItems(widget.items, _qtySort),
+      );
+    });
+  }
+
+  void _syncFocusedIndexToSelection(List<InventoryItem> items) {
+    final selectedId = widget.selectedId;
+    if (selectedId == null) return;
+    final index = items.indexWhere((item) => item.id == selectedId);
+    if (index >= 0) _focusedIndex = index;
+  }
+
   void _moveFocus(int delta) {
-    final items = widget.items;
+    final items = sortInventoryListPanelItems(widget.items, _qtySort);
     if (items.isEmpty) return;
     setState(() {
       _focusedIndex = (_focusedIndex + delta).clamp(0, items.length - 1);
@@ -124,7 +142,7 @@ class _InventoryItemWorkspaceState
   }
 
   void _selectFocused() {
-    final items = widget.items;
+    final items = sortInventoryListPanelItems(widget.items, _qtySort);
     if (items.isEmpty) return;
     final item = items[_focusedIndex.clamp(0, items.length - 1)];
     _selectItem(item.id);
@@ -141,7 +159,7 @@ class _InventoryItemWorkspaceState
 
   @override
   Widget build(BuildContext context) {
-    final items = widget.items;
+    final items = sortInventoryListPanelItems(widget.items, _qtySort);
     final selectedId = widget.selectedId;
 
     if (selectedId != null && items.isNotEmpty) {
@@ -210,6 +228,8 @@ class _InventoryItemWorkspaceState
           itemType: widget.itemType,
           onMenuSelected: widget.onMenuSelected,
           toolbarMenuItems: widget.toolbarMenuItems,
+          qtySort: _qtySort,
+          onQtySortToggle: _toggleQtySort,
         ),
       ),
       detailPanel: selectedId == null || detailItem == null

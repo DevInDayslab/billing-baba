@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/app_database_provider.dart';
@@ -122,16 +123,33 @@ class BusinessService {
     String? selectedId,
   ) async {
     try {
+      final previousCached = await _cache.readBusinesses();
       final remote = await _repository.listBusinesses();
+      final remoteJson = remote.map(_businessToJson).toList();
       if (accountId != null) {
-        await _cache.saveBusinesses(
-          remote.map(_businessToJson).toList(),
-          accountId: accountId,
-        );
+        await _cache.saveBusinesses(remoteJson, accountId: accountId);
+      }
+      if (!_businessListsJsonEqual(previousCached, remoteJson) &&
+          _ref.mounted) {
+        _ref.invalidate(businessListProvider);
       }
     } on DioException {
       // Keep showing cache.
     }
+  }
+
+  bool _businessListsJsonEqual(
+    List<Map<String, dynamic>> cached,
+    List<Map<String, dynamic>> remote,
+  ) {
+    if (cached.length != remote.length) return false;
+    String encode(List<Map<String, dynamic>> list) {
+      final sorted = list.map(Map<String, dynamic>.from).toList()
+        ..sort((a, b) => (a['id'] as String).compareTo(b['id'] as String));
+      return jsonEncode(sorted);
+    }
+
+    return encode(cached) == encode(remote);
   }
 
   Future<List<BusinessModel>> _loadFromCache(String? selectedId) async {

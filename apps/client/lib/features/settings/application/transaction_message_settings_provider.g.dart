@@ -85,7 +85,7 @@ final class TransactionMessageSettingsNotifierProvider
 }
 
 String _$transactionMessageSettingsNotifierHash() =>
-    r'a3d834f2d9383f711efeeb00f506bfbf11a0e8f0';
+    r'f0841e6cc39555291abb00c74e73a1129a5122db';
 
 abstract class _$TransactionMessageSettingsNotifier
     extends $AsyncNotifier<TransactionMessageSettings> {
