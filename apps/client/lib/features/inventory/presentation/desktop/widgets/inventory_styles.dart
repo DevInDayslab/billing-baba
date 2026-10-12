@@ -11,13 +11,6 @@ const inventoryPositiveColor = Color(0xFF2E7D32);
 const inventoryButtonHeight = 48.0;
 const inventoryDropdownWidth = 36.0;
 
-/// Reserved width for compact list row overflow menus.
-const inventoryListRowMenuWidth = 32.0;
-
-/// List panel column layout (inventory search toolbar).
-const inventoryListQtyColumnMaxWidth = 40.0;
-const inventoryListPrimaryColumnFlex = 5;
-
 const inventoryPopupMenuShape = RoundedRectangleBorder(
   borderRadius: BorderRadius.all(Radius.circular(6)),
   side: BorderSide(color: inventoryCardBorder),
