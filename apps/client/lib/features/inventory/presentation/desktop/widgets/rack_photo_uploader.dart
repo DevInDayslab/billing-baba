@@ -50,13 +50,13 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
   }
 
   Future<({Uint8List bytes, String mimeType})?> _pickImage() async {
-    final result = await FilePicker.pickFiles(
+    final picked = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
     );
 
-    if (result.isEmpty) return null;
-    final file = result.single;
+    if (picked.isEmpty) return null;
+    final file = picked.single;
 
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty) return null;

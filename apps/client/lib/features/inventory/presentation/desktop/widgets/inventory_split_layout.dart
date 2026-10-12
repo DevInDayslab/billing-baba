@@ -2,64 +2,136 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
 
+/// Reference split for Products/Services list vs detail (responsive flex).
+const inventoryListPanelFlex = 573;
+const inventoryDetailPanelFlex = 1986;
+
 class InventorySplitLayout extends StatelessWidget {
   const InventorySplitLayout({
     required this.listPanel,
     required this.detailPanel,
-    this.listWidthFactor = 0.185,
-    this.listWidth,
+    this.listFlex = inventoryListPanelFlex,
+    this.detailFlex = inventoryDetailPanelFlex,
     super.key,
   });
 
   final Widget listPanel;
   final Widget detailPanel;
-  final double listWidthFactor;
-
-  /// When set, uses a fixed left-panel width instead of [listWidthFactor].
-  final double? listWidth;
-
-  static const _minListWidth = 219.0;
-  static const _maxListWidth = 352.0;
+  final int listFlex;
+  final int detailFlex;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final resolvedListWidth =
-              listWidth ??
-              (constraints.maxWidth * listWidthFactor).clamp(
-                _minListWidth,
-                _maxListWidth,
-              );
+    final border = inventoryWorkspacePanelBorderWidth;
+    final innerRadius = inventoryWorkspacePanelInnerRadius();
 
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.lgBorder,
-              border: Border.all(color: inventoryCardBorder),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0A000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+    return SizedBox.expand(
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.workspacePanelBorder,
+          borderRadius: inventoryWorkspacePanelOuterRadius,
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.all(border),
+        child: ClipRRect(
+          borderRadius: innerRadius,
+          child: ColoredBox(
+            color: AppColors.surface,
+            child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: listFlex,
+                child: _SplitPaneChrome(
+                  borderOnRight: true,
+                  child: listPanel,
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadius.lgBorder,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(width: resolvedListWidth, child: listPanel),
-                  const VerticalDivider(width: 1, color: inventoryCardBorder),
-                  Expanded(child: detailPanel),
-                ],
               ),
+              Expanded(flex: detailFlex, child: detailPanel),
+            ],
             ),
-          );
-        },
+          ),
+        ),
       ),
+    );
+  }
+}
+
+/// Paints a split edge in the gutter color without shrinking the pane’s flex size.
+class _SplitPaneChrome extends StatelessWidget {
+  const _SplitPaneChrome({
+    required this.child,
+    this.borderOnRight = false,
+    this.borderOnTop = false,
+  });
+
+  final Widget child;
+  final bool borderOnRight;
+  final bool borderOnTop;
+
+  @override
+  Widget build(BuildContext context) {
+    final border = inventoryWorkspacePanelBorderWidth;
+    final edge = AppColors.workspacePanelBorder;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(
+            right: borderOnRight ? border : 0,
+            top: borderOnTop ? border : 0,
+          ),
+          child: child,
+        ),
+        if (borderOnRight)
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: border,
+            child: ColoredBox(color: edge),
+          ),
+        if (borderOnTop)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: border,
+            child: ColoredBox(color: edge),
+          ),
+      ],
+    );
+  }
+}
+
+/// Horizontal split between detail summary and transactions (inset, no overlap).
+class InventoryWorkspaceDetailSplit extends StatelessWidget {
+  const InventoryWorkspaceDetailSplit({
+    required this.header,
+    required this.body,
+    super.key,
+  });
+
+  final Widget header;
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        header,
+        Expanded(
+          child: _SplitPaneChrome(borderOnTop: true, child: body),
+        ),
+      ],
     );
   }
 }

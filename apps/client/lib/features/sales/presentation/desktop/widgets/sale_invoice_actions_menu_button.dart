@@ -25,14 +25,17 @@ class SaleInvoiceMenuEntry {
 class SaleInvoiceActionsMenuButton extends ConsumerWidget {
   const SaleInvoiceActionsMenuButton({
     required this.invoice,
+    this.iconButtonConstraints,
     super.key,
   });
 
   final SaleInvoiceModel invoice;
+  final BoxConstraints? iconButtonConstraints;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SalesActionMenuButton(
+      iconButtonConstraints: iconButtonConstraints,
       items: [
         for (final item in SaleInvoiceTableActions.menuItems(invoice))
           SalesActionMenuItem(

@@ -54,7 +54,6 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
               .firstOrNull;
 
     return InventorySplitLayout(
-      listWidth: 340,
       listPanel: _CategoryListPanel(
         categories: categories,
         selectedId: selectedId,

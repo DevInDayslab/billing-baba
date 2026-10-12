@@ -10,9 +10,6 @@ const inventoryListHeaderHeight = 44.0;
 /// Shorter header variant for compact list panels (e.g. parties).
 const inventoryListHeaderCompactHeight = 30.0;
 
-/// Fixed width for the trailing numeric column in left-panel lists (quantity, price).
-const inventoryListTrailingColumnWidth = 86.0;
-
 class InventoryListHeader extends StatelessWidget {
   const InventoryListHeader({
     required this.columns,
@@ -49,7 +46,7 @@ class InventoryListHeader extends StatelessWidget {
           ? const EdgeInsets.symmetric(vertical: 12)
           : EdgeInsets.zero,
       trailing: includeTrailingSpace
-          ? const SizedBox(width: 28)
+          ? const SizedBox(width: inventoryListRowMenuWidth)
           : const SizedBox.shrink(),
       children: [
         for (final column in columns)
@@ -60,7 +57,7 @@ class InventoryListHeader extends StatelessWidget {
     return Container(
       clipBehavior: Clip.hardEdge,
       padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
+        horizontal: isCompact ? AppSpacing.sm : AppSpacing.md,
         vertical: showColumnSeparators ? 0 : (isCompact ? 6 : 10),
       ),
       decoration: const BoxDecoration(
@@ -83,7 +80,7 @@ class InventoryListRowLayout extends StatelessWidget {
     required this.children,
     this.fixedWidths,
     this.alignEnds,
-    this.trailing = const SizedBox(width: 28),
+    this.trailing = const SizedBox(width: inventoryListRowMenuWidth),
     this.showColumnSeparators = true,
     this.dividerAfterColumnIndex,
     this.cellVerticalPadding = EdgeInsets.zero,
@@ -158,10 +155,13 @@ class InventoryListRowLayout extends StatelessWidget {
             if (i > 0 &&
                 !(dividerAfterColumnIndex != null &&
                     dividerAfterColumnIndex == i - 1))
-              const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.xs),
             _columnChild(
               index: i,
-              child: _wrapColumnChild(index: i, child: children[i]),
+              child: _wrapColumnChild(
+                index: i,
+                child: ClipRect(child: children[i]),
+              ),
             ),
           ],
           trailing,
