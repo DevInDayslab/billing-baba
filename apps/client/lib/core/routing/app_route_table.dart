@@ -97,7 +97,10 @@ import 'package:billing_baba/features/subscription/presentation/mobile/payment_p
 import 'package:billing_baba/features/subscription/presentation/mobile/payment_success_page.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/review_order_summary_page.dart';
 import 'package:billing_baba/features/utilities/presentation/barcode_generator_page.dart';
+import 'package:billing_baba/features/utilities/presentation/bulk_update_items_page.dart';
+import 'package:billing_baba/features/utilities/presentation/export_items_page.dart';
 import 'package:billing_baba/features/utilities/presentation/import_items_page.dart';
+import 'package:billing_baba/features/utilities/presentation/import_parties_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -635,8 +638,20 @@ GoRouter createAppRouter({
             builder: (context, state) => const ImportItemsPage(),
           ),
           GoRoute(
+            path: AppRoutes.utilitiesExportItems,
+            builder: (context, state) => const ExportItemsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.utilitiesImportParties,
+            builder: (context, state) => const ImportPartiesPage(),
+          ),
+          GoRoute(
             path: AppRoutes.utilitiesAddItemsBarcode,
             builder: (context, state) => const AddItemsBarcodeScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.utilitiesBulkUpdateItems,
+            builder: (context, state) => const BulkUpdateItemsPage(),
           ),
           GoRoute(
             path: AppRoutes.utilitiesBarcodeGenerator,

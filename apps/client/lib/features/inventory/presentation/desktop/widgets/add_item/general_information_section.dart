@@ -252,7 +252,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: InputDecorator(
                   isEmpty: _isUnitEmpty(unitDisplay),
                   decoration: buildFormControlDecoration(
-                    labelText: 'Select Unit',
+                    hint: 'Select Unit',
                     hasError: baseUnitError,
                   ),
                   child: InkWell(

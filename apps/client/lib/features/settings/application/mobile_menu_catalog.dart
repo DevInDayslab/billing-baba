@@ -221,6 +221,22 @@ abstract final class MobileMenuCatalog {
       section: MobileMenuSection.utilities,
     ),
     const MobileMenuItem(
+      id: 'export-items',
+      title: 'Export Items',
+      subtitle: 'Export all items to Excel',
+      icon: LucideIcons.download,
+      route: AppRoutes.utilitiesExportItems,
+      section: MobileMenuSection.utilities,
+    ),
+    const MobileMenuItem(
+      id: 'bulk-update-items',
+      title: 'Bulk Update Items',
+      subtitle: 'Update price, HSN, and category for many items',
+      icon: LucideIcons.pencil,
+      route: AppRoutes.utilitiesBulkUpdateItems,
+      section: MobileMenuSection.utilities,
+    ),
+    const MobileMenuItem(
       id: 'backup-restore',
       title: 'Backup & Restore',
       subtitle: 'Export and restore local .biba backups',

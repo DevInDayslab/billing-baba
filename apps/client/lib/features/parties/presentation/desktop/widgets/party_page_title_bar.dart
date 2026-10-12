@@ -9,6 +9,7 @@ import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/manage_party_groups_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Compact page action row below the global search bar.
 class PartyPageTitleBar extends ConsumerWidget {
@@ -153,6 +154,10 @@ class _MoreMenu extends StatelessWidget {
           (value) {
             if (value == 'Manage Party Groups') {
               unawaited(showManagePartyGroupsDialog(context));
+              return;
+            }
+            if (value == 'Import Parties') {
+              context.push(AppRoutes.utilitiesImportParties);
               return;
             }
             ScaffoldMessenger.of(context).showSnackBar(
