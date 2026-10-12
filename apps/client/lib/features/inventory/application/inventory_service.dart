@@ -39,6 +39,7 @@ import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
 import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/bulk_item_update_payload.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
@@ -1161,8 +1162,9 @@ class InventoryService {
 
   Future<InventoryItem> createItemFromForm(
     AddItemFormState form,
-    List<InventoryUnit> units,
-  ) async {
+    List<InventoryUnit> units, {
+    int? quantityDecimalPlaces,
+  }) async {
     final baseUnit =
         _resolveUnit(form.baseUnitId, units) ??
         (form.itemType == ItemType.service
@@ -1180,6 +1182,9 @@ class InventoryService {
       baseUnitShortName: baseUnit.shortName,
       openingGodownId: form.godownId ?? defaultGodown?.id,
       godownIdForLocation: form.godownId ?? defaultGodown?.id,
+      quantityDecimalPlaces:
+          quantityDecimalPlaces ??
+          ItemSettings.defaults().quantityDecimalPlaces,
     );
 
     try {
@@ -1199,6 +1204,7 @@ class InventoryService {
     AddItemFormState form,
     List<InventoryUnit> units, {
     double? initialOpeningQty,
+    int? quantityDecimalPlaces,
   }) async {
     final baseUnit =
         _resolveUnit(form.baseUnitId, units) ??
@@ -1218,6 +1224,9 @@ class InventoryService {
       openingGodownId: form.godownId ?? defaultGodown?.id,
       godownIdForLocation: form.godownId ?? defaultGodown?.id,
       initialOpeningQty: initialOpeningQty,
+      quantityDecimalPlaces:
+          quantityDecimalPlaces ??
+          ItemSettings.defaults().quantityDecimalPlaces,
     );
 
     try {

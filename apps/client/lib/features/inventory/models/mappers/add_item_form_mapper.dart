@@ -1,4 +1,6 @@
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
+import 'package:billing_baba/features/inventory/utils/item_quantity_input.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
@@ -14,6 +16,7 @@ abstract final class AddItemFormMapper {
     required String baseUnitShortName,
     String? openingGodownId,
     String? godownIdForLocation,
+    int quantityDecimalPlaces = ItemSettings.defaultQuantityDecimalPlaces,
   }) {
     final tierPrices = _tierPricesFromForm(form);
     final godownId = form.godownId ?? openingGodownId;
@@ -50,13 +53,17 @@ abstract final class AddItemFormMapper {
       salePrice: _formatMoney(form.salePrice),
       purchasePrice: _formatMoney(form.atPrice),
       mrp: form.mrp > 0 ? _formatMoney(form.mrp) : null,
-      reorderLevel: form.minStock > 0 ? _formatMoney(form.minStock) : null,
+      reorderLevel: form.minStock > 0
+          ? _formatQuantity(form.minStock, quantityDecimalPlaces)
+          : null,
       hasStockTracking: form.itemType == ItemType.product,
       tierPrices: tierPrices,
       primaryImageUrl: form.primaryImageUrl.trim().isEmpty
           ? null
           : form.primaryImageUrl.trim(),
-      openingQuantity: hasOpeningStock ? _formatMoney(form.openingQty) : null,
+      openingQuantity: hasOpeningStock
+          ? _formatQuantity(form.openingQty, quantityDecimalPlaces)
+          : null,
       openingCostPerUnit: hasOpeningStock ? _formatMoney(form.atPrice) : null,
       openingGodownId: hasOpeningStock ? godownId : null,
       location: location,
@@ -69,6 +76,7 @@ abstract final class AddItemFormMapper {
     String? openingGodownId,
     String? godownIdForLocation,
     double? initialOpeningQty,
+    int quantityDecimalPlaces = ItemSettings.defaultQuantityDecimalPlaces,
   }) {
     final godownId = form.godownId ?? openingGodownId;
     final locationGodownId = form.godownId ?? godownIdForLocation;
@@ -116,13 +124,15 @@ abstract final class AddItemFormMapper {
       salePrice: _formatMoney(form.salePrice),
       purchasePrice: _formatMoney(form.atPrice),
       mrp: form.mrp > 0 ? _formatMoney(form.mrp) : null,
-      reorderLevel: form.minStock > 0 ? _formatMoney(form.minStock) : '0',
+      reorderLevel: form.minStock > 0
+          ? _formatQuantity(form.minStock, quantityDecimalPlaces)
+          : '0',
       hasStockTracking: form.itemType == ItemType.product,
       primaryImageUrl: form.primaryImageUrl.trim().isEmpty
           ? null
           : form.primaryImageUrl.trim(),
       openingQuantity: includeOpeningStock
-          ? _formatMoney(form.openingQty)
+          ? _formatQuantity(form.openingQty, quantityDecimalPlaces)
           : null,
       openingCostPerUnit: includeOpeningStock
           ? _formatMoney(form.atPrice)
@@ -136,7 +146,10 @@ abstract final class AddItemFormMapper {
     AddItemFormState form,
   ) => _tierPricesFromForm(form);
 
-  static ReplaceItemBomRequest toBomRequest(AddItemFormState form) {
+  static ReplaceItemBomRequest toBomRequest(
+    AddItemFormState form, {
+    int quantityDecimalPlaces = ItemSettings.defaultQuantityDecimalPlaces,
+  }) {
     final materials = <ItemBomMaterialInput>[];
     for (var index = 0; index < form.rawMaterials.length; index++) {
       final row = form.rawMaterials[index];
@@ -146,7 +159,7 @@ abstract final class AddItemFormMapper {
       materials.add(
         ItemBomMaterialInput(
           rawItemId: rawItemId,
-          qty: _formatQty(row.qty),
+          qty: _formatQuantity(row.qty, quantityDecimalPlaces),
           unitId: unitId,
           purchasePrice: _formatMoney(row.purchasePrice),
           sortOrder: index,
@@ -223,11 +236,8 @@ abstract final class AddItemFormMapper {
     ).hasMatch(trimmed);
   }
 
-  static String _formatQty(double value) {
-    if (value == value.roundToDouble()) {
-      return value.toStringAsFixed(0);
-    }
-    return value.toStringAsFixed(4);
+  static String _formatQuantity(double value, int quantityDecimalPlaces) {
+    return ItemQuantityInput.formatStored(value, quantityDecimalPlaces);
   }
 
   static List<CreateItemTierPriceRequest> _tierPricesFromForm(
