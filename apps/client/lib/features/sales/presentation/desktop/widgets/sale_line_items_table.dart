@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_line_item_table_settings_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/compact_number_field.dart';
@@ -50,15 +52,37 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
     final columnVisibility = ref.watch(
-      saleLineItemColumnVisibilityStateProvider,
+      effectiveSaleLineItemColumnVisibilityProvider,
     );
+    final tableSettings = ref.watch(saleLineItemTableSettingsProvider);
     final columnVisibilityNotifier = ref.read(
       saleLineItemColumnVisibilityStateProvider.notifier,
     );
     final items = form.items;
+    final quickEntryEnabled = ref.watch(saleTransactionFeaturesProvider).quickEntry;
+
+    int? quickEntryIndex;
+    if (quickEntryEnabled) {
+      quickEntryIndex = items.indexWhere((line) => !line.isConfirmed);
+      if (quickEntryIndex < 0 && items.isNotEmpty) {
+        quickEntryIndex = items.length - 1;
+      }
+    }
+
+    final gridRowIndices = <int>[];
+    for (var i = 0; i < items.length; i++) {
+      if (quickEntryEnabled) {
+        if (items[i].isConfirmed) gridRowIndices.add(i);
+      } else {
+        gridRowIndices.add(i);
+      }
+    }
 
     if (_activeRowIndex >= items.length) {
       _activeRowIndex = items.isEmpty ? 0 : items.length - 1;
+    }
+    if (quickEntryEnabled && quickEntryIndex != null) {
+      _activeRowIndex = quickEntryIndex;
     }
 
     final totalQty = items.fold<double>(0, (sum, item) => sum + item.qty);
@@ -79,6 +103,7 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
             final widths = SaleLineItemTableLayout.columnWidthsFor(
               tableWidth,
               visibility: columnVisibility,
+              tableSettings: tableSettings,
             );
 
             final grid = DecoratedBox(
@@ -93,22 +118,57 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
                   _LineItemsHeader(
                     widths: widths,
                     visibility: columnVisibility,
+                    countColumnLabel: tableSettings.countColumnLabel,
                     onToggleColumn: columnVisibilityNotifier.toggleColumn,
                   ),
-                  for (var i = 0; i < items.length; i++)
+                  if (quickEntryEnabled && quickEntryIndex != null)
+                    Builder(
+                      builder: (context) {
+                        final quickIdx = quickEntryIndex!;
+                        return _LineItemRow(
+                          index: quickIdx,
+                          item: items[quickIdx],
+                          sessionKey: widget.sessionKey,
+                          widths: widths,
+                          visibility: columnVisibility,
+                          tableSettings: tableSettings,
+                          isActive: true,
+                          isQuickEntry: true,
+                          onActivate: () =>
+                              setState(() => _activeRowIndex = quickIdx),
+                          onConfirm: () {
+                            notifier.confirmLineItem(quickIdx);
+                            setState(() => _activeRowIndex = quickIdx);
+                          },
+                          onRemove: () {},
+                          onItemSelected: (catalogItem) => _handleItemSelected(
+                            quickIdx,
+                            items[quickIdx].id,
+                            catalogItem,
+                          ),
+                        );
+                      },
+                    ),
+                  for (var display = 0; display < gridRowIndices.length; display++)
                     _LineItemRow(
-                      index: i,
-                      item: items[i],
+                      index: gridRowIndices[display],
+                      item: items[gridRowIndices[display]],
                       sessionKey: widget.sessionKey,
                       widths: widths,
                       visibility: columnVisibility,
-                      isActive: i == _activeRowIndex,
-                      onActivate: () => setState(() => _activeRowIndex = i),
+                      tableSettings: tableSettings,
+                      isActive: gridRowIndices[display] == _activeRowIndex,
+                      displayRowNumber: display + 1,
+                      onActivate: () => setState(
+                        () => _activeRowIndex = gridRowIndices[display],
+                      ),
                       onConfirm: () {
+                        final i = gridRowIndices[display];
                         notifier.confirmLineItem(i);
                         setState(() => _activeRowIndex = i + 1);
                       },
                       onRemove: () {
+                        final i = gridRowIndices[display];
                         notifier.removeLineItem(i);
                         setState(() {
                           final newLength = ref
@@ -126,8 +186,11 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
                           }
                         });
                       },
-                      onItemSelected: (catalogItem) =>
-                          _handleItemSelected(i, items[i].id, catalogItem),
+                      onItemSelected: (catalogItem) => _handleItemSelected(
+                        gridRowIndices[display],
+                        items[gridRowIndices[display]].id,
+                        catalogItem,
+                      ),
                     ),
                   _TotalsRow(
                     widths: widths,
@@ -161,7 +224,8 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
               style: TextStyle(fontSize: 11, color: saleFieldErrorColor),
             ),
           ),
-        Padding(
+        if (!quickEntryEnabled)
+          Padding(
           padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
           child: Align(
             alignment: Alignment.centerLeft,
@@ -258,11 +322,13 @@ class _LineItemsHeader extends StatelessWidget {
   const _LineItemsHeader({
     required this.widths,
     required this.visibility,
+    required this.countColumnLabel,
     required this.onToggleColumn,
   });
 
   final SaleLineItemColumnWidths widths;
   final SaleLineItemColumnVisibility visibility;
+  final String countColumnLabel;
   final ValueChanged<SaleLineItemColumn> onToggleColumn;
 
   @override
@@ -333,6 +399,18 @@ class _LineItemsHeader extends StatelessWidget {
             ),
             SaleLineItemGridHeaderCell(label: 'QTY', width: widths.qty),
             SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.freeQty,
+              visibility: visibility,
+              width: widths.freeQty,
+              label: 'FREE QTY',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.count,
+              visibility: visibility,
+              width: widths.count,
+              label: countColumnLabel.toUpperCase(),
+            ),
+            SaleLineItemOptionalHeaderCell(
               column: SaleLineItemColumn.unit,
               visibility: visibility,
               width: widths.unit,
@@ -392,8 +470,11 @@ class _LineItemRow extends ConsumerWidget {
     required this.onRemove,
     required this.widths,
     required this.visibility,
+    required this.tableSettings,
     required this.onItemSelected,
     this.sessionKey = 'default',
+    this.isQuickEntry = false,
+    this.displayRowNumber,
   });
 
   final int index;
@@ -404,8 +485,11 @@ class _LineItemRow extends ConsumerWidget {
   final VoidCallback onRemove;
   final SaleLineItemColumnWidths widths;
   final SaleLineItemColumnVisibility visibility;
+  final SaleLineItemTableSettings tableSettings;
   final void Function(SaleItemOption) onItemSelected;
   final String sessionKey;
+  final bool isQuickEntry;
+  final int? displayRowNumber;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -447,9 +531,9 @@ class _LineItemRow extends ConsumerWidget {
                   width: widths.index,
                   alignment: Alignment.center,
                   child: SaleLineItemIndexCell(
-                    rowNumber: index + 1,
+                    rowNumber: displayRowNumber ?? index + 1,
                     isActive: isActive,
-                    onDelete: onRemove,
+                    onDelete: isQuickEntry ? null : onRemove,
                   ),
                 ),
                 SaleLineItemGridCell(
@@ -485,11 +569,23 @@ class _LineItemRow extends ConsumerWidget {
                             value: item.itemName,
                             borderless: _gridBorderless,
                             fieldHeight: _cellFieldHeight,
+                            displayPurchasePrice:
+                                tableSettings.displayPurchasePrice,
+                            showLast5SalePrice:
+                                tableSettings.showLast5SalePrice,
                             onChanged: (value) => notifier.updateLineItem(
                               index,
                               item.copyWith(itemName: value),
                             ),
                             onItemSelected: onItemSelected,
+                            onSubmitted: isQuickEntry
+                                ? (_) {
+                                    if (item.itemName.trim().isNotEmpty &&
+                                        item.qty > 0) {
+                                      onConfirm();
+                                    }
+                                  }
+                                : null,
                           ),
                         ),
                       ),
@@ -649,6 +745,38 @@ class _LineItemRow extends ConsumerWidget {
                   ),
                 ),
                 SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.freeQty,
+                  visibility: visibility,
+                  width: widths.freeQty,
+                  child: CompactNumberField(
+                    value: item.freeQty,
+                    hintText: '0',
+                    borderless: _gridBorderless,
+                    fieldHeight: _cellFieldHeight,
+                    integerOnly: true,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(freeQty: value),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.count,
+                  visibility: visibility,
+                  width: widths.count,
+                  child: CompactNumberField(
+                    value: item.packetCount,
+                    hintText: '0',
+                    borderless: _gridBorderless,
+                    fieldHeight: _cellFieldHeight,
+                    integerOnly: true,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(packetCount: value),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
                   column: SaleLineItemColumn.unit,
                   visibility: visibility,
                   width: widths.unit,
@@ -670,19 +798,63 @@ class _LineItemRow extends ConsumerWidget {
                   column: SaleLineItemColumn.price,
                   visibility: visibility,
                   width: widths.price,
-                  child: CompactNumberField(
-                    value: item.pricePerUnit,
-                    hintText: '0',
-                    borderless: _gridBorderless,
-                    fieldHeight: _cellFieldHeight,
-                    onChanged: (value) => notifier.updateLineItem(
-                      index,
-                      item.copyWith(
-                        pricePerUnit: value,
-                        priceManuallyOverridden: true,
-                      ),
-                    ),
-                  ),
+                  child: tableSettings.allowInclusiveExclusiveTax
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: CompactNumberField(
+                                value: item.pricePerUnit,
+                                hintText: '0',
+                                borderless: _gridBorderless,
+                                fieldHeight: _cellFieldHeight,
+                                onChanged: (value) => notifier.updateLineItem(
+                                  index,
+                                  item.copyWith(
+                                    pricePerUnit: value,
+                                    priceManuallyOverridden: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            SizedBox(
+                              width: 72,
+                              child: SaleGenericSelectDropdown(
+                                value: item.priceIsTaxInclusive
+                                    ? 'With Tax'
+                                    : 'Without Tax',
+                                options: salePriceTaxModes,
+                                hintText: '',
+                                highlight: SaleDropdownHighlight.red,
+                                compact: true,
+                                triggerHeight: _cellFieldHeight,
+                                minMenuWidth: 132,
+                                onSelected: (value) {
+                                  final withTax = value == 'With Tax';
+                                  notifier.updateLineItem(
+                                    index,
+                                    item.copyWith(
+                                      priceIsTaxInclusive: withTax,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        )
+                      : CompactNumberField(
+                          value: item.pricePerUnit,
+                          hintText: '0',
+                          borderless: _gridBorderless,
+                          fieldHeight: _cellFieldHeight,
+                          onChanged: (value) => notifier.updateLineItem(
+                            index,
+                            item.copyWith(
+                              pricePerUnit: value,
+                              priceManuallyOverridden: true,
+                            ),
+                          ),
+                        ),
                 ),
                 SaleLineItemOptionalCell(
                   column: SaleLineItemColumn.discount,
@@ -703,16 +875,26 @@ class _LineItemRow extends ConsumerWidget {
                   column: SaleLineItemColumn.taxPercent,
                   visibility: visibility,
                   width: widths.taxPercent,
-                  child: SaleGenericSelectDropdown(
-                    value: taxLabelForPercent(item.taxPercent),
-                    options: SaleDropdownOptions.taxSlabs,
-                    highlight: SaleDropdownHighlight.red,
-                    compact: true,
-                    triggerHeight: _cellFieldHeight,
-                    minMenuWidth: 88,
-                    onSelected: (value) => notifier.updateLineItem(
-                      index,
-                      item.copyWith(taxPercent: saleTaxSlabs[value] ?? 0),
+                  child: IgnorePointer(
+                    ignoring: tableSettings.allowInclusiveExclusiveTax &&
+                        !item.priceIsTaxInclusive,
+                    child: Opacity(
+                      opacity: tableSettings.allowInclusiveExclusiveTax &&
+                              !item.priceIsTaxInclusive
+                          ? 0.45
+                          : 1,
+                      child: SaleGenericSelectDropdown(
+                        value: taxLabelForPercent(item.taxPercent),
+                        options: SaleDropdownOptions.taxSlabs,
+                        highlight: SaleDropdownHighlight.red,
+                        compact: true,
+                        triggerHeight: _cellFieldHeight,
+                        minMenuWidth: 88,
+                        onSelected: (value) => notifier.updateLineItem(
+                          index,
+                          item.copyWith(taxPercent: saleTaxSlabs[value] ?? 0),
+                        ),
+                      ),
                     ),
                   ),
                 ),

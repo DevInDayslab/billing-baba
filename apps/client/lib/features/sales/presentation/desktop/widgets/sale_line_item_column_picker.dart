@@ -39,6 +39,7 @@ class SaleLineItemColumnPickerButton extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final column in SaleLineItemColumn.values)
+                if (!column.isSettingsControlled)
                 _ColumnToggleTile(
                   label: column.label,
                   value: visibility.isVisible(column),

@@ -99,6 +99,8 @@ class GeneralSettingsCheckboxRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.inter(
                 fontSize: AppTypography.bodyMediumSize,
                 color: AppColors.textPrimary,

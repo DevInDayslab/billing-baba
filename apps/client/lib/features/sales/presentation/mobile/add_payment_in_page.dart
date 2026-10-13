@@ -9,6 +9,7 @@ import 'package:billing_baba/features/payments/presentation/shared/payment_flow_
 import 'package:billing_baba/features/payments/presentation/shared/payment_intent_builder.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
@@ -235,18 +236,20 @@ class _MobileAddPaymentInPageState
               notifier.updateReceivedAmount(double.tryParse(value) ?? 0);
             },
           ),
-          const SizedBox(height: AppSpacing.lg),
-          MobileSaleFormField(
-            label: 'Discount',
-            controller: _discountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-            ],
-            onChanged: (value) {
-              notifier.updateDiscount(double.tryParse(value) ?? 0);
-            },
-          ),
+          if (ref.watch(saleTransactionFeaturesProvider).discountDuringPayment) ...[
+            const SizedBox(height: AppSpacing.lg),
+            MobileSaleFormField(
+              label: 'Discount',
+              controller: _discountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+              ],
+              onChanged: (value) {
+                notifier.updateDiscount(double.tryParse(value) ?? 0);
+              },
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: form.isSaving

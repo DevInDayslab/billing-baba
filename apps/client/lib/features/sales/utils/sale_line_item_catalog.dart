@@ -20,6 +20,10 @@ SaleLineItem applyCatalogItemToLine(
   final taxPercent = item.defaultTaxPercent > 0
       ? item.defaultTaxPercent
       : (fallbackTaxPercent ?? line.taxPercent);
+  final double unitCost = item.purchasePrice > 0
+      ? item.purchasePrice
+      : (item.mfgCost > 0 ? item.mfgCost : 0.0);
+
   return line.copyWith(
     itemId: item.id,
     itemName: item.name,
@@ -29,6 +33,7 @@ SaleLineItem applyCatalogItemToLine(
     unit: saleItemDefaultUnit(item),
     qty: qty,
     taxPercent: taxPercent,
+    unitCost: unitCost,
   );
 }
 

@@ -13,7 +13,11 @@ import 'package:billing_baba/features/parties/application/parties_providers.dart
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_header_visibility.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_totals_settings.dart';
 import 'package:billing_baba/features/sales/application/sale_tabs_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
@@ -23,6 +27,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_profit_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_tabs_bar.dart';
@@ -79,11 +84,15 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
   late final String _attachSessionKey =
       'attach_${widget.attachOrderIds?.join('_') ?? ''}';
 
-  bool get _supportsTabs =>
-      widget.invoiceId == null &&
-      !widget.readOnly &&
-      widget.duplicateFromId == null &&
-      widget.attachOrderIds == null;
+  bool _supportsTabs(WidgetRef ref) {
+    if (ref.read(saleTransactionTotalsSettingsProvider).isLiteSale) {
+      return false;
+    }
+    return widget.invoiceId == null &&
+        !widget.readOnly &&
+        widget.duplicateFromId == null &&
+        widget.attachOrderIds == null;
+  }
 
   String get _sessionKey {
     if (widget.attachOrderIds != null && widget.attachOrderIds!.isNotEmpty) {
@@ -93,7 +102,7 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
     if (widget.invoiceId != null) return widget.invoiceId!;
     final partyId = widget.initialPartyId?.trim();
     if (partyId != null && partyId.isNotEmpty) return 'party_$partyId';
-    if (_supportsTabs) {
+    if (_supportsTabs(ref)) {
       return ref.read(saleTabsProvider()).activeTab.sessionKey;
     }
     return 'default';
@@ -119,6 +128,9 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initializeForm());
     } else {
       _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_applyTransactionHeaderDefaultsForNewSale());
+      });
       final partyId = widget.initialPartyId?.trim();
       final partyName = widget.initialPartyName?.trim();
       if (partyId != null &&
@@ -132,6 +144,19 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
         });
       }
     }
+  }
+
+  Future<void> _applyTransactionHeaderDefaultsForNewSale() async {
+    if (widget.invoiceId != null ||
+        widget.duplicateFromId != null ||
+        (widget.attachOrderIds != null && widget.attachOrderIds!.isNotEmpty)) {
+      return;
+    }
+    await ref.read(saleInvoiceSettingsProvider.future);
+    if (!mounted) return;
+    ref
+        .read(addSaleFormProvider(sessionKey: _sessionKey).notifier)
+        .applyTransactionHeaderDefaultsForNewDocument();
   }
 
   Future<void> _initializeAttachForm() async {
@@ -216,36 +241,16 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
     );
     if (confirmed == true && mounted) {
       _resetSaleFormState(_sessionKey);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_applyTransactionHeaderDefaultsForNewSale());
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_supportsTabs) {
-      final tabsState = ref.watch(saleTabsProvider());
-      final activeSessionKey = tabsState.activeTab.sessionKey;
-
-      ref.listen(
-        addSaleFormProvider(sessionKey: activeSessionKey),
-        (previous, next) {
-          if (previous?.saleType == next.saleType &&
-              previous?.billingName == next.billingName) {
-            return;
-          }
-          ref
-              .read(saleTabsProvider().notifier)
-              .updateTabLabel(
-                tabsState.activeIndex,
-                saleTabLabelForForm(
-                  saleNumber: tabsState.activeTab.saleNumber,
-                  billingName: next.billingName,
-                ),
-              );
-        },
-      );
-    }
-
     final sessionKey = _sessionKey;
+    final supportsTabs = _supportsTabs(ref);
     final isLoading = ref.watch(
       addSaleFormProvider(
         sessionKey: sessionKey,
@@ -292,8 +297,10 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_supportsTabs)
+              if (supportsTabs) ...[
+                const _SaleTabsActiveFormLabelListener(),
                 SaleTabsBar(onFormClose: _handleClose),
+              ],
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
@@ -329,8 +336,8 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
                                     sessionKey: sessionKey,
                                     readOnly: widget.readOnly,
                                     isEditing: _isEditing,
-                                    showTitle: !_supportsTabs,
-                                    showCloseButton: !_supportsTabs,
+                                    showTitle: !supportsTabs,
+                                    showCloseButton: !supportsTabs,
                                     onClose: _handleClose,
                                     onClear: _handleClearForm,
                                   ),
@@ -432,6 +439,7 @@ class _PageHeader extends ConsumerWidget {
       addSaleFormProvider(sessionKey: sessionKey).notifier,
     );
     final title = readOnly ? 'View Sale' : (isEditing ? 'Edit Sale' : 'Sale');
+    final features = ref.watch(saleTransactionFeaturesProvider);
 
     return Row(
       children: [
@@ -454,7 +462,25 @@ class _PageHeader extends ConsumerWidget {
             saleType: form.saleType,
             onChanged: notifier.toggleSaleType,
           ),
+        if (!readOnly && features.wholesalePriceToggleOnInvoice) ...[
+          const SizedBox(width: AppSpacing.md),
+          FilterChip(
+            label: const Text('Wholesale price'),
+            selected: form.useWholesalePriceOnInvoice,
+            onSelected: notifier.setUseWholesalePriceOnInvoice,
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
         const Spacer(),
+        if (!readOnly && features.showProfitOnSaleInvoice)
+          TextButton.icon(
+            onPressed: () => showSaleInvoiceProfitDialog(
+              context,
+              form: form,
+            ),
+            icon: const Icon(Icons.trending_up, size: 18),
+            label: const Text('Profit'),
+          ),
         if (!readOnly) ...[
           _GodownSelector(
             value: form.godown,
@@ -511,6 +537,7 @@ class _SaleLineItemColumnSettingsButton extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final column in SaleLineItemColumn.values)
+                if (!column.isSettingsControlled)
                 _SaleLineItemColumnMenuTile(
                   label: column.label,
                   value: visibility.isVisible(column),
@@ -712,6 +739,7 @@ class _FormFields extends ConsumerStatefulWidget {
 class _FormFieldsState extends ConsumerState<_FormFields> {
   final _invoiceDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
   final _dueDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
+  final _customerPoDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
 
   @override
   void initState() {
@@ -744,12 +772,17 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
     final hiddenLedgerBanner = showHiddenLedgerBanner
         ? HiddenLedgerSummaryTile(partyId: partyId)
         : null;
+    final headerVisibility = ref.watch(saleTransactionHeaderVisibilityProvider);
+    final transactionFeatures = ref.watch(saleTransactionFeaturesProvider);
+    final isLiteSale = ref.watch(saleTransactionTotalsSettingsProvider).isLiteSale;
+    final showEWayBill =
+        !isLiteSale && transactionFeatures.showEWayBillNumber;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < _narrowBreakpoint;
-        final billingNameField = _LabeledField(
-          label: 'Billing Name (Optional)',
+        final partySearchField = _LabeledField(
+          label: 'Customer',
           child: BillingNamePartySearchField(
             value: form.billingName,
             selectedPartyId: form.partyId,
@@ -785,6 +818,17 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
             },
           ),
         );
+        final billingNameOnInvoiceField = !isLiteSale &&
+                headerVisibility.showBillingNameOnInvoice
+            ? _LabeledField(
+                label: 'Billing Name (Optional)',
+                child: _SaleTextField(
+                  initialValue: form.businessName,
+                  hintText: 'Name to print on invoice',
+                  onChanged: notifier.updateBusinessName,
+                ),
+              )
+            : null;
         final phoneField = _LabeledField(
           label: 'Phone No.',
           child: _SaleTextField(
@@ -820,19 +864,22 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
             onChanged: (value) => notifier.updateAddresses(shipping: value),
           ),
         );
-        final eWayBillField = _LabeledField(
-          label: 'E-Way Bill No.',
-          child: _SaleTextField(
-            initialValue: form.eWayBillNo,
-            hintText: 'E-Way bill number',
-            onChanged: notifier.updateEWayBillNo,
-          ),
-        );
+        final eWayBillField = showEWayBill
+            ? _LabeledField(
+                label: 'E-Way Bill No.',
+                child: _SaleTextField(
+                  initialValue: form.eWayBillNo,
+                  hintText: 'E-Way bill number',
+                  onChanged: notifier.updateEWayBillNo,
+                ),
+              )
+            : null;
 
         final invoiceDetails = _InvoiceDetailsFields(
           sessionKey: widget.sessionKey,
           invoiceDatePickerKey: _invoiceDatePickerKey,
           dueDatePickerKey: _dueDatePickerKey,
+          customerPoDatePickerKey: _customerPoDatePickerKey,
         );
 
         final partyDetails = Column(
@@ -842,7 +889,11 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      billingNameField,
+                      partySearchField,
+                      if (billingNameOnInvoiceField != null) ...[
+                        const SizedBox(height: _sectionGap),
+                        billingNameOnInvoiceField,
+                      ],
                       const SizedBox(height: _sectionGap),
                       phoneField,
                     ],
@@ -852,8 +903,15 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                     children: [
                       Expanded(
                         flex: _billingNameRowFlex,
-                        child: billingNameField,
+                        child: partySearchField,
                       ),
+                      if (billingNameOnInvoiceField != null) ...[
+                        const SizedBox(width: _sectionGap),
+                        Expanded(
+                          flex: _billingNameRowFlex,
+                          child: billingNameOnInvoiceField,
+                        ),
+                      ],
                       const SizedBox(width: _sectionGap),
                       Expanded(flex: _phoneRowFlex, child: phoneField),
                       Expanded(
@@ -866,38 +924,44 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
               const SizedBox(height: _sectionGap),
               hiddenLedgerBanner,
             ],
-            const SizedBox(height: _sectionGap),
-            isNarrow
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      billingAddressField,
-                      const SizedBox(height: _sectionGap),
-                      shippingAddressField,
-                      const SizedBox(height: _sectionGap),
-                      eWayBillField,
-                    ],
-                  )
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: _billingAddressRowFlex,
-                        child: billingAddressField,
-                      ),
-                      const SizedBox(width: _sectionGap),
-                      Expanded(
-                        flex: _billingAddressRowFlex,
-                        child: shippingAddressField,
-                      ),
-                      const SizedBox(width: _sectionGap),
-                      Expanded(flex: _eWayBillRowFlex, child: eWayBillField),
-                      Expanded(
-                        flex: _addressRowTrailingSpacerFlex,
-                        child: const SizedBox.shrink(),
-                      ),
-                    ],
-                  ),
+            if (!isLiteSale) ...[
+              const SizedBox(height: _sectionGap),
+              isNarrow
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        billingAddressField,
+                        const SizedBox(height: _sectionGap),
+                        shippingAddressField,
+                        if (eWayBillField != null) ...[
+                          const SizedBox(height: _sectionGap),
+                          eWayBillField,
+                        ],
+                      ],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: _billingAddressRowFlex,
+                          child: billingAddressField,
+                        ),
+                        const SizedBox(width: _sectionGap),
+                        Expanded(
+                          flex: _billingAddressRowFlex,
+                          child: shippingAddressField,
+                        ),
+                        if (eWayBillField != null) ...[
+                          const SizedBox(width: _sectionGap),
+                          Expanded(flex: _eWayBillRowFlex, child: eWayBillField),
+                        ],
+                        Expanded(
+                          flex: _addressRowTrailingSpacerFlex,
+                          child: const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+            ],
           ],
         );
 
@@ -930,14 +994,20 @@ class _InvoiceDetailsFields extends ConsumerWidget {
     required this.sessionKey,
     required this.invoiceDatePickerKey,
     required this.dueDatePickerKey,
+    required this.customerPoDatePickerKey,
   });
 
   final String sessionKey;
   final GlobalKey<SaleSingleDatePickerAnchorState> invoiceDatePickerKey;
   final GlobalKey<SaleSingleDatePickerAnchorState> dueDatePickerKey;
+  final GlobalKey<SaleSingleDatePickerAnchorState> customerPoDatePickerKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final headerVisibility = ref.watch(saleTransactionHeaderVisibilityProvider);
+    final transactionFeatures = ref.watch(saleTransactionFeaturesProvider);
+    final isLiteSale = ref.watch(saleTransactionTotalsSettingsProvider).isLiteSale;
+    final paymentTermOptions = ref.watch(salePaymentTermNameOptionsProvider);
     final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
     final notifier = ref.read(
       addSaleFormProvider(sessionKey: sessionKey).notifier,
@@ -957,18 +1027,20 @@ class _InvoiceDetailsFields extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _LabeledField(
-          label: 'Invoice Number',
-          child: _SaleTextField(
-            initialValue: displayNumber,
-            hintText: 'Invoice number',
-            readOnly: true,
-            filled: true,
-            compact: true,
-            onChanged: (_) {},
+        if (headerVisibility.showInvoiceBillNumber) ...[
+          _LabeledField(
+            label: 'Invoice Number',
+            child: _SaleTextField(
+              initialValue: displayNumber,
+              hintText: 'Invoice number',
+              readOnly: true,
+              filled: true,
+              compact: true,
+              onChanged: (_) {},
+            ),
           ),
-        ),
-        const SizedBox(height: _sectionGap),
+          const SizedBox(height: _sectionGap),
+        ],
         _LabeledField(
           label: 'Invoice Date',
           child: SaleSingleDatePickerAnchor(
@@ -983,16 +1055,33 @@ class _InvoiceDetailsFields extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: _sectionGap),
-        _LabeledField(
-          label: 'Time',
-          child: SaleTimeDropdown(
-            value: form.invoiceTime,
-            compact: true,
-            onSelected: notifier.updateInvoiceTime,
+        if (headerVisibility.showTransactionTime) ...[
+          const SizedBox(height: _sectionGap),
+          _LabeledField(
+            label: 'Time',
+            child: SaleTimeDropdown(
+              value: form.invoiceTime,
+              compact: true,
+              onSelected: notifier.updateInvoiceTime,
+            ),
           ),
-        ),
-        if (form.saleType == SaleType.credit) ...[
+        ],
+        if (form.saleType == SaleType.credit &&
+            transactionFeatures.dueDatesAndPaymentTerms) ...[
+          const SizedBox(height: _sectionGap),
+          _LabeledField(
+            label: 'Payment Terms',
+            child: SaleGenericSelectDropdown(
+              value: form.paymentTerms,
+              options: paymentTermOptions.isNotEmpty
+                  ? paymentTermOptions
+                  : SaleDropdownOptions.paymentTerms,
+              hintText: 'Select terms',
+              maxMenuHeight: 280,
+              compact: true,
+              onSelected: notifier.updatePaymentTerms,
+            ),
+          ),
           const SizedBox(height: _sectionGap),
           _LabeledField(
             label: 'Due Date',
@@ -1012,18 +1101,50 @@ class _InvoiceDetailsFields extends ConsumerWidget {
             ),
           ),
         ],
-        const SizedBox(height: _sectionGap),
-        _LabeledField(
-          label: 'State of supply',
-          child: SaleGenericSelectDropdown(
-            value: form.stateOfSupply,
-            options: SaleDropdownOptions.indianStates,
-            hintText: 'Select state',
-            maxMenuHeight: 280,
-            compact: true,
-            onSelected: notifier.updateStateOfSupply,
+        if (!isLiteSale) ...[
+          const SizedBox(height: _sectionGap),
+          _LabeledField(
+            label: 'State of supply',
+            child: SaleGenericSelectDropdown(
+              value: form.stateOfSupply,
+              options: SaleDropdownOptions.indianStates,
+              hintText: 'Select state',
+              maxMenuHeight: 280,
+              compact: true,
+              onSelected: notifier.updateStateOfSupply,
+            ),
           ),
-        ),
+        ],
+        if (!isLiteSale && headerVisibility.showCustomerPoDetails) ...[
+          const SizedBox(height: _sectionGap),
+          _LabeledField(
+            label: 'Customer P.O. No.',
+            child: _SaleTextField(
+              initialValue: form.customerPoNumber,
+              hintText: 'PO number',
+              compact: true,
+              onChanged: notifier.updateCustomerPoNumber,
+            ),
+          ),
+          const SizedBox(height: _sectionGap),
+          _LabeledField(
+            label: 'Customer P.O. Date',
+            child: SaleSingleDatePickerAnchor(
+              key: customerPoDatePickerKey,
+              selectedDate: form.customerPoDate,
+              onDateSelected: notifier.updateCustomerPoDate,
+              child: _PickerField(
+                value: form.customerPoDate != null
+                    ? formatSaleSingleDate(form.customerPoDate)
+                    : 'Select Date',
+                icon: Icons.calendar_today_outlined,
+                isPlaceholder: form.customerPoDate == null,
+                compact: true,
+                onTap: () => customerPoDatePickerKey.currentState?.toggle(),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1330,6 +1451,23 @@ class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
       return;
     }
 
+    final saved = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
+    final docId = saved.documentId;
+    final showPreview = ref.read(saleTransactionFeaturesProvider).showInvoicePreviewOnSave;
+
+    if (!widget.isEditing &&
+        showPreview &&
+        docId != null &&
+        docId.isNotEmpty) {
+      await SaleInvoicePrintActions.preview(
+        context,
+        ref,
+        docId,
+        filename: _filename(saved),
+      );
+      if (!context.mounted) return;
+    }
+
     await _showSaveSuccessDialog(
       context,
       isEditing: widget.isEditing,
@@ -1593,5 +1731,35 @@ class _PickerField extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Keeps tab titles in sync without conditional [ref.listen] in [AddSalePage.build].
+class _SaleTabsActiveFormLabelListener extends ConsumerWidget {
+  const _SaleTabsActiveFormLabelListener();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tabsState = ref.watch(saleTabsProvider());
+    final activeSessionKey = tabsState.activeTab.sessionKey;
+
+    ref.listen(
+      addSaleFormProvider(sessionKey: activeSessionKey),
+      (previous, next) {
+        if (previous?.saleType == next.saleType &&
+            previous?.billingName == next.billingName) {
+          return;
+        }
+        ref.read(saleTabsProvider().notifier).updateTabLabel(
+              tabsState.activeIndex,
+              saleTabLabelForForm(
+                saleNumber: tabsState.activeTab.saleNumber,
+                billingName: next.billingName,
+              ),
+            );
+      },
+    );
+
+    return const SizedBox.shrink();
   }
 }
