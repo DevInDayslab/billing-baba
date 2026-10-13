@@ -17,6 +17,7 @@ import 'package:billing_baba/features/parties/application/parties_providers.dart
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_document_barcode_providers.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_tabs_provider.dart';
@@ -878,7 +879,8 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
               if (party.shippingAddress.isNotEmpty) {
                 notifier.updateAddresses(shipping: party.shippingAddress);
               }
-              if (party.gstin.isNotEmpty) {
+              if (ref.read(enableGstinOnPartyProvider) &&
+                  party.gstin.isNotEmpty) {
                 notifier.updateGstin(party.gstin);
               }
               if (party.email.isNotEmpty) {

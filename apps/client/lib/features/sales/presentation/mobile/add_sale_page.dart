@@ -13,6 +13,7 @@ import 'package:billing_baba/features/inventory/application/inventory_godowns_pr
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
@@ -588,7 +589,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       showPhone: _visibility.showPhone,
       showBillingAddress: _visibility.showBillingAddress,
       showShippingAddress: _visibility.showShippingAddress,
-      showGstin: _visibility.showGstin,
+      showGstin:
+          _visibility.showGstin && ref.watch(enableGstinOnPartyProvider),
       showEmail: _visibility.showEmail,
       showItems: _visibility.showItems,
       showBarcodeScan: !widget.readOnly && isBarcodeScanningEnabled(ref),
@@ -703,8 +705,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
                   MobileDocumentLineDisplay(
                     name: entry.item.itemName,
                     qtyLabel:
-                        '${entry.item.qty} ${entry.item.unit} × ₹${MobileDocumentItemsSection.formatAmount(entry.item.pricePerUnit)}',
-                    amountLabel: MobileDocumentItemsSection.formatAmount(
+                        '${entry.item.qty} ${entry.item.unit} × ${MobileDocumentItemsSection.formatAmount(ref, entry.item.pricePerUnit)}',
+                    amountLabel: MobileDocumentItemsSection.formatAmount(ref, 
                       entry.item.amount,
                     ),
                   ),

@@ -30,6 +30,18 @@ final amountDecimalPlacesProvider = Provider<int>((ref) {
   return ref.watch(generalSettingsProvider).value?.amountDecimalPlaces ?? 0;
 });
 
+GeneralSettings _generalSettingsOrDefaults(Ref ref) {
+  return ref.watch(generalSettingsProvider).value ?? GeneralSettings.defaults();
+}
+
+final deliveryChallanPrintAmountEnabledProvider = Provider<bool>((ref) {
+  return _generalSettingsOrDefaults(ref).deliveryChallanPrintAmountEnabled;
+});
+
+final deliveryChallanGoodsReturnEnabledProvider = Provider<bool>((ref) {
+  return _generalSettingsOrDefaults(ref).deliveryChallanGoodsReturnEnabled;
+});
+
 final blockNewPartiesFromTxnProvider = Provider<bool>((ref) {
   return ref
           .watch(generalSettingsProvider)
@@ -77,7 +89,7 @@ class GeneralSettingsNotifier extends AsyncNotifier<GeneralSettings> {
     final repo = await ref.read(generalSettingsRepositoryProvider.future);
     await repo.save(next);
     state = AsyncData(next);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.general);
+    notifySettingsSaved(message: SettingsSaveMessages.general);
   }
 
   Future<void> setGodownStockTransferEnabled(bool enabled) async {

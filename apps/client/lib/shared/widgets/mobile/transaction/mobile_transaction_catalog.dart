@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -101,6 +102,14 @@ abstract final class MobileTransactionCatalog {
 
   static MobileTransactionScopeDefinition? definitionForRoute(String route) {
     return _byRoute[route];
+  }
+
+  static List<MobileTransactionScopeDefinition> visibleScopes(
+    GeneralSettings settings,
+  ) {
+    return all
+        .where((def) => settings.isTransactionPathEnabled(def.route))
+        .toList();
   }
 
   static bool statusFilterMatcher(

@@ -20,6 +20,7 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
+import 'package:billing_baba/features/sales/utils/sale_negative_stock_validation.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
@@ -929,6 +930,14 @@ class AddSaleForm extends _$AddSaleForm {
 
     if (!validate(finalize: finalize)) {
       return AddSaleSaveResult(error: _validationError(finalize: finalize));
+    }
+
+    if (finalize) {
+      final stockError = validateSaleLinesForNegativeStock(ref, state.items);
+      if (stockError != null) {
+        state = state.copyWith(showValidationErrors: true, saveError: stockError);
+        return AddSaleSaveResult(error: stockError);
+      }
     }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);

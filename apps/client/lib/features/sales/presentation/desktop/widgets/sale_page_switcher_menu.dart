@@ -1,6 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 const _menuHoverColor = Color(0xFFF5F5F5);
@@ -9,7 +12,7 @@ const _leadingWidth = 20.0;
 const _dotSize = 7.0;
 
 /// Dropdown menu for switching between sale sub-pages.
-class SalePageSwitcherMenu extends StatelessWidget {
+class SalePageSwitcherMenu extends ConsumerWidget {
   const SalePageSwitcherMenu({
     required this.currentRoute,
     required this.child,
@@ -20,7 +23,13 @@ class SalePageSwitcherMenu extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final general =
+        ref.watch(generalSettingsProvider).value ?? GeneralSettings.defaults();
+    final visibleRoutes = SaleSubRoutes.items
+        .where((item) => general.isNavRouteVisible(item.route))
+        .toList();
+
     return MenuAnchor(
       alignmentOffset: const Offset(0, 4),
       style: MenuStyle(
@@ -34,7 +43,7 @@ class SalePageSwitcherMenu extends StatelessWidget {
         padding: const WidgetStatePropertyAll(EdgeInsets.zero),
       ),
       menuChildren: [
-        for (final item in SaleSubRoutes.items)
+        for (final item in visibleRoutes)
           _PageSwitcherMenuItem(
             label: item.label,
             isSelected: item.route == currentRoute,

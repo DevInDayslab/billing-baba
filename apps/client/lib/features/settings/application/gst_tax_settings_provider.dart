@@ -40,7 +40,7 @@ class GstTaxSettingsNotifier extends AsyncNotifier<GstTaxSettings> {
     await repo.save(next);
     state = AsyncData(next);
     await _syncRelated(next);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.taxesGst);
+    notifySettingsSaved(message: SettingsSaveMessages.taxesGst);
   }
 
   Future<void> _syncRelated(GstTaxSettings settings) async {

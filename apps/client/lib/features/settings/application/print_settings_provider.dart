@@ -35,7 +35,7 @@ class PrintSettingsNotifier extends _$PrintSettingsNotifier {
     final repository = await ref.read(printSettingsRepositoryProvider.future);
     await repository.save(settings);
     state = AsyncData(settings);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.print);
+    notifySettingsSaved(message: SettingsSaveMessages.print);
   }
 
   Future<void> updateField(
