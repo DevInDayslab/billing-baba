@@ -11,6 +11,7 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/party
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_list_panel.dart';
 import 'package:billing_baba/features/parties/parties_navigation.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_settings_side_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -129,6 +130,9 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => openDesktopAddPartyDialog(context),
+                onSettingsTap: () => unawaited(
+                  showPartySettingsSidePanel(context: context),
+                ),
               ),
               Expanded(child: body),
             ],

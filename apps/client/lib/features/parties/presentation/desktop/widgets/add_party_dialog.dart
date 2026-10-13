@@ -21,6 +21,7 @@ import 'package:billing_baba/features/parties/models/party_additional_phone_deta
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_additional_phone_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_editor.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_settings_side_panel.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/device_contact_picker_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/gstin_verification_dialogs.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
@@ -470,6 +471,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   final _creditLimitFocusNode = FocusNode();
   final _additionalField1Controller = TextEditingController();
   final _additionalField2Controller = TextEditingController();
+  final _additionalField3Controller = TextEditingController();
+  final _additionalField4DatePickerKey =
+      GlobalKey<SaleSingleDatePickerAnchorState>();
   final List<PartyAdditionalPhoneDetail> _additionalPhoneEntries = [];
   final List<String?> _additionalPhoneErrors = [];
   final _openingBalanceAsOfDatePickerKey =
@@ -481,6 +485,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   bool _useCustomCreditLimit = false;
   bool _additionalField1Enabled = false;
   bool _additionalField2Enabled = false;
+  bool _additionalField3Enabled = false;
+  bool _additionalField4Enabled = false;
+  DateTime _additionalField4Date = DateTime.now();
 
   final _profileImageEditorKey = GlobalKey<PartyProfileImageEditorState>();
   String? _profileImageUrl;
@@ -646,6 +653,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         a.additionalField1 == b.additionalField1 &&
         a.additionalField2Enabled == b.additionalField2Enabled &&
         a.additionalField2 == b.additionalField2 &&
+        a.additionalField3Enabled == b.additionalField3Enabled &&
+        a.additionalField3 == b.additionalField3 &&
+        a.additionalField4Enabled == b.additionalField4Enabled &&
+        a.additionalField4 == b.additionalField4 &&
         a.defaultPriceTier == b.defaultPriceTier &&
         _listEquals(a.additionalPhones, b.additionalPhones) &&
         samePhoneDetails(a.additionalPhoneDetails, b.additionalPhoneDetails);
@@ -1012,6 +1023,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _additionalField1Controller.text = party.additionalField1;
     _additionalField2Enabled = party.additionalField2.isNotEmpty;
     _additionalField2Controller.text = party.additionalField2;
+    _additionalField3Enabled = party.additionalField3.isNotEmpty;
+    _additionalField3Controller.text = party.additionalField3;
+    _additionalField4Enabled = party.additionalField4.isNotEmpty;
+    final field4Parsed = DateTime.tryParse(party.additionalField4);
+    _additionalField4Date = field4Parsed != null
+        ? _dateOnly(field4Parsed)
+        : _dateOnly(DateTime.now());
     _defaultPriceTier = party.defaultPriceTier;
   }
 
@@ -1049,6 +1067,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _creditLimitFocusNode.dispose();
     _additionalField1Controller.dispose();
     _additionalField2Controller.dispose();
+    _additionalField3Controller.dispose();
     super.dispose();
   }
 
@@ -1106,8 +1125,24 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       additionalField2: _additionalField2Enabled
           ? _additionalField2Controller.text.trim()
           : '',
+      additionalField3Enabled: _additionalField3Enabled,
+      additionalField3: _additionalField3Enabled
+          ? _additionalField3Controller.text.trim()
+          : '',
+      additionalField4Enabled: _additionalField4Enabled,
+      additionalField4: _additionalField4Enabled
+          ? _serializedAdditionalField4()
+          : '',
       defaultPriceTier: _defaultPriceTier,
     );
+  }
+
+  String _serializedAdditionalField4() {
+    final date = _dateOnly(_additionalField4Date);
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   DateTime _dateOnly(DateTime date) =>
@@ -1807,6 +1842,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _creditLimitController.clear();
     _additionalField1Controller.clear();
     _additionalField2Controller.clear();
+    _additionalField3Controller.clear();
     _setAdditionalPhoneEntries(const []);
     final defaultState = _resolvedBusinessState();
     setState(() {
@@ -1822,6 +1858,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _useCustomCreditLimit = false;
       _additionalField1Enabled = false;
       _additionalField2Enabled = false;
+      _additionalField3Enabled = false;
+      _additionalField4Enabled = false;
+      _additionalField4Date = _dateOnly(DateTime.now());
       _showShippingAddress = false;
       _showDetailedBillingAddress = false;
       _showDetailedShippingAddress = false;
@@ -2103,6 +2142,19 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 ],
               ],
             ),
+          ),
+          IconButton(
+            onPressed: _isSaving
+                ? null
+                : () => unawaited(
+                    showPartySettingsSidePanel(context: context),
+                  ),
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: AppColors.textSecondary,
+            ),
+            tooltip: 'Party settings',
+            visualDensity: VisualDensity.compact,
           ),
           IconButton(
             onPressed: _isSaving ? null : () => unawaited(_requestClose()),
@@ -3654,30 +3706,57 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         PartyAdditionalFieldCatalog.defaultFields();
 
     final rows = <Widget>[];
-    for (var i = 0; i < configs.length && i < 2; i++) {
+    for (
+      var i = 0;
+      i < configs.length && i < PartyAdditionalFieldCatalog.fieldCount;
+      i++
+    ) {
       final config = configs[i];
       if (!config.enabled) continue;
       final label = config.label.trim().isEmpty
           ? PartyAdditionalFieldCatalog.defaultLabelForIndex(i)
           : config.label.trim();
-      if (i == 0) {
+      if (i == 3 &&
+          config.valueKind == PartyAdditionalFieldValueKind.date) {
         rows.add(
-          _buildAdditionalFieldRow(
+          _buildAdditionalDateFieldRow(
             label: label,
-            enabled: _additionalField1Enabled,
-            controller: _additionalField1Controller,
+            enabled: _additionalField4Enabled,
+            selectedDate: _additionalField4Date,
             onEnabledChanged: (value) =>
-                setState(() => _additionalField1Enabled = value),
+                setState(() => _additionalField4Enabled = value),
+            onDateSelected: (date) =>
+                setState(() => _additionalField4Date = _dateOnly(date)),
           ),
         );
-      } else if (i == 1) {
+      } else {
+        final controller = switch (i) {
+          0 => _additionalField1Controller,
+          1 => _additionalField2Controller,
+          2 => _additionalField3Controller,
+          _ => _additionalField3Controller,
+        };
+        final enabled = switch (i) {
+          0 => _additionalField1Enabled,
+          1 => _additionalField2Enabled,
+          2 => _additionalField3Enabled,
+          _ => false,
+        };
         rows.add(
           _buildAdditionalFieldRow(
             label: label,
-            enabled: _additionalField2Enabled,
-            controller: _additionalField2Controller,
-            onEnabledChanged: (value) =>
-                setState(() => _additionalField2Enabled = value),
+            enabled: enabled,
+            controller: controller,
+            onEnabledChanged: (value) => setState(() {
+              switch (i) {
+                case 0:
+                  _additionalField1Enabled = value;
+                case 1:
+                  _additionalField2Enabled = value;
+                case 2:
+                  _additionalField3Enabled = value;
+              }
+            }),
           ),
         );
       }
@@ -3722,6 +3801,42 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             controller: controller,
             hint: label,
             enabled: enabled,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalDateFieldRow({
+    required String label,
+    required bool enabled,
+    required DateTime selectedDate,
+    required ValueChanged<bool> onEnabledChanged,
+    required ValueChanged<DateTime> onDateSelected,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: enabled,
+          onChanged: (value) => onEnabledChanged(value ?? false),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+          activeColor: AppColors.primary,
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+          child: Opacity(
+            opacity: enabled ? 1 : 0.45,
+            child: IgnorePointer(
+              ignoring: !enabled,
+              child: _buildVyaparOutlinedDateField(
+                label: label,
+                selectedDate: selectedDate,
+                datePickerKey: _additionalField4DatePickerKey,
+                onDateSelected: onDateSelected,
+              ),
+            ),
           ),
         ),
       ],
