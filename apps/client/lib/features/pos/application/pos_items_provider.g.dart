@@ -326,7 +326,7 @@ final class PosCustomerSearchProvider
   }
 }
 
-String _$posCustomerSearchHash() => r'a852f05e16c160c872fa5d182adb2306ba0d4b09';
+String _$posCustomerSearchHash() => r'391276712a121efebb2d653d4d4d450582def43f';
 
 final class PosCustomerSearchFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<PosCustomer>>, String> {

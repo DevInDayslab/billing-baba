@@ -360,8 +360,7 @@ export class AccountingReportsRepository {
     const costOfGoodsSold = openingStock + netPurchases - closingStock;
     const directExpenses = 0;
     const indirectExpenses = expenseTotal;
-    const totalExpenses =
-      costOfGoodsSold + directExpenses + indirectExpenses;
+    const totalExpenses = costOfGoodsSold + directExpenses + indirectExpenses;
 
     const row = (
       particular: string,

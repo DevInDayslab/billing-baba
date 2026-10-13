@@ -76,7 +76,7 @@ final class ItemSettingsNotifierProvider
 }
 
 String _$itemSettingsNotifierHash() =>
-    r'3540b33780a5867716e42f270de2ca4730ce8e60';
+    r'a6576884e640e704181a4f81bf0795842d41bfee';
 
 abstract class _$ItemSettingsNotifier extends $AsyncNotifier<ItemSettings> {
   FutureOr<ItemSettings> build();
