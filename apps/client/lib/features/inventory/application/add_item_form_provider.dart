@@ -3,6 +3,7 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/shared/constants/item_price_limits.dart';
 import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/opening_stock_batch_row.dart';
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
 import 'package:billing_baba/features/inventory/utils/item_pricing_discount.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
@@ -483,6 +484,31 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void updateOpeningQty(double value) {
     state = state.copyWith(openingQty: value, isDirty: true);
+  }
+
+  void setBatchTrackingEnabled(bool enabled) {
+    if (!enabled) {
+      state = state.copyWith(
+        batchTrackingEnabled: false,
+        clearOpeningStockBatches: true,
+        openingQty: 0,
+        isDirty: true,
+      );
+      return;
+    }
+    state = state.copyWith(batchTrackingEnabled: true, isDirty: true);
+  }
+
+  void clearBatchTracking() => setBatchTrackingEnabled(false);
+
+  void setOpeningStockBatches(List<OpeningStockBatchRow> rows) {
+    final total = OpeningStockBatchRow.totalQty(rows);
+    state = state.copyWith(
+      openingStockBatches: rows,
+      openingQty: total,
+      batchTrackingEnabled: true,
+      isDirty: true,
+    );
   }
 
   void updateAtPrice(double value) {

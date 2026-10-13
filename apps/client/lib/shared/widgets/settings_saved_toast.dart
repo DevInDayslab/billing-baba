@@ -18,10 +18,41 @@ void showSettingsSavedToast({
   BuildContext? context,
   Duration duration = _toastDuration,
 }) {
+  _showSettingsFeedbackToast(
+    message: message,
+    context: context,
+    duration: duration,
+    backgroundColor: AppColors.success,
+    leadingIcon: Icons.check,
+  );
+}
+
+/// Vyapar-style error banner when a settings change is blocked.
+void showSettingsBlockedToast({
+  required String message,
+  BuildContext? context,
+  Duration duration = _toastDuration,
+}) {
+  _showSettingsFeedbackToast(
+    message: message,
+    context: context,
+    duration: duration,
+    backgroundColor: AppColors.error,
+    leadingIcon: Icons.gpp_maybe_outlined,
+  );
+}
+
+void _showSettingsFeedbackToast({
+  required String message,
+  BuildContext? context,
+  required Duration duration,
+  required Color backgroundColor,
+  required IconData leadingIcon,
+}) {
   final overlay = _resolveOverlay(context);
   if (overlay == null) {
     if (kDebugMode) {
-      debugPrint('SettingsSavedToast: no overlay ($message)');
+      debugPrint('SettingsFeedbackToast: no overlay ($message)');
     }
     return;
   }
@@ -57,12 +88,13 @@ void showSettingsSavedToast({
           elevation: 8,
           shadowColor: Colors.black26,
           borderRadius: const BorderRadius.all(Radius.circular(4)),
-          color: AppColors.success,
+          color: backgroundColor,
           clipBehavior: Clip.antiAlias,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 4, 12),
-            child: _SettingsSavedToastBody(
+            child: _SettingsFeedbackToastBody(
               message: message,
+              leadingIcon: leadingIcon,
               onDismiss: dismiss,
             ),
           ),
@@ -76,13 +108,15 @@ void showSettingsSavedToast({
   Future<void>.delayed(duration, dismiss);
 }
 
-class _SettingsSavedToastBody extends StatelessWidget {
-  const _SettingsSavedToastBody({
+class _SettingsFeedbackToastBody extends StatelessWidget {
+  const _SettingsFeedbackToastBody({
     required this.message,
+    required this.leadingIcon,
     required this.onDismiss,
   });
 
   final String message;
+  final IconData leadingIcon;
   final VoidCallback onDismiss;
 
   @override
@@ -90,9 +124,9 @@ class _SettingsSavedToastBody extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 2),
-          child: Icon(Icons.check, color: Colors.white, size: 22),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(leadingIcon, color: Colors.white, size: 22),
         ),
         const SizedBox(width: 10),
         Expanded(

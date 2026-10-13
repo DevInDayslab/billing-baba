@@ -57,6 +57,8 @@ class PartyModel {
     this.creditLimit = '',
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.additionalField3 = '',
+    this.additionalField4 = '',
     this.defaultPriceTier = PriceTier.retail,
     this.profileImageUrl,
     this.profileMediaAssetId,
@@ -116,6 +118,8 @@ class PartyModel {
       creditLimit: dto.creditLimit,
       additionalField1: extension.additionalField1,
       additionalField2: extension.additionalField2,
+      additionalField3: extension.additionalField3,
+      additionalField4: extension.additionalField4,
       defaultPriceTier: extension.defaultPriceTier.isNotEmpty
           ? PriceTier.normalizeTierKey(extension.defaultPriceTier)
           : PriceTier.normalizeTierKey(dto.pricingTier),
@@ -214,6 +218,12 @@ class PartyModel {
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2.trim()
           : '',
+      additionalField3: result.additionalField3Enabled
+          ? result.additionalField3.trim()
+          : '',
+      additionalField4: result.additionalField4Enabled
+          ? result.additionalField4.trim()
+          : '',
       defaultPriceTier: result.defaultPriceTier,
     );
   }
@@ -256,6 +266,8 @@ class PartyModel {
   final String creditLimit;
   final String additionalField1;
   final String additionalField2;
+  final String additionalField3;
+  final String additionalField4;
   final String defaultPriceTier;
   final String? profileImageUrl;
   final String? profileMediaAssetId;
@@ -398,6 +410,8 @@ class PartyModel {
     String? creditLimit,
     String? additionalField1,
     String? additionalField2,
+    String? additionalField3,
+    String? additionalField4,
     String? defaultPriceTier,
     String? profileImageUrl,
     String? profileMediaAssetId,
@@ -444,6 +458,8 @@ class PartyModel {
       creditLimit: creditLimit ?? this.creditLimit,
       additionalField1: additionalField1 ?? this.additionalField1,
       additionalField2: additionalField2 ?? this.additionalField2,
+      additionalField3: additionalField3 ?? this.additionalField3,
+      additionalField4: additionalField4 ?? this.additionalField4,
       defaultPriceTier: defaultPriceTier ?? this.defaultPriceTier,
       profileImageUrl: clearProfileImage
           ? null

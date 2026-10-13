@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
@@ -12,7 +14,11 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_ge
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_item_serial_no_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_item_column_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_items_table_layout.dart';
+import 'package:billing_baba/features/sales/application/sale_document_barcode_providers.dart';
+import 'package:billing_baba/features/sales/utils/sale_barcode_scan_messages.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/widgets/document_barcode_keyboard_host.dart';
+import 'package:billing_baba/shared/widgets/document_barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -50,11 +56,13 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
     final columnVisibility = ref.watch(
-      saleLineItemColumnVisibilityStateProvider,
+      saleLineItemEffectiveColumnVisibilityProvider,
     );
     final columnVisibilityNotifier = ref.read(
       saleLineItemColumnVisibilityStateProvider.notifier,
     );
+    final itemSettings =
+        ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
     final items = form.items;
 
     if (_activeRowIndex >= items.length) {
@@ -94,6 +102,7 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
                     widths: widths,
                     visibility: columnVisibility,
                     onToggleColumn: columnVisibilityNotifier.toggleColumn,
+                    itemSettings: itemSettings,
                   ),
                   for (var i = 0; i < items.length; i++)
                     _LineItemRow(
@@ -259,11 +268,13 @@ class _LineItemsHeader extends StatelessWidget {
     required this.widths,
     required this.visibility,
     required this.onToggleColumn,
+    required this.itemSettings,
   });
 
   final SaleLineItemColumnWidths widths;
   final SaleLineItemColumnVisibility visibility;
   final ValueChanged<SaleLineItemColumn> onToggleColumn;
+  final ItemSettings itemSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -373,6 +384,7 @@ class _LineItemsHeader extends StatelessWidget {
               child: SaleLineItemColumnPickerButton(
                 visibility: visibility,
                 onToggle: onToggleColumn,
+                itemSettings: itemSettings,
               ),
             ),
           ],
@@ -412,6 +424,37 @@ class _LineItemRow extends ConsumerWidget {
     final notifier = ref.read(
       addSaleFormProvider(sessionKey: sessionKey).notifier,
     );
+    final showBarcodeScan = isBarcodeScanningEnabled(ref);
+
+    void focusBarcodeScanner() {
+      DocumentBarcodeKeyboardScope.maybeOf(context)?.requestScannerFocus();
+    }
+
+    void onItemBarcodeTap() {
+      setSaleDocumentBarcodeItemRow(ref, sessionKey, index);
+      setSaleDocumentBarcodeSerialRow(ref, sessionKey, null);
+      onActivate();
+      focusBarcodeScanner();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(SaleBarcodeScanMessages.itemColumnScanHint),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
+
+    void onSerialBarcodeTap() {
+      setSaleDocumentBarcodeSerialRow(ref, sessionKey, index);
+      setSaleDocumentBarcodeItemRow(ref, sessionKey, null);
+      onActivate();
+      focusBarcodeScanner();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(SaleBarcodeScanMessages.serialColumnScanHint),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
 
     Future<void> pickDate({
       required DateTime? current,
@@ -457,26 +500,19 @@ class _LineItemRow extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Center(
-                        child: InkWell(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Scan with a USB/Bluetooth barcode scanner, '
-                                  'or type the code and press Enter',
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Icon(
-                            Icons.qr_code_scanner,
-                            size: 16,
-                            color: AppColors.textSecondary,
+                      if (showBarcodeScan) ...[
+                        Center(
+                          child: InkWell(
+                            onTap: onItemBarcodeTap,
+                            child: const Icon(
+                              Icons.qr_code_scanner,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
+                        const SizedBox(width: 4),
+                      ],
                       Expanded(
                         child: SaleCompactFieldBox(
                           height: _cellFieldHeight,
@@ -500,35 +536,54 @@ class _LineItemRow extends ConsumerWidget {
                   column: SaleLineItemColumn.serialNo,
                   visibility: visibility,
                   width: widths.serial,
-                  child: _CompactTextField(
-                    initialValue: item.serialNo,
-                    hintText: 'Serial',
-                    borderless: _gridBorderless,
-                    onChanged: (value) => notifier.updateLineItem(
-                      index,
-                      item.copyWith(serialNo: value),
-                    ),
-                    suffixIcon: IconButton(
-                      onPressed: () async {
-                        final result = await showSaleItemSerialNoDialog(
-                          context,
-                          initialSerials: item.serialNo,
-                          requiredQty: item.qty,
-                        );
-                        if (result == null) return;
-                        notifier.updateLineItem(
-                          index,
-                          item.copyWith(serialNo: result),
-                        );
-                      },
-                      icon: const Icon(Icons.list, size: 14),
-                      padding: EdgeInsets.zero,
-                      style: IconButton.styleFrom(
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  child: Row(
+                    children: [
+                      if (showBarcodeScan) ...[
+                        InkWell(
+                          onTap: onSerialBarcodeTap,
+                          child: const Padding(
+                            padding: EdgeInsets.only(right: 2),
+                            child: Icon(
+                              Icons.qr_code_scanner,
+                              size: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                      Expanded(
+                        child: _CompactTextField(
+                          initialValue: item.serialNo,
+                          hintText: 'Serial',
+                          borderless: _gridBorderless,
+                          onChanged: (value) => notifier.updateLineItem(
+                            index,
+                            item.copyWith(serialNo: value),
+                          ),
+                          suffixIcon: IconButton(
+                            onPressed: () async {
+                              final result = await showSaleItemSerialNoDialog(
+                                context,
+                                initialSerials: item.serialNo,
+                                requiredQty: item.qty,
+                              );
+                              if (result == null) return;
+                              notifier.updateLineItem(
+                                index,
+                                item.copyWith(serialNo: result),
+                              );
+                            },
+                            icon: const Icon(Icons.list, size: 14),
+                            padding: EdgeInsets.zero,
+                            style: IconButton.styleFrom(
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            tooltip: 'Serial numbers',
+                          ),
+                        ),
                       ),
-                      tooltip: 'Serial numbers',
-                    ),
+                    ],
                   ),
                 ),
                 SaleLineItemOptionalCell(

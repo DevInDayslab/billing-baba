@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
@@ -8,6 +10,7 @@ import 'package:billing_baba/features/settings/application/party_settings_provid
 import 'package:billing_baba/features/parties/presentation/desktop/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/party_groups_page.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_settings_side_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -195,7 +198,9 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
                     currentRoute: currentRoute,
                     onAddParty: () => openDesktopAddPartyDialog(context),
                     onAddGroup: () => openDesktopAddGroupDialog(context, ref),
-                    onSettingsTap: () => context.push(AppRoutes.settingsParty),
+                    onSettingsTap: () => unawaited(
+                      showPartySettingsSidePanel(context: context),
+                    ),
                   ),
                   Expanded(
                     child: TabBarView(

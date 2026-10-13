@@ -2,6 +2,7 @@ import 'package:billing_baba/features/inventory/models/item_location_history_mod
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/rack_shelf_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/item_qty_unit_suffix.dart';
+import 'package:billing_baba/features/inventory/utils/item_quantity_input.dart';
 import 'package:billing_baba/features/inventory/utils/item_unit_qty_conversion.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
@@ -49,6 +50,9 @@ class StockSection extends StatelessWidget {
     this.onRackPhotoUploaded,
     this.onRackLocationSynced,
     this.decimalInputFormatter,
+    required this.quantityDecimalPlaces,
+    this.showOpeningBatchButton = false,
+    this.onOpeningBatchTap,
     super.key,
   });
 
@@ -89,13 +93,13 @@ class StockSection extends StatelessWidget {
   final VoidCallback? onRackPhotoUploaded;
   final ValueChanged<String>? onRackLocationSynced;
   final TextInputFormatter? decimalInputFormatter;
-
-  static final _defaultDecimalFormatter = FilteringTextInputFormatter.allow(
-    RegExp(r'^\d*\.?\d*'),
-  );
+  final int quantityDecimalPlaces;
+  final bool showOpeningBatchButton;
+  final VoidCallback? onOpeningBatchTap;
 
   List<TextInputFormatter> get _formatters => [
-    decimalInputFormatter ?? _defaultDecimalFormatter,
+    decimalInputFormatter ??
+        ItemQuantityInput.formatter(quantityDecimalPlaces),
   ];
 
   Widget _floatingField({required String label, required Widget child}) {
@@ -135,7 +139,10 @@ class StockSection extends StatelessWidget {
       secondaryUnitId: secondaryUnitId,
       baseToSecondaryRate: baseToSecondaryRate,
     );
-    controller.text = formatItemQtyFieldValue(newDisplay);
+    controller.text = formatItemQtyFieldValue(
+      newDisplay,
+      decimalPlaces: quantityDecimalPlaces,
+    );
     onBaseQtyChanged(baseQty);
   }
 
@@ -144,11 +151,15 @@ class StockSection extends StatelessWidget {
     required String? displayUnitId,
     required ValueChanged<double> onBaseQtyChanged,
   }) {
+    final parsed = double.tryParse(text) ?? 0;
+    final displayQty = ItemQuantityInput.roundToPlaces(
+      parsed,
+      quantityDecimalPlaces,
+    );
     if (baseUnitId == null) {
-      onBaseQtyChanged(double.tryParse(text) ?? 0);
+      onBaseQtyChanged(displayQty);
       return;
     }
-    final displayQty = double.tryParse(text) ?? 0;
     onBaseQtyChanged(
       qtyInBaseUnit(
         qty: displayQty,
@@ -174,17 +185,35 @@ class StockSection extends StatelessWidget {
               style: saleFieldTextStyle,
               decoration: buildFormControlDecoration(
                 labelText: 'Opening Stock',
-                suffix: ItemQtyUnitSuffix(
-                  unitOptions: stockQtyUnitOptions,
-                  selectedUnitId: openingQtyUnitId,
-                  fallbackBaseUnitId: baseUnitId,
-                  onUnitSelected: (unitId) => _onQtyUnitChanged(
-                    controller: openingQtyController,
-                    currentUnitId: openingQtyUnitId,
-                    newUnitId: unitId,
-                    onUnitChanged: onOpeningQtyUnitChanged,
-                    onBaseQtyChanged: onOpeningQtyChanged,
-                  ),
+                suffix: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showOpeningBatchButton && onOpeningBatchTap != null)
+                      TextButton(
+                        onPressed: onOpeningBatchTap,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'Batch',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ItemQtyUnitSuffix(
+                      unitOptions: stockQtyUnitOptions,
+                      selectedUnitId: openingQtyUnitId,
+                      fallbackBaseUnitId: baseUnitId,
+                      onUnitSelected: (unitId) => _onQtyUnitChanged(
+                        controller: openingQtyController,
+                        currentUnitId: openingQtyUnitId,
+                        newUnitId: unitId,
+                        onUnitChanged: onOpeningQtyUnitChanged,
+                        onBaseQtyChanged: onOpeningQtyChanged,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               keyboardType: const TextInputType.numberWithOptions(

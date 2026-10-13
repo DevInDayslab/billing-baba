@@ -5,6 +5,7 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/widgets/godowns/mobile_add_godown_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/item_qty_unit_suffix.dart';
+import 'package:billing_baba/features/inventory/utils/item_quantity_input.dart';
 import 'package:billing_baba/features/inventory/utils/item_unit_qty_conversion.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:collection/collection.dart';
@@ -38,6 +39,7 @@ class MobileAddItemStockSection extends StatelessWidget {
     required this.minStockUnitId,
     required this.onOpeningQtyUnitChanged,
     required this.onMinStockUnitChanged,
+    required this.quantityDecimalPlaces,
     super.key,
   });
 
@@ -63,8 +65,12 @@ class MobileAddItemStockSection extends StatelessWidget {
   final String? minStockUnitId;
   final ValueChanged<String> onOpeningQtyUnitChanged;
   final ValueChanged<String> onMinStockUnitChanged;
+  final int quantityDecimalPlaces;
 
-  static final _decimalFormatter = FilteringTextInputFormatter.allow(
+  List<TextInputFormatter> get _qtyFormatters =>
+      ItemQuantityInput.formatters(quantityDecimalPlaces);
+
+  static final _priceDecimalFormatter = FilteringTextInputFormatter.allow(
     RegExp(r'^\d*\.?\d*'),
   );
 
@@ -104,7 +110,10 @@ class MobileAddItemStockSection extends StatelessWidget {
       secondaryUnitId: secondaryUnitId,
       baseToSecondaryRate: baseToSecondaryRate,
     );
-    controller.text = formatItemQtyFieldValue(newDisplay);
+    controller.text = formatItemQtyFieldValue(
+      newDisplay,
+      decimalPlaces: quantityDecimalPlaces,
+    );
     onBaseQtyChanged(baseQty);
   }
 
@@ -113,11 +122,15 @@ class MobileAddItemStockSection extends StatelessWidget {
     required String? displayUnitId,
     required ValueChanged<double> onBaseQtyChanged,
   }) {
+    final parsed = double.tryParse(text) ?? 0;
+    final displayQty = ItemQuantityInput.roundToPlaces(
+      parsed,
+      quantityDecimalPlaces,
+    );
     if (baseUnitId == null) {
-      onBaseQtyChanged(double.tryParse(text) ?? 0);
+      onBaseQtyChanged(displayQty);
       return;
     }
-    final displayQty = double.tryParse(text) ?? 0;
     onBaseQtyChanged(
       qtyInBaseUnit(
         qty: displayQty,
@@ -225,7 +238,7 @@ class MobileAddItemStockSection extends StatelessWidget {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  inputFormatters: [_decimalFormatter],
+                  inputFormatters: _qtyFormatters,
                   suffix: ItemQtyUnitSuffix(
                     unitOptions: stockQtyUnitOptions,
                     selectedUnitId: openingQtyUnitId,
@@ -252,7 +265,7 @@ class MobileAddItemStockSection extends StatelessWidget {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  inputFormatters: [_decimalFormatter],
+                  inputFormatters: [_priceDecimalFormatter],
                   onChanged: (v) =>
                       onOpeningPriceChanged(double.tryParse(v) ?? 0),
                 ),
@@ -310,7 +323,7 @@ class MobileAddItemStockSection extends StatelessWidget {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  inputFormatters: [_decimalFormatter],
+                  inputFormatters: _qtyFormatters,
                   suffix: ItemQtyUnitSuffix(
                     unitOptions: stockQtyUnitOptions,
                     selectedUnitId: minStockUnitId,

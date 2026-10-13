@@ -74,6 +74,27 @@ class SaleLineItemColumnVisibility {
 
   String encode() => _visible.map((c) => c.storageKey).join(',');
 
+  /// Gates tax/discount columns by Item Settings (item-wise tax / discount).
+  SaleLineItemColumnVisibility applyItemSettings({
+    required bool itemWiseTax,
+    required bool itemWiseDiscount,
+  }) {
+    final next = Set<SaleLineItemColumn>.from(_visible);
+    if (itemWiseTax) {
+      next.add(SaleLineItemColumn.taxPercent);
+      next.add(SaleLineItemColumn.taxAmount);
+    } else {
+      next.remove(SaleLineItemColumn.taxPercent);
+      next.remove(SaleLineItemColumn.taxAmount);
+    }
+    if (itemWiseDiscount) {
+      next.add(SaleLineItemColumn.discount);
+    } else {
+      next.remove(SaleLineItemColumn.discount);
+    }
+    return SaleLineItemColumnVisibility(next);
+  }
+
   static SaleLineItemColumnVisibility decode(String? raw) {
     if (raw == null || raw.trim().isEmpty) return defaults;
 

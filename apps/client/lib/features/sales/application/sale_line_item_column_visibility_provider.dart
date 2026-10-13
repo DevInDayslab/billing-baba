@@ -1,10 +1,25 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_line_item_column_visibility_provider.g.dart';
+
+/// User column prefs merged with Item Settings (item-wise tax / discount).
+final saleLineItemEffectiveColumnVisibilityProvider =
+    Provider<SaleLineItemColumnVisibility>((ref) {
+      final saved = ref.watch(saleLineItemColumnVisibilityStateProvider);
+      final settings =
+          ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+      return saved.applyItemSettings(
+        itemWiseTax: settings.itemWiseTax,
+        itemWiseDiscount: settings.itemWiseDiscount,
+      );
+    });
 
 /// Persisted visibility for optional columns on the Add Sale line-items grid.
 @Riverpod(keepAlive: true)

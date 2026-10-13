@@ -15,3 +15,15 @@ void notifySettingsSaved(
     );
   });
 }
+
+void notifySettingsBlocked(
+  Ref ref, {
+  required String message,
+}) {
+  SchedulerBinding.instance.addPostFrameCallback((_) {
+    showSettingsBlockedToast(
+      message: message,
+      context: rootNavigatorKey.currentContext,
+    );
+  });
+}

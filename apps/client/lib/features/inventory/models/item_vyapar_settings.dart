@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class ItemDateFormatOption {
   const ItemDateFormatOption({required this.id, required this.label});
 
@@ -8,11 +10,56 @@ class ItemDateFormatOption {
 abstract final class ItemFieldCatalog {
   static const customFieldCount = 6;
 
+  static const defaultBatchDateFormatId = 'dd/mm/yy';
+
   static const dateFormatOptions = <ItemDateFormatOption>[
     ItemDateFormatOption(id: 'mm/yy', label: 'mm/yy'),
     ItemDateFormatOption(id: 'dd/mm/yy', label: 'dd/mm/yy'),
     ItemDateFormatOption(id: 'dd-MM-yyyy', label: 'dd-mm-yyyy'),
   ];
+
+  /// Batch tracking (Exp./Mfg. date) — Vyapar shows mm/yy and dd/mm/yy only.
+  static const batchDateFormatOptions = <ItemDateFormatOption>[
+    ItemDateFormatOption(id: 'mm/yy', label: 'mm/yy'),
+    ItemDateFormatOption(id: 'dd/mm/yy', label: 'dd/mm/yy'),
+  ];
+
+  static Set<String> get _batchDateFormatIds =>
+      batchDateFormatOptions.map((o) => o.id).toSet();
+
+  static String resolveBatchDateFormatId(String? raw) {
+    final id = raw?.trim();
+    if (id != null && _batchDateFormatIds.contains(id)) return id;
+    return defaultBatchDateFormatId;
+  }
+
+  static String intlPatternForDateFormatId(String? formatId) {
+    return switch (resolveBatchDateFormatId(formatId)) {
+      'mm/yy' => 'MM/yy',
+      'dd/mm/yy' => 'dd/MM/yy',
+      _ => 'dd/MM/yyyy',
+    };
+  }
+
+  static bool batchDateFormatIsMonthYear(String? formatId) {
+    return resolveBatchDateFormatId(formatId) == 'mm/yy';
+  }
+
+  static String formatBatchDate(DateTime? date, String? formatId) {
+    if (date == null) return '';
+    return DateFormat(intlPatternForDateFormatId(formatId)).format(date);
+  }
+
+  static DateTime? parseBatchDate(String raw, String? formatId) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+    final pattern = intlPatternForDateFormatId(formatId);
+    try {
+      return DateFormat(pattern).parseStrict(text);
+    } on Object {
+      return DateTime.tryParse(text);
+    }
+  }
 
   static String defaultCustomFieldLabel(int index) =>
       'Custom Field ${index + 1}';
@@ -131,10 +178,10 @@ class ItemVyaparExtension {
     batchNoEnabled: false,
     batchNoLabel: 'Batch No.',
     batchExpDateEnabled: false,
-    batchExpDateFormatId: ItemFieldCatalog.dateFormatOptions.first.id,
+    batchExpDateFormatId: ItemFieldCatalog.batchDateFormatOptions.first.id,
     batchExpDateLabel: 'Exp. Date',
     batchMfgDateEnabled: false,
-    batchMfgDateFormatId: 'dd/mm/yy',
+    batchMfgDateFormatId: ItemFieldCatalog.defaultBatchDateFormatId,
     batchMfgDateLabel: 'Mfg. Date',
     batchModelNoEnabled: false,
     batchModelNoLabel: 'Model No.',
@@ -159,8 +206,7 @@ class ItemVyaparExtension {
       });
     }
 
-    final formatIds =
-        ItemFieldCatalog.dateFormatOptions.map((e) => e.id).toSet();
+    final batchFormatIds = ItemFieldCatalog._batchDateFormatIds;
 
     return ItemVyaparExtension(
       showLowStockDialog:
@@ -192,20 +238,20 @@ class ItemVyaparExtension {
       batchNoLabel: json['batchNoLabel'] as String? ?? defaults.batchNoLabel,
       batchExpDateEnabled:
           json['batchExpDateEnabled'] as bool? ?? defaults.batchExpDateEnabled,
-      batchExpDateFormatId: formatIds.contains(
-        json['batchExpDateFormatId'] as String?,
-      )
-          ? json['batchExpDateFormatId'] as String
-          : defaults.batchExpDateFormatId,
+      batchExpDateFormatId: ItemFieldCatalog.resolveBatchDateFormatId(
+        batchFormatIds.contains(json['batchExpDateFormatId'] as String?)
+            ? json['batchExpDateFormatId'] as String?
+            : null,
+      ),
       batchExpDateLabel:
           json['batchExpDateLabel'] as String? ?? defaults.batchExpDateLabel,
       batchMfgDateEnabled:
           json['batchMfgDateEnabled'] as bool? ?? defaults.batchMfgDateEnabled,
-      batchMfgDateFormatId: formatIds.contains(
-        json['batchMfgDateFormatId'] as String?,
-      )
-          ? json['batchMfgDateFormatId'] as String
-          : defaults.batchMfgDateFormatId,
+      batchMfgDateFormatId: ItemFieldCatalog.resolveBatchDateFormatId(
+        batchFormatIds.contains(json['batchMfgDateFormatId'] as String?)
+            ? json['batchMfgDateFormatId'] as String?
+            : null,
+      ),
       batchMfgDateLabel:
           json['batchMfgDateLabel'] as String? ?? defaults.batchMfgDateLabel,
       batchModelNoEnabled:

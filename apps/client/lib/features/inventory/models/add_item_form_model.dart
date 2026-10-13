@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/opening_stock_batch_row.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 
 enum PriceTaxMode { withoutTax, withTax }
@@ -212,6 +213,8 @@ class AddItemFormState {
     this.baseUnitError = false,
     this.fieldErrors = const {},
     this.isDirty = false,
+    this.batchTrackingEnabled = false,
+    this.openingStockBatches = const [],
   });
 
   final ItemType itemType;
@@ -271,8 +274,13 @@ class AddItemFormState {
   /// Server / extra validation messages keyed by API field name.
   final Map<String, String> fieldErrors;
   final bool isDirty;
+  final bool batchTrackingEnabled;
+  final List<OpeningStockBatchRow> openingStockBatches;
 
   String? errorFor(String field) => fieldErrors[field];
+
+  bool get usesOpeningStockBatches =>
+      batchTrackingEnabled && openingStockBatches.isNotEmpty;
 
   double get rawMaterialTotal =>
       rawMaterials.fold(0, (sum, row) => sum + row.estimatedCost);
@@ -362,6 +370,9 @@ class AddItemFormState {
     Map<String, String>? fieldErrors,
     bool clearFieldErrors = false,
     bool? isDirty,
+    bool? batchTrackingEnabled,
+    List<OpeningStockBatchRow>? openingStockBatches,
+    bool clearOpeningStockBatches = false,
   }) {
     return AddItemFormState(
       itemType: itemType ?? this.itemType,
@@ -429,6 +440,10 @@ class AddItemFormState {
           ? const {}
           : (fieldErrors ?? this.fieldErrors),
       isDirty: isDirty ?? this.isDirty,
+      batchTrackingEnabled: batchTrackingEnabled ?? this.batchTrackingEnabled,
+      openingStockBatches: clearOpeningStockBatches
+          ? const []
+          : (openingStockBatches ?? this.openingStockBatches),
     );
   }
 }
