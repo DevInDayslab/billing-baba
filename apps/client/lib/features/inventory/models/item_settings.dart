@@ -93,6 +93,8 @@ class ItemSettings {
     required this.vyapar,
   });
 
+  static const defaultQuantityDecimalPlaces = 2;
+
   factory ItemSettings.defaults() => ItemSettings(
     enableItem: true,
     itemTypeScope: ItemTypeScope.productsAndServices,
@@ -107,7 +109,7 @@ class ItemSettings {
     itemCategory: true,
     partyWiseItemRate: true,
     wholesalePrice: true,
-    quantityDecimalPlaces: 2,
+    quantityDecimalPlaces: defaultQuantityDecimalPlaces,
     itemWiseTax: true,
     calculateTaxBasedOnMrp: false,
     itemWiseDiscount: false,
@@ -307,5 +309,12 @@ class ItemSettings {
     ItemVyaparExtension Function(ItemVyaparExtension current) update,
   ) {
     return copyWith(vyapar: update(vyapar));
+  }
+
+  /// Label for the item description field (Item Settings → Description → Change Text).
+  String get resolvedDescriptionFieldLabel {
+    final custom = vyapar.descriptionFieldLabel.trim();
+    if (custom.isNotEmpty) return custom;
+    return 'Description';
   }
 }

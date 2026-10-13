@@ -15,7 +15,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Whether HID/camera barcode scanning is enabled in item settings.
 bool isBarcodeScanningEnabled(WidgetRef ref) {
   final settings = ref.watch(itemSettingsProvider).value;
-  return settings?.barcodeScanningEnabled ?? true;
+  if (settings == null) return false;
+  return settings.barcodeScanningEnabled;
 }
 
 /// Prefer USB HID UI when item settings select USB scanner.

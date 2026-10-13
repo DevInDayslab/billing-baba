@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_bom_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/add_item_form_mapper.dart';
@@ -29,7 +30,13 @@ class ItemBom extends _$ItemBom {
     String itemId,
     AddItemFormState form,
   ) async {
-    await replaceFromForm(itemId, AddItemFormMapper.toBomRequest(form));
+    await replaceFromForm(
+      itemId,
+      AddItemFormMapper.toBomRequest(
+        form,
+        quantityDecimalPlaces: ref.read(itemQuantityDecimalPlacesProvider),
+      ),
+    );
   }
 
   Future<void> removeForItem(String itemId) async {
