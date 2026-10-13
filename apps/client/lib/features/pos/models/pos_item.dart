@@ -4,6 +4,7 @@ class PosItem {
     required this.name,
     required this.sku,
     required this.price,
+    this.purchasePrice,
     required this.stock,
     this.categoryId,
     this.categoryName = 'Uncategorized',
@@ -21,6 +22,7 @@ class PosItem {
   final String? categoryId;
   final String categoryName;
   final double price;
+  final double? purchasePrice;
   final double? mrp;
   final int stock;
   final String unit;

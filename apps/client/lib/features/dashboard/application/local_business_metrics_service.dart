@@ -219,6 +219,201 @@ class LocalBusinessMetricsService {
     );
   }
 
+  Future<AllTransactionsReportData?> buildAllTransactions(
+    ReportQuery query,
+  ) async {
+    final businessId = _businessId;
+    if (businessId == null) return null;
+
+    final range = dateRangeForReportQuery(query);
+    final rows = _filterTransactionRows(
+      await _buildLocalTransactionRows(businessId, range),
+      documentType: query.documentType,
+      searchQuery: query.q,
+    );
+
+    final page = query.page < 1 ? 1 : query.page;
+    final limit = query.limit < 1 ? 20 : query.limit;
+    final start = (page - 1) * limit;
+    final pageRows = start >= rows.length
+        ? const <ReportTransactionRow>[]
+        : rows.skip(start).take(limit).toList();
+
+    final totalPages = rows.isEmpty ? 1 : (rows.length / limit).ceil();
+
+    return AllTransactionsReportData(
+      rows: pageRows,
+      meta: ReportPaginationMeta(
+        page: page,
+        limit: limit,
+        total: rows.length,
+        totalPages: totalPages,
+      ),
+    );
+  }
+
+  Future<DayBookReportData?> buildDayBook(ReportQuery query) async {
+    final businessId = _businessId;
+    if (businessId == null) return null;
+
+    final day = _resolveDayBookDate(query);
+    final dayRange = DateTimeRange(start: day, end: day);
+
+    final filtered = _filterTransactionRows(
+      await _buildLocalTransactionRows(businessId, dayRange),
+      documentType: query.documentType,
+      searchQuery: query.q,
+    );
+
+    var totalMoneyIn = 0.0;
+    var totalMoneyOut = 0.0;
+    for (final row in filtered) {
+      totalMoneyIn += row.moneyIn;
+      totalMoneyOut += row.moneyOut;
+    }
+
+    return DayBookReportData(
+      rows: filtered,
+      totalMoneyIn: totalMoneyIn,
+      totalMoneyOut: totalMoneyOut,
+      netTotal: totalMoneyIn - totalMoneyOut,
+    );
+  }
+
+  DateTime _resolveDayBookDate(ReportQuery query) {
+    final raw = query.date ?? DateTime.now();
+    return DateTime(raw.year, raw.month, raw.day);
+  }
+
+  Future<List<ReportTransactionRow>> _buildLocalTransactionRows(
+    String businessId,
+    DateTimeRange range,
+  ) async {
+    final partyNames = await _partyNameIndex(businessId);
+    final rows = <ReportTransactionRow>[];
+
+    for (final type in revenueSalesTypes) {
+      final docs = await _salesLocal.listByType(
+        businessId: businessId,
+        documentType: type,
+      );
+      for (final doc in docs) {
+        if (doc.status != 'finalized') continue;
+        if (!_inRange(doc.documentDate, range)) continue;
+        final total = _parseAmount(doc.totalAmount);
+        final paid = _parseAmount(doc.paidAmount);
+        final balance = (total - paid).clamp(0.0, double.infinity).toDouble();
+        final date = parseDocumentCalendarDay(doc.documentDate) ?? range.start;
+        rows.add(
+          ReportTransactionRow(
+            id: doc.id,
+            date: date,
+            refNo: doc.documentNumber ?? doc.documentSeries,
+            partyName: partyNames[doc.partyId ?? ''] ?? '—',
+            category: 'Sales',
+            type: 'Sale',
+            total: total,
+            received: paid,
+            balance: balance,
+            status: doc.status,
+            paymentType: doc.paymentMode ?? '',
+          ),
+        );
+      }
+    }
+
+    final purchaseDocs = await _purchaseLocal.listByType(
+      businessId: businessId,
+      documentType: 'purchase_bill',
+    );
+    for (final doc in purchaseDocs) {
+      if (doc.status != 'finalized') continue;
+      if (!_inRange(doc.documentDate, range)) continue;
+      final total = _parseAmount(doc.totalAmount);
+      final paid = _parseAmount(doc.paidAmount);
+      final balance = (total - paid).clamp(0.0, double.infinity).toDouble();
+      final date = parseDocumentCalendarDay(doc.documentDate) ?? range.start;
+      rows.add(
+        ReportTransactionRow(
+          id: doc.id,
+          date: date,
+          refNo: doc.documentNumber ?? doc.documentSeries,
+          partyName: partyNames[doc.partyId] ?? '—',
+          category: 'Purchase',
+          type: 'Purchase',
+          total: total,
+          received: paid,
+          balance: balance,
+          moneyOut: total,
+          dueDate: doc.dueDate != null
+              ? parseDocumentCalendarDay(doc.dueDate!)
+              : null,
+          status: doc.status,
+          paymentType: doc.paymentMode ?? '',
+        ),
+      );
+    }
+
+    final expenses = await _expenseLocal.listExpenses(businessId);
+    for (final expense in expenses) {
+      if (!_inRange(expense.expenseDate, range)) continue;
+      final amount = _parseAmount(expense.amount);
+      final date =
+          parseDocumentCalendarDay(expense.expenseDate) ?? range.start;
+      rows.add(
+        ReportTransactionRow(
+          id: expense.id,
+          date: date,
+          refNo: expense.description?.trim().isNotEmpty == true
+              ? expense.description!.trim()
+              : expense.id,
+          partyName: expense.partyName?.trim().isNotEmpty == true
+              ? expense.partyName!.trim()
+              : '—',
+          category: 'Expense',
+          type: 'Expense',
+          total: amount,
+          moneyOut: amount,
+          status: 'paid',
+          paymentType: expense.paymentMode ?? '',
+        ),
+      );
+    }
+
+    rows.sort((a, b) => b.date.compareTo(a.date));
+    return rows;
+  }
+
+  List<ReportTransactionRow> _filterTransactionRows(
+    List<ReportTransactionRow> rows, {
+    String? documentType,
+    String? searchQuery,
+  }) {
+    final typeLabel = _mapTransactionDocumentTypeFilter(documentType);
+    final q = searchQuery?.trim().toLowerCase();
+    return rows.where((row) {
+      if (typeLabel != null && row.type != typeLabel) return false;
+      if (q == null || q.isEmpty) return true;
+      return row.partyName.toLowerCase().contains(q) ||
+          row.refNo.toLowerCase().contains(q) ||
+          row.type.toLowerCase().contains(q) ||
+          row.category.toLowerCase().contains(q) ||
+          row.status.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  String? _mapTransactionDocumentTypeFilter(String? documentType) {
+    if (documentType == null || documentType.isEmpty) return null;
+    return switch (documentType) {
+      'sale' => 'Sale',
+      'purchase' => 'Purchase',
+      'payment_in' => 'Payment In',
+      'payment_out' => 'Payment Out',
+      'expense' => 'Expense',
+      _ => null,
+    };
+  }
+
   Future<PurchaseReportData?> buildPurchaseReport(ReportQuery query) async {
     final businessId = _businessId;
     if (businessId == null) return null;

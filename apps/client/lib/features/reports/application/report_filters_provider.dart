@@ -40,7 +40,11 @@ class ReportFilters extends _$ReportFilters {
     final last = reportLastSelectableDay();
     final normalized = DateTime(date.year, date.month, date.day);
     final selected = normalized.isAfter(last) ? last : normalized;
-    state = state.copyWith(selectedDate: selected, currentPage: 1);
+    state = state.copyWith(
+      selectedDate: selected,
+      currentPage: 1,
+      isTableLoading: true,
+    );
   }
 
   void clearSelectedDate() {

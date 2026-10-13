@@ -17,11 +17,63 @@ final _currency = NumberFormat.currency(
   decimalDigits: 0,
 );
 
-/// Columns follow the catalog pane width so the grid stays 3–4 across desktops.
+String _saleProductInfoTooltip(PosItem item) {
+  final lines = <String>[];
+  final purchase = item.purchasePrice;
+  final selling = item.price;
+
+  lines.add(
+    'Purchase price: ${purchase != null ? _currency.format(purchase) : '—'}',
+  );
+  lines.add('Selling price: ${_currency.format(selling)}');
+
+  final mrp = item.mrp;
+  if (mrp != null && mrp > 0) {
+    lines.add('MRP: ${_currency.format(mrp)}');
+  }
+
+  if (purchase != null) {
+    final profit = selling - purchase;
+    final marginPercent = selling > 0 ? (profit / selling * 100).round() : 0;
+    lines.add('Profit: ${_currency.format(profit)} ($marginPercent%)');
+  }
+
+  lines.add('Stock: ${item.stock} ${item.unit}');
+
+  final hsn = item.hsnCode?.trim();
+  if (hsn != null && hsn.isNotEmpty) {
+    lines.add('HSN: $hsn');
+  }
+
+  final category = item.categoryName.trim();
+  if (category.isNotEmpty && category.toLowerCase() != 'uncategorized') {
+    lines.add('Category: $category');
+  }
+
+  final brand = item.brandName?.trim();
+  if (brand != null && brand.isNotEmpty) {
+    lines.add('Brand: $brand');
+  }
+
+  return lines.join('\n');
+}
+
+/// Each card is ~60% of the original width/height so more products fit per row.
+const kSaleProductCardSizeScale = 0.6;
+
+const _saleProductCardHeightFactor = 1.55;
+
+/// Columns follow the catalog pane width (more columns when [kSaleProductCardSizeScale] < 1).
 int saleProductColumnCount(double width) {
-  if (width >= PosBreakpoints.laptop) return 4;
-  if (width >= PosBreakpoints.mobile) return 3;
-  return 2;
+  final int baseColumns;
+  if (width >= PosBreakpoints.laptop) {
+    baseColumns = 4;
+  } else if (width >= PosBreakpoints.mobile) {
+    baseColumns = 3;
+  } else {
+    baseColumns = 2;
+  }
+  return (baseColumns / kSaleProductCardSizeScale).ceil();
 }
 
 class SaleProductPane extends ConsumerWidget {
@@ -115,7 +167,7 @@ class SaleProductPane extends ConsumerWidget {
                     final columns = saleProductColumnCount(
                       constraints.maxWidth,
                     );
-                    final gap = AppSpacing.md;
+                    final gap = AppSpacing.sm;
                     final cardWidth =
                         (constraints.maxWidth - gap * (columns - 1)) / columns;
 
@@ -124,7 +176,7 @@ class SaleProductPane extends ConsumerWidget {
                         crossAxisCount: columns,
                         mainAxisSpacing: gap,
                         crossAxisSpacing: gap,
-                        mainAxisExtent: cardWidth * 1.55,
+                        mainAxisExtent: cardWidth * _saleProductCardHeightFactor,
                       ),
                       itemCount: items.length,
                       itemBuilder: (context, index) {
@@ -352,6 +404,13 @@ class _SaleProductCard extends StatelessWidget {
         : null;
     final inStock = !item.isOutOfStock;
     final brand = item.brandName?.trim();
+    final sku = item.sku.trim();
+    final category = item.categoryName.trim();
+    final showCategory =
+        category.isNotEmpty && category.toLowerCase() != 'uncategorized';
+    final qtyFooter = showCategory
+        ? 'Qty Left: ${item.stock}  ·  $category'
+        : 'Qty Left: ${item.stock}';
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
@@ -369,7 +428,7 @@ class _SaleProductCard extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -403,11 +462,24 @@ class _SaleProductCard extends StatelessWidget {
                   item.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleSmall?.copyWith(
+                  style: textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
+                if (sku.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    sku,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary.withValues(alpha: 0.75),
+                    ),
+                  ),
+                ],
                 if (brand != null && brand.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
@@ -421,29 +493,15 @@ class _SaleProductCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    _Badge(
-                      label: inStock ? 'In Stock' : 'Out of Stock',
-                      background: inStock
-                          ? AppColors.successSoft
-                          : AppColors.dangerSoft,
-                      foreground: inStock
-                          ? AppColors.success
-                          : AppColors.danger,
-                    ),
-                    const Spacer(),
-                    Flexible(
-                      child: Text(
-                        item.sku,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _Badge(
+                    label: inStock ? 'In Stock' : 'Out of Stock',
+                    background: inStock
+                        ? AppColors.successSoft
+                        : AppColors.dangerSoft,
+                    foreground: inStock ? AppColors.success : AppColors.danger,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
@@ -479,15 +537,52 @@ class _SaleProductCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Qty Left: ${item.stock}  ·  ${item.categoryName}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.labelSmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        qtyFooter,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    _SaleProductInfoButton(tooltip: _saleProductInfoTooltip(item)),
+                  ],
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SaleProductInfoButton extends StatelessWidget {
+  const _SaleProductInfoButton({required this.tooltip});
+
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      waitDuration: const Duration(milliseconds: 200),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: AppRadius.smBorder,
+          onTap: () {},
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              Icons.info_outline,
+              size: 16,
+              color: AppColors.textSecondary.withValues(alpha: 0.85),
             ),
           ),
         ),

@@ -574,15 +574,28 @@ class ReportsService {
   Future<DayBookReportData> fetchDayBook(ReportQuery query) async {
     try {
       final payload = await _repository.getDayBook(query);
-      return DayBookReportData(
+      final remote = DayBookReportData(
         rows: payload.rows.map(ReportMapper.toTransactionRow).toList(),
         totalMoneyIn: _amount(payload.totalMoneyIn),
         totalMoneyOut: _amount(payload.totalMoneyOut),
         netTotal: _amount(payload.netTotal),
       );
+      return _preferLocalDayBook(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildDayBook(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<DayBookReportData> _preferLocalDayBook(
+    DayBookReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildDayBook(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<AllTransactionsReportData> fetchAllTransactions(
@@ -591,13 +604,26 @@ class ReportsService {
     try {
       final response = await _repository.getAllTransactions(query);
       final payload = response.data;
-      return AllTransactionsReportData(
+      final remote = AllTransactionsReportData(
         rows: payload.rows.map(ReportMapper.toTransactionRow).toList(),
         meta: response.meta,
       );
+      return _preferLocalAllTransactions(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildAllTransactions(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<AllTransactionsReportData> _preferLocalAllTransactions(
+    AllTransactionsReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildAllTransactions(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<ProfitLossReportData> fetchProfitLoss(ReportQuery query) async {

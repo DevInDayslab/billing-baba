@@ -32,6 +32,7 @@ PosItem mapInventoryItemToPosItem(
     categoryId: item.categoryId,
     categoryName: categoryName,
     price: item.salePrice ?? 0,
+    purchasePrice: item.purchasePrice,
     mrp: item.mrp,
     stock: stock,
     unit: item.baseUnitShortName ?? 'pcs',
