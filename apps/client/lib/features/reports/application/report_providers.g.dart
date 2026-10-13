@@ -196,7 +196,7 @@ final class PartyReportByItemReportProvider
 }
 
 String _$partyReportByItemReportHash() =>
-    r'817db6a277e3cb663180dabee6ce31e86e6ed059';
+    r'13a560db3b7c88cf24f3290ae90b6388fd46fd8b';
 
 abstract class _$PartyReportByItemReport
     extends $AsyncNotifier<PartyReportByItemReportData?> {
@@ -678,7 +678,7 @@ final class ItemDetailReportProvider
   ItemDetailReport create() => ItemDetailReport();
 }
 
-String _$itemDetailReportHash() => r'790d64d97a07dcbb420fd6a6166974dd630f9262';
+String _$itemDetailReportHash() => r'f7d732167ab1efb3cfa4ac105d21408d5e6a73f6';
 
 abstract class _$ItemDetailReport
     extends $AsyncNotifier<ItemDetailReportData?> {
@@ -1128,7 +1128,7 @@ final class BankStatementReportProvider
 }
 
 String _$bankStatementReportHash() =>
-    r'c751772a292af9c9411076a60730f03501ef862f';
+    r'adb2d6ad8acace503103f59118e1ef84ea4f1af3';
 
 abstract class _$BankStatementReport
     extends $AsyncNotifier<BankStatementReportData?> {
@@ -1919,7 +1919,7 @@ final class LoanStatementReportProvider
 }
 
 String _$loanStatementReportHash() =>
-    r'ac23b1567253aa261e69f95fb495714fc7b93872';
+    r'ca8f901a8f7e0ea88e2bfd8904a501f553e5f41f';
 
 abstract class _$LoanStatementReport
     extends $AsyncNotifier<LoanStatementReportData?> {

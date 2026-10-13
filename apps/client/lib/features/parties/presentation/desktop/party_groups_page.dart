@@ -10,6 +10,7 @@ import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_group_detail_panel.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_group_list_panel.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_settings_side_panel.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
 import 'package:flutter/material.dart';
@@ -147,6 +148,9 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
               PartyPageTitleBar(
                 currentRoute: AppRoutes.partyGroups,
                 onAddGroup: () => openDesktopAddGroupDialog(context, ref),
+                onSettingsTap: () => unawaited(
+                  showPartySettingsSidePanel(context: context),
+                ),
               ),
               Expanded(child: body),
             ],

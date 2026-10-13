@@ -32,7 +32,7 @@ final class ItemBomProvider extends $AsyncNotifierProvider<ItemBom, void> {
   ItemBom create() => ItemBom();
 }
 
-String _$itemBomHash() => r'5906dd26453d26a87554db4c8e216e60b255b487';
+String _$itemBomHash() => r'cc0d811dfa1095acec7f20a36b023e1338ce624f';
 
 abstract class _$ItemBom extends $AsyncNotifier<void> {
   FutureOr<void> build();

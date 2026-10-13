@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
@@ -12,12 +13,19 @@ import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/models/pos_sale_line_item.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel.dart';
+import 'package:billing_baba/features/sale_screen/application/sale_invoice_focus_provider.dart';
+import 'package:billing_baba/features/sale_screen/application/sale_screen_tabs_provider.dart';
 import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_invoice_panel.dart';
 import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_product_pane.dart';
+import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_screen_tabs_bar.dart';
+import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/shared/utils/output_error_mapper.dart';
+import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+const _cardBorder = Color(0xFFE0E0E0);
 
 /// Keyboard-first counter: type a product, press Enter, keep typing.
 class SaleScreenPage extends ConsumerStatefulWidget {
@@ -50,6 +58,9 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
     super.dispose();
   }
 
+  String get _cartSessionKey =>
+      ref.read(saleScreenTabsProvider).activeTab.sessionKey;
+
   List<PosItem> get _results => ref.read(
     posFilteredCatalogProvider(
       searchQuery: _query,
@@ -64,13 +75,15 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
     });
   }
 
-  void _clearQuery() {
+  void _clearQuery({bool refocusSearch = true}) {
     _searchController.clear();
     setState(() {
       _query = '';
       _highlightIndex = 0;
     });
-    _searchFocus.requestFocus();
+    if (refocusSearch) {
+      _searchFocus.requestFocus();
+    }
   }
 
   void _moveHighlight(int delta) {
@@ -89,6 +102,21 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
     _addItem(items[index]);
   }
 
+  void _addItemToCart(
+    PosItem item, {
+    bool allowInsufficientStock = false,
+    String? sessionKey,
+  }) {
+    final cartKey = sessionKey ?? _cartSessionKey;
+    ref
+        .read(posCartProvider(sessionKey: cartKey).notifier)
+        .addItem(item, allowInsufficientStock: allowInsufficientStock);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      requestSaleInvoiceQuantityFocus(ref, item.id);
+    });
+  }
+
   void _addItem(PosItem item) {
     if (item.isOutOfStock) {
       showDialog<void>(
@@ -97,56 +125,54 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
           itemId: item.id,
           itemName: item.name,
           onSelectAlternative: (alternative) async {
-            ref
-                .read(posCartProvider.notifier)
-                .addItem(
-                  PosItem(
-                    id: alternative.id,
-                    name: alternative.name,
-                    sku: alternative.barcode ?? '',
-                    categoryName: alternative.categoryName ?? item.categoryName,
-                    price: alternative.salePrice,
-                    stock: alternative.stockQuantity.toInt(),
-                    unit: item.unit,
-                    brandName: item.brandName,
-                  ),
-                );
-            _clearQuery();
+            _addItemToCart(
+              PosItem(
+                id: alternative.id,
+                name: alternative.name,
+                sku: alternative.barcode ?? '',
+                categoryName: alternative.categoryName ?? item.categoryName,
+                price: alternative.salePrice,
+                stock: alternative.stockQuantity.toInt(),
+                unit: item.unit,
+                brandName: item.brandName,
+              ),
+            );
+            _clearQuery(refocusSearch: false);
           },
           onContinueAnyway: () async {
-            ref.read(posCartProvider.notifier).addItem(item);
-            _clearQuery();
+            _addItemToCart(item, allowInsufficientStock: true);
+            _clearQuery(refocusSearch: false);
           },
         ),
       );
       return;
     }
 
-    ref.read(posCartProvider.notifier).addItem(item);
-    _clearQuery();
+    _addItemToCart(item);
+    _clearQuery(refocusSearch: false);
   }
 
-  Future<void> _holdBill() async {
-    final cart = ref.read(posCartProvider);
+  Future<void> _holdBill(String sessionKey) async {
+    final cart = ref.read(posCartProvider(sessionKey: sessionKey));
     if (cart.items.isEmpty) {
       _showMessage('Add an item before holding the bill');
       return;
     }
-    await ref.read(posCartProvider.notifier).holdBill();
+    await ref.read(posCartProvider(sessionKey: sessionKey).notifier).holdBill();
     if (!mounted) return;
     _showMessage('Bill held');
     _searchFocus.requestFocus();
   }
 
-  void _clearBill() {
-    final notifier = ref.read(posCartProvider.notifier);
+  void _clearBill(String sessionKey) {
+    final notifier = ref.read(posCartProvider(sessionKey: sessionKey).notifier);
     notifier.clearCart();
     notifier.setCustomerName(null);
     _searchFocus.requestFocus();
   }
 
-  Future<void> _printBill() async {
-    final cart = ref.read(posCartProvider);
+  Future<void> _printBill(String sessionKey) async {
+    final cart = ref.read(posCartProvider(sessionKey: sessionKey));
     if (cart.items.isEmpty) {
       _showMessage('Add items before printing');
       return;
@@ -170,7 +196,7 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
             lineTotal: line.lineTotal,
             itemId: line.item.id,
             unit: line.item.unit,
-            unitPrice: line.item.price,
+            unitPrice: line.unitPrice,
           ),
       ],
     );
@@ -191,9 +217,9 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
     }
   }
 
-  Future<void> _payAndComplete() async {
+  Future<void> _payAndComplete(String sessionKey) async {
     if (_isCompleting) return;
-    final cart = ref.read(posCartProvider);
+    final cart = ref.read(posCartProvider(sessionKey: sessionKey));
     if (cart.items.isEmpty) {
       _showMessage('Add at least one item');
       _searchFocus.requestFocus();
@@ -202,7 +228,9 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
 
     setState(() => _isCompleting = true);
     try {
-      final sale = await ref.read(posCartProvider.notifier).completeSale();
+      final sale = await ref
+          .read(posCartProvider(sessionKey: sessionKey).notifier)
+          .completeSale();
       if (!mounted) return;
       ref.read(posSalesListProvider.notifier).addSale(sale);
       _showMessage('Sale ${sale.docNumber} completed');
@@ -220,6 +248,24 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
     }
   }
 
+  void _resetAllTabCarts() {
+    final tabs = ref.read(saleScreenTabsProvider).tabs;
+    for (final tab in tabs) {
+      ref.invalidate(posCartProvider(sessionKey: tab.sessionKey));
+    }
+    ref.invalidate(saleScreenTabsProvider);
+  }
+
+  Future<void> _handleClose() async {
+    final confirmed = await showCloseFormDialog(
+      context,
+      title: 'Close sale screen',
+    );
+    if (!confirmed || !mounted) return;
+    _resetAllTabCarts();
+    returnToTransactionList(context, AppRoutes.home);
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
@@ -228,62 +274,112 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.f9): () {
-          unawaited(_payAndComplete());
-        },
+    final tabsState = ref.watch(saleScreenTabsProvider);
+    final sessionKey = tabsState.activeTab.sessionKey;
+
+    ref.listen(posCartProvider(sessionKey: sessionKey), (previous, next) {
+      if (previous?.customerName == next.customerName) return;
+      ref
+          .read(saleScreenTabsProvider.notifier)
+          .updateTabLabel(
+            tabsState.activeIndex,
+            saleScreenTabLabelForCart(
+              posNumber: tabsState.activeTab.posNumber,
+              customerName: next.customerName,
+            ),
+          );
+    });
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleClose();
       },
-      child: Focus(
-        autofocus: true,
-        child: ColoredBox(
-          color: AppColors.background,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final stackInvoice = constraints.maxWidth < PosBreakpoints.tablet;
-              final catalog = SaleProductPane(
-                query: _query,
-                categoryId: _categoryId,
-                highlightIndex: _highlightIndex,
-                searchController: _searchController,
-                searchFocus: _searchFocus,
-                onQueryChanged: _onQueryChanged,
-                onMoveHighlight: _moveHighlight,
-                onSubmitSearch: _addHighlighted,
-                onClearQuery: _clearQuery,
-                onCategoryChanged: (categoryId) {
-                  setState(() {
-                    _categoryId = categoryId;
-                    _highlightIndex = 0;
-                  });
-                },
-                onItemSelected: _addItem,
-              );
-              final invoice = SaleInvoicePanel(
-                isCompleting: _isCompleting,
-                onHold: () => unawaited(_holdBill()),
-                onClear: _clearBill,
-                onPrint: () => unawaited(_printBill()),
-                onPay: () => unawaited(_payAndComplete()),
-              );
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.f9): () {
+            unawaited(_payAndComplete(sessionKey));
+          },
+        },
+        child: Focus(
+          autofocus: true,
+          child: ColoredBox(
+            color: AppColors.background,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SaleScreenTabsBar(onFormClose: () => unawaited(_handleClose())),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.lgBorder,
+                        border: Border.all(color: _cardBorder),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0A000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final stackInvoice =
+                              constraints.maxWidth < PosBreakpoints.tablet;
+                          final catalog = SaleProductPane(
+                            query: _query,
+                            categoryId: _categoryId,
+                            highlightIndex: _highlightIndex,
+                            searchController: _searchController,
+                            searchFocus: _searchFocus,
+                            onQueryChanged: _onQueryChanged,
+                            onMoveHighlight: _moveHighlight,
+                            onSubmitSearch: _addHighlighted,
+                            onClearQuery: _clearQuery,
+                            onCategoryChanged: (categoryId) {
+                              setState(() {
+                                _categoryId = categoryId;
+                                _highlightIndex = 0;
+                              });
+                            },
+                            onItemSelected: _addItem,
+                          );
+                          final invoice = SaleInvoicePanel(
+                            cartSessionKey: sessionKey,
+                            isCompleting: _isCompleting,
+                            onHold: () => unawaited(_holdBill(sessionKey)),
+                            onClear: () => _clearBill(sessionKey),
+                            onPrint: () => unawaited(_printBill(sessionKey)),
+                            onPay: () => unawaited(_payAndComplete(sessionKey)),
+                          );
 
-              if (stackInvoice) {
-                return Column(
-                  children: [
-                    Expanded(flex: 3, child: catalog),
-                    Expanded(flex: 2, child: invoice),
-                  ],
-                );
-              }
+                          if (stackInvoice) {
+                            return Column(
+                              children: [
+                                Expanded(flex: 3, child: catalog),
+                                Expanded(flex: 2, child: invoice),
+                              ],
+                            );
+                          }
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(flex: 3, child: catalog),
-                  Expanded(flex: 2, child: invoice),
-                ],
-              );
-            },
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(flex: 3, child: catalog),
+                              Expanded(flex: 2, child: invoice),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

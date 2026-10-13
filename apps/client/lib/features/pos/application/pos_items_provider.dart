@@ -2,7 +2,9 @@ import 'package:billing_baba/features/inventory/application/inventory_brands_pro
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/utils/walk_in_party.dart';
 import 'package:billing_baba/features/pos/application/pos_catalog.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/repositories/pos_repository.dart';
@@ -70,12 +72,13 @@ Future<List<PosCustomer>> posCustomerSearch(Ref ref, String query) async {
   if (trimmed.isEmpty) return [];
 
   // Prefer parties list (includes profile images) over the stub POS repo.
+  final businessId = ref.watch(currentBusinessProvider)?.id;
   final parties = await ref.watch(partyPickerListProvider.future);
   final q = trimmed.toLowerCase();
-  return parties
-      .where(
-        (party) => party.partyType == 'customer' || party.partyType == 'both',
-      )
+  return customerPartiesExcludingWalkIn(
+    parties,
+    businessId: businessId,
+  )
       .where((party) {
         final phone = party.phone.replaceAll(RegExp(r'\D'), '');
         final queryDigits = trimmed.replaceAll(RegExp(r'\D'), '');

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
@@ -14,12 +15,14 @@ import 'package:billing_baba/features/pos/models/held_bill.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
-import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pos_cart_provider.g.dart';
+
+/// Default cart session for the POS module; sale screen uses per-tab session keys.
+const defaultPosCartSessionKey = 'default';
 
 @Riverpod(keepAlive: true)
 class PosCart extends _$PosCart {
@@ -46,7 +49,7 @@ class PosCart extends _$PosCart {
   }
 
   @override
-  PosCartState build() {
+  PosCartState build({String sessionKey = defaultPosCartSessionKey}) {
     ref.listen(currentBusinessProvider, (previous, next) {
       final previousId = previous?.id;
       final nextId = next?.id;
@@ -73,16 +76,15 @@ class PosCart extends _$PosCart {
         item;
   }
 
-  int _cartQuantityFor(String itemId) {
-    return state.items
-        .where((cartItem) => cartItem.item.id == itemId)
-        .fold<int>(0, (sum, cartItem) => sum + cartItem.quantity);
-  }
-
-  bool _canAddQuantity(PosItem item, int additionalQty) {
+  bool _canAddQuantity(
+    PosItem item,
+    int targetTotalQty, {
+    bool allowInsufficientStock = false,
+  }) {
+    if (allowInsufficientStock) return true;
     final live = _livePosItem(item);
     if (live == null || live.stock <= 0) return false;
-    return _cartQuantityFor(item.id) + additionalQty <= live.stock;
+    return targetTotalQty <= live.stock;
   }
 
   Future<void> _loadHeldBills() async {
@@ -95,23 +97,38 @@ class PosCart extends _$PosCart {
     state = state.copyWith(heldBills: bills);
   }
 
-  void addItem(PosItem item) {
-    if (!_canAddQuantity(item, 1)) return;
-
+  void addItem(PosItem item, {bool allowInsufficientStock = false}) {
     final live = _livePosItem(item) ?? item;
     final index = state.items.indexWhere((c) => c.item.id == live.id);
+    final existing = index >= 0 ? state.items[index] : null;
+    final allowStock =
+        allowInsufficientStock || (existing?.allowInsufficientStock ?? false);
+    final nextQty = (existing?.quantity ?? 0) + 1;
+    if (!_canAddQuantity(
+      live,
+      nextQty,
+      allowInsufficientStock: allowStock,
+    )) {
+      return;
+    }
+
     if (index >= 0) {
       final updated = List<CartItem>.from(state.items);
       updated[index] = updated[index].copyWith(
         item: live,
-        quantity: updated[index].quantity + 1,
+        quantity: nextQty,
+        allowInsufficientStock: allowStock,
       );
       state = state.copyWith(items: updated);
     } else {
       state = state.copyWith(
         items: [
           ...state.items,
-          CartItem(item: live, quantity: 1),
+          CartItem(
+            item: live,
+            quantity: 1,
+            allowInsufficientStock: allowInsufficientStock,
+          ),
         ],
       );
     }
@@ -134,7 +151,11 @@ class PosCart extends _$PosCart {
     final cartItem = state.items.where((c) => c.item.id == itemId).firstOrNull;
     var nextQty = qty;
     if (cartItem != null &&
-        !_canAddQuantity(cartItem.item, nextQty - cartItem.quantity)) {
+        !_canAddQuantity(
+          cartItem.item,
+          nextQty,
+          allowInsufficientStock: cartItem.allowInsufficientStock,
+        )) {
       final live = _livePosItem(cartItem.item);
       nextQty = live?.stock ?? cartItem.item.stock;
       if (nextQty <= 0) {
@@ -149,6 +170,22 @@ class PosCart extends _$PosCart {
         return c.copyWith(item: live, quantity: nextQty);
       }
       return c;
+    }).toList();
+    state = state.copyWith(items: updated);
+    _syncSinglePaymentAmount();
+  }
+
+  void updateUnitPrice(String itemId, double price) {
+    if (price < 0) return;
+
+    final updated = state.items.map((c) {
+      if (c.item.id != itemId) return c;
+      final catalogPrice = _livePosItem(c.item)?.price ?? c.item.price;
+      final matchesCatalog = (price - catalogPrice).abs() < 0.0001;
+      if (matchesCatalog) {
+        return c.copyWith(clearUnitPriceOverride: true);
+      }
+      return c.copyWith(unitPriceOverride: price);
     }).toList();
     state = state.copyWith(items: updated);
     _syncSinglePaymentAmount();

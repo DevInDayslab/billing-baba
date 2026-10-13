@@ -60,17 +60,17 @@ class _PaymentPanelState extends ConsumerState<PaymentPanel> {
   }
 
   void _selectCustomer(PosCustomer customer) {
-    ref.read(posCartProvider.notifier).setCustomerName(customer.name);
+    ref.read(posCartProvider().notifier).setCustomerName(customer.name);
     _customerSearchController.text = customer.name;
     setState(() => _debouncedCustomerQuery = '');
   }
 
   @override
   Widget build(BuildContext context) {
-    final cart = ref.watch(posCartProvider);
-    final notifier = ref.read(posCartProvider.notifier);
+    final cart = ref.watch(posCartProvider());
+    final notifier = ref.read(posCartProvider().notifier);
 
-    ref.listen(posCartProvider, (previous, next) {
+    ref.listen(posCartProvider(), (previous, next) {
       final text = next.totalPaid > 0
           ? next.totalPaid.toStringAsFixed(2)
           : next.totalPayable.toStringAsFixed(2);

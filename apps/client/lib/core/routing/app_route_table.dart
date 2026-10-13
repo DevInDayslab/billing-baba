@@ -82,7 +82,6 @@ import 'package:billing_baba/features/sales/presentation/sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_return_page.dart';
-import 'package:billing_baba/features/settings/models/settings_sub_route.dart';
 import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/settings/presentation/print_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/general_settings_screen.dart';
@@ -90,7 +89,7 @@ import 'package:billing_baba/features/settings/presentation/accounting_settings_
 import 'package:billing_baba/features/settings/presentation/party_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/gst_tax_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/transaction_settings_screen.dart';
-import 'package:billing_baba/features/settings/presentation/settings_placeholder_screen.dart';
+import 'package:billing_baba/features/settings/presentation/settings_desktop_route.dart';
 import 'package:billing_baba/features/settings/presentation/settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/transaction_messages_screen.dart';
 import 'package:billing_baba/features/subscription/presentation/mobile/payment_processing_page.dart';
@@ -297,7 +296,8 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.itemsSettings,
-            builder: (context, state) => const ItemSettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const ItemSettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.sale,
@@ -683,7 +683,7 @@ GoRouter createAppRouter({
               ),
           GoRoute(
             path: AppRoutes.settings,
-            redirect: (context, state) => AppRoutes.settingsPreferences,
+            redirect: (context, state) => AppRoutes.settingsGeneral,
           ),
           GoRoute(
             path: '/settings/users',
@@ -700,49 +700,60 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.settingsGeneral,
-            builder: (context, state) => const GeneralSettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const GeneralSettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsTransaction,
-            builder: (context, state) => const TransactionSettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const TransactionSettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsTaxes,
-            builder: (context, state) => const GstTaxSettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const GstTaxSettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsParty,
-            builder: (context, state) => const PartySettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const PartySettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsServiceReminders,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Service Reminders'),
+            builder: (context, state) => settingsDesktopRoute(
+              const ComingSoonPage(title: 'Service Reminders'),
+            ),
           ),
           GoRoute(
             path: AppRoutes.settingsAccounting,
-            builder: (context, state) => const AccountingSettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const AccountingSettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsMultiCurrency,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Multi Currency'),
+            builder: (context, state) => settingsDesktopRoute(
+              const ComingSoonPage(title: 'Multi Currency'),
+            ),
           ),
           GoRoute(
             path: AppRoutes.settingsPreferences,
-            builder: (context, state) => const SettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const SettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsPrint,
-            builder: (context, state) => const PrintSettingsScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const PrintSettingsScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsTransactionMessages,
-            builder: (context, state) => const TransactionMessagesScreen(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const TransactionMessagesScreen()),
           ),
           GoRoute(
             path: AppRoutes.settingsBackup,
-            builder: (context, state) => const BackupRestorePage(),
+            builder: (context, state) =>
+                settingsDesktopRoute(const BackupRestorePage()),
           ),
           GoRoute(
             path: AppRoutes.settingsNotifications,

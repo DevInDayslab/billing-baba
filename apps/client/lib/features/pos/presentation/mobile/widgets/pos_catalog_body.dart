@@ -29,7 +29,7 @@ class PosCatalogBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartState = ref.watch(posCartProvider);
+    final cartState = ref.watch(posCartProvider());
     final theme = Theme.of(context);
 
     if (items.isEmpty) {

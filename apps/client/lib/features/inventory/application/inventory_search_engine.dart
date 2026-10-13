@@ -98,6 +98,7 @@ class InventorySearchEngine {
   static final _wordPattern = RegExp(r'\S+');
   static final _numericPattern = RegExp(r'\d+');
   static final _alphaPattern = RegExp('[a-z]+');
+  static final _digitOnlyPattern = RegExp(r'^\d+$');
 
   bool get isEmpty => _entriesByItemId.isEmpty;
 
@@ -314,11 +315,19 @@ class InventorySearchEngine {
 
     var exactTokenMatches = 0;
     var partialTokenMatches = 0;
+    final requireNameTokenMatch = queryTokens.length > 1;
 
     for (final queryToken in queryTokens) {
-      final matchType = _bestTokenMatch(queryToken, entry);
+      final nameOnlyTokenMatch =
+          requireNameTokenMatch || _requiresNameOnlyTokenMatch(queryToken);
+      final matchType = nameOnlyTokenMatch
+          ? _bestNameTokenMatch(queryToken, entry)
+          : _bestTokenMatch(queryToken, entry);
       switch (matchType) {
         case _TokenMatchType.none:
+          if (nameOnlyTokenMatch) {
+            return null;
+          }
           if (entry.searchableText.contains(queryToken)) {
             score += 10;
             partialTokenMatches++;
@@ -341,6 +350,29 @@ class InventorySearchEngine {
     score += partialTokenMatches * 25;
 
     return score;
+  }
+
+  static _TokenMatchType _bestNameTokenMatch(
+    String queryToken,
+    InventorySearchIndexEntry entry,
+  ) {
+    var best = _TokenMatchType.none;
+
+    for (final nameToken in entry.nameTokens) {
+      final match = _tokenMatchType(
+        queryToken,
+        nameToken,
+        isNameToken: true,
+      );
+      if (match == _TokenMatchType.exactName) {
+        return _TokenMatchType.exactName;
+      }
+      if (match == _TokenMatchType.partial) {
+        best = _TokenMatchType.partial;
+      }
+    }
+
+    return best;
   }
 
   static _TokenMatchType _bestTokenMatch(
@@ -389,6 +421,9 @@ class InventorySearchEngine {
     }
 
     if (itemToken.contains(queryToken)) {
+      if (_isWeakNumericSubstringMatch(queryToken, itemToken)) {
+        return _TokenMatchType.none;
+      }
       return _TokenMatchType.partial;
     }
 
@@ -397,6 +432,22 @@ class InventorySearchEngine {
     }
 
     return _TokenMatchType.none;
+  }
+
+  /// Short numeric queries (e.g. `3`, `12`) match item names only, not barcodes.
+  static bool _requiresNameOnlyTokenMatch(String queryToken) {
+    return _digitOnlyPattern.hasMatch(queryToken) && queryToken.length <= 2;
+  }
+
+  /// Ignores digit queries that only appear inside longer barcodes/SKUs.
+  static bool _isWeakNumericSubstringMatch(
+    String queryToken,
+    String itemToken,
+  ) {
+    if (!_digitOnlyPattern.hasMatch(queryToken)) return false;
+    if (!_digitOnlyPattern.hasMatch(itemToken)) return false;
+    if (queryToken == itemToken) return false;
+    return queryToken.length <= 2 && itemToken.length > queryToken.length;
   }
 }
 

@@ -54,8 +54,8 @@ List<InventoryItem> searchInventoryItems(
   return engine.searchItems(items, query: query);
 }
 
-InventoryItem? findInventoryItemByBarcodeOrQuery(
-  InventorySearchEngine engine,
+/// Returns an item only when [query] is an exact normalized barcode match.
+InventoryItem? findInventoryItemByExactBarcode(
   Iterable<InventoryItem> items, {
   required String query,
 }) {
@@ -67,6 +67,23 @@ InventoryItem? findInventoryItemByBarcodeOrQuery(
       return item;
     }
   }
+  return null;
+}
+
+/// Resolves a single item for barcode scan or submit-to-add flows.
+InventoryItem? findInventoryItemByBarcodeOrQuery(
+  InventorySearchEngine engine,
+  Iterable<InventoryItem> items, {
+  required String query,
+}) {
+  final trimmed = query.trim();
+  if (trimmed.isEmpty) return null;
+
+  final exactBarcode = findInventoryItemByExactBarcode(
+    items,
+    query: trimmed,
+  );
+  if (exactBarcode != null) return exactBarcode;
 
   if (BarcodeConfidence.isBarcodeLike(trimmed)) return null;
 

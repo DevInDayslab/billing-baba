@@ -233,6 +233,7 @@ class ReportTransactionTypeFilter extends ConsumerWidget {
     'Purchase',
     'Payment In',
     'Payment Out',
+    'Expense',
   ];
   static const List<String?> _values = [
     null,
@@ -240,6 +241,7 @@ class ReportTransactionTypeFilter extends ConsumerWidget {
     'purchase',
     'payment_in',
     'payment_out',
+    'expense',
   ];
 
   @override
@@ -251,6 +253,7 @@ class ReportTransactionTypeFilter extends ConsumerWidget {
       'purchase' => 'Purchase',
       'payment_in' => 'Payment In',
       'payment_out' => 'Payment Out',
+      'expense' => 'Expense',
       _ => 'All Transaction',
     };
 

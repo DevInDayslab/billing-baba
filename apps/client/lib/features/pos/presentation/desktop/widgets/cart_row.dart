@@ -21,7 +21,7 @@ class CartRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(posCartProvider.notifier);
+    final notifier = ref.read(posCartProvider().notifier);
     final item = cartItem.item;
 
     return Padding(
@@ -185,11 +185,13 @@ class CartRow extends ConsumerWidget {
       context,
       itemName: cartItem.item.name,
       initialQuantity: cartItem.quantity,
-      maxQuantity: cartItem.item.stock > 0 ? cartItem.item.stock : null,
+      maxQuantity: cartItem.allowInsufficientStock
+          ? null
+          : (cartItem.item.stock > 0 ? cartItem.item.stock : null),
     );
     if (result != null) {
       ref
-          .read(posCartProvider.notifier)
+          .read(posCartProvider().notifier)
           .updateQuantity(cartItem.item.id, result);
     }
   }
@@ -257,7 +259,7 @@ class CartRow extends ConsumerWidget {
     controller.dispose();
     if (result != null) {
       ref
-          .read(posCartProvider.notifier)
+          .read(posCartProvider().notifier)
           .updateDiscount(cartItem.item.id, result);
     }
   }

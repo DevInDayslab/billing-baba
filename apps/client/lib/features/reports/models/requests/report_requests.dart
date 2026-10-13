@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/reports/utils/report_date_bounds.dart';
 import 'package:flutter/material.dart';
 
 enum ReportPeriod {
@@ -272,14 +273,11 @@ class ReportFiltersState {
 
   /// Resolves the visible date range for UI controls from period + custom range.
   DateTimeRange get effectiveDateRange {
-    if (period == ReportPeriod.custom && customDateRange != null) {
-      return customDateRange!;
-    }
-
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    return switch (period) {
+    final raw = switch (period) {
+      ReportPeriod.custom when customDateRange != null => customDateRange!,
       ReportPeriod.today => DateTimeRange(start: today, end: today),
       ReportPeriod.yesterday => () {
         final yesterday = today.subtract(const Duration(days: 1));
@@ -329,6 +327,8 @@ class ReportFiltersState {
       ),
       ReportPeriod.custom => customDateRange ?? currentMonthDateRange(),
     };
+
+    return clampReportDateRange(raw);
   }
 
   static DateTimeRange currentMonthDateRange() {
@@ -340,10 +340,11 @@ class ReportFiltersState {
   }
 
   ReportQuery toQuery({int? page, int? limit, String? format}) {
+    final customRange = period == ReportPeriod.custom ? effectiveDateRange : null;
     return ReportQuery(
       period: period,
-      from: customDateRange?.start,
-      to: customDateRange?.end,
+      from: customRange?.start,
+      to: customRange?.end,
       date: selectedDate,
       page: page ?? currentPage,
       limit: limit ?? pageSize,

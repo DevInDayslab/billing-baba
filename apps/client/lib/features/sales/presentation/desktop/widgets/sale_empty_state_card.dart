@@ -48,81 +48,84 @@ class SaleEmptyStateCard extends StatelessWidget {
 
           return SizedBox(
             height: height,
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    illustration,
-                    if (title != null) ...[
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        title!,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: AppSpacing.md),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xl,
-                      ),
-                      child: Text(
-                        description,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    if (buttonIcon != null)
-                      FilledButton.icon(
-                        onPressed: onPressed ?? () {},
-                        style: FilledButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 14,
-                          ),
-                          shape: const StadiumBorder(),
-                        ),
-                        icon: Icon(buttonIcon, size: 18),
-                        label: Text(
-                          buttonLabel,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: height),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      illustration,
+                      if (title != null) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          title!,
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                      )
-                    else
-                      FilledButton(
-                        onPressed: onPressed ?? () {},
-                        style: FilledButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 14,
-                          ),
-                          shape: const StadiumBorder(),
+                      ],
+                      const SizedBox(height: AppSpacing.md),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
                         ),
                         child: Text(
-                          buttonLabel,
+                          description,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
-                  ],
+                      const SizedBox(height: AppSpacing.lg),
+                      if (buttonIcon != null)
+                        FilledButton.icon(
+                          onPressed: onPressed ?? () {},
+                          style: FilledButton.styleFrom(
+                            backgroundColor: buttonColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 14,
+                            ),
+                            shape: const StadiumBorder(),
+                          ),
+                          icon: Icon(buttonIcon, size: 18),
+                          label: Text(
+                            buttonLabel,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      else
+                        FilledButton(
+                          onPressed: onPressed ?? () {},
+                          style: FilledButton.styleFrom(
+                            backgroundColor: buttonColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 14,
+                            ),
+                            shape: const StadiumBorder(),
+                          ),
+                          child: Text(
+                            buttonLabel,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

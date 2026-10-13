@@ -564,122 +564,61 @@ export class Phase1ReportsRepository {
     dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
     const dateKey = dayStart.toISOString().slice(0, 10);
 
-    const [ledgerRows, paymentRows, expenseRows] = await Promise.all([
-      this.db
-        .select({
-          id: ledgerEntries.id,
-          date: ledgerEntries.entryDate,
-          type: ledgerEntries.entryType,
-          description: ledgerEntries.description,
-          debit: ledgerEntries.debit,
-          credit: ledgerEntries.credit,
-          partyName: parties.name,
-        })
-        .from(ledgerEntries)
-        .leftJoin(parties, eq(ledgerEntries.partyId, parties.id))
-        .where(
-          and(
-            eq(ledgerEntries.businessId, businessId),
-            eq(ledgerEntries.entryDate, dateKey),
-          ),
-        ),
-      this.db
-        .select({
-          id: payments.id,
-          date: payments.paymentDate,
-          direction: payments.direction,
-          amount: payments.amount,
-          referenceNumber: payments.referenceNumber,
-          partyName: parties.name,
-          paymentMode: payments.paymentMode,
-        })
-        .from(payments)
-        .innerJoin(parties, eq(payments.partyId, parties.id))
-        .where(
-          and(
-            eq(payments.businessId, businessId),
-            eq(payments.isDeleted, false),
-            gte(payments.paymentDate, dayStart),
-            lt(payments.paymentDate, dayEnd),
-          ),
-        ),
-      this.db
-        .select({
-          id: expenses.id,
-          date: expenses.expenseDate,
-          amount: expenses.amount,
-          description: expenses.description,
-          partyName: parties.name,
-        })
-        .from(expenses)
-        .leftJoin(parties, eq(expenses.partyId, parties.id))
-        .where(
-          and(
-            eq(expenses.businessId, businessId),
-            eq(expenses.isDeleted, false),
-            eq(expenses.expenseDate, dateKey),
-          ),
-        ),
+    const typeFilter = query.document_type
+      ? this.mapDocumentTypeFilter(query.document_type)
+      : null;
+    const includeExpenses = !typeFilter || typeFilter === 'Expense';
+
+    const [transactionRows, expenseRows] = await Promise.all([
+      this.buildTransactionUnion(
+        businessId,
+        dayStart,
+        dayEnd,
+        query.party_id,
+        query.q,
+        query.document_type,
+      ),
+      includeExpenses
+        ? this.db
+            .select({
+              id: expenses.id,
+              date: expenses.expenseDate,
+              amount: expenses.amount,
+              description: expenses.description,
+              partyName: parties.name,
+            })
+            .from(expenses)
+            .leftJoin(parties, eq(expenses.partyId, parties.id))
+            .where(
+              and(
+                eq(expenses.businessId, businessId),
+                eq(expenses.isDeleted, false),
+                eq(expenses.expenseDate, dateKey),
+              ),
+            )
+        : Promise.resolve([]),
     ]);
 
-    const rows = [
-      ...ledgerRows.map((row) => {
-        const moneyIn = Number(row.credit ?? 0);
-        const moneyOut = Number(row.debit ?? 0);
-        return {
-          id: row.id,
-          date: new Date(row.date).toISOString(),
-          ref_no: row.type,
-          party_id: null,
-          party_name: row.partyName,
-          category: 'Ledger',
-          type: row.type,
-          total: String(moneyIn || moneyOut),
-          received: String(moneyIn),
-          balance: '0',
-          money_in: String(moneyIn),
-          money_out: String(moneyOut),
-          status: 'finalized',
-          payment_type: null,
-        };
-      }),
-      ...paymentRows.map((row) => {
-        const isIn = row.direction === 'received';
-        const _amount = Number(row.amount ?? 0);
-        return {
-          id: row.id,
-          date: row.date.toISOString(),
-          ref_no: row.referenceNumber ?? row.id,
-          party_id: null,
-          party_name: row.partyName,
-          category: 'Payment',
-          type: isIn ? 'Payment In' : 'Payment Out',
-          total: row.amount ?? '0',
-          received: isIn ? (row.amount ?? '0') : '0',
-          balance: '0',
-          money_in: isIn ? (row.amount ?? '0') : '0',
-          money_out: isIn ? '0' : (row.amount ?? '0'),
-          status: 'paid',
-          payment_type: row.paymentMode,
-        };
-      }),
-      ...expenseRows.map((row) => ({
-        id: row.id,
-        date: new Date(row.date).toISOString(),
-        ref_no: row.description ?? row.id,
-        party_id: null,
-        party_name: row.partyName,
-        category: 'Expense',
-        type: 'Expense',
-        total: row.amount ?? '0',
-        received: '0',
-        balance: '0',
-        money_in: '0',
-        money_out: row.amount ?? '0',
-        status: 'paid',
-        payment_type: null,
-      })),
-    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const expenseMapped = expenseRows.map((row) => ({
+      id: row.id,
+      date: new Date(row.date).toISOString(),
+      ref_no: row.description ?? row.id,
+      party_id: null,
+      party_name: row.partyName,
+      category: 'Expense',
+      type: 'Expense',
+      total: row.amount ?? '0',
+      received: '0',
+      balance: '0',
+      money_in: '0',
+      money_out: row.amount ?? '0',
+      status: 'paid',
+      payment_type: null,
+    }));
+
+    const rows = [...transactionRows, ...expenseMapped].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
 
     const totalMoneyIn = rows.reduce(
       (sum, row) => sum + Number(row.money_in),
@@ -888,6 +827,7 @@ export class Phase1ReportsRepository {
         purchase: 'Purchase',
         payment_in: 'Payment In',
         payment_out: 'Payment Out',
+        expense: 'Expense',
       }[documentType] ?? null
     );
   }

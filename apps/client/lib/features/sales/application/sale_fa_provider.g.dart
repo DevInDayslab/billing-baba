@@ -387,7 +387,7 @@ final class SaleFaUserFilterOptionsProvider
 }
 
 String _$saleFaUserFilterOptionsHash() =>
-    r'fc6c4d1dde311db54270f234d75d14e097fb7c6e';
+    r'038501906ebaf7f95c132c32e809f0ec433cee00';
 
 @ProviderFor(saleFaGodownFilterOptions)
 final saleFaGodownFilterOptionsProvider = SaleFaGodownFilterOptionsProvider._();

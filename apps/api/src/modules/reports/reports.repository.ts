@@ -81,7 +81,7 @@ export class ReportsRepository {
   }
 
   getProfitLoss(businessId: string, query: ReportBaseQuery) {
-    return this.phase1.getProfitLoss(businessId, query);
+    return this.accounting.getProfitLoss(businessId, query);
   }
 
   getGstr1(businessId: string, query: ReportBaseQuery) {

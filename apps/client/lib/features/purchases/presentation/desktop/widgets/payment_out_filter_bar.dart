@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/payment_out_dialog.dart';
@@ -6,6 +7,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_da
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class PaymentOutFilterBar extends ConsumerStatefulWidget {
   const PaymentOutFilterBar({super.key});
@@ -143,6 +145,13 @@ class _PaymentOutFilterBarState extends ConsumerState<PaymentOutFilterBar> {
             'Add Payment-Out',
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
+        ),
+        IconButton(
+          onPressed: () => context.push(AppRoutes.settingsTransaction),
+          icon: const Icon(Icons.settings_outlined),
+          color: AppColors.textSecondary,
+          tooltip: 'Settings',
+          visualDensity: VisualDensity.compact,
         ),
       ],
     );

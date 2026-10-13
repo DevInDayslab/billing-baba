@@ -35,13 +35,16 @@ List<CompanyListEntry> mergeDirectoryProfileFields(
     final samePhone = business.phone == entry.phone;
     final sameEmail = business.email == entry.email;
     final sameAddress = business.address == entry.address;
+    final sameDeletion =
+        business.scheduledDeletionAt == entry.scheduledDeletionAt;
     if (sameName &&
         sameLogo &&
         sameGstin &&
         sameOwner &&
         samePhone &&
         sameEmail &&
-        sameAddress) {
+        sameAddress &&
+        sameDeletion) {
       return entry;
     }
 
@@ -65,7 +68,7 @@ List<CompanyListEntry> mergeDirectoryProfileFields(
       email: business.email,
       address: business.address,
       logoUrl: business.logoUrl,
-      scheduledDeletionAt: entry.scheduledDeletionAt,
+      scheduledDeletionAt: business.scheduledDeletionAt,
     );
   }).toList();
 }

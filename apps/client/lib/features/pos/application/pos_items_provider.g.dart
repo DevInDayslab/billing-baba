@@ -106,7 +106,7 @@ final class PosCatalogProvider
   }
 }
 
-String _$posCatalogHash() => r'739168163fbfef5456858bc492ebb78f5ecba89a';
+String _$posCatalogHash() => r'75d2db014029063d33f6f99ba3ab9f1f6d105cb4';
 
 /// Inventory categories that currently have at least one POS product.
 
@@ -326,7 +326,7 @@ final class PosCustomerSearchProvider
   }
 }
 
-String _$posCustomerSearchHash() => r'a852f05e16c160c872fa5d182adb2306ba0d4b09';
+String _$posCustomerSearchHash() => r'391276712a121efebb2d653d4d4d450582def43f';
 
 final class PosCustomerSearchFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<PosCustomer>>, String> {

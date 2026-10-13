@@ -152,6 +152,7 @@ abstract final class AppRoutes {
   static bool isSaleInvoiceFormRoute(String path) {
     const exactFormRoutes = <String>{
       addSale,
+      saleScreen,
       addEstimate,
       addProforma,
       addSaleOrder,

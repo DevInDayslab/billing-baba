@@ -81,7 +81,7 @@ final class SaleInvoiceSettingsNotifierProvider
 }
 
 String _$saleInvoiceSettingsNotifierHash() =>
-    r'72e8859eef8415e64bb813abe97852a6906d9ce9';
+    r'd7828f81b93078d4b8ae55f9dfa10124165fca4a';
 
 abstract class _$SaleInvoiceSettingsNotifier
     extends $AsyncNotifier<SaleInvoiceSettings> {

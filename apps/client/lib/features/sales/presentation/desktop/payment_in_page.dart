@@ -7,6 +7,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/payment
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_page_title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 const _addPaymentInRed = Color(0xFFE53935);
 
@@ -38,6 +39,8 @@ class DesktopPaymentInPage extends ConsumerWidget {
                   addButtonLabel: 'Add Payment-In',
                   addButtonColor: _addPaymentInRed,
                   onAddTap: () => showPaymentInDialog(context),
+                  onSettingsTap: () =>
+                      context.push(AppRoutes.settingsTransaction),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const PaymentInFilterBar(),

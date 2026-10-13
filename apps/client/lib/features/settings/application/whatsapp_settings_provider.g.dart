@@ -77,7 +77,7 @@ final class WhatsAppSettingsNotifierProvider
 }
 
 String _$whatsAppSettingsNotifierHash() =>
-    r'314094d645b5eef74727d9336c4d777e2402d8f6';
+    r'899e7a9425b5a74140db2d3afccdd848159a0450';
 
 abstract class _$WhatsAppSettingsNotifier
     extends $AsyncNotifier<WhatsAppSettings> {

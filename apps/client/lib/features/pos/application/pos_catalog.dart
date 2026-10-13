@@ -32,6 +32,7 @@ PosItem mapInventoryItemToPosItem(
     categoryId: item.categoryId,
     categoryName: categoryName,
     price: item.salePrice ?? 0,
+    purchasePrice: item.purchasePrice,
     mrp: item.mrp,
     stock: stock,
     unit: item.baseUnitShortName ?? 'pcs',
@@ -129,8 +130,7 @@ List<PosItem> filterPosCatalog({
   final query = searchQuery.trim();
   if (query.isEmpty) return result.toList();
 
-  final barcodeMatch = findInventoryItemByBarcodeOrQuery(
-    searchEngine,
+  final barcodeMatch = findInventoryItemByExactBarcode(
     products,
     query: query,
   );

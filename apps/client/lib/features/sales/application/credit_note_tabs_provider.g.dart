@@ -58,7 +58,7 @@ final class CreditNoteTabsProvider
   }
 }
 
-String _$creditNoteTabsHash() => r'abd07f4b14be6d8211e0ca302b62ea4694611a63';
+String _$creditNoteTabsHash() => r'5248b62e9fbea1f35beb4a081e2295f4cfb70ad0';
 
 final class CreditNoteTabsFamily extends $Family
     with

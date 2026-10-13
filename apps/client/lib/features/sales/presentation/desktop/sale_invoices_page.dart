@@ -46,6 +46,8 @@ class DesktopSaleInvoicesPage extends ConsumerWidget {
                     addButtonLabel: 'Add Sale',
                     addButtonColor: _addSaleRed,
                     onAddTap: () => context.push(AppRoutes.addSale),
+                    onSettingsTap: () =>
+                        context.push(AppRoutes.settingsTransaction),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   const SaleInvoiceFilterBar(),

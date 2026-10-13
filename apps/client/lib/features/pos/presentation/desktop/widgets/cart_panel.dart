@@ -38,7 +38,7 @@ class CartPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(posCartProvider);
+    final cart = ref.watch(posCartProvider());
 
     return PosPanel(
       child: SizedBox.expand(
@@ -210,7 +210,7 @@ class _BillSummaryState extends ConsumerState<_BillSummary> {
 
     controller.dispose();
     if (result != null) {
-      ref.read(posCartProvider.notifier).updateBillDiscount(result);
+      ref.read(posCartProvider().notifier).updateBillDiscount(result);
     }
   }
 
