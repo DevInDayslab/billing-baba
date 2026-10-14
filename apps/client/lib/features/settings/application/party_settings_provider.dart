@@ -57,6 +57,6 @@ class PartySettingsNotifier extends AsyncNotifier<PartySettings> {
     final repo = await ref.read(partySettingsRepositoryProvider.future);
     await repo.save(next);
     state = AsyncData(next);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.party);
+    notifySettingsSaved(message: SettingsSaveMessages.party);
   }
 }

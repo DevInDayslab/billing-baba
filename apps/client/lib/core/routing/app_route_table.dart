@@ -21,7 +21,10 @@ import 'package:billing_baba/features/collaboration/domain/models/company_sessio
 import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
 import 'package:billing_baba/features/collaboration/guards/permission_guard.dart';
 import 'package:billing_baba/features/settings/application/accounting_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_route_guard.dart';
 import 'package:billing_baba/features/settings/models/accounting_settings.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/collaboration/presentation/sync_share_page.dart';
 import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
@@ -202,7 +205,13 @@ GoRouter createAppRouter({
           final accounting =
               ref.read(accountingSettingsProvider).value ??
               AccountingSettings.defaults();
-          return AccountingRouteGuard.redirect(location, accounting);
+          final accountingRedirect =
+              AccountingRouteGuard.redirect(location, accounting);
+          if (accountingRedirect != null) return accountingRedirect;
+          final general =
+              ref.read(generalSettingsProvider).value ??
+              GeneralSettings.defaults();
+          return GeneralSettingsRouteGuard.redirect(location, general);
         case AuthStatus.initializing:
           return showSplash ? AppRoutes.splash : AppRoutes.login;
       }

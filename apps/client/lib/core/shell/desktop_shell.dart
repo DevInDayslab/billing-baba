@@ -31,6 +31,7 @@ import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar
 import 'package:billing_baba/features/tasks/presentation/task_undo_redo_shortcuts.dart';
 import 'package:billing_baba/features/search/presentation/desktop/search_dialog.dart';
 import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/shared/widgets/desktop_bidirectional_scroll.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:flutter/material.dart';
@@ -1948,13 +1949,29 @@ class _ScaledShellContent extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return ClipRect(
+        final viewW = constraints.maxWidth;
+        final viewH = constraints.maxHeight;
+        if (viewW <= 0 ||
+            viewH <= 0 ||
+            !viewW.isFinite ||
+            !viewH.isFinite) {
+          return child;
+        }
+
+        final logicalW = viewW / scale;
+        final logicalH = viewH / scale;
+
+        return DesktopBidirectionalScroll(
           child: Transform.scale(
             scale: scale,
             alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: constraints.maxWidth / scale,
-              height: constraints.maxHeight / scale,
+            filterQuality: FilterQuality.medium,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: logicalW,
+                maxWidth: logicalW,
+                minHeight: logicalH,
+              ),
               child: child,
             ),
           ),

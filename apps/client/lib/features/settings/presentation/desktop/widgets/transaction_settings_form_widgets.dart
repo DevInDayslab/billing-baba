@@ -9,6 +9,9 @@ class TransactionSettingsCheckboxRow extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.infoKey,
+    this.linkLabel,
+    this.onLinkTap,
+    this.showLink = true,
     super.key,
   });
 
@@ -16,34 +19,57 @@ class TransactionSettingsCheckboxRow extends StatelessWidget {
   final bool value;
   final ValueChanged<bool?>? onChanged;
   final TransactionSettingsInfoKey? infoKey;
+  /// Optional action shown indented under this row (e.g. Set Payment Terms).
+  final String? linkLabel;
+  final VoidCallback? onLinkTap;
+  /// When false, hides [linkLabel] even if set (e.g. gate on checkbox value).
+  final bool showLink;
+
+  static const _linkIndent = 40.0;
 
   @override
   Widget build(BuildContext context) {
+    final showNestedLink =
+        linkLabel != null && onLinkTap != null && showLink;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs + 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Checkbox(
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColors.primary,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-          ),
-          Expanded(
-            child: Text(
-              label,
-              style: AppTypography.inter(
-                fontSize: AppTypography.bodyMediumSize,
-                color: AppColors.textPrimary,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Checkbox(
+                value: value,
+                onChanged: onChanged,
+                activeColor: AppColors.primary,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
               ),
-            ),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodyMediumSize,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (infoKey != null)
+                SettingsInfoHoverIcon(
+                  heading: label,
+                  sections: TransactionSettingsInfoCatalog.sectionsFor(infoKey!),
+                ),
+            ],
           ),
-          if (infoKey != null)
-            SettingsInfoHoverIcon(
-              heading: label,
-              sections: TransactionSettingsInfoCatalog.sectionsFor(infoKey!),
+          if (showNestedLink)
+            Padding(
+              padding: const EdgeInsets.only(left: _linkIndent, bottom: 2),
+              child: TransactionSettingsLinkButton(
+                label: linkLabel!,
+                onTap: onLinkTap!,
+              ),
             ),
         ],
       ),

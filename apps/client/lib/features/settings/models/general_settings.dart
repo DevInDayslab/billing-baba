@@ -217,7 +217,7 @@ class GeneralSettings {
     );
   }
 
-  /// Sidebar / navigation visibility for transaction routes.
+  /// Sidebar / navigation visibility for transaction list routes.
   bool isNavRouteVisible(String route) {
     return switch (route) {
       AppRoutes.saleEstimateQuotation => enableEstimateQuotation,
@@ -231,4 +231,62 @@ class GeneralSettings {
       _ => true,
     };
   }
+
+  /// Maps add/edit document paths to their list route for [isNavRouteVisible].
+  static String? listRouteForTransactionPath(String path) {
+    if (path == AppRoutes.addEstimate ||
+        path.startsWith('${AppRoutes.editEstimate}/') ||
+        path.startsWith('${AppRoutes.duplicateEstimate}/')) {
+      return AppRoutes.saleEstimateQuotation;
+    }
+    if (path == AppRoutes.addProforma ||
+        path.startsWith('${AppRoutes.editProforma}/')) {
+      return AppRoutes.saleProformaInvoice;
+    }
+    if (path == AppRoutes.addSaleOrder ||
+        path.startsWith('${AppRoutes.editSaleOrder}/')) {
+      return AppRoutes.saleOrder;
+    }
+    if (path == AppRoutes.addDeliveryChallan ||
+        path.startsWith('${AppRoutes.editDeliveryChallan}/')) {
+      return AppRoutes.saleDeliveryChallan;
+    }
+    if (path == AppRoutes.addSaleFa ||
+        path.startsWith('${AppRoutes.editSaleFa}/')) {
+      return AppRoutes.saleFa;
+    }
+    if (path == AppRoutes.addExpense) {
+      return AppRoutes.purchaseExpenses;
+    }
+    if (path == AppRoutes.addPurchaseOrder) {
+      return AppRoutes.purchaseOrder;
+    }
+    if (path == AppRoutes.addPurchaseFa) {
+      return AppRoutes.purchaseFa;
+    }
+    return switch (path) {
+      AppRoutes.saleEstimateQuotation => AppRoutes.saleEstimateQuotation,
+      AppRoutes.saleProformaInvoice => AppRoutes.saleProformaInvoice,
+      AppRoutes.saleOrder => AppRoutes.saleOrder,
+      AppRoutes.purchaseOrder => AppRoutes.purchaseOrder,
+      AppRoutes.saleDeliveryChallan => AppRoutes.saleDeliveryChallan,
+      AppRoutes.saleFa => AppRoutes.saleFa,
+      AppRoutes.purchaseFa => AppRoutes.purchaseFa,
+      AppRoutes.purchaseExpenses => AppRoutes.purchaseExpenses,
+      _ => null,
+    };
+  }
+
+  /// Whether [path] is allowed (list pages and their add/edit flows).
+  bool isTransactionPathEnabled(String path) {
+    final listRoute = listRouteForTransactionPath(path);
+    if (listRoute == null) return true;
+    return isNavRouteVisible(listRoute);
+  }
+
+  bool get deliveryChallanPrintAmountEnabled =>
+      enableDeliveryChallan && deliveryChallanPrintAmount;
+
+  bool get deliveryChallanGoodsReturnEnabled =>
+      enableDeliveryChallan && deliveryChallanGoodsReturn;
 }

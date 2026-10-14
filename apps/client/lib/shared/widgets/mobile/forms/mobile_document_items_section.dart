@@ -3,8 +3,9 @@ import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_s
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_line_items_list.dart';
 import 'package:billing_baba/shared/widgets/mobile/forms/mobile_document_visibility.dart';
 import 'package:billing_baba/shared/widgets/mobile/forms/mobile_item_picker_sheet.dart';
+import 'package:billing_baba/shared/business/business_amount_format.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -42,13 +43,9 @@ class MobileDocumentItemsSection extends StatelessWidget {
   final VoidCallback? onScan;
   final ValueChanged<int>? onLineTap;
 
-  static final _currency = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '',
-    decimalDigits: 2,
-  );
-
-  static String formatAmount(double amount) => _currency.format(amount).trim();
+  static String formatAmount(WidgetRef ref, double amount) {
+    return ref.read(businessAmountFormatterProvider).format(amount).trim();
+  }
 
   @override
   Widget build(BuildContext context) {

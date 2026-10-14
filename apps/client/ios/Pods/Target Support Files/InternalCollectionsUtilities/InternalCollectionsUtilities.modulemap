@@ -1,0 +1,6 @@
+framework module InternalCollectionsUtilities {
+  umbrella header "InternalCollectionsUtilities-umbrella.h"
+
+  export *
+  module * { export * }
+}
