@@ -795,6 +795,41 @@ class SalesService {
     }
   }
 
+  Future<SalesDocumentDto> fetchDocument(String documentId) async {
+    try {
+      return await _repository.getDocument(documentId);
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
+  /// Updates line quantities on a draft sale by inventory item id.
+  Future<SalesDocumentDto> applyLineQuantitiesByItemId(
+    SalesDocumentDto document,
+    Map<String, double> qtyByItemId,
+  ) async {
+    try {
+      for (final line in document.lines) {
+        final targetQty = qtyByItemId[line.itemId];
+        if (targetQty == null) continue;
+        final currentQty = double.tryParse(line.quantity) ?? 0;
+        if (targetQty == currentQty) continue;
+        if (targetQty <= 0) {
+          await _repository.deleteLine(document.id, line.id);
+          continue;
+        }
+        await _repository.updateLine(
+          document.id,
+          line.id,
+          UpdateSalesLineRequest(quantity: targetQty.toString()),
+        );
+      }
+      return await _repository.getDocument(document.id);
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
   Future<SalesDocumentDto> finalizeDraft(
     String documentId, {
     String? godownId,

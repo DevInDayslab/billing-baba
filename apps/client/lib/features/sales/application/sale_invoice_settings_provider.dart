@@ -51,7 +51,7 @@ class SaleInvoiceSettingsNotifier extends _$SaleInvoiceSettingsNotifier {
     );
     await repository.save(next);
     if (!silent) {
-      notifySettingsSaved(ref, message: SettingsSaveMessages.transaction);
+      notifySettingsSaved(message: SettingsSaveMessages.transaction);
     }
   }
 }

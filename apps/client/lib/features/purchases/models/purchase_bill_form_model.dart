@@ -92,6 +92,8 @@ class AddPurchaseFormState {
     this.attachedImages = const [],
     this.attachedDocuments = const [],
     this.roundOff = true,
+    this.taxOption = 'NONE',
+    this.transactionDiscountPercent = 0,
     this.showValidationErrors = false,
     this.isDirty = false,
     this.isLoading = false,
@@ -120,6 +122,8 @@ class AddPurchaseFormState {
   final List<SaleFormAttachment> attachedImages;
   final List<SaleFormAttachment> attachedDocuments;
   final bool roundOff;
+  final String taxOption;
+  final double transactionDiscountPercent;
   final bool showValidationErrors;
   final bool isDirty;
   final bool isLoading;
@@ -188,6 +192,8 @@ class AddPurchaseFormState {
     List<SaleFormAttachment>? attachedImages,
     List<SaleFormAttachment>? attachedDocuments,
     bool? roundOff,
+    String? taxOption,
+    double? transactionDiscountPercent,
     bool? showValidationErrors,
     bool? isDirty,
     bool? isLoading,
@@ -221,6 +227,9 @@ class AddPurchaseFormState {
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
+      taxOption: taxOption ?? this.taxOption,
+      transactionDiscountPercent:
+          transactionDiscountPercent ?? this.transactionDiscountPercent,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
       isLoading: isLoading ?? this.isLoading,

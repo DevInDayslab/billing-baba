@@ -14,7 +14,13 @@ enum SaleLineItemColumn {
   price,
   discount,
   taxPercent,
-  taxAmount;
+  taxAmount,
+  freeQty,
+  count;
+
+  /// Hidden from the column picker; toggled only via transaction settings.
+  bool get isSettingsControlled =>
+      this == SaleLineItemColumn.freeQty || this == SaleLineItemColumn.count;
 
   String get label => switch (this) {
     SaleLineItemColumn.serialNo => 'Serial No.',
@@ -30,6 +36,8 @@ enum SaleLineItemColumn {
     SaleLineItemColumn.discount => 'Discount',
     SaleLineItemColumn.taxPercent => 'Tax %',
     SaleLineItemColumn.taxAmount => 'Tax Amount',
+    SaleLineItemColumn.freeQty => 'Free Qty',
+    SaleLineItemColumn.count => 'Count',
   };
 
   String get storageKey => name;

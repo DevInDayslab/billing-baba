@@ -177,23 +177,20 @@ class DesktopTransactionSettingsScreen extends ConsumerWidget {
                   label: 'Due Dates and Payment Terms',
                   value: settings.dueDatesAndPaymentTerms,
                   infoKey: TransactionSettingsInfoKey.dueDatesPaymentTerms,
+                  linkLabel: 'Set Payment Terms',
+                  onLinkTap: () => showPaymentTermsEditor(
+                    context: context,
+                    initial: settings.formExtras.paymentTerms,
+                    onSave: (terms) => patch(
+                      (s) => s.copyWith(
+                        formExtras: s.formExtras.copyWith(paymentTerms: terms),
+                      ),
+                    ),
+                  ),
                   onChanged: (v) => patch(
                     (s) => s.copyWith(dueDatesAndPaymentTerms: v ?? false),
                   ),
                 ),
-                if (settings.dueDatesAndPaymentTerms)
-                  TransactionSettingsLinkButton(
-                    label: 'Set Payment Terms',
-                    onTap: () => showPaymentTermsEditor(
-                      context: context,
-                      initial: settings.formExtras.paymentTerms,
-                      onSave: (terms) => patch(
-                        (s) => s.copyWith(
-                          formExtras: s.formExtras.copyWith(paymentTerms: terms),
-                        ),
-                      ),
-                    ),
-                  ),
                 TransactionSettingsCheckboxRow(
                   label: 'Show Profit while making Sale Invoice',
                   value: settings.showProfitOnSaleInvoice,
@@ -214,18 +211,16 @@ class DesktopTransactionSettingsScreen extends ConsumerWidget {
                   label: 'Terms and Conditions',
                   value: settings.termsAndConditionsEnabled,
                   infoKey: TransactionSettingsInfoKey.termsAndConditions,
+                  linkLabel: 'Set Terms and Conditions',
+                  showLink: settings.termsAndConditionsEnabled,
+                  onLinkTap: () => _openSettingsDialog(
+                    context,
+                    const SaleInvoiceTermsSettingsPage(),
+                  ),
                   onChanged: (v) => patch(
                     (s) => s.copyWith(termsAndConditionsEnabled: v ?? false),
                   ),
                 ),
-                if (settings.termsAndConditionsEnabled)
-                  TransactionSettingsLinkButton(
-                    label: 'Set Terms and Conditions',
-                    onTap: () => _openSettingsDialog(
-                      context,
-                      const SaleInvoiceTermsSettingsPage(),
-                    ),
-                  ),
                 TransactionSettingsLinkButton(
                   label: 'Additional Fields >',
                   onTap: () => _openSettingsDialog(

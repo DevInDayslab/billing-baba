@@ -25,7 +25,9 @@ import 'package:billing_baba/features/sales/data/sales_repository.dart';
 import 'package:billing_baba/features/sales/models/dto/job_work_order_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/shared/business/business_amount_format.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:intl/intl.dart';
 
 class PrintDataService {
   PrintDataService({
@@ -40,7 +42,10 @@ class PrintDataService {
     required this._saleFaRepository,
     required this._jobWorkRepository,
     required this._imageService,
-  });
+    required NumberFormat amountFormatter,
+    this.showPartyGstinOnDocuments = true,
+    this.deliveryChallanPrintAmount = true,
+  }) : _amountFormatter = amountFormatter;
 
   final SalesRepository _salesRepository;
   final PurchaseRepository _purchaseRepository;
@@ -53,6 +58,9 @@ class PrintDataService {
   final SaleFaRepository _saleFaRepository;
   final JobWorkRepository _jobWorkRepository;
   final ImageService _imageService;
+  final NumberFormat _amountFormatter;
+  final bool showPartyGstinOnDocuments;
+  final bool deliveryChallanPrintAmount;
   final Map<String, ItemDetailDto> _itemCache = {};
 
   Future<PrintableDocument> load(PrintRequest request) {
@@ -109,6 +117,10 @@ class PrintDataService {
       assetsFuture.then((value) => assets = value),
     ]);
 
+    final showChallanPricing = request.kind !=
+            PrintableDocumentKind.deliveryChallan ||
+        deliveryChallanPrintAmount;
+
     return PrintableDocument(
       kind: request.kind,
       request: request,
@@ -125,6 +137,7 @@ class PrintDataService {
       taxSummary: _taxSummaryFromSalesLines(document.lines),
       assets: assets,
       salesDocument: document,
+      deliveryChallanShowPricing: showChallanPricing,
     );
   }
 
@@ -488,7 +501,10 @@ class PrintDataService {
     }
     final dto = await _partyMasterRepository.getActive(partyId);
     if (dto == null) return null;
-    return PrintableParty(dto: dto);
+    final partyDto = showPartyGstinOnDocuments
+        ? dto
+        : dto.copyWith(clearGstin: true);
+    return PrintableParty(dto: partyDto);
   }
 
   Future<PrintableAssets> _loadAssets(
@@ -765,9 +781,6 @@ class PrintDataService {
   }
 
   String _formatAmount(double value) {
-    if (value == value.roundToDouble()) {
-      return value.round().toString();
-    }
-    return value.toStringAsFixed(2);
+    return _amountFormatter.format(value);
   }
 }

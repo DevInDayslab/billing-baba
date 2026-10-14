@@ -10,6 +10,7 @@ import 'package:billing_baba/features/settings/application/gst_tax_settings_prov
 import 'package:billing_baba/features/sales/models/sale_invoice_settings.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/sale_invoice_settings_subpages.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/widgets/transaction_settings_editors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -249,6 +250,19 @@ class _SaleInvoiceSettingsBody extends ConsumerWidget {
               onChanged: (value) => _update(
                 ref,
                 (s) => s.copyWith(dueDatesAndPaymentTerms: value),
+              ),
+            ),
+            SettingsTile(
+              title: 'Set Payment Terms',
+              onTap: () => showPaymentTermsEditor(
+                context: context,
+                initial: settings.formExtras.paymentTerms,
+                onSave: (terms) => _update(
+                  ref,
+                  (s) => s.copyWith(
+                    formExtras: s.formExtras.copyWith(paymentTerms: terms),
+                  ),
+                ),
               ),
             ),
             SwitchTile(

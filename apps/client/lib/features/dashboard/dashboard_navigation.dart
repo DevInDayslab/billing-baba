@@ -40,10 +40,18 @@ abstract final class DashboardNavigation {
   }) {
     final intent = _intentForQuickReportKey(key);
     if (intent != null) {
-      _openReports(context, ref, intent);
+      openReports(context, ref, intent);
       return;
     }
     context.go(AppRoutes.reports);
+  }
+
+  static void openReports(
+    BuildContext context,
+    WidgetRef ref,
+    ReportsNavIntent intent,
+  ) {
+    _openReports(context, ref, intent);
   }
 
   static void openSideWidget(

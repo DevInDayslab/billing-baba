@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/widgets/transaction_settings_editors.dart';
 import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -188,12 +189,47 @@ class _SaleInvoiceSettingsPanelState
                           horizontal: AppSpacing.lg,
                           vertical: AppSpacing.md,
                         ),
-                        child: _DueDatesPaymentTermsRow(
-                          value: settings.dueDatesAndPaymentTerms,
-                          isLoading:
-                              _isSavingDueDates || settingsAsync.isLoading,
-                          onChanged: (value) =>
-                              unawaited(_setDueDatesAndPaymentTerms(value)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _DueDatesPaymentTermsRow(
+                              value: settings.dueDatesAndPaymentTerms,
+                              isLoading:
+                                  _isSavingDueDates || settingsAsync.isLoading,
+                              onChanged: (value) =>
+                                  unawaited(_setDueDatesAndPaymentTerms(value)),
+                            ),
+                            TextButton(
+                                onPressed: () => showPaymentTermsEditor(
+                                  context: context,
+                                  initial: settings.formExtras.paymentTerms,
+                                  onSave: (terms) => ref
+                                      .read(
+                                        saleInvoiceSettingsProvider.notifier,
+                                      )
+                                      .updateSettings(
+                                        (s) => s.copyWith(
+                                          formExtras: s.formExtras.copyWith(
+                                            paymentTerms: terms,
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  'Set Payment Terms',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],

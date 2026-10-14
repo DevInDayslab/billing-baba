@@ -26,6 +26,9 @@ abstract final class InvoicePdfTableLayout {
     0.12,
   ];
 
+  /// #, Description, Qty, Unit
+  static const _quantityOnlyFractions = <double>[0.06, 0.58, 0.18, 0.18];
+
   /// #, Description, Qty, Unit, Rate, Discount, Amount
   static const _nonGstFractions = <double>[
     0.05,
@@ -39,6 +42,7 @@ abstract final class InvoicePdfTableLayout {
 
   static Map<int, pw.TableColumnWidth> commercialColumns({
     required bool showGst,
+    required bool showLinePricing,
     PdfPageFormat pageFormat = PdfPageFormat.a4,
     double margin = horizontalMargin,
   }) {
@@ -46,7 +50,11 @@ abstract final class InvoicePdfTableLayout {
       pageFormat: pageFormat,
       margin: margin,
     );
-    final fractions = showGst ? _gstFractions : _nonGstFractions;
+    final fractions = !showLinePricing
+        ? _quantityOnlyFractions
+        : showGst
+        ? _gstFractions
+        : _nonGstFractions;
 
     return {
       for (var i = 0; i < fractions.length; i++)

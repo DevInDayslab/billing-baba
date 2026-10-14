@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/application/add_purchase_form_provider.dart';
+import 'package:billing_baba/features/purchases/utils/purchase_bill_totals.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_totals_settings.dart';
 import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -33,6 +35,11 @@ class AddPurchaseFooter extends ConsumerWidget {
     final notifier = ref.read(addPurchaseFormProvider(billId: billId).notifier);
     final totalTax = ref.watch(addPurchaseTotalTaxProvider(billId: billId));
     final grandTotal = ref.watch(addPurchaseGrandTotalProvider(billId: billId));
+    final totalsSettings = ref.watch(saleTransactionTotalsSettingsProvider);
+    final computedTotals = computePurchaseBillTotals(
+      form: form,
+      settings: totalsSettings,
+    );
     final showTransactionTaxes = ref.watch(gstAllowsTransactionTaxesProvider);
 
     return Row(
@@ -106,7 +113,30 @@ class AddPurchaseFooter extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (showTransactionTaxes) ...[
+              if (totalsSettings.transactionWiseDiscount) ...[
+                Row(
+                  children: [
+                    const Text(
+                      'Discount %',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 72,
+                      child: _AmountField(
+                        value: form.transactionDiscountPercent,
+                        readOnly: false,
+                        onChanged: notifier.updateTransactionDiscountPercent,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (showTransactionTaxes)
                 Row(
                   children: [
                     const Text(
@@ -116,6 +146,19 @@ class AddPurchaseFooter extends ConsumerWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
+                    if (totalsSettings.transactionWiseTax) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 72,
+                        child: SaleGenericSelectDropdown(
+                          value: form.taxOption,
+                          options: SaleDropdownOptions.taxSlabs,
+                          highlight: SaleDropdownHighlight.red,
+                          compact: true,
+                          onSelected: notifier.updateTaxOption,
+                        ),
+                      ),
+                    ],
                     const Spacer(),
                     SizedBox(
                       width: 72,
@@ -127,35 +170,36 @@ class AddPurchaseFooter extends ConsumerWidget {
                     ),
                   ],
                 ),
+              if (totalsSettings.roundOffTransactionAmount) ...[
                 const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: form.roundOff,
+                      onChanged: (value) =>
+                          notifier.toggleRoundOff(value: value ?? false),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const Text(
+                      'Round Off',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      width: 72,
+                      child: _AmountField(
+                        value: computedTotals.roundOffAmount,
+                        readOnly: true,
+                        onChanged: (_) {},
+                      ),
+                    ),
+                  ],
+                ),
               ],
-              Row(
-                children: [
-                  Checkbox(
-                    value: form.roundOff,
-                    onChanged: (value) =>
-                        notifier.toggleRoundOff(value: value ?? false),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  const Text(
-                    'Round Off',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 72,
-                    child: _AmountField(
-                      value: form.roundOffAmount,
-                      readOnly: !form.roundOff,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(

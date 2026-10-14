@@ -294,8 +294,8 @@ class _MobileAddSaleDocumentPageState
                 MobileDocumentLineDisplay(
                   name: item.itemName,
                   qtyLabel:
-                      '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
-                  amountLabel: MobileDocumentItemsSection.formatAmount(
+                      '${item.qty} × ${MobileDocumentItemsSection.formatAmount(ref, item.pricePerUnit)}',
+                  amountLabel: MobileDocumentItemsSection.formatAmount(ref, 
                     item.amount,
                   ),
                 ),

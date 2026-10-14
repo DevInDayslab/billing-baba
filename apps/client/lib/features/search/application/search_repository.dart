@@ -1,5 +1,7 @@
 import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/search/application/recent_search_storage.dart';
 import 'package:billing_baba/features/search/application/search_matcher.dart';
 import 'package:billing_baba/features/search/application/search_registry.dart';
@@ -24,8 +26,13 @@ class SearchRepository {
   /// Sync filter against the static registry — no I/O.
   List<SearchResultSection> filteredSections(String query) {
     final permissions = _ref.read(permissionServiceProvider);
+    final general =
+        _ref.read(generalSettingsProvider).value ?? GeneralSettings.defaults();
     final pages = SearchMatcher.filter(
-      items: SearchRegistry.visiblePages(permissions),
+      items: SearchRegistry.visiblePages(
+        permissions,
+        generalSettings: general,
+      ),
       query: query,
     );
     final commands = SearchMatcher.filter(

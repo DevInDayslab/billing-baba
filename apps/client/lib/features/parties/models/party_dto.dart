@@ -98,6 +98,37 @@ class PartyDto {
     return double.tryParse(balance?.toString() ?? '0') ?? 0;
   }
 
+  PartyDto copyWith({String? gstin, bool clearGstin = false}) {
+    return PartyDto(
+      id: id,
+      name: name,
+      partyType: partyType,
+      pricingTier: pricingTier,
+      creditLimit: creditLimit,
+      openingBalance: openingBalance,
+      balance: balance,
+      isActive: isActive,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      unrecoveredAmount: unrecoveredAmount,
+      legalName: legalName,
+      alias: alias,
+      mobile: mobile,
+      additionalPhones: additionalPhones,
+      email: email,
+      partyCategory: partyCategory,
+      partyGroup: partyGroup,
+      areaCode: areaCode,
+      gstin: clearGstin ? null : (gstin ?? this.gstin),
+      stateCode: stateCode,
+      state: state,
+      areaId: areaId,
+      notes: notes,
+      profileImageUrl: profileImageUrl,
+      profileMediaAssetId: profileMediaAssetId,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
