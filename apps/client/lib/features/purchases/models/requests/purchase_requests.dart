@@ -232,6 +232,7 @@ class CreateExpenseRequest {
     required this.categoryId,
     required this.amount,
     required this.expenseDate,
+    this.expenseItemId,
     this.partyId,
     this.description,
     this.notes,
@@ -245,6 +246,7 @@ class CreateExpenseRequest {
   final String categoryId;
   final String amount;
   final String expenseDate;
+  final String? expenseItemId;
   final String? partyId;
   final String? description;
   final String? notes;
@@ -258,6 +260,7 @@ class CreateExpenseRequest {
     'category_id': categoryId,
     'amount': amount,
     'expense_date': expenseDate,
+    if (expenseItemId != null) 'expense_item_id': expenseItemId,
     if (partyId != null) 'party_id': partyId,
     if (description != null) 'description': description,
     if (notes != null) 'notes': notes,
@@ -275,6 +278,7 @@ class UpdateExpenseRequest {
     this.categoryId,
     this.amount,
     this.expenseDate,
+    this.expenseItemId,
     this.partyId,
     this.description,
     this.notes,
@@ -288,6 +292,7 @@ class UpdateExpenseRequest {
   final String? categoryId;
   final String? amount;
   final String? expenseDate;
+  final String? expenseItemId;
   final String? partyId;
   final String? description;
   final String? notes;
@@ -301,6 +306,7 @@ class UpdateExpenseRequest {
     if (categoryId != null) 'category_id': categoryId,
     if (amount != null) 'amount': amount,
     if (expenseDate != null) 'expense_date': expenseDate,
+    if (expenseItemId != null) 'expense_item_id': expenseItemId,
     if (partyId != null) 'party_id': partyId,
     if (description != null) 'description': description,
     if (notes != null) 'notes': notes,
@@ -336,5 +342,54 @@ class UpdateExpenseCategoryRequest {
   Map<String, dynamic> toJson() => {
     if (name != null) 'name': name,
     if (categoryType != null) 'category_type': categoryType,
+  };
+}
+
+class CreateExpenseItemRequest {
+  const CreateExpenseItemRequest({
+    required this.name,
+    this.hsnSac,
+    this.price = '0',
+    this.priceIsTaxInclusive = false,
+    this.taxRate = '0',
+  });
+
+  final String name;
+  final String? hsnSac;
+  final String price;
+  final bool priceIsTaxInclusive;
+  final String taxRate;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    if (hsnSac != null && hsnSac!.isNotEmpty) 'hsn_sac': hsnSac,
+    'price': price,
+    'price_is_tax_inclusive': priceIsTaxInclusive,
+    'tax_rate': taxRate,
+  };
+}
+
+class UpdateExpenseItemRequest {
+  const UpdateExpenseItemRequest({
+    this.name,
+    this.hsnSac,
+    this.price,
+    this.priceIsTaxInclusive,
+    this.taxRate,
+  });
+
+  final String? name;
+  final String? hsnSac;
+  final String? price;
+  final bool? priceIsTaxInclusive;
+  final String? taxRate;
+
+  Map<String, dynamic> toJson() => {
+    if (name != null) 'name': name,
+    if (hsnSac != null) 'hsn_sac': hsnSac,
+    if (price != null) 'price': price,
+    if (priceIsTaxInclusive != null)
+      'price_is_tax_inclusive': priceIsTaxInclusive,
+    if (taxRate != null) 'tax_rate': taxRate,
   };
 }

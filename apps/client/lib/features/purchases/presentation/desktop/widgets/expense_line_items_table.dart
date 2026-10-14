@@ -1,13 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/application/add_expense_form_provider.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
+import 'package:billing_baba/features/purchases/presentation/desktop/widgets/expense_item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/compact_number_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/features/sales/utils/sale_price_input.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -259,17 +260,24 @@ class _LineItemRow extends ConsumerWidget {
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             tooltip: 'Remove row',
           ),
-          ItemNameAutocompleteField(
+          ExpenseItemNameAutocompleteField(
             value: item.itemName,
             onChanged: (value) => notifier.updateLineItem(
               index,
-              item.copyWith(itemName: value),
+              item.copyWith(
+                itemName: value,
+                clearExpenseItemId: true,
+              ),
             ),
             onItemSelected: (catalogItem) => notifier.updateLineItem(
               index,
               item.copyWith(
+                expenseItemId: catalogItem.id,
                 itemName: catalogItem.name,
-                pricePerUnit: catalogItem.purchasePrice,
+                pricePerUnit: catalogItem.price,
+                priceIsTaxInclusive: catalogItem.priceIsTaxInclusive,
+                taxPercent: catalogItem.taxRate,
+                qty: item.qty > 0 ? item.qty : 1,
               ),
             ),
           ),
@@ -281,8 +289,11 @@ class _LineItemRow extends ConsumerWidget {
               item.copyWith(description: value),
             ),
           ),
-          _CompactNumberField(
-            initialValue: item.qty,
+          CompactNumberField(
+            value: item.qty,
+            hintText: '0',
+            borderless: true,
+            useFieldBox: false,
             onChanged: (value) => notifier.updateLineItem(
               index,
               item.copyWith(qty: value),
@@ -292,8 +303,11 @@ class _LineItemRow extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: _CompactNumberField(
-                    initialValue: item.pricePerUnit,
+                  child: CompactNumberField(
+                    value: item.pricePerUnit,
+                    hintText: '0',
+                    borderless: true,
+                    useFieldBox: false,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
                       item.copyWith(pricePerUnit: value),
@@ -320,8 +334,11 @@ class _LineItemRow extends ConsumerWidget {
               ],
             )
           else
-            _CompactNumberField(
-              initialValue: item.pricePerUnit,
+            CompactNumberField(
+              value: item.pricePerUnit,
+              hintText: '0',
+              borderless: true,
+              useFieldBox: false,
               onChanged: (value) => notifier.updateLineItem(
                 index,
                 item.copyWith(pricePerUnit: value),
@@ -401,7 +418,7 @@ class _TotalsRow extends StatelessWidget {
           ),
           const SizedBox.shrink(),
           Text(
-            totalQty == 0 ? '0' : totalQty.toString(),
+            SalePriceInput.format(totalQty, zeroValue: '0'),
             style: valueStyle,
           ),
           const SizedBox.shrink(),
@@ -470,59 +487,3 @@ class _CompactTextFieldState extends State<_CompactTextField> {
   }
 }
 
-class _CompactNumberField extends StatefulWidget {
-  const _CompactNumberField({
-    required this.initialValue,
-    required this.onChanged,
-  });
-
-  final double initialValue;
-  final ValueChanged<double> onChanged;
-
-  @override
-  State<_CompactNumberField> createState() => _CompactNumberFieldState();
-}
-
-class _CompactNumberFieldState extends State<_CompactNumberField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(
-      text: widget.initialValue == 0 ? '' : widget.initialValue.toString(),
-    );
-  }
-
-  @override
-  void didUpdateWidget(_CompactNumberField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final newText = widget.initialValue == 0
-        ? ''
-        : widget.initialValue.toString();
-    if (widget.initialValue != oldWidget.initialValue &&
-        newText != _controller.text) {
-      _controller.text = newText;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      style: saleFieldTextStyle.copyWith(fontSize: 12),
-      decoration: buildSaleFieldDecoration(compact: true),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
-      onChanged: (text) => widget.onChanged(double.tryParse(text) ?? 0),
-    );
-  }
-}

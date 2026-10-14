@@ -63,6 +63,7 @@ part 'database.g.dart';
     InventoryMovementsLocal,
     StockLevelsLocal,
     ExpenseCategoriesLocal,
+    ExpenseItemsLocal,
     ExpensesLocal,
     GatewayPaymentSessionsLocal,
     NotificationsLocal,
@@ -73,7 +74,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Drift schema version — keep in sync with [schemaVersion].
-  static const currentSchemaVersion = 27;
+  static const currentSchemaVersion = 28;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -270,6 +271,17 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(todosLocal);
         await m.database.customStatement(
           'CREATE INDEX IF NOT EXISTS idx_todos_local_business_id ON todos_local (business_id)',
+        );
+      }
+      if (from < 28) {
+        await m.createTable(expenseItemsLocal);
+        await m.database.customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_expense_items_local_business_id ON expense_items_local (business_id)',
+        );
+        await _addColumnIfMissing(
+          m,
+          expensesLocal,
+          expensesLocal.expenseItemId,
         );
       }
     },

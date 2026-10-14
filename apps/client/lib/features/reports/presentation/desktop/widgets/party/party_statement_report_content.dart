@@ -5,14 +5,12 @@ import 'package:billing_baba/features/reports/application/phase1_report_provider
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
-import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/party/party_statement_transactions_table.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_view_toggle.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
@@ -30,7 +28,6 @@ class PartyStatementReportContent extends ConsumerStatefulWidget {
 
 class _PartyStatementReportContentState
     extends ConsumerState<PartyStatementReportContent> {
-  String _viewMode = 'Vyapar';
   bool _summaryExpanded = true;
 
   @override
@@ -125,9 +122,13 @@ class _PartyStatementReportContentState
                       ),
                     )
                   : SaleFilterDropdown(
-                      label: 'Select Party',
+                      label: selectedParty?.name ??
+                          (partyNames.isNotEmpty
+                              ? partyNames.first
+                              : 'Select Party'),
                       options: partyNames,
-                      selected: selectedParty?.name ?? partyNames.first,
+                      selected: selectedParty?.name ??
+                          (partyNames.isNotEmpty ? partyNames.first : ''),
                       showSearchField: true,
                       onSelected: (name) {
                         final party = parties
@@ -176,29 +177,10 @@ class _PartyStatementReportContentState
                           children: [
                             Expanded(
                               child: ReportCard(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(
-                                        AppSpacing.md,
-                                      ),
-                                      child: ReportViewToggle(
-                                        value: _viewMode,
-                                        onChanged: (v) =>
-                                            setState(() => _viewMode = v),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: ReportTableArea(
-                                        child: _PartyStatementTable(
-                                          entries: data.entries,
-                                          viewMode: _viewMode,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: ReportTableArea(
+                                  child: PartyStatementTransactionsTable(
+                                    entries: data.entries,
+                                  ),
                                 ),
                               ),
                             ),
@@ -226,15 +208,12 @@ class _PartyStatementReportContentState
     PartyStatementReportData? data,
   ) {
     if (data == null) return;
-    final headers = _exportHeaders(_viewMode);
     reportExportTable(
       context: context,
       title: 'Party Statement',
       filename: 'party-statement',
-      headers: headers,
-      rows: [
-        for (final row in data.entries) _exportRow(row, _viewMode),
-      ],
+      headers: _exportHeaders,
+      rows: [for (final row in data.entries) _exportRow(row)],
     );
   }
 
@@ -243,40 +222,25 @@ class _PartyStatementReportContentState
     PartyStatementReportData? data,
   ) {
     if (data == null) return;
-    final headers = _exportHeaders(_viewMode);
     ReportExportService.showPrintPreview(
       context: context,
       title: 'Party Statement',
       content: ReportExportService.toCsv(
-        headers: headers,
-        rows: [
-          for (final row in data.entries) _exportRow(row, _viewMode),
-        ],
+        headers: _exportHeaders,
+        rows: [for (final row in data.entries) _exportRow(row)],
       ),
     );
   }
 
-  static List<String> _exportHeaders(String viewMode) {
-    if (viewMode == 'Accounting') {
-      return const ['Date', 'Type', 'Ref No', 'Debit', 'Credit', 'Balance'];
-    }
-    return const ['Date', 'Type', 'Ref No', 'Total', 'Balance'];
-  }
+  static const _exportHeaders = [
+    'Date',
+    'Type',
+    'Ref No',
+    'Total',
+    'Balance',
+  ];
 
-  static List<String> _exportRow(
-    ReportPartyStatementEntry row,
-    String viewMode,
-  ) {
-    if (viewMode == 'Accounting') {
-      return [
-        formatReportDate(row.date),
-        row.type,
-        row.refNo,
-        if (row.debit > 0) formatReportCurrency(row.debit) else '',
-        if (row.credit > 0) formatReportCurrency(row.credit) else '',
-        formatReportCurrency(row.balance),
-      ];
-    }
+  static List<String> _exportRow(ReportPartyStatementEntry row) {
     return [
       formatReportDate(row.date),
       row.type,
@@ -284,37 +248,6 @@ class _PartyStatementReportContentState
       formatReportCurrency(row.total),
       formatReportCurrency(row.balance),
     ];
-  }
-}
-
-class _PartyStatementTable extends ConsumerWidget {
-  const _PartyStatementTable({
-    required this.entries,
-    required this.viewMode,
-  });
-
-  final List<ReportPartyStatementEntry> entries;
-  final String viewMode;
-
-  bool get _isAccounting => viewMode == 'Accounting';
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ReportFilterableSyncTable<ReportPartyStatementEntry>(
-      reportScope: partyStatementReportScope,
-      minWidth: _isAccounting ? 640 : 520,
-      columns: partyStatementColumns(accountingView: _isAccounting),
-      rows: entries,
-      emptyState: const Center(
-        child: Text(
-          'No statement entries for this party.',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
   }
 }
 

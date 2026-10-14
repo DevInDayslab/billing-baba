@@ -239,6 +239,39 @@ class InventoryStockLocalDataSource {
   }
 
   /// Bulk item quantities for list views (sums all godowns per item).
+  Future<List<StockLevelLocalData>> listAllStockLevels({
+    required String businessId,
+  }) {
+    return (_db.select(_db.stockLevelsLocal)..where(
+          (t) =>
+              t.businessId.equals(businessId) & t.isDeleted.equals(false),
+        ))
+        .get();
+  }
+
+  Future<List<InventoryMovementLocalData>> listMovementsInRange({
+    required String businessId,
+    required DateTime from,
+    required DateTime to,
+    String? godownId,
+    String? itemId,
+  }) {
+    return (_db.select(_db.inventoryMovementsLocal)..where((t) {
+      var predicate =
+          t.businessId.equals(businessId) &
+          t.isDeleted.equals(false) &
+          t.createdAt.isBiggerOrEqualValue(from) &
+          t.createdAt.isSmallerThanValue(to);
+      if (godownId != null && godownId.isNotEmpty) {
+        predicate = predicate & t.godownId.equals(godownId);
+      }
+      if (itemId != null && itemId.isNotEmpty) {
+        predicate = predicate & t.itemId.equals(itemId);
+      }
+      return predicate;
+    })).get();
+  }
+
   Future<Map<String, double>> quantitiesByItem({
     required String businessId,
   }) async {
@@ -467,6 +500,67 @@ class InventoryStockLocalDataSource {
             deviceId: Value(deviceId),
           ),
         );
+  }
+
+  Future<List<MovementDto>> listStockTransferMovements({
+    required String businessId,
+    required DateTime fromInclusive,
+    required DateTime toExclusive,
+  }) async {
+    final rows =
+        await (_db.select(_db.inventoryMovementsLocal).join([
+              leftOuterJoin(
+                _db.godownsLocal,
+                _db.godownsLocal.id.equalsExp(
+                      _db.inventoryMovementsLocal.godownId,
+                    ) &
+                    _db.godownsLocal.businessId.equalsExp(
+                      _db.inventoryMovementsLocal.businessId,
+                    ),
+              ),
+              leftOuterJoin(
+                _db.itemsLocal,
+                _db.itemsLocal.id.equalsExp(
+                      _db.inventoryMovementsLocal.itemId,
+                    ) &
+                    _db.itemsLocal.businessId.equalsExp(
+                      _db.inventoryMovementsLocal.businessId,
+                    ),
+              ),
+            ])
+            ..where(
+              _db.inventoryMovementsLocal.businessId.equals(businessId) &
+                  _db.inventoryMovementsLocal.isDeleted.equals(false) &
+                  _db.inventoryMovementsLocal.createdAt.isBiggerOrEqualValue(
+                    fromInclusive,
+                  ) &
+                  _db.inventoryMovementsLocal.createdAt.isSmallerThanValue(
+                    toExclusive,
+                  ) &
+                  (_db.inventoryMovementsLocal.referenceType.equals(
+                        'stock_transfer',
+                      ) |
+                      (_db.inventoryMovementsLocal.movementType.equals(
+                            'adjustment',
+                          ) &
+                          _db.inventoryMovementsLocal.referenceId.isNotNull()) |
+                      _db.inventoryMovementsLocal.movementType.equals(
+                        'transfer',
+                      )),
+            )
+            ..orderBy([
+              OrderingTerm.desc(_db.inventoryMovementsLocal.createdAt),
+            ]))
+          .get();
+
+    return [
+      for (final row in rows)
+        _movementDtoFromRow(
+          movement: row.readTable(_db.inventoryMovementsLocal),
+          godownName: row.readTableOrNull(_db.godownsLocal)?.name,
+          itemName: row.readTableOrNull(_db.itemsLocal)?.name,
+        ),
+    ];
   }
 
   Future<List<MovementDto>> listMovementsForItem({

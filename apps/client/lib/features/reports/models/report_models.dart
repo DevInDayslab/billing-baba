@@ -202,13 +202,17 @@ class ReportSalePurchaseByPartyGroupRow {
 class ReportPartyByItemRow {
   const ReportPartyByItemRow({
     required this.partyName,
-    required this.quantity,
-    required this.amount,
+    required this.saleQuantity,
+    required this.saleAmount,
+    required this.purchaseQuantity,
+    required this.purchaseAmount,
   });
 
   final String partyName;
-  final double quantity;
-  final double amount;
+  final double saleQuantity;
+  final double saleAmount;
+  final double purchaseQuantity;
+  final double purchaseAmount;
 }
 
 class ReportGstrRow {
@@ -429,12 +433,14 @@ class ReportItemDiscountRow {
   const ReportItemDiscountRow({
     required this.itemName,
     required this.saleQty,
+    required this.saleAmount,
     required this.discountAmount,
     required this.discountPercent,
   });
 
   final String itemName;
   final double saleQty;
+  final double saleAmount;
   final double discountAmount;
   final double discountPercent;
 }
@@ -479,6 +485,7 @@ class ReportStockTransferRow {
     required this.toGodown,
     required this.itemName,
     required this.quantity,
+    this.value = 0,
   });
 
   final DateTime date;
@@ -487,38 +494,56 @@ class ReportStockTransferRow {
   final String toGodown;
   final String itemName;
   final double quantity;
+  final double value;
 }
 
 class ReportExpenseRow {
   const ReportExpenseRow({
+    required this.id,
     required this.date,
     required this.expenseNo,
     required this.partyName,
     required this.category,
+    required this.paymentType,
     required this.amount,
+    required this.balanceDue,
     required this.dueDate,
     required this.status,
   });
 
+  final String id;
   final DateTime date;
   final String expenseNo;
   final String partyName;
   final String category;
+  final String? paymentType;
   final double amount;
-  final DateTime dueDate;
-  final String status;
+  final double balanceDue;
+  final DateTime? dueDate;
+  final ExpenseReportPaymentStatus status;
 }
+
+enum ExpenseReportPaymentStatus { paid, pending, partial }
 
 class ReportExpenseCategoryRow {
   const ReportExpenseCategoryRow({
+    required this.categoryId,
     required this.category,
+    required this.categoryType,
     required this.amount,
     required this.count,
   });
 
+  final String categoryId;
   final String category;
+  /// `direct` or `indirect` from expense category master.
+  final String categoryType;
   final double amount;
   final int count;
+
+  String get categoryTypeLabel => categoryType == 'indirect'
+      ? 'Indirect Expense'
+      : 'Direct Expense';
 }
 
 class ReportExpenseItemRow {
@@ -527,12 +552,14 @@ class ReportExpenseItemRow {
     required this.category,
     required this.amount,
     required this.count,
+    this.categoryId,
   });
 
   final String itemName;
   final String category;
   final double amount;
   final int count;
+  final String? categoryId;
 }
 
 class ReportBankStatementRow {
@@ -564,6 +591,8 @@ class ReportOrderRow {
     required this.status,
     required this.type,
     required this.amount,
+    this.advance = 0,
+    this.balance = 0,
   });
 
   final DateTime date;
@@ -573,6 +602,8 @@ class ReportOrderRow {
   final String status;
   final String type;
   final double amount;
+  final double advance;
+  final double balance;
 }
 
 class ReportOrderItemRow {

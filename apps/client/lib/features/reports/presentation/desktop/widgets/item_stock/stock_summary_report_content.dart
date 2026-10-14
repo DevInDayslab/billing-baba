@@ -1,15 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
-import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
-import 'package:billing_baba/features/reports/models/report_models.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
-import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/item_stock/stock_summary_transactions_table.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filter_widgets.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
@@ -20,17 +13,12 @@ class StockSummaryReportContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final filters = ref.watch(reportFiltersProvider);
     final reportAsync = ref.watch(stockSummaryReportProvider);
 
     return ReportAsyncBody(
       value: reportAsync,
       onRetry: () => ref.read(stockSummaryReportProvider.notifier).refresh(),
       data: (report) {
-        final rows = report.rows;
-        final totalStockValue = report.totalStockValue;
-        final filterNotifier = ref.read(reportFiltersProvider.notifier);
-
         void exportExcel() {
           reportExportTable(
             context: context,
@@ -44,7 +32,7 @@ class StockSummaryReportContent extends ConsumerWidget {
               'Stock Value',
             ],
             rows: [
-              for (final row in rows)
+              for (final row in report.rows)
                 [
                   row.itemName,
                   formatReportCurrency(row.salePrice),
@@ -68,7 +56,7 @@ class StockSummaryReportContent extends ConsumerWidget {
               'Stock Value',
             ],
             rows: [
-              for (final row in rows)
+              for (final row in report.rows)
                 [
                   row.itemName,
                   formatReportCurrency(row.salePrice),
@@ -90,64 +78,34 @@ class StockSummaryReportContent extends ConsumerWidget {
                   AppSpacing.lg,
                   AppSpacing.lg,
                   AppSpacing.lg,
-                  AppSpacing.md,
+                  0,
                 ),
-                child: ReportCard(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Wrap(
-                      spacing: AppSpacing.md,
-                      runSpacing: AppSpacing.sm,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        const Text(
-                          'FILTERS',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondary,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                        const ReportCategoryFilter(),
-                        const ReportGodownFilter(),
-                        const ReportDisabledDateFilter(),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: filters.inStockOnly,
-                              onChanged: (value) =>
-                                  filterNotifier.setInStockOnly(
-                                    value ?? false,
-                                  ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            const Text(
-                              'Show items in stock',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ],
-                        ),
-                        ReportTextActionButton(
-                          label: 'Excel',
-                          icon: Icons.table_chart_outlined,
-                          onTap: exportExcel,
-                        ),
-                        ReportTextActionButton(
-                          label: 'Print',
-                          icon: Icons.print_outlined,
-                          onTap: exportPrint,
-                        ),
-                      ],
+                child: Row(
+                  children: [
+                    const Text(
+                      'STOCK SUMMARY',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
+                    const Spacer(),
+                    ReportTextActionButton(
+                      label: 'Excel',
+                      icon: Icons.table_chart_outlined,
+                      onTap: exportExcel,
+                    ),
+                    ReportTextActionButton(
+                      label: 'Print',
+                      icon: Icons.print_outlined,
+                      onTap: exportPrint,
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: AppSpacing.md),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -156,111 +114,8 @@ class StockSummaryReportContent extends ConsumerWidget {
                     AppSpacing.lg,
                     AppSpacing.lg,
                   ),
-                  child: ReportCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.sm,
-                          ),
-                          child: Row(
-                            children: [
-                              const Text(
-                                'STOCK SUMMARY',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const Spacer(),
-                              SizedBox(
-                                width: 240,
-                                child: ReportSearchField(
-                                  hintText: 'Search items...',
-                                  onChanged: filterNotifier.setSearchQuery,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1, color: reportCardBorder),
-                        Expanded(
-                          child: ReportTableArea(
-                            child:
-                                ReportFilterableSyncTable<
-                                  ReportStockSummaryRow
-                                >(
-                                  reportScope: stockSummaryReportScope,
-                                  columns: stockSummaryColumns(),
-                                  rows: rows,
-                                  emptyState: const Center(
-                                    child: Text(
-                                      'No stock items to display.',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.md,
-                          ),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              top: BorderSide(color: reportCardBorder),
-                            ),
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text.rich(
-                              TextSpan(
-                                style: const TextStyle(fontSize: 14),
-                                children: [
-                                  const TextSpan(
-                                    text: 'Total Stock Value: ',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: formatReportCurrency(totalStockValue),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: reportTeal,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        ReportPaginationBar(
-                          page: report.meta.page,
-                          totalPages: report.meta.totalPages,
-                          onPrevious: report.meta.page > 1
-                              ? () => ref
-                                    .read(stockSummaryReportProvider.notifier)
-                                    .goToPage(report.meta.page - 1)
-                              : null,
-                          onNext: report.meta.page < report.meta.totalPages
-                              ? () => ref
-                                    .read(stockSummaryReportProvider.notifier)
-                                    .goToPage(report.meta.page + 1)
-                              : null,
-                        ),
-                      ],
-                    ),
+                  child: StockSummaryTransactionsTable(
+                    totalStockValue: report.totalStockValue,
                   ),
                 ),
               ),

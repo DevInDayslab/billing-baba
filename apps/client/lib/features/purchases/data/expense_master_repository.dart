@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 const _uuid = Uuid();
 const _expensesEntity = 'expenses';
 const _expenseCategoriesEntity = 'expense_categories';
+const _expenseItemsEntity = 'expense_items';
 
 class ExpenseMasterRepository {
   ExpenseMasterRepository({
@@ -36,17 +37,32 @@ class ExpenseMasterRepository {
 
   Future<void> _hydrateIfEmpty(String businessId) async {
     final categories = await _local.listCategories(businessId);
-    if (categories.isNotEmpty) return;
+    final items = await _local.listExpenseItems(businessId);
+    if (categories.isNotEmpty && items.isNotEmpty) return;
     try {
-      var page = 1;
-      while (true) {
-        final response = await _remote.listCategories(page: page, limit: 100);
-        for (final dto in response.categories) {
-          await _local.upsertCategoryFromDto(businessId, dto);
+      if (categories.isEmpty) {
+        var page = 1;
+        while (true) {
+          final response = await _remote.listCategories(page: page, limit: 100);
+          for (final dto in response.categories) {
+            await _local.upsertCategoryFromDto(businessId, dto);
+          }
+          if (response.categories.length < 100) break;
+          if (page * 100 >= response.meta.total) break;
+          page += 1;
         }
-        if (response.categories.length < 100) break;
-        if (page * 100 >= response.meta.total) break;
-        page += 1;
+      }
+      if (items.isEmpty) {
+        var page = 1;
+        while (true) {
+          final response = await _remote.listExpenseItems(page: page, limit: 100);
+          for (final dto in response.items) {
+            await _local.upsertExpenseItemFromDto(businessId, dto);
+          }
+          if (response.items.length < 100) break;
+          if (page * 100 >= response.meta.total) break;
+          page += 1;
+        }
       }
     } on Object {
       // Offline.
@@ -90,6 +106,7 @@ class ExpenseMasterRepository {
       id: id,
       businessId: businessId,
       categoryId: request.categoryId,
+      expenseItemId: request.expenseItemId,
       partyId: request.partyId,
       amount: request.amount,
       expenseDate: request.expenseDate,
@@ -130,6 +147,7 @@ class ExpenseMasterRepository {
       id: id,
       businessId: businessId,
       categoryId: request.categoryId ?? existing.categoryId,
+      expenseItemId: request.expenseItemId ?? existing.expenseItemId,
       partyId: request.partyId ?? existing.partyId,
       amount: request.amount ?? existing.amount,
       expenseDate: request.expenseDate ?? existing.expenseDate,
@@ -257,6 +275,113 @@ class ExpenseMasterRepository {
       clientUpdatedAt: now,
     );
     return (await _local.getCategory(id))!;
+  }
+
+  Future<PaginatedExpenseItemsDto> listExpenseItems({
+    int page = 1,
+    int limit = 100,
+  }) async {
+    final businessId = _requireBusinessId();
+    await _hydrateIfEmpty(businessId);
+    final all = await _local.listExpenseItems(businessId);
+    final start = (page - 1) * limit;
+    final pageItems = start >= all.length
+        ? <ExpenseItemDto>[]
+        : all.skip(start).take(limit).toList();
+    return PaginatedExpenseItemsDto(
+      items: pageItems,
+      meta: PaginationMetaDto(page: page, limit: limit, total: all.length),
+    );
+  }
+
+  Future<ExpenseItemDto> getExpenseItem(String id) async {
+    final local = await _local.getExpenseItem(id);
+    if (local != null) return local;
+    final remote = await _remote.getExpenseItem(id);
+    await _local.upsertExpenseItemFromDto(_requireBusinessId(), remote);
+    return remote;
+  }
+
+  Future<ExpenseItemDto> createExpenseItem(
+    CreateExpenseItemRequest request,
+  ) async {
+    final businessId = _requireBusinessId();
+    final now = DateTime.now().toUtc();
+    final id = _uuid.v4();
+    await _local.upsertExpenseItem(
+      id: id,
+      businessId: businessId,
+      name: request.name.trim(),
+      hsnSac: request.hsnSac?.trim(),
+      price: request.price,
+      priceIsTaxInclusive: request.priceIsTaxInclusive,
+      taxRate: request.taxRate,
+      syncVersion: 0,
+      createdAt: now,
+      updatedAt: now,
+      deviceId: _deviceIdReader?.call(),
+    );
+    await _syncQueue.enqueueRowMutation(
+      businessId: businessId,
+      deviceId: _deviceIdReader?.call(),
+      entityType: _expenseItemsEntity,
+      entityId: id,
+      operation: SyncQueueOperation.create,
+      payload: request.toJson(),
+      clientUpdatedAt: now,
+    );
+    return (await _local.getExpenseItem(id))!;
+  }
+
+  Future<ExpenseItemDto> updateExpenseItem(
+    String id,
+    UpdateExpenseItemRequest request,
+  ) async {
+    final businessId = _requireBusinessId();
+    final existing = await _local.getExpenseItem(id);
+    if (existing == null) {
+      return _remote.updateExpenseItem(id, request);
+    }
+    final now = DateTime.now().toUtc();
+    await _local.upsertExpenseItem(
+      id: id,
+      businessId: businessId,
+      name: request.name?.trim() ?? existing.name,
+      hsnSac: request.hsnSac ?? existing.hsnSac,
+      price: request.price ?? existing.price,
+      priceIsTaxInclusive:
+          request.priceIsTaxInclusive ?? existing.priceIsTaxInclusive,
+      taxRate: request.taxRate ?? existing.taxRate,
+      syncVersion: 0,
+      createdAt: DateTime.tryParse(existing.createdAt)?.toUtc() ?? now,
+      updatedAt: now,
+      deviceId: _deviceIdReader?.call(),
+    );
+    await _syncQueue.enqueueRowMutation(
+      businessId: businessId,
+      deviceId: _deviceIdReader?.call(),
+      entityType: _expenseItemsEntity,
+      entityId: id,
+      operation: SyncQueueOperation.update,
+      payload: request.toJson(),
+      clientUpdatedAt: now,
+    );
+    return (await _local.getExpenseItem(id))!;
+  }
+
+  Future<void> deleteExpenseItem(String id) async {
+    final businessId = _requireBusinessId();
+    final now = DateTime.now().toUtc();
+    await _local.softDeleteExpenseItem(id, now);
+    await _syncQueue.enqueueRowMutation(
+      businessId: businessId,
+      deviceId: _deviceIdReader?.call(),
+      entityType: _expenseItemsEntity,
+      entityId: id,
+      operation: SyncQueueOperation.delete,
+      payload: const {},
+      clientUpdatedAt: now,
+    );
   }
 
   Future<void> deleteCategory(String id) async {

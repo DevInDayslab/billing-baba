@@ -2,6 +2,81 @@ import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/sync/engine/sync_apply_guard.dart';
 import 'package:drift/drift.dart';
 
+class ExpenseItemSync {
+  ExpenseItemSync(this._db);
+
+  final AppDatabase _db;
+
+  Future<void> applyChange({
+    required String businessId,
+    required String entityId,
+    required int syncVersion,
+    required DateTime updatedAt,
+    required bool isDeleted,
+    DateTime? deletedAt,
+    String? deviceId,
+    Map<String, dynamic>? payload,
+  }) async {
+    final existing = await (_db.select(
+      _db.expenseItemsLocal,
+    )..where((t) => t.id.equals(entityId))).getSingleOrNull();
+
+    if (!shouldApplyPullChange(
+      incomingSyncVersion: syncVersion,
+      existingSyncVersion: existing?.syncVersion,
+      isDeleted: isDeleted,
+    )) {
+      return;
+    }
+
+    await _db
+        .into(_db.expenseItemsLocal)
+        .insertOnConflictUpdate(
+          ExpenseItemsLocalCompanion.insert(
+            id: entityId,
+            businessId: businessId,
+            name: _str(payload, 'name') ?? existing?.name ?? '',
+            hsnSac: Value(_str(payload, 'hsn_sac') ?? existing?.hsnSac),
+            price: Value(
+              _str(payload, 'price') ?? existing?.price ?? '0',
+            ),
+            priceIsTaxInclusive: Value(
+              payload?['price_is_tax_inclusive'] == true ||
+                  (existing?.priceIsTaxInclusive ?? false),
+            ),
+            taxRate: Value(
+              _str(payload, 'tax_rate') ?? existing?.taxRate ?? '0',
+            ),
+            syncVersion: Value(syncVersion),
+            isDeleted: Value(isDeleted),
+            createdAt: existing?.createdAt ?? updatedAt.toUtc(),
+            updatedAt: updatedAt.toUtc(),
+            deletedAt: Value(
+              isDeleted ? (deletedAt ?? updatedAt).toUtc() : null,
+            ),
+            deviceId: Value(deviceId ?? existing?.deviceId),
+          ),
+        );
+  }
+
+  Future<void> updateAckMeta({
+    required String entityId,
+    required int syncVersion,
+    required DateTime updatedAt,
+    String? deviceId,
+  }) {
+    return (_db.update(
+      _db.expenseItemsLocal,
+    )..where((t) => t.id.equals(entityId))).write(
+      ExpenseItemsLocalCompanion(
+        syncVersion: Value(syncVersion),
+        updatedAt: Value(updatedAt.toUtc()),
+        deviceId: deviceId == null ? const Value.absent() : Value(deviceId),
+      ),
+    );
+  }
+}
+
 class ExpenseCategorySync {
   ExpenseCategorySync(this._db);
 
@@ -109,6 +184,9 @@ class ExpenseSync {
             businessId: businessId,
             categoryId:
                 _str(payload, 'category_id') ?? existing?.categoryId ?? '',
+            expenseItemId: Value(
+              _str(payload, 'expense_item_id') ?? existing?.expenseItemId,
+            ),
             partyId: Value(_str(payload, 'party_id') ?? existing?.partyId),
             amount: _str(payload, 'amount') ?? existing?.amount ?? '0',
             taxAmount: Value(

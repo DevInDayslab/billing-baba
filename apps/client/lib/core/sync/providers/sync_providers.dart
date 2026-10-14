@@ -128,6 +128,7 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     dealSync: DealSync(db),
     expenseSync: ExpenseSync(db),
     expenseCategorySync: ExpenseCategorySync(db),
+    expenseItemSync: ExpenseItemSync(db),
     stockLevelSync: StockLevelSync(
       InventoryStockLocalDataSource(db),
       metadata,

@@ -51,6 +51,32 @@ export const expenseCategories = pgTable(
   ],
 );
 
+export const expenseItems = pgTable(
+  'expense_items',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    hsnSac: text('hsn_sac'),
+    price: money('price').notNull().default('0'),
+    priceIsTaxInclusive: boolean('price_is_tax_inclusive')
+      .notNull()
+      .default(false),
+    taxRate: money('tax_rate').notNull().default('0'),
+  },
+  (table) => [
+    uniqueIndex('uq_expense_items_business_name')
+      .on(table.businessId, sql`lower(${table.name})`)
+      .where(sql`${table.isDeleted} = false`),
+    syncPullIndex(
+      'expense_items',
+      table.businessId,
+      table.updatedAt,
+      table.isDeleted,
+    ),
+  ],
+);
+
 export const purchaseDocuments = pgTable(
   'purchase_documents',
   {
@@ -132,6 +158,7 @@ export const expenses = pgTable(
     categoryId: uuid('category_id')
       .notNull()
       .references(() => expenseCategories.id),
+    expenseItemId: uuid('expense_item_id').references(() => expenseItems.id),
     partyId: uuid('party_id').references(() => parties.id),
     amount: money('amount').notNull(),
     taxAmount: money('tax_amount').notNull().default('0'),

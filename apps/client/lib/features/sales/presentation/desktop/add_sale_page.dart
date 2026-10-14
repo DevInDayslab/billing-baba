@@ -46,6 +46,7 @@ import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
@@ -415,7 +416,7 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
                                   padding: const EdgeInsets.fromLTRB(
                                     _sectionGap,
                                     _sectionGap,
-                                    _sectionGap,
+                                    0,
                                     0,
                                   ),
                                   child: _PageHeader(
@@ -476,7 +477,13 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
                             ),
                           ),
                         ),
-                        if (!widget.readOnly) ...[
+                        if (widget.readOnly && widget.invoiceId != null) ...[
+                          const Divider(height: 1, color: _cardBorder),
+                          _ViewSaleBottomActionBar(
+                            sessionKey: sessionKey,
+                            invoiceId: widget.invoiceId!,
+                          ),
+                        ] else if (!widget.readOnly) ...[
                           const Divider(height: 1, color: _cardBorder),
                           _BottomActionBar(
                             sessionKey: sessionKey,
@@ -526,51 +533,91 @@ class _PageHeader extends ConsumerWidget {
     );
     final title = readOnly ? 'View Sale' : (isEditing ? 'Edit Sale' : 'Sale');
 
-    return Row(
+    const actionButtonReserve = 108.0;
+
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        if (showTitle) ...[
-          Flexible(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+        Padding(
+          padding: const EdgeInsets.only(right: actionButtonReserve),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  if (showTitle) ...[
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                  ],
+                  if (!readOnly)
+                    _SaleTypeToggle(
+                      saleType: form.saleType,
+                      onChanged: notifier.toggleSaleType,
+                    ),
+                ],
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
+              if (!readOnly) ...[
+                const SizedBox(height: 8),
+                _GodownSelector(
+                  value: form.godown,
+                  onSelected: notifier.updateGodown,
+                ),
+              ],
+            ],
           ),
-          const SizedBox(width: AppSpacing.md),
-        ],
-        if (!readOnly)
-          _SaleTypeToggle(
-            saleType: form.saleType,
-            onChanged: notifier.toggleSaleType,
+        ),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (readOnly && form.documentId != null)
+                _ViewSaleHeaderActions(
+                  sessionKey: sessionKey,
+                  invoiceId: form.documentId!,
+                ),
+              if (!readOnly) ...[
+                IconButton(
+                  onPressed: onClear,
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Clear sale',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+                const _SaleLineItemColumnSettingsButton(),
+              ],
+              if (showCloseButton)
+                IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Close',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+            ],
           ),
-        const Spacer(),
-        if (!readOnly) ...[
-          _GodownSelector(
-            value: form.godown,
-            onSelected: notifier.updateGodown,
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: onClear,
-            icon: const Icon(Icons.delete_outline, size: 20),
-            color: AppColors.textSecondary,
-            tooltip: 'Clear sale',
-            visualDensity: VisualDensity.compact,
-          ),
-          const _SaleLineItemColumnSettingsButton(),
-        ],
-        if (showCloseButton)
-          IconButton(
-            onPressed: onClose,
-            icon: const Icon(Icons.close, size: 20),
-            color: AppColors.textSecondary,
-            tooltip: 'Close',
-            visualDensity: VisualDensity.compact,
-          ),
+        ),
       ],
     );
   }
@@ -638,6 +685,8 @@ class _SaleLineItemColumnSettingsButton extends ConsumerWidget {
           color: AppColors.textSecondary,
           tooltip: 'Line item columns',
           visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         );
       },
     );
@@ -1130,6 +1179,146 @@ class _InvoiceDetailsFields extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ViewSaleHeaderActions extends ConsumerWidget {
+  const _ViewSaleHeaderActions({
+    required this.sessionKey,
+    required this.invoiceId,
+  });
+
+  final String sessionKey;
+  final String invoiceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
+    final filename = _saleInvoiceFilename(form);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: () => _previewSavedSale(context, ref, invoiceId, filename),
+          icon: const Icon(Icons.print_outlined, size: 20),
+          color: AppColors.textSecondary,
+          tooltip: 'Print / Preview',
+          visualDensity: VisualDensity.compact,
+        ),
+        ShareMenuButton(
+          onChannelSelected: (_) => _shareSavedSale(
+            context,
+            ref,
+            invoiceId,
+            filename,
+          ),
+        ),
+        FilledButton.tonal(
+          onPressed: () =>
+              context.pushReplacement('${AppRoutes.editSale}/$invoiceId'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            visualDensity: VisualDensity.compact,
+          ),
+          child: const Text('Edit', style: TextStyle(fontSize: 13)),
+        ),
+      ],
+    );
+  }
+}
+
+String _saleInvoiceFilename(AddSaleFormState form) {
+  final number = form.invoiceNumber.trim();
+  if (number.isNotEmpty) {
+    return SaleInvoicePrintActions.filenameFor(number);
+  }
+  final id = form.documentId;
+  return id == null ? 'invoice' : SaleInvoicePrintActions.filenameFor(id);
+}
+
+Future<void> _previewSavedSale(
+  BuildContext context,
+  WidgetRef ref,
+  String documentId,
+  String filename,
+) {
+  return SaleInvoicePrintActions.preview(
+    context,
+    ref,
+    documentId,
+    filename: filename,
+  );
+}
+
+Future<void> _shareSavedSale(
+  BuildContext context,
+  WidgetRef ref,
+  String documentId,
+  String filename,
+) {
+  return SaleInvoicePrintActions.share(
+    context,
+    ref,
+    documentId,
+    filename: filename,
+  );
+}
+
+class _ViewSaleBottomActionBar extends ConsumerWidget {
+  const _ViewSaleBottomActionBar({
+    required this.sessionKey,
+    required this.invoiceId,
+  });
+
+  final String sessionKey;
+  final String invoiceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
+    final filename = _saleInvoiceFilename(form);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _sectionGap,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          OutlinedButton.icon(
+            onPressed: () =>
+                _previewSavedSale(context, ref, invoiceId, filename),
+            icon: const Icon(Icons.print_outlined, size: 16),
+            label: const Text(
+              'Print / Preview',
+              style: TextStyle(fontSize: 13),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              side: const BorderSide(color: _cardBorder),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          ShareMenuButton(
+            onChannelSelected: (_) =>
+                _shareSavedSale(context, ref, invoiceId, filename),
+          ),
+          const Spacer(),
+          FilledButton.tonal(
+            onPressed: () =>
+                context.pushReplacement('${AppRoutes.editSale}/$invoiceId'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+            ),
+            child: const Text('Edit sale', style: TextStyle(fontSize: 13)),
+          ),
+        ],
+      ),
     );
   }
 }

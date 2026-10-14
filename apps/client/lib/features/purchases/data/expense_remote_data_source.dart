@@ -100,4 +100,53 @@ class ExpenseRemoteDataSource {
   Future<void> deleteCategory(String id) async {
     await _dio.delete<void>(ApiEndpoints.expenseCategory(id));
   }
+
+  Future<PaginatedExpenseItemsDto> listExpenseItems({
+    int page = 1,
+    int limit = 100,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.expenseItems,
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return PaginatedExpenseItemsDto.fromJson(response.data ?? {});
+  }
+
+  Future<ExpenseItemDto> getExpenseItem(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.expenseItem(id),
+    );
+    return ExpenseItemDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<ExpenseItemDto> createExpenseItem(
+    CreateExpenseItemRequest request,
+  ) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.expenseItems,
+      data: request.toJson(),
+    );
+    return ExpenseItemDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<ExpenseItemDto> updateExpenseItem(
+    String id,
+    UpdateExpenseItemRequest request,
+  ) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      ApiEndpoints.expenseItem(id),
+      data: request.toJson(),
+    );
+    return ExpenseItemDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<void> deleteExpenseItem(String id) async {
+    await _dio.delete<void>(ApiEndpoints.expenseItem(id));
+  }
 }

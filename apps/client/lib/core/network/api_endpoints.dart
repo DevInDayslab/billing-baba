@@ -205,6 +205,8 @@ abstract final class ApiEndpoints {
   static String expense(String id) => '$expenses/$id';
   static const expenseCategories = '$purchases/expense-categories';
   static String expenseCategory(String id) => '$expenseCategories/$id';
+  static const expenseItems = '$purchases/expense-items';
+  static String expenseItem(String id) => '$expenseItems/$id';
 
   static const fixedAssetPurchases = '$purchases/fixed-asset-purchases';
   static String fixedAssetPurchase(String batchId) =>

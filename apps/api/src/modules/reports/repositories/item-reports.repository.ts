@@ -544,6 +544,7 @@ export class ItemReportsRepository {
       return {
         item_name: row.itemName ?? '',
         sale_qty: row.saleQty ?? '0',
+        sale_amount: row.grossAmount ?? '0',
         discount_amount: row.discountAmount ?? '0',
         discount_percent: String(percent),
       };

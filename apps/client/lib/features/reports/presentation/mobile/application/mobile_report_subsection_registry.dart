@@ -134,8 +134,8 @@ abstract final class MobileReportSubsectionRegistry {
         const ['Receivable', 'Payable', 'Credit Limit'],
       ),
       (ReportNavGroup.party, 'partyReportByItem') => (
-        const ['Parties', 'Total Amount', 'Qty'],
-        const ['Qty', 'Amount', '—'],
+        const ['Parties', 'Total Sale', 'Total Purchase'],
+        const ['Sale Qty', 'Sale Amt', 'Purchase'],
       ),
       (ReportNavGroup.party, 'salePurchaseByParty') => (
         const ['Parties', 'Total', 'Net'],

@@ -2,10 +2,16 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/reports/application/expense_column_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
+import 'package:billing_baba/features/reports/models/reports_nav_intent.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
+import 'package:billing_baba/features/reports/application/bill_wise_profit_column_filters_provider.dart';
+import 'package:billing_baba/features/reports/application/cash_flow_column_filters_provider.dart';
+import 'package:billing_baba/features/reports/application/sale_purchase_orders_column_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/sale_report_column_filters_provider.dart';
 import 'package:billing_baba/features/reports/models/business_status_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/expense_report_subsection.dart';
@@ -81,6 +87,16 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
     if (intent == null || !mounted) return;
 
     ref.read(reportFiltersProvider.notifier).resetForReportSwitch();
+    final categoryId = intent.expenseCategoryId;
+    final categoryName = intent.expenseCategoryName;
+    if (categoryId != null && categoryId.isNotEmpty) {
+      ref.read(reportFiltersProvider.notifier).setCategoryId(categoryId);
+    }
+    if (categoryName != null && categoryName.isNotEmpty) {
+      ref
+          .read(expenseColumnFiltersProvider.notifier)
+          .setCategoryColumnFilter(SelectColumnFilter(value: categoryName));
+    }
     setState(() {
       _navGroup = intent.group;
       if (intent.transactionSub != null) {
@@ -134,6 +150,21 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
         transactionSub != TransactionReportSubSection.sale) {
       ref.read(saleReportColumnFiltersProvider.notifier).reset();
     }
+    if (transactionSub != null &&
+        transactionSub != TransactionReportSubSection.billWiseProfit) {
+      ref.read(billWiseProfitColumnFiltersProvider.notifier).reset();
+    }
+    if (transactionSub != null &&
+        transactionSub != TransactionReportSubSection.cashFlow) {
+      ref.read(cashFlowColumnFiltersProvider.notifier).reset();
+    }
+    if (salePurchaseOrderSub == null ||
+        salePurchaseOrderSub !=
+            SalePurchaseOrderReportSubSection.salePurchaseOrders) {
+      ref
+          .read(salePurchaseOrdersColumnFiltersProvider.notifier)
+          .reset();
+    }
     setState(() {
       _navGroup = group;
       if (transactionSub != null) _selectedTransactionSub = transactionSub;
@@ -155,6 +186,13 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<ReportsNavIntent?>(reportsNavIntentProvider, (previous, next) {
+      if (next == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _applyPendingIntent();
+      });
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

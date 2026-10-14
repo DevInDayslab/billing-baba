@@ -20,3 +20,14 @@ DateTimeRange clampReportDateRange(DateTimeRange range) {
 
   return DateTimeRange(start: start, end: end);
 }
+
+/// Inclusive UI range → API bounds (`from` < `to`, exclusive end day).
+(DateTime from, DateTime to) apiDateBoundsFromInclusiveRange(DateTimeRange range) {
+  final clamped = clampReportDateRange(range);
+  final start = _dateOnly(clamped.start);
+  final endExclusive = _dateOnly(clamped.end).add(const Duration(days: 1));
+  if (!start.isBefore(endExclusive)) {
+    return (start, start.add(const Duration(days: 1)));
+  }
+  return (start, endExclusive);
+}

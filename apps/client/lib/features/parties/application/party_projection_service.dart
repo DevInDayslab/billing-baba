@@ -4,6 +4,7 @@ import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_projection_model.dart';
 import 'package:billing_baba/features/parties/models/party_timeline_row.dart';
 import 'package:billing_baba/features/parties/utils/party_timeline_utils.dart';
+import 'package:billing_baba/shared/utils/reporting_period_range.dart';
 
 class _LedgerEntryDraft {
   const _LedgerEntryDraft({
@@ -96,6 +97,68 @@ class PartyProjectionService {
 
     _outstandingIndexCache[cacheKey] = index;
     return index;
+  }
+
+  /// Receivable and payable totals as of an inclusive calendar day.
+  Future<({double receivable, double payable})> buildOutstandingTotalsAsOf({
+    required String businessId,
+    required DateTime asOfInclusive,
+  }) async {
+    final salesDocs = await _local.listAllSalesDocuments(businessId);
+    final purchaseDocs = await _local.listAllPurchaseDocuments(businessId);
+
+    final salesByParty = <String, List<PartyDocumentSnapshot>>{};
+    for (final doc in salesDocs) {
+      final partyId = _partyIdFromSalesDoc(doc);
+      if (partyId == null) continue;
+      salesByParty.putIfAbsent(partyId, () => []).add(doc);
+    }
+
+    final purchaseByParty = <String, List<PartyDocumentSnapshot>>{};
+    for (final doc in purchaseDocs) {
+      final partyId = _partyIdFromPurchaseDoc(doc);
+      if (partyId == null) continue;
+      purchaseByParty.putIfAbsent(partyId, () => []).add(doc);
+    }
+
+    final activeParties = await _local.listActiveParties(businessId);
+    final partyIds = {
+      ...salesByParty.keys,
+      ...purchaseByParty.keys,
+      ...activeParties.map((party) => party.id),
+    };
+
+    var receivable = 0.0;
+    var payable = 0.0;
+
+    for (final partyId in partyIds) {
+      final party = await _local.getParty(partyId);
+      if (party == null) continue;
+      final openingBalance = parseTimelineMoney(party.openingBalance);
+      final entries = _buildLedgerEntries(
+        salesByParty[partyId] ?? const [],
+        purchaseByParty[partyId] ?? const [],
+      ).where((entry) => _ledgerEntryOnOrBefore(entry, asOfInclusive));
+      final balance = _computeOutstanding(openingBalance, entries.toList());
+      if (balance > 0) {
+        receivable += balance;
+      } else if (balance < 0) {
+        payable += balance.abs();
+      }
+    }
+
+    return (receivable: receivable, payable: payable);
+  }
+
+  bool _ledgerEntryOnOrBefore(_LedgerEntryDraft entry, DateTime asOfInclusive) {
+    final day = parseDocumentCalendarDay(entry.date);
+    if (day == null) return false;
+    final asOf = DateTime(
+      asOfInclusive.year,
+      asOfInclusive.month,
+      asOfInclusive.day,
+    );
+    return !day.isAfter(asOf);
   }
 
   String? _partyIdFromSalesDoc(PartyDocumentSnapshot doc) => doc.partyId;

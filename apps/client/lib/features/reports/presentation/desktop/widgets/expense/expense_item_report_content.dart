@@ -1,19 +1,15 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/expense/expense_item_transactions_table.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_responsive_widgets.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/utils/expense_item_export.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
-import 'package:billing_baba/features/reports/utils/report_export_service.dart';
-import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class ExpenseItemReportContent extends ConsumerWidget {
   const ExpenseItemReportContent({super.key});
@@ -37,15 +33,18 @@ class ExpenseItemReportContent extends ConsumerWidget {
             context: context,
             title: 'Expense Item Report',
             filename: 'expense-item-report',
-            headers: const ['Expense Item', 'Category Type', 'Amount'],
-            rows: [
-              for (final row in rows)
-                [
-                  row.itemName,
-                  row.category,
-                  formatReportCurrency(row.amount),
-                ],
-            ],
+            headers: expenseItemExportHeaders,
+            rows: [for (final row in rows) expenseItemExportRow(row)],
+          );
+        }
+
+        void exportPrint() {
+          reportPrintTable(
+            context: context,
+            title: 'Expense Item Report',
+            filename: 'expense-item-report',
+            headers: expenseItemExportHeaders,
+            rows: [for (final row in rows) expenseItemExportRow(row)],
           );
         }
 
@@ -65,32 +64,14 @@ class ExpenseItemReportContent extends ConsumerWidget {
                   title: 'Expense Item Report',
                   actions: [
                     ReportTextActionButton(
-                      label: 'Excel',
+                      label: 'Excel Report',
                       icon: Icons.table_chart_outlined,
                       onTap: exportCsv,
                     ),
                     ReportTextActionButton(
                       label: 'Print',
                       icon: Icons.print_outlined,
-                      onTap: () => ReportExportService.showPrintPreview(
-                        context: context,
-                        title: 'Expense Item Report',
-                        content: ReportExportService.toCsv(
-                          headers: const [
-                            'Expense Item',
-                            'Category Type',
-                            'Amount',
-                          ],
-                          rows: [
-                            for (final row in rows)
-                              [
-                                row.itemName,
-                                row.category,
-                                formatReportCurrency(row.amount),
-                              ],
-                          ],
-                        ),
-                      ),
+                      onTap: exportPrint,
                     ),
                   ],
                 ),
@@ -108,10 +89,7 @@ class ExpenseItemReportContent extends ConsumerWidget {
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ReportFromToDateFilter(betweenLabel: 'From'),
-                  ),
+                  child: ReportFromToDateFilter(betweenLabel: 'From'),
                 ),
               ),
               Expanded(
@@ -122,177 +100,9 @@ class ExpenseItemReportContent extends ConsumerWidget {
                     AppSpacing.lg,
                     AppSpacing.lg,
                   ),
-                  child: ReportCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.sm,
-                          ),
-                          child: Row(
-                            children: [
-                              const Text(
-                                'EXPENSE',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textSecondary,
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                              const Spacer(),
-                              FilledButton.icon(
-                                onPressed: () =>
-                                    context.push(AppRoutes.purchaseExpenses),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: reportActiveBlue,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.md,
-                                    vertical: 10,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.add, size: 18),
-                                label: const Text(
-                                  'Add Expense',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: ReportTableArea(
-                            child: rows.isEmpty
-                                ? const Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      ReportSyncScrollTable(
-                                        headerChildren: [
-                                          Expanded(
-                                            child: ReportAlignedHeaderCell(
-                                              label: 'EXPENSE ITEM',
-                                            ),
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'CATEGORY TYPE',
-                                            width: 180,
-                                          ),
-                                          ReportAlignedHeaderCell(
-                                            label: 'AMOUNT',
-                                            width: 140,
-                                            alignment: Alignment.centerRight,
-                                          ),
-                                        ],
-                                        rows: [],
-                                      ),
-                                      Expanded(
-                                        child: Center(
-                                          child: Text(
-                                            'No expense records found for the selected period.',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : ReportSyncScrollTable(
-                                    headerChildren: const [
-                                      Expanded(
-                                        child: ReportAlignedHeaderCell(
-                                          label: 'EXPENSE ITEM',
-                                        ),
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'CATEGORY TYPE',
-                                        width: 180,
-                                      ),
-                                      ReportAlignedHeaderCell(
-                                        label: 'AMOUNT',
-                                        width: 140,
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                    ],
-                                    rows: [
-                                      for (var i = 0; i < rows.length; i++)
-                                        ReportAlignedRowStrip(
-                                          index: i,
-                                          child: ReportAlignedDataRow(
-                                            cells: [
-                                              ReportAlignedCell.flex(
-                                                child: Text(rows[i].itemName),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                180,
-                                                child: Text(rows[i].category),
-                                              ),
-                                              ReportAlignedCell.fixed(
-                                                140,
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Text(
-                                                  formatReportCurrency(
-                                                    rows[i].amount,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.md,
-                          ),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              top: BorderSide(color: reportCardBorder),
-                            ),
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text.rich(
-                              TextSpan(
-                                style: const TextStyle(fontSize: 14),
-                                children: [
-                                  const TextSpan(
-                                    text: 'Total Expense: ',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: formatReportCurrency(totalExpense),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: reportAddRed,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: ExpenseItemTransactionsTable(
+                    rows: rows,
+                    totalAmount: totalExpense,
                   ),
                 ),
               ),

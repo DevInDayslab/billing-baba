@@ -1,34 +1,19 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/models/report_models.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
-import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/item_stock/item_report_by_party_transactions_table.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/utils/item_report_by_party_export.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
-import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ItemReportByPartyReportContent extends ConsumerStatefulWidget {
+class ItemReportByPartyReportContent extends ConsumerWidget {
   const ItemReportByPartyReportContent({super.key});
 
   @override
-  ConsumerState<ItemReportByPartyReportContent> createState() =>
-      _ItemReportByPartyReportContentState();
-}
-
-class _ItemReportByPartyReportContentState
-    extends ConsumerState<ItemReportByPartyReportContent> {
-  String _firm = 'ALL FIRMS';
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(itemReportByPartyReportProvider);
 
     return ReportAsyncBody(
@@ -36,201 +21,61 @@ class _ItemReportByPartyReportContentState
       onRetry: () =>
           ref.read(itemReportByPartyReportProvider.notifier).refresh(),
       data: (report) {
-        final rows = report.rows;
-        final totalSaleAmount = rows.fold<double>(
-          0,
-          (sum, row) => sum + row.amount,
-        );
-        const exportHeaders = [
-          'Item Name',
-          'Party Name',
-          'Sale Quantity',
-          'Sale Amount',
-          'Purchase Quantity',
-          'Purchase Amount',
+        List<List<String>> exportRows() => [
+          for (final row in report.rows) itemReportByPartyExportRow(row),
         ];
-        final exportRows = [
-          for (final row in rows)
-            [
-              row.itemName,
-              row.partyName,
-              row.quantity.toStringAsFixed(0),
-              formatReportCurrency(row.amount),
-              '-',
-              '-',
-            ],
-        ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Item Report by Party',
+            filename: 'item-report-by-party',
+            headers: itemReportByPartyExportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void exportPrint() {
+          reportPrintTable(
+            context: context,
+            title: 'Item Report by Party',
+            headers: itemReportByPartyExportHeaders,
+            rows: exportRows(),
+          );
+        }
 
         return ColoredBox(
           color: AppColors.background,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                ),
-                child: ReportCard(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  child: Wrap(
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.sm,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ReportPeriodFilterBar(
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      SaleFilterDropdown(
-                        label: _firm,
-                        options: const ['ALL FIRMS', 'Firm A', 'Firm B'],
-                        selected: _firm,
-                        onSelected: (value) => setState(() => _firm = value),
-                      ),
-                      const ReportFromToDateFilter(betweenLabel: 'From'),
                       ReportTextActionButton(
                         label: 'Excel',
                         icon: Icons.table_chart_outlined,
-                        onTap: () => reportExportTable(
-                          context: context,
-                          title: 'Item Report by Party',
-                          filename: 'item-report-by-party',
-                          headers: exportHeaders,
-                          rows: exportRows,
-                        ),
+                        onTap: exportExcel,
                       ),
                       ReportTextActionButton(
                         label: 'Print',
                         icon: Icons.print_outlined,
-                        onTap: () => reportPrintTable(
-                          context: context,
-                          title: 'Item Report by Party',
-                          headers: exportHeaders,
-                          rows: exportRows,
-                        ),
+                        onTap: exportPrint,
                       ),
                     ],
                   ),
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    0,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                  ),
-                  child: ReportCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.sm,
-                          ),
-                          child: Text(
-                            'DETAILS',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            0,
-                            AppSpacing.md,
-                            AppSpacing.sm,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'FILTERS',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textSecondary,
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                              SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: ReportSearchField(
-                                  hintText: 'Search party...',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1, color: reportCardBorder),
-                        Expanded(
-                          child: ReportTableArea(
-                            child:
-                                ReportFilterableSyncTable<ReportItemByPartyRow>(
-                                  reportScope: itemByPartyReportScope,
-                                  columns: itemReportByPartyColumns(),
-                                  rows: rows,
-                                  emptyState: const Center(
-                                    child: Text(
-                                      'No data for the selected period.',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.md,
-                          ),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              top: BorderSide(color: reportCardBorder),
-                            ),
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text.rich(
-                              TextSpan(
-                                style: const TextStyle(fontSize: 14),
-                                children: [
-                                  const TextSpan(
-                                    text: 'Total Sale Amount: ',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: formatReportCurrency(totalSaleAmount),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: reportTeal,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: AppSpacing.md),
+                Expanded(
+                  child: ItemReportByPartyTransactionsTable(
+                    totalSaleAmount: report.resolvedTotalSaleAmount,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

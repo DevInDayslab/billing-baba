@@ -1,16 +1,9 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
-import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
-import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
-import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
-import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
-import 'package:billing_baba/features/purchases/models/mappers/purchase_document_mapper.dart';
-import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
-import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
@@ -339,89 +332,11 @@ class AddExpenseForm extends _$AddExpenseForm {
     return taxableItems.first.taxPercent.toStringAsFixed(4);
   }
 
-  Map<String, String> _itemNameToId() {
-    final items = ref.read(inventoryItemListProvider);
-    return {for (final item in items) item.name.trim(): item.id};
-  }
-
-  List<PurchaseLineItem> _expenseItemsToPurchaseLines() {
-    return [
-      for (final item in state.items)
-        if (item.itemName.trim().isNotEmpty && item.qty > 0)
-          PurchaseLineItem(
-            id: item.id,
-            itemName: item.itemName,
-            description: item.description,
-            qty: item.qty,
-            pricePerUnit: item.pricePerUnit,
-            taxPercent: item.taxPercent,
-            priceIsTaxInclusive: item.priceIsTaxInclusive,
-          ),
-    ];
-  }
-
-  /// GST supplier expenses are recorded as finalized purchase bills so payment
-  /// status appears on the Purchase Bills list.
-  Future<String?> _saveGstExpenseAsPurchaseBill() async {
-    final partyId = state.partyId;
-    if (partyId == null || partyId.isEmpty) {
-      return 'Please select a supplier';
+  String? _primaryExpenseItemId() {
+    for (final item in state.items) {
+      final id = item.expenseItemId;
+      if (id != null && id.isNotEmpty) return id;
     }
-
-    final partyService = await ref.read(partyServiceProvider.future);
-    await partyService.ensureSupplierRole(partyId);
-
-    final purchaseService = await ref.read(purchaseServiceProvider.future);
-    final expenseDate = state.expenseDate ?? DateTime.now();
-    final expenseTime =
-        state.expenseTime ?? TimeOfDay.fromDateTime(expenseDate);
-
-    final input = PurchaseDocumentDraftInput(
-      partyId: partyId,
-      documentType: PurchaseDocumentType.purchaseBill,
-      documentSeries: PurchaseDocumentMapper.seriesForType(
-        PurchaseDocumentType.purchaseBill,
-      ),
-      documentDate: expenseDate,
-      dueDate: state.dueDate,
-      notes: state.description.trim().isEmpty ? null : state.description.trim(),
-      items: _expenseItemsToPurchaseLines(),
-    );
-
-    final document = await purchaseService.finalizeDocumentDraft(
-      input,
-      itemNameToId: _itemNameToId(),
-    );
-
-    if (state.paymentAmount > 0) {
-      final paymentDate = DateTime(
-        expenseDate.year,
-        expenseDate.month,
-        expenseDate.day,
-        expenseTime.hour,
-        expenseTime.minute,
-      );
-      final reference = state.payments.isNotEmpty
-          ? state.payments.first.referenceNo.trim()
-          : '';
-      final payAmount = state.paymentAmount
-          .clamp(0, state.grandTotal)
-          .toDouble();
-      await purchaseService.recordPurchaseBillPayment(
-        partyId: partyId,
-        purchaseDocumentId: document.id,
-        amount: payAmount,
-        paymentModeUi: state.paymentType,
-        referenceNumber: reference.isEmpty ? null : reference,
-        paymentDate: paymentDate,
-      );
-    }
-
-    ref.invalidate(purchaseBillsProvider);
-    await ref.read(purchaseBillsProvider.notifier).refresh();
-    ref
-        .read(purchaseBillSaveSuccessMessageProvider.notifier)
-        .setMessage('Purchase bill saved successfully.');
     return null;
   }
 
@@ -446,12 +361,6 @@ class AddExpenseForm extends _$AddExpenseForm {
     state = state.copyWith(isSaving: true, clearSaveError: true);
 
     try {
-      if (state.gstEnabled && state.expenseId == null) {
-        final gstError = await _saveGstExpenseAsPurchaseBill();
-        state = state.copyWith(isSaving: false, isDirty: gstError == null);
-        return gstError;
-      }
-
       final service = await ref.read(expenseServiceProvider.future);
       final date = state.expenseDate ?? DateTime.now();
       final expenseDate = _formatExpenseDate(date);
@@ -470,6 +379,7 @@ class AddExpenseForm extends _$AddExpenseForm {
         categoryId: categoryId,
         amount: state.grandTotal.toStringAsFixed(4),
         expenseDate: expenseDate,
+        expenseItemId: _primaryExpenseItemId(),
         partyId: partyId?.isNotEmpty == true ? partyId : null,
         description: description,
         notes: notes.isEmpty ? null : notes,
@@ -488,6 +398,7 @@ class AddExpenseForm extends _$AddExpenseForm {
             categoryId: request.categoryId,
             amount: request.amount,
             expenseDate: request.expenseDate,
+            expenseItemId: request.expenseItemId,
             partyId: request.partyId,
             description: request.description,
             notes: request.notes,
@@ -517,6 +428,7 @@ class AddExpenseForm extends _$AddExpenseForm {
       );
       await ref.read(expenseTransactionsProvider.notifier).refresh();
       await ref.read(expenseCategoriesProvider.notifier).refresh();
+      await ref.read(expenseCatalogItemsProvider.notifier).refresh();
       ref
           .read(expenseSaveSuccessMessageProvider.notifier)
           .setMessage('Expense saved successfully');

@@ -71,13 +71,16 @@ class ExpenseMapper {
     final isSyncManaged =
         dto.sourceReferenceId != null && dto.sourceReferenceId!.isNotEmpty;
 
+    final expenseItemId = dto.expenseItemId;
     return ExpenseTransactionModel(
       id: dto.id,
       categoryId: dto.categoryId,
-      itemId: itemGroupKey(
-        categoryId: dto.categoryId,
-        description: description,
-      ),
+      expenseItemId: expenseItemId,
+      itemId: expenseItemId ??
+          itemGroupKey(
+            categoryId: dto.categoryId,
+            description: description,
+          ),
       date: DateTime.tryParse(dto.expenseDate) ?? DateTime.now(),
       transactionNo: dto.referenceNumber?.trim().isNotEmpty == true
           ? dto.referenceNumber!.trim()
@@ -101,6 +104,40 @@ class ExpenseMapper {
     List<ExpenseDto> dtos,
   ) {
     return dtos.map(toTransactionModel).toList(growable: false);
+  }
+
+  static ExpenseCatalogItemModel toCatalogItemModel(ExpenseItemDto dto) {
+    return ExpenseCatalogItemModel(
+      id: dto.id,
+      name: dto.name,
+      hsnSac: dto.hsnSac,
+      price: double.tryParse(dto.price) ?? 0,
+      priceIsTaxInclusive: dto.priceIsTaxInclusive,
+      taxRate: double.tryParse(dto.taxRate) ?? 0,
+    );
+  }
+
+  static List<ExpenseItemModel> catalogToListItems(
+    List<ExpenseCatalogItemModel> catalog, {
+    List<ExpenseTransactionModel> transactions = const [],
+  }) {
+    return catalog.map((item) {
+      final linked = transactions.where(
+        (transaction) => transaction.expenseItemId == item.id,
+      );
+      final total = linked.fold<double>(
+        0,
+        (sum, transaction) => sum + (transaction.amount ?? 0),
+      );
+      return ExpenseItemModel(
+        id: item.id,
+        name: item.name,
+        category: '',
+        amount: total > 0 ? total : item.price,
+        description: item.name,
+        defaultPrice: item.price,
+      );
+    }).toList();
   }
 
   static List<ExpenseItemModel> groupTransactionsToItems(

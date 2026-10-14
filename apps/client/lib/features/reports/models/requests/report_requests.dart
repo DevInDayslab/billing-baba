@@ -112,9 +112,12 @@ class ReportQuery {
       'limit': '$limit',
     };
 
-    if (period == ReportPeriod.custom) {
-      if (from != null) params['from'] = from!.toUtc().toIso8601String();
-      if (to != null) params['to'] = to!.toUtc().toIso8601String();
+    if (period == ReportPeriod.custom && from != null && to != null) {
+      final bounds = apiDateBoundsFromInclusiveRange(
+        DateTimeRange(start: from!, end: to!),
+      );
+      params['from'] = bounds.$1.toUtc().toIso8601String();
+      params['to'] = bounds.$2.toUtc().toIso8601String();
     }
     if (date != null) {
       params['date'] = date!.toUtc().toIso8601String();

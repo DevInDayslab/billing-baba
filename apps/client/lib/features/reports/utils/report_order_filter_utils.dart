@@ -50,6 +50,21 @@ String? salePurchaseOrderStatusValue(String label) => switch (label) {
   _ => null,
 };
 
+String salePurchaseOrderRowTypeLabel(String type) => switch (type) {
+  'sale' => 'Sale',
+  'purchase' => 'Purchase',
+  'sale_return' => 'Sale Return',
+  'purchase_return' => 'Purchase Return',
+  _ => type,
+};
+
+const salePurchaseOrderRowTypeFilterOptions = [
+  'Sale',
+  'Purchase',
+  'Sale Return',
+  'Purchase Return',
+];
+
 List<ReportOrderRow> filterSalePurchaseOrderRows(
   List<ReportOrderRow> rows,
   ReportFiltersState filters,

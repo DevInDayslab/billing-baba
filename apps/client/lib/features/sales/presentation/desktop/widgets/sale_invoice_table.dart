@@ -197,7 +197,7 @@ class _SaleInvoiceTransactionsTableState
                 ref
                     .read(selectedSaleInvoiceIdProvider.notifier)
                     .select(invoice.id);
-                context.push('${AppRoutes.viewSale}/${invoice.id}');
+                context.push('${AppRoutes.editSale}/${invoice.id}');
               },
             ),
         ];

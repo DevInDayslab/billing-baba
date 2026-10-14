@@ -2,6 +2,7 @@ export type ExpenseRecord = {
   id: string;
   category_id: string;
   category_name: string;
+  expense_item_id: string | null;
   party_id: string | null;
   party_name: string | null;
   amount: string;
@@ -25,6 +26,7 @@ export type ExpenseRecord = {
 export type ExpenseInsertValues = {
   businessId: string;
   categoryId: string;
+  expenseItemId?: string | null;
   partyId?: string | null;
   amount: string;
   taxAmount?: string;
@@ -46,6 +48,7 @@ export type ExpenseInsertValues = {
 
 export type ExpenseUpdateValues = {
   categoryId?: string;
+  expenseItemId?: string | null;
   partyId?: string | null;
   amount?: string;
   taxAmount?: string;
@@ -84,6 +87,7 @@ export type ExpenseRow = {
   id: string;
   categoryId: string;
   categoryName: string;
+  expenseItemId: string | null;
   partyId: string | null;
   partyName: string | null;
   amount: string;

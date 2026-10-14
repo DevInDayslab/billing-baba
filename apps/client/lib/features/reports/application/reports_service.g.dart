@@ -46,4 +46,4 @@ final class ReportsServiceProvider
   }
 }
 
-String _$reportsServiceHash() => r'f30ff3094135087c1c55fa66b065652808f11b97';
+String _$reportsServiceHash() => r'2d4424bbe4bf9a1e009afa45b2b012355b9c0610';

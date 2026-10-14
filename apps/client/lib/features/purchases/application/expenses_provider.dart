@@ -272,6 +272,39 @@ class ExpenseCategories extends _$ExpenseCategories {
 }
 
 @Riverpod(keepAlive: true)
+class ExpenseCatalogItems extends _$ExpenseCatalogItems {
+  @override
+  Future<List<ExpenseCatalogItemModel>> build() async {
+    final service = await ref.read(expenseServiceProvider.future);
+    return service.fetchExpenseCatalogItems();
+  }
+
+  Future<void> refresh() async {
+    if (!state.hasValue) {
+      state = const AsyncLoading();
+    }
+    state = await AsyncValue.guard(() async {
+      final service = await ref.read(expenseServiceProvider.future);
+      return service.fetchExpenseCatalogItems();
+    });
+  }
+
+  Future<ExpenseCatalogItemModel?> createItem(
+    CreateExpenseItemRequest request,
+  ) async {
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      final created = await service.createExpenseCatalogItem(request);
+      await refresh();
+      ref.invalidate(expenseItemsProvider);
+      return created;
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+@Riverpod(keepAlive: true)
 class ExpenseTransactions extends _$ExpenseTransactions {
   @override
   Future<List<ExpenseTransactionModel>> build() async {
@@ -344,19 +377,13 @@ Future<ExpensePageData> expensesPageData(Ref ref) async {
 
 @riverpod
 List<ExpenseItemModel> expenseItems(Ref ref) {
+  final catalogAsync = ref.watch(expenseCatalogItemsProvider);
   final transactionsAsync = ref.watch(expenseTransactionsProvider);
-  final categoriesAsync = ref.watch(expenseCategoriesProvider);
-  final categoryNames = categoriesAsync.maybeWhen(
-    data: (categories) => {
-      for (final category in categories) category.id: category.name,
-    },
-    orElse: () => const <String, String>{},
-  );
 
-  return transactionsAsync.maybeWhen(
-    data: (transactions) => ExpenseMapper.groupTransactionsToItems(
-      transactions,
-      categoryNames: categoryNames,
+  return catalogAsync.maybeWhen(
+    data: (catalog) => ExpenseMapper.catalogToListItems(
+      catalog,
+      transactions: transactionsAsync.value ?? const [],
     ),
     orElse: () => const <ExpenseItemModel>[],
   );
@@ -680,7 +707,10 @@ List<ExpenseTransactionModel> itemExpenseTransactions(
   final query = ref.watch(expenseItemTransactionSearchQueryProvider);
 
   final scoped = transactions
-      .where((transaction) => transaction.itemId == itemId)
+      .where(
+        (transaction) =>
+            transaction.expenseItemId == itemId || transaction.itemId == itemId,
+      )
       .toList();
   return _applyExpenseTransactionFilters(scoped, filters, query);
 }

@@ -21,6 +21,7 @@ import {
 import { todos } from '../../../db/schema/notifications/tables';
 import {
   expenseCategories,
+  expenseItems,
   expenses,
   purchaseDocumentLines,
   purchaseDocuments,
@@ -299,11 +300,23 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
     table: expenseCategories,
     allowedColumns: ['name', 'categoryType', 'isSystem'],
   }),
+  expense_items: defineEntity({
+    entityType: 'expense_items',
+    table: expenseItems,
+    allowedColumns: [
+      'name',
+      'hsnSac',
+      'price',
+      'priceIsTaxInclusive',
+      'taxRate',
+    ],
+  }),
   expenses: defineEntity({
     entityType: 'expenses',
     table: expenses,
     allowedColumns: [
       'categoryId',
+      'expenseItemId',
       'partyId',
       'amount',
       'taxAmount',

@@ -63,6 +63,64 @@ abstract class _$ExpenseCategories
   }
 }
 
+@ProviderFor(ExpenseCatalogItems)
+final expenseCatalogItemsProvider = ExpenseCatalogItemsProvider._();
+
+final class ExpenseCatalogItemsProvider
+    extends
+        $AsyncNotifierProvider<
+          ExpenseCatalogItems,
+          List<ExpenseCatalogItemModel>
+        > {
+  ExpenseCatalogItemsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'expenseCatalogItemsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$expenseCatalogItemsHash();
+
+  @$internal
+  @override
+  ExpenseCatalogItems create() => ExpenseCatalogItems();
+}
+
+String _$expenseCatalogItemsHash() =>
+    r'bcd934d6be2b14a76e6fc0f04a9345636bddad2e';
+
+abstract class _$ExpenseCatalogItems
+    extends $AsyncNotifier<List<ExpenseCatalogItemModel>> {
+  FutureOr<List<ExpenseCatalogItemModel>> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<ExpenseCatalogItemModel>>,
+              List<ExpenseCatalogItemModel>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<ExpenseCatalogItemModel>>,
+                List<ExpenseCatalogItemModel>
+              >,
+              AsyncValue<List<ExpenseCatalogItemModel>>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(ExpenseTransactions)
 final expenseTransactionsProvider = ExpenseTransactionsProvider._();
 
@@ -205,7 +263,7 @@ final class ExpenseItemsProvider
   }
 }
 
-String _$expenseItemsHash() => r'aaee8d3e4544ddbc2a5beccafe6a3580d26e9d08';
+String _$expenseItemsHash() => r'445c60b5481ac710450d4e0de5cfbc3a00c4c575';
 
 @ProviderFor(ExpenseTabIndex)
 final expenseTabIndexProvider = ExpenseTabIndexProvider._();
@@ -885,7 +943,7 @@ final class ItemExpenseTransactionsProvider
 }
 
 String _$itemExpenseTransactionsHash() =>
-    r'ffad6d784fe5c7e19b6a75a0a207cc887931898f';
+    r'bbc3f5e01606cbb3634aab4f730f6e675c90e06f';
 
 final class ItemExpenseTransactionsFamily extends $Family
     with $FunctionalFamilyOverride<List<ExpenseTransactionModel>, String> {
