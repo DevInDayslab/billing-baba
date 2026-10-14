@@ -42,6 +42,9 @@ const inventoryListRowMenuWidth = 32.0;
 /// Max width for quantity / numeric cells in compact list rows.
 const inventoryListQtyColumnMaxWidth = 40.0;
 
+/// Header width for QTY column (filter + label + sort arrow).
+const inventoryListQtyHeaderWidth = 88.0;
+
 /// Flex weights for item name vs trailing value columns in compact list panels.
 const inventoryListPrimaryColumnFlex = 5;
 const inventoryListTrailingColumnFlex = 1;

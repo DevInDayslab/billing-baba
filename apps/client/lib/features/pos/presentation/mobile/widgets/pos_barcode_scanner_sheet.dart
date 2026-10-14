@@ -126,7 +126,7 @@ class _PosBarcodeScannerLayerState
           item,
           categoryName: categoryName,
         );
-        ref.read(posCartProvider.notifier).addItem(posItem);
+        ref.read(posCartProvider().notifier).addItem(posItem);
         if (!mounted) return;
         showBarcodeAddedSnackBar(context, item.name);
       },

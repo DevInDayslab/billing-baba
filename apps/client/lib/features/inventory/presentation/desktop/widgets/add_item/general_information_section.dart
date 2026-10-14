@@ -49,6 +49,9 @@ class GeneralInformationSection extends StatelessWidget {
     this.seedPrimaryImageUrl,
     this.pendingItemPhotos = const [],
     this.onPendingPhotoTap,
+    this.showCategory = true,
+    this.showDescription = true,
+    this.descriptionFieldLabel = 'Description',
     super.key,
   });
 
@@ -84,7 +87,9 @@ class GeneralInformationSection extends StatelessWidget {
   final String? seedPrimaryImageUrl;
   final List<Uint8List> pendingItemPhotos;
   final ValueChanged<int>? onPendingPhotoTap;
-
+  final bool showCategory;
+  final bool showDescription;
+  final String descriptionFieldLabel;
   bool get _isProduct => itemType == ItemType.product;
 
   static const _pendingThumbSize = 52.0;
@@ -252,7 +257,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: InputDecorator(
                   isEmpty: _isUnitEmpty(unitDisplay),
                   decoration: buildFormControlDecoration(
-                    labelText: 'Select Unit',
+                    hint: 'Select Unit',
                     hasError: baseUnitError,
                   ),
                   child: InkWell(
@@ -322,49 +327,51 @@ class GeneralInformationSection extends StatelessWidget {
                 ),
               ),
             ),
-            FormGridCell(
-              span: 3,
-              child: _floatingField(
-                label: 'Category',
-                child: InputDecorator(
-                  isEmpty: categoryDisplay.isEmpty,
-                  decoration: buildFormControlDecoration(
-                    labelText: 'Category',
-                    contentPadding: selectFieldPadding,
-                  ),
-                  child: AddItemCategoryPickerField(
-                    borderless: true,
-                    triggerHeight: decoratorTriggerHeight,
-                    categories: categories,
-                    selectedCategoryId: selectedCategoryId,
-                    selectedCategoryName: selectedCategory,
-                    onCategorySelected: onCategorySelected,
+            if (showCategory)
+              FormGridCell(
+                span: 3,
+                child: _floatingField(
+                  label: 'Category',
+                  child: InputDecorator(
+                    isEmpty: categoryDisplay.isEmpty,
+                    decoration: buildFormControlDecoration(
+                      labelText: 'Category',
+                      contentPadding: selectFieldPadding,
+                    ),
+                    child: AddItemCategoryPickerField(
+                      borderless: true,
+                      triggerHeight: decoratorTriggerHeight,
+                      categories: categories,
+                      selectedCategoryId: selectedCategoryId,
+                      selectedCategoryName: selectedCategory,
+                      onCategorySelected: onCategorySelected,
+                    ),
                   ),
                 ),
               ),
-            ),
-            FormGridCell(
-              span: alternativesInlineAddButton != null ? 4 : 9,
-              child: _floatingField(
-                label: 'Description',
-                child: TextField(
-                  controller: descriptionController,
-                  style: saleFieldTextStyle,
-                  decoration: buildFormControlDecoration(
-                    labelText: 'Description',
+            if (showDescription)
+              FormGridCell(
+                span: alternativesInlineAddButton != null ? 4 : 9,
+                child: _floatingField(
+                  label: descriptionFieldLabel,
+                  child: TextField(
+                    controller: descriptionController,
+                    style: saleFieldTextStyle,
+                    decoration: buildFormControlDecoration(
+                      labelText: descriptionFieldLabel,
+                    ),
+                    onChanged: onDescriptionChanged,
                   ),
-                  onChanged: onDescriptionChanged,
                 ),
               ),
-            ),
-            if (alternativesInlineAddButton case final inlineActions?)
+            if (alternativesInlineAddButton != null)
               FormGridCell(
                 span: 5,
                 child: SizedBox(
                   height: FormSpacing.inputHeight,
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: inlineActions,
+                    child: alternativesInlineAddButton,
                   ),
                 ),
               ),

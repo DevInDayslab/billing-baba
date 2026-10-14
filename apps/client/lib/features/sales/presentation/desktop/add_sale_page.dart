@@ -7,12 +7,17 @@ import 'package:billing_baba/features/hidden_ledger/models/short_payment_handlin
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_recovery_dialog.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_summary_tile.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/short_payment_handling_dialog.dart';
+import 'package:billing_baba/features/inventory/application/barcode_scan_handler.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_document_barcode_providers.dart';
 import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
@@ -24,10 +29,12 @@ import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/add_sale_footer.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/godown_label_selector.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_profit_dialog.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_item_serial_no_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_tabs_bar.dart';
@@ -37,7 +44,9 @@ import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/shared/widgets/close_form_dialog.dart';
+import 'package:billing_baba/shared/widgets/barcode_scan_feedback.dart';
 import 'package:billing_baba/shared/widgets/document_barcode_keyboard_host.dart';
+import 'package:billing_baba/shared/widgets/document_barcode_scan.dart';
 import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -190,6 +199,87 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
 
   bool get _isEditing => widget.invoiceId != null;
 
+  bool _directBarcodeScanAutofocus(WidgetRef ref) {
+    final settings = ref.read(itemSettingsProvider).value;
+    if (settings == null || !settings.barcodeScanningEnabled) return false;
+    return settings.vyapar.directBarcodeScan;
+  }
+
+  String _mergeSerialNo(String existing, String scanned) {
+    final parts = parseSaleItemSerialNos(existing);
+    if (!parts.contains(scanned)) {
+      parts.add(scanned);
+    }
+    return joinSaleItemSerialNos(parts);
+  }
+
+  Future<void> _applyBarcodeCatalogToRow(
+    String sessionKey,
+    int rowIndex,
+    String barcode,
+    BarcodeScanHandler handler,
+  ) async {
+    await handleDocumentBarcodeScanCode(
+      barcode,
+      context: context,
+      ref: ref,
+      handler: handler,
+      onCatalogItem: (catalog) async {
+        await ref
+            .read(addSaleFormProvider(sessionKey: sessionKey).notifier)
+            .selectCatalogItem(rowIndex, catalog);
+      },
+    );
+  }
+
+  Future<bool> _handleSaleDocumentBarcode(
+    String barcode,
+    String sessionKey,
+  ) async {
+    final handler = BarcodeScanHandler(debounce: BarcodeScanHandler.hidDebounce);
+    final serialRow = saleDocumentBarcodeSerialRow(ref, sessionKey);
+    if (serialRow != null) {
+      final result = await handler.process(
+        barcode,
+        engine: ref.read(inventorySearchEngineProvider),
+        items: ref.read(inventoryItemListProvider),
+      );
+      final notifier = ref.read(
+        addSaleFormProvider(sessionKey: sessionKey).notifier,
+      );
+      if (result.isFound && result.item != null) {
+        await notifier.selectCatalogItem(
+          serialRow,
+          saleItemOptionFromInventory(result.item!),
+        );
+        if (mounted) {
+          showBarcodeAddedSnackBar(context, result.item!.name);
+        }
+      } else if (result.status != BarcodeScanStatus.debounced &&
+          result.status != BarcodeScanStatus.invalid) {
+        final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
+        if (serialRow >= 0 && serialRow < form.items.length) {
+          final line = form.items[serialRow];
+          notifier.updateLineItem(
+            serialRow,
+            line.copyWith(serialNo: _mergeSerialNo(line.serialNo, result.barcode)),
+          );
+        }
+      }
+      setSaleDocumentBarcodeSerialRow(ref, sessionKey, null);
+      return true;
+    }
+
+    final itemRow = saleDocumentBarcodeItemRow(ref, sessionKey);
+    if (itemRow != null) {
+      await _applyBarcodeCatalogToRow(sessionKey, itemRow, barcode, handler);
+      setSaleDocumentBarcodeItemRow(ref, sessionKey, null);
+      return true;
+    }
+
+    return false;
+  }
+
   void _resetSaleFormState(String sessionKey) {
     ref.invalidate(addSaleFormProvider(sessionKey: sessionKey));
     ref.invalidate(addSaleSubtotalProvider(sessionKey: sessionKey));
@@ -269,7 +359,10 @@ class _AddSalePageState extends ConsumerState<DesktopAddSalePage> {
 
     return DocumentBarcodeKeyboardHost(
       enabled: !widget.readOnly,
+      autofocus: !widget.readOnly && _directBarcodeScanAutofocus(ref),
+      onBarcode: (barcode) => _handleSaleDocumentBarcode(barcode, sessionKey),
       onCatalogItem: (catalog) async {
+        clearSaleDocumentBarcodeTargets(ref, sessionKey);
         final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
         final notifier = ref.read(
           addSaleFormProvider(sessionKey: sessionKey).notifier,
@@ -514,10 +607,21 @@ class _SaleLineItemColumnSettingsButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final visibility = ref.watch(saleLineItemColumnVisibilityStateProvider);
+    final visibility = ref.watch(saleLineItemEffectiveColumnVisibilityProvider);
     final notifier = ref.read(
       saleLineItemColumnVisibilityStateProvider.notifier,
     );
+    final itemSettings =
+        ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+
+    bool isColumnOffered(SaleLineItemColumn column) {
+      return switch (column) {
+        SaleLineItemColumn.taxPercent || SaleLineItemColumn.taxAmount =>
+          itemSettings.itemWiseTax,
+        SaleLineItemColumn.discount => itemSettings.itemWiseDiscount,
+        _ => true,
+      };
+    }
 
     return MenuAnchor(
       alignmentOffset: const Offset(-180, 4),
@@ -537,12 +641,12 @@ class _SaleLineItemColumnSettingsButton extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final column in SaleLineItemColumn.values)
-                if (!column.isSettingsControlled)
-                _SaleLineItemColumnMenuTile(
-                  label: column.label,
-                  value: visibility.isVisible(column),
-                  onChanged: () => notifier.toggleColumn(column),
-                ),
+                if (!column.isSettingsControlled && isColumnOffered(column))
+                  _SaleLineItemColumnMenuTile(
+                    label: column.label,
+                    value: visibility.isVisible(column),
+                    onChanged: () => notifier.toggleColumn(column),
+                  ),
             ],
           ),
         ),

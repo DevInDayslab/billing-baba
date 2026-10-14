@@ -8,6 +8,7 @@ import 'package:billing_baba/features/inventory/application/inventory_item_list_
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/bulk_item_update_payload.dart';
@@ -295,7 +296,11 @@ class InventoryItems extends _$InventoryItems {
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final units = await ref.read(inventoryUnitsProvider.future);
-      item = await service.createItemFromForm(form, units);
+      item = await service.createItemFromForm(
+        form,
+        units,
+        quantityDecimalPlaces: ref.read(itemQuantityDecimalPlacesProvider),
+      );
     } on ApiValidationException {
       rethrow;
     } on InventoryException {
@@ -345,6 +350,7 @@ class InventoryItems extends _$InventoryItems {
         form,
         units,
         initialOpeningQty: initialOpeningQty,
+        quantityDecimalPlaces: ref.read(itemQuantityDecimalPlacesProvider),
       );
       final current = state.value;
       if (current != null) {

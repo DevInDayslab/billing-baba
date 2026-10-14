@@ -177,7 +177,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
     final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now(),
       initialDateRange: filters.effectiveDateRange,
     );
     if (picked == null) return;

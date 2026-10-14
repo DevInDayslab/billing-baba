@@ -47,6 +47,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
     this.onScanBarcode,
     this.showCategory = true,
     this.showDescription = true,
+    this.descriptionFieldLabel = 'Description',
     this.showManufacturing = false,
     this.selectedAlternativeItemIds = const [],
     this.excludeAlternativeItemId,
@@ -80,6 +81,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
   final VoidCallback? onScanBarcode;
   final bool showCategory;
   final bool showDescription;
+  final String descriptionFieldLabel;
   final bool showManufacturing;
   final List<String> selectedAlternativeItemIds;
   final String? excludeAlternativeItemId;
@@ -203,8 +205,8 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
               const SizedBox(height: MobileAddItemTheme.fieldSpacing),
               MobileAddItemField(
                 controller: descriptionController,
-                label: 'Description',
-                hint: 'Description',
+                label: descriptionFieldLabel,
+                hint: descriptionFieldLabel,
                 maxLines: 3,
                 onChanged: onDescriptionChanged,
               ),

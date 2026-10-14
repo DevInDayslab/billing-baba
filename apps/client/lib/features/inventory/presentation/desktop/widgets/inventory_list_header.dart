@@ -296,12 +296,8 @@ class _SortableHeaderContent extends StatelessWidget {
     final labelRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (alignEnd && sortIcon != null) ...[
-          sortIcon,
-          const SizedBox(width: 4),
-        ],
-        Flexible(child: label),
-        if (!alignEnd && sortIcon != null) ...[
+        if (alignEnd) label else Flexible(child: label),
+        if (sortIcon != null) ...[
           const SizedBox(width: 4),
           sortIcon,
         ],

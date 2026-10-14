@@ -71,7 +71,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
   }
 
   Future<void> _printCurrentBill() async {
-    final cart = ref.read(posCartProvider);
+    final cart = ref.read(posCartProvider());
     if (cart.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Complete sale first to print')),
@@ -97,7 +97,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
               lineTotal: item.lineTotal,
               itemId: item.item.id,
               unit: item.item.unit,
-              unitPrice: item.item.price,
+              unitPrice: item.unitPrice,
             ),
           )
           .toList(),
@@ -120,7 +120,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
   }
 
   Future<void> _holdBill() async {
-    await ref.read(posCartProvider.notifier).holdBill();
+    await ref.read(posCartProvider().notifier).holdBill();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Bill held successfully')),
@@ -136,7 +136,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
       return;
     }
 
-    final cart = ref.read(posCartProvider);
+    final cart = ref.read(posCartProvider());
     if (cart.items.isEmpty || cart.totalPayable <= 0) return;
 
     final totalPaid = cart.payments.fold<double>(0, (sum, p) => sum + p.amount);
@@ -174,7 +174,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
     );
 
     try {
-      final sale = await ref.read(posCartProvider.notifier).completeSale();
+      final sale = await ref.read(posCartProvider().notifier).completeSale();
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
 
@@ -240,7 +240,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
           item,
           categoryName: categoryName,
         );
-        ref.read(posCartProvider.notifier).addItem(posItem);
+        ref.read(posCartProvider().notifier).addItem(posItem);
         if (!mounted) return;
         showBarcodeAddedSnackBar(context, item.name);
         _hidController.requestFocus();
@@ -285,8 +285,8 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(posSessionProvider);
-    final heldCount = ref.watch(posCartProvider).heldBills.length;
-    final cartItemCount = ref.watch(posCartProvider).totalItems;
+    final heldCount = ref.watch(posCartProvider()).heldBills.length;
+    final cartItemCount = ref.watch(posCartProvider()).totalItems;
 
     if (session.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -339,7 +339,7 @@ class _PosTerminalViewState extends ConsumerState<DesktopPosTerminalView> {
               searchFocusNode: _searchFocusNode,
               onSearchChanged: _onSearchChanged,
               onHoldBillsTap: () => HoldBillsPanel.show(context),
-              onNewSale: () => ref.read(posCartProvider.notifier).clearCart(),
+              onNewSale: () => ref.read(posCartProvider().notifier).clearCart(),
               onBack: _exitTerminal,
             ),
             Expanded(

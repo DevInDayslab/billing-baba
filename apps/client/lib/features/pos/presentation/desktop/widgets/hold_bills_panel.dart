@@ -31,7 +31,7 @@ class HoldBillsPanel extends ConsumerWidget {
     WidgetRef ref,
     HeldBill bill,
   ) async {
-    final cart = ref.read(posCartProvider);
+    final cart = ref.read(posCartProvider());
     if (cart.items.isNotEmpty) {
       final confirmed = await showDialog<bool>(
         context: context,
@@ -53,7 +53,7 @@ class HoldBillsPanel extends ConsumerWidget {
       if (confirmed != true || !context.mounted) return;
     }
 
-    ref.read(posCartProvider.notifier).resumeBill(bill);
+    ref.read(posCartProvider().notifier).resumeBill(bill);
     if (context.mounted) {
       Navigator.of(context).pop();
     }
@@ -83,13 +83,13 @@ class HoldBillsPanel extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
-      await ref.read(posCartProvider.notifier).discardHeldBill(billId);
+      await ref.read(posCartProvider().notifier).discardHeldBill(billId);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final heldBills = ref.watch(posCartProvider).heldBills;
+    final heldBills = ref.watch(posCartProvider()).heldBills;
 
     return Dialog(
       backgroundColor: AppColors.surface,

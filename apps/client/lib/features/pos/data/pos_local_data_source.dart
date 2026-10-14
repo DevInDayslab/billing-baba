@@ -66,7 +66,7 @@ class PosLocalDataSource {
                 itemId: Value(cartItem.item.id),
                 itemName: Value(cartItem.item.name),
                 quantity: Value(cartItem.quantity),
-                rate: Value(cartItem.item.price),
+                rate: Value(cartItem.unitPrice),
                 lineTotal: Value(
                   lineDto != null
                       ? (double.tryParse(lineDto.lineTotal) ??
@@ -209,6 +209,9 @@ class PosLocalDataSource {
     },
     'quantity': item.quantity,
     'discountPercent': item.discountPercent,
+    'allowInsufficientStock': item.allowInsufficientStock,
+    if (item.unitPriceOverride != null)
+      'unitPriceOverride': item.unitPriceOverride,
   };
 
   CartItem _cartItemFromJson(Map<String, dynamic> json) {
@@ -234,6 +237,8 @@ class PosLocalDataSource {
       ),
       quantity: json['quantity'] as int,
       discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0,
+      allowInsufficientStock: json['allowInsufficientStock'] as bool? ?? false,
+      unitPriceOverride: (json['unitPriceOverride'] as num?)?.toDouble(),
     );
   }
 

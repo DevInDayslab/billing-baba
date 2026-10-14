@@ -38,7 +38,10 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/online_store_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/product_description_section.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/add_opening_stock_batches_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/item_batch_tracking_selector.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/stock_section.dart';
+import 'package:billing_baba/features/inventory/utils/item_batch_tracking_config.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/suppliers_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/tier_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/rack_shelf_section.dart';
@@ -58,6 +61,7 @@ import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_
 import 'package:billing_baba/features/inventory/presentation/shared/item_image_pick_crop.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate_preference.dart';
+import 'package:billing_baba/features/inventory/utils/item_quantity_input.dart';
 import 'package:billing_baba/features/inventory/utils/item_unit_qty_conversion.dart';
 import 'package:billing_baba/features/inventory/utils/min_wholesale_qty_units.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
@@ -457,7 +461,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         final reorderLevel = double.tryParse(detailDto.reorderLevel!);
         if (reorderLevel != null) {
           notifier.updateMinStock(reorderLevel);
-          _syncMinStockController(reorderLevel, ref.read(unitsProvider));
+          _syncMinStockController(
+            reorderLevel,
+            ref.read(unitsProvider),
+            quantityDecimalPlaces:
+                ref.read(itemQuantityDecimalPlacesProvider),
+          );
         }
       }
 
@@ -490,7 +499,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       _initialOpeningQty = openingQty;
       if (openingQty > 0) {
         notifier.updateOpeningQty(openingQty);
-        _syncOpeningQtyController(openingQty, ref.read(unitsProvider));
+        _syncOpeningQtyController(
+          openingQty,
+          ref.read(unitsProvider),
+          quantityDecimalPlaces: ref.read(itemQuantityDecimalPlacesProvider),
+        );
       }
 
       final openingGodown = detailDto.openingStock?.godowns.firstOrNull;
@@ -1213,8 +1226,17 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         );
     final updated = ref.read(addItemFormProvider);
     final units = ref.read(unitsProvider);
-    _syncOpeningQtyController(updated.openingQty, units);
-    _syncMinStockController(updated.minStock, units);
+    final qtyDecimals = ref.read(itemQuantityDecimalPlacesProvider);
+    _syncOpeningQtyController(
+      updated.openingQty,
+      units,
+      quantityDecimalPlaces: qtyDecimals,
+    );
+    _syncMinStockController(
+      updated.minStock,
+      units,
+      quantityDecimalPlaces: qtyDecimals,
+    );
   }
 
   String _displayUnitLabel() {
@@ -1262,6 +1284,36 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         .firstOrNull;
     final itemSettings =
         ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+
+    ref.listen(itemSettingsProvider, (previous, next) {
+      final settings = next.value;
+      if (settings == null) return;
+      if (!settings.vyapar.hasBatchTrackingFieldsConfigured &&
+          form.batchTrackingEnabled) {
+        notifier.clearBatchTracking();
+        _syncOpeningQtyController(
+          ref.read(addItemFormProvider).openingQty,
+          ref.read(unitsProvider),
+          quantityDecimalPlaces: settings.quantityDecimalPlaces,
+        );
+      }
+    });
+
+    ref.listen<int>(itemQuantityDecimalPlacesProvider, (previous, next) {
+      if (previous == next) return;
+      final units = ref.read(unitsProvider);
+      final currentForm = ref.read(addItemFormProvider);
+      _syncOpeningQtyController(
+        currentForm.openingQty,
+        units,
+        quantityDecimalPlaces: next,
+      );
+      _syncMinStockController(
+        currentForm.minStock,
+        units,
+        quantityDecimalPlaces: next,
+      );
+    });
 
     final formBody = buildFormBody(
       form,
@@ -1453,7 +1505,26 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
               pendingItemPhotos: _pendingItemPhotos,
               onPendingPhotoTap: (index) => unawaited(_openPendingPhoto(index)),
+              showCategory: itemSettings.itemCategory,
+              showDescription: itemSettings.descriptionEnabled,
+              descriptionFieldLabel: itemSettings.resolvedDescriptionFieldLabel,
             ),
+            if (form.itemType == ItemType.product &&
+                itemSettings.vyapar.hasBatchTrackingFieldsConfigured) ...[
+              const SizedBox(height: FormSpacing.section),
+              ItemBatchTrackingSelector(
+                enabled: form.batchTrackingEnabled,
+                onEnabledChanged: notifier.setBatchTrackingEnabled,
+                onClearTracking: () {
+                  notifier.clearBatchTracking();
+                  _syncOpeningQtyController(
+                    0,
+                    ref.read(unitsProvider),
+                    quantityDecimalPlaces: itemSettings.quantityDecimalPlaces,
+                  );
+                },
+              ),
+            ],
             const SizedBox(height: FormSpacing.section),
             _buildTabBar(form),
             const Divider(height: 1, color: _cardBorder),
@@ -1462,7 +1533,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               key: ValueKey(
                 'add-item-tab-${form.itemType.name}-${form.activeTab}',
               ),
-              child: _buildActiveTabContent(form, notifier, itemSettings),
+              child: _buildActiveTabContent(
+                form,
+                notifier,
+                itemSettings,
+                selectedCategory,
+              ),
             ),
           ],
         ),
@@ -1527,6 +1603,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           onScanBarcode: showBarcodeScan ? _scanBarcode : null,
           showCategory: itemSettings.itemCategory,
           showDescription: itemSettings.descriptionEnabled,
+          descriptionFieldLabel: itemSettings.resolvedDescriptionFieldLabel,
           showManufacturing:
               form.itemType == ItemType.product && itemSettings.manufacturing,
           selectedAlternativeItemIds: form.alternativeItemIds,
@@ -1690,6 +1767,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         minStockUnitId: form.minStockUnitId,
         onOpeningQtyUnitChanged: notifier.setOpeningQtyUnitId,
         onMinStockUnitChanged: notifier.setMinStockUnitId,
+        quantityDecimalPlaces: itemSettings.quantityDecimalPlaces,
       ),
       2 => MobileAddItemProductDescriptionSection(
         descriptionController: _onlineStoreDescriptionController,
@@ -1809,6 +1887,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     AddItemFormState form,
     AddItemForm notifier,
     ItemSettings itemSettings,
+    String? selectedCategory,
   ) {
     if (_isMobileFullPage) {
       return _buildMobileTabContent(form, notifier, itemSettings);
@@ -1835,7 +1914,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           isService: false,
           itemSettings: itemSettings,
         ),
-        1 => _buildStockTab(form, notifier),
+        1 => _buildStockTab(
+          form,
+          notifier,
+          itemSettings: itemSettings,
+          categoryName: selectedCategory,
+        ),
         2 => _buildProductDescriptionTab(form, notifier),
         3 => _buildOnlineStoreTab(form, notifier),
         4 => _buildManufacturingTab(form, notifier),
@@ -1850,7 +1934,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         isService: false,
         itemSettings: itemSettings,
       ),
-      1 => _buildStockTab(form, notifier),
+      1 => _buildStockTab(
+        form,
+        notifier,
+        itemSettings: itemSettings,
+        categoryName: selectedCategory,
+      ),
       2 => _buildProductDescriptionTab(form, notifier),
       3 => _buildOnlineStoreTab(form, notifier),
       4 => _buildManufacturingTab(form, notifier),
@@ -1932,6 +2021,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
           taxRate: form.taxRate,
           onTaxRateChanged: notifier.setTaxRate,
+          decimalInputFormatter: ItemQuantityInput.formatter(
+            itemSettings.quantityDecimalPlaces,
+          ),
         ),
         const SizedBox(height: FormSpacing.section),
         TierPricingSection(
@@ -1953,23 +2045,33 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
-  void _syncOpeningQtyController(double baseQty, List<InventoryUnit> units) {
+  void _syncOpeningQtyController(
+    double baseQty,
+    List<InventoryUnit> units, {
+    required int quantityDecimalPlaces,
+  }) {
     final form = ref.read(addItemFormProvider);
     _openingQtyController.text = _displayStockQtyText(
       baseQty: baseQty,
       displayUnitId: form.openingQtyUnitId,
       form: form,
       units: units,
+      quantityDecimalPlaces: quantityDecimalPlaces,
     );
   }
 
-  void _syncMinStockController(double baseQty, List<InventoryUnit> units) {
+  void _syncMinStockController(
+    double baseQty,
+    List<InventoryUnit> units, {
+    required int quantityDecimalPlaces,
+  }) {
     final form = ref.read(addItemFormProvider);
     _minStockController.text = _displayStockQtyText(
       baseQty: baseQty,
       displayUnitId: form.minStockUnitId,
       form: form,
       units: units,
+      quantityDecimalPlaces: quantityDecimalPlaces,
     );
   }
 
@@ -1978,10 +2080,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     required String? displayUnitId,
     required AddItemFormState form,
     required List<InventoryUnit> units,
+    required int quantityDecimalPlaces,
   }) {
     if (baseQty == 0) return '';
     final baseUnitId = form.baseUnitId;
-    if (baseUnitId == null) return formatItemQtyFieldValue(baseQty);
+    if (baseUnitId == null) {
+      return formatItemQtyFieldValue(
+        baseQty,
+        decimalPlaces: quantityDecimalPlaces,
+      );
+    }
     final rate = resolveBaseToSecondaryRate(
       units: units,
       baseUnitId: baseUnitId,
@@ -1994,10 +2102,41 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       secondaryUnitId: form.secondaryUnitId,
       baseToSecondaryRate: rate,
     );
-    return formatItemQtyFieldValue(display);
+    return formatItemQtyFieldValue(
+      display,
+      decimalPlaces: quantityDecimalPlaces,
+    );
   }
 
-  Widget _buildStockTab(AddItemFormState form, AddItemForm notifier) {
+  Future<void> _openOpeningStockBatchesDialog({
+    required AddItemFormState form,
+    required AddItemForm notifier,
+    required ItemSettings itemSettings,
+    required String? categoryName,
+  }) async {
+    final result = await showAddOpeningStockBatchesDialog(
+      context,
+      itemName: form.itemName.trim().isEmpty ? 'Item' : form.itemName.trim(),
+      categoryLabel: categoryName ?? '',
+      vyapar: itemSettings.vyapar,
+      initialRows: form.openingStockBatches,
+      quantityDecimalPlaces: itemSettings.quantityDecimalPlaces,
+    );
+    if (result == null || !mounted) return;
+    notifier.setOpeningStockBatches(result);
+    _syncOpeningQtyController(
+      ref.read(addItemFormProvider).openingQty,
+      ref.read(unitsProvider),
+      quantityDecimalPlaces: itemSettings.quantityDecimalPlaces,
+    );
+  }
+
+  Widget _buildStockTab(
+    AddItemFormState form,
+    AddItemForm notifier, {
+    required ItemSettings itemSettings,
+    String? categoryName,
+  }) {
     final units = ref.watch(unitsProvider);
     final stockQtyUnitOptions = minWholesaleQtyUnitOptions(
       allUnits: units,
@@ -2071,6 +2210,18 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       onRackLocationSynced: (rack) {
         setState(() => _initialRackLocation = rack);
       },
+      quantityDecimalPlaces: itemSettings.quantityDecimalPlaces,
+      showOpeningBatchButton:
+          form.batchTrackingEnabled &&
+          itemSettings.vyapar.hasBatchTrackingFieldsConfigured,
+      onOpeningBatchTap: () => unawaited(
+        _openOpeningStockBatchesDialog(
+          form: form,
+          notifier: notifier,
+          itemSettings: itemSettings,
+          categoryName: categoryName,
+        ),
+      ),
     );
   }
 

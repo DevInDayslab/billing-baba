@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_line_items_table_layout.dart';
 import 'package:flutter/material.dart';
@@ -12,12 +13,25 @@ class SaleLineItemColumnPickerButton extends StatelessWidget {
     required this.visibility,
     required this.onToggle,
     this.onMoreSettings,
+    this.itemSettings,
     super.key,
   });
 
   final SaleLineItemColumnVisibility visibility;
   final ValueChanged<SaleLineItemColumn> onToggle;
   final VoidCallback? onMoreSettings;
+  final ItemSettings? itemSettings;
+
+  bool _isColumnOffered(SaleLineItemColumn column) {
+    final settings = itemSettings;
+    if (settings == null) return true;
+    return switch (column) {
+      SaleLineItemColumn.taxPercent || SaleLineItemColumn.taxAmount =>
+        settings.itemWiseTax,
+      SaleLineItemColumn.discount => settings.itemWiseDiscount,
+      _ => true,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +53,12 @@ class SaleLineItemColumnPickerButton extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final column in SaleLineItemColumn.values)
-                if (!column.isSettingsControlled)
-                _ColumnToggleTile(
-                  label: column.label,
-                  value: visibility.isVisible(column),
-                  onChanged: (_) => onToggle(column),
-                ),
+                if (!column.isSettingsControlled && _isColumnOffered(column))
+                  _ColumnToggleTile(
+                    label: column.label,
+                    value: visibility.isVisible(column),
+                    onChanged: (_) => onToggle(column),
+                  ),
               if (onMoreSettings != null) ...[
                 const Divider(
                   height: 1,

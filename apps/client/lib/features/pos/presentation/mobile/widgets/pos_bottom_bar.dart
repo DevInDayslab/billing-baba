@@ -24,8 +24,8 @@ class PosBottomBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartState = ref.watch(posCartProvider);
-    final cart = ref.read(posCartProvider.notifier);
+    final cartState = ref.watch(posCartProvider());
+    final cart = ref.read(posCartProvider().notifier);
     final isEmpty = cartState.items.isEmpty;
     final theme = Theme.of(context);
 

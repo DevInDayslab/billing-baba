@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/utils/item_quantity_input.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:collection/collection.dart';
 
@@ -58,7 +59,10 @@ double qtyFromBaseUnit({
   return baseQty;
 }
 
-String formatItemQtyFieldValue(double value) {
+String formatItemQtyFieldValue(double value, {int? decimalPlaces}) {
+  if (decimalPlaces != null) {
+    return ItemQuantityInput.formatDisplay(value, decimalPlaces);
+  }
   if (value == 0) return '';
   if (value == value.roundToDouble()) {
     return value.toInt().toString();

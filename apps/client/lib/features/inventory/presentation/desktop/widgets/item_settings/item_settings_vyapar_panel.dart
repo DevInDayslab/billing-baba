@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
+import 'package:billing_baba/features/inventory/utils/item_batch_tracking_config.dart';
 import 'package:billing_baba/features/inventory/models/item_settings_info_catalog.dart';
 import 'package:billing_baba/features/inventory/models/item_vyapar_settings.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
@@ -517,7 +518,7 @@ class _AdditionalItemFieldsColumn extends StatelessWidget {
           hint: 'Batch No.',
           onToggle: (e) => onPatch(
             (s) => s.copyWithVyapar(
-              (vy) => vy.copyWith(batchNoEnabled: e, batchTrackingEnabled: e),
+              (vy) => vy.copyWith(batchNoEnabled: e).withSyncedBatchTrackingEnabled(),
             ),
           ),
           onLabel: (t) =>
@@ -527,10 +528,13 @@ class _AdditionalItemFieldsColumn extends StatelessWidget {
           settings: settings,
           onPatch: onPatch,
           enabled: v.batchExpDateEnabled,
+          fieldHint: 'Exp. Date',
           label: v.batchExpDateLabel,
           formatId: v.batchExpDateFormatId,
           onToggle: (e) => onPatch(
-            (s) => s.copyWithVyapar((vy) => vy.copyWith(batchExpDateEnabled: e)),
+            (s) => s.copyWithVyapar(
+              (vy) => vy.copyWith(batchExpDateEnabled: e).withSyncedBatchTrackingEnabled(),
+            ),
           ),
           onLabel: (t) => onPatch(
             (s) => s.copyWithVyapar((vy) => vy.copyWith(batchExpDateLabel: t)),
@@ -543,10 +547,13 @@ class _AdditionalItemFieldsColumn extends StatelessWidget {
           settings: settings,
           onPatch: onPatch,
           enabled: v.batchMfgDateEnabled,
+          fieldHint: 'Mfg. Date',
           label: v.batchMfgDateLabel,
           formatId: v.batchMfgDateFormatId,
           onToggle: (e) => onPatch(
-            (s) => s.copyWithVyapar((vy) => vy.copyWith(batchMfgDateEnabled: e)),
+            (s) => s.copyWithVyapar(
+              (vy) => vy.copyWith(batchMfgDateEnabled: e).withSyncedBatchTrackingEnabled(),
+            ),
           ),
           onLabel: (t) => onPatch(
             (s) => s.copyWithVyapar((vy) => vy.copyWith(batchMfgDateLabel: t)),
@@ -562,7 +569,9 @@ class _AdditionalItemFieldsColumn extends StatelessWidget {
           label: v.batchModelNoLabel,
           hint: 'Model No.',
           onToggle: (e) => onPatch(
-            (s) => s.copyWithVyapar((vy) => vy.copyWith(batchModelNoEnabled: e)),
+            (s) => s.copyWithVyapar(
+              (vy) => vy.copyWith(batchModelNoEnabled: e).withSyncedBatchTrackingEnabled(),
+            ),
           ),
           onLabel: (t) => onPatch(
             (s) => s.copyWithVyapar((vy) => vy.copyWith(batchModelNoLabel: t)),
@@ -575,7 +584,9 @@ class _AdditionalItemFieldsColumn extends StatelessWidget {
           label: v.batchSizeLabel,
           hint: 'Size',
           onToggle: (e) => onPatch(
-            (s) => s.copyWithVyapar((vy) => vy.copyWith(batchSizeEnabled: e)),
+            (s) => s.copyWithVyapar(
+              (vy) => vy.copyWith(batchSizeEnabled: e).withSyncedBatchTrackingEnabled(),
+            ),
           ),
           onLabel: (t) =>
               onPatch((s) => s.copyWithVyapar((vy) => vy.copyWith(batchSizeLabel: t))),
@@ -713,12 +724,13 @@ class _BatchFieldRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  label,
+                  hint,
                   style: AppTypography.inter(fontSize: AppTypography.bodySmallSize),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 TextFormField(
-                  initialValue: hint,
+                  key: ValueKey('batch-field-$hint-$label'),
+                  initialValue: label.trim().isEmpty ? hint : label,
                   enabled: enabled,
                   decoration: InputDecoration(
                     hintText: hint,
@@ -736,11 +748,12 @@ class _BatchFieldRow extends StatelessWidget {
   }
 }
 
-class _BatchDateFieldRow extends StatelessWidget {
+class _BatchDateFieldRow extends StatefulWidget {
   const _BatchDateFieldRow({
     required this.settings,
     required this.onPatch,
     required this.enabled,
+    required this.fieldHint,
     required this.label,
     required this.formatId,
     required this.onToggle,
@@ -751,6 +764,7 @@ class _BatchDateFieldRow extends StatelessWidget {
   final ItemSettings settings;
   final Future<void> Function(ItemSettingsUpdater) onPatch;
   final bool enabled;
+  final String fieldHint;
   final String label;
   final String formatId;
   final ValueChanged<bool> onToggle;
@@ -758,15 +772,43 @@ class _BatchDateFieldRow extends StatelessWidget {
   final ValueChanged<String> onFormat;
 
   @override
+  State<_BatchDateFieldRow> createState() => _BatchDateFieldRowState();
+}
+
+class _BatchDateFieldRowState extends State<_BatchDateFieldRow> {
+  late String _selectedFormatId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedFormatId = ItemFieldCatalog.resolveBatchDateFormatId(
+      widget.formatId,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _BatchDateFieldRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final resolved = ItemFieldCatalog.resolveBatchDateFormatId(widget.formatId);
+    if (resolved != _selectedFormatId) {
+      _selectedFormatId = resolved;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final displayLabel = widget.label.trim().isEmpty
+        ? widget.fieldHint
+        : widget.label;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Checkbox(
-            value: enabled,
-            onChanged: (v) => onToggle(v ?? false),
+            value: widget.enabled,
+            onChanged: (v) => widget.onToggle(v ?? false),
             activeColor: AppColors.primary,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -775,54 +817,66 @@ class _BatchDateFieldRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  label,
-                  style: AppTypography.inter(fontSize: AppTypography.bodySmallSize),
+                  widget.fieldHint,
+                  style: AppTypography.inter(
+                    fontSize: AppTypography.bodySmallSize,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Row(
                   children: [
-                    Flexible(
-                      flex: 2,
+                    SizedBox(
+                      width: 124,
                       child: DropdownButtonFormField<String>(
+                        key: ValueKey(
+                          'batch-date-format-${widget.fieldHint}-$_selectedFormatId',
+                        ),
                         isExpanded: true,
-                        value: formatId,
+                        value: _selectedFormatId,
                         decoration: InputDecoration(
                           isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 10,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: AppRadius.smBorder,
                           ),
                         ),
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySmallSize,
+                        ),
                         items: [
-                          for (final o in ItemFieldCatalog.dateFormatOptions)
+                          for (final o
+                              in ItemFieldCatalog.batchDateFormatOptions)
                             DropdownMenuItem(
                               value: o.id,
-                              child: Text(
-                                o.label,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              child: Text(o.label),
                             ),
                         ],
-                        onChanged: enabled
-                            ? (id) {
-                                if (id != null) onFormat(id);
-                              }
-                            : null,
+                        onChanged: (id) {
+                          if (id == null || id == _selectedFormatId) return;
+                          setState(() => _selectedFormatId = id);
+                          widget.onFormat(id);
+                        },
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    Flexible(
-                      flex: 3,
+                    Expanded(
                       child: TextFormField(
-                        initialValue: label,
-                        enabled: enabled,
+                        key: ValueKey(
+                          'batch-date-label-${widget.fieldHint}-$displayLabel',
+                        ),
+                        initialValue: displayLabel,
+                        enabled: widget.enabled,
                         decoration: InputDecoration(
-                          hintText: label,
+                          hintText: widget.fieldHint,
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: AppRadius.smBorder,
                           ),
                         ),
-                        onChanged: onLabel,
+                        onChanged: widget.onLabel,
                       ),
                     ),
                   ],

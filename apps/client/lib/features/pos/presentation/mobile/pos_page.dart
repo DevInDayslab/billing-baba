@@ -121,7 +121,7 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
           item,
           categoryName: categoryName,
         );
-        ref.read(posCartProvider.notifier).addItem(posItem);
+        ref.read(posCartProvider().notifier).addItem(posItem);
         if (!mounted) return;
         showBarcodeAddedSnackBar(context, item.name);
         _hidController.requestFocus();
@@ -137,7 +137,7 @@ class _MobilePosPageState extends ConsumerState<MobilePosPage> {
   @override
   Widget build(BuildContext context) {
     final inventoryAsync = ref.watch(inventoryItemsProvider).itemsOnly;
-    final heldCount = ref.watch(posCartProvider).heldBills.length;
+    final heldCount = ref.watch(posCartProvider()).heldBills.length;
     final bodyTop = _bodyTopOffset(context);
     final scanningEnabled = isBarcodeScanningEnabled(ref);
     final preferHardware = preferHardwareBarcodeScanner(ref);

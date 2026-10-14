@@ -50,7 +50,7 @@ class PosSession extends _$PosSession {
   PosSessionState build() => const PosSessionState();
 
   Future<void> openTerminal() async {
-    ref.read(posCartProvider.notifier).clearCart();
+    ref.read(posCartProvider().notifier).clearCart();
     state = state.copyWith(
       isTerminalOpen: true,
       isLoading: true,

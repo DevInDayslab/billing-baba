@@ -70,4 +70,85 @@ void main() {
     expect(nameResults, hasLength(1));
     expect(nameResults.first.name, 'AA Battery 4-pack');
   });
+
+  test('returns all products matching a partial name query', () {
+    const items = [
+      InventoryItem(
+        id: '1',
+        name: 'Test 1',
+        type: ItemType.product,
+        salePrice: 120,
+      ),
+      InventoryItem(
+        id: '2',
+        name: 'Test 2',
+        type: ItemType.product,
+        salePrice: 52,
+      ),
+      InventoryItem(
+        id: '3',
+        name: 'Test 3',
+        type: ItemType.product,
+        salePrice: 0,
+      ),
+      InventoryItem(
+        id: '4',
+        name: 'Widget',
+        type: ItemType.product,
+        salePrice: 10,
+      ),
+    ];
+
+    final catalog = mapInventoryItemsToPosItems(items, const {});
+    final engine = InventorySearchEngine.build(
+      items: items.map(InventorySearchableFields.fromInventoryItem),
+    );
+
+    final results = filterPosCatalog(
+      catalog: catalog,
+      inventoryItems: items,
+      searchEngine: engine,
+      searchQuery: 't',
+    );
+
+    expect(
+      results.map((item) => item.name),
+      containsAll(['Test 1', 'Test 2', 'Test 3']),
+    );
+    expect(results, hasLength(4));
+  });
+
+  test('multi-word search matches only the named product', () {
+    const items = [
+      InventoryItem(
+        id: '1',
+        name: 'Test 1',
+        type: ItemType.product,
+        barcode: '1790938395123',
+        salePrice: 120,
+      ),
+      InventoryItem(
+        id: '2',
+        name: 'Test 2',
+        type: ItemType.product,
+        barcode: '1790938433123',
+        salePrice: 52,
+      ),
+    ];
+
+    final catalog = mapInventoryItemsToPosItems(items, const {});
+    final engine = InventorySearchEngine.build(
+      items: items.map(InventorySearchableFields.fromInventoryItem),
+    );
+
+    final results = filterPosCatalog(
+      catalog: catalog,
+      inventoryItems: items,
+      searchEngine: engine,
+      searchQuery: 'test 1',
+    );
+
+    expect(results, hasLength(1));
+    expect(results.first.name, 'Test 1');
+  });
 }

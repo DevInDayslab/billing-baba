@@ -32,7 +32,6 @@ import 'package:billing_baba/features/tasks/presentation/task_undo_redo_shortcut
 import 'package:billing_baba/features/search/presentation/desktop/search_dialog.dart';
 import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/shared/widgets/desktop_bidirectional_scroll.dart';
-import 'package:billing_baba/features/settings/models/settings_sub_route.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:flutter/material.dart';
@@ -123,8 +122,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _collaborationExpandInitialized = false;
   bool _isDeveloperExpanded = false;
   bool _developerExpandInitialized = false;
-  bool _isSettingsExpanded = false;
-  bool _settingsExpandInitialized = false;
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
@@ -216,13 +213,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         _isDeveloperExpanded = true;
       }
     }
-    if (!_settingsExpandInitialized) {
-      _settingsExpandInitialized = true;
-      final location = GoRouterState.of(context).uri.path;
-      if (_isSettingsLocation(location)) {
-        _isSettingsExpanded = true;
-      }
-    }
   }
 
   static bool _isSettingsLocation(String location) {
@@ -253,16 +243,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   static final List<_NavSubItem> _collaborationSubItems = CollaborationSubRoutes
       .items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
-      .toList();
-
-  static final List<_NavSubItem> _settingsSubItems = SettingsSubRoutes.items
-      .map(
-        (item) => _NavSubItem(
-          route: item.route,
-          label: item.label,
-          showProBadge: item.showProBadge,
-        ),
-      )
       .toList();
 
   static final List<_NavSubItem> _developerSubItems = [
@@ -364,13 +344,11 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         subItems: _developerSubItems,
       ),
     if (!ShellSidebarVisibility.hideSettings)
-      _NavItem(
+      const _NavItem(
+        route: AppRoutes.settingsGeneral,
         icon: LucideIcons.settings,
         iconColor: _SidebarTokens.settings,
         label: 'Settings',
-        isExpandable: true,
-        routePrefix: AppRoutes.settings,
-        subItems: _settingsSubItems,
       ),
     const _NavItem(
       route: AppRoutes.plansPricing,
@@ -456,7 +434,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       _isUtilitiesExpanded = route.startsWith(AppRoutes.utilities);
       _isCollaborationExpanded = route.startsWith(AppRoutes.collaboration);
       _isDeveloperExpanded = route.startsWith(AppRoutes.developer);
-      _isSettingsExpanded = _isSettingsLocation(route);
     });
     context.go(route);
     _scheduleSidebarCloseAfterNavigation(
@@ -627,23 +604,25 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           constraints.maxWidth,
         );
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSidebarHeader(
-              collapsed: compactLayout,
-              showCloseButton: showCloseButton,
-              sidebarNotifier: sidebarNotifier,
-            ),
-            Expanded(
-              child: _buildNavList(
-                currentLocation,
+        return _SidebarHoverRegion(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSidebarHeader(
                 collapsed: compactLayout,
-                permissions: permissions,
+                showCloseButton: showCloseButton,
+                sidebarNotifier: sidebarNotifier,
               ),
-            ),
-            _buildSidebarFooter(collapsed: compactLayout),
-          ],
+              Expanded(
+                child: _buildNavList(
+                  currentLocation,
+                  collapsed: compactLayout,
+                  permissions: permissions,
+                ),
+              ),
+              _buildSidebarFooter(collapsed: compactLayout),
+            ],
+          ),
         );
       },
     );
@@ -762,8 +741,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     required PermissionService permissions,
   }) {
     final navItems = _visibleNavItems(permissions);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+    return _SidebarNavScroll(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -787,7 +765,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       final isUtilities = item.routePrefix == AppRoutes.utilities;
       final isCollaboration = item.routePrefix == AppRoutes.collaboration;
       final isDeveloper = item.routePrefix == AppRoutes.developer;
-      final isSettings = item.routePrefix == AppRoutes.settings;
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
@@ -802,7 +779,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ? currentLocation.startsWith(AppRoutes.collaboration)
           : isDeveloper
           ? currentLocation.startsWith(AppRoutes.developer)
-          : isSettings && _isSettingsLocation(currentLocation);
+          : false;
 
       final isExpanded = isSale
           ? _isSaleExpanded
@@ -816,7 +793,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ? _isCollaborationExpanded
           : isDeveloper
           ? _isDeveloperExpanded
-          : isSettings && _isSettingsExpanded;
+          : false;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -840,8 +817,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 _isCollaborationExpanded = !_isCollaborationExpanded;
               } else if (isDeveloper) {
                 _isDeveloperExpanded = !_isDeveloperExpanded;
-              } else if (isSettings) {
-                _isSettingsExpanded = !_isSettingsExpanded;
               }
             }),
             onCollapsedTap: () {
@@ -859,28 +834,20 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                   _isCollaborationExpanded = true;
                 } else if (isDeveloper) {
                   _isDeveloperExpanded = true;
-                } else if (isSettings) {
-                  _isSettingsExpanded = true;
                 }
               });
             },
           ),
           if (isExpanded && !collapsed)
             ...item.subItems.map((sub) {
-              final isSubActive = isSettings
-                  ? _isSettingsSubItemActive(
-                      subRoute: sub.route,
-                      currentLocation: currentLocation,
-                    )
-                  : _isSubItemActive(
-                      routePrefix: routePrefix,
-                      subRoute: sub.route,
-                      currentLocation: currentLocation,
-                    );
+              final isSubActive = _isSubItemActive(
+                routePrefix: routePrefix,
+                subRoute: sub.route,
+                currentLocation: currentLocation,
+              );
               return _SidebarNavSubTile(
                 label: sub.label,
                 isActive: isSubActive,
-                showProBadge: sub.showProBadge,
                 onTap: () => _navigateTo(sub.route),
               );
             }),
@@ -894,7 +861,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             (item.route == AppRoutes.partyDetails &&
                 currentLocation.startsWith(AppRoutes.parties)) ||
             (item.route == AppRoutes.reports &&
-                currentLocation.startsWith(AppRoutes.reports)));
+                currentLocation.startsWith(AppRoutes.reports)) ||
+            (item.route == AppRoutes.settingsGeneral &&
+                _isSettingsLocation(currentLocation)));
 
     return _SidebarNavTile(
       item: item,
@@ -902,14 +871,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       isActive: isActive,
       onTap: item.route != null ? () => _navigateTo(item.route!) : null,
     );
-  }
-
-  bool _isSettingsSubItemActive({
-    required String subRoute,
-    required String currentLocation,
-  }) {
-    if (currentLocation == subRoute) return true;
-    return false;
   }
 
   bool _isSubItemActive({
@@ -1021,6 +982,156 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   }
 }
 
+/// Tracks pointer hover anywhere on the sidebar panel (nav scrollbar visibility).
+class _SidebarHoverScope extends InheritedWidget {
+  const _SidebarHoverScope({
+    required this.isHovered,
+    required super.child,
+  });
+
+  final bool isHovered;
+
+  static bool isHoveredOf(BuildContext context) {
+    return context
+            .dependOnInheritedWidgetOfExactType<_SidebarHoverScope>()
+            ?.isHovered ??
+        false;
+  }
+
+  @override
+  bool updateShouldNotify(_SidebarHoverScope oldWidget) {
+    return isHovered != oldWidget.isHovered;
+  }
+}
+
+class _SidebarHoverRegion extends StatefulWidget {
+  const _SidebarHoverRegion({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_SidebarHoverRegion> createState() => _SidebarHoverRegionState();
+}
+
+class _SidebarHoverRegionState extends State<_SidebarHoverRegion> {
+  var _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: _SidebarHoverScope(
+        isHovered: _isHovered,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _SidebarNavScroll extends StatefulWidget {
+  const _SidebarNavScroll({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_SidebarNavScroll> createState() => _SidebarNavScrollState();
+}
+
+/// Suppresses the platform scrollbar on the sidebar nav; we paint our own on hover.
+class _SidebarNavScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
+
+class _SidebarNavScrollState extends State<_SidebarNavScroll> {
+  static const _thicknessHovered = 10.0;
+
+  /// Ignore sub-pixel layout noise that would show a scrollbar with nothing to scroll.
+  static const _scrollExtentEpsilon = 1.0;
+
+  late final ScrollController _scrollController = ScrollController();
+  var _hasOverflow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_syncOverflowState);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncOverflowState());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SidebarNavScroll oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncOverflowState());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_syncOverflowState);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _syncOverflowState() {
+    if (!mounted || !_scrollController.hasClients) return;
+    final hasOverflow =
+        _scrollController.position.maxScrollExtent > _scrollExtentEpsilon;
+    if (hasOverflow == _hasOverflow) return;
+    setState(() => _hasOverflow = hasOverflow);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hovered = _SidebarHoverScope.isHoveredOf(context);
+    final showScrollbar = hovered && _hasOverflow;
+
+    final scrollView = NotificationListener<ScrollMetricsNotification>(
+      onNotification: (_) {
+        _syncOverflowState();
+        return false;
+      },
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        physics: _hasOverflow
+            ? const ClampingScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        child: widget.child,
+      ),
+    );
+
+    return ScrollConfiguration(
+      behavior: _SidebarNavScrollBehavior(),
+      child: showScrollbar
+          ? ScrollbarTheme(
+              data: ScrollbarThemeData(
+                thickness: WidgetStateProperty.all(_thicknessHovered),
+                radius: const Radius.circular(6),
+                thumbColor: WidgetStateProperty.all(const Color(0x8FFFFFFF)),
+                trackColor: WidgetStateProperty.all(const Color(0x14FFFFFF)),
+                thumbVisibility: WidgetStateProperty.all(true),
+                trackVisibility: WidgetStateProperty.all(true),
+                interactive: true,
+              ),
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: scrollView,
+              ),
+            )
+          : scrollView,
+    );
+  }
+}
+
 class _NavItem {
   const _NavItem({
     required this.icon,
@@ -1045,12 +1156,10 @@ class _NavSubItem {
   const _NavSubItem({
     required this.route,
     required this.label,
-    this.showProBadge = false,
   });
 
   final String route;
   final String label;
-  final bool showProBadge;
 }
 
 class _SidebarTileSurface extends StatelessWidget {
@@ -1192,13 +1301,11 @@ class _SidebarNavSubTile extends StatelessWidget {
     required this.label,
     required this.isActive,
     required this.onTap,
-    this.showProBadge = false,
   });
 
   final String label;
   final bool isActive;
   final VoidCallback onTap;
-  final bool showProBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -1208,39 +1315,17 @@ class _SidebarNavSubTile extends StatelessWidget {
       verticalPadding: AppSpacing.sm,
       child: Padding(
         padding: const EdgeInsets.only(left: 20),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isActive
-                      ? _SidebarTokens.textActive
-                      : _SidebarTokens.text,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.4,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (showProBadge) ...[
-              const SizedBox(width: 6),
-              Container(
-                width: 18,
-                height: 18,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2563EB),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  LucideIcons.crown,
-                  size: 10,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive
+                ? _SidebarTokens.textActive
+                : _SidebarTokens.text,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.4,
+          ),
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );

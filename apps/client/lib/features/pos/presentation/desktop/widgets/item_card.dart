@@ -88,15 +88,17 @@ class ItemCard extends ConsumerWidget {
               stock: alternativeItem.stockQuantity.toInt(),
               unit: item.unit,
             );
-            ref.read(posCartProvider.notifier).addItem(alternativePosItem);
+            ref.read(posCartProvider().notifier).addItem(alternativePosItem);
           },
           onContinueAnyway: () async {
-            ref.read(posCartProvider.notifier).addItem(item);
+            ref
+                .read(posCartProvider().notifier)
+                .addItem(item, allowInsufficientStock: true);
           },
         ),
       );
     } else {
-      ref.read(posCartProvider.notifier).addItem(item);
+      ref.read(posCartProvider().notifier).addItem(item);
     }
   }
 

@@ -117,6 +117,53 @@ void main() {
       expect(engine.searchIds('amul butter'), isEmpty);
       expect(engine.searchIds('amul'), [sampleItem.id]);
     });
+
+    test('multi-word queries require every token to match the item name', () {
+      final rankedEngine = InventorySearchEngine.build(
+        items: const [
+          InventorySearchableFields(
+            id: 'test-1',
+            name: 'Test 1',
+            barcode: '1790938395123',
+          ),
+          InventorySearchableFields(
+            id: 'test-2',
+            name: 'Test 2',
+            barcode: '1790938433123',
+          ),
+        ],
+      );
+
+      expect(rankedEngine.searchIds('test 1'), ['test-1']);
+      expect(rankedEngine.searchIds('test 2'), ['test-2']);
+      expect(rankedEngine.searchIds('test'), containsAll(['test-1', 'test-2']));
+    });
+
+    test('short numeric queries match item names, not barcode digits', () {
+      final rankedEngine = InventorySearchEngine.build(
+        items: const [
+          InventorySearchableFields(
+            id: 'test-1',
+            name: 'Test 1',
+            barcode: '1790938395123',
+          ),
+          InventorySearchableFields(
+            id: 'test-2',
+            name: 'Test 2',
+            barcode: '1790938433123',
+          ),
+          InventorySearchableFields(
+            id: 'test-3',
+            name: 'Test 3',
+            barcode: '4354bcc5-1000',
+          ),
+        ],
+      );
+
+      expect(rankedEngine.searchIds('3'), ['test-3']);
+      expect(rankedEngine.searchIds('1'), ['test-1']);
+      expect(rankedEngine.searchIds('2'), ['test-2']);
+    });
   });
 
   group('highlightRanges', () {

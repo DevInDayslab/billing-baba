@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
+import 'package:billing_baba/features/reports/utils/report_date_bounds.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -29,14 +30,21 @@ class ReportFilters extends _$ReportFilters {
   void setCustomDateRange(DateTimeRange range) {
     state = state.copyWith(
       period: ReportPeriod.custom,
-      customDateRange: range,
+      customDateRange: clampReportDateRange(range),
       currentPage: 1,
       isTableLoading: true,
     );
   }
 
   void setSelectedDate(DateTime date) {
-    state = state.copyWith(selectedDate: date, currentPage: 1);
+    final last = reportLastSelectableDay();
+    final normalized = DateTime(date.year, date.month, date.day);
+    final selected = normalized.isAfter(last) ? last : normalized;
+    state = state.copyWith(
+      selectedDate: selected,
+      currentPage: 1,
+      isTableLoading: true,
+    );
   }
 
   void clearSelectedDate() {

@@ -27,6 +27,8 @@ class PartyLocalExtension {
     this.loyaltyPointsBalance = '',
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.additionalField3 = '',
+    this.additionalField4 = '',
     this.defaultPriceTier = '',
     this.additionalPhones = const [],
     this.additionalPhoneDetails = const [],
@@ -57,6 +59,8 @@ class PartyLocalExtension {
       loyaltyPointsBalance: json['loyalty_points_balance'] as String? ?? '',
       additionalField1: json['additional_field_1'] as String? ?? '',
       additionalField2: json['additional_field_2'] as String? ?? '',
+      additionalField3: json['additional_field_3'] as String? ?? '',
+      additionalField4: json['additional_field_4'] as String? ?? '',
       defaultPriceTier: json['default_price_tier'] as String? ?? '',
       additionalPhones: json['additional_phones'] is List
           ? (json['additional_phones'] as List)
@@ -102,6 +106,12 @@ class PartyLocalExtension {
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2
           : '',
+      additionalField3: result.additionalField3Enabled
+          ? result.additionalField3
+          : '',
+      additionalField4: result.additionalField4Enabled
+          ? result.additionalField4
+          : '',
       defaultPriceTier: result.defaultPriceTier,
       additionalPhones: result.additionalPhones,
       additionalPhoneDetails: result.additionalPhoneDetails.isNotEmpty
@@ -130,6 +140,8 @@ class PartyLocalExtension {
   final String loyaltyPointsBalance;
   final String additionalField1;
   final String additionalField2;
+  final String additionalField3;
+  final String additionalField4;
   final String defaultPriceTier;
   final List<String> additionalPhones;
   final List<PartyAdditionalPhoneDetail> additionalPhoneDetails;
@@ -155,6 +167,8 @@ class PartyLocalExtension {
     'loyalty_points_balance': loyaltyPointsBalance,
     'additional_field_1': additionalField1,
     'additional_field_2': additionalField2,
+    'additional_field_3': additionalField3,
+    'additional_field_4': additionalField4,
     'default_price_tier': defaultPriceTier,
     'additional_phones': additionalPhones,
     'additional_phone_details': additionalPhoneDetails

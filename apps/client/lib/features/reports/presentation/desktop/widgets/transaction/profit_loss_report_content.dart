@@ -11,6 +11,55 @@ import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+const _profitLossExpandBlue = Color(0xFF1565C0);
+const _profitLossPositiveGreen = Color(0xFF2E7D32);
+
+bool _isProfitLossSummaryRow(ReportProfitLossItem item) {
+  return item.particular.startsWith('Net Profit');
+}
+
+bool _profitLossRowHasChildren(
+  List<ReportProfitLossItem> items,
+  int index,
+) {
+  if (!items[index].isHeader || _isProfitLossSummaryRow(items[index])) {
+    return false;
+  }
+  final indent = items[index].indent;
+  if (index + 1 >= items.length) return false;
+  final next = items[index + 1];
+  if (_isProfitLossSummaryRow(next)) return false;
+  return next.indent > indent;
+}
+
+bool _isProfitLossRowVisible(
+  List<ReportProfitLossItem> items,
+  int index,
+  Set<int> collapsedHeaders,
+) {
+  if (_isProfitLossSummaryRow(items[index])) return true;
+
+  var indent = items[index].indent;
+  for (var i = index - 1; i >= 0; i--) {
+    final row = items[i];
+    if (!row.isHeader) continue;
+    if (row.indent < indent) {
+      if (collapsedHeaders.contains(i)) return false;
+      indent = row.indent;
+    }
+  }
+  return true;
+}
+
+List<int> _profitLossCollapsibleHeaderIndices(
+  List<ReportProfitLossItem> items,
+) {
+  return [
+    for (var i = 0; i < items.length; i++)
+      if (_profitLossRowHasChildren(items, i)) i,
+  ];
+}
+
 class ProfitLossReportContent extends ConsumerStatefulWidget {
   const ProfitLossReportContent({super.key});
 
@@ -21,7 +70,33 @@ class ProfitLossReportContent extends ConsumerStatefulWidget {
 
 class _ProfitLossReportContentState
     extends ConsumerState<ProfitLossReportContent> {
-  String _viewMode = 'Vyapar';
+  final Set<int> _collapsedHeaders = <int>{};
+
+  bool _areAllAccountsExpanded(List<ReportProfitLossItem> items) {
+    final collapsible = _profitLossCollapsibleHeaderIndices(items);
+    if (collapsible.isEmpty) return true;
+    return collapsible.every((index) => !_collapsedHeaders.contains(index));
+  }
+
+  void _toggleAllAccounts(List<ReportProfitLossItem> items) {
+    setState(() {
+      if (_areAllAccountsExpanded(items)) {
+        _collapsedHeaders.addAll(_profitLossCollapsibleHeaderIndices(items));
+      } else {
+        _collapsedHeaders.clear();
+      }
+    });
+  }
+
+  void _toggleHeader(int index) {
+    setState(() {
+      if (_collapsedHeaders.contains(index)) {
+        _collapsedHeaders.remove(index);
+      } else {
+        _collapsedHeaders.add(index);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +107,12 @@ class _ProfitLossReportContentState
       onRetry: () => ref.read(profitLossReportProvider.notifier).refresh(),
       data: (report) {
         final items = report.items;
+        final visibleIndices = <int>[
+          for (var i = 0; i < items.length; i++)
+            if (_isProfitLossRowVisible(items, i, _collapsedHeaders)) i,
+        ];
+        final allExpanded = _areAllAccountsExpanded(items);
+
         return ColoredBox(
           color: AppColors.background,
           child: Padding(
@@ -78,46 +159,42 @@ class _ProfitLossReportContentState
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            0,
+                            AppSpacing.md,
+                            AppSpacing.sm,
                           ),
-                          child: Row(
-                            children: [
-                              const Text(
-                                'View :',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: InkWell(
+                              onTap: () => _toggleAllAccounts(items),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    allExpanded
+                                        ? 'Collapse all accounts'
+                                        : 'Expand all accounts',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: _profitLossExpandBlue,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Icon(
+                                    allExpanded
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    size: 20,
+                                    color: _profitLossExpandBlue,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Radio<String>(
-                                value: 'Vyapar',
-                                groupValue: _viewMode,
-                                onChanged: (v) =>
-                                    setState(() => _viewMode = v!),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              const Text(
-                                'Vyapar',
-                                style: TextStyle(fontSize: 13),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Radio<String>(
-                                value: 'Accounting',
-                                groupValue: _viewMode,
-                                onChanged: (v) =>
-                                    setState(() => _viewMode = v!),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              const Text(
-                                'Accounting',
-                                style: TextStyle(fontSize: 13),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.sm),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
                           child: ReportSyncScrollTable(
@@ -137,12 +214,26 @@ class _ProfitLossReportContentState
                               ),
                             ],
                             rows: [
-                              for (var i = 0; i < items.length; i++)
+                              for (var rowIndex = 0;
+                                  rowIndex < visibleIndices.length;
+                                  rowIndex++)
                                 ReportAlignedRowStrip(
-                                  index: i,
+                                  index: rowIndex,
                                   child: _ProfitLossRow(
-                                    item: items[i],
-                                    index: i,
+                                    item: items[visibleIndices[rowIndex]],
+                                    sourceIndex: visibleIndices[rowIndex],
+                                    items: items,
+                                    isCollapsed: _collapsedHeaders.contains(
+                                      visibleIndices[rowIndex],
+                                    ),
+                                    onToggle: _profitLossRowHasChildren(
+                                      items,
+                                      visibleIndices[rowIndex],
+                                    )
+                                        ? () => _toggleHeader(
+                                            visibleIndices[rowIndex],
+                                          )
+                                        : null,
                                   ),
                                 ),
                             ],
@@ -162,21 +253,44 @@ class _ProfitLossReportContentState
 }
 
 class _ProfitLossRow extends StatelessWidget {
-  const _ProfitLossRow({required this.item, required this.index});
+  const _ProfitLossRow({
+    required this.item,
+    required this.sourceIndex,
+    required this.items,
+    required this.isCollapsed,
+    this.onToggle,
+  });
 
   final ReportProfitLossItem item;
-  final int index;
+  final int sourceIndex;
+  final List<ReportProfitLossItem> items;
+  final bool isCollapsed;
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
-    final indentPadding = AppSpacing.md + (item.indent * AppSpacing.lg);
-    final textStyle = item.isHeader
+    final isSummary = _isProfitLossSummaryRow(item);
+    final hasChildren = _profitLossRowHasChildren(items, sourceIndex);
+    final indentPadding =
+        AppSpacing.md + (item.indent * AppSpacing.lg) + (hasChildren ? 0 : 20);
+
+    final textStyle = isSummary
         ? const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           )
+        : item.isHeader
+        ? const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          )
         : const TextStyle(fontSize: 13, color: AppColors.textPrimary);
+
+    final amountColor = isSummary
+        ? (item.amount >= 0 ? _profitLossPositiveGreen : reportAddRed)
+        : (item.amount < 0 ? reportAddRed : AppColors.textPrimary);
 
     return ReportAlignedDataRow(
       padding: EdgeInsets.fromLTRB(
@@ -187,18 +301,32 @@ class _ProfitLossRow extends StatelessWidget {
       ),
       cells: [
         ReportAlignedCell.flex(
-          child: Text(item.particular, style: textStyle),
+          child: Row(
+            children: [
+              if (hasChildren)
+                InkWell(
+                  onTap: onToggle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      isCollapsed
+                          ? Icons.arrow_right
+                          : Icons.keyboard_arrow_down,
+                      size: 18,
+                      color: _profitLossExpandBlue,
+                    ),
+                  ),
+                ),
+              Expanded(child: Text(item.particular, style: textStyle)),
+            ],
+          ),
         ),
         ReportAlignedCell.fixed(
           120,
           alignment: Alignment.centerRight,
           child: Text(
-            item.isHeader && item.amount == 0
-                ? ''
-                : formatReportCurrency(item.amount),
-            style: textStyle.copyWith(
-              color: item.amount < 0 ? reportAddRed : AppColors.textPrimary,
-            ),
+            formatReportCurrency(item.amount),
+            style: textStyle.copyWith(color: amountColor),
           ),
         ),
       ],

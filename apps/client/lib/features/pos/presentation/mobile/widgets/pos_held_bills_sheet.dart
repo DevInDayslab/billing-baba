@@ -18,7 +18,7 @@ Future<void> showPosHeldBillsSheet(BuildContext context) {
     context: context,
     titleWidget: Consumer(
       builder: (context, ref, _) {
-        final count = ref.watch(posCartProvider).heldBills.length;
+        final count = ref.watch(posCartProvider()).heldBills.length;
         final theme = Theme.of(context);
 
         return Text(
@@ -80,8 +80,8 @@ class _HeldBillsSheetBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final heldBills = ref.watch(posCartProvider).heldBills;
-    final cart = ref.read(posCartProvider.notifier);
+    final heldBills = ref.watch(posCartProvider()).heldBills;
+    final cart = ref.read(posCartProvider().notifier);
 
     if (heldBills.isEmpty) {
       return const MobileEmptyState(
