@@ -12,6 +12,8 @@ import 'package:billing_baba/features/inventory/application/inventory_providers.
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/shared/business/business_amount_format.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,12 +88,6 @@ class ItemNameAutocompleteFieldState
   OverlayEntry? _overlayEntry;
   late final TextEditingController _controller;
   var _waitingForItems = false;
-
-  static final _priceFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 0,
-  );
 
   @override
   void initState() {
@@ -273,7 +269,12 @@ class ItemNameAutocompleteFieldState
       builder: (overlayContext) {
         return Consumer(
           builder: (context, overlayRef, _) {
-            final itemsAsync = overlayRef.watch(inventoryItemsProvider).itemsOnly;
+            final priceFormat =
+                overlayRef.watch(businessAmountFormatterProvider);
+            final blockQuickAddItem =
+                overlayRef.watch(blockNewItemsFromTxnProvider);
+            final itemsAsync =
+                overlayRef.watch(inventoryItemsProvider).itemsOnly;
             final panelWidth = triggerWidth < 420 ? 420.0 : triggerWidth;
 
             if (_shouldShowItemsLoading(itemsAsync)) {
@@ -472,7 +473,7 @@ class ItemNameAutocompleteFieldState
                                         ),
                                         Expanded(
                                           child: Text(
-                                            _priceFormat.format(
+                                            priceFormat.format(
                                               item.salePrice,
                                             ),
                                             textAlign: TextAlign.right,
@@ -484,7 +485,7 @@ class ItemNameAutocompleteFieldState
                                         if (widget.displayPurchasePrice)
                                           Expanded(
                                             child: Text(
-                                              _priceFormat.format(
+                                              priceFormat.format(
                                                 item.purchasePrice,
                                               ),
                                               textAlign: TextAlign.right,
@@ -509,25 +510,27 @@ class ItemNameAutocompleteFieldState
                               },
                             ),
                     ),
-                    const Divider(height: 1),
-                    ListTile(
-                      dense: true,
-                      visualDensity: VisualDensity.compact,
-                      leading: const Icon(
-                        Icons.add,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                      title: const Text(
-                        '+ Add Item',
-                        style: TextStyle(
-                          fontSize: 13,
+                    if (!blockQuickAddItem) ...[
+                      const Divider(height: 1),
+                      ListTile(
+                        dense: true,
+                        visualDensity: VisualDensity.compact,
+                        leading: const Icon(
+                          Icons.add,
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                          size: 20,
                         ),
+                        title: const Text(
+                          '+ Add Item',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onTap: _openAddItemDialog,
                       ),
-                      onTap: _openAddItemDialog,
-                    ),
+                    ],
                   ],
                 ),
               ),

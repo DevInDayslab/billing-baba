@@ -7,6 +7,7 @@ import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/edit_business_dialog.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
 import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/settings/models/general_settings_info_catalog.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/widgets/general_settings_form_widgets.dart';
@@ -71,6 +72,14 @@ class _DesktopGeneralSettingsScreenState
     final updated = profile.copyWith(currency: code);
     ref.read(businessProfileProvider.notifier).replaceWith(updated);
     await propagateBusinessProfileListUpdate(ref, updated);
+    notifySettingsSaved();
+  }
+
+  Future<void> _onDecimalPlacesChanged(int value) async {
+    final current =
+        ref.read(generalSettingsProvider).requireValue.amountDecimalPlaces;
+    if (value == current) return;
+    await _patch((s) => s.copyWith(amountDecimalPlaces: value));
   }
 
   Future<void> _selectFirm(BusinessModel business) async {
@@ -166,9 +175,7 @@ class _DesktopGeneralSettingsScreenState
                       currencyCode: currencyCode,
                       onPasscodeChanged: _onPasscodeChanged,
                       onCurrencyChanged: _onCurrencyChanged,
-                      onDecimalPlaces: (v) => _patch(
-                        (s) => s.copyWith(amountDecimalPlaces: v),
-                      ),
+                      onDecimalPlaces: _onDecimalPlacesChanged,
                       onPatch: _patch,
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -337,7 +344,7 @@ class _ApplicationColumn extends StatelessWidget {
   final String currencyCode;
   final ValueChanged<bool?> onPasscodeChanged;
   final ValueChanged<String?> onCurrencyChanged;
-  final ValueChanged<int> onDecimalPlaces;
+  final Future<void> Function(int) onDecimalPlaces;
   final Future<void> Function(GeneralSettingsUpdater) onPatch;
 
   @override

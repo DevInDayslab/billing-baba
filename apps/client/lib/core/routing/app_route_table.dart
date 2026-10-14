@@ -17,6 +17,9 @@ import 'package:billing_baba/features/collaboration/application/permission_servi
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
 import 'package:billing_baba/features/collaboration/guards/permission_guard.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_route_guard.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/collaboration/presentation/sync_share_page.dart';
 import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
@@ -189,7 +192,15 @@ GoRouter createAppRouter({
         case AuthStatus.authenticated:
           if (onLogin || onOtp) return AppRoutes.home;
           final permission = ref.read(permissionServiceProvider);
-          return PermissionGuard.redirect(location, permission);
+          final permissionRedirect = PermissionGuard.redirect(
+            location,
+            permission,
+          );
+          if (permissionRedirect != null) return permissionRedirect;
+          final general =
+              ref.read(generalSettingsProvider).value ??
+              GeneralSettings.defaults();
+          return GeneralSettingsRouteGuard.redirect(location, general);
         case AuthStatus.initializing:
           return showSplash ? AppRoutes.splash : AppRoutes.login;
       }

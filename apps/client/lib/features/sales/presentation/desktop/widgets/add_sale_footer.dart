@@ -16,6 +16,7 @@ import 'package:billing_baba/shared/attachments/transaction_attachment_actions.d
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:billing_baba/shared/business/business_amount_format.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -58,14 +59,9 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
     });
   }
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
-
   @override
   Widget build(BuildContext context) {
+    final currencyFormat = ref.watch(businessAmountFormatterProvider);
     final form = ref.watch(
       addSaleFormProvider(sessionKey: widget.sessionKey),
     );
@@ -172,7 +168,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       roundOffAmount: computedTotals.roundOffAmount,
       grandTotal: grandTotal,
       isCredit: isCredit,
-      currencyFormat: _currencyFormat,
+      currencyFormat: currencyFormat,
       loyaltyPointsEnabled: loyaltyPointsEnabled,
     );
 

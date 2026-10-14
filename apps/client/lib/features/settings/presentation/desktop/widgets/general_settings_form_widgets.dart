@@ -157,7 +157,7 @@ class GeneralSettingsLabeledField extends StatelessWidget {
   }
 }
 
-class GeneralSettingsDecimalField extends StatelessWidget {
+class GeneralSettingsDecimalField extends StatefulWidget {
   const GeneralSettingsDecimalField({
     required this.value,
     required this.onSubmitted,
@@ -168,10 +168,62 @@ class GeneralSettingsDecimalField extends StatelessWidget {
   final ValueChanged<int> onSubmitted;
 
   @override
+  State<GeneralSettingsDecimalField> createState() =>
+      _GeneralSettingsDecimalFieldState();
+}
+
+class _GeneralSettingsDecimalFieldState extends State<GeneralSettingsDecimalField> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.value}');
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(GeneralSettingsDecimalField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value && !_focusNode.hasFocus) {
+      _controller.text = '${widget.value}';
+    }
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _commit();
+    }
+  }
+
+  void _commit() {
+    final parsed = int.tryParse(_controller.text.trim());
+    if (parsed == null) {
+      _controller.text = '${widget.value}';
+      return;
+    }
+    final clamped = parsed.clamp(0, 4);
+    if (clamped != parsed) {
+      _controller.text = '$clamped';
+    }
+    widget.onSubmitted(clamped);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      key: ValueKey(value),
-      initialValue: '$value',
+      controller: _controller,
+      focusNode: _focusNode,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       decoration: InputDecoration(
@@ -192,11 +244,9 @@ class GeneralSettingsDecimalField extends StatelessWidget {
         filled: true,
         fillColor: AppColors.background,
       ),
-      onFieldSubmitted: (text) {
-        final parsed = int.tryParse(text.trim());
-        if (parsed == null) return;
-        onSubmitted(parsed.clamp(0, 4));
-      },
+      onFieldSubmitted: (_) => _commit(),
+      onEditingComplete: _commit,
+      onTapOutside: (_) => _focusNode.unfocus(),
     );
   }
 }
