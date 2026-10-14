@@ -25,6 +25,20 @@ void main() {
     });
   });
 
+  group('receiptNumberNeedsAutoAllocate', () {
+    test('empty and legacy placeholders allocate', () {
+      expect(receiptNumberNeedsAutoAllocate(''), isTrue);
+      expect(receiptNumberNeedsAutoAllocate('Auto'), isTrue);
+      expect(receiptNumberNeedsAutoAllocate('REC-123'), isTrue);
+      expect(receiptNumberNeedsAutoAllocate('PO-123'), isTrue);
+    });
+
+    test('custom receipt is kept', () {
+      expect(receiptNumberNeedsAutoAllocate('PIN9'), isFalse);
+      expect(receiptNumberNeedsAutoAllocate('MY-REF'), isFalse);
+    });
+  });
+
   group('resolveDocumentNumberDisplay', () {
     test('uses preview for new documents', () {
       expect(

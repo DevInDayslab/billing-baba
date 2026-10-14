@@ -1,10 +1,13 @@
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/documents/data/local_document_number_service.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_settings.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final _localDocumentNumberPattern = RegExp(r'^LOCAL-(\d+)$');
 
 /// Payment-in local series key (no dedicated constant module yet).
 const paymentInDocumentSeries = 'PIN';
@@ -123,4 +126,39 @@ String watchDocumentNumberPreview(WidgetRef ref, String documentSeries) {
       nextNumber: 1,
     ),
   );
+}
+
+int? counterFromLocalDocumentNumber(String localToken) {
+  final match = _localDocumentNumberPattern.firstMatch(localToken.trim());
+  if (match == null) return null;
+  return int.tryParse(match.group(1)!);
+}
+
+/// Whether a voucher receipt/reference should be allocated from settings + series.
+bool receiptNumberNeedsAutoAllocate(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty || isUnsetDocumentNumber(trimmed)) {
+    return true;
+  }
+  // Legacy placeholders before prefix wiring.
+  if (trimmed.startsWith('REC-') || trimmed.startsWith('PO-')) {
+    return true;
+  }
+  return false;
+}
+
+/// Consumes the next counter for [documentSeries] and returns `{prefix}{n}`.
+Future<String> allocateFormattedDocumentNumber({
+  required LocalDocumentNumberService numbering,
+  required String businessId,
+  required String documentSeries,
+  required SaleInvoiceSettings? settings,
+}) async {
+  final local = await numbering.allocate(
+    businessId: businessId,
+    documentSeries: documentSeries,
+  );
+  final counter = counterFromLocalDocumentNumber(local) ?? 1;
+  final prefix = prefixForDocumentSeries(settings, documentSeries);
+  return formatDocumentNumberPreview(prefix: prefix, nextNumber: counter);
 }

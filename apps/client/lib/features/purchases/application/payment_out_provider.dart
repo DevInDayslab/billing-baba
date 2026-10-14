@@ -1,5 +1,9 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
@@ -45,10 +49,6 @@ abstract final class PaymentOutDropdownOptions {
     'Wallet',
     'Others',
   ];
-}
-
-String generatePaymentOutReceiptNo() {
-  return 'PO-${DateTime.now().millisecondsSinceEpoch}';
 }
 
 class PaymentOutFiltersState {
@@ -681,7 +681,6 @@ class PaymentOutFormState {
 PaymentOutFormState _initialPaymentOutFormState() {
   final now = DateTime.now();
   return PaymentOutFormState(
-    receiptNo: generatePaymentOutReceiptNo(),
     date: DateTime(now.year, now.month, now.day),
     time: TimeOfDay.fromDateTime(now),
   );
@@ -841,7 +840,29 @@ class PaymentOutForm extends _$PaymentOutForm {
         amount: paymentAmount,
       );
 
-      final receiptNo = state.receiptNo;
+      var receiptNo = state.receiptNo.trim();
+      if (receiptNumberNeedsAutoAllocate(receiptNo)) {
+        final businessId = ref.read(currentBusinessProvider)?.id.trim() ?? '';
+        if (businessId.isNotEmpty) {
+          final settings = await ref.read(saleInvoiceSettingsProvider.future);
+          receiptNo = await allocateFormattedDocumentNumber(
+            numbering: ref.read(localDocumentNumberServiceProvider),
+            businessId: businessId,
+            documentSeries: paymentOutDocumentSeries,
+            settings: settings,
+          );
+          ref.invalidate(
+            nextDocumentNumberPreviewProvider(paymentOutDocumentSeries),
+          );
+        } else {
+          final settings = ref.read(saleInvoiceSettingsProvider).asData?.value;
+          final prefix = prefixForDocumentSeries(
+            settings,
+            paymentOutDocumentSeries,
+          );
+          receiptNo = formatDocumentNumberPreview(prefix: prefix, nextNumber: 1);
+        }
+      }
 
       final created = await service.createPayment(
         CreatePaymentRequest(

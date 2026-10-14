@@ -13,6 +13,9 @@ import 'package:billing_baba/features/inventory/application/inventory_godowns_pr
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_header_visibility.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
@@ -73,6 +76,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   late final TextEditingController _gstinController;
   late final TextEditingController _emailController;
   late final TextEditingController _eWayController;
+  late final TextEditingController _customerPoNumberController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
 
@@ -105,6 +109,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController = TextEditingController();
     _emailController = TextEditingController();
     _eWayController = TextEditingController();
+    _customerPoNumberController = TextEditingController();
     _descriptionController = TextEditingController();
     _termsTextController = TextEditingController();
 
@@ -124,23 +129,34 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     } else {
       _initialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final notifier = ref.read(
-          addSaleFormProvider(sessionKey: _sessionKey).notifier,
-        );
-        if (!widget.readOnly) {
-          notifier.toggleSaleType(SaleType.credit);
-        }
-        final partyId = widget.initialPartyId?.trim();
-        final partyName = widget.initialPartyName?.trim();
-        if (partyId != null &&
-            partyId.isNotEmpty &&
-            partyName != null &&
-            partyName.isNotEmpty) {
-          notifier.updateParty(partyId: partyId, partyName: partyName);
-        }
-        _syncControllersFromForm();
+        unawaited(_applyTransactionHeaderDefaultsForNewSale());
       });
     }
+  }
+
+  Future<void> _applyTransactionHeaderDefaultsForNewSale() async {
+    if (widget.invoiceId != null ||
+        widget.duplicateFromId != null ||
+        (widget.attachOrderIds != null && widget.attachOrderIds!.isNotEmpty)) {
+      return;
+    }
+    await ref.read(saleInvoiceSettingsProvider.future);
+    if (!mounted) return;
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: _sessionKey).notifier,
+    );
+    if (!widget.readOnly) {
+      notifier.applyTransactionHeaderDefaultsForNewDocument();
+    }
+    final partyId = widget.initialPartyId?.trim();
+    final partyName = widget.initialPartyName?.trim();
+    if (partyId != null &&
+        partyId.isNotEmpty &&
+        partyName != null &&
+        partyName.isNotEmpty) {
+      notifier.updateParty(partyId: partyId, partyName: partyName);
+    }
+    _syncControllersFromForm();
   }
 
   @override
@@ -153,6 +169,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController.dispose();
     _emailController.dispose();
     _eWayController.dispose();
+    _customerPoNumberController.dispose();
     _descriptionController.dispose();
     _termsTextController.dispose();
     super.dispose();
@@ -198,6 +215,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController.text = form.gstin;
     _emailController.text = form.email;
     _eWayController.text = form.eWayBillNo;
+    _customerPoNumberController.text = form.customerPoNumber;
     _descriptionController.text = form.description;
     _termsTextController.text = form.termsText;
   }
@@ -235,6 +253,20 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
         .updateInvoiceDate(picked);
   }
 
+  Future<void> _pickCustomerPoDate() async {
+    final form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: form.customerPoDate ?? form.invoiceDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) return;
+    ref
+        .read(addSaleFormProvider(sessionKey: _sessionKey).notifier)
+        .updateCustomerPoDate(picked);
+  }
+
   Future<void> _pickDueDate() async {
     final form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
     final picked = await showDatePicker(
@@ -263,12 +295,16 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
 
   Future<void> _pickPaymentTerms() async {
     final form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
+    final configured = ref.read(salePaymentTermNameOptionsProvider);
+    final termLabels = configured.isNotEmpty
+        ? configured
+        : SaleDropdownOptions.paymentTerms;
     final selected = await showMobileOptionSheet<String>(
       context: context,
       title: 'Payment Terms',
       selected: form.paymentTerms,
       options: [
-        for (final term in SaleDropdownOptions.paymentTerms)
+        for (final term in termLabels)
           MobileOption(value: term, label: term),
       ],
     );
@@ -458,8 +494,13 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
 
     final saved = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
     final docId = saved.documentId;
-    if (docId != null && docId.isNotEmpty) {
-      await SaleInvoicePrintActions.print(
+    final showPreview =
+        ref.read(saleTransactionFeaturesProvider).showInvoicePreviewOnSave;
+    if (docId != null &&
+        docId.isNotEmpty &&
+        showPreview &&
+        widget.invoiceId == null) {
+      await SaleInvoicePrintActions.preview(
         context,
         ref,
         docId,
@@ -574,17 +615,31 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       }
     }
 
+    final headerVisibility = ref.watch(saleTransactionHeaderVisibilityProvider);
+    final transactionFeatures = ref.watch(saleTransactionFeaturesProvider);
     final visibility = MobileDocumentVisibility(
-      showDocumentNumber: _visibility.showDocumentNumber,
+      showDocumentNumber:
+          _visibility.showDocumentNumber &&
+          headerVisibility.showInvoiceBillNumber,
       showDate: _visibility.showDate,
-      showTime: _visibility.showTime,
-      showDueDate: isCredit && _visibility.showDueDate,
-      showPaymentTerms: isCredit && _visibility.showPaymentTerms,
+      showTime: _visibility.showTime && headerVisibility.showTransactionTime,
+      showDueDate:
+          isCredit &&
+          _visibility.showDueDate &&
+          transactionFeatures.dueDatesAndPaymentTerms,
+      showPaymentTerms:
+          isCredit &&
+          _visibility.showPaymentTerms &&
+          transactionFeatures.dueDatesAndPaymentTerms,
       showStateOfSupply: _visibility.showStateOfSupply,
       showGodown: _visibility.showGodown,
-      showEWayBill: _visibility.showEWayBill,
+      showEWayBill:
+          _visibility.showEWayBill && transactionFeatures.showEWayBillNumber,
       showParty: _visibility.showParty,
-      showBillingName: _visibility.showBillingName,
+      showBillingName:
+          _visibility.showBillingName &&
+          headerVisibility.showBillingNameOnInvoice,
+      showCustomerPoDetails: headerVisibility.showCustomerPoDetails,
       showPhone: _visibility.showPhone,
       showBillingAddress: _visibility.showBillingAddress,
       showShippingAddress: _visibility.showShippingAddress,
@@ -597,7 +652,9 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       showPaymentSection: _visibility.showPaymentSection,
       showReceivedAmount: _visibility.showReceivedAmount,
       showDescription: _visibility.showDescription,
-      showTerms: _visibility.showTerms,
+      showTerms:
+          _visibility.showTerms &&
+          transactionFeatures.termsAndConditionsEnabled,
       showAttachments: _visibility.showAttachments,
       showSaleTypeToggle: _visibility.showSaleTypeToggle,
       showSettings: _visibility.showSettings,
@@ -662,6 +719,13 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
               onGodownTap: _pickGodown,
               eWayBillController: _eWayController,
               onEWayBillChanged: notifier.updateEWayBillNo,
+              customerPoNumberController: _customerPoNumberController,
+              onCustomerPoNumberChanged: notifier.updateCustomerPoNumber,
+              customerPoDateValue: form.customerPoDate != null
+                  ? formatSaleSingleDate(form.customerPoDate)
+                  : null,
+              customerPoDateIsPlaceholder: form.customerPoDate == null,
+              onCustomerPoDateTap: _pickCustomerPoDate,
             ),
             const SizedBox(height: AppSpacing.lg),
             MobileDocumentPartySection(

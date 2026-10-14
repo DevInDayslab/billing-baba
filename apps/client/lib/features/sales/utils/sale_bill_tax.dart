@@ -38,6 +38,10 @@ List<SaleLineItem> applyBillTaxOptionToSaleItems(
   return [for (final item in items) item.copyWith(taxPercent: 0)];
 }
 
+List<SaleLineItem> clearLineDiscountPercents(List<SaleLineItem> items) {
+  return [for (final item in items) item.copyWith(discountPercent: 0)];
+}
+
 double effectiveSaleLineTaxPercent({
   required String taxOption,
   required double lineTaxPercent,
