@@ -8,6 +8,7 @@ import 'package:billing_baba/features/inventory/application/item_alternatives_in
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/paginated_inventory_items.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -57,8 +58,11 @@ class ItemNameAutocompleteField extends ConsumerStatefulWidget {
     required this.onChanged,
     required this.onItemSelected,
     this.onAfterItemSelected,
+    this.onSubmitted,
     this.borderless = false,
     this.fieldHeight,
+    this.displayPurchasePrice = true,
+    this.showLast5SalePrice = false,
     super.key,
   });
 
@@ -66,8 +70,11 @@ class ItemNameAutocompleteField extends ConsumerStatefulWidget {
   final ValueChanged<String> onChanged;
   final ValueChanged<SaleItemOption> onItemSelected;
   final VoidCallback? onAfterItemSelected;
+  final ValueChanged<String>? onSubmitted;
   final bool borderless;
   final double? fieldHeight;
+  final bool displayPurchasePrice;
+  final bool showLast5SalePrice;
 
   @override
   ConsumerState<ItemNameAutocompleteField> createState() =>
@@ -198,7 +205,10 @@ class ItemNameAutocompleteFieldState
     );
   }
 
-  List<SaleItemOption> _buildItemOptions(List<InventoryItem> inventory) {
+  List<SaleItemOption> _buildItemOptions(
+    WidgetRef ref,
+    List<InventoryItem> inventory,
+  ) {
     final query = _controller.text.trim();
     final Iterable<InventoryItem> rankedItems;
     if (query.isEmpty) {
@@ -257,40 +267,45 @@ class ItemNameAutocompleteFieldState
 
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) {
-        final priceFormat = ref.watch(businessAmountFormatterProvider);
-        final blockQuickAddItem = ref.watch(blockNewItemsFromTxnProvider);
-        final itemsAsync = ref.watch(inventoryItemsProvider).itemsOnly;
-        final panelWidth = triggerWidth < 420 ? 420.0 : triggerWidth;
+        return Consumer(
+          builder: (context, overlayRef, _) {
+            final priceFormat =
+                overlayRef.watch(businessAmountFormatterProvider);
+            final blockQuickAddItem =
+                overlayRef.watch(blockNewItemsFromTxnProvider);
+            final itemsAsync =
+                overlayRef.watch(inventoryItemsProvider).itemsOnly;
+            final panelWidth = triggerWidth < 420 ? 420.0 : triggerWidth;
 
-        if (_shouldShowItemsLoading(itemsAsync)) {
-          return _buildOverlayScaffold(
-            triggerWidth: triggerWidth,
-            child: _buildLoadingPanel(panelWidth),
-          );
-        }
+            if (_shouldShowItemsLoading(itemsAsync)) {
+              return _buildOverlayScaffold(
+                triggerWidth: triggerWidth,
+                child: _buildLoadingPanel(panelWidth),
+              );
+            }
 
-        return itemsAsync.when(
-          loading: () => _buildOverlayScaffold(
-            triggerWidth: triggerWidth,
-            child: _buildLoadingPanel(panelWidth),
-          ),
-          error: (error, _) => _buildOverlayScaffold(
-            triggerWidth: triggerWidth,
-            child: SizedBox(
-              width: panelWidth,
-              height: _overlayMinHeight,
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Text(
-                  'Failed to load items',
-                  style: TextStyle(color: AppColors.error),
+            return itemsAsync.when(
+              loading: () => _buildOverlayScaffold(
+                triggerWidth: triggerWidth,
+                child: _buildLoadingPanel(panelWidth),
+              ),
+              error: (error, _) => _buildOverlayScaffold(
+                triggerWidth: triggerWidth,
+                child: SizedBox(
+                  width: panelWidth,
+                  height: _overlayMinHeight,
+                  child: const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Text(
+                      'Failed to load items',
+                      style: TextStyle(color: AppColors.error),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          data: (inventory) {
-            final items = _buildItemOptions(inventory);
-            return _buildOverlayScaffold(
+              data: (inventory) {
+                final items = _buildItemOptions(overlayRef, inventory);
+                return _buildOverlayScaffold(
               triggerWidth: triggerWidth,
               child: SizedBox(
                 width: panelWidth,
@@ -298,14 +313,14 @@ class ItemNameAutocompleteFieldState
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       child: Row(
                         children: [
-                          Expanded(
+                          const Expanded(
                             flex: 3,
                             child: Text(
                               'ITEM',
@@ -316,7 +331,7 @@ class ItemNameAutocompleteFieldState
                               ),
                             ),
                           ),
-                          Expanded(
+                          const Expanded(
                             child: Text(
                               'SALE PRICE',
                               style: TextStyle(
@@ -327,29 +342,19 @@ class ItemNameAutocompleteFieldState
                               textAlign: TextAlign.right,
                             ),
                           ),
-                          Expanded(
-                            child: Text(
-                              'PURCHASE',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
+                          if (widget.displayPurchasePrice)
+                            const Expanded(
+                              child: Text(
+                                'PURCHASE',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
+                                textAlign: TextAlign.right,
                               ),
-                              textAlign: TextAlign.right,
                             ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'MFG COST',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          Expanded(
+                          const Expanded(
                             child: Text(
                               'STOCK',
                               style: TextStyle(
@@ -458,6 +463,11 @@ class ItemNameAutocompleteFieldState
                                                         AppColors.textSecondary,
                                                   ),
                                                 ),
+                                              if (widget.showLast5SalePrice &&
+                                                  item.id.isNotEmpty)
+                                                _LastSalePricesLine(
+                                                  itemId: item.id,
+                                                ),
                                             ],
                                           ),
                                         ),
@@ -472,28 +482,18 @@ class ItemNameAutocompleteFieldState
                                             ),
                                           ),
                                         ),
-                                        Expanded(
-                                          child: Text(
-                                            priceFormat.format(
-                                              item.purchasePrice,
-                                            ),
-                                            textAlign: TextAlign.right,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            priceFormat.format(
-                                              item.mfgCost,
-                                            ),
-                                            textAlign: TextAlign.right,
-                                            style: const TextStyle(
-                                              fontSize: 12,
+                                        if (widget.displayPurchasePrice)
+                                          Expanded(
+                                            child: Text(
+                                              priceFormat.format(
+                                                item.purchasePrice,
+                                              ),
+                                              textAlign: TextAlign.right,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
                                             ),
                                           ),
-                                        ),
                                         Expanded(
                                           child: Text(
                                             '${item.stock.toInt()}',
@@ -534,6 +534,8 @@ class ItemNameAutocompleteFieldState
                   ],
                 ),
               ),
+                );
+              },
             );
           },
         );
@@ -545,10 +547,6 @@ class ItemNameAutocompleteFieldState
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(inventoryItemsProvider, (_, _) {
-      _overlayEntry?.markNeedsBuild();
-    });
-
     return CompositedTransformTarget(
       link: _layerLink,
       child: SaleTextField(
@@ -565,7 +563,43 @@ class ItemNameAutocompleteFieldState
         onTap: () {
           if (_overlayEntry == null) _showOverlay();
         },
+        onSubmitted: widget.onSubmitted,
       ),
+    );
+  }
+}
+
+class _LastSalePricesLine extends ConsumerWidget {
+  const _LastSalePricesLine({required this.itemId});
+
+  final String itemId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final history = ref.watch(priceHistoryProvider(itemId));
+    return history.when(
+      data: (entries) {
+        if (entries.isEmpty) return const SizedBox.shrink();
+        final prices = entries
+            .take(5)
+            .map((e) => NumberFormat.currency(
+                  locale: 'en_IN',
+                  symbol: '₹',
+                  decimalDigits: 0,
+                ).format(e.price))
+            .join(', ');
+        return Text(
+          'Last: $prices',
+          style: const TextStyle(
+            fontSize: 10,
+            color: AppColors.textSecondary,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

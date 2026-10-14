@@ -12,6 +12,7 @@ class MobileDocumentVisibility {
     this.showStateOfSupply = false,
     this.showGodown = false,
     this.showEWayBill = false,
+    this.showCustomerPoDetails = false,
     this.showParty = true,
     this.showBillingName = false,
     this.showPhone = false,
@@ -41,6 +42,7 @@ class MobileDocumentVisibility {
   final bool showStateOfSupply;
   final bool showGodown;
   final bool showEWayBill;
+  final bool showCustomerPoDetails;
   final bool showParty;
   final bool showBillingName;
   final bool showPhone;

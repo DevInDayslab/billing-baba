@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_profile_sync.dart';
@@ -32,11 +31,6 @@ class DesktopGeneralSettingsScreen extends ConsumerStatefulWidget {
 
 class _DesktopGeneralSettingsScreenState
     extends ConsumerState<DesktopGeneralSettingsScreen> {
-  int? _draftUiScalePercent;
-
-  int _uiScaleDraft(GeneralSettings settings) =>
-      _draftUiScalePercent ?? settings.desktopUiScalePercent;
-
   int _scaleStepIndex(int percent) {
     final steps = DesktopGeneralSettingsScreen._uiScaleSteps;
     final exact = steps.indexOf(percent);
@@ -96,10 +90,23 @@ class _DesktopGeneralSettingsScreenState
     }
   }
 
-  Future<void> _applyUiScale(GeneralSettings settings) async {
-    final percent = _uiScaleDraft(settings);
-    await _patch((s) => s.copyWith(desktopUiScalePercent: percent));
-    if (mounted) setState(() => _draftUiScalePercent = null);
+  void _previewUiScale(int percent) {
+    ref
+        .read(desktopUiScalePreviewPercentProvider.notifier)
+        .setPreview(percent);
+  }
+
+  Future<void> _commitUiScale(int percent) async {
+    await ref.read(generalSettingsProvider.notifier).patch(
+      (s) => s.copyWith(desktopUiScalePercent: percent),
+      silent: true,
+    );
+    ref.read(desktopUiScalePreviewPercentProvider.notifier).setPreview(null);
+  }
+
+  int _activeScalePercent(GeneralSettings settings) {
+    return ref.watch(desktopUiScalePreviewPercentProvider) ??
+        settings.desktopUiScalePercent;
   }
 
   @override
@@ -141,17 +148,25 @@ class _DesktopGeneralSettingsScreenState
               ]
             : firms;
 
-        final scaleDraft = _uiScaleDraft(settings);
-        final scaleIndex = _scaleStepIndex(scaleDraft);
+        final scalePercent = _activeScalePercent(settings);
+        final scaleIndex = _scaleStepIndex(scalePercent);
         final lastBackup = lastBackupAsync.asData?.value;
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final useThreeColumns = constraints.maxWidth >= 1100;
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const minColumnWidth = 300.0;
+              const columnGap = AppSpacing.md;
+              final viewportW = constraints.maxWidth;
+
+              int columnCountFor(double w) {
+                if (w >= minColumnWidth * 3 + columnGap * 2) return 3;
+                if (w >= minColumnWidth * 2 + columnGap) return 2;
+                return 1;
+              }
+
+              final columnCount = columnCountFor(viewportW);
                 final col1 = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -203,47 +218,114 @@ class _DesktopGeneralSettingsScreenState
                     const SizedBox(height: AppSpacing.md),
                     _CustomizeColumn(
                       scaleIndex: scaleIndex,
-                      scalePercent:
-                          DesktopGeneralSettingsScreen._uiScaleSteps[scaleIndex],
-                      onScaleChanged: (index) {
-                        setState(
-                          () => _draftUiScalePercent =
-                              DesktopGeneralSettingsScreen._uiScaleSteps[index],
-                        );
-                      },
-                      onApply: () => _applyUiScale(settings),
+                      scalePercent: scalePercent,
+                      onScalePreview: (index) => _previewUiScale(
+                        DesktopGeneralSettingsScreen._uiScaleSteps[index],
+                      ),
+                      onScaleCommit: (index) => unawaited(
+                        _commitUiScale(
+                          DesktopGeneralSettingsScreen._uiScaleSteps[index],
+                        ),
+                      ),
                     ),
                   ],
                 );
 
-                if (useThreeColumns) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              final columns = switch (columnCount) {
+                3 => _GeneralSettingsThreeColumnLayout(
+                    columnGap: columnGap,
+                    col1: col1,
+                    col2: col2,
+                    col3: col3,
+                  ),
+                2 => _GeneralSettingsTwoColumnLayout(
+                    columnGap: columnGap,
+                    col1: col1,
+                    col2: col2,
+                    col3: col3,
+                  ),
+                _ => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: col1),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: col2),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: col3),
+                      col1,
+                      const SizedBox(height: columnGap),
+                      col2,
+                      const SizedBox(height: columnGap),
+                      col3,
                     ],
-                  );
-                }
+                  ),
+              };
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    col1,
-                    const SizedBox(height: AppSpacing.md),
-                    col2,
-                    const SizedBox(height: AppSpacing.md),
-                    col3,
-                  ],
-                );
-              },
-            ),
+              return SingleChildScrollView(
+                primary: true,
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: columns,
+              );
+            },
           ),
         );
       },
+    );
+  }
+}
+
+class _GeneralSettingsThreeColumnLayout extends StatelessWidget {
+  const _GeneralSettingsThreeColumnLayout({
+    required this.columnGap,
+    required this.col1,
+    required this.col2,
+    required this.col3,
+  });
+
+  final double columnGap;
+  final Widget col1;
+  final Widget col2;
+  final Widget col3;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: col1),
+        SizedBox(width: columnGap),
+        Expanded(child: col2),
+        SizedBox(width: columnGap),
+        Expanded(child: col3),
+      ],
+    );
+  }
+}
+
+class _GeneralSettingsTwoColumnLayout extends StatelessWidget {
+  const _GeneralSettingsTwoColumnLayout({
+    required this.columnGap,
+    required this.col1,
+    required this.col2,
+    required this.col3,
+  });
+
+  final double columnGap;
+  final Widget col1;
+  final Widget col2;
+  final Widget col3;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: col1),
+            SizedBox(width: columnGap),
+            Expanded(child: col2),
+          ],
+        ),
+        SizedBox(height: columnGap),
+        col3,
+      ],
     );
   }
 }
@@ -523,33 +605,63 @@ class _FirmSelectRow extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Radio<bool>(
                 value: true,
                 groupValue: selected,
                 onChanged: (_) => onSelect(),
                 activeColor: AppColors.primary,
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               Expanded(
-                child: Text(
-                  firm.name,
-                  style: AppTypography.inter(
-                    fontWeight: FontWeight.w600,
-                    fontSize: AppTypography.bodyMediumSize,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      firm.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.inter(
+                        fontWeight: FontWeight.w600,
+                        fontSize: AppTypography.bodyMediumSize,
+                      ),
+                    ),
+                    if (firm.isCurrent ||
+                        firm.syncStatus == SyncStatus.on) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.xs,
+                        children: [
+                          if (firm.isCurrent)
+                            _FirmTag(
+                              label: 'DEFAULT',
+                              color: AppColors.textSecondary,
+                            ),
+                          if (firm.syncStatus == SyncStatus.on)
+                            _FirmTag(
+                              label: 'ALL DEVICES',
+                              color: AppColors.primary,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              if (firm.isCurrent)
-                _FirmTag(label: 'DEFAULT', color: AppColors.textSecondary),
-              if (firm.syncStatus == SyncStatus.on) ...[
-                const SizedBox(width: AppSpacing.xs),
-                _FirmTag(label: 'ALL DEVICES', color: AppColors.primary),
-              ],
               IconButton(
                 icon: const Icon(Icons.edit_outlined, size: 18),
                 color: AppColors.primary,
                 tooltip: 'Edit firm',
                 onPressed: onEdit,
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
               ),
             ],
           ),
@@ -689,14 +801,14 @@ class _CustomizeColumn extends StatelessWidget {
   const _CustomizeColumn({
     required this.scaleIndex,
     required this.scalePercent,
-    required this.onScaleChanged,
-    required this.onApply,
+    required this.onScalePreview,
+    required this.onScaleCommit,
   });
 
   final int scaleIndex;
   final int scalePercent;
-  final ValueChanged<int> onScaleChanged;
-  final VoidCallback onApply;
+  final ValueChanged<int> onScalePreview;
+  final ValueChanged<int> onScaleCommit;
 
   @override
   Widget build(BuildContext context) {
@@ -727,34 +839,54 @@ class _CustomizeColumn extends StatelessWidget {
               .toDouble(),
           divisions: DesktopGeneralSettingsScreen._uiScaleSteps.length - 1,
           label: '$scalePercent%',
-          onChanged: (v) => onScaleChanged(v.round()),
+          onChanged: (v) => onScalePreview(v.round()),
+          onChangeEnd: (v) => onScaleCommit(v.round()),
         ),
-        Row(
-          children: [
-            for (final step in DesktopGeneralSettingsScreen._uiScaleSteps)
-              Expanded(
-                child: Text(
-                  '$step%',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.inter(
-                    fontSize: 10,
-                    color: step == scalePercent
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                    fontWeight: step == scalePercent
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final steps = DesktopGeneralSettingsScreen._uiScaleSteps;
+            return Row(
+              children: [
+                for (var i = 0; i < steps.length; i++)
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () {
+                        onScalePreview(i);
+                        onScaleCommit(i);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '${steps[i]}%',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.inter(
+                              fontSize: AppTypography.bodySmallSize,
+                              color: steps[i] == scalePercent
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                              fontWeight: steps[i] == scalePercent
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.sm),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FilledButton(
-            onPressed: onApply,
-            child: const Text('Apply'),
+        Text(
+          'Zoom updates as you move the slider and saves when you release it.',
+          style: AppTypography.inter(
+            fontSize: AppTypography.bodySmallSize,
+            color: AppColors.textSecondary,
+            height: 1.35,
           ),
         ),
       ],

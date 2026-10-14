@@ -18,6 +18,8 @@ import 'package:billing_baba/features/purchases/data/purchase_bill_command_repos
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
+import 'package:billing_baba/features/purchases/utils/purchase_bill_totals.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_totals_settings.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
@@ -495,6 +497,29 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     );
   }
 
+  void updateTaxOption(String value) {
+    if (!ref.read(saleTransactionTotalsSettingsProvider).transactionWiseTax) {
+      return;
+    }
+    state = state.copyWith(
+      taxOption: value,
+      items: applyBillTaxOptionToPurchaseItems(state.items, value),
+      isDirty: true,
+      clearSaveError: true,
+    );
+  }
+
+  void updateTransactionDiscountPercent(double value) {
+    if (!ref.read(saleTransactionTotalsSettingsProvider).transactionWiseDiscount) {
+      return;
+    }
+    state = state.copyWith(
+      transactionDiscountPercent: value.clamp(0, 100).toDouble(),
+      isDirty: true,
+      clearSaveError: true,
+    );
+  }
+
   void toggleRoundOff({required bool value}) {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
@@ -702,11 +727,13 @@ extension on PurchaseDocumentDraftInput {
 @riverpod
 double addPurchaseTotalTax(Ref ref, {String? billId}) {
   final form = ref.watch(addPurchaseFormProvider(billId: billId));
-  return form.totalTax;
+  final settings = ref.watch(saleTransactionTotalsSettingsProvider);
+  return computePurchaseBillTotals(form: form, settings: settings).totalTax;
 }
 
 @riverpod
 double addPurchaseGrandTotal(Ref ref, {String? billId}) {
   final form = ref.watch(addPurchaseFormProvider(billId: billId));
-  return form.grandTotal;
+  final settings = ref.watch(saleTransactionTotalsSettingsProvider);
+  return computePurchaseBillTotals(form: form, settings: settings).grandTotal;
 }

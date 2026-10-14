@@ -64,9 +64,25 @@ final enableGstinOnPartyProvider = Provider<bool>((ref) {
   return ref.watch(generalSettingsProvider).value?.enableGstinOnParty ?? true;
 });
 
+/// Live zoom while dragging the settings slider (before save).
+final desktopUiScalePreviewPercentProvider =
+    NotifierProvider<DesktopUiScalePreviewNotifier, int?>(
+      DesktopUiScalePreviewNotifier.new,
+    );
+
+class DesktopUiScalePreviewNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void setPreview(int? percent) => state = percent;
+}
+
 final desktopUiScaleProvider = Provider<double>((ref) {
+  final preview = ref.watch(desktopUiScalePreviewPercentProvider);
   final percent =
-      ref.watch(generalSettingsProvider).value?.desktopUiScalePercent ?? 100;
+      preview ??
+      ref.watch(generalSettingsProvider).value?.desktopUiScalePercent ??
+      100;
   return percent.clamp(70, 130) / 100.0;
 });
 
@@ -83,13 +99,18 @@ class GeneralSettingsNotifier extends AsyncNotifier<GeneralSettings> {
     return loaded;
   }
 
-  Future<void> patch(GeneralSettingsUpdater update) async {
+  Future<void> patch(
+    GeneralSettingsUpdater update, {
+    bool silent = false,
+  }) async {
     final current = state.requireValue;
     final next = update(current);
     final repo = await ref.read(generalSettingsRepositoryProvider.future);
     await repo.save(next);
     state = AsyncData(next);
-    notifySettingsSaved(message: SettingsSaveMessages.general);
+    if (!silent) {
+      notifySettingsSaved(ref, message: SettingsSaveMessages.general);
+    }
   }
 
   Future<void> setGodownStockTransferEnabled(bool enabled) async {
