@@ -19,6 +19,7 @@ import 'package:billing_baba/features/documents/application/document_number_prev
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_document_barcode_providers.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_tabs_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
@@ -587,11 +588,12 @@ class _SaleLineItemColumnSettingsButton extends ConsumerWidget {
     );
     final itemSettings =
         ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+    final allowsTransactionTaxes = ref.watch(gstAllowsTransactionTaxesProvider);
 
     bool isColumnOffered(SaleLineItemColumn column) {
       return switch (column) {
         SaleLineItemColumn.taxPercent || SaleLineItemColumn.taxAmount =>
-          itemSettings.itemWiseTax,
+          itemSettings.itemWiseTax && allowsTransactionTaxes,
         SaleLineItemColumn.discount => itemSettings.itemWiseDiscount,
         _ => true,
       };
@@ -1058,6 +1060,7 @@ class _InvoiceDetailsFields extends ConsumerWidget {
       preview: preview,
       forceAuto: isAutoNumber,
     );
+    final showPlaceOfSupply = ref.watch(gstPlaceOfSupplyEnabledProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1117,18 +1120,20 @@ class _InvoiceDetailsFields extends ConsumerWidget {
             ),
           ),
         ],
-        const SizedBox(height: _sectionGap),
-        _LabeledField(
-          label: 'State of supply',
-          child: SaleGenericSelectDropdown(
-            value: form.stateOfSupply,
-            options: SaleDropdownOptions.indianStates,
-            hintText: 'Select state',
-            maxMenuHeight: 280,
-            compact: true,
-            onSelected: notifier.updateStateOfSupply,
+        if (showPlaceOfSupply) ...[
+          const SizedBox(height: _sectionGap),
+          _LabeledField(
+            label: 'State of supply',
+            child: SaleGenericSelectDropdown(
+              value: form.stateOfSupply,
+              options: SaleDropdownOptions.indianStates,
+              hintText: 'Select state',
+              maxMenuHeight: 280,
+              compact: true,
+              onSelected: notifier.updateStateOfSupply,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }

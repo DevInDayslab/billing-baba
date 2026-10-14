@@ -6,6 +6,7 @@ import 'package:billing_baba/features/documents/application/document_number_prev
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/add_purchase_form_provider.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_document_desktop_import.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -367,20 +368,22 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 ),
               ),
             ),
-            const SizedBox(width: _sectionGap),
-            Expanded(
-              flex: 2,
-              child: _LabeledField(
-                label: 'State of supply',
-                child: SaleGenericSelectDropdown(
-                  value: form.stateOfSupply,
-                  options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select state',
-                  maxMenuHeight: 280,
-                  onSelected: notifier.updateStateOfSupply,
+            if (ref.watch(gstPlaceOfSupplyEnabledProvider)) ...[
+              const SizedBox(width: _sectionGap),
+              Expanded(
+                flex: 2,
+                child: _LabeledField(
+                  label: 'State of supply',
+                  child: SaleGenericSelectDropdown(
+                    value: form.stateOfSupply,
+                    options: SaleDropdownOptions.indianStates,
+                    hintText: 'Select state',
+                    maxMenuHeight: 280,
+                    onSelected: notifier.updateStateOfSupply,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ],

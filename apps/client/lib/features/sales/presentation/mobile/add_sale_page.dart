@@ -19,6 +19,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_si
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_settings_panel.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
@@ -580,7 +581,9 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       showTime: _visibility.showTime,
       showDueDate: isCredit && _visibility.showDueDate,
       showPaymentTerms: isCredit && _visibility.showPaymentTerms,
-      showStateOfSupply: _visibility.showStateOfSupply,
+      showStateOfSupply:
+          _visibility.showStateOfSupply &&
+          ref.watch(gstPlaceOfSupplyEnabledProvider),
       showGodown: _visibility.showGodown,
       showEWayBill: _visibility.showEWayBill,
       showParty: _visibility.showParty,

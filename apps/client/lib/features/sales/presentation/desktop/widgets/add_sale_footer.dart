@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -147,6 +148,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       ),
     );
     final loyaltyPointsEnabled = ref.watch(partyLoyaltyPointsEnabledProvider);
+    final showTransactionTaxes = ref.watch(gstAllowsTransactionTaxesProvider);
     final totalsSection = _TotalsSection(
       form: form,
       notifier: notifier,
@@ -155,6 +157,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       isCredit: isCredit,
       currencyFormat: _currencyFormat,
       loyaltyPointsEnabled: loyaltyPointsEnabled,
+      showTransactionTaxes: showTransactionTaxes,
     );
 
     return LayoutBuilder(
@@ -264,6 +267,7 @@ class _TotalsSection extends StatelessWidget {
     required this.isCredit,
     required this.currencyFormat,
     required this.loyaltyPointsEnabled,
+    required this.showTransactionTaxes,
   });
 
   final AddSaleFormState form;
@@ -273,44 +277,47 @@ class _TotalsSection extends StatelessWidget {
   final bool isCredit;
   final NumberFormat currencyFormat;
   final bool loyaltyPointsEnabled;
+  final bool showTransactionTaxes;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            const Text(
-              'Tax',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
+        if (showTransactionTaxes) ...[
+          Row(
+            children: [
+              const Text(
+                'Tax',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 72,
-              child: SaleGenericSelectDropdown(
-                value: form.taxOption,
-                options: SaleDropdownOptions.taxSlabs,
-                highlight: SaleDropdownHighlight.red,
-                compact: true,
-                onSelected: notifier.updateTaxOption,
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 72,
+                child: SaleGenericSelectDropdown(
+                  value: form.taxOption,
+                  options: SaleDropdownOptions.taxSlabs,
+                  highlight: SaleDropdownHighlight.red,
+                  compact: true,
+                  onSelected: notifier.updateTaxOption,
+                ),
               ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: 72,
-              child: _AmountField(
-                value: totalTax,
-                readOnly: true,
-                onChanged: (_) {},
+              const Spacer(),
+              SizedBox(
+                width: 72,
+                child: _AmountField(
+                  value: totalTax,
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
         Row(
           children: [
             Checkbox(

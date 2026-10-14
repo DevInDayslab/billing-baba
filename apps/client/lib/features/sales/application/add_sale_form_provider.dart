@@ -21,6 +21,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_na
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
@@ -877,9 +878,11 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(salesServiceProvider.future);
+      final isGstFormal = ref.read(gstFormalDocumentProvider);
       final document = await service.saveDraft(
         state,
         itemNameToId: _itemNameToId(),
+        isGstFormal: isGstFormal,
       );
       final synced = await syncTransactionAttachments(
         ref,
@@ -946,11 +949,13 @@ class AddSaleForm extends _$AddSaleForm {
         final loyaltyPointsAvailable = state.loyaltyPointsAvailable;
         final party = partyId != null ? await _resolveParty(partyId) : null;
 
+        final isGstFormal = ref.read(gstFormalDocumentProvider);
         final result = await service.createAndFinalizeSale(
           state,
           partyId: partyId,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
+          isGstFormal: isGstFormal,
           loyaltyPointsRedeemed: loyaltyPointsUsed,
           shortPaymentHandling: shortPaymentHandling,
           shortfallAmount: shortfallAmount,

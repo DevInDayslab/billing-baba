@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/sale_document_form_provider.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -120,6 +121,7 @@ class _SaleDocumentFooterState extends ConsumerState<SaleDocumentFooter> {
         notifier: notifier,
         totalTax: totalTax,
         grandTotal: grandTotal,
+        showTransactionTaxes: ref.watch(gstAllowsTransactionTaxesProvider),
       ),
     );
   }
@@ -157,50 +159,53 @@ class _TotalsSection extends StatelessWidget {
     required this.notifier,
     required this.totalTax,
     required this.grandTotal,
+    required this.showTransactionTaxes,
   });
 
   final SaleDocumentFormState form;
   final SaleDocumentFormNotifier notifier;
   final double totalTax;
   final double grandTotal;
+  final bool showTransactionTaxes;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            const Text(
-              'Tax',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
+        if (showTransactionTaxes)
+          Row(
+            children: [
+              const Text(
+                'Tax',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 72,
-              child: SaleGenericSelectDropdown(
-                value: form.taxOption,
-                options: SaleDropdownOptions.taxSlabs,
-                highlight: SaleDropdownHighlight.red,
-                compact: true,
-                onSelected: notifier.updateTaxOption,
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 72,
+                child: SaleGenericSelectDropdown(
+                  value: form.taxOption,
+                  options: SaleDropdownOptions.taxSlabs,
+                  highlight: SaleDropdownHighlight.red,
+                  compact: true,
+                  onSelected: notifier.updateTaxOption,
+                ),
               ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: 72,
-              child: _AmountField(
-                value: totalTax,
-                readOnly: true,
-                onChanged: (_) {},
+              const Spacer(),
+              SizedBox(
+                width: 72,
+                child: _AmountField(
+                  value: totalTax,
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
+            ],
+          ),
+        if (showTransactionTaxes) const SizedBox(height: 8),
         Row(
           children: [
             Checkbox(
