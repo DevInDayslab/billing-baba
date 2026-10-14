@@ -109,7 +109,7 @@ class GeneralSettingsNotifier extends AsyncNotifier<GeneralSettings> {
     await repo.save(next);
     state = AsyncData(next);
     if (!silent) {
-      notifySettingsSaved(ref, message: SettingsSaveMessages.general);
+      notifySettingsSaved(message: SettingsSaveMessages.general);
     }
   }
 
