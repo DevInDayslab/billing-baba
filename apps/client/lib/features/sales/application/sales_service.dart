@@ -429,9 +429,17 @@ class SalesService {
             : null,
         items: form.items,
         taxOption: form.taxOption,
+        requestedDocumentNumber: _requestedSaleDocumentNumber(form),
       ),
       itemNameToId: itemNameToId,
     );
+  }
+
+  String? _requestedSaleDocumentNumber(AddSaleFormState form) {
+    if (form.invoiceNumberMode != InvoiceNumberMode.manual) return null;
+    final number = form.invoiceNumber.trim();
+    if (number.isEmpty || number == 'Auto') return null;
+    return number;
   }
 
   Future<SalesDocumentDto> finalizeDocumentDraft(

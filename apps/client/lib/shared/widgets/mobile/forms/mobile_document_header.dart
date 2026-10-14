@@ -13,6 +13,12 @@ class MobileDocumentHeader extends StatelessWidget {
     this.documentNumberLabel = 'Invoice No.',
     this.documentNumberValue,
     this.documentNumberIsPlaceholder = false,
+    this.documentNumberEditable = false,
+    this.documentNumberController,
+    this.onDocumentNumberChanged,
+    this.showInvoiceNumberManualToggle = false,
+    this.invoiceNumberManual = false,
+    this.onInvoiceNumberManualToggle,
     this.onDocumentNumberTap,
     this.dateLabel = 'Date',
     this.dateValue,
@@ -44,6 +50,12 @@ class MobileDocumentHeader extends StatelessWidget {
   final String documentNumberLabel;
   final String? documentNumberValue;
   final bool documentNumberIsPlaceholder;
+  final bool documentNumberEditable;
+  final TextEditingController? documentNumberController;
+  final ValueChanged<String>? onDocumentNumberChanged;
+  final bool showInvoiceNumberManualToggle;
+  final bool invoiceNumberManual;
+  final ValueChanged<bool>? onInvoiceNumberManualToggle;
   final VoidCallback? onDocumentNumberTap;
   final String dateLabel;
   final String? dateValue;
@@ -80,12 +92,41 @@ class MobileDocumentHeader extends StatelessWidget {
           children: [
             if (visibility.showDocumentNumber)
               Expanded(
-                child: MobileSalePickerField(
-                  label: documentNumberLabel,
-                  value: documentNumberValue ?? 'Auto',
-                  isPlaceholder: documentNumberIsPlaceholder,
-                  onTap: onDocumentNumberTap ?? () {},
-                ),
+                child: documentNumberEditable &&
+                        documentNumberController != null
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: MobileSaleFormField(
+                              label: documentNumberLabel,
+                              controller: documentNumberController,
+                              hintText: documentNumberLabel,
+                              readOnly: showInvoiceNumberManualToggle &&
+                                  !invoiceNumberManual,
+                              onChanged: onDocumentNumberChanged,
+                            ),
+                          ),
+                          if (showInvoiceNumberManualToggle) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 22),
+                              child: Switch(
+                                value: invoiceNumberManual,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                onChanged: onInvoiceNumberManualToggle,
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    : MobileSalePickerField(
+                        label: documentNumberLabel,
+                        value: documentNumberValue ?? 'Auto',
+                        isPlaceholder: documentNumberIsPlaceholder,
+                        onTap: onDocumentNumberTap ?? () {},
+                      ),
               ),
             if (visibility.showDocumentNumber && visibility.showDate)
               const SizedBox(width: AppSpacing.sm),

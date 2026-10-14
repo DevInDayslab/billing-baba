@@ -78,6 +78,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   late final TextEditingController _gstinController;
   late final TextEditingController _emailController;
   late final TextEditingController _eWayController;
+  late final TextEditingController _invoiceNumberController;
   late final TextEditingController _customerPoNumberController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
@@ -111,6 +112,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController = TextEditingController();
     _emailController = TextEditingController();
     _eWayController = TextEditingController();
+    _invoiceNumberController = TextEditingController();
     _customerPoNumberController = TextEditingController();
     _descriptionController = TextEditingController();
     _termsTextController = TextEditingController();
@@ -171,6 +173,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController.dispose();
     _emailController.dispose();
     _eWayController.dispose();
+    _invoiceNumberController.dispose();
     _customerPoNumberController.dispose();
     _descriptionController.dispose();
     _termsTextController.dispose();
@@ -220,6 +223,18 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _customerPoNumberController.text = form.customerPoNumber;
     _descriptionController.text = form.description;
     _termsTextController.text = form.termsText;
+    _syncInvoiceNumberController(form);
+  }
+
+  void _syncInvoiceNumberController(AddSaleFormState form) {
+    if (!ref.read(saleManualInvoiceNumberEnabledProvider)) return;
+    final label = _invoiceNumberLabel(form);
+    final text = form.invoiceNumberMode == InvoiceNumberMode.manual
+        ? form.invoiceNumber
+        : label;
+    if (_invoiceNumberController.text != text) {
+      _invoiceNumberController.text = text;
+    }
   }
 
   void _resetSaleFormState() {
@@ -619,8 +634,22 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
 
     final headerVisibility = ref.watch(saleTransactionHeaderVisibilityProvider);
     final transactionFeatures = ref.watch(saleTransactionFeaturesProvider);
+    final showInvoiceNumber = ref.watch(saleInvoiceBillNumberVisibleProvider);
+    final allowManualInvoiceToggle = ref.watch(
+      saleManualInvoiceNumberEnabledProvider,
+    );
+    final isManualNumber =
+        form.invoiceNumberMode == InvoiceNumberMode.manual;
+    final invoiceNumberLabel = _invoiceNumberLabel(form);
+    final useInvoiceNumberField =
+        allowManualInvoiceToggle && _visibility.showDocumentNumber;
+    if (useInvoiceNumberField) {
+      _syncInvoiceNumberController(form);
+    }
+
     final visibility = MobileDocumentVisibility(
       showDocumentNumber:
+          showInvoiceNumber &&
           _visibility.showDocumentNumber &&
           headerVisibility.showInvoiceBillNumber,
       showDate: _visibility.showDate,
@@ -703,8 +732,28 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
           children: [
             MobileDocumentHeader(
               visibility: visibility,
-              documentNumberValue: _invoiceNumberLabel(form),
+              documentNumberValue: invoiceNumberLabel,
               documentNumberIsPlaceholder: false,
+              documentNumberEditable:
+                  useInvoiceNumberField && !widget.readOnly,
+              documentNumberController: _invoiceNumberController,
+              onDocumentNumberChanged: notifier.updateInvoiceNumberFromUser,
+              showInvoiceNumberManualToggle:
+                  useInvoiceNumberField && !widget.readOnly,
+              invoiceNumberManual: isManualNumber,
+              onInvoiceNumberManualToggle: widget.readOnly
+                  ? null
+                  : (manual) {
+                      if (manual) {
+                        notifier.enableManualInvoiceNumber(
+                          invoiceNumberLabel,
+                        );
+                      } else {
+                        notifier.toggleInvoiceNumberMode(
+                          InvoiceNumberMode.auto,
+                        );
+                      }
+                    },
               dateValue: formatSaleSingleDate(form.invoiceDate),
               dateIsPlaceholder: form.invoiceDate == null,
               onDateTap: _pickInvoiceDate,

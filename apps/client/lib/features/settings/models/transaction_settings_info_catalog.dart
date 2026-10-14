@@ -2,6 +2,7 @@ import 'package:billing_baba/features/settings/models/general_settings_info_cata
 
 enum TransactionSettingsInfoKey {
   invoiceBillNo,
+  manualInvoiceNumber,
   addTimeOnTransactions,
   printTimeOnInvoices,
   cashSaleByDefault,
@@ -39,6 +40,14 @@ abstract final class TransactionSettingsInfoCatalog {
             'Invoice/bill numbers will be assigned to every invoice & the no. will keep on increasing as you keep making invoices. You can also change the number manually.',
         why:
             'Keep track of your invoices and assign unique invoice numbers automatically.',
+      ),
+      TransactionSettingsInfoKey.manualInvoiceNumber => _sections(
+        what:
+            'Allows you to type or change the sale invoice number on the Add Sale screen instead of using only the auto-generated number from your transaction prefix.',
+        how:
+            'Turn this on, then open a new sale invoice — the invoice number field becomes editable. Numbers still use your Sale prefix and series counter when you leave auto numbering.',
+        why:
+            'Use when you need a specific invoice number for a customer, a gap in your series, or to match an external numbering scheme.',
       ),
       TransactionSettingsInfoKey.addTimeOnTransactions => _sections(
         what:

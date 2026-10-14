@@ -632,6 +632,14 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(invoiceNumber: value, isDirty: true);
   }
 
+  void updateInvoiceNumberFromUser(String value) {
+    state = state.copyWith(
+      invoiceNumber: value,
+      invoiceNumberMode: InvoiceNumberMode.manual,
+      isDirty: true,
+    );
+  }
+
   void toggleInvoiceNumberMode(InvoiceNumberMode mode) {
     if (mode == InvoiceNumberMode.auto) {
       state = state.copyWith(
@@ -642,6 +650,16 @@ class AddSaleForm extends _$AddSaleForm {
     } else {
       state = state.copyWith(invoiceNumberMode: mode, isDirty: true);
     }
+  }
+
+  /// Switches to manual numbering and seeds the field (e.g. current auto preview).
+  void enableManualInvoiceNumber(String seedValue) {
+    final trimmed = seedValue.trim();
+    state = state.copyWith(
+      invoiceNumberMode: InvoiceNumberMode.manual,
+      invoiceNumber: trimmed.isEmpty ? state.invoiceNumber : trimmed,
+      isDirty: true,
+    );
   }
 
   void updateInvoiceDate(DateTime date) {

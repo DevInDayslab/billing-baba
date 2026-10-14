@@ -85,9 +85,23 @@ class _SaleInvoiceSettingsBody extends ConsumerWidget {
               value: settings.invoiceBillNumberEnabled,
               onChanged: (value) => _update(
                 ref,
-                (s) => s.copyWith(invoiceBillNumberEnabled: value),
+                (s) => s.copyWith(
+                  invoiceBillNumberEnabled: value,
+                  manualInvoiceNumberEnabled: value
+                      ? s.manualInvoiceNumberEnabled
+                      : false,
+                ),
               ),
             ),
+            if (settings.invoiceBillNumberEnabled)
+              SwitchTile(
+                title: 'Allow editing sale invoice number',
+                value: settings.manualInvoiceNumberEnabled,
+                onChanged: (value) => _update(
+                  ref,
+                  (s) => s.copyWith(manualInvoiceNumberEnabled: value),
+                ),
+              ),
             SwitchTile(
               title: 'Cash Sale by default',
               value: settings.cashSaleByDefault,
