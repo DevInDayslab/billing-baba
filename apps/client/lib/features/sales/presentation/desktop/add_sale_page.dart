@@ -17,6 +17,7 @@ import 'package:billing_baba/features/parties/application/parties_providers.dart
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_document_barcode_providers.dart';
 import 'package:billing_baba/features/sales/application/sale_line_item_column_visibility_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_tabs_provider.dart';
@@ -1058,22 +1059,64 @@ class _InvoiceDetailsFields extends ConsumerWidget {
       preview: preview,
       forceAuto: isAutoNumber,
     );
+    final showInvoiceNumber = ref.watch(saleInvoiceBillNumberVisibleProvider);
+    final allowManualInvoiceToggle = ref.watch(
+      saleManualInvoiceNumberEnabledProvider,
+    );
+    final isManualNumber = !isAutoNumber;
+    final fieldValue = isManualNumber ? form.invoiceNumber : displayNumber;
+    final fieldReadOnly = !allowManualInvoiceToggle || !isManualNumber;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _LabeledField(
-          label: 'Invoice Number',
-          child: _SaleTextField(
-            initialValue: displayNumber,
-            hintText: 'Invoice number',
-            readOnly: true,
-            filled: true,
-            compact: true,
-            onChanged: (_) {},
+        if (showInvoiceNumber) ...[
+          _LabeledField(
+            label: 'Invoice Number',
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: _SaleTextField(
+                    key: ValueKey(
+                      'sale-inv-no-$isManualNumber-$fieldValue',
+                    ),
+                    initialValue: fieldValue,
+                    hintText: 'Invoice number',
+                    readOnly: fieldReadOnly,
+                    filled: fieldReadOnly,
+                    compact: true,
+                    onChanged: isManualNumber
+                        ? notifier.updateInvoiceNumberFromUser
+                        : (_) {},
+                  ),
+                ),
+                if (allowManualInvoiceToggle) ...[
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    message: isManualNumber
+                        ? 'Manual invoice number'
+                        : 'Auto invoice number',
+                    child: Switch(
+                      value: isManualNumber,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onChanged: (manual) {
+                        if (manual) {
+                          notifier.enableManualInvoiceNumber(displayNumber);
+                        } else {
+                          notifier.toggleInvoiceNumberMode(
+                            InvoiceNumberMode.auto,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: _sectionGap),
+          const SizedBox(height: _sectionGap),
+        ],
         _LabeledField(
           label: 'Invoice Date',
           child: SaleSingleDatePickerAnchor(
@@ -1563,6 +1606,7 @@ class _SaleTextField extends StatefulWidget {
   const _SaleTextField({
     required this.initialValue,
     required this.onChanged,
+    super.key,
     this.hintText,
     this.keyboardType,
     this.minLines = 1,

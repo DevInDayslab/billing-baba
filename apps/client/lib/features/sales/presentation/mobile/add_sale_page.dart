@@ -13,6 +13,7 @@ import 'package:billing_baba/features/inventory/application/inventory_godowns_pr
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
@@ -73,6 +74,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   late final TextEditingController _gstinController;
   late final TextEditingController _emailController;
   late final TextEditingController _eWayController;
+  late final TextEditingController _invoiceNumberController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
 
@@ -105,6 +107,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController = TextEditingController();
     _emailController = TextEditingController();
     _eWayController = TextEditingController();
+    _invoiceNumberController = TextEditingController();
     _descriptionController = TextEditingController();
     _termsTextController = TextEditingController();
 
@@ -153,6 +156,7 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController.dispose();
     _emailController.dispose();
     _eWayController.dispose();
+    _invoiceNumberController.dispose();
     _descriptionController.dispose();
     _termsTextController.dispose();
     super.dispose();
@@ -200,6 +204,18 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _eWayController.text = form.eWayBillNo;
     _descriptionController.text = form.description;
     _termsTextController.text = form.termsText;
+    _syncInvoiceNumberController(form);
+  }
+
+  void _syncInvoiceNumberController(AddSaleFormState form) {
+    if (!ref.read(saleManualInvoiceNumberEnabledProvider)) return;
+    final label = _invoiceNumberLabel(form);
+    final text = form.invoiceNumberMode == InvoiceNumberMode.manual
+        ? form.invoiceNumber
+        : label;
+    if (_invoiceNumberController.text != text) {
+      _invoiceNumberController.text = text;
+    }
   }
 
   void _resetSaleFormState() {
@@ -574,8 +590,21 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       }
     }
 
+    final showInvoiceNumber = ref.watch(saleInvoiceBillNumberVisibleProvider);
+    final allowManualInvoiceToggle = ref.watch(
+      saleManualInvoiceNumberEnabledProvider,
+    );
+    final isManualNumber =
+        form.invoiceNumberMode == InvoiceNumberMode.manual;
+    final invoiceNumberLabel = _invoiceNumberLabel(form);
+    final useInvoiceNumberField =
+        allowManualInvoiceToggle && _visibility.showDocumentNumber;
+    if (useInvoiceNumberField) {
+      _syncInvoiceNumberController(form);
+    }
+
     final visibility = MobileDocumentVisibility(
-      showDocumentNumber: _visibility.showDocumentNumber,
+      showDocumentNumber: showInvoiceNumber && _visibility.showDocumentNumber,
       showDate: _visibility.showDate,
       showTime: _visibility.showTime,
       showDueDate: isCredit && _visibility.showDueDate,
@@ -641,8 +670,28 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
           children: [
             MobileDocumentHeader(
               visibility: visibility,
-              documentNumberValue: _invoiceNumberLabel(form),
+              documentNumberValue: invoiceNumberLabel,
               documentNumberIsPlaceholder: false,
+              documentNumberEditable:
+                  useInvoiceNumberField && !widget.readOnly,
+              documentNumberController: _invoiceNumberController,
+              onDocumentNumberChanged: notifier.updateInvoiceNumberFromUser,
+              showInvoiceNumberManualToggle:
+                  useInvoiceNumberField && !widget.readOnly,
+              invoiceNumberManual: isManualNumber,
+              onInvoiceNumberManualToggle: widget.readOnly
+                  ? null
+                  : (manual) {
+                      if (manual) {
+                        notifier.enableManualInvoiceNumber(
+                          invoiceNumberLabel,
+                        );
+                      } else {
+                        notifier.toggleInvoiceNumberMode(
+                          InvoiceNumberMode.auto,
+                        );
+                      }
+                    },
               dateValue: formatSaleSingleDate(form.invoiceDate),
               dateIsPlaceholder: form.invoiceDate == null,
               onDateTap: _pickInvoiceDate,

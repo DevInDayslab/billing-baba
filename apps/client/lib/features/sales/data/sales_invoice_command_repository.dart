@@ -70,12 +70,15 @@ class SalesInvoiceCommandRepository {
         ? <String>{}
         : existing.lines.map((line) => line.id).toSet();
 
+    final requested = input.requestedDocumentNumber?.trim();
     final documentNumber =
         existing?.documentNumber ??
-        await _numbering.allocate(
-          businessId: businessId,
-          documentSeries: input.documentSeries,
-        );
+        (requested != null && requested.isNotEmpty
+            ? requested
+            : await _numbering.allocate(
+                businessId: businessId,
+                documentSeries: input.documentSeries,
+              ));
 
     final totals = computeSalesTotals(
       items: input.items,

@@ -58,9 +58,29 @@ class DesktopTransactionSettingsScreen extends ConsumerWidget {
                   label: 'Invoice/Bill No.',
                   value: settings.invoiceBillNumberEnabled,
                   infoKey: TransactionSettingsInfoKey.invoiceBillNo,
-                  onChanged: (v) => patch(
-                    (s) => s.copyWith(invoiceBillNumberEnabled: v ?? false),
-                  ),
+                  onChanged: (v) {
+                    final enabled = v ?? false;
+                    patch(
+                      (s) => s.copyWith(
+                        invoiceBillNumberEnabled: enabled,
+                        manualInvoiceNumberEnabled: enabled
+                            ? s.manualInvoiceNumberEnabled
+                            : false,
+                      ),
+                    );
+                  },
+                ),
+                TransactionSettingsCheckboxRow(
+                  label: 'Allow editing sale invoice number',
+                  value: settings.manualInvoiceNumberEnabled,
+                  infoKey: TransactionSettingsInfoKey.manualInvoiceNumber,
+                  onChanged: settings.invoiceBillNumberEnabled
+                      ? (v) => patch(
+                          (s) => s.copyWith(
+                            manualInvoiceNumberEnabled: v ?? false,
+                          ),
+                        )
+                      : null,
                 ),
                 TransactionSettingsCheckboxRow(
                   label: 'Add Time on Transactions',
