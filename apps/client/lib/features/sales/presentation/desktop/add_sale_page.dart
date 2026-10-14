@@ -24,6 +24,7 @@ import 'package:billing_baba/features/sales/application/sale_line_item_column_vi
 import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
 import 'package:billing_baba/features/sales/application/sale_transaction_header_visibility.dart';
 import 'package:billing_baba/features/sales/application/sale_transaction_totals_settings.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_tabs_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
@@ -614,11 +615,12 @@ class _SaleLineItemColumnSettingsButton extends ConsumerWidget {
     );
     final itemSettings =
         ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+    final allowsTransactionTaxes = ref.watch(gstAllowsTransactionTaxesProvider);
 
     bool isColumnOffered(SaleLineItemColumn column) {
       return switch (column) {
         SaleLineItemColumn.taxPercent || SaleLineItemColumn.taxAmount =>
-          itemSettings.itemWiseTax,
+          itemSettings.itemWiseTax && allowsTransactionTaxes,
         SaleLineItemColumn.discount => itemSettings.itemWiseDiscount,
         _ => true,
       };
@@ -1129,6 +1131,7 @@ class _InvoiceDetailsFields extends ConsumerWidget {
       preview: preview,
       forceAuto: isAutoNumber,
     );
+    final showPlaceOfSupply = ref.watch(gstPlaceOfSupplyEnabledProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1207,7 +1210,7 @@ class _InvoiceDetailsFields extends ConsumerWidget {
             ),
           ),
         ],
-        if (!isLiteSale) ...[
+        if (!isLiteSale && showPlaceOfSupply) ...[
           const SizedBox(height: _sectionGap),
           _LabeledField(
             label: 'State of supply',

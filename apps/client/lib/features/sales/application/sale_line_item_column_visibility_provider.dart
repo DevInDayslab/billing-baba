@@ -3,6 +3,7 @@ import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/application/item_settings_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -15,9 +16,11 @@ final saleLineItemEffectiveColumnVisibilityProvider =
       final saved = ref.watch(saleLineItemColumnVisibilityStateProvider);
       final settings =
           ref.watch(itemSettingsProvider).value ?? ItemSettings.defaults();
+      final allowsTaxes = ref.watch(gstAllowsTransactionTaxesProvider);
       return saved.applyItemSettings(
         itemWiseTax: settings.itemWiseTax,
         itemWiseDiscount: settings.itemWiseDiscount,
+        allowsTransactionTaxes: allowsTaxes,
       );
     });
 

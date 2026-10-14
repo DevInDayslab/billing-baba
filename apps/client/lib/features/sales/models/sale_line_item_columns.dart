@@ -82,13 +82,14 @@ class SaleLineItemColumnVisibility {
 
   String encode() => _visible.map((c) => c.storageKey).join(',');
 
-  /// Gates tax/discount columns by Item Settings (item-wise tax / discount).
+  /// Gates tax/discount columns by Item Settings and GST tax settings.
   SaleLineItemColumnVisibility applyItemSettings({
     required bool itemWiseTax,
     required bool itemWiseDiscount,
+    required bool allowsTransactionTaxes,
   }) {
     final next = Set<SaleLineItemColumn>.from(_visible);
-    if (itemWiseTax) {
+    if (itemWiseTax && allowsTransactionTaxes) {
       next.add(SaleLineItemColumn.taxPercent);
       next.add(SaleLineItemColumn.taxAmount);
     } else {

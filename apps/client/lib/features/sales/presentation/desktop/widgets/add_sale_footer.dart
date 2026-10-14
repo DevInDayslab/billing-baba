@@ -3,6 +3,7 @@ import 'package:billing_baba/features/sales/application/add_sale_form_provider.d
 import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
 import 'package:billing_baba/features/sales/application/sale_transaction_totals_settings.dart';
 import 'package:billing_baba/features/sales/utils/sale_invoice_totals.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -146,6 +147,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       ),
     );
     final loyaltyPointsEnabled = ref.watch(partyLoyaltyPointsEnabledProvider);
+    final showTransactionTaxes = ref.watch(gstAllowsTransactionTaxesProvider);
     final transactionFeatures = ref.watch(saleTransactionFeaturesProvider);
     final totalsSettings = ref.watch(saleTransactionTotalsSettingsProvider);
     final computedTotals = computeSaleInvoiceTotals(
@@ -170,6 +172,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       isCredit: isCredit,
       currencyFormat: currencyFormat,
       loyaltyPointsEnabled: loyaltyPointsEnabled,
+      showTransactionTaxes: showTransactionTaxes,
     );
 
     return LayoutBuilder(
@@ -295,6 +298,7 @@ class _TotalsSection extends StatelessWidget {
     required this.isCredit,
     required this.currencyFormat,
     required this.loyaltyPointsEnabled,
+    required this.showTransactionTaxes,
   });
 
   final AddSaleFormState form;
@@ -306,6 +310,7 @@ class _TotalsSection extends StatelessWidget {
   final bool isCredit;
   final NumberFormat currencyFormat;
   final bool loyaltyPointsEnabled;
+  final bool showTransactionTaxes;
 
   @override
   Widget build(BuildContext context) {
@@ -345,39 +350,40 @@ class _TotalsSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        Row(
-          children: [
-            const Text(
-              'Tax',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
+        if (showTransactionTaxes)
+          Row(
+            children: [
+              const Text(
+                'Tax',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            if (totalsSettings.transactionWiseTax) ...[
-              const SizedBox(width: 8),
+              if (totalsSettings.transactionWiseTax) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 72,
+                  child: SaleGenericSelectDropdown(
+                    value: form.taxOption,
+                    options: SaleDropdownOptions.taxSlabs,
+                    highlight: SaleDropdownHighlight.red,
+                    compact: true,
+                    onSelected: notifier.updateTaxOption,
+                  ),
+                ),
+              ],
+              const Spacer(),
               SizedBox(
                 width: 72,
-                child: SaleGenericSelectDropdown(
-                  value: form.taxOption,
-                  options: SaleDropdownOptions.taxSlabs,
-                  highlight: SaleDropdownHighlight.red,
-                  compact: true,
-                  onSelected: notifier.updateTaxOption,
+                child: _AmountField(
+                  value: totalTax,
+                  readOnly: true,
+                  onChanged: (_) {},
                 ),
               ),
             ],
-            const Spacer(),
-            SizedBox(
-              width: 72,
-              child: _AmountField(
-                value: totalTax,
-                readOnly: true,
-                onChanged: (_) {},
-              ),
-            ),
-          ],
-        ),
+          ),
         if (totalsSettings.roundOffTransactionAmount) ...[
           const SizedBox(height: 8),
           Row(

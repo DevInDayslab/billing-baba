@@ -6,6 +6,7 @@ import 'package:billing_baba/shared/widgets/mobile/mobile_settings_tiles.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_settings.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/sale_invoice_settings_subpages.dart';
@@ -70,6 +71,8 @@ class _SaleInvoiceSettingsBody extends ConsumerWidget {
       settings,
       currentBusiness?.id,
     );
+    final showReverseCharge = ref.watch(gstReverseChargeFeatureEnabledProvider);
+    final showPlaceOfSupply = ref.watch(gstPlaceOfSupplyEnabledProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -325,24 +328,26 @@ class _SaleInvoiceSettingsBody extends ConsumerWidget {
         SettingsSection(
           title: 'GST',
           children: [
-            SwitchTile(
-              title: 'Reverse Charge',
-              value: settings.reverseCharge,
-              onChanged: (value) => _update(
-                ref,
-                (s) => s.copyWith(reverseCharge: value),
+            if (showReverseCharge)
+              SwitchTile(
+                title: 'Reverse Charge',
+                value: settings.reverseCharge,
+                onChanged: (value) => _update(
+                  ref,
+                  (s) => s.copyWith(reverseCharge: value),
+                ),
               ),
-            ),
-            DropdownTile<String>(
-              title: 'State of Supply',
-              value: settings.stateOfSupply,
-              options: SaleDropdownOptions.indianStates,
-              labelBuilder: (option) => option,
-              onChanged: (value) => _update(
-                ref,
-                (s) => s.copyWith(stateOfSupply: value),
+            if (showPlaceOfSupply)
+              DropdownTile<String>(
+                title: 'State of Supply',
+                value: settings.stateOfSupply,
+                options: SaleDropdownOptions.indianStates,
+                labelBuilder: (option) => option,
+                onChanged: (value) => _update(
+                  ref,
+                  (s) => s.copyWith(stateOfSupply: value),
+                ),
               ),
-            ),
             SwitchTile(
               title: 'E-Way Bill No.',
               value: settings.eWayBillNumberEnabled,

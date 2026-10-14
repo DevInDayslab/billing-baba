@@ -11,6 +11,7 @@ import 'package:billing_baba/features/purchases/application/add_purchase_form_pr
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/inventory/application/barcode_scan_handler.dart';
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
@@ -191,7 +192,9 @@ class _MobileAddPurchasePageState extends ConsumerState<MobileAddPurchasePage> {
       showTime: _visibility.showTime,
       showDueDate: _visibility.showDueDate,
       showPaymentTerms: _visibility.showPaymentTerms,
-      showStateOfSupply: _visibility.showStateOfSupply,
+      showStateOfSupply:
+          _visibility.showStateOfSupply &&
+          ref.watch(gstPlaceOfSupplyEnabledProvider),
       showGodown: _visibility.showGodown,
       showEWayBill: _visibility.showEWayBill,
       showParty: _visibility.showParty,

@@ -14,6 +14,7 @@ import 'package:billing_baba/features/purchases/application/purchase_document_pa
 import 'package:billing_baba/features/purchases/application/purchase_document_party_factory.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
@@ -565,9 +566,11 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(purchaseServiceProvider.future);
+      final isGstFormal = ref.read(gstFormalDocumentProvider);
       final input = service.draftInputFromBillForm(
         state,
         documentType: PurchaseDocumentType.purchaseBill,
+        isGstFormal: isGstFormal,
       );
       final document = await service.saveDocumentDraft(
         input.copyWith(partyId: state.partyId),
@@ -604,9 +607,11 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(purchaseServiceProvider.future);
+      final isGstFormal = ref.read(gstFormalDocumentProvider);
       final input = service.draftInputFromBillForm(
         state,
         documentType: PurchaseDocumentType.purchaseBill,
+        isGstFormal: isGstFormal,
       );
 
       final PurchaseDocumentDto document;

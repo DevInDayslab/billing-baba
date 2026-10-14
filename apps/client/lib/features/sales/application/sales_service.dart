@@ -411,6 +411,7 @@ class SalesService {
   Future<SalesDocumentDto> saveDraft(
     AddSaleFormState form, {
     required Map<String, String> itemNameToId,
+    bool isGstFormal = true,
   }) {
     return saveDocumentDraft(
       SalesDocumentDraftInput(
@@ -422,7 +423,7 @@ class SalesService {
         documentTime: form.invoiceTime,
         notes: form.description,
         godownId: form.godownId,
-        isGstFormal: true,
+        isGstFormal: isGstFormal,
         convertedFromId: form.attachedSaleOrderIds.isNotEmpty
             ? form.attachedSaleOrderIds.first
             : null,
