@@ -271,6 +271,8 @@ class _PrefixChoiceLabel extends StatelessWidget {
   }
 }
 
+const _paymentTermsDialogHeaderBg = Color(0xFFE3F2FD);
+
 Future<void> showPaymentTermsEditor({
   required BuildContext context,
   required List<PaymentTermSetting> initial,
@@ -278,6 +280,7 @@ Future<void> showPaymentTermsEditor({
 }) {
   return showDialog<void>(
     context: context,
+    barrierDismissible: true,
     builder: (context) => _PaymentTermsDialog(initial: initial, onSave: onSave),
   );
 }
@@ -310,16 +313,59 @@ class _PaymentTermsDialogState extends State<_PaymentTermsDialog> {
     });
   }
 
+  Future<void> _saveAndClose() async {
+    await widget.onSave(
+      _terms.where((t) => t.name.trim().isNotEmpty).toList(),
+    );
+    if (mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Set Payment Terms'),
-      content: SizedBox(
-        width: 520,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Align(
+    return Dialog(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560, maxHeight: 520),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              color: _paymentTermsDialogHeaderBg,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm + 2,
+              ),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Set Payment Terms',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, size: 20),
+                    color: AppColors.textSecondary,
+                    visualDensity: VisualDensity.compact,
+                    tooltip: 'Close',
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              child: Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
                   onPressed: () {
@@ -335,73 +381,128 @@ class _PaymentTermsDialogState extends State<_PaymentTermsDialog> {
                       ];
                     });
                   },
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add'),
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
                 children: const [
                   Expanded(flex: 3, child: Text('Term')),
+                  SizedBox(width: 8),
                   Expanded(child: Text('Days')),
-                  SizedBox(width: 72, child: Text('Default')),
+                  SizedBox(width: 88, child: Text('Default')),
                 ],
               ),
-              for (var i = 0; i < _terms.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.sm),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          initialValue: _terms[i].name,
-                          decoration: const InputDecoration(isDense: true),
-                          onChanged: (v) => _terms[i] = _terms[i].copyWith(
-                            name: v,
-                          ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < _terms.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: TextFormField(
+                                key: ValueKey('term_name_${_terms[i].id}'),
+                                initialValue: _terms[i].name,
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 10,
+                                  ),
+                                ),
+                                onChanged: (v) => _terms[i] = _terms[i]
+                                    .copyWith(name: v),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextFormField(
+                                key: ValueKey('term_days_${_terms[i].id}'),
+                                initialValue: '${_terms[i].days}',
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 10,
+                                  ),
+                                ),
+                                onChanged: (v) => _terms[i] = _terms[i].copyWith(
+                                  days: int.tryParse(v) ?? 0,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 88,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Checkbox(
+                                    value: _terms[i].isDefault,
+                                    onChanged: (v) =>
+                                        _setDefault(i, v ?? false),
+                                  ),
+                                  Icon(
+                                    Icons.edit_outlined,
+                                    size: 18,
+                                    color: AppColors.textSecondary.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                  ),
+                                  if (!_terms[i].locked)
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        size: 18,
+                                      ),
+                                      color: AppColors.textSecondary,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(
+                                        minWidth: 32,
+                                        minHeight: 32,
+                                      ),
+                                      onPressed: () =>
+                                          setState(() => _terms.removeAt(i)),
+                                    )
+                                  else
+                                    const SizedBox(width: 32),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: '${_terms[i].days}',
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(isDense: true),
-                          onChanged: (v) => _terms[i] = _terms[i].copyWith(
-                            days: int.tryParse(v) ?? 0,
-                          ),
-                        ),
-                      ),
-                      Checkbox(
-                        value: _terms[i].isDefault,
-                        onChanged: (v) => _setDefault(i, v ?? false),
-                      ),
-                      if (!_terms[i].locked)
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => setState(() => _terms.removeAt(i)),
-                        )
-                      else
-                        const SizedBox(width: 48),
-                    ],
-                  ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(
+                  onPressed: _saveAndClose,
+                  child: const Text('DONE'),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        FilledButton(
-          onPressed: () async {
-            await widget.onSave(
-              _terms.where((t) => t.name.trim().isNotEmpty).toList(),
-            );
-            if (context.mounted) Navigator.of(context).pop();
-          },
-          child: const Text('DONE'),
-        ),
-      ],
     );
   }
 }

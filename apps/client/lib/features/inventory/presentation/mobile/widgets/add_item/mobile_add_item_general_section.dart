@@ -47,6 +47,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
     this.onScanBarcode,
     this.showCategory = true,
     this.showDescription = true,
+    this.showHsnSacCode = true,
     this.descriptionFieldLabel = 'Description',
     this.showManufacturing = false,
     this.selectedAlternativeItemIds = const [],
@@ -81,6 +82,7 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
   final VoidCallback? onScanBarcode;
   final bool showCategory;
   final bool showDescription;
+  final bool showHsnSacCode;
   final String descriptionFieldLabel;
   final bool showManufacturing;
   final List<String> selectedAlternativeItemIds;
@@ -211,24 +213,29 @@ class MobileAddItemGeneralSection extends ConsumerWidget {
                 onChanged: onDescriptionChanged,
               ),
             ],
-            const SizedBox(height: MobileAddItemTheme.fieldSpacing),
-            MobileAddItemField(
-              controller: hsnController,
-              label: taxLabel,
-              hint: taxLabel,
-              onChanged: onHsnChanged,
-              suffixIcon: IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  LucideIcons.search,
-                  size: 20,
-                  color: AppColors.primary,
+            if (showHsnSacCode) ...[
+              const SizedBox(height: MobileAddItemTheme.fieldSpacing),
+              MobileAddItemField(
+                controller: hsnController,
+                label: taxLabel,
+                hint: taxLabel,
+                onChanged: onHsnChanged,
+                suffixIcon: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    LucideIcons.search,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
+                  tooltip: 'Search $taxLabel',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
                 ),
-                tooltip: 'Search $taxLabel',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               ),
-            ),
+            ],
             if (_isProduct) ...[
               if (showManufacturing) ...[
                 const SizedBox(height: MobileAddItemTheme.fieldSpacing),

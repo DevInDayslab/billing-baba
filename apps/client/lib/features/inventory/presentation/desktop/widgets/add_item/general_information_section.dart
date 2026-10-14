@@ -51,6 +51,7 @@ class GeneralInformationSection extends StatelessWidget {
     this.onPendingPhotoTap,
     this.showCategory = true,
     this.showDescription = true,
+    this.showHsnSacCode = true,
     this.descriptionFieldLabel = 'Description',
     super.key,
   });
@@ -89,6 +90,7 @@ class GeneralInformationSection extends StatelessWidget {
   final ValueChanged<int>? onPendingPhotoTap;
   final bool showCategory;
   final bool showDescription;
+  final bool showHsnSacCode;
   final String descriptionFieldLabel;
   bool get _isProduct => itemType == ItemType.product;
 
@@ -191,31 +193,32 @@ class GeneralInformationSection extends StatelessWidget {
                 ),
               ),
             ),
-            FormGridCell(
-              span: 3,
-              child: _floatingField(
-                label: taxCodeLabel,
-                child: TextField(
-                  controller: hsnController,
-                  style: saleFieldTextStyle,
-                  decoration: buildFormControlDecoration(
-                    labelText: taxCodeLabel,
-                    suffixIcon: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.search, size: 18),
-                      color: AppColors.textSecondary,
-                      tooltip: taxCodeLabel,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: FormSpacing.inputHeight,
-                        minHeight: FormSpacing.inputHeight,
+            if (showHsnSacCode)
+              FormGridCell(
+                span: 3,
+                child: _floatingField(
+                  label: taxCodeLabel,
+                  child: TextField(
+                    controller: hsnController,
+                    style: saleFieldTextStyle,
+                    decoration: buildFormControlDecoration(
+                      labelText: taxCodeLabel,
+                      suffixIcon: IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.search, size: 18),
+                        color: AppColors.textSecondary,
+                        tooltip: taxCodeLabel,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: FormSpacing.inputHeight,
+                          minHeight: FormSpacing.inputHeight,
+                        ),
                       ),
                     ),
+                    onChanged: onHsnChanged,
                   ),
-                  onChanged: onHsnChanged,
                 ),
               ),
-            ),
             FormGridCell(
               span: 3,
               child: _floatingField(

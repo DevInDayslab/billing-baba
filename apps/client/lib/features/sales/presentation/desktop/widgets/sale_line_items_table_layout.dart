@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/application/sale_line_item_table_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
@@ -25,14 +26,19 @@ class SaleLineItemTableLayout {
     double availableWidth, {
     SaleLineItemColumnVisibility visibility =
         SaleLineItemColumnVisibility.defaults,
+    SaleLineItemTableSettings tableSettings = const SaleLineItemTableSettings(),
   }) {
     final contentWidth = math.max<double>(
       availableWidth - horizontalPadding * 2,
       320,
     );
-    return _columnWidthsFor(
-      contentWidth,
-    ).applyVisibility(visibility).rescaleToFit(contentWidth, visibility);
+    var widths = _columnWidthsFor(contentWidth);
+    if (tableSettings.allowInclusiveExclusiveTax) {
+      widths = widths.copyWith(price: widths.price + 76);
+    }
+    return widths
+        .applyVisibility(visibility)
+        .rescaleToFit(contentWidth, visibility);
   }
 
   /// Smallest width needed to render all visible columns at their floor sizes.
@@ -84,6 +90,8 @@ class SaleLineItemColumnWidths {
     required this.mrp,
     required this.size,
     required this.qty,
+    required this.freeQty,
+    required this.count,
     required this.unit,
     required this.price,
     required this.discount,
@@ -105,6 +113,8 @@ class SaleLineItemColumnWidths {
     mrp: 52,
     size: 52,
     qty: 44,
+    freeQty: 44,
+    count: 44,
     unit: 72,
     price: 100,
     discount: 52,
@@ -126,6 +136,8 @@ class SaleLineItemColumnWidths {
     mrp: 40,
     size: 40,
     qty: 36,
+    freeQty: 36,
+    count: 36,
     unit: 60,
     price: 80,
     discount: 40,
@@ -148,6 +160,8 @@ class SaleLineItemColumnWidths {
   final double mrp;
   final double size;
   final double qty;
+  final double freeQty;
+  final double count;
   final double unit;
   final double price;
   final double discount;
@@ -165,6 +179,8 @@ class SaleLineItemColumnWidths {
     SaleLineItemColumn.mfgDate => mfgDate,
     SaleLineItemColumn.mrp => mrp,
     SaleLineItemColumn.size => size,
+    SaleLineItemColumn.freeQty => freeQty,
+    SaleLineItemColumn.count => count,
     SaleLineItemColumn.unit => unit,
     SaleLineItemColumn.price => price,
     SaleLineItemColumn.discount => discount,
@@ -224,6 +240,14 @@ class SaleLineItemColumnWidths {
       ),
       mrp: grow(mrp, visible: visibility.isVisible(SaleLineItemColumn.mrp)),
       size: grow(size, visible: visibility.isVisible(SaleLineItemColumn.size)),
+      freeQty: grow(
+        freeQty,
+        visible: visibility.isVisible(SaleLineItemColumn.freeQty),
+      ),
+      count: grow(
+        count,
+        visible: visibility.isVisible(SaleLineItemColumn.count),
+      ),
       unit: grow(unit, visible: visibility.isVisible(SaleLineItemColumn.unit)),
       price: grow(
         price,
@@ -258,9 +282,13 @@ class SaleLineItemColumnWidths {
       index,
       item,
       qty,
+      if (visibility.isVisible(SaleLineItemColumn.freeQty)) freeQty,
+      if (visibility.isVisible(SaleLineItemColumn.count)) count,
       amount,
       actions,
       for (final column in SaleLineItemColumn.values)
+        if (column != SaleLineItemColumn.freeQty &&
+            column != SaleLineItemColumn.count)
         if (visibility.isVisible(column)) widthFor(column),
     ];
     return values.fold<double>(0, (sum, value) => sum + value) +
@@ -297,6 +325,10 @@ class SaleLineItemColumnWidths {
       mrp: visibility.isVisible(SaleLineItemColumn.mrp) ? scale(mrp) : 0,
       size: visibility.isVisible(SaleLineItemColumn.size) ? scale(size) : 0,
       qty: scale(qty),
+      freeQty: visibility.isVisible(SaleLineItemColumn.freeQty)
+          ? scale(freeQty)
+          : 0,
+      count: visibility.isVisible(SaleLineItemColumn.count) ? scale(count) : 0,
       unit: visibility.isVisible(SaleLineItemColumn.unit) ? scale(unit) : 0,
       price: visibility.isVisible(SaleLineItemColumn.price) ? scale(price) : 0,
       discount: visibility.isVisible(SaleLineItemColumn.discount)
@@ -325,6 +357,8 @@ class SaleLineItemColumnWidths {
     mrp,
     size,
     qty,
+    freeQty,
+    count,
     unit,
     price,
     discount,
@@ -346,6 +380,8 @@ class SaleLineItemColumnWidths {
     double? mrp,
     double? size,
     double? qty,
+    double? freeQty,
+    double? count,
     double? unit,
     double? price,
     double? discount,
@@ -366,6 +402,8 @@ class SaleLineItemColumnWidths {
       mrp: mrp ?? this.mrp,
       size: size ?? this.size,
       qty: qty ?? this.qty,
+      freeQty: freeQty ?? this.freeQty,
+      count: count ?? this.count,
       unit: unit ?? this.unit,
       price: price ?? this.price,
       discount: discount ?? this.discount,
@@ -396,6 +434,8 @@ class SaleLineItemColumnWidths {
       mrp: scaleValue(pref.mrp, min.mrp),
       size: scaleValue(pref.size, min.size),
       qty: scaleValue(pref.qty, min.qty),
+      freeQty: scaleValue(pref.freeQty, min.freeQty),
+      count: scaleValue(pref.count, min.count),
       unit: scaleValue(pref.unit, min.unit),
       price: scaleValue(pref.price, min.price),
       discount: scaleValue(pref.discount, min.discount),

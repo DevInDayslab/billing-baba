@@ -1,5 +1,9 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
 import 'package:billing_baba/features/hidden_ledger/application/hidden_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
@@ -602,14 +606,9 @@ class PaymentInFormState {
   }
 }
 
-String generateReceiptNo() {
-  return 'REC-${DateTime.now().millisecondsSinceEpoch}';
-}
-
 PaymentInFormState _initialPaymentInFormState() {
   final now = DateTime.now();
   return PaymentInFormState(
-    receiptNo: generateReceiptNo(),
     date: DateTime(now.year, now.month, now.day),
     time: TimeOfDay.fromDateTime(now),
   );
@@ -818,6 +817,28 @@ class PaymentInForm extends _$PaymentInForm {
     state = state.copyWith(isSaving: true, clearSaveError: true);
 
     try {
+      var receiptNo = payment.receiptNo.trim();
+      if (receiptNumberNeedsAutoAllocate(receiptNo)) {
+        final businessId = ref.read(currentBusinessProvider)?.id.trim() ?? '';
+        if (businessId.isNotEmpty) {
+          final settings = await ref.read(saleInvoiceSettingsProvider.future);
+          receiptNo = await allocateFormattedDocumentNumber(
+            numbering: ref.read(localDocumentNumberServiceProvider),
+            businessId: businessId,
+            documentSeries: paymentInDocumentSeries,
+            settings: settings,
+          );
+          ref.invalidate(nextDocumentNumberPreviewProvider(paymentInDocumentSeries));
+        } else {
+          final settings = ref.read(saleInvoiceSettingsProvider).asData?.value;
+          final prefix = prefixForDocumentSeries(
+            settings,
+            paymentInDocumentSeries,
+          );
+          receiptNo = formatDocumentNumberPreview(prefix: prefix, nextNumber: 1);
+        }
+      }
+
       final service = await ref.read(salesServiceProvider.future);
       final allocations = await service.buildFifoAllocations(
         partyId: state.partyId!,
@@ -837,7 +858,7 @@ class PaymentInForm extends _$PaymentInForm {
           amount: payment.receivedAmount.toStringAsFixed(4),
           paymentMode: SalesPaymentModes.toApi(payment.paymentType),
           paymentDate: payment.date.toUtc().toIso8601String(),
-          referenceNumber: payment.receiptNo,
+          referenceNumber: receiptNo,
           notes: payment.description.trim().isEmpty
               ? null
               : payment.description,

@@ -9,6 +9,7 @@ import 'package:billing_baba/features/search/application/search_registry_reports
 import 'package:billing_baba/features/search/application/search_registry_visibility.dart';
 import 'package:billing_baba/features/search/domain/search_category.dart';
 import 'package:billing_baba/features/search/domain/search_item.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/settings/models/settings_tab.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:flutter/material.dart';
@@ -496,12 +497,19 @@ abstract final class SearchRegistry {
     }.toList(growable: false);
   }
 
-  static List<SearchItem> visiblePages(PermissionService permissions) {
+  static List<SearchItem> visiblePages(
+    PermissionService permissions, {
+    GeneralSettings? generalSettings,
+  }) {
+    final general = generalSettings ?? GeneralSettings.defaults();
     return pages
         .where((item) {
           final route = item.route;
           if (route == null) return true;
-          return NavigationPermissionRegistry.isVisible(route, permissions);
+          if (!NavigationPermissionRegistry.isVisible(route, permissions)) {
+            return false;
+          }
+          return general.isTransactionPathEnabled(route);
         })
         .toList(growable: false);
   }

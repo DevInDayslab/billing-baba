@@ -39,7 +39,7 @@ class ItemSettingsNotifier extends _$ItemSettingsNotifier {
         .read(itemSettingsGuardProvider)
         .restrictionForPatch(current, settings);
     if (restriction != null) {
-      notifySettingsBlocked(ref, message: restriction.message);
+      notifySettingsBlocked(message: restriction.message);
       return;
     }
 
@@ -47,7 +47,7 @@ class ItemSettingsNotifier extends _$ItemSettingsNotifier {
     await repository.save(settings);
     state = AsyncData(settings);
     if (!silent) {
-      notifySettingsSaved(ref, message: SettingsSaveMessages.item);
+      notifySettingsSaved(message: SettingsSaveMessages.item);
     }
   }
 

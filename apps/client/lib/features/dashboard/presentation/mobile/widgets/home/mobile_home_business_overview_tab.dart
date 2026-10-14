@@ -2,6 +2,7 @@ import 'package:billing_baba/features/dashboard/application/dashboard_provider.d
 import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_financial_assets_row.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_quick_actions.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_accountant_module_entry.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_home_todays_business_carousel.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/widgets/home/mobile_money_cards.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
@@ -64,6 +65,12 @@ class MobileHomeBusinessOverviewTab extends ConsumerWidget {
             slivers: [
               SliverToBoxAdapter(child: scrollChrome),
               const SliverToBoxAdapter(child: MobileHomeQuickActions()),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: DashboardAccountantModuleEntry(),
+                ),
+              ),
               const SliverToBoxAdapter(
                 child: MobileHomeTodaysBusinessCarousel(),
               ),

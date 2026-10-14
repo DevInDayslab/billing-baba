@@ -9,6 +9,7 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_document_actions.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
@@ -203,14 +204,19 @@ class SalesDocumentsTableRows {
   }) {
     final module = permissionModuleForScope(config.scope);
     final permissions = ref.watch(permissionServiceProvider);
+    final general = ref.watch(generalSettingsProvider).value;
     final menuActions = config.actions.where((action) {
       return switch (action) {
         SalesDocumentMenuAction.view => permissions.canView(module),
         SalesDocumentMenuAction.edit => permissions.canEdit(module),
         SalesDocumentMenuAction.duplicate => permissions.canCreate(module),
         SalesDocumentMenuAction.delete => permissions.canDelete(module),
-        SalesDocumentMenuAction.convertToSaleOrder ||
-        SalesDocumentMenuAction.convertToDeliveryChallan ||
+        SalesDocumentMenuAction.convertToSaleOrder =>
+          permissions.canCreate(module) &&
+              (general?.enableSalePurchaseOrder ?? true),
+        SalesDocumentMenuAction.convertToDeliveryChallan =>
+          permissions.canCreate(module) &&
+              (general?.enableDeliveryChallan ?? true),
         SalesDocumentMenuAction.convertToInvoice => permissions.canCreate(
           module,
         ),

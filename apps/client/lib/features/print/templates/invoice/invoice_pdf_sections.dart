@@ -208,15 +208,20 @@ abstract final class CommercialDocumentPdfSections {
 
   static Map<int, pw.TableColumnWidth> tableColumnWidths({
     required bool showGst,
+    required bool showLinePricing,
     PdfPageFormat pageFormat = PdfPageFormat.a4,
   }) {
     return InvoicePdfTableLayout.commercialColumns(
       showGst: showGst,
+      showLinePricing: showLinePricing,
       pageFormat: pageFormat,
     );
   }
 
-  static List<pw.TableRow> itemsTableHeader({required bool showGst}) {
+  static List<pw.TableRow> itemsTableHeader({
+    required bool showGst,
+    required bool showLinePricing,
+  }) {
     return [
       pw.TableRow(
         repeat: true,
@@ -225,27 +230,32 @@ abstract final class CommercialDocumentPdfSections {
         children: [
           InvoicePdfWidgets.tableHeaderCell('#', align: pw.TextAlign.center),
           InvoicePdfWidgets.tableHeaderCell('Description'),
-          if (showGst)
+          if (showGst && showLinePricing)
             InvoicePdfWidgets.tableHeaderCell(
               'HSN/SAC',
               align: pw.TextAlign.center,
             ),
           InvoicePdfWidgets.tableHeaderCell('Qty', align: pw.TextAlign.center),
           InvoicePdfWidgets.tableHeaderCell('Unit', align: pw.TextAlign.center),
-          InvoicePdfWidgets.tableHeaderCell('Rate', align: pw.TextAlign.right),
-          InvoicePdfWidgets.tableHeaderCell(
-            'Discount',
-            align: pw.TextAlign.right,
-          ),
-          if (showGst)
+          if (showLinePricing) ...[
             InvoicePdfWidgets.tableHeaderCell(
-              'GST %',
+              'Rate',
               align: pw.TextAlign.right,
             ),
-          InvoicePdfWidgets.tableHeaderCell(
-            'Amount',
-            align: pw.TextAlign.right,
-          ),
+            InvoicePdfWidgets.tableHeaderCell(
+              'Discount',
+              align: pw.TextAlign.right,
+            ),
+            if (showGst)
+              InvoicePdfWidgets.tableHeaderCell(
+                'GST %',
+                align: pw.TextAlign.right,
+              ),
+            InvoicePdfWidgets.tableHeaderCell(
+              'Amount',
+              align: pw.TextAlign.right,
+            ),
+          ],
         ],
       ),
     ];
@@ -254,10 +264,16 @@ abstract final class CommercialDocumentPdfSections {
   static List<pw.TableRow> itemsTableRows({
     required List<PrintableLineItem> lines,
     required bool showGst,
+    required bool showLinePricing,
   }) {
     return [
       for (var i = 0; i < lines.length; i++)
-        _itemRow(index: i + 1, item: lines[i], showGst: showGst),
+        _itemRow(
+          index: i + 1,
+          item: lines[i],
+          showGst: showGst,
+          showLinePricing: showLinePricing,
+        ),
     ];
   }
 
@@ -265,6 +281,9 @@ abstract final class CommercialDocumentPdfSections {
     PrintableDocument document,
     CommercialDocumentLayoutConfig config,
   ) {
+    if (!config.showLinePricing) {
+      return pw.SizedBox();
+    }
     final totals = document.totals;
     final tax = document.taxSummary;
 
@@ -391,6 +410,7 @@ abstract final class CommercialDocumentPdfSections {
     required int index,
     required PrintableLineItem item,
     required bool showGst,
+    required bool showLinePricing,
   }) {
     final line = item.line;
 
@@ -406,7 +426,7 @@ abstract final class CommercialDocumentPdfSections {
           maxLines: 2,
           allowWrap: true,
         ),
-        if (showGst)
+        if (showGst && showLinePricing)
           InvoicePdfWidgets.tableBodyCell(
             _compactCode(item.hsnCode),
             align: pw.TextAlign.center,
@@ -419,23 +439,25 @@ abstract final class CommercialDocumentPdfSections {
           _compactUnit(line.unit),
           align: pw.TextAlign.center,
         ),
-        InvoicePdfWidgets.tableBodyCell(
-          _format(line.unitPrice),
-          align: pw.TextAlign.right,
-        ),
-        InvoicePdfWidgets.tableBodyCell(
-          _format(line.discountAmount),
-          align: pw.TextAlign.right,
-        ),
-        if (showGst)
+        if (showLinePricing) ...[
           InvoicePdfWidgets.tableBodyCell(
-            '${line.taxRate}%',
+            _format(line.unitPrice),
             align: pw.TextAlign.right,
           ),
-        InvoicePdfWidgets.tableBodyCell(
-          _format(line.lineTotal),
-          align: pw.TextAlign.right,
-        ),
+          InvoicePdfWidgets.tableBodyCell(
+            _format(line.discountAmount),
+            align: pw.TextAlign.right,
+          ),
+          if (showGst)
+            InvoicePdfWidgets.tableBodyCell(
+              '${line.taxRate}%',
+              align: pw.TextAlign.right,
+            ),
+          InvoicePdfWidgets.tableBodyCell(
+            _format(line.lineTotal),
+            align: pw.TextAlign.right,
+          ),
+        ],
       ],
     );
   }

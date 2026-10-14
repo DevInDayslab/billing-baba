@@ -4,6 +4,7 @@ import 'package:billing_baba/features/export/presentation/desktop/widgets/module
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sale_document_form_provider.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -739,16 +740,18 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
                   onTap: () => _pickTime(context, form.invoiceTime),
                 ),
               ),
-              const SizedBox(height: _sectionGap),
-              _LabeledField(
-                label: 'State of Supply',
-                child: SaleGenericSelectDropdown(
-                  value: form.stateOfSupply,
-                  options: SaleDropdownOptions.indianStates,
-                  maxMenuHeight: 280,
-                  onSelected: notifier.updateStateOfSupply,
+              if (ref.watch(gstPlaceOfSupplyEnabledProvider)) ...[
+                const SizedBox(height: _sectionGap),
+                _LabeledField(
+                  label: 'State of Supply',
+                  child: SaleGenericSelectDropdown(
+                    value: form.stateOfSupply,
+                    options: SaleDropdownOptions.indianStates,
+                    maxMenuHeight: 280,
+                    onSelected: notifier.updateStateOfSupply,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

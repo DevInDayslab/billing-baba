@@ -9,7 +9,11 @@ import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/sale_purchase_order_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/taxes_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
+import 'package:billing_baba/features/reports/application/reports_nav_catalog.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
+import 'package:billing_baba/features/settings/models/gst_tax_settings_behavior.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _navBackground = Color(0xFFF8F9FB);
 const _sectionHeaderColor = Color(0xFF00695C);
@@ -18,7 +22,7 @@ const _activeBackground = Color(0xFFE8F1FB);
 const _borderColor = Color(0xFFE0E0E0);
 const _notificationDot = Color(0xFFE53935);
 
-class ReportsNavPanel extends StatelessWidget {
+class ReportsNavPanel extends ConsumerWidget {
   const ReportsNavPanel({
     required this.navGroup,
     required this.selectedTransactionSub,
@@ -69,7 +73,17 @@ class ReportsNavPanel extends StatelessWidget {
   final ValueChanged<LoanAccountsReportSubSection> onLoanAccountsSubSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gst = ref.watch(effectiveGstTaxSettingsProvider);
+    final gstSubs = ReportsNavCatalog.subsectionsFor(
+      ReportNavGroup.gst,
+      gstSettings: gst,
+    );
+    final taxesSubs = ReportsNavCatalog.subsectionsFor(
+      ReportNavGroup.taxes,
+      gstSettings: gst,
+    );
+
     return ColoredBox(
       color: _navBackground,
       child: ListView(
@@ -95,15 +109,20 @@ class ReportsNavPanel extends StatelessWidget {
                   navGroup == ReportNavGroup.party && sub == selectedPartySub,
               onTap: () => onPartySubSelected(sub),
             ),
-          const SizedBox(height: 8),
-          const _SectionHeader(label: 'GST reports'),
-          for (final sub in GstReportSubSection.values)
-            _NavItemTile(
-              label: sub.label,
-              isSelected:
-                  navGroup == ReportNavGroup.gst && sub == selectedGstSub,
-              onTap: () => onGstSubSelected(sub),
-            ),
+          if (gst.showGstReportNav && gstSubs.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const _SectionHeader(label: 'GST reports'),
+            for (final entry in gstSubs)
+              _NavItemTile(
+                label: entry.label,
+                isSelected:
+                    navGroup == ReportNavGroup.gst &&
+                    entry.id == selectedGstSub.name,
+                onTap: () => onGstSubSelected(
+                  GstReportSubSection.values.byName(entry.id),
+                ),
+              ),
+          ],
           const SizedBox(height: 8),
           const _SectionHeader(label: 'Item/Stock report'),
           for (final sub in ItemStockReportSubSection.values)
@@ -124,15 +143,20 @@ class ReportsNavPanel extends StatelessWidget {
                   sub == selectedBusinessStatusSub,
               onTap: () => onBusinessStatusSubSelected(sub),
             ),
-          const SizedBox(height: 8),
-          const _SectionHeader(label: 'Taxes'),
-          for (final sub in TaxesReportSubSection.values)
-            _NavItemTile(
-              label: sub.label,
-              isSelected:
-                  navGroup == ReportNavGroup.taxes && sub == selectedTaxesSub,
-              onTap: () => onTaxesSubSelected(sub),
-            ),
+          if (taxesSubs.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const _SectionHeader(label: 'Taxes'),
+            for (final entry in taxesSubs)
+              _NavItemTile(
+                label: entry.label,
+                isSelected:
+                    navGroup == ReportNavGroup.taxes &&
+                    entry.id == selectedTaxesSub.name,
+                onTap: () => onTaxesSubSelected(
+                  TaxesReportSubSection.values.byName(entry.id),
+                ),
+              ),
+          ],
           const SizedBox(height: 8),
           const _SectionHeader(label: 'Expense report'),
           for (final sub in ExpenseReportSubSection.values)

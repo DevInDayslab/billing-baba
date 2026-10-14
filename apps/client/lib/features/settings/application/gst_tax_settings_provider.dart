@@ -5,6 +5,7 @@ import 'package:billing_baba/features/sales/application/sale_invoice_settings_pr
 import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
 import 'package:billing_baba/features/settings/application/settings_save_messages.dart';
 import 'package:billing_baba/features/settings/models/gst_tax_settings.dart';
+import 'package:billing_baba/features/settings/models/gst_tax_settings_behavior.dart';
 import 'package:billing_baba/features/settings/repositories/gst_tax_settings_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,8 +21,28 @@ final gstTaxSettingsProvider =
       GstTaxSettingsNotifier.new,
     );
 
+final effectiveGstTaxSettingsProvider = Provider<GstTaxSettings>((ref) {
+  return ref.watch(gstTaxSettingsProvider).value ?? GstTaxSettings.defaults();
+});
+
 final gstEnabledProvider = Provider<bool>((ref) {
-  return ref.watch(gstTaxSettingsProvider).value?.enableGst ?? true;
+  return ref.watch(effectiveGstTaxSettingsProvider).enableGst;
+});
+
+final gstAllowsTransactionTaxesProvider = Provider<bool>((ref) {
+  return ref.watch(effectiveGstTaxSettingsProvider).allowsTransactionTaxes;
+});
+
+final gstPlaceOfSupplyEnabledProvider = Provider<bool>((ref) {
+  return ref.watch(effectiveGstTaxSettingsProvider).showPlaceOfSupplyOnTransactions;
+});
+
+final gstReverseChargeFeatureEnabledProvider = Provider<bool>((ref) {
+  return ref.watch(effectiveGstTaxSettingsProvider).reverseChargeFeatureEnabled;
+});
+
+final gstFormalDocumentProvider = Provider<bool>((ref) {
+  return ref.watch(effectiveGstTaxSettingsProvider).isGstFormalDocument;
 });
 
 class GstTaxSettingsNotifier extends AsyncNotifier<GstTaxSettings> {
@@ -40,18 +61,27 @@ class GstTaxSettingsNotifier extends AsyncNotifier<GstTaxSettings> {
     await repo.save(next);
     state = AsyncData(next);
     await _syncRelated(next);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.taxesGst);
+    notifySettingsSaved(message: SettingsSaveMessages.taxesGst);
   }
 
   Future<void> _syncRelated(GstTaxSettings settings) async {
     final items = await ref.read(itemSettingsProvider.future);
-    if (items.hsnSacCode != settings.enableHsnSac) {
+    var nextItems = items;
+    var itemSettingsChanged = false;
+    if (items.hsnSacCode != settings.showHsnSacOnItems) {
+      nextItems = nextItems.copyWith(hsnSacCode: settings.showHsnSacOnItems);
+      itemSettingsChanged = true;
+    }
+    if (items.additionalCess != settings.showAdditionalCessOnItems) {
+      nextItems = nextItems.copyWith(
+        additionalCess: settings.showAdditionalCessOnItems,
+      );
+      itemSettingsChanged = true;
+    }
+    if (itemSettingsChanged) {
       await ref
           .read(itemSettingsProvider.notifier)
-          .save(
-            items.copyWith(hsnSacCode: settings.enableHsnSac),
-            silent: true,
-          );
+          .save(nextItems, silent: true);
     }
 
     await ref.read(saleInvoiceSettingsProvider.notifier).updateSettings(

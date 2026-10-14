@@ -10,6 +10,8 @@ import 'package:billing_baba/features/reports/models/report_subsection_entry.dar
 import 'package:billing_baba/features/reports/models/sale_purchase_order_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/taxes_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
+import 'package:billing_baba/features/settings/models/gst_tax_settings.dart';
+import 'package:billing_baba/features/settings/models/gst_tax_settings_behavior.dart';
 
 /// Canonical list of report groups and subsections for mobile navigation.
 abstract final class ReportsNavCatalog {
@@ -25,7 +27,11 @@ abstract final class ReportsNavCatalog {
     return null;
   }
 
-  static List<ReportSubsectionEntry> subsectionsFor(ReportNavGroup group) {
+  static List<ReportSubsectionEntry> subsectionsFor(
+    ReportNavGroup group, {
+    GstTaxSettings? gstSettings,
+  }) {
+    final gst = gstSettings ?? GstTaxSettings.defaults();
     return switch (group) {
       ReportNavGroup.transaction =>
         TransactionReportSubSection.values
@@ -43,6 +49,7 @@ abstract final class ReportsNavCatalog {
             .toList(growable: false),
       ReportNavGroup.gst =>
         GstReportSubSection.values
+            .where(gst.isGstReportSubSectionVisible)
             .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
             .toList(growable: false),
       ReportNavGroup.itemStock =>
@@ -55,6 +62,7 @@ abstract final class ReportsNavCatalog {
             .toList(growable: false),
       ReportNavGroup.taxes =>
         TaxesReportSubSection.values
+            .where(gst.isTaxesReportSubSectionVisible)
             .map((sub) => ReportSubsectionEntry(id: sub.name, label: sub.label))
             .toList(growable: false),
       ReportNavGroup.expenseReport =>

@@ -8,6 +8,7 @@ import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/das
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_side_widget_cards.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_widget_picker.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_accountant_module_entry.dart';
 import 'package:billing_baba/shared/layout/dashboard_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +39,7 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const DashboardAccountantModuleEntry(),
         Expanded(
           child: DashboardSideWidgetPanel(
             child: visible.isEmpty

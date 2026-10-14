@@ -39,6 +39,11 @@ class MobileDocumentHeader extends StatelessWidget {
     this.onGodownTap,
     this.eWayBillController,
     this.onEWayBillChanged,
+    this.customerPoNumberController,
+    this.onCustomerPoNumberChanged,
+    this.customerPoDateValue,
+    this.customerPoDateIsPlaceholder = true,
+    this.onCustomerPoDateTap,
   });
 
   final MobileDocumentVisibility visibility;
@@ -71,6 +76,11 @@ class MobileDocumentHeader extends StatelessWidget {
   final VoidCallback? onGodownTap;
   final TextEditingController? eWayBillController;
   final ValueChanged<String>? onEWayBillChanged;
+  final TextEditingController? customerPoNumberController;
+  final ValueChanged<String>? onCustomerPoNumberChanged;
+  final String? customerPoDateValue;
+  final bool customerPoDateIsPlaceholder;
+  final VoidCallback? onCustomerPoDateTap;
 
   @override
   Widget build(BuildContext context) {
@@ -206,6 +216,23 @@ class MobileDocumentHeader extends StatelessWidget {
             controller: eWayBillController,
             hintText: 'E-Way bill number',
             onChanged: onEWayBillChanged,
+          ),
+        ],
+        if (visibility.showCustomerPoDetails) ...[
+          const SizedBox(height: AppSpacing.lg),
+          MobileSaleFormField(
+            label: 'Customer P.O. No.',
+            controller: customerPoNumberController,
+            hintText: 'PO number',
+            onChanged: onCustomerPoNumberChanged,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          MobileSalePickerField(
+            label: 'Customer P.O. Date',
+            value: customerPoDateValue ?? 'Select date',
+            isPlaceholder: customerPoDateIsPlaceholder,
+            trailingIcon: LucideIcons.calendar,
+            onTap: onCustomerPoDateTap ?? () {},
           ),
         ],
       ],
