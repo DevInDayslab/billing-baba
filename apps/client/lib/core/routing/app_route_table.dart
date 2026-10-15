@@ -3,6 +3,9 @@ import 'package:billing_baba/core/routing/app_navigator_key.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/sync/application/sync_engine_lifecycle_provider.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/accounting/application/accounting_route_guard.dart';
+import 'package:billing_baba/features/accounting/presentation/accountant_hub_page.dart';
+import 'package:billing_baba/features/accounting/presentation/journal_entries_page.dart';
 import 'package:billing_baba/features/auth/presentation/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/splash_page.dart';
 import 'package:billing_baba/features/auth/presentation/user_profile_page.dart';
@@ -17,6 +20,11 @@ import 'package:billing_baba/features/collaboration/application/permission_servi
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
 import 'package:billing_baba/features/collaboration/guards/permission_guard.dart';
+import 'package:billing_baba/features/settings/application/accounting_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_route_guard.dart';
+import 'package:billing_baba/features/settings/models/accounting_settings.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/collaboration/presentation/sync_share_page.dart';
 import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
@@ -198,7 +206,21 @@ GoRouter createAppRouter({
         case AuthStatus.authenticated:
           if (onLogin || onOtp) return AppRoutes.home;
           final permission = ref.read(permissionServiceProvider);
-          return PermissionGuard.redirect(location, permission);
+          final permissionRedirect = PermissionGuard.redirect(
+            location,
+            permission,
+          );
+          if (permissionRedirect != null) return permissionRedirect;
+          final accounting =
+              ref.read(accountingSettingsProvider).value ??
+              AccountingSettings.defaults();
+          final accountingRedirect =
+              AccountingRouteGuard.redirect(location, accounting);
+          if (accountingRedirect != null) return accountingRedirect;
+          final general =
+              ref.read(generalSettingsProvider).value ??
+              GeneralSettings.defaults();
+          return GeneralSettingsRouteGuard.redirect(location, general);
         case AuthStatus.initializing:
           return showSplash ? AppRoutes.splash : AppRoutes.login;
       }
@@ -233,6 +255,16 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.home,
             builder: (context, state) => const HomePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.accountant,
+            builder: (context, state) => const AccountantHubPage(),
+            routes: [
+              GoRoute(
+                path: 'journal-entries',
+                builder: (context, state) => const JournalEntriesPage(),
+              ),
+            ],
           ),
           GoRoute(
             path: AppRoutes.notifications,

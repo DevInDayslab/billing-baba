@@ -9,12 +9,14 @@ import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 /// Mobile report group screen — lists subsections for a report category.
-class MobileReportGroupScreen extends StatelessWidget {
+class MobileReportGroupScreen extends ConsumerWidget {
   const MobileReportGroupScreen({
     required this.groupId,
     super.key,
@@ -23,7 +25,7 @@ class MobileReportGroupScreen extends StatelessWidget {
   final String groupId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final group = ReportNavGroupExtensions.fromId(groupId);
     if (group == null) {
       return Scaffold(
@@ -39,7 +41,8 @@ class MobileReportGroupScreen extends StatelessWidget {
       );
     }
 
-    final subsections = ReportsNavCatalog.subsectionsFor(group);
+    final gst = ref.watch(effectiveGstTaxSettingsProvider);
+    final subsections = ReportsNavCatalog.subsectionsFor(group, gstSettings: gst);
     final bottomPadding = MobileBottomNavigation.contentBottomPadding(context);
 
     return Scaffold(

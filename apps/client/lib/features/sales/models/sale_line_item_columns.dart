@@ -14,7 +14,13 @@ enum SaleLineItemColumn {
   price,
   discount,
   taxPercent,
-  taxAmount;
+  taxAmount,
+  freeQty,
+  count;
+
+  /// Hidden from the column picker; toggled only via transaction settings.
+  bool get isSettingsControlled =>
+      this == SaleLineItemColumn.freeQty || this == SaleLineItemColumn.count;
 
   String get label => switch (this) {
     SaleLineItemColumn.serialNo => 'Serial No.',
@@ -30,6 +36,8 @@ enum SaleLineItemColumn {
     SaleLineItemColumn.discount => 'Discount',
     SaleLineItemColumn.taxPercent => 'Tax %',
     SaleLineItemColumn.taxAmount => 'Tax Amount',
+    SaleLineItemColumn.freeQty => 'Free Qty',
+    SaleLineItemColumn.count => 'Count',
   };
 
   String get storageKey => name;
@@ -74,13 +82,14 @@ class SaleLineItemColumnVisibility {
 
   String encode() => _visible.map((c) => c.storageKey).join(',');
 
-  /// Gates tax/discount columns by Item Settings (item-wise tax / discount).
+  /// Gates tax/discount columns by Item Settings and GST tax settings.
   SaleLineItemColumnVisibility applyItemSettings({
     required bool itemWiseTax,
     required bool itemWiseDiscount,
+    required bool allowsTransactionTaxes,
   }) {
     final next = Set<SaleLineItemColumn>.from(_visible);
-    if (itemWiseTax) {
+    if (itemWiseTax && allowsTransactionTaxes) {
       next.add(SaleLineItemColumn.taxPercent);
       next.add(SaleLineItemColumn.taxAmount);
     } else {

@@ -4,9 +4,24 @@ import 'package:billing_baba/features/settings/application/settings_save_feedbac
 import 'package:billing_baba/features/settings/application/settings_save_messages.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_settings.dart';
 import 'package:billing_baba/features/sales/repositories/sale_invoice_settings_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_invoice_settings_provider.g.dart';
+
+/// Sale invoice number field visible on transaction forms.
+final saleInvoiceBillNumberVisibleProvider = Provider<bool>((ref) {
+  final settings = ref.watch(saleInvoiceSettingsProvider).asData?.value;
+  return settings?.invoiceBillNumberEnabled ?? true;
+});
+
+/// User may type the sale invoice number (Settings → Transaction).
+final saleManualInvoiceNumberEnabledProvider = Provider<bool>((ref) {
+  final settings = ref.watch(saleInvoiceSettingsProvider).asData?.value;
+  if (settings == null) return false;
+  return settings.invoiceBillNumberEnabled &&
+      settings.manualInvoiceNumberEnabled;
+});
 
 typedef SaleInvoiceSettingsUpdater =
     SaleInvoiceSettings Function(
@@ -51,7 +66,7 @@ class SaleInvoiceSettingsNotifier extends _$SaleInvoiceSettingsNotifier {
     );
     await repository.save(next);
     if (!silent) {
-      notifySettingsSaved(ref, message: SettingsSaveMessages.transaction);
+      notifySettingsSaved(message: SettingsSaveMessages.transaction);
     }
   }
 }

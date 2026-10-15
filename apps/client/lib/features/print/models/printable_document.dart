@@ -36,6 +36,7 @@ class PrintableDocument {
     this.saleFaBatch,
     this.jobWorkOrder,
     this.jobWorkMaterialNames = const {},
+    this.deliveryChallanShowPricing = true,
   });
 
   final PrintableDocumentKind kind;
@@ -72,6 +73,9 @@ class PrintableDocument {
 
   /// Item id → display name for job work raw materials.
   final Map<String, String> jobWorkMaterialNames;
+
+  /// When false, delivery challan PDF hides rate, tax, and amount columns.
+  final bool deliveryChallanShowPricing;
 
   bool get hasLineItems => lines.isNotEmpty;
 }

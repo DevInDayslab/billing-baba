@@ -11,6 +11,7 @@ class CommercialDocumentLayoutConfig {
     required this.showTaxSummary,
     required this.showAmountInWords,
     required this.showSignature,
+    this.showLinePricing = true,
     this.footerNote,
     this.showDueDate = false,
     this.showSupplierInvoiceNumber = false,
@@ -24,6 +25,7 @@ class CommercialDocumentLayoutConfig {
   final bool showTaxSummary;
   final bool showAmountInWords;
   final bool showSignature;
+  final bool showLinePricing;
   final String? footerNote;
   final bool showDueDate;
   final bool showSupplierInvoiceNumber;
@@ -86,10 +88,11 @@ class CommercialDocumentLayoutConfig {
         title: 'DELIVERY CHALLAN',
         documentNumberLabel: 'Challan No',
         partyHeading: 'Ship To',
-        showGstColumns: isGst,
-        showTaxSummary: false,
-        showAmountInWords: false,
+        showGstColumns: isGst && document.deliveryChallanShowPricing,
+        showTaxSummary: isGst && document.deliveryChallanShowPricing,
+        showAmountInWords: document.deliveryChallanShowPricing,
         showSignature: true,
+        showLinePricing: document.deliveryChallanShowPricing,
       ),
       PrintableDocumentKind.creditNote => CommercialDocumentLayoutConfig(
         title: 'CREDIT NOTE',

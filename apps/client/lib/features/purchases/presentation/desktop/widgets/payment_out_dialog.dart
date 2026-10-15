@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
@@ -195,6 +196,16 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
     final form = ref.watch(paymentOutFormProvider);
     final notifier = ref.read(paymentOutFormProvider.notifier);
     final isSaving = form.isSaving;
+    final receiptPreview = watchDocumentNumberPreview(
+      ref,
+      paymentOutDocumentSeries,
+    );
+    final displayReceiptNo = resolveDocumentNumberDisplay(
+      documentId: null,
+      currentNumber: form.receiptNo,
+      preview: receiptPreview,
+      forceAuto: isUnsetDocumentNumber(form.receiptNo),
+    );
 
     return Stack(
       children: [
@@ -450,7 +461,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                               _LabeledField(
                                 label: 'Receipt No',
                                 child: Text(
-                                  form.receiptNo,
+                                  displayReceiptNo,
                                   style: saleFieldTextStyle.copyWith(
                                     fontWeight: FontWeight.w500,
                                   ),

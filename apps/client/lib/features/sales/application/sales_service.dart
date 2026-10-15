@@ -411,6 +411,7 @@ class SalesService {
   Future<SalesDocumentDto> saveDraft(
     AddSaleFormState form, {
     required Map<String, String> itemNameToId,
+    bool isGstFormal = true,
   }) {
     return saveDocumentDraft(
       SalesDocumentDraftInput(
@@ -422,15 +423,23 @@ class SalesService {
         documentTime: form.invoiceTime,
         notes: form.description,
         godownId: form.godownId,
-        isGstFormal: true,
+        isGstFormal: isGstFormal,
         convertedFromId: form.attachedSaleOrderIds.isNotEmpty
             ? form.attachedSaleOrderIds.first
             : null,
         items: form.items,
         taxOption: form.taxOption,
+        requestedDocumentNumber: _requestedSaleDocumentNumber(form),
       ),
       itemNameToId: itemNameToId,
     );
+  }
+
+  String? _requestedSaleDocumentNumber(AddSaleFormState form) {
+    if (form.invoiceNumberMode != InvoiceNumberMode.manual) return null;
+    final number = form.invoiceNumber.trim();
+    if (number.isEmpty || number == 'Auto') return null;
+    return number;
   }
 
   Future<SalesDocumentDto> finalizeDocumentDraft(
@@ -836,6 +845,41 @@ class SalesService {
           applyGst: applyGst,
         ),
       );
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
+  Future<SalesDocumentDto> fetchDocument(String documentId) async {
+    try {
+      return await _repository.getDocument(documentId);
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
+  /// Updates line quantities on a draft sale by inventory item id.
+  Future<SalesDocumentDto> applyLineQuantitiesByItemId(
+    SalesDocumentDto document,
+    Map<String, double> qtyByItemId,
+  ) async {
+    try {
+      for (final line in document.lines) {
+        final targetQty = qtyByItemId[line.itemId];
+        if (targetQty == null) continue;
+        final currentQty = double.tryParse(line.quantity) ?? 0;
+        if (targetQty == currentQty) continue;
+        if (targetQty <= 0) {
+          await _repository.deleteLine(document.id, line.id);
+          continue;
+        }
+        await _repository.updateLine(
+          document.id,
+          line.id,
+          UpdateSalesLineRequest(quantity: targetQty.toString()),
+        );
+      }
+      return await _repository.getDocument(document.id);
     } on DioException catch (error) {
       throw mapSalesError(error);
     }

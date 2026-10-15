@@ -12,6 +12,14 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/inventory/application/item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_header_visibility.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_totals_settings.dart';
+import 'package:billing_baba/features/sales/utils/sale_invoice_totals.dart';
+import 'package:billing_baba/features/sales/models/transaction_form_extras.dart';
+import 'package:billing_baba/features/sales/utils/sale_payment_terms.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/add_sale_save_result.dart';
@@ -20,7 +28,9 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
+import 'package:billing_baba/features/sales/utils/sale_negative_stock_validation.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
@@ -505,8 +515,42 @@ class AddSaleForm extends _$AddSaleForm {
     _repriceLineItemsForPartyTier();
   }
 
+  String? _effectivePriceTier() {
+    if (state.useWholesalePriceOnInvoice) return PriceTier.wholesale;
+    return state.partyPriceTier;
+  }
+
+  List<PaymentTermSetting> _configuredPaymentTerms() {
+    final settings = ref.read(saleInvoiceSettingsProvider).value;
+    return settings?.formExtras.paymentTerms ??
+        TransactionFormExtras.defaults().paymentTerms;
+  }
+
+  SaleInvoiceTotals _invoiceTotals() {
+    return computeSaleInvoiceTotals(
+      form: state,
+      settings: ref.read(saleTransactionTotalsSettingsProvider),
+    );
+  }
+
+  double _invoiceTotalAfterLoyalty() {
+    final grand = _invoiceTotals().grandTotal;
+    return (grand - state.loyaltyDiscount).clamp(0, double.infinity);
+  }
+
+  DateTime? _dueDateForCurrentPaymentTerms(DateTime? invoiceDate) {
+    final features = ref.read(saleTransactionFeaturesProvider);
+    if (!features.dueDatesAndPaymentTerms) return null;
+    if (invoiceDate == null || state.saleType == SaleType.cash) return null;
+    return dueDateFromPaymentTerm(
+      invoiceDate: invoiceDate,
+      termName: state.paymentTerms,
+      terms: _configuredPaymentTerms(),
+    );
+  }
+
   Future<void> _repriceLineItemsForPartyTier() async {
-    final partyTier = state.partyPriceTier;
+    final partyTier = _effectivePriceTier();
     final fallback = await readInvoiceFallbackTaxPercent(ref);
     final tierStore = ref.read(itemTierPricesProvider).value ?? {};
     final inventory = ref.read(inventoryItemListProvider);
@@ -569,12 +613,16 @@ class AddSaleForm extends _$AddSaleForm {
       payments.add(const SalePaymentEntry(type: 'Cash'));
     }
 
+    final dueDate = type == SaleType.cash
+        ? null
+        : (_dueDateForCurrentPaymentTerms(state.invoiceDate) ?? state.dueDate);
+
     state = state.copyWith(
       saleType: type,
-      dueDate: type == SaleType.cash ? null : state.dueDate,
+      dueDate: dueDate,
       receivedEnabled: type == SaleType.credit && state.receivedEnabled,
       payments: type == SaleType.cash
-          ? [payments.first.copyWith(type: 'Cash', amount: state.invoiceTotal)]
+          ? [payments.first.copyWith(type: 'Cash', amount: _invoiceTotalAfterLoyalty())]
           : payments,
       isDirty: true,
     );
@@ -582,6 +630,14 @@ class AddSaleForm extends _$AddSaleForm {
 
   void updateInvoiceNumber(String value) {
     state = state.copyWith(invoiceNumber: value, isDirty: true);
+  }
+
+  void updateInvoiceNumberFromUser(String value) {
+    state = state.copyWith(
+      invoiceNumber: value,
+      invoiceNumberMode: InvoiceNumberMode.manual,
+      isDirty: true,
+    );
   }
 
   void toggleInvoiceNumberMode(InvoiceNumberMode mode) {
@@ -596,8 +652,23 @@ class AddSaleForm extends _$AddSaleForm {
     }
   }
 
+  /// Switches to manual numbering and seeds the field (e.g. current auto preview).
+  void enableManualInvoiceNumber(String seedValue) {
+    final trimmed = seedValue.trim();
+    state = state.copyWith(
+      invoiceNumberMode: InvoiceNumberMode.manual,
+      invoiceNumber: trimmed.isEmpty ? state.invoiceNumber : trimmed,
+      isDirty: true,
+    );
+  }
+
   void updateInvoiceDate(DateTime date) {
-    state = state.copyWith(invoiceDate: date, isDirty: true);
+    final due = _dueDateForCurrentPaymentTerms(date);
+    state = state.copyWith(
+      invoiceDate: date,
+      dueDate: due ?? state.dueDate,
+      isDirty: true,
+    );
   }
 
   void updateDueDate(DateTime? date) {
@@ -616,8 +687,113 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(eWayBillNo: value, isDirty: true);
   }
 
+  void updateCustomerPoNumber(String value) {
+    state = state.copyWith(customerPoNumber: value, isDirty: true);
+  }
+
+  void updateRepeatInvoiceEnabled(bool enabled) {
+    state = state.copyWith(repeatInvoiceEnabled: enabled, isDirty: true);
+  }
+
+  void updateRepeatInvoiceFrequency(String frequency) {
+    state = state.copyWith(repeatInvoiceFrequency: frequency, isDirty: true);
+  }
+
+  void updateCustomerPoDate(DateTime? date) {
+    state = state.copyWith(
+      customerPoDate: date,
+      clearCustomerPoDate: date == null,
+      isDirty: true,
+    );
+  }
+
+  /// Applies cash/credit default from transaction settings for a new sale only.
+  void applyTransactionHeaderDefaultsForNewDocument() {
+    if (state.documentId != null || state.isDirty) return;
+
+    final header = ref.read(saleTransactionHeaderVisibilityProvider);
+    final features = ref.read(saleTransactionFeaturesProvider);
+    final totalsSettings = ref.read(saleTransactionTotalsSettingsProvider);
+    final settings = ref.read(saleInvoiceSettingsProvider).value;
+    final target =
+        header.cashSaleByDefault ? SaleType.cash : SaleType.credit;
+
+    final payments = [...state.payments];
+    if (payments.isEmpty) {
+      payments.add(const SalePaymentEntry(type: 'Cash'));
+    }
+
+    var next = state;
+    if (next.saleType != target) {
+      next = next.copyWith(
+        saleType: target,
+        dueDate: target == SaleType.cash ? null : next.dueDate,
+        receivedEnabled: target == SaleType.credit && next.receivedEnabled,
+        payments: target == SaleType.cash
+            ? [
+                payments.first.copyWith(
+                  type: 'Cash',
+                  amount: computeSaleInvoiceTotals(
+                    form: next,
+                    settings: ref.read(saleTransactionTotalsSettingsProvider),
+                  ).grandTotal,
+                ),
+              ]
+            : payments,
+      );
+    }
+
+    if (features.termsAndConditionsEnabled && settings != null) {
+      next = next.copyWith(termsText: settings.termsAndConditionsText);
+    }
+
+    if (features.dueDatesAndPaymentTerms) {
+      final terms = _configuredPaymentTerms();
+      final defaultTerm = resolvePaymentTermSetting(next.paymentTerms, terms);
+      final due = target == SaleType.cash
+          ? null
+          : _dueDateForCurrentPaymentTerms(next.invoiceDate) ??
+              (next.invoiceDate != null
+                  ? dueDateFromPaymentTerm(
+                      invoiceDate: next.invoiceDate!,
+                      termName: defaultTerm.name,
+                      terms: terms,
+                    )
+                  : null);
+      next = next.copyWith(
+        paymentTerms: defaultTerm.name,
+        dueDate: due,
+      );
+    }
+
+    if (!totalsSettings.transactionWiseTax && next.taxOption != 'NONE') {
+      next = next.copyWith(
+        taxOption: 'NONE',
+        items: applyBillTaxOptionToSaleItems(next.items, 'NONE'),
+      );
+    }
+
+    next = next.copyWith(
+      roundOff: totalsSettings.roundOffTransactionAmount,
+      isDirty: false,
+    );
+
+    state = next;
+  }
+
+  void setUseWholesalePriceOnInvoice(bool value) {
+    if (state.useWholesalePriceOnInvoice == value) return;
+    state = state.copyWith(useWholesalePriceOnInvoice: value, isDirty: true);
+    unawaited(_repriceLineItemsForPartyTierAsync());
+  }
+
   void updatePaymentTerms(String value) {
-    state = state.copyWith(paymentTerms: value, isDirty: true);
+    final due = _dueDateForCurrentPaymentTerms(state.invoiceDate);
+    state = state.copyWith(
+      paymentTerms: value,
+      dueDate: due ?? state.dueDate,
+      isDirty: true,
+    );
   }
 
   void updateTermsTitle(String value) {
@@ -637,9 +813,25 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void updateTaxOption(String value) {
+    if (!ref.read(saleTransactionTotalsSettingsProvider).transactionWiseTax) {
+      return;
+    }
     state = state.copyWith(
       taxOption: value,
       items: applyBillTaxOptionToSaleItems(state.items, value),
+      isDirty: true,
+      clearSaveError: true,
+    );
+  }
+
+  void updateTransactionDiscountPercent(double value) {
+    if (!ref.read(saleTransactionTotalsSettingsProvider).transactionWiseDiscount) {
+      return;
+    }
+    final clamped = value.clamp(0, 100).toDouble();
+    state = state.copyWith(
+      transactionDiscountPercent: clamped,
+      items: clearLineDiscountPercents(state.items),
       isDirty: true,
       clearSaveError: true,
     );
@@ -688,7 +880,7 @@ class AddSaleForm extends _$AddSaleForm {
     final applied = applyCatalogItemToLine(
       line,
       catalogItem,
-      partyPriceTier: state.partyPriceTier,
+      partyPriceTier: _effectivePriceTier(),
       fallbackTaxPercent: fallback,
     ).copyWith(mrp: catalogItem.salePrice);
     if (applied.taxPercent > 0) {
@@ -904,9 +1096,11 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(salesServiceProvider.future);
+      final isGstFormal = ref.read(gstFormalDocumentProvider);
       final document = await service.saveDraft(
         state,
         itemNameToId: _itemNameToId(),
+        isGstFormal: isGstFormal,
       );
       final synced = await syncTransactionAttachments(
         ref,
@@ -958,6 +1152,14 @@ class AddSaleForm extends _$AddSaleForm {
       return AddSaleSaveResult(error: _validationError(finalize: finalize));
     }
 
+    if (finalize) {
+      final stockError = validateSaleLinesForNegativeStock(ref, state.items);
+      if (stockError != null) {
+        state = state.copyWith(showValidationErrors: true, saveError: stockError);
+        return AddSaleSaveResult(error: stockError);
+      }
+    }
+
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(salesServiceProvider.future);
@@ -967,17 +1169,19 @@ class AddSaleForm extends _$AddSaleForm {
       var pointsAvailable = 0.0;
       var loyaltyPointsUsedForExpense = 0.0;
       if (finalize) {
-        final invoiceTotal = state.invoiceTotal;
+        final invoiceTotal = _invoiceTotalAfterLoyalty();
         final loyaltyPointsUsed = state.loyaltyPointsUsed;
         loyaltyPointsUsedForExpense = loyaltyPointsUsed;
         final loyaltyPointsAvailable = state.loyaltyPointsAvailable;
         final party = partyId != null ? await _resolveParty(partyId) : null;
 
+        final isGstFormal = ref.read(gstFormalDocumentProvider);
         final result = await service.createAndFinalizeSale(
           state,
           partyId: partyId,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
+          isGstFormal: isGstFormal,
           loyaltyPointsRedeemed: loyaltyPointsUsed,
           shortPaymentHandling: shortPaymentHandling,
           shortfallAmount: shortfallAmount,
@@ -1090,11 +1294,14 @@ double addSaleSubtotal(Ref ref, {String sessionKey = 'default'}) {
 @riverpod
 double addSaleTotalTax(Ref ref, {String sessionKey = 'default'}) {
   final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
-  return form.totalTax;
+  final settings = ref.watch(saleTransactionTotalsSettingsProvider);
+  return computeSaleInvoiceTotals(form: form, settings: settings).totalTax;
 }
 
 @riverpod
 double addSaleGrandTotal(Ref ref, {String sessionKey = 'default'}) {
   final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
-  return form.invoiceTotal;
+  final settings = ref.watch(saleTransactionTotalsSettingsProvider);
+  final totals = computeSaleInvoiceTotals(form: form, settings: settings);
+  return (totals.grandTotal - form.loyaltyDiscount).clamp(0, double.infinity);
 }

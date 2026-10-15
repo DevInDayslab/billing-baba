@@ -13,12 +13,17 @@ import 'package:billing_baba/features/inventory/application/inventory_godowns_pr
 import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_barcode_scanner_screen.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoice_settings_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_header_visibility.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_form_widgets.dart';
 import 'package:billing_baba/features/sales/presentation/mobile/widgets/mobile_sale_settings_panel.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
@@ -73,6 +78,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
   late final TextEditingController _gstinController;
   late final TextEditingController _emailController;
   late final TextEditingController _eWayController;
+  late final TextEditingController _invoiceNumberController;
+  late final TextEditingController _customerPoNumberController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _termsTextController;
 
@@ -105,6 +112,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController = TextEditingController();
     _emailController = TextEditingController();
     _eWayController = TextEditingController();
+    _invoiceNumberController = TextEditingController();
+    _customerPoNumberController = TextEditingController();
     _descriptionController = TextEditingController();
     _termsTextController = TextEditingController();
 
@@ -124,23 +133,34 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     } else {
       _initialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final notifier = ref.read(
-          addSaleFormProvider(sessionKey: _sessionKey).notifier,
-        );
-        if (!widget.readOnly) {
-          notifier.toggleSaleType(SaleType.credit);
-        }
-        final partyId = widget.initialPartyId?.trim();
-        final partyName = widget.initialPartyName?.trim();
-        if (partyId != null &&
-            partyId.isNotEmpty &&
-            partyName != null &&
-            partyName.isNotEmpty) {
-          notifier.updateParty(partyId: partyId, partyName: partyName);
-        }
-        _syncControllersFromForm();
+        unawaited(_applyTransactionHeaderDefaultsForNewSale());
       });
     }
+  }
+
+  Future<void> _applyTransactionHeaderDefaultsForNewSale() async {
+    if (widget.invoiceId != null ||
+        widget.duplicateFromId != null ||
+        (widget.attachOrderIds != null && widget.attachOrderIds!.isNotEmpty)) {
+      return;
+    }
+    await ref.read(saleInvoiceSettingsProvider.future);
+    if (!mounted) return;
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: _sessionKey).notifier,
+    );
+    if (!widget.readOnly) {
+      notifier.applyTransactionHeaderDefaultsForNewDocument();
+    }
+    final partyId = widget.initialPartyId?.trim();
+    final partyName = widget.initialPartyName?.trim();
+    if (partyId != null &&
+        partyId.isNotEmpty &&
+        partyName != null &&
+        partyName.isNotEmpty) {
+      notifier.updateParty(partyId: partyId, partyName: partyName);
+    }
+    _syncControllersFromForm();
   }
 
   @override
@@ -153,6 +173,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController.dispose();
     _emailController.dispose();
     _eWayController.dispose();
+    _invoiceNumberController.dispose();
+    _customerPoNumberController.dispose();
     _descriptionController.dispose();
     _termsTextController.dispose();
     super.dispose();
@@ -198,8 +220,21 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
     _gstinController.text = form.gstin;
     _emailController.text = form.email;
     _eWayController.text = form.eWayBillNo;
+    _customerPoNumberController.text = form.customerPoNumber;
     _descriptionController.text = form.description;
     _termsTextController.text = form.termsText;
+    _syncInvoiceNumberController(form);
+  }
+
+  void _syncInvoiceNumberController(AddSaleFormState form) {
+    if (!ref.read(saleManualInvoiceNumberEnabledProvider)) return;
+    final label = _invoiceNumberLabel(form);
+    final text = form.invoiceNumberMode == InvoiceNumberMode.manual
+        ? form.invoiceNumber
+        : label;
+    if (_invoiceNumberController.text != text) {
+      _invoiceNumberController.text = text;
+    }
   }
 
   void _resetSaleFormState() {
@@ -235,6 +270,20 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
         .updateInvoiceDate(picked);
   }
 
+  Future<void> _pickCustomerPoDate() async {
+    final form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: form.customerPoDate ?? form.invoiceDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) return;
+    ref
+        .read(addSaleFormProvider(sessionKey: _sessionKey).notifier)
+        .updateCustomerPoDate(picked);
+  }
+
   Future<void> _pickDueDate() async {
     final form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
     final picked = await showDatePicker(
@@ -263,12 +312,16 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
 
   Future<void> _pickPaymentTerms() async {
     final form = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
+    final configured = ref.read(salePaymentTermNameOptionsProvider);
+    final termLabels = configured.isNotEmpty
+        ? configured
+        : SaleDropdownOptions.paymentTerms;
     final selected = await showMobileOptionSheet<String>(
       context: context,
       title: 'Payment Terms',
       selected: form.paymentTerms,
       options: [
-        for (final term in SaleDropdownOptions.paymentTerms)
+        for (final term in termLabels)
           MobileOption(value: term, label: term),
       ],
     );
@@ -458,8 +511,13 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
 
     final saved = ref.read(addSaleFormProvider(sessionKey: _sessionKey));
     final docId = saved.documentId;
-    if (docId != null && docId.isNotEmpty) {
-      await SaleInvoicePrintActions.print(
+    final showPreview =
+        ref.read(saleTransactionFeaturesProvider).showInvoicePreviewOnSave;
+    if (docId != null &&
+        docId.isNotEmpty &&
+        showPreview &&
+        widget.invoiceId == null) {
+      await SaleInvoicePrintActions.preview(
         context,
         ref,
         docId,
@@ -574,21 +632,52 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       }
     }
 
+    final headerVisibility = ref.watch(saleTransactionHeaderVisibilityProvider);
+    final transactionFeatures = ref.watch(saleTransactionFeaturesProvider);
+    final showInvoiceNumber = ref.watch(saleInvoiceBillNumberVisibleProvider);
+    final allowManualInvoiceToggle = ref.watch(
+      saleManualInvoiceNumberEnabledProvider,
+    );
+    final isManualNumber =
+        form.invoiceNumberMode == InvoiceNumberMode.manual;
+    final invoiceNumberLabel = _invoiceNumberLabel(form);
+    final useInvoiceNumberField =
+        allowManualInvoiceToggle && _visibility.showDocumentNumber;
+    if (useInvoiceNumberField) {
+      _syncInvoiceNumberController(form);
+    }
+
     final visibility = MobileDocumentVisibility(
-      showDocumentNumber: _visibility.showDocumentNumber,
+      showDocumentNumber:
+          showInvoiceNumber &&
+          _visibility.showDocumentNumber &&
+          headerVisibility.showInvoiceBillNumber,
       showDate: _visibility.showDate,
-      showTime: _visibility.showTime,
-      showDueDate: isCredit && _visibility.showDueDate,
-      showPaymentTerms: isCredit && _visibility.showPaymentTerms,
-      showStateOfSupply: _visibility.showStateOfSupply,
+      showTime: _visibility.showTime && headerVisibility.showTransactionTime,
+      showDueDate:
+          isCredit &&
+          _visibility.showDueDate &&
+          transactionFeatures.dueDatesAndPaymentTerms,
+      showPaymentTerms:
+          isCredit &&
+          _visibility.showPaymentTerms &&
+          transactionFeatures.dueDatesAndPaymentTerms,
+      showStateOfSupply:
+          _visibility.showStateOfSupply &&
+          ref.watch(gstPlaceOfSupplyEnabledProvider),
       showGodown: _visibility.showGodown,
-      showEWayBill: _visibility.showEWayBill,
+      showEWayBill:
+          _visibility.showEWayBill && transactionFeatures.showEWayBillNumber,
       showParty: _visibility.showParty,
-      showBillingName: _visibility.showBillingName,
+      showBillingName:
+          _visibility.showBillingName &&
+          headerVisibility.showBillingNameOnInvoice,
+      showCustomerPoDetails: headerVisibility.showCustomerPoDetails,
       showPhone: _visibility.showPhone,
       showBillingAddress: _visibility.showBillingAddress,
       showShippingAddress: _visibility.showShippingAddress,
-      showGstin: _visibility.showGstin,
+      showGstin:
+          _visibility.showGstin && ref.watch(enableGstinOnPartyProvider),
       showEmail: _visibility.showEmail,
       showItems: _visibility.showItems,
       showBarcodeScan: !widget.readOnly && isBarcodeScanningEnabled(ref),
@@ -597,7 +686,9 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
       showPaymentSection: _visibility.showPaymentSection,
       showReceivedAmount: _visibility.showReceivedAmount,
       showDescription: _visibility.showDescription,
-      showTerms: _visibility.showTerms,
+      showTerms:
+          _visibility.showTerms &&
+          transactionFeatures.termsAndConditionsEnabled,
       showAttachments: _visibility.showAttachments,
       showSaleTypeToggle: _visibility.showSaleTypeToggle,
       showSettings: _visibility.showSettings,
@@ -641,8 +732,28 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
           children: [
             MobileDocumentHeader(
               visibility: visibility,
-              documentNumberValue: _invoiceNumberLabel(form),
+              documentNumberValue: invoiceNumberLabel,
               documentNumberIsPlaceholder: false,
+              documentNumberEditable:
+                  useInvoiceNumberField && !widget.readOnly,
+              documentNumberController: _invoiceNumberController,
+              onDocumentNumberChanged: notifier.updateInvoiceNumberFromUser,
+              showInvoiceNumberManualToggle:
+                  useInvoiceNumberField && !widget.readOnly,
+              invoiceNumberManual: isManualNumber,
+              onInvoiceNumberManualToggle: widget.readOnly
+                  ? null
+                  : (manual) {
+                      if (manual) {
+                        notifier.enableManualInvoiceNumber(
+                          invoiceNumberLabel,
+                        );
+                      } else {
+                        notifier.toggleInvoiceNumberMode(
+                          InvoiceNumberMode.auto,
+                        );
+                      }
+                    },
               dateValue: formatSaleSingleDate(form.invoiceDate),
               dateIsPlaceholder: form.invoiceDate == null,
               onDateTap: _pickInvoiceDate,
@@ -662,6 +773,13 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
               onGodownTap: _pickGodown,
               eWayBillController: _eWayController,
               onEWayBillChanged: notifier.updateEWayBillNo,
+              customerPoNumberController: _customerPoNumberController,
+              onCustomerPoNumberChanged: notifier.updateCustomerPoNumber,
+              customerPoDateValue: form.customerPoDate != null
+                  ? formatSaleSingleDate(form.customerPoDate)
+                  : null,
+              customerPoDateIsPlaceholder: form.customerPoDate == null,
+              onCustomerPoDateTap: _pickCustomerPoDate,
             ),
             const SizedBox(height: AppSpacing.lg),
             MobileDocumentPartySection(
@@ -703,8 +821,8 @@ class _MobileAddSalePageState extends ConsumerState<MobileAddSalePage> {
                   MobileDocumentLineDisplay(
                     name: entry.item.itemName,
                     qtyLabel:
-                        '${entry.item.qty} ${entry.item.unit} × ₹${MobileDocumentItemsSection.formatAmount(entry.item.pricePerUnit)}',
-                    amountLabel: MobileDocumentItemsSection.formatAmount(
+                        '${entry.item.qty} ${entry.item.unit} × ${MobileDocumentItemsSection.formatAmount(ref, entry.item.pricePerUnit)}',
+                    amountLabel: MobileDocumentItemsSection.formatAmount(ref, 
                       entry.item.amount,
                     ),
                   ),

@@ -44,6 +44,6 @@ class TransactionMessageSettingsNotifier
     );
     await repository.save(settings);
     state = AsyncData(settings);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.transactionMessages);
+    notifySettingsSaved(message: SettingsSaveMessages.transactionMessages);
   }
 }

@@ -32,6 +32,6 @@ class WhatsAppSettingsNotifier extends _$WhatsAppSettingsNotifier {
     );
     await repository.save(settings);
     state = AsyncData(settings);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.whatsApp);
+    notifySettingsSaved(message: SettingsSaveMessages.whatsApp);
   }
 }

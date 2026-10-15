@@ -61,14 +61,14 @@ class TaxRates extends _$TaxRates {
     final repository = await ref.read(taxRateMasterRepositoryProvider.future);
     await repository.update(id, request);
     ref.invalidateSelf();
-    notifySettingsSaved(ref, message: SettingsSaveMessages.taxRates);
+    notifySettingsSaved(message: SettingsSaveMessages.taxRates);
   }
 
   Future<void> deleteRate(String id) async {
     final repository = await ref.read(taxRateMasterRepositoryProvider.future);
     await repository.softDelete(id);
     ref.invalidateSelf();
-    notifySettingsSaved(ref, message: SettingsSaveMessages.taxRates);
+    notifySettingsSaved(message: SettingsSaveMessages.taxRates);
   }
 
   Future<void> refresh() async {

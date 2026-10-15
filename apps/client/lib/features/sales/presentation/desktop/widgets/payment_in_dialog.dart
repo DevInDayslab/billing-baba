@@ -6,7 +6,9 @@ import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets
 import 'package:billing_baba/features/payments/presentation/shared/payment_flow_launcher.dart';
 import 'package:billing_baba/features/payments/presentation/shared/payment_intent_builder.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
+import 'package:billing_baba/features/documents/application/document_number_preview.dart';
 import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_attachments_section.dart';
@@ -228,10 +230,27 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
   Widget build(BuildContext context) {
     final form = ref.watch(paymentInFormProvider);
     final notifier = ref.read(paymentInFormProvider.notifier);
-    final totalAmount = form.receivedAmount + form.discount;
+    final showDiscount =
+        ref.watch(saleTransactionFeaturesProvider).discountDuringPayment;
+    final totalAmount = showDiscount
+        ? form.receivedAmount + form.discount
+        : form.receivedAmount;
 
-    if (_receiptNoController.text != form.receiptNo) {
-      _receiptNoController.text = form.receiptNo;
+    final receiptPreview = watchDocumentNumberPreview(
+      ref,
+      paymentInDocumentSeries,
+    );
+    final displayReceiptNo = resolveDocumentNumberDisplay(
+      documentId: null,
+      currentNumber: form.receiptNo,
+      preview: receiptPreview,
+      forceAuto: isUnsetDocumentNumber(form.receiptNo),
+    );
+    final receiptControllerValue = isUnsetDocumentNumber(form.receiptNo)
+        ? displayReceiptNo
+        : form.receiptNo;
+    if (_receiptNoController.text != receiptControllerValue) {
+      _receiptNoController.text = receiptControllerValue;
     }
 
     return ConstrainedBox(
@@ -536,34 +555,36 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          _AmountRow(
-                            label: 'Discount',
-                            child: SizedBox(
-                              width: 120,
-                              child: TextField(
-                                controller: _discountController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
+                          if (showDiscount) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            _AmountRow(
+                              label: 'Discount',
+                              child: SizedBox(
+                                width: 120,
+                                child: TextField(
+                                  controller: _discountController,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'^\d*\.?\d{0,2}'),
                                     ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'^\d*\.?\d{0,2}'),
+                                  ],
+                                  style: saleFieldTextStyle,
+                                  textAlign: TextAlign.right,
+                                  decoration: buildSaleFieldDecoration(
+                                    compact: true,
                                   ),
-                                ],
-                                style: saleFieldTextStyle,
-                                textAlign: TextAlign.right,
-                                decoration: buildSaleFieldDecoration(
-                                  compact: true,
+                                  onChanged: (value) {
+                                    final amount = double.tryParse(value) ?? 0;
+                                    notifier.updateDiscount(amount);
+                                  },
                                 ),
-                                onChanged: (value) {
-                                  final amount = double.tryParse(value) ?? 0;
-                                  notifier.updateDiscount(amount);
-                                },
                               ),
                             ),
-                          ),
+                          ],
                           const SizedBox(height: AppSpacing.sm),
                           _AmountRow(
                             label: 'Total',

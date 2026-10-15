@@ -23,6 +23,8 @@ class SaleLineItem {
     this.mrp = 0,
     this.size = '',
     this.qty = 0,
+    this.freeQty = 0,
+    this.packetCount = 0,
     this.unit = 'NONE',
     this.pricePerUnit = 0,
     this.priceIsTaxInclusive = false,
@@ -31,6 +33,7 @@ class SaleLineItem {
     this.isConfirmed = false,
     this.priceManuallyOverridden = false,
     this.catalogUnitPrice = 0,
+    this.unitCost = 0,
   });
 
   factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
@@ -48,6 +51,8 @@ class SaleLineItem {
   final double mrp;
   final String size;
   final double qty;
+  final double freeQty;
+  final double packetCount;
   final String unit;
   final double pricePerUnit;
   final bool priceIsTaxInclusive;
@@ -56,8 +61,13 @@ class SaleLineItem {
   final bool isConfirmed;
   final bool priceManuallyOverridden;
   final double catalogUnitPrice;
+  final double unitCost;
 
   double get _discountedUnitPrice => pricePerUnit * (1 - discountPercent / 100);
+
+  double get lineCost => unitCost > 0 ? unitCost * qty : 0;
+
+  double get lineProfit => amount - lineCost;
 
   /// Additional line revenue from a manual price increase above catalog price.
   double get markupAmount {
@@ -101,6 +111,8 @@ class SaleLineItem {
     double? mrp,
     String? size,
     double? qty,
+    double? freeQty,
+    double? packetCount,
     String? unit,
     double? pricePerUnit,
     bool? priceIsTaxInclusive,
@@ -109,6 +121,7 @@ class SaleLineItem {
     bool? isConfirmed,
     bool? priceManuallyOverridden,
     double? catalogUnitPrice,
+    double? unitCost,
     bool clearExpDate = false,
     bool clearMfgDate = false,
   }) {
@@ -126,6 +139,8 @@ class SaleLineItem {
       mrp: mrp ?? this.mrp,
       size: size ?? this.size,
       qty: qty ?? this.qty,
+      freeQty: freeQty ?? this.freeQty,
+      packetCount: packetCount ?? this.packetCount,
       unit: unit ?? this.unit,
       pricePerUnit: pricePerUnit ?? this.pricePerUnit,
       priceIsTaxInclusive: priceIsTaxInclusive ?? this.priceIsTaxInclusive,
@@ -135,6 +150,7 @@ class SaleLineItem {
       priceManuallyOverridden:
           priceManuallyOverridden ?? this.priceManuallyOverridden,
       catalogUnitPrice: catalogUnitPrice ?? this.catalogUnitPrice,
+      unitCost: unitCost ?? this.unitCost,
     );
   }
 }
@@ -185,6 +201,8 @@ class AddSaleFormState {
     this.invoiceTime,
     this.stateOfSupply = 'Madhya Pradesh',
     this.eWayBillNo = '',
+    this.customerPoNumber = '',
+    this.customerPoDate,
     this.paymentTerms = 'Due on Receipt',
     this.termsTitle = 'Sale Invoice',
     this.termsText = 'Thanks for doing business with us!',
@@ -210,7 +228,11 @@ class AddSaleFormState {
     this.attachedSaleOrderIds = const [],
     this.partyPriceTier,
     this.taxOption = 'NONE',
+    this.transactionDiscountPercent = 0,
     this.hiddenLedgerBalance = 0,
+    this.repeatInvoiceEnabled = false,
+    this.repeatInvoiceFrequency = 'Monthly',
+    this.useWholesalePriceOnInvoice = false,
   });
 
   final String? documentId;
@@ -231,6 +253,8 @@ class AddSaleFormState {
   final TimeOfDay? invoiceTime;
   final String stateOfSupply;
   final String eWayBillNo;
+  final String customerPoNumber;
+  final DateTime? customerPoDate;
   final String paymentTerms;
   final String termsTitle;
   final String termsText;
@@ -256,7 +280,16 @@ class AddSaleFormState {
   final List<String> attachedSaleOrderIds;
   final String? partyPriceTier;
   final String taxOption;
+  final double transactionDiscountPercent;
   final double hiddenLedgerBalance;
+  final bool repeatInvoiceEnabled;
+  final String repeatInvoiceFrequency;
+  final bool useWholesalePriceOnInvoice;
+
+  double get estimatedCostTotal =>
+      items.fold<double>(0, (sum, line) => sum + line.lineCost);
+
+  double get estimatedProfitTotal => rawGrandTotal - estimatedCostTotal;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -389,6 +422,9 @@ class AddSaleFormState {
     TimeOfDay? invoiceTime,
     String? stateOfSupply,
     String? eWayBillNo,
+    String? customerPoNumber,
+    DateTime? customerPoDate,
+    bool clearCustomerPoDate = false,
     String? paymentTerms,
     String? termsTitle,
     String? termsText,
@@ -419,8 +455,12 @@ class AddSaleFormState {
     bool clearPartyPriceTier = false,
     bool clearPartyId = false,
     String? taxOption,
+    double? transactionDiscountPercent,
     double? hiddenLedgerBalance,
     bool clearHiddenLedgerBalance = false,
+    bool? repeatInvoiceEnabled,
+    String? repeatInvoiceFrequency,
+    bool? useWholesalePriceOnInvoice,
   }) {
     return AddSaleFormState(
       documentId: clearDocumentId ? null : (documentId ?? this.documentId),
@@ -441,6 +481,9 @@ class AddSaleFormState {
       invoiceTime: invoiceTime ?? this.invoiceTime,
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
       eWayBillNo: eWayBillNo ?? this.eWayBillNo,
+      customerPoNumber: customerPoNumber ?? this.customerPoNumber,
+      customerPoDate:
+          clearCustomerPoDate ? null : (customerPoDate ?? this.customerPoDate),
       paymentTerms: paymentTerms ?? this.paymentTerms,
       termsTitle: termsTitle ?? this.termsTitle,
       termsText: termsText ?? this.termsText,
@@ -471,9 +514,17 @@ class AddSaleFormState {
           ? null
           : (partyPriceTier ?? this.partyPriceTier),
       taxOption: taxOption ?? this.taxOption,
+      transactionDiscountPercent:
+          transactionDiscountPercent ?? this.transactionDiscountPercent,
       hiddenLedgerBalance: clearHiddenLedgerBalance
           ? 0
           : (hiddenLedgerBalance ?? this.hiddenLedgerBalance),
+      repeatInvoiceEnabled:
+          repeatInvoiceEnabled ?? this.repeatInvoiceEnabled,
+      repeatInvoiceFrequency:
+          repeatInvoiceFrequency ?? this.repeatInvoiceFrequency,
+      useWholesalePriceOnInvoice:
+          useWholesalePriceOnInvoice ?? this.useWholesalePriceOnInvoice,
     );
   }
 }

@@ -34,6 +34,7 @@ class SaleInvoiceSettingsRepository {
   Map<String, dynamic> _toJson(SaleInvoiceSettings settings) {
     return {
       'invoiceBillNumberEnabled': settings.invoiceBillNumberEnabled,
+      'manualInvoiceNumberEnabled': settings.manualInvoiceNumberEnabled,
       'cashSaleByDefault': settings.cashSaleByDefault,
       'billingNameOfParties': settings.billingNameOfParties,
       'poDetailsForCustomer': settings.poDetailsForCustomer,
@@ -104,6 +105,9 @@ class SaleInvoiceSettingsRepository {
       invoiceBillNumberEnabled:
           json['invoiceBillNumberEnabled'] as bool? ??
           defaults.invoiceBillNumberEnabled,
+      manualInvoiceNumberEnabled:
+          json['manualInvoiceNumberEnabled'] as bool? ??
+          defaults.manualInvoiceNumberEnabled,
       cashSaleByDefault:
           json['cashSaleByDefault'] as bool? ?? defaults.cashSaleByDefault,
       billingNameOfParties:

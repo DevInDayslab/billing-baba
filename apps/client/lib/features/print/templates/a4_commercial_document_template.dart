@@ -24,8 +24,10 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
 
     final config = CommercialDocumentLayoutConfig.forDocument(document);
     final showGst = config.showGstColumns;
+    final showLinePricing = config.showLinePricing;
     final columnWidths = CommercialDocumentPdfSections.tableColumnWidths(
       showGst: showGst,
+      showLinePricing: showLinePricing,
     );
     final pdf = pw.Document();
 
@@ -76,6 +78,7 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
                 columnWidths: columnWidths,
                 children: CommercialDocumentPdfSections.itemsTableHeader(
                   showGst: showGst,
+                  showLinePricing: showLinePricing,
                 ),
               ),
             ],
@@ -97,6 +100,7 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
             children: CommercialDocumentPdfSections.itemsTableRows(
               lines: document.lines,
               showGst: showGst,
+              showLinePricing: showLinePricing,
             ),
           ),
           CommercialDocumentPdfSections.closingSection(document, config),

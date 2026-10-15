@@ -38,7 +38,10 @@ import 'package:billing_baba/features/sales/data/sale_fa_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/print_settings_provider.dart';
+import 'package:billing_baba/features/settings/models/general_settings.dart';
+import 'package:billing_baba/shared/business/business_amount_format.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -68,6 +71,13 @@ Future<PrintDataService> printDataService(Ref ref) async {
   } on Object {
     deviceId = null;
   }
+  final generalSettings =
+      ref.watch(generalSettingsProvider).value ?? GeneralSettings.defaults();
+  final currencyCode = ref.watch(businessCurrencyCodeProvider);
+  final amountFormatter = businessAmountNumberFormat(
+    currencyCode: currencyCode,
+    decimalPlaces: generalSettings.amountDecimalPlaces,
+  );
   final remote = InventoryRemoteDataSource(api.dio);
   String businessIdReader() =>
       storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
@@ -119,6 +129,10 @@ Future<PrintDataService> printDataService(Ref ref) async {
       remote: JobWorkRemoteDataSource(api.dio),
     ),
     imageService: imageService,
+    amountFormatter: amountFormatter,
+    showPartyGstinOnDocuments: generalSettings.enableGstinOnParty,
+    deliveryChallanPrintAmount:
+        generalSettings.deliveryChallanPrintAmountEnabled,
   );
 }
 

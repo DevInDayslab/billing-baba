@@ -9,19 +9,28 @@ import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_navigation.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mobile reports hub — lists all report categories from the desktop app.
-class MobileReportsHubScreen extends StatelessWidget {
+class MobileReportsHubScreen extends ConsumerWidget {
   const MobileReportsHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final groups = ReportsNavCatalog.groups;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gst = ref.watch(effectiveGstTaxSettingsProvider);
+    final groups = ReportsNavCatalog.groups
+        .where(
+          (group) =>
+              ReportsNavCatalog.subsectionsFor(group, gstSettings: gst)
+                  .isNotEmpty,
+        )
+        .toList(growable: false);
     final bottomPadding = MobileBottomNavigation.contentBottomPadding(context);
 
     return Scaffold(
@@ -75,7 +84,7 @@ class MobileReportsHubScreen extends StatelessWidget {
                         ),
                         const Gap(4),
                         Text(
-                          '${groups.length} categories · ${groups.fold<int>(0, (sum, g) => sum + ReportsNavCatalog.subsectionsFor(g).length)} reports',
+                          '${groups.length} categories · ${groups.fold<int>(0, (sum, g) => sum + ReportsNavCatalog.subsectionsFor(g, gstSettings: gst).length)} reports',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: AppColors.textSecondary),
                         ),
@@ -90,7 +99,10 @@ class MobileReportsHubScreen extends StatelessWidget {
           for (var i = 0; i < groups.length; i++) ...[
             _GroupTile(
               group: groups[i],
-              reportCount: ReportsNavCatalog.subsectionsFor(groups[i]).length,
+              reportCount: ReportsNavCatalog.subsectionsFor(
+                groups[i],
+                gstSettings: gst,
+              ).length,
             ),
             if (i < groups.length - 1) const Gap(AppSpacing.sm),
           ],

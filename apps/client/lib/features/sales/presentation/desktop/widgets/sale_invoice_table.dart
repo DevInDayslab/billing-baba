@@ -4,6 +4,7 @@ import 'package:billing_baba/features/export/presentation/desktop/widgets/module
 import 'package:billing_baba/features/print/presentation/desktop/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_status_badge.dart';
@@ -182,6 +183,10 @@ class _SaleInvoiceTransactionsTableState
             ? _cellHorizontalPaddingCompact
             : _cellHorizontalPadding;
 
+        final columnFlags = SaleInvoiceTableColumnFlags.fromFeatures(
+          ref.watch(saleTransactionFeaturesProvider),
+        );
+
         final rows = [
           for (var i = 0; i < widget.items.length; i++)
             SaleInvoiceTableRows.buildDataRow(
@@ -192,6 +197,7 @@ class _SaleInvoiceTransactionsTableState
               isSelected: widget.items[i].id == selectedId,
               compact: compact,
               cellPadding: cellPadding,
+              columnFlags: columnFlags,
               onTap: () {
                 final invoice = widget.items[i];
                 ref
@@ -207,6 +213,7 @@ class _SaleInvoiceTransactionsTableState
           ref: ref,
           compact: compact,
           cellPadding: cellPadding,
+          columnFlags: columnFlags,
           onStatusFilter: (status) =>
               ref.read(saleInvoiceFiltersProvider.notifier).setStatus(status),
         );
@@ -255,6 +262,8 @@ class SaleInvoiceTableRows {
     required VoidCallback onTap,
     bool compact = false,
     double cellPadding = _cellHorizontalPadding,
+    SaleInvoiceTableColumnFlags columnFlags =
+        const SaleInvoiceTableColumnFlags(),
   }) {
     final dateText = compact
         ? _dateFormatCompact.format(invoice.date)
@@ -335,33 +344,36 @@ class SaleInvoiceTableRows {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        _DataCell(
-          padding: cellPadding,
-          alignment: Alignment.centerRight,
-          child: Text(
-            _currencyFormat.format(invoice.balance),
-            style: invoice.balance > 0
-                ? const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFC62828), // outstanding balance = red
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  )
-                : const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
+        if (columnFlags.showBalance)
+          _DataCell(
+            padding: cellPadding,
+            alignment: Alignment.centerRight,
+            child: Text(
+              _currencyFormat.format(invoice.balance),
+              style: invoice.balance > 0
+                  ? const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFC62828), // outstanding balance = red
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    )
+                  : const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+            ),
           ),
-        ),
-        _DataCell(
-          padding: cellPadding,
-          child: Text(dueText, overflow: TextOverflow.ellipsis),
-        ),
-        _DataCell(
-          padding: cellPadding,
-          child: SaleInvoiceStatusBadge(status: invoice.status, plain: true),
-        ),
+        if (columnFlags.showDueDate)
+          _DataCell(
+            padding: cellPadding,
+            child: Text(dueText, overflow: TextOverflow.ellipsis),
+          ),
+        if (columnFlags.showStatus)
+          _DataCell(
+            padding: cellPadding,
+            child: SaleInvoiceStatusBadge(status: invoice.status, plain: true),
+          ),
         _DataCell(
           padding: cellPadding,
           child: LayoutBuilder(
@@ -426,6 +438,8 @@ class _SaleInvoiceTableColumns {
     required ValueChanged<String> onStatusFilter,
     bool compact = false,
     double cellPadding = _cellHorizontalPadding,
+    SaleInvoiceTableColumnFlags columnFlags =
+        const SaleInvoiceTableColumnFlags(),
   }) {
     final dateWidth = compact ? 88.0 : _dateColWidth;
     final invoiceWidth = compact ? 72.0 : _invoiceColWidth;
@@ -572,47 +586,50 @@ class _SaleInvoiceTableColumns {
           ),
         ),
       ),
-      ResizableDataColumn(
-        initialWidth: balanceWidth,
-        minWidth: colMin,
-        header: TableColumnFilterTrigger(
-          config: ColumnFilter(
-            id: 'balance',
-            title: compact ? 'Bal' : 'Balance',
-            type: FilterType.number,
-          ),
-          alignment: Alignment.centerRight,
-          initialValue: filters.balanceColumnFilter,
-          onApply: (result) => filtersNotifier.setBalanceColumnFilter(
-            FilterUtils.fromResult(result) as AmountColumnFilter?,
-          ),
-        ),
-      ),
-      ResizableDataColumn(
-        initialWidth: dueWidth,
-        minWidth: colMin,
-        header: TableColumnFilterTrigger(
-          config: ColumnFilter(
-            id: 'dueDate',
-            title: compact ? 'Due' : 'Due date',
-            type: FilterType.date,
-          ),
-          initialValue: filters.dueDateColumnFilter,
-          onApply: (result) => filtersNotifier.setDueDateColumnFilter(
-            FilterUtils.fromResult(result) as DateColumnFilter?,
+      if (columnFlags.showBalance)
+        ResizableDataColumn(
+          initialWidth: balanceWidth,
+          minWidth: colMin,
+          header: TableColumnFilterTrigger(
+            config: ColumnFilter(
+              id: 'balance',
+              title: compact ? 'Bal' : 'Balance',
+              type: FilterType.number,
+            ),
+            alignment: Alignment.centerRight,
+            initialValue: filters.balanceColumnFilter,
+            onApply: (result) => filtersNotifier.setBalanceColumnFilter(
+              FilterUtils.fromResult(result) as AmountColumnFilter?,
+            ),
           ),
         ),
-      ),
-      ResizableDataColumn(
-        initialWidth: statusWidth,
-        minWidth: colMin,
-        header: _StatusColumnFilterHeader(
-          onStatusFilter: onStatusFilter,
-          selectedStatus: filters.selectedStatus,
-          compact: compact,
-          horizontalPadding: cellPadding,
+      if (columnFlags.showDueDate)
+        ResizableDataColumn(
+          initialWidth: dueWidth,
+          minWidth: colMin,
+          header: TableColumnFilterTrigger(
+            config: ColumnFilter(
+              id: 'dueDate',
+              title: compact ? 'Due' : 'Due date',
+              type: FilterType.date,
+            ),
+            initialValue: filters.dueDateColumnFilter,
+            onApply: (result) => filtersNotifier.setDueDateColumnFilter(
+              FilterUtils.fromResult(result) as DateColumnFilter?,
+            ),
+          ),
         ),
-      ),
+      if (columnFlags.showStatus)
+        ResizableDataColumn(
+          initialWidth: statusWidth,
+          minWidth: colMin,
+          header: _StatusColumnFilterHeader(
+            onStatusFilter: onStatusFilter,
+            selectedStatus: filters.selectedStatus,
+            compact: compact,
+            horizontalPadding: cellPadding,
+          ),
+        ),
       ResizableDataColumn(
         initialWidth: actionsWidth,
         minWidth: compact ? 56 : 88,
