@@ -7,6 +7,7 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_p
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
 import 'package:billing_baba/features/parties/utils/party_search_match.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -317,13 +318,15 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
             },
           ),
         ),
-        const Divider(height: 1),
-        ListTile(
-          dense: true,
-          leading: const Icon(Icons.add, color: AppColors.primary),
-          title: const Text('+ Add New Party'),
-          onTap: _openAddPartyDialog,
-        ),
+        if (!ref.watch(blockNewPartiesFromTxnProvider)) ...[
+          const Divider(height: 1),
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.add, color: AppColors.primary),
+            title: const Text('+ Add New Party'),
+            onTap: _openAddPartyDialog,
+          ),
+        ],
       ],
     );
   }

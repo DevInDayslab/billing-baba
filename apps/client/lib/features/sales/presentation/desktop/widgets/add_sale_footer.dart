@@ -1,5 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_features.dart';
+import 'package:billing_baba/features/sales/application/sale_transaction_totals_settings.dart';
+import 'package:billing_baba/features/sales/utils/sale_invoice_totals.dart';
+import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -15,6 +19,7 @@ import 'package:billing_baba/shared/attachments/transaction_attachment_actions.d
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:billing_baba/shared/business/business_amount_format.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -57,14 +62,9 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
     });
   }
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
-
   @override
   Widget build(BuildContext context) {
+    final currencyFormat = ref.watch(businessAmountFormatterProvider);
     final form = ref.watch(
       addSaleFormProvider(sessionKey: widget.sessionKey),
     );
@@ -149,14 +149,32 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       ),
     );
     final loyaltyPointsEnabled = ref.watch(partyLoyaltyPointsEnabledProvider);
+    final showTransactionTaxes = ref.watch(gstAllowsTransactionTaxesProvider);
+    final transactionFeatures = ref.watch(saleTransactionFeaturesProvider);
+    final totalsSettings = ref.watch(saleTransactionTotalsSettingsProvider);
+    final computedTotals = computeSaleInvoiceTotals(
+      form: form,
+      settings: totalsSettings,
+    );
+    final showRepeatInvoices =
+        !totalsSettings.isLiteSale && transactionFeatures.repeatInvoices;
+    final showTerms =
+        !totalsSettings.isLiteSale &&
+        transactionFeatures.termsAndConditionsEnabled;
+    final repeatSection = showRepeatInvoices
+        ? _RepeatInvoiceSection(sessionKey: widget.sessionKey)
+        : null;
     final totalsSection = _TotalsSection(
       form: form,
       notifier: notifier,
+      totalsSettings: totalsSettings,
       totalTax: totalTax,
+      roundOffAmount: computedTotals.roundOffAmount,
       grandTotal: grandTotal,
       isCredit: isCredit,
-      currencyFormat: _currencyFormat,
+      currencyFormat: currencyFormat,
       loyaltyPointsEnabled: loyaltyPointsEnabled,
+      showTransactionTaxes: showTransactionTaxes,
     );
 
     return LayoutBuilder(
@@ -167,8 +185,14 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              termsSection,
-              const SizedBox(height: 16),
+              if (repeatSection != null) ...[
+                repeatSection,
+                const SizedBox(height: 16),
+              ],
+              if (showTerms) ...[
+                termsSection,
+                const SizedBox(height: 16),
+              ],
               Align(
                 alignment: Alignment.centerLeft,
                 child: FractionallySizedBox(
@@ -186,21 +210,29 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (repeatSection != null) ...[
+              repeatSection,
+              const SizedBox(height: 16),
+            ],
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 2, child: termsSection),
-                const SizedBox(width: 16),
+                if (showTerms) ...[
+                  Expanded(flex: 2, child: termsSection),
+                  const SizedBox(width: 16),
+                ],
                 Expanded(
                   flex: 2,
                   child: Align(
                     alignment: Alignment.topLeft,
                     child: FractionallySizedBox(
                       widthFactor: _attachmentActionsWidthFactor,
-                      child: SizedBox(
-                        height: _termsAndAttachmentPanelHeight,
-                        child: attachmentActionsBoxTall,
-                      ),
+                      child: showTerms
+                          ? SizedBox(
+                              height: _termsAndAttachmentPanelHeight,
+                              child: attachmentActionsBoxTall,
+                            )
+                          : attachmentActionsBox,
                     ),
                   ),
                 ),
@@ -261,85 +293,129 @@ class _TotalsSection extends StatelessWidget {
   const _TotalsSection({
     required this.form,
     required this.notifier,
+    required this.totalsSettings,
     required this.totalTax,
+    required this.roundOffAmount,
     required this.grandTotal,
     required this.isCredit,
     required this.currencyFormat,
     required this.loyaltyPointsEnabled,
+    required this.showTransactionTaxes,
   });
 
   final AddSaleFormState form;
   final AddSaleForm notifier;
+  final SaleTransactionTotalsSettings totalsSettings;
   final double totalTax;
+  final double roundOffAmount;
   final double grandTotal;
   final bool isCredit;
   final NumberFormat currencyFormat;
   final bool loyaltyPointsEnabled;
+  final bool showTransactionTaxes;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            const Text(
-              'Tax',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
+        if (totalsSettings.transactionWiseDiscount) ...[
+          Row(
+            children: [
+              const Text(
+                'Discount %',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 72,
-              child: SaleGenericSelectDropdown(
-                value: form.taxOption,
-                options: SaleDropdownOptions.taxSlabs,
-                highlight: SaleDropdownHighlight.red,
-                compact: true,
-                onSelected: notifier.updateTaxOption,
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 72,
+                child: _AmountField(
+                  value: form.transactionDiscountPercent,
+                  readOnly: false,
+                  onChanged: (value) =>
+                      notifier.updateTransactionDiscountPercent(value),
+                ),
               ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: 72,
-              child: _AmountField(
-                value: totalTax,
-                readOnly: true,
-                onChanged: (_) {},
+              const Spacer(),
+              SizedBox(
+                width: 72,
+                child: _AmountField(
+                  value: form.subtotal * form.transactionDiscountPercent / 100,
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Checkbox(
-              value: form.roundOff,
-              onChanged: (value) =>
-                  notifier.toggleRoundOff(value: value ?? false),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-            ),
-            const Text(
-              'Round Off',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (showTransactionTaxes)
+          Row(
+            children: [
+              const Text(
+                'Tax',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: 72,
-              child: _AmountField(
-                value: form.roundOffAmount,
-                readOnly: !form.roundOff,
-                onChanged: (_) {},
+              if (totalsSettings.transactionWiseTax) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 72,
+                  child: SaleGenericSelectDropdown(
+                    value: form.taxOption,
+                    options: SaleDropdownOptions.taxSlabs,
+                    highlight: SaleDropdownHighlight.red,
+                    compact: true,
+                    onSelected: notifier.updateTaxOption,
+                  ),
+                ),
+              ],
+              const Spacer(),
+              SizedBox(
+                width: 72,
+                child: _AmountField(
+                  value: totalTax,
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        if (totalsSettings.roundOffTransactionAmount) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Checkbox(
+                value: form.roundOff,
+                onChanged: (value) =>
+                    notifier.toggleRoundOff(value: value ?? false),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+              const Text(
+                'Round Off',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: 72,
+                child: _AmountField(
+                  value: roundOffAmount,
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
+              ),
+            ],
+          ),
+        ],
         if (loyaltyPointsEnabled && form.showLoyaltySection) ...[
           const SizedBox(height: 8),
           _LoyaltyPointsSection(
@@ -1182,6 +1258,70 @@ class _AmountFieldState extends State<_AmountField> {
       readOnly: true,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
       decoration: buildSaleFieldDecoration(),
+    );
+  }
+}
+
+class _RepeatInvoiceSection extends ConsumerWidget {
+  const _RepeatInvoiceSection({required this.sessionKey});
+
+  final String sessionKey;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
+    final notifier = ref.read(addSaleFormProvider(sessionKey: sessionKey).notifier);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: _cardBorder),
+        borderRadius: AppRadius.lgBorder,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Repeat invoice',
+              style: AppTypography.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: Text(
+                'Create repeat invoices on a schedule',
+                style: AppTypography.inter(fontSize: 13),
+              ),
+              value: form.repeatInvoiceEnabled,
+              onChanged: (value) =>
+                  notifier.updateRepeatInvoiceEnabled(value ?? false),
+            ),
+            if (form.repeatInvoiceEnabled) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Frequency',
+                style: saleFieldLabelStyle,
+              ),
+              const SizedBox(height: 4),
+              SaleGenericSelectDropdown(
+                value: form.repeatInvoiceFrequency,
+                options: saleRepeatInvoiceFrequencies,
+                hintText: 'Select frequency',
+                compact: true,
+                onSelected: notifier.updateRepeatInvoiceFrequency,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

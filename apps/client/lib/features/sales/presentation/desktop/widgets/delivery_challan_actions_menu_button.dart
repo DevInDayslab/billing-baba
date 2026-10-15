@@ -4,7 +4,9 @@ import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/delivery_challan_goods_return_convert_dialog.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -144,7 +146,7 @@ class DeliveryChallanTableActions {
       case 'view_edit':
         await context.push('${AppRoutes.editDeliveryChallan}/${challan.id}');
       case 'convert_to_sale':
-        await _convert(context, notifier, challan.id);
+        await _convert(context, ref, notifier, challan.id);
       case 'cancel':
         await _confirmCancel(context, challan, notifier);
       case 'delete':
@@ -177,24 +179,41 @@ class DeliveryChallanTableActions {
 
   static Future<void> _convert(
     BuildContext context,
+    WidgetRef ref,
     DeliveryChallans notifier,
     String documentId,
   ) async {
-    final error = await notifier.convertChallan(
+    final goodsReturn =
+        ref.read(deliveryChallanGoodsReturnEnabledProvider);
+    ChallanBillQtyByItemId? billQtyByItemId;
+    if (goodsReturn) {
+      billQtyByItemId = await showDeliveryChallanGoodsReturnConvertDialog(
+        context: context,
+        ref: ref,
+        challanDocumentId: documentId,
+      );
+      if (billQtyByItemId == null || !context.mounted) return;
+    }
+
+    final result = await notifier.convertChallanToSale(
       documentId,
-      targetType: 'tax_invoice',
+      billQtyByItemId: billQtyByItemId,
     );
     if (!context.mounted) return;
-    if (error != null) {
+    if (result.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(result.error!)),
       );
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Delivery challan converted to sale')),
     );
-    if (context.mounted) {
+    if (!context.mounted) return;
+    final saleId = result.saleDocumentId;
+    if (goodsReturn && saleId != null) {
+      context.push('${AppRoutes.editSale}/$saleId');
+    } else {
       context.go(AppRoutes.saleInvoices);
     }
   }

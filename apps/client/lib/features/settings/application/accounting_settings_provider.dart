@@ -48,6 +48,6 @@ class AccountingSettingsNotifier extends AsyncNotifier<AccountingSettings> {
     final repo = await ref.read(accountingSettingsRepositoryProvider.future);
     await repo.save(next);
     state = AsyncData(next);
-    notifySettingsSaved(ref, message: SettingsSaveMessages.accounting);
+    notifySettingsSaved(message: SettingsSaveMessages.accounting);
   }
 }

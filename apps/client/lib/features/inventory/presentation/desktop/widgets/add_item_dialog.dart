@@ -1507,6 +1507,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               onPendingPhotoTap: (index) => unawaited(_openPendingPhoto(index)),
               showCategory: itemSettings.itemCategory,
               showDescription: itemSettings.descriptionEnabled,
+              showHsnSacCode: itemSettings.hsnSacCode,
               descriptionFieldLabel: itemSettings.resolvedDescriptionFieldLabel,
             ),
             if (form.itemType == ItemType.product &&
@@ -1603,6 +1604,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           onScanBarcode: showBarcodeScan ? _scanBarcode : null,
           showCategory: itemSettings.itemCategory,
           showDescription: itemSettings.descriptionEnabled,
+          showHsnSacCode: itemSettings.hsnSacCode,
           descriptionFieldLabel: itemSettings.resolvedDescriptionFieldLabel,
           showManufacturing:
               form.itemType == ItemType.product && itemSettings.manufacturing,

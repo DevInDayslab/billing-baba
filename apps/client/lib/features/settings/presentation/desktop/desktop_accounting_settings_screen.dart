@@ -63,9 +63,13 @@ class DesktopAccountingSettingsScreen extends ConsumerWidget {
                       value: settings.allowJournalEntries,
                       infoKey: AccountingSettingsInfoKey.allowJournalEntries,
                       muted: !settings.isJournalEntriesApplicable,
-                      onChanged: (enabled) => patch(
-                        (s) => s.withAllowJournalEntries(enabled ?? false),
-                      ),
+                      onChanged: settings.enableAccountingModule
+                          ? (enabled) => patch(
+                              (s) => s.withAllowJournalEntries(
+                                enabled ?? false,
+                              ),
+                            )
+                          : null,
                     ),
                   ],
                 ),

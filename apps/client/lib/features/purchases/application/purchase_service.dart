@@ -1144,6 +1144,7 @@ class PurchaseService {
   PurchaseDocumentDraftInput draftInputFromBillForm(
     AddPurchaseFormState form, {
     required PurchaseDocumentType documentType,
+    bool isGstFormal = true,
   }) {
     return PurchaseDocumentDraftInput(
       documentId: form.documentId,
@@ -1158,6 +1159,7 @@ class PurchaseService {
           : form.eWayBillNo.trim(),
       notes: form.description,
       godownId: form.godownId,
+      isGstFormal: isGstFormal,
       items: form.items,
     );
   }

@@ -93,6 +93,7 @@ enum SaleTransactionPrefixType {
 class SaleInvoiceSettings {
   const SaleInvoiceSettings({
     required this.invoiceBillNumberEnabled,
+    required this.manualInvoiceNumberEnabled,
     required this.cashSaleByDefault,
     required this.billingNameOfParties,
     required this.poDetailsForCustomer,
@@ -140,6 +141,7 @@ class SaleInvoiceSettings {
   factory SaleInvoiceSettings.defaults({String? firmId}) {
     return SaleInvoiceSettings(
       invoiceBillNumberEnabled: true,
+      manualInvoiceNumberEnabled: false,
       cashSaleByDefault: false,
       billingNameOfParties: false,
       poDetailsForCustomer: false,
@@ -193,6 +195,7 @@ class SaleInvoiceSettings {
   }
 
   final bool invoiceBillNumberEnabled;
+  final bool manualInvoiceNumberEnabled;
   final bool cashSaleByDefault;
   final bool billingNameOfParties;
   final bool poDetailsForCustomer;
@@ -249,6 +252,7 @@ class SaleInvoiceSettings {
 
   SaleInvoiceSettings copyWith({
     bool? invoiceBillNumberEnabled,
+    bool? manualInvoiceNumberEnabled,
     bool? cashSaleByDefault,
     bool? billingNameOfParties,
     bool? poDetailsForCustomer,
@@ -295,6 +299,8 @@ class SaleInvoiceSettings {
     return SaleInvoiceSettings(
       invoiceBillNumberEnabled:
           invoiceBillNumberEnabled ?? this.invoiceBillNumberEnabled,
+      manualInvoiceNumberEnabled:
+          manualInvoiceNumberEnabled ?? this.manualInvoiceNumberEnabled,
       cashSaleByDefault: cashSaleByDefault ?? this.cashSaleByDefault,
       billingNameOfParties: billingNameOfParties ?? this.billingNameOfParties,
       poDetailsForCustomer: poDetailsForCustomer ?? this.poDetailsForCustomer,

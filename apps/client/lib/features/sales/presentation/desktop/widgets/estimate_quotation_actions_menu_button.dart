@@ -5,6 +5,7 @@ import 'package:billing_baba/features/print/presentation/desktop/widgets/documen
 import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -57,7 +58,12 @@ class EstimateQuotationActionsMenuButton extends ConsumerWidget {
       surfaceTintColor: Colors.transparent,
       shape: _menuShape,
       constraints: const BoxConstraints(minWidth: _menuMinWidth),
-      items: EstimateQuotationTableActions.buildMenuItems(estimate),
+      items: EstimateQuotationTableActions.buildMenuItems(
+        estimate,
+        enableDeliveryChallan:
+            ref.read(generalSettingsProvider).value?.enableDeliveryChallan ??
+            true,
+      ),
     );
 
     if (action == null || !context.mounted) return;
@@ -100,13 +106,14 @@ class EstimateQuotationTableActions {
   const EstimateQuotationTableActions._();
 
   static List<PopupMenuEntry<String>> buildMenuItems(
-    SaleInvoiceModel estimate,
-  ) {
+    SaleInvoiceModel estimate, {
+    required bool enableDeliveryChallan,
+  }) {
     final canConvert = estimate.documentStatus == SalesDocumentStatus.finalized;
 
     return [
       _menuItem('view_edit', 'View/Edit'),
-      if (canConvert)
+      if (canConvert && enableDeliveryChallan)
         _menuItem('convert_to_challan', 'Convert to Delivery Challan'),
       _menuItem('duplicate', 'Duplicate'),
       _menuItem('open_pdf', 'Open PDF'),

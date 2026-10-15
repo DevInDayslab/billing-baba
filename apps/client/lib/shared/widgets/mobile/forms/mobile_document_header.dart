@@ -13,6 +13,12 @@ class MobileDocumentHeader extends StatelessWidget {
     this.documentNumberLabel = 'Invoice No.',
     this.documentNumberValue,
     this.documentNumberIsPlaceholder = false,
+    this.documentNumberEditable = false,
+    this.documentNumberController,
+    this.onDocumentNumberChanged,
+    this.showInvoiceNumberManualToggle = false,
+    this.invoiceNumberManual = false,
+    this.onInvoiceNumberManualToggle,
     this.onDocumentNumberTap,
     this.dateLabel = 'Date',
     this.dateValue,
@@ -33,12 +39,23 @@ class MobileDocumentHeader extends StatelessWidget {
     this.onGodownTap,
     this.eWayBillController,
     this.onEWayBillChanged,
+    this.customerPoNumberController,
+    this.onCustomerPoNumberChanged,
+    this.customerPoDateValue,
+    this.customerPoDateIsPlaceholder = true,
+    this.onCustomerPoDateTap,
   });
 
   final MobileDocumentVisibility visibility;
   final String documentNumberLabel;
   final String? documentNumberValue;
   final bool documentNumberIsPlaceholder;
+  final bool documentNumberEditable;
+  final TextEditingController? documentNumberController;
+  final ValueChanged<String>? onDocumentNumberChanged;
+  final bool showInvoiceNumberManualToggle;
+  final bool invoiceNumberManual;
+  final ValueChanged<bool>? onInvoiceNumberManualToggle;
   final VoidCallback? onDocumentNumberTap;
   final String dateLabel;
   final String? dateValue;
@@ -59,6 +76,11 @@ class MobileDocumentHeader extends StatelessWidget {
   final VoidCallback? onGodownTap;
   final TextEditingController? eWayBillController;
   final ValueChanged<String>? onEWayBillChanged;
+  final TextEditingController? customerPoNumberController;
+  final ValueChanged<String>? onCustomerPoNumberChanged;
+  final String? customerPoDateValue;
+  final bool customerPoDateIsPlaceholder;
+  final VoidCallback? onCustomerPoDateTap;
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +92,41 @@ class MobileDocumentHeader extends StatelessWidget {
           children: [
             if (visibility.showDocumentNumber)
               Expanded(
-                child: MobileSalePickerField(
-                  label: documentNumberLabel,
-                  value: documentNumberValue ?? 'Auto',
-                  isPlaceholder: documentNumberIsPlaceholder,
-                  onTap: onDocumentNumberTap ?? () {},
-                ),
+                child: documentNumberEditable &&
+                        documentNumberController != null
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: MobileSaleFormField(
+                              label: documentNumberLabel,
+                              controller: documentNumberController,
+                              hintText: documentNumberLabel,
+                              readOnly: showInvoiceNumberManualToggle &&
+                                  !invoiceNumberManual,
+                              onChanged: onDocumentNumberChanged,
+                            ),
+                          ),
+                          if (showInvoiceNumberManualToggle) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 22),
+                              child: Switch(
+                                value: invoiceNumberManual,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                onChanged: onInvoiceNumberManualToggle,
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    : MobileSalePickerField(
+                        label: documentNumberLabel,
+                        value: documentNumberValue ?? 'Auto',
+                        isPlaceholder: documentNumberIsPlaceholder,
+                        onTap: onDocumentNumberTap ?? () {},
+                      ),
               ),
             if (visibility.showDocumentNumber && visibility.showDate)
               const SizedBox(width: AppSpacing.sm),
@@ -165,6 +216,23 @@ class MobileDocumentHeader extends StatelessWidget {
             controller: eWayBillController,
             hintText: 'E-Way bill number',
             onChanged: onEWayBillChanged,
+          ),
+        ],
+        if (visibility.showCustomerPoDetails) ...[
+          const SizedBox(height: AppSpacing.lg),
+          MobileSaleFormField(
+            label: 'Customer P.O. No.',
+            controller: customerPoNumberController,
+            hintText: 'PO number',
+            onChanged: onCustomerPoNumberChanged,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          MobileSalePickerField(
+            label: 'Customer P.O. Date',
+            value: customerPoDateValue ?? 'Select date',
+            isPlaceholder: customerPoDateIsPlaceholder,
+            trailingIcon: LucideIcons.calendar,
+            onTap: onCustomerPoDateTap ?? () {},
           ),
         ],
       ],

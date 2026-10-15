@@ -468,16 +468,22 @@ class DeliveryChallans extends _$DeliveryChallans {
     }
   }
 
-  Future<String?> convertChallan(
+  Future<({String? error, String? saleDocumentId})> convertChallanToSale(
     String documentId, {
-    required String targetType,
+    Map<String, double>? billQtyByItemId,
   }) async {
     try {
       final service = await ref.read(salesServiceProvider.future);
-      final document = await service.convertDocument(
+      var document = await service.convertDocument(
         documentId,
-        targetType: targetType,
+        targetType: 'tax_invoice',
       );
+      if (billQtyByItemId != null && billQtyByItemId.isNotEmpty) {
+        document = await service.applyLineQuantitiesByItemId(
+          document,
+          billQtyByItemId,
+        );
+      }
       await refresh();
       await refreshAfterSaleMutation(
         ref,
@@ -489,10 +495,28 @@ class DeliveryChallans extends _$DeliveryChallans {
               .where((id) => id.isNotEmpty),
         ),
       );
-      return null;
+      return (error: null, saleDocumentId: document.id);
     } catch (error) {
-      return SalesErrorMapper.messageFor(error);
+      return (error: SalesErrorMapper.messageFor(error), saleDocumentId: null);
     }
+  }
+
+  Future<String?> convertChallan(
+    String documentId, {
+    required String targetType,
+  }) async {
+    if (targetType != 'tax_invoice') {
+      try {
+        final service = await ref.read(salesServiceProvider.future);
+        await service.convertDocument(documentId, targetType: targetType);
+        await refresh();
+        return null;
+      } catch (error) {
+        return SalesErrorMapper.messageFor(error);
+      }
+    }
+    final result = await convertChallanToSale(documentId);
+    return result.error;
   }
 
   Future<String?> bulkConvertToSale(Set<String> documentIds) async {
