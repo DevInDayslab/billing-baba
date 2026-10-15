@@ -232,6 +232,7 @@ void invalidateAllBusinessScopedProvidersOn(
     ..invalidate(paymentInRecordsProvider)
     ..invalidate(paymentOutRecordsProvider)
     ..invalidate(expenseCategoriesProvider)
+    ..invalidate(expenseCatalogItemsProvider)
     ..invalidate(expenseTransactionsProvider)
     ..invalidate(purchaseFaProvider)
     ..invalidate(jobWorkOrdersListProvider);

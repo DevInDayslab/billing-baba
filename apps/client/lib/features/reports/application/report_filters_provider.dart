@@ -126,6 +126,7 @@ class ReportFilters extends _$ReportFilters {
       partyGroup: partyGroup,
       clearPartyGroup: partyGroup == null || partyGroup.isEmpty,
       currentPage: 1,
+      isTableLoading: true,
     );
   }
 
@@ -167,6 +168,7 @@ class ReportFilters extends _$ReportFilters {
       partyType: partyType,
       clearPartyType: partyType == null || partyType.isEmpty,
       currentPage: 1,
+      isTableLoading: true,
     );
   }
 

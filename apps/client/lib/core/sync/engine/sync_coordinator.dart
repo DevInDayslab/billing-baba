@@ -68,6 +68,7 @@ class SyncCoordinator {
     this._dealSync,
     this._expenseSync,
     this._expenseCategorySync,
+    this._expenseItemSync,
     this._stockLevelSync,
     this._todoSync,
     Uuid? uuid,
@@ -95,6 +96,7 @@ class SyncCoordinator {
     this.dealsEntityType = 'deals',
     this.expensesEntityType = 'expenses',
     this.expenseCategoriesEntityType = 'expense_categories',
+    this.expenseItemsEntityType = 'expense_items',
     this.stockLevelsEntityType = 'stock_levels',
     this.todosEntityType = 'todos',
   }) : _uuid = uuid ?? const Uuid();
@@ -126,6 +128,7 @@ class SyncCoordinator {
   final DealSync? _dealSync;
   final ExpenseSync? _expenseSync;
   final ExpenseCategorySync? _expenseCategorySync;
+  final ExpenseItemSync? _expenseItemSync;
   final StockLevelSync? _stockLevelSync;
   final TodoSync? _todoSync;
   final Uuid _uuid;
@@ -153,6 +156,7 @@ class SyncCoordinator {
   final String dealsEntityType;
   final String expensesEntityType;
   final String expenseCategoriesEntityType;
+  final String expenseItemsEntityType;
   final String stockLevelsEntityType;
   final String todosEntityType;
 
@@ -164,7 +168,7 @@ class SyncCoordinator {
       '$purchaseDocumentLinesEntityType,$leadsEntityType,'
       '$leadActivitiesEntityType,$contactsEntityType,'
       '$contactActivitiesEntityType,$dealsEntityType,'
-      '$expensesEntityType,$expenseCategoriesEntityType,'
+      '$expensesEntityType,$expenseCategoriesEntityType,$expenseItemsEntityType,'
       '$stockLevelsEntityType,$todosEntityType';
 
   bool _isRowEntity(String? type) =>
@@ -192,6 +196,7 @@ class SyncCoordinator {
       type == dealsEntityType ||
       type == expensesEntityType ||
       type == expenseCategoriesEntityType ||
+      type == expenseItemsEntityType ||
       type == todosEntityType;
 
   bool _busy = false;
@@ -994,6 +999,17 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'expense_items':
+        await _expenseItemSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       case 'stock_levels':
         await _stockLevelSync?.applyChange(
           businessId: businessId,
@@ -1188,6 +1204,13 @@ class SyncCoordinator {
           updatedAt: updatedAt,
           deviceId: deviceId,
         );
+      case 'expense_items':
+        await _expenseItemSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
       case 'todos':
         await _todoSync?.updateAckMeta(
           entityId: entityId,
@@ -1305,6 +1328,7 @@ class SyncCoordinator {
     'contact_activities',
     'deals',
     'expense_categories',
+    'expense_items',
     'expenses',
     'business_settings',
     'sales_documents',

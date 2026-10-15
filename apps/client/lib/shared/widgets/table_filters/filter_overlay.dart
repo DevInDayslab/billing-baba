@@ -232,25 +232,29 @@ class FilterColumnHeaderTrigger extends StatelessWidget {
         horizontal: 4,
         vertical: AppSpacing.sm,
       ),
-      child: Align(
-        alignment: alignment,
-        widthFactor: 1,
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: headerStyle ?? TableFilterTheme.defaultHeaderStyle,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                textAlign: alignment == Alignment.centerRight
-                    ? TextAlign.right
-                    : TextAlign.left,
+      child: Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: alignment,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: Text(
+                      label,
+                      style: headerStyle ?? TableFilterTheme.defaultHeaderStyle,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  _buildIconButton(),
+                ],
               ),
             ),
-            _buildIconButton(),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -155,4 +155,28 @@ class ExpenseService {
       throw mapPurchaseError(error);
     }
   }
+
+  Future<List<ExpenseCatalogItemModel>> fetchExpenseCatalogItems() async {
+    try {
+      final response = await _repository.listExpenseItems(limit: 500);
+      return response.items.map(ExpenseMapper.toCatalogItemModel).toList();
+    } on DioException {
+      // Offline-first: listExpenseItems should still return local rows when
+      // hydration fails; if the call still errors, treat as empty catalog.
+      return const [];
+    } on Object {
+      return const [];
+    }
+  }
+
+  Future<ExpenseCatalogItemModel> createExpenseCatalogItem(
+    CreateExpenseItemRequest request,
+  ) async {
+    try {
+      final dto = await _repository.createExpenseItem(request);
+      return ExpenseMapper.toCatalogItemModel(dto);
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
 }

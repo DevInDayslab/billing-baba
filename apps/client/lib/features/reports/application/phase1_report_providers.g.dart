@@ -281,7 +281,7 @@ final class PartyStatementReportProvider
 }
 
 String _$partyStatementReportHash() =>
-    r'08c7b441aa1f784586e2afc263e064dfffb29cac';
+    r'da9d2558ef56bd4170898c8154a2b939613056b4';
 
 abstract class _$PartyStatementReport
     extends $AsyncNotifier<PartyStatementReportData?> {

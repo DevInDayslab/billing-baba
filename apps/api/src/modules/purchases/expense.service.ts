@@ -88,6 +88,7 @@ export class ExpenseService extends PurchasesServiceBase {
       const expense = await repo.create({
         businessId,
         categoryId: input.category_id,
+        expenseItemId: input.expense_item_id ?? null,
         partyId: input.party_id ?? null,
         amount: input.amount,
         taxAmount: input.tax_amount ?? '0',
@@ -147,6 +148,9 @@ export class ExpenseService extends PurchasesServiceBase {
       const updated = await repo.update(businessId, expenseId, {
         ...(input.category_id !== undefined
           ? { categoryId: input.category_id }
+          : {}),
+        ...(input.expense_item_id !== undefined
+          ? { expenseItemId: input.expense_item_id }
           : {}),
         ...(input.party_id !== undefined ? { partyId: input.party_id } : {}),
         ...(input.amount !== undefined ? { amount: input.amount } : {}),

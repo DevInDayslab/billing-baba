@@ -717,7 +717,11 @@ class _InvoiceLine extends ConsumerWidget {
                 IconButton(
                   tooltip: 'Remove',
                   visualDensity: VisualDensity.compact,
-                  onPressed: () => notifier.removeItem(line.item.id),
+                  onPressed: () => _confirmRemoveCartItem(
+                    context,
+                    itemName: line.item.name,
+                    onRemove: () => notifier.removeItem(line.item.id),
+                  ),
                   icon: const Icon(Icons.close, size: 16),
                 ),
               ],
@@ -1046,5 +1050,37 @@ class _TotalRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Future<void> _confirmRemoveCartItem(
+  BuildContext context, {
+  required String itemName,
+  required VoidCallback onRemove,
+}) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Remove item?'),
+      content: Text('Remove "$itemName" from this bill?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.error,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Remove'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed == true && context.mounted) {
+    onRemove();
   }
 }

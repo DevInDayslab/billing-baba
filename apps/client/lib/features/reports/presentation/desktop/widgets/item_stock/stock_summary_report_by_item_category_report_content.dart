@@ -1,16 +1,13 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
-import 'package:billing_baba/features/reports/models/report_models.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
-import 'package:billing_baba/features/reports/utils/report_table_builders.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/item_stock/stock_summary_by_item_category_transactions_table.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_responsive_widgets.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
-import 'package:billing_baba/features/reports/utils/report_formatters.dart';
+import 'package:billing_baba/features/reports/utils/stock_summary_by_item_category_export.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_single_date_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +37,15 @@ class _StockSummaryReportByItemCategoryReportContentState
     super.initState();
     final now = DateTime.now();
     _asOnDate = DateTime(now.year, now.month, now.day);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyDateFilter());
+  }
+
+  void _applyDateFilter() {
+    if (!_useDateFilter) return;
+    ref.read(reportFiltersProvider.notifier).setCustomDateRange(
+      DateTimeRange(start: _asOnDate, end: _asOnDate),
+    );
+    ref.read(stockSummaryByItemCategoryReportProvider.notifier).refresh();
   }
 
   @override
@@ -51,48 +57,38 @@ class _StockSummaryReportByItemCategoryReportContentState
       onRetry: () =>
           ref.read(stockSummaryByItemCategoryReportProvider.notifier).refresh(),
       data: (report) {
-        final rows = report.rows;
-        final totalPurchaseValue = rows.fold<double>(
-          0,
-          (sum, row) => sum + row.purchaseAmount,
-        );
-        final totalSaleValue = rows.fold<double>(
-          0,
-          (sum, row) => sum + row.saleAmount,
-        );
-        const exportHeaders = [
-          'Item Category',
-          'No. of Items',
-          'Stock Qty',
-          'Purchase Value',
-          'Sale Value',
-          'Low Stock Items',
+        List<List<String>> exportRows() => [
+          for (final row in report.rows)
+            stockSummaryByItemCategoryExportRow(row),
         ];
-        final exportRows = [
-          for (final row in rows)
-            [
-              row.category,
-              '—',
-              '—',
-              formatReportCurrency(row.purchaseAmount),
-              formatReportCurrency(row.saleAmount),
-              '—',
-            ],
-        ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Stock Summary by Item Category',
+            filename: 'stock-summary-by-item-category',
+            headers: stockSummaryByItemCategoryExportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void exportPrint() {
+          reportPrintTable(
+            context: context,
+            title: 'Stock Summary by Item Category',
+            headers: stockSummaryByItemCategoryExportHeaders,
+            rows: exportRows(),
+          );
+        }
 
         return ColoredBox(
           color: AppColors.background,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                ),
-                child: ReportCard(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ReportCard(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
@@ -116,9 +112,10 @@ class _StockSummaryReportByItemCategoryReportContentState
                         children: [
                           Checkbox(
                             value: _useDateFilter,
-                            onChanged: (value) => setState(
-                              () => _useDateFilter = value ?? false,
-                            ),
+                            onChanged: (value) {
+                              setState(() => _useDateFilter = value ?? false);
+                              _applyDateFilter();
+                            },
                             visualDensity: VisualDensity.compact,
                           ),
                           const Text(
@@ -129,8 +126,10 @@ class _StockSummaryReportByItemCategoryReportContentState
                           SaleSingleDatePickerAnchor(
                             key: _datePickerKey,
                             selectedDate: _asOnDate,
-                            onDateSelected: (date) =>
-                                setState(() => _asOnDate = date),
+                            onDateSelected: (date) {
+                              setState(() => _asOnDate = date);
+                              _applyDateFilter();
+                            },
                             child: InkWell(
                               onTap: _useDateFilter
                                   ? () => _datePickerKey.currentState?.toggle()
@@ -206,284 +205,28 @@ class _StockSummaryReportByItemCategoryReportContentState
                       ReportTextActionButton(
                         label: 'Excel',
                         icon: Icons.table_chart_outlined,
-                        onTap: () => reportExportTable(
-                          context: context,
-                          title: 'Stock Summary by Item Category',
-                          filename: 'stock-summary-by-item-category',
-                          headers: exportHeaders,
-                          rows: exportRows,
-                        ),
+                        onTap: exportExcel,
                       ),
                       ReportTextActionButton(
                         label: 'Print',
                         icon: Icons.print_outlined,
-                        onTap: () => reportPrintTable(
-                          context: context,
-                          title: 'Stock Summary by Item Category',
-                          headers: exportHeaders,
-                          rows: exportRows,
-                        ),
+                        onTap: exportPrint,
                       ),
                     ],
                   ),
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    0,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                  ),
-                  child: ReportCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.md,
-                            AppSpacing.sm,
-                          ),
-                          child: Text(
-                            'STOCK SUMMARY REPORT BY ITEM CATEGORY',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            0,
-                            AppSpacing.md,
-                            AppSpacing.sm,
-                          ),
-                          child: Wrap(
-                            spacing: AppSpacing.sm,
-                            runSpacing: AppSpacing.sm,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              _SummaryChip(
-                                label: 'Categories',
-                                value: '${rows.length}',
-                                icon: Icons.category_outlined,
-                              ),
-                              _SummaryChip(
-                                label: 'Stock Value',
-                                value: formatReportCurrency(totalPurchaseValue),
-                                icon: Icons.payments_outlined,
-                                highlight: true,
-                              ),
-                              _SummaryChip(
-                                label: 'Sale Value',
-                                value: formatReportCurrency(totalSaleValue),
-                                icon: Icons.trending_up_outlined,
-                              ),
-                              const SizedBox(
-                                width: 280,
-                                child: ReportSearchField(
-                                  hintText: 'Search category...',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1, color: reportCardBorder),
-                        const Divider(height: 1, color: reportCardBorder),
-                        Expanded(
-                          child: ReportTableArea(
-                            child:
-                                ReportFilterableSyncTable<
-                                  ReportCategoryAmountRow
-                                >(
-                                  reportScope:
-                                      stockSummaryByCategoryReportScope,
-                                  columns: stockSummaryByCategoryColumns(),
-                                  rows: rows,
-                                  emptyState: const Center(
-                                    child: Text(
-                                      'No stock data found for the selected filters.',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
-                          ),
-                          decoration: const BoxDecoration(
-                            color: reportTableHeaderBg,
-                            border: Border(
-                              top: BorderSide(color: reportCardBorder),
-                            ),
-                          ),
-                          child: ReportHorizontalScroll(
-                            minWidth: 720,
-                            child: Row(
-                              children: [
-                                const SizedBox(
-                                  width: 150,
-                                  child: Text(
-                                    'Grand Total',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 110,
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      '—',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 100,
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      '—',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 130,
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      formatReportCurrency(totalPurchaseValue),
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 110,
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      formatReportCurrency(totalSaleValue),
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: reportTeal,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 130,
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      '—',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: AppSpacing.md),
+                Expanded(
+                  child: StockSummaryByItemCategoryTransactionsTable(
+                    includeZeroStock: _includeZeroStock,
+                    lowStockOnly: _lowStockOnly,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
-    );
-  }
-}
-
-class _SummaryChip extends StatelessWidget {
-  const _SummaryChip({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.highlight = false,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: highlight
-            ? reportTeal.withValues(alpha: 0.08)
-            : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: highlight
-              ? reportTeal.withValues(alpha: 0.35)
-              : reportCardBorder,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: highlight ? reportTeal : AppColors.textSecondary,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '$label: ',
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: highlight ? reportTeal : AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

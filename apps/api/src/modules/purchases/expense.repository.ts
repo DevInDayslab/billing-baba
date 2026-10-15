@@ -30,6 +30,7 @@ export class ExpenseRepository {
       id: expenses.id,
       categoryId: expenses.categoryId,
       categoryName: expenseCategories.name,
+      expenseItemId: expenses.expenseItemId,
       partyId: expenses.partyId,
       partyName: parties.name,
       amount: expenses.amount,
@@ -166,6 +167,7 @@ export class ExpenseRepository {
       .values({
         businessId: values.businessId,
         categoryId: values.categoryId,
+        expenseItemId: values.expenseItemId ?? null,
         partyId: values.partyId ?? null,
         amount: values.amount,
         taxAmount: values.taxAmount ?? '0',
@@ -209,6 +211,9 @@ export class ExpenseRepository {
       .set({
         ...(values.categoryId !== undefined
           ? { categoryId: values.categoryId }
+          : {}),
+        ...(values.expenseItemId !== undefined
+          ? { expenseItemId: values.expenseItemId }
           : {}),
         ...(values.partyId !== undefined ? { partyId: values.partyId } : {}),
         ...(values.amount !== undefined ? { amount: values.amount } : {}),

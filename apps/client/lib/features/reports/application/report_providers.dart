@@ -12,7 +12,7 @@ ReportQuery _currentQuery(Ref ref) {
   return ref.read(reportFiltersProvider).toQuery();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class BillWiseProfitReport extends _$BillWiseProfitReport {
   @override
   Future<BillWiseProfitReportData> build() async {
@@ -36,7 +36,7 @@ class BillWiseProfitReport extends _$BillWiseProfitReport {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class CashFlowReport extends _$CashFlowReport {
   @override
   Future<CashFlowReportData> build() async {
@@ -84,6 +84,7 @@ class PartyReportByItemReport extends _$PartyReportByItemReport {
   @override
   Future<PartyReportByItemReportData?> build() async {
     watchReportListReload(ref);
+    ref.watch(reportDataEpochProvider);
     final value = ref.watch(
       reportFiltersProvider.select((state) => state.itemId),
     );

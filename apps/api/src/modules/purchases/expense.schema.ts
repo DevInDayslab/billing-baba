@@ -34,6 +34,7 @@ export type ListExpensesQuery = z.infer<typeof listExpensesQuerySchema>;
 
 export const createExpenseBodySchema = z.object({
   category_id: z.uuid('Invalid category ID'),
+  expense_item_id: z.uuid('Invalid expense item ID').optional().nullable(),
   party_id: z.uuid('Invalid party ID').optional().nullable(),
   amount: z.string().regex(/^\d+(\.\d{1,4})?$/, 'Invalid amount'),
   tax_amount: z

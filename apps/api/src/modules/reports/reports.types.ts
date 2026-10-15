@@ -232,8 +232,10 @@ export type ReportSalePurchaseByPartyGroupRow = {
 
 export type ReportPartyByItemRow = {
   party_name: string;
-  quantity: string;
-  amount: string;
+  sale_quantity: string;
+  sale_amount: string;
+  purchase_quantity: string;
+  purchase_amount: string;
 };
 
 export type ReportGstr9SupplyRow = {
@@ -309,6 +311,7 @@ export type ReportCategoryAmountRow = {
 export type ReportItemDiscountRow = {
   item_name: string;
   sale_qty: string;
+  sale_amount: string;
   discount_amount: string;
   discount_percent: string;
 };
@@ -339,17 +342,22 @@ export type ReportStockTransferRow = {
 };
 
 export type ReportExpenseRow = {
+  id: string;
   date: string;
   expense_no: string;
   party_name: string | null;
   category: string;
+  payment_mode: string | null;
   amount: string;
-  due_date: string;
-  status: string;
+  balance_due: string;
+  due_date: string | null;
+  status: 'paid' | 'pending' | 'partial';
 };
 
 export type ReportExpenseCategoryRow = {
+  category_id: string;
   category: string;
+  category_type: string;
   amount: string;
   count: number;
 };

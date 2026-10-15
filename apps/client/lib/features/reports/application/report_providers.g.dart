@@ -21,7 +21,7 @@ final class BillWiseProfitReportProvider
         argument: null,
         retry: null,
         name: r'billWiseProfitReportProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -35,7 +35,7 @@ final class BillWiseProfitReportProvider
 }
 
 String _$billWiseProfitReportHash() =>
-    r'8292e157fbf2cc7f607431054066f3306daf771b';
+    r'4da5bbdaa8647d88e7458598eaa46d3b2f930fbf';
 
 abstract class _$BillWiseProfitReport
     extends $AsyncNotifier<BillWiseProfitReportData> {
@@ -75,7 +75,7 @@ final class CashFlowReportProvider
         argument: null,
         retry: null,
         name: r'cashFlowReportProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -88,7 +88,7 @@ final class CashFlowReportProvider
   CashFlowReport create() => CashFlowReport();
 }
 
-String _$cashFlowReportHash() => r'73dc534ae93ebf30c5550da581be25139245f9ff';
+String _$cashFlowReportHash() => r'b8a94b48076d1ac676a66823b49ff076fd6e9020';
 
 abstract class _$CashFlowReport extends $AsyncNotifier<CashFlowReportData> {
   FutureOr<CashFlowReportData> build();
@@ -196,7 +196,7 @@ final class PartyReportByItemReportProvider
 }
 
 String _$partyReportByItemReportHash() =>
-    r'13a560db3b7c88cf24f3290ae90b6388fd46fd8b';
+    r'53f3ec4c51fe377575615c6892e5a8b8cfa0acf5';
 
 abstract class _$PartyReportByItemReport
     extends $AsyncNotifier<PartyReportByItemReportData?> {

@@ -5,6 +5,7 @@ export function toExpenseRecord(row: ExpenseRow): ExpenseRecord {
     id: row.id,
     category_id: row.categoryId,
     category_name: row.categoryName,
+    expense_item_id: row.expenseItemId,
     party_id: row.partyId,
     party_name: row.partyName,
     amount: row.amount,

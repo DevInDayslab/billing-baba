@@ -26587,6 +26587,766 @@ class ExpenseCategoriesLocalCompanion
   }
 }
 
+class $ExpenseItemsLocalTable extends ExpenseItemsLocal
+    with TableInfo<$ExpenseItemsLocalTable, ExpenseItemTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExpenseItemsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hsnSacMeta = const VerificationMeta('hsnSac');
+  @override
+  late final GeneratedColumn<String> hsnSac = GeneratedColumn<String>(
+    'hsn_sac',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<String> price = GeneratedColumn<String>(
+    'price',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _priceIsTaxInclusiveMeta =
+      const VerificationMeta('priceIsTaxInclusive');
+  @override
+  late final GeneratedColumn<bool> priceIsTaxInclusive = GeneratedColumn<bool>(
+    'price_is_tax_inclusive',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("price_is_tax_inclusive" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _taxRateMeta = const VerificationMeta(
+    'taxRate',
+  );
+  @override
+  late final GeneratedColumn<String> taxRate = GeneratedColumn<String>(
+    'tax_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    hsnSac,
+    price,
+    priceIsTaxInclusive,
+    taxRate,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'expense_items_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ExpenseItemTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('hsn_sac')) {
+      context.handle(
+        _hsnSacMeta,
+        hsnSac.isAcceptableOrUnknown(data['hsn_sac']!, _hsnSacMeta),
+      );
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
+      );
+    }
+    if (data.containsKey('price_is_tax_inclusive')) {
+      context.handle(
+        _priceIsTaxInclusiveMeta,
+        priceIsTaxInclusive.isAcceptableOrUnknown(
+          data['price_is_tax_inclusive']!,
+          _priceIsTaxInclusiveMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_rate')) {
+      context.handle(
+        _taxRateMeta,
+        taxRate.isAcceptableOrUnknown(data['tax_rate']!, _taxRateMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ExpenseItemTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ExpenseItemTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      hsnSac: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hsn_sac'],
+      ),
+      price: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}price'],
+      )!,
+      priceIsTaxInclusive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}price_is_tax_inclusive'],
+      )!,
+      taxRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_rate'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $ExpenseItemsLocalTable createAlias(String alias) {
+    return $ExpenseItemsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class ExpenseItemTableData extends DataClass
+    implements Insertable<ExpenseItemTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String? hsnSac;
+  final String price;
+  final bool priceIsTaxInclusive;
+  final String taxRate;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const ExpenseItemTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    this.hsnSac,
+    required this.price,
+    required this.priceIsTaxInclusive,
+    required this.taxRate,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || hsnSac != null) {
+      map['hsn_sac'] = Variable<String>(hsnSac);
+    }
+    map['price'] = Variable<String>(price);
+    map['price_is_tax_inclusive'] = Variable<bool>(priceIsTaxInclusive);
+    map['tax_rate'] = Variable<String>(taxRate);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  ExpenseItemsLocalCompanion toCompanion(bool nullToAbsent) {
+    return ExpenseItemsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      hsnSac: hsnSac == null && nullToAbsent
+          ? const Value.absent()
+          : Value(hsnSac),
+      price: Value(price),
+      priceIsTaxInclusive: Value(priceIsTaxInclusive),
+      taxRate: Value(taxRate),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory ExpenseItemTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ExpenseItemTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      hsnSac: serializer.fromJson<String?>(json['hsnSac']),
+      price: serializer.fromJson<String>(json['price']),
+      priceIsTaxInclusive: serializer.fromJson<bool>(
+        json['priceIsTaxInclusive'],
+      ),
+      taxRate: serializer.fromJson<String>(json['taxRate']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'hsnSac': serializer.toJson<String?>(hsnSac),
+      'price': serializer.toJson<String>(price),
+      'priceIsTaxInclusive': serializer.toJson<bool>(priceIsTaxInclusive),
+      'taxRate': serializer.toJson<String>(taxRate),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  ExpenseItemTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    Value<String?> hsnSac = const Value.absent(),
+    String? price,
+    bool? priceIsTaxInclusive,
+    String? taxRate,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => ExpenseItemTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    hsnSac: hsnSac.present ? hsnSac.value : this.hsnSac,
+    price: price ?? this.price,
+    priceIsTaxInclusive: priceIsTaxInclusive ?? this.priceIsTaxInclusive,
+    taxRate: taxRate ?? this.taxRate,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  ExpenseItemTableData copyWithCompanion(ExpenseItemsLocalCompanion data) {
+    return ExpenseItemTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      hsnSac: data.hsnSac.present ? data.hsnSac.value : this.hsnSac,
+      price: data.price.present ? data.price.value : this.price,
+      priceIsTaxInclusive: data.priceIsTaxInclusive.present
+          ? data.priceIsTaxInclusive.value
+          : this.priceIsTaxInclusive,
+      taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExpenseItemTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('hsnSac: $hsnSac, ')
+          ..write('price: $price, ')
+          ..write('priceIsTaxInclusive: $priceIsTaxInclusive, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    hsnSac,
+    price,
+    priceIsTaxInclusive,
+    taxRate,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ExpenseItemTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.hsnSac == this.hsnSac &&
+          other.price == this.price &&
+          other.priceIsTaxInclusive == this.priceIsTaxInclusive &&
+          other.taxRate == this.taxRate &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class ExpenseItemsLocalCompanion extends UpdateCompanion<ExpenseItemTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String?> hsnSac;
+  final Value<String> price;
+  final Value<bool> priceIsTaxInclusive;
+  final Value<String> taxRate;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const ExpenseItemsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.hsnSac = const Value.absent(),
+    this.price = const Value.absent(),
+    this.priceIsTaxInclusive = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ExpenseItemsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.hsnSac = const Value.absent(),
+    this.price = const Value.absent(),
+    this.priceIsTaxInclusive = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ExpenseItemTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? hsnSac,
+    Expression<String>? price,
+    Expression<bool>? priceIsTaxInclusive,
+    Expression<String>? taxRate,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (hsnSac != null) 'hsn_sac': hsnSac,
+      if (price != null) 'price': price,
+      if (priceIsTaxInclusive != null)
+        'price_is_tax_inclusive': priceIsTaxInclusive,
+      if (taxRate != null) 'tax_rate': taxRate,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ExpenseItemsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String?>? hsnSac,
+    Value<String>? price,
+    Value<bool>? priceIsTaxInclusive,
+    Value<String>? taxRate,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return ExpenseItemsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      hsnSac: hsnSac ?? this.hsnSac,
+      price: price ?? this.price,
+      priceIsTaxInclusive: priceIsTaxInclusive ?? this.priceIsTaxInclusive,
+      taxRate: taxRate ?? this.taxRate,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (hsnSac.present) {
+      map['hsn_sac'] = Variable<String>(hsnSac.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<String>(price.value);
+    }
+    if (priceIsTaxInclusive.present) {
+      map['price_is_tax_inclusive'] = Variable<bool>(priceIsTaxInclusive.value);
+    }
+    if (taxRate.present) {
+      map['tax_rate'] = Variable<String>(taxRate.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExpenseItemsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('hsnSac: $hsnSac, ')
+          ..write('price: $price, ')
+          ..write('priceIsTaxInclusive: $priceIsTaxInclusive, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ExpensesLocalTable extends ExpensesLocal
     with TableInfo<$ExpensesLocalTable, ExpenseTableData> {
   @override
@@ -26623,6 +27383,17 @@ class $ExpensesLocalTable extends ExpensesLocal
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expenseItemIdMeta = const VerificationMeta(
+    'expenseItemId',
+  );
+  @override
+  late final GeneratedColumn<String> expenseItemId = GeneratedColumn<String>(
+    'expense_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _partyIdMeta = const VerificationMeta(
     'partyId',
@@ -26797,6 +27568,7 @@ class $ExpensesLocalTable extends ExpensesLocal
     id,
     businessId,
     categoryId,
+    expenseItemId,
     partyId,
     amount,
     taxAmount,
@@ -26845,6 +27617,15 @@ class $ExpensesLocalTable extends ExpensesLocal
       );
     } else if (isInserting) {
       context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('expense_item_id')) {
+      context.handle(
+        _expenseItemIdMeta,
+        expenseItemId.isAcceptableOrUnknown(
+          data['expense_item_id']!,
+          _expenseItemIdMeta,
+        ),
+      );
     }
     if (data.containsKey('party_id')) {
       context.handle(
@@ -26980,6 +27761,10 @@ class $ExpensesLocalTable extends ExpensesLocal
         DriftSqlType.string,
         data['${effectivePrefix}category_id'],
       )!,
+      expenseItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expense_item_id'],
+      ),
       partyId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}party_id'],
@@ -27054,6 +27839,7 @@ class ExpenseTableData extends DataClass
   final String id;
   final String businessId;
   final String categoryId;
+  final String? expenseItemId;
   final String? partyId;
   final String amount;
   final String taxAmount;
@@ -27073,6 +27859,7 @@ class ExpenseTableData extends DataClass
     required this.id,
     required this.businessId,
     required this.categoryId,
+    this.expenseItemId,
     this.partyId,
     required this.amount,
     required this.taxAmount,
@@ -27095,6 +27882,9 @@ class ExpenseTableData extends DataClass
     map['id'] = Variable<String>(id);
     map['business_id'] = Variable<String>(businessId);
     map['category_id'] = Variable<String>(categoryId);
+    if (!nullToAbsent || expenseItemId != null) {
+      map['expense_item_id'] = Variable<String>(expenseItemId);
+    }
     if (!nullToAbsent || partyId != null) {
       map['party_id'] = Variable<String>(partyId);
     }
@@ -27132,6 +27922,9 @@ class ExpenseTableData extends DataClass
       id: Value(id),
       businessId: Value(businessId),
       categoryId: Value(categoryId),
+      expenseItemId: expenseItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expenseItemId),
       partyId: partyId == null && nullToAbsent
           ? const Value.absent()
           : Value(partyId),
@@ -27173,6 +27966,7 @@ class ExpenseTableData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       businessId: serializer.fromJson<String>(json['businessId']),
       categoryId: serializer.fromJson<String>(json['categoryId']),
+      expenseItemId: serializer.fromJson<String?>(json['expenseItemId']),
       partyId: serializer.fromJson<String?>(json['partyId']),
       amount: serializer.fromJson<String>(json['amount']),
       taxAmount: serializer.fromJson<String>(json['taxAmount']),
@@ -27197,6 +27991,7 @@ class ExpenseTableData extends DataClass
       'id': serializer.toJson<String>(id),
       'businessId': serializer.toJson<String>(businessId),
       'categoryId': serializer.toJson<String>(categoryId),
+      'expenseItemId': serializer.toJson<String?>(expenseItemId),
       'partyId': serializer.toJson<String?>(partyId),
       'amount': serializer.toJson<String>(amount),
       'taxAmount': serializer.toJson<String>(taxAmount),
@@ -27219,6 +28014,7 @@ class ExpenseTableData extends DataClass
     String? id,
     String? businessId,
     String? categoryId,
+    Value<String?> expenseItemId = const Value.absent(),
     Value<String?> partyId = const Value.absent(),
     String? amount,
     String? taxAmount,
@@ -27238,6 +28034,9 @@ class ExpenseTableData extends DataClass
     id: id ?? this.id,
     businessId: businessId ?? this.businessId,
     categoryId: categoryId ?? this.categoryId,
+    expenseItemId: expenseItemId.present
+        ? expenseItemId.value
+        : this.expenseItemId,
     partyId: partyId.present ? partyId.value : this.partyId,
     amount: amount ?? this.amount,
     taxAmount: taxAmount ?? this.taxAmount,
@@ -27265,6 +28064,9 @@ class ExpenseTableData extends DataClass
       categoryId: data.categoryId.present
           ? data.categoryId.value
           : this.categoryId,
+      expenseItemId: data.expenseItemId.present
+          ? data.expenseItemId.value
+          : this.expenseItemId,
       partyId: data.partyId.present ? data.partyId.value : this.partyId,
       amount: data.amount.present ? data.amount.value : this.amount,
       taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
@@ -27299,6 +28101,7 @@ class ExpenseTableData extends DataClass
           ..write('id: $id, ')
           ..write('businessId: $businessId, ')
           ..write('categoryId: $categoryId, ')
+          ..write('expenseItemId: $expenseItemId, ')
           ..write('partyId: $partyId, ')
           ..write('amount: $amount, ')
           ..write('taxAmount: $taxAmount, ')
@@ -27323,6 +28126,7 @@ class ExpenseTableData extends DataClass
     id,
     businessId,
     categoryId,
+    expenseItemId,
     partyId,
     amount,
     taxAmount,
@@ -27346,6 +28150,7 @@ class ExpenseTableData extends DataClass
           other.id == this.id &&
           other.businessId == this.businessId &&
           other.categoryId == this.categoryId &&
+          other.expenseItemId == this.expenseItemId &&
           other.partyId == this.partyId &&
           other.amount == this.amount &&
           other.taxAmount == this.taxAmount &&
@@ -27367,6 +28172,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
   final Value<String> id;
   final Value<String> businessId;
   final Value<String> categoryId;
+  final Value<String?> expenseItemId;
   final Value<String?> partyId;
   final Value<String> amount;
   final Value<String> taxAmount;
@@ -27387,6 +28193,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     this.id = const Value.absent(),
     this.businessId = const Value.absent(),
     this.categoryId = const Value.absent(),
+    this.expenseItemId = const Value.absent(),
     this.partyId = const Value.absent(),
     this.amount = const Value.absent(),
     this.taxAmount = const Value.absent(),
@@ -27408,6 +28215,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     required String id,
     required String businessId,
     required String categoryId,
+    this.expenseItemId = const Value.absent(),
     this.partyId = const Value.absent(),
     required String amount,
     this.taxAmount = const Value.absent(),
@@ -27435,6 +28243,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     Expression<String>? id,
     Expression<String>? businessId,
     Expression<String>? categoryId,
+    Expression<String>? expenseItemId,
     Expression<String>? partyId,
     Expression<String>? amount,
     Expression<String>? taxAmount,
@@ -27456,6 +28265,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
       if (id != null) 'id': id,
       if (businessId != null) 'business_id': businessId,
       if (categoryId != null) 'category_id': categoryId,
+      if (expenseItemId != null) 'expense_item_id': expenseItemId,
       if (partyId != null) 'party_id': partyId,
       if (amount != null) 'amount': amount,
       if (taxAmount != null) 'tax_amount': taxAmount,
@@ -27479,6 +28289,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     Value<String>? id,
     Value<String>? businessId,
     Value<String>? categoryId,
+    Value<String?>? expenseItemId,
     Value<String?>? partyId,
     Value<String>? amount,
     Value<String>? taxAmount,
@@ -27500,6 +28311,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
       id: id ?? this.id,
       businessId: businessId ?? this.businessId,
       categoryId: categoryId ?? this.categoryId,
+      expenseItemId: expenseItemId ?? this.expenseItemId,
       partyId: partyId ?? this.partyId,
       amount: amount ?? this.amount,
       taxAmount: taxAmount ?? this.taxAmount,
@@ -27530,6 +28342,9 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     }
     if (categoryId.present) {
       map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (expenseItemId.present) {
+      map['expense_item_id'] = Variable<String>(expenseItemId.value);
     }
     if (partyId.present) {
       map['party_id'] = Variable<String>(partyId.value);
@@ -27588,6 +28403,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
           ..write('id: $id, ')
           ..write('businessId: $businessId, ')
           ..write('categoryId: $categoryId, ')
+          ..write('expenseItemId: $expenseItemId, ')
           ..write('partyId: $partyId, ')
           ..write('amount: $amount, ')
           ..write('taxAmount: $taxAmount, ')
@@ -30172,6 +30988,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $ExpenseCategoriesLocalTable expenseCategoriesLocal =
       $ExpenseCategoriesLocalTable(this);
+  late final $ExpenseItemsLocalTable expenseItemsLocal =
+      $ExpenseItemsLocalTable(this);
   late final $ExpensesLocalTable expensesLocal = $ExpensesLocalTable(this);
   late final $GatewayPaymentSessionsLocalTable gatewayPaymentSessionsLocal =
       $GatewayPaymentSessionsLocalTable(this);
@@ -30249,6 +31067,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     inventoryMovementsLocal,
     stockLevelsLocal,
     expenseCategoriesLocal,
+    expenseItemsLocal,
     expensesLocal,
     gatewayPaymentSessionsLocal,
     notificationsLocal,
@@ -42987,11 +43806,383 @@ typedef $$ExpenseCategoriesLocalTableProcessedTableManager =
       ExpenseCategoryTableData,
       PrefetchHooks Function()
     >;
+typedef $$ExpenseItemsLocalTableCreateCompanionBuilder =
+    ExpenseItemsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<String?> hsnSac,
+      Value<String> price,
+      Value<bool> priceIsTaxInclusive,
+      Value<String> taxRate,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$ExpenseItemsLocalTableUpdateCompanionBuilder =
+    ExpenseItemsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String?> hsnSac,
+      Value<String> price,
+      Value<bool> priceIsTaxInclusive,
+      Value<String> taxRate,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$ExpenseItemsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $ExpenseItemsLocalTable> {
+  $$ExpenseItemsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hsnSac => $composableBuilder(
+    column: $table.hsnSac,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get priceIsTaxInclusive => $composableBuilder(
+    column: $table.priceIsTaxInclusive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ExpenseItemsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $ExpenseItemsLocalTable> {
+  $$ExpenseItemsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hsnSac => $composableBuilder(
+    column: $table.hsnSac,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get priceIsTaxInclusive => $composableBuilder(
+    column: $table.priceIsTaxInclusive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ExpenseItemsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ExpenseItemsLocalTable> {
+  $$ExpenseItemsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get hsnSac =>
+      $composableBuilder(column: $table.hsnSac, builder: (column) => column);
+
+  GeneratedColumn<String> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<bool> get priceIsTaxInclusive => $composableBuilder(
+    column: $table.priceIsTaxInclusive,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxRate =>
+      $composableBuilder(column: $table.taxRate, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$ExpenseItemsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ExpenseItemsLocalTable,
+          ExpenseItemTableData,
+          $$ExpenseItemsLocalTableFilterComposer,
+          $$ExpenseItemsLocalTableOrderingComposer,
+          $$ExpenseItemsLocalTableAnnotationComposer,
+          $$ExpenseItemsLocalTableCreateCompanionBuilder,
+          $$ExpenseItemsLocalTableUpdateCompanionBuilder,
+          (
+            ExpenseItemTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ExpenseItemsLocalTable,
+              ExpenseItemTableData
+            >,
+          ),
+          ExpenseItemTableData,
+          PrefetchHooks Function()
+        > {
+  $$ExpenseItemsLocalTableTableManager(
+    _$AppDatabase db,
+    $ExpenseItemsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ExpenseItemsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ExpenseItemsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ExpenseItemsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> hsnSac = const Value.absent(),
+                Value<String> price = const Value.absent(),
+                Value<bool> priceIsTaxInclusive = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExpenseItemsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                hsnSac: hsnSac,
+                price: price,
+                priceIsTaxInclusive: priceIsTaxInclusive,
+                taxRate: taxRate,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<String?> hsnSac = const Value.absent(),
+                Value<String> price = const Value.absent(),
+                Value<bool> priceIsTaxInclusive = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExpenseItemsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                hsnSac: hsnSac,
+                price: price,
+                priceIsTaxInclusive: priceIsTaxInclusive,
+                taxRate: taxRate,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ExpenseItemsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ExpenseItemsLocalTable,
+      ExpenseItemTableData,
+      $$ExpenseItemsLocalTableFilterComposer,
+      $$ExpenseItemsLocalTableOrderingComposer,
+      $$ExpenseItemsLocalTableAnnotationComposer,
+      $$ExpenseItemsLocalTableCreateCompanionBuilder,
+      $$ExpenseItemsLocalTableUpdateCompanionBuilder,
+      (
+        ExpenseItemTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ExpenseItemsLocalTable,
+          ExpenseItemTableData
+        >,
+      ),
+      ExpenseItemTableData,
+      PrefetchHooks Function()
+    >;
 typedef $$ExpensesLocalTableCreateCompanionBuilder =
     ExpensesLocalCompanion Function({
       required String id,
       required String businessId,
       required String categoryId,
+      Value<String?> expenseItemId,
       Value<String?> partyId,
       required String amount,
       Value<String> taxAmount,
@@ -43014,6 +44205,7 @@ typedef $$ExpensesLocalTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> businessId,
       Value<String> categoryId,
+      Value<String?> expenseItemId,
       Value<String?> partyId,
       Value<String> amount,
       Value<String> taxAmount,
@@ -43053,6 +44245,11 @@ class $$ExpensesLocalTableFilterComposer
 
   ColumnFilters<String> get categoryId => $composableBuilder(
     column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get expenseItemId => $composableBuilder(
+    column: $table.expenseItemId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -43156,6 +44353,11 @@ class $$ExpensesLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get expenseItemId => $composableBuilder(
+    column: $table.expenseItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get partyId => $composableBuilder(
     column: $table.partyId,
     builder: (column) => ColumnOrderings(column),
@@ -43254,6 +44456,11 @@ class $$ExpensesLocalTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get expenseItemId => $composableBuilder(
+    column: $table.expenseItemId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get partyId =>
       $composableBuilder(column: $table.partyId, builder: (column) => column);
 
@@ -43348,6 +44555,7 @@ class $$ExpensesLocalTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> businessId = const Value.absent(),
                 Value<String> categoryId = const Value.absent(),
+                Value<String?> expenseItemId = const Value.absent(),
                 Value<String?> partyId = const Value.absent(),
                 Value<String> amount = const Value.absent(),
                 Value<String> taxAmount = const Value.absent(),
@@ -43368,6 +44576,7 @@ class $$ExpensesLocalTableTableManager
                 id: id,
                 businessId: businessId,
                 categoryId: categoryId,
+                expenseItemId: expenseItemId,
                 partyId: partyId,
                 amount: amount,
                 taxAmount: taxAmount,
@@ -43390,6 +44599,7 @@ class $$ExpensesLocalTableTableManager
                 required String id,
                 required String businessId,
                 required String categoryId,
+                Value<String?> expenseItemId = const Value.absent(),
                 Value<String?> partyId = const Value.absent(),
                 required String amount,
                 Value<String> taxAmount = const Value.absent(),
@@ -43410,6 +44620,7 @@ class $$ExpensesLocalTableTableManager
                 id: id,
                 businessId: businessId,
                 categoryId: categoryId,
+                expenseItemId: expenseItemId,
                 partyId: partyId,
                 amount: amount,
                 taxAmount: taxAmount,
@@ -44713,6 +45924,8 @@ class $AppDatabaseManager {
         _db,
         _db.expenseCategoriesLocal,
       );
+  $$ExpenseItemsLocalTableTableManager get expenseItemsLocal =>
+      $$ExpenseItemsLocalTableTableManager(_db, _db.expenseItemsLocal);
   $$ExpensesLocalTableTableManager get expensesLocal =>
       $$ExpensesLocalTableTableManager(_db, _db.expensesLocal);
   $$GatewayPaymentSessionsLocalTableTableManager

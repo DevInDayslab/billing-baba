@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class ExpenseLineItem {
   const ExpenseLineItem({
     required this.id,
+    this.expenseItemId,
     this.itemName = '',
     this.description = '',
     this.qty = 0,
@@ -16,6 +17,7 @@ class ExpenseLineItem {
       ExpenseLineItem(id: id);
 
   final String id;
+  final String? expenseItemId;
   final String itemName;
   final String description;
   final double qty;
@@ -37,6 +39,8 @@ class ExpenseLineItem {
 
   ExpenseLineItem copyWith({
     String? id,
+    String? expenseItemId,
+    bool clearExpenseItemId = false,
     String? itemName,
     String? description,
     double? qty,
@@ -46,6 +50,8 @@ class ExpenseLineItem {
   }) {
     return ExpenseLineItem(
       id: id ?? this.id,
+      expenseItemId:
+          clearExpenseItemId ? null : (expenseItemId ?? this.expenseItemId),
       itemName: itemName ?? this.itemName,
       description: description ?? this.description,
       qty: qty ?? this.qty,

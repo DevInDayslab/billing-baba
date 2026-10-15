@@ -21,6 +21,8 @@ final class ReportsNavIntent {
     this.businessStatusSub,
     this.taxesSub,
     this.expenseSub,
+    this.expenseCategoryId,
+    this.expenseCategoryName,
     this.salePurchaseOrderSub,
     this.otherIncomeSub,
     this.loanAccountsSub,
@@ -70,10 +72,16 @@ final class ReportsNavIntent {
     );
   }
 
-  factory ReportsNavIntent.expense(ExpenseReportSubSection sub) {
+  factory ReportsNavIntent.expense(
+    ExpenseReportSubSection sub, {
+    String? categoryId,
+    String? categoryName,
+  }) {
     return ReportsNavIntent._(
       group: ReportNavGroup.expenseReport,
       expenseSub: sub,
+      expenseCategoryId: categoryId,
+      expenseCategoryName: categoryName,
     );
   }
 
@@ -108,6 +116,8 @@ final class ReportsNavIntent {
   final BusinessStatusReportSubSection? businessStatusSub;
   final TaxesReportSubSection? taxesSub;
   final ExpenseReportSubSection? expenseSub;
+  final String? expenseCategoryId;
+  final String? expenseCategoryName;
   final SalePurchaseOrderReportSubSection? salePurchaseOrderSub;
   final OtherIncomeReportSubSection? otherIncomeSub;
   final LoanAccountsReportSubSection? loanAccountsSub;

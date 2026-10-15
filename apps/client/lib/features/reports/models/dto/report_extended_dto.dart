@@ -128,21 +128,31 @@ class PartyWiseProfitLossPayloadDto {
 class ReportPartyByItemRowDto {
   const ReportPartyByItemRowDto({
     required this.partyName,
-    required this.quantity,
-    required this.amount,
+    required this.saleQuantity,
+    required this.saleAmount,
+    required this.purchaseQuantity,
+    required this.purchaseAmount,
   });
 
   factory ReportPartyByItemRowDto.fromJson(Map<String, dynamic> json) {
     return ReportPartyByItemRowDto(
       partyName: json['party_name'] as String? ?? '',
-      quantity: json['quantity'] as String? ?? '0',
-      amount: json['amount'] as String? ?? '0',
+      saleQuantity:
+          json['sale_quantity'] as String? ??
+          json['quantity'] as String? ??
+          '0',
+      saleAmount:
+          json['sale_amount'] as String? ?? json['amount'] as String? ?? '0',
+      purchaseQuantity: json['purchase_quantity'] as String? ?? '0',
+      purchaseAmount: json['purchase_amount'] as String? ?? '0',
     );
   }
 
   final String partyName;
-  final String quantity;
-  final String amount;
+  final String saleQuantity;
+  final String saleAmount;
+  final String purchaseQuantity;
+  final String purchaseAmount;
 }
 
 class PartyReportByItemPayloadDto {
@@ -622,6 +632,7 @@ class ReportItemDiscountRowDto {
   const ReportItemDiscountRowDto({
     required this.itemName,
     required this.saleQty,
+    required this.saleAmount,
     required this.discountAmount,
     required this.discountPercent,
   });
@@ -630,6 +641,7 @@ class ReportItemDiscountRowDto {
     return ReportItemDiscountRowDto(
       itemName: json['item_name'] as String? ?? '',
       saleQty: json['sale_qty'] as String? ?? '0',
+      saleAmount: json['sale_amount'] as String? ?? '0',
       discountAmount: json['discount_amount'] as String? ?? '0',
       discountPercent: json['discount_percent'] as String? ?? '0',
     );
@@ -637,6 +649,7 @@ class ReportItemDiscountRowDto {
 
   final String itemName;
   final String saleQty;
+  final String saleAmount;
   final String discountAmount;
   final String discountPercent;
 }
@@ -750,6 +763,7 @@ class ReportStockTransferRowDto {
     required this.toGodown,
     required this.itemName,
     required this.quantity,
+    required this.value,
   });
 
   factory ReportStockTransferRowDto.fromJson(Map<String, dynamic> json) {
@@ -760,6 +774,7 @@ class ReportStockTransferRowDto {
       toGodown: json['to_godown'] as String? ?? '',
       itemName: json['item_name'] as String? ?? '',
       quantity: json['quantity'] as String? ?? '0',
+      value: json['value'] as String? ?? '0',
     );
   }
 
@@ -769,6 +784,7 @@ class ReportStockTransferRowDto {
   final String toGodown;
   final String itemName;
   final String quantity;
+  final String value;
 }
 
 class StockTransferPayloadDto {
@@ -982,33 +998,42 @@ class TaxInvoiceReportPayloadDto {
 
 class ReportExpenseRowDto {
   const ReportExpenseRowDto({
+    required this.id,
     required this.date,
     required this.expenseNo,
     required this.partyName,
     required this.category,
+    required this.paymentMode,
     required this.amount,
+    required this.balanceDue,
     required this.dueDate,
     required this.status,
   });
 
   factory ReportExpenseRowDto.fromJson(Map<String, dynamic> json) {
     return ReportExpenseRowDto(
+      id: json['id'] as String? ?? '',
       date: json['date'] as String? ?? '',
       expenseNo: json['expense_no'] as String? ?? '',
       partyName: json['party_name'] as String? ?? '',
       category: json['category'] as String? ?? '',
+      paymentMode: json['payment_mode'] as String?,
       amount: json['amount'] as String? ?? '0',
-      dueDate: json['due_date'] as String? ?? '',
-      status: json['status'] as String? ?? '',
+      balanceDue: json['balance_due'] as String? ?? '0',
+      dueDate: json['due_date'] as String?,
+      status: json['status'] as String? ?? 'pending',
     );
   }
 
+  final String id;
   final String date;
   final String expenseNo;
   final String partyName;
   final String category;
+  final String? paymentMode;
   final String amount;
-  final String dueDate;
+  final String balanceDue;
+  final String? dueDate;
   final String status;
 }
 
@@ -1038,20 +1063,26 @@ class ExpensesPayloadDto {
 
 class ReportExpenseCategoryRowDto {
   const ReportExpenseCategoryRowDto({
+    required this.categoryId,
     required this.category,
+    required this.categoryType,
     required this.amount,
     required this.count,
   });
 
   factory ReportExpenseCategoryRowDto.fromJson(Map<String, dynamic> json) {
     return ReportExpenseCategoryRowDto(
+      categoryId: json['category_id'] as String? ?? '',
       category: json['category'] as String? ?? '',
+      categoryType: json['category_type'] as String? ?? 'direct',
       amount: json['amount'] as String? ?? '0',
       count: (json['count'] as num?)?.toInt() ?? 0,
     );
   }
 
+  final String categoryId;
   final String category;
+  final String categoryType;
   final String amount;
   final int count;
 }
@@ -1079,6 +1110,7 @@ class ReportExpenseItemRowDto {
     required this.category,
     required this.amount,
     required this.count,
+    this.categoryId,
   });
 
   factory ReportExpenseItemRowDto.fromJson(Map<String, dynamic> json) {
@@ -1087,6 +1119,7 @@ class ReportExpenseItemRowDto {
       category: json['category'] as String? ?? '',
       amount: json['amount'] as String? ?? '0',
       count: (json['count'] as num?)?.toInt() ?? 0,
+      categoryId: json['category_id'] as String?,
     );
   }
 
@@ -1094,6 +1127,7 @@ class ReportExpenseItemRowDto {
   final String category;
   final String amount;
   final int count;
+  final String? categoryId;
 }
 
 class ExpenseByItemPayloadDto {

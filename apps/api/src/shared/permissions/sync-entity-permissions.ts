@@ -22,6 +22,7 @@ const ENTITY_MODULE_MAP: Record<string, PermissionModule> = {
   purchase_document_lines: 'purchase',
   expenses: 'expense',
   expense_categories: 'expense',
+  expense_items: 'expense',
   business_settings: 'settings',
   tax_rates: 'settings',
   leads: 'party_smart_connect',

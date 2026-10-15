@@ -3,6 +3,7 @@ import { parties } from '../crm/tables';
 import { items } from '../inventory/tables';
 import {
   expenseCategories,
+  expenseItems,
   expenses,
   purchaseDocumentLines,
   purchaseDocuments,
@@ -48,10 +49,18 @@ export const purchaseDocumentLinesRelations = relations(
   }),
 );
 
+export const expenseItemsRelations = relations(expenseItems, ({ many }) => ({
+  expenses: many(expenses),
+}));
+
 export const expensesRelations = relations(expenses, ({ one }) => ({
   category: one(expenseCategories, {
     fields: [expenses.categoryId],
     references: [expenseCategories.id],
+  }),
+  expenseItem: one(expenseItems, {
+    fields: [expenses.expenseItemId],
+    references: [expenseItems.id],
   }),
   party: one(parties, {
     fields: [expenses.partyId],

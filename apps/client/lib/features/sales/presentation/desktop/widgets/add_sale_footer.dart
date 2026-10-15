@@ -7,7 +7,9 @@ import 'package:billing_baba/features/settings/application/gst_tax_settings_prov
 import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/compact_number_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/sales/utils/sale_price_input.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
@@ -463,42 +465,148 @@ class _TotalsSection extends StatelessWidget {
           ),
         ] else ...[
           const SizedBox(height: 8),
+          _CashPaymentRows(
+            payments: form.payments,
+            onPaymentTypeSelected: notifier.updatePaymentTypeAt,
+            onPaymentNameChanged: notifier.updatePaymentTypeAt,
+            onPaymentAmountChanged: notifier.updatePaymentAmountAt,
+            onRemovePayment: notifier.removePaymentAt,
+            onAddPayment: notifier.addPaymentType,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CashPaymentRows extends StatelessWidget {
+  const _CashPaymentRows({
+    required this.payments,
+    required this.onPaymentTypeSelected,
+    required this.onPaymentNameChanged,
+    required this.onPaymentAmountChanged,
+    required this.onRemovePayment,
+    required this.onAddPayment,
+  });
+
+  final List<SalePaymentEntry> payments;
+  final void Function(int index, String type) onPaymentTypeSelected;
+  final void Function(int index, String type) onPaymentNameChanged;
+  final void Function(int index, double amount) onPaymentAmountChanged;
+  final void Function(int index) onRemovePayment;
+  final VoidCallback onAddPayment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < payments.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
                 width: 120,
-                child: SaleGenericSelectDropdown(
-                  value: form.paymentType,
-                  options: SaleDropdownOptions.paymentTypes,
-                  highlight: SaleDropdownHighlight.blue,
-                  compact: true,
-                  onSelected: notifier.updatePaymentType,
-                ),
+                child: i == 0
+                    ? SaleGenericSelectDropdown(
+                        value: payments[i].type,
+                        options: SaleDropdownOptions.paymentTypes,
+                        highlight: SaleDropdownHighlight.blue,
+                        compact: true,
+                        onSelected: (value) => onPaymentTypeSelected(i, value),
+                      )
+                    : _PaymentNameField(
+                        value: payments[i].type,
+                        onChanged: (value) => onPaymentNameChanged(i, value),
+                      ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _AmountField(
-                  value: form.paymentAmount,
-                  onChanged: notifier.updatePaymentAmount,
+                  value: payments[i].amount,
+                  onChanged: (amount) => onPaymentAmountChanged(i, amount),
                 ),
               ),
+              if (i > 0) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: () => onRemovePayment(i),
+                  icon: const Icon(Icons.close, size: 18),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Remove payment',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 4),
-          InkWell(
-            onTap: notifier.addPaymentType,
-            borderRadius: BorderRadius.circular(4),
-            child: const Text(
-              '+ Add Payment type',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w500,
-              ),
+        ],
+        const SizedBox(height: 4),
+        InkWell(
+          onTap: onAddPayment,
+          borderRadius: BorderRadius.circular(4),
+          child: const Text(
+            '+ Add Payment type',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ],
+        ),
       ],
+    );
+  }
+}
+
+class _PaymentNameField extends StatefulWidget {
+  const _PaymentNameField({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_PaymentNameField> createState() => _PaymentNameFieldState();
+}
+
+class _PaymentNameFieldState extends State<_PaymentNameField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(_PaymentNameField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value && widget.value != _controller.text) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SaleTextField(
+      controller: _controller,
+      hint: 'Payment name',
+      compact: true,
+      onChanged: widget.onChanged,
     );
   }
 }
@@ -1111,18 +1219,19 @@ class _AmountField extends StatefulWidget {
 class _AmountFieldState extends State<_AmountField> {
   late final TextEditingController _controller;
 
+  String _displayText(double value) =>
+      SalePriceInput.format(value, zeroValue: '0');
+
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-      text: widget.value == 0 ? '0' : widget.value.toString(),
-    );
+    _controller = TextEditingController(text: _displayText(widget.value));
   }
 
   @override
   void didUpdateWidget(_AmountField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newText = widget.value == 0 ? '0' : widget.value.toString();
+    final newText = _displayText(widget.value);
     if (widget.value != oldWidget.value && newText != _controller.text) {
       _controller.text = newText;
     }
@@ -1136,16 +1245,19 @@ class _AmountFieldState extends State<_AmountField> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.readOnly) {
+      return CompactNumberField(
+        value: widget.value,
+        onChanged: widget.onChanged,
+        selectAllOnFocus: false,
+      );
+    }
+
     return TextField(
       controller: _controller,
-      readOnly: widget.readOnly,
+      readOnly: true,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
       decoration: buildSaleFieldDecoration(),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
-      onChanged: (text) => widget.onChanged(double.tryParse(text) ?? 0),
     );
   }
 }

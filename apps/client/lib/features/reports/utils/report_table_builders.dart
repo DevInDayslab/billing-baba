@@ -3,6 +3,7 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_filterable_sync_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/reports/utils/report_transaction_table_shared.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_types.dart';
@@ -193,35 +194,35 @@ List<ReportColumnSpec<ReportPartyStatementEntry>> partyStatementColumns({
     _dateCol(
       id: 'date',
       label: 'DATE',
-      width: 100,
+      flex: 1,
       value: (row) => row.date,
       child: (row) => Text(formatReportDate(row.date)),
     ),
     _textCol(
       id: 'type',
       label: 'TYPE',
-      width: 100,
+      flex: 1,
       value: (row) => row.type,
       child: (row) => Text(row.type),
     ),
     _textCol(
       id: 'refNo',
       label: 'REF NO',
-      width: 100,
+      flex: 2,
       value: (row) => row.refNo,
       child: (row) => Text(row.refNo),
     ),
     _numberCol(
       id: 'total',
       label: 'TOTAL',
-      width: 100,
+      flex: 1,
       value: (row) => row.total,
       child: (row) => _currencyText(row.total),
     ),
     _numberCol(
       id: 'balance',
       label: 'BALANCE',
-      width: 110,
+      flex: 1,
       value: (row) => row.balance,
       child: (row) => _currencyText(row.balance),
     ),
@@ -413,45 +414,74 @@ List<ReportColumnSpec<ReportCashFlowTableRow>> cashFlowColumns({
 ];
 
 List<ReportColumnSpec<ReportBillWiseProfitRow>> billWiseProfitColumns({
-  required List<String> exportHeaders,
-  required List<String> Function(ReportBillWiseProfitRow row) exportRow,
-}) => [
-  _dateCol(
-    id: 'date',
-    label: 'DATE',
-    width: 100,
-    value: (row) => row.date,
-    child: (row) => Text(formatReportDate(row.date)),
-  ),
-  _textCol(
-    id: 'invoiceNo',
-    label: 'INVOICE NO',
-    width: 110,
-    value: (row) => row.invoiceNo,
-    child: (row) => Text(row.invoiceNo),
-  ),
-  _textCol(
-    id: 'partyName',
-    label: 'PARTY NAME',
-    flex: 1,
-    value: (row) => row.partyName,
-    child: (row) => Text(row.partyName),
-  ),
-  _numberCol(
-    id: 'saleAmount',
-    label: 'SALE AMOUNT',
-    width: 120,
-    value: (row) => row.saleAmount,
-    child: (row) => _currencyText(row.saleAmount),
-  ),
-  _numberCol(
-    id: 'profit',
-    label: 'PROFIT',
-    width: 110,
-    value: (row) => row.profit,
-    child: (row) => _currencyText(row.profit),
-  ),
-];
+  ReportCellBuilder<ReportBillWiseProfitRow>? detailsCell,
+}) {
+  final columns = <ReportColumnSpec<ReportBillWiseProfitRow>>[
+    _dateCol(
+      id: 'date',
+      label: 'DATE',
+      width: 90,
+      value: (row) => row.date,
+      child: (row) => Text(formatReportDate(row.date)),
+    ),
+    _textCol(
+      id: 'invoiceNo',
+      label: 'INVOICE NO',
+      width: 110,
+      value: (row) => row.invoiceNo,
+      child: (row) => Text(row.invoiceNo),
+    ),
+    _textCol(
+      id: 'partyName',
+      label: 'PARTY',
+      flex: 1,
+      value: (row) => row.partyName,
+      child: (row) => Text(row.partyName),
+    ),
+    _numberCol(
+      id: 'saleAmount',
+      label: 'TOTAL SALE AMOUNT',
+      width: 140,
+      value: (row) => row.saleAmount,
+      child: (row) => _currencyText(row.saleAmount),
+    ),
+    ReportColumnSpec(
+      id: 'profit',
+      label: 'PROFIT (+) / LOSS (-)',
+      filterType: FilterType.number,
+      width: 140,
+      alignment: Alignment.centerRight,
+      filterValue: (row) => row.profit,
+      buildCell: (row, _) => ReportAlignedCell.fixed(
+        140,
+        alignment: Alignment.centerRight,
+        child: Text(
+          formatReportCurrency(row.profit),
+          style: TextStyle(
+            color: row.profit >= 0 ? reportTeal : reportAddRed,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    ),
+  ];
+
+  if (detailsCell != null) {
+    columns.add(
+      ReportColumnSpec(
+        id: 'details',
+        label: 'DETAILS',
+        filterType: FilterType.text,
+        filterValue: (_) => '',
+        showFilter: false,
+        width: 80,
+        buildCell: detailsCell,
+      ),
+    );
+  }
+
+  return columns;
+}
 
 List<ReportColumnSpec<ReportBankStatementRow>> bankStatementColumns() => [
   _dateCol(
@@ -669,19 +699,34 @@ List<ReportColumnSpec<ReportPartyByItemRow>> partyReportByItemColumns() => [
     child: (row) => Text(row.partyName),
   ),
   _numberCol(
-    id: 'quantity',
-    label: 'QUANTITY',
-    width: 110,
+    id: 'saleQuantity',
+    label: 'SALE QTY',
+    width: 100,
     alignment: Alignment.centerRight,
-    value: (row) => row.quantity,
-    child: (row) => Text(row.quantity.toStringAsFixed(2)),
+    value: (row) => row.saleQuantity,
+    child: (row) => Text(row.saleQuantity.toStringAsFixed(2)),
   ),
   _numberCol(
-    id: 'amount',
-    label: 'AMOUNT',
+    id: 'saleAmount',
+    label: 'SALE AMOUNT',
     width: 120,
-    value: (row) => row.amount,
-    child: (row) => _currencyText(row.amount),
+    value: (row) => row.saleAmount,
+    child: (row) => _currencyText(row.saleAmount),
+  ),
+  _numberCol(
+    id: 'purchaseQuantity',
+    label: 'PURCHASE QTY',
+    width: 110,
+    alignment: Alignment.centerRight,
+    value: (row) => row.purchaseQuantity,
+    child: (row) => Text(row.purchaseQuantity.toStringAsFixed(2)),
+  ),
+  _numberCol(
+    id: 'purchaseAmount',
+    label: 'PURCHASE AMOUNT',
+    width: 130,
+    value: (row) => row.purchaseAmount,
+    child: (row) => _currencyText(row.purchaseAmount),
   ),
 ];
 
@@ -1089,9 +1134,11 @@ expenseCategoryReportColumns() => [
     filterType: FilterType.text,
     width: 180,
     showFilter: false,
-    filterValue: (_) => 'Direct Expense',
-    buildCell: (_, __) =>
-        const ReportAlignedCell.fixed(180, child: Text('Direct Expense')),
+    filterValue: (row) => row.categoryTypeLabel,
+    buildCell: (row, _) => ReportAlignedCell.fixed(
+      180,
+      child: Text(row.categoryTypeLabel),
+    ),
   ),
   _numberCol(
     id: 'amount',

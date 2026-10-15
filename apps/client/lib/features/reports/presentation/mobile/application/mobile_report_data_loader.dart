@@ -10,6 +10,7 @@ import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_formatters.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_subsection_registry.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/mobile_report_view_model.dart';
+import 'package:billing_baba/features/reports/utils/expense_export.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:dio/dio.dart';
@@ -980,7 +981,7 @@ abstract final class MobileReportDataLoader {
       metrics: _countTotalMetrics(
         data.meta.total,
         data.rows,
-        (row) => row.amount,
+        (row) => row.saleAmount + row.purchaseAmount,
         config: config,
       ),
       rows: [
@@ -990,9 +991,9 @@ abstract final class MobileReportDataLoader {
             title: row.partyName,
             reference: config.referencePrefix,
             values: [
-              '${row.quantity}',
-              formatReportCurrency(row.amount),
-              '-',
+              '${row.saleQuantity}',
+              formatReportCurrency(row.saleAmount),
+              formatReportCurrency(row.purchaseAmount),
             ],
           ),
       ],
@@ -1638,7 +1639,7 @@ abstract final class MobileReportDataLoader {
             dateTime: row.date,
             values: [
               formatReportCurrency(row.amount),
-              row.status,
+              expenseReportStatusLabel(row.status),
               formatMobileReportDueDate(row.dueDate),
             ],
           ),

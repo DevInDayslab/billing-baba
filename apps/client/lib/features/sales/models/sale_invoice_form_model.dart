@@ -286,6 +286,9 @@ class AddSaleFormState {
 
   double get paymentAmount => payments.isNotEmpty ? payments.first.amount : 0;
 
+  double get totalPaymentsAmount =>
+      payments.fold<double>(0, (sum, payment) => sum + payment.amount);
+
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
 
@@ -331,7 +334,7 @@ class AddSaleFormState {
 
   double get balanceAmount {
     if (saleType == SaleType.cash) {
-      return (invoiceTotal - paymentAmount).clamp(0, double.infinity);
+      return (invoiceTotal - totalPaymentsAmount).clamp(0, double.infinity);
     }
     final received = receivedEnabled ? receivedAmount : 0;
     return (invoiceTotal - received).clamp(0, double.infinity);
@@ -362,7 +365,7 @@ class AddSaleFormState {
       partyId != null && partyId!.isNotEmpty && loyaltyPointsAvailable > 0;
 
   double get displayReceivedAmount {
-    if (saleType == SaleType.cash) return paymentAmount;
+    if (saleType == SaleType.cash) return totalPaymentsAmount;
     return receivedEnabled ? receivedAmount : 0;
   }
 

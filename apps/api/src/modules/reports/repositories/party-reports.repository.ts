@@ -2,7 +2,10 @@ import { and, desc, eq, gte, ilike, inArray, lt, sql } from 'drizzle-orm';
 import type { Database } from '../../../db/client';
 import { parties } from '../../../db/schema/crm/tables';
 import { items } from '../../../db/schema/inventory/tables';
-import { purchaseDocuments } from '../../../db/schema/purchases/tables';
+import {
+  purchaseDocumentLines,
+  purchaseDocuments,
+} from '../../../db/schema/purchases/tables';
 import {
   salesDocumentLines,
   salesDocuments,
@@ -103,6 +106,13 @@ export class PartyReportsRepository {
     if (partyGroupFilter) {
       partyFilters.push(partyGroupFilter);
     }
+    if (query.party_type === 'customer') {
+      partyFilters.push(inArray(parties.partyType, ['customer', 'both']));
+    } else if (query.party_type === 'supplier') {
+      partyFilters.push(inArray(parties.partyType, ['supplier', 'both']));
+    } else if (query.party_type) {
+      partyFilters.push(eq(parties.partyType, query.party_type));
+    }
     if (query.q) {
       partyFilters.push(ilike(parties.name, `%${query.q}%`));
     }
@@ -168,7 +178,29 @@ export class PartyReportsRepository {
       };
     }
 
-    const filters = [
+    const partyFilters = [
+      eq(parties.businessId, businessId),
+      eq(parties.isDeleted, false),
+    ];
+    const partyGroupFilter = this.partyGroupFilter(query);
+    if (partyGroupFilter) {
+      partyFilters.push(partyGroupFilter);
+    }
+    if (query.party_type === 'customer') {
+      partyFilters.push(inArray(parties.partyType, ['customer', 'both']));
+    } else if (query.party_type === 'supplier') {
+      partyFilters.push(inArray(parties.partyType, ['supplier', 'both']));
+    } else if (query.party_type) {
+      partyFilters.push(eq(parties.partyType, query.party_type));
+    }
+    if (query.party_id) {
+      partyFilters.push(eq(parties.id, query.party_id));
+    }
+    if (query.q) {
+      partyFilters.push(ilike(parties.name, `%${query.q}%`));
+    }
+
+    const saleFilters = [
       eq(salesDocuments.businessId, businessId),
       eq(salesDocuments.isDeleted, false),
       eq(salesDocuments.status, 'finalized'),
@@ -177,16 +209,15 @@ export class PartyReportsRepository {
       eq(salesDocumentLines.isDeleted, false),
       gte(salesDocuments.documentDate, range.from),
       lt(salesDocuments.documentDate, range.to),
+      ...partyFilters,
     ];
-    if (query.party_id) {
-      filters.push(eq(salesDocuments.partyId, query.party_id));
-    }
 
-    const grouped = await this.db
+    const saleGrouped = await this.db
       .select({
+        partyId: parties.id,
         partyName: parties.name,
-        quantity: sql<string>`COALESCE(SUM(${salesDocumentLines.quantity}::numeric), 0)`,
-        amount: sql<string>`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`,
+        saleQuantity: sql<string>`COALESCE(SUM(${salesDocumentLines.quantity}::numeric), 0)`,
+        saleAmount: sql<string>`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`,
       })
       .from(salesDocumentLines)
       .innerJoin(
@@ -194,17 +225,92 @@ export class PartyReportsRepository {
         eq(salesDocumentLines.salesDocumentId, salesDocuments.id),
       )
       .innerJoin(parties, eq(salesDocuments.partyId, parties.id))
-      .where(and(...filters))
-      .groupBy(parties.id, parties.name)
-      .orderBy(
-        desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`),
-      );
+      .where(and(...saleFilters))
+      .groupBy(parties.id, parties.name);
 
-    const mapped = grouped.map((row) => ({
-      party_name: row.partyName ?? '',
-      quantity: row.quantity ?? '0',
-      amount: row.amount ?? '0',
-    }));
+    const purchaseFilters = [
+      eq(purchaseDocuments.businessId, businessId),
+      eq(purchaseDocuments.isDeleted, false),
+      eq(purchaseDocuments.status, 'finalized'),
+      eq(purchaseDocuments.documentType, PURCHASE_BILL_TYPE),
+      eq(purchaseDocumentLines.itemId, query.item_id),
+      eq(purchaseDocumentLines.isDeleted, false),
+      gte(purchaseDocuments.documentDate, range.from),
+      lt(purchaseDocuments.documentDate, range.to),
+      ...partyFilters,
+    ];
+
+    const purchaseGrouped = await this.db
+      .select({
+        partyId: parties.id,
+        partyName: parties.name,
+        purchaseQuantity: sql<string>`COALESCE(SUM(${purchaseDocumentLines.quantity}::numeric), 0)`,
+        purchaseAmount: sql<string>`COALESCE(SUM(${purchaseDocumentLines.lineTotal}::numeric), 0)`,
+      })
+      .from(purchaseDocumentLines)
+      .innerJoin(
+        purchaseDocuments,
+        eq(purchaseDocumentLines.purchaseDocumentId, purchaseDocuments.id),
+      )
+      .innerJoin(parties, eq(purchaseDocuments.partyId, parties.id))
+      .where(and(...purchaseFilters))
+      .groupBy(parties.id, parties.name);
+
+    type PartyAcc = {
+      party_name: string;
+      sale_quantity: number;
+      sale_amount: number;
+      purchase_quantity: number;
+      purchase_amount: number;
+    };
+    const byParty = new Map<string, PartyAcc>();
+
+    for (const row of saleGrouped) {
+      const partyId = row.partyId;
+      if (!partyId) continue;
+      byParty.set(partyId, {
+        party_name: row.partyName ?? '',
+        sale_quantity: Number(row.saleQuantity ?? 0),
+        sale_amount: Number(row.saleAmount ?? 0),
+        purchase_quantity: 0,
+        purchase_amount: 0,
+      });
+    }
+
+    for (const row of purchaseGrouped) {
+      const partyId = row.partyId;
+      if (!partyId) continue;
+      const existing = byParty.get(partyId);
+      if (existing) {
+        existing.purchase_quantity = Number(row.purchaseQuantity ?? 0);
+        existing.purchase_amount = Number(row.purchaseAmount ?? 0);
+      } else {
+        byParty.set(partyId, {
+          party_name: row.partyName ?? '',
+          sale_quantity: 0,
+          sale_amount: 0,
+          purchase_quantity: Number(row.purchaseQuantity ?? 0),
+          purchase_amount: Number(row.purchaseAmount ?? 0),
+        });
+      }
+    }
+
+    const mapped = [...byParty.values()]
+      .filter(
+        (row) =>
+          row.sale_quantity > 0 ||
+          row.sale_amount > 0 ||
+          row.purchase_quantity > 0 ||
+          row.purchase_amount > 0,
+      )
+      .map((row) => ({
+        party_name: row.party_name,
+        sale_quantity: String(row.sale_quantity),
+        sale_amount: String(row.sale_amount),
+        purchase_quantity: String(row.purchase_quantity),
+        purchase_amount: String(row.purchase_amount),
+      }))
+      .sort((a, b) => Number(b.sale_amount) - Number(a.sale_amount));
 
     const { rows, total } = paginateSlice(mapped, query.page, query.limit);
 
@@ -271,6 +377,18 @@ export class PartyReportsRepository {
       eq(parties.businessId, businessId),
       eq(parties.isDeleted, false),
     ];
+
+    const partyGroupFilter = this.partyGroupFilter(query);
+    if (partyGroupFilter) {
+      partyFilters.push(partyGroupFilter);
+    }
+    if (query.party_type === 'customer') {
+      partyFilters.push(inArray(parties.partyType, ['customer', 'both']));
+    } else if (query.party_type === 'supplier') {
+      partyFilters.push(inArray(parties.partyType, ['supplier', 'both']));
+    } else if (query.party_type) {
+      partyFilters.push(eq(parties.partyType, query.party_type));
+    }
     if (query.q) {
       partyFilters.push(ilike(parties.name, `%${query.q}%`));
     }

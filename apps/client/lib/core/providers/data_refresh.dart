@@ -168,6 +168,8 @@ void invalidatePaymentOutLists(Ref ref) {
 void invalidateExpenseLists(Ref ref) {
   ref
     ..invalidate(expenseCategoriesProvider)
+    ..invalidate(expenseCatalogItemsProvider)
+    ..invalidate(expenseItemsProvider)
     ..invalidate(expenseTransactionsProvider);
 }
 
@@ -228,6 +230,7 @@ Future<void> refreshAfterSaleMutation(
   if (!ref.mounted) return;
   invalidateSaleLists(ref);
   invalidatePaymentInLists(ref);
+  invalidateReports(ref);
   await _refreshDependentViews(ref, context);
   if (!ref.mounted) return;
   _refreshStockContextInBackground(ref, context);
@@ -241,6 +244,7 @@ Future<void> refreshAfterPurchaseMutation(
   if (!ref.mounted) return;
   invalidatePurchaseLists(ref);
   invalidatePaymentOutLists(ref);
+  invalidateReports(ref);
   await _refreshDependentViews(ref, context);
   if (!ref.mounted) return;
   _refreshStockContextInBackground(ref, context);
@@ -275,6 +279,7 @@ void refreshAfterExpense(
 }) {
   invalidateExpenseLists(ref);
   invalidateDashboard(ref);
+  invalidateReports(ref);
   _refreshPartyContext(ref, context);
 }
 

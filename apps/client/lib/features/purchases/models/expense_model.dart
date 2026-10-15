@@ -44,6 +44,7 @@ class ExpenseTransactionModel {
     required this.transactionNo,
     required this.party,
     this.categoryId,
+    this.expenseItemId,
     this.itemId,
     this.paymentType,
     this.amount,
@@ -58,6 +59,7 @@ class ExpenseTransactionModel {
 
   final String id;
   final String? categoryId;
+  final String? expenseItemId;
   final String? itemId;
   final DateTime date;
   final String transactionNo;
@@ -73,6 +75,24 @@ class ExpenseTransactionModel {
   final bool isSyncManaged;
 }
 
+class ExpenseCatalogItemModel {
+  const ExpenseCatalogItemModel({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.priceIsTaxInclusive,
+    required this.taxRate,
+    this.hsnSac,
+  });
+
+  final String id;
+  final String name;
+  final String? hsnSac;
+  final double price;
+  final bool priceIsTaxInclusive;
+  final double taxRate;
+}
+
 class ExpenseItemModel {
   const ExpenseItemModel({
     required this.id,
@@ -80,6 +100,7 @@ class ExpenseItemModel {
     required this.category,
     required this.amount,
     this.description = '',
+    this.defaultPrice = 0,
   });
 
   final String id;
@@ -87,6 +108,7 @@ class ExpenseItemModel {
   final String category;
   final double amount;
   final String description;
+  final double defaultPrice;
 }
 
 /// Legacy flat expense record kept for compatibility.

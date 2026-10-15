@@ -371,7 +371,6 @@ GoRouter createAppRouter({
             name: 'viewSale',
             builder: (context, state) => AddSalePage(
               invoiceId: state.pathParameters['invoiceId'],
-              readOnly: true,
             ),
           ),
           GoRoute(

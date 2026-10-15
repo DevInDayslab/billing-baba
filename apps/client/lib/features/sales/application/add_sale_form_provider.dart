@@ -913,31 +913,41 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(items: items, isDirty: true);
   }
 
-  void updatePaymentType(String type) {
+  void updatePaymentType(String type) => updatePaymentTypeAt(0, type);
+
+  void updatePaymentAmount(double amount) => updatePaymentAmountAt(0, amount);
+
+  void updatePaymentTypeAt(int index, String type) {
+    if (index < 0) return;
     final payments = [...state.payments];
-    if (payments.isEmpty) {
-      payments.add(SalePaymentEntry(type: type));
-    } else {
-      payments[0] = payments[0].copyWith(type: type);
+    while (payments.length <= index) {
+      payments.add(const SalePaymentEntry(type: 'Cash'));
     }
+    payments[index] = payments[index].copyWith(type: type);
     state = state.copyWith(payments: payments, isDirty: true);
   }
 
-  void updatePaymentAmount(double amount) {
+  void updatePaymentAmountAt(int index, double amount) {
+    if (index < 0) return;
     final payments = [...state.payments];
-    if (payments.isEmpty) {
-      payments.add(SalePaymentEntry(type: 'Cash', amount: amount));
-    } else {
-      payments[0] = payments[0].copyWith(amount: amount);
+    while (payments.length <= index) {
+      payments.add(const SalePaymentEntry(type: 'Cash'));
     }
+    payments[index] = payments[index].copyWith(amount: amount);
     state = state.copyWith(payments: payments, isDirty: true);
   }
 
   void addPaymentType() {
     final payments = [
       ...state.payments,
-      const SalePaymentEntry(type: 'UPI'),
+      const SalePaymentEntry(type: '', amount: 0),
     ];
+    state = state.copyWith(payments: payments, isDirty: true);
+  }
+
+  void removePaymentAt(int index) {
+    if (index <= 0 || index >= state.payments.length) return;
+    final payments = [...state.payments]..removeAt(index);
     state = state.copyWith(payments: payments, isDirty: true);
   }
 

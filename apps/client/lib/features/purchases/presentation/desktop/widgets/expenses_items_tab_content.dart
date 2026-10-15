@@ -5,6 +5,7 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
+import 'package:billing_baba/features/purchases/presentation/desktop/widgets/add_expense_item_dialog.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/expense_list_panel_layout.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/expense_transaction_resizable_table.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
@@ -99,6 +100,12 @@ class _ItemListPanel extends StatelessWidget {
                   hint: 'Search',
                   onChanged: onSearchChanged,
                 ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: () => showAddExpenseItemDialog(context),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Add Item'),
               ),
               const SizedBox(width: AppSpacing.sm),
               FilledButton.icon(

@@ -9,6 +9,15 @@ import 'package:billing_baba/features/reports/models/mappers/report_extended_map
 import 'package:billing_baba/features/reports/models/mappers/report_mapper.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
+import 'package:billing_baba/features/reports/utils/item_detail_ledger.dart';
+import 'package:billing_baba/features/reports/utils/profit_loss_report_builder.dart';
+import 'package:billing_baba/features/reports/utils/report_transaction_table_shared.dart';
+import 'package:billing_baba/features/reports/utils/balance_sheet_report_builder.dart';
+import 'package:billing_baba/features/reports/utils/consumption_report_builder.dart';
+import 'package:billing_baba/features/reports/utils/manufacturing_report_builder.dart';
+import 'package:billing_baba/features/reports/utils/trial_balance_report_builder.dart';
+import 'package:billing_baba/features/sales/data/job_work_remote_data_source.dart';
+import 'package:billing_baba/features/sales/data/job_work_repository.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -26,6 +35,9 @@ Future<ReportsService> reportsService(Ref ref) async {
       remote: ReportsRemoteDataSource(api.dio),
     ),
     localMetrics: localMetrics,
+    jobWorkRepository: JobWorkRepository(
+      remote: JobWorkRemoteDataSource(api.dio),
+    ),
   );
 }
 
@@ -278,17 +290,42 @@ class SacReportData {
 }
 
 class ItemReportByPartyReportData {
-  const ItemReportByPartyReportData({required this.rows, required this.meta});
+  const ItemReportByPartyReportData({
+    required this.rows,
+    required this.meta,
+    this.totalSaleAmount,
+  });
 
   final List<ReportItemByPartyRow> rows;
   final ReportPaginationMeta meta;
+
+  /// Full-period sale total when computed offline (not just the current page).
+  final double? totalSaleAmount;
+
+  double get resolvedTotalSaleAmount =>
+      totalSaleAmount ??
+      rows.fold<double>(0, (sum, row) => sum + row.amount);
 }
 
 class ItemWiseProfitLossReportData {
-  const ItemWiseProfitLossReportData({required this.rows, required this.meta});
+  const ItemWiseProfitLossReportData({
+    required this.rows,
+    required this.meta,
+    this.totalSaleAmount,
+    this.totalProfit,
+  });
 
   final List<ReportItemWiseProfitLossRow> rows;
   final ReportPaginationMeta meta;
+  final double? totalSaleAmount;
+  final double? totalProfit;
+
+  double get resolvedTotalSaleAmount =>
+      totalSaleAmount ??
+      rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+
+  double get resolvedTotalProfit =>
+      totalProfit ?? rows.fold<double>(0, (sum, row) => sum + row.profit);
 }
 
 class StockDetailReportData {
@@ -299,44 +336,112 @@ class StockDetailReportData {
 }
 
 class ItemDetailReportData {
-  const ItemDetailReportData({required this.rows, required this.meta});
+  const ItemDetailReportData({
+    required this.rows,
+    required this.meta,
+    this.openingQuantity = 0,
+    this.ledgerRows,
+  });
 
   final List<ReportItemDetailRow> rows;
   final ReportPaginationMeta meta;
+  final double openingQuantity;
+  final List<ReportItemDetailTableRow>? ledgerRows;
 }
 
 class CategoryAmountReportData {
-  const CategoryAmountReportData({required this.rows});
+  const CategoryAmountReportData({
+    required this.rows,
+    this.lowStockCategoryNames = const {},
+  });
 
   final List<ReportCategoryAmountRow> rows;
+  final Set<String> lowStockCategoryNames;
 }
 
 class ItemWiseDiscountReportData {
-  const ItemWiseDiscountReportData({required this.rows, required this.meta});
+  const ItemWiseDiscountReportData({
+    required this.rows,
+    required this.meta,
+    this.totalSaleAmount,
+    this.totalDiscountAmount,
+  });
 
   final List<ReportItemDiscountRow> rows;
   final ReportPaginationMeta meta;
+  final double? totalSaleAmount;
+  final double? totalDiscountAmount;
+
+  double get resolvedTotalSaleAmount =>
+      totalSaleAmount ??
+      rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+
+  double get resolvedTotalDiscountAmount =>
+      totalDiscountAmount ??
+      rows.fold<double>(0, (sum, row) => sum + row.discountAmount);
 }
 
 class ManufacturingReportData {
-  const ManufacturingReportData({required this.rows, required this.meta});
+  const ManufacturingReportData({
+    required this.rows,
+    required this.meta,
+    this.totalQtyManufactured,
+    this.totalAmount,
+  });
 
   final List<ReportManufacturingRow> rows;
   final ReportPaginationMeta meta;
+  final double? totalQtyManufactured;
+  final double? totalAmount;
+
+  double get resolvedTotalQtyManufactured =>
+      totalQtyManufactured ??
+      rows.fold<double>(0, (sum, row) => sum + row.quantity);
+
+  double get resolvedTotalAmount =>
+      totalAmount ?? rows.fold<double>(0, (sum, row) => sum + row.cost);
 }
 
 class ConsumptionReportData {
-  const ConsumptionReportData({required this.rows, required this.meta});
+  const ConsumptionReportData({
+    required this.rows,
+    required this.meta,
+    this.totalQtyConsumed,
+    this.totalAmount,
+  });
 
   final List<ReportConsumptionRow> rows;
   final ReportPaginationMeta meta;
+  final double? totalQtyConsumed;
+  final double? totalAmount;
+
+  double get resolvedTotalQtyConsumed =>
+      totalQtyConsumed ??
+      rows.fold<double>(0, (sum, row) => sum + row.quantity);
+
+  double get resolvedTotalAmount =>
+      totalAmount ?? rows.fold<double>(0, (sum, row) => sum + row.value);
 }
 
 class StockTransferReportData {
-  const StockTransferReportData({required this.rows, required this.meta});
+  const StockTransferReportData({
+    required this.rows,
+    required this.meta,
+    this.totalQtyTransferred,
+    this.totalValue,
+  });
 
   final List<ReportStockTransferRow> rows;
   final ReportPaginationMeta meta;
+  final double? totalQtyTransferred;
+  final double? totalValue;
+
+  double get resolvedTotalQtyTransferred =>
+      totalQtyTransferred ??
+      rows.fold<double>(0, (sum, row) => sum + row.quantity);
+
+  double get resolvedTotalValue =>
+      totalValue ?? rows.fold<double>(0, (sum, row) => sum + row.value);
 }
 
 class BankStatementReportData {
@@ -445,10 +550,12 @@ class ReportsService {
   ReportsService({
     required this._repository,
     this._localMetrics,
-  });
+    JobWorkRepository? jobWorkRepository,
+  }) : _jobWorkRepository = jobWorkRepository;
 
   final ReportsRepository _repository;
   final LocalBusinessMetricsService? _localMetrics;
+  final JobWorkRepository? _jobWorkRepository;
 
   Future<SaleReportData> fetchSaleReport(ReportQuery query) async {
     try {
@@ -512,28 +619,54 @@ class ReportsService {
     try {
       final response = await _repository.getStockSummary(query);
       final payload = response.data;
-      return StockSummaryReportData(
+      final remote = StockSummaryReportData(
         rows: payload.rows.map(ReportMapper.toStockSummaryRow).toList(),
         totalStockValue: _amount(payload.totalStockValue),
         meta: response.meta,
       );
+      return _preferLocalStockSummary(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildStockSummary(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<StockSummaryReportData> _preferLocalStockSummary(
+    StockSummaryReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty || remote.totalStockValue != 0) return remote;
+    final local = await _localMetrics?.buildStockSummary(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<LowStockReportData> fetchLowStock(ReportQuery query) async {
     try {
       final response = await _repository.getLowStock(query);
       final payload = response.data;
-      return LowStockReportData(
+      final remote = LowStockReportData(
         rows: payload.rows.map(ReportMapper.toLowStockRow).toList(),
         lowStockCount: payload.lowStockCount,
         meta: response.meta,
       );
+      return _preferLocalLowStock(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildLowStock(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<LowStockReportData> _preferLocalLowStock(
+    LowStockReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildLowStock(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<PartyOutstandingReportData> fetchPartyOutstanding(
@@ -542,7 +675,7 @@ class ReportsService {
     try {
       final response = await _repository.getPartyOutstanding(query);
       final payload = response.data;
-      return PartyOutstandingReportData(
+      final remote = PartyOutstandingReportData(
         rows: payload.rows.map(ReportMapper.toPartyModel).toList(),
         totalReceivable: _amount(payload.summary.totalReceivable),
         receivablePartyCount: payload.summary.receivablePartyCount,
@@ -550,9 +683,22 @@ class ReportsService {
         payablePartyCount: payload.summary.payablePartyCount,
         meta: response.meta,
       );
+      return _preferLocalPartyOutstanding(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildPartyOutstanding(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<PartyOutstandingReportData> _preferLocalPartyOutstanding(
+    PartyOutstandingReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildPartyOutstanding(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<PartyStatementReportData> fetchPartyStatement(
@@ -560,15 +706,28 @@ class ReportsService {
   ) async {
     try {
       final payload = await _repository.getPartyStatement(query);
-      return PartyStatementReportData(
+      final remote = PartyStatementReportData(
         entries: payload.entries
             .map(ReportMapper.toPartyStatementEntry)
             .toList(),
         summary: ReportMapper.toPartyStatementSummary(payload.summary),
       );
+      return _preferLocalPartyStatement(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildPartyStatement(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<PartyStatementReportData> _preferLocalPartyStatement(
+    PartyStatementReportData remote,
+    ReportQuery query,
+  ) async {
+    final local = await _localMetrics?.buildPartyStatement(query);
+    if (local == null) return remote;
+    if (remote.entries.isNotEmpty) return remote;
+    return local;
   }
 
   Future<DayBookReportData> fetchDayBook(ReportQuery query) async {
@@ -629,33 +788,70 @@ class ReportsService {
   Future<ProfitLossReportData> fetchProfitLoss(ReportQuery query) async {
     try {
       final payload = await _repository.getProfitLoss(query);
-      return ProfitLossReportData(
+      final remote = ProfitLossReportData(
         items: payload.items.map(ReportMapper.toProfitLossItem).toList(),
         netProfit: _amount(payload.netProfit),
       );
+      return _preferLocalProfitLoss(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildProfitLoss(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<ProfitLossReportData> _preferLocalProfitLoss(
+    ProfitLossReportData remote,
+    ReportQuery query,
+  ) async {
+    if (ProfitLossReportBuilder.hasMeaningfulActivity(
+      items: remote.items,
+      netProfit: remote.netProfit,
+    )) {
+      return remote;
+    }
+    final local = await _localMetrics?.buildProfitLoss(query);
+    if (local != null) return local;
+    return remote;
   }
 
   Future<TrialBalanceReportData> fetchTrialBalance(ReportQuery query) async {
     try {
       final payload = await _repository.getTrialBalance(query);
-      return TrialBalanceReportData(
+      final remote = TrialBalanceReportData(
         rows: payload.rows.map(ReportMapper.toTrialBalanceRow).toList(),
         totalDebit: _amount(payload.totalDebit),
         totalCredit: _amount(payload.totalCredit),
         isBalanced: payload.isBalanced,
       );
+      return _preferLocalTrialBalance(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildTrialBalance(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<TrialBalanceReportData> _preferLocalTrialBalance(
+    TrialBalanceReportData remote,
+    ReportQuery query,
+  ) async {
+    if (TrialBalanceReportBuilder.hasMeaningfulActivity(
+      rows: remote.rows,
+      totalDebit: remote.totalDebit,
+      totalCredit: remote.totalCredit,
+    )) {
+      return remote;
+    }
+    final local = await _localMetrics?.buildTrialBalance(query);
+    if (local != null) return local;
+    return remote;
   }
 
   Future<BalanceSheetReportData> fetchBalanceSheet(ReportQuery query) async {
     try {
       final payload = await _repository.getBalanceSheet(query);
-      return BalanceSheetReportData(
+      final remote = BalanceSheetReportData(
         assets: payload.assets.map(ReportMapper.toBalanceSheetItem).toList(),
         liabilities: payload.liabilities
             .map(ReportMapper.toBalanceSheetItem)
@@ -672,9 +868,30 @@ class ReportsService {
         isBalanced: payload.isBalanced,
         asOn: DateTime.tryParse(payload.asOn) ?? DateTime.now(),
       );
+      return _preferLocalBalanceSheet(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildBalanceSheet(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<BalanceSheetReportData> _preferLocalBalanceSheet(
+    BalanceSheetReportData remote,
+    ReportQuery query,
+  ) async {
+    if (BalanceSheetReportBuilder.hasMeaningfulActivity(
+      assets: remote.assets,
+      liabilities: remote.liabilities,
+      assetsTotal: remote.assetsTotal,
+      liabilitiesTotal: remote.liabilitiesTotal,
+      netProfit: remote.netProfit,
+    )) {
+      return remote;
+    }
+    final local = await _localMetrics?.buildBalanceSheet(query);
+    if (local != null) return local;
+    return remote;
   }
 
   Future<GstrReportData> fetchGstr1(ReportQuery query) async {
@@ -715,30 +932,56 @@ class ReportsService {
   ) async {
     try {
       final response = await _repository.getBillWiseProfit(query);
-      return BillWiseProfitReportData(
+      final remote = BillWiseProfitReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toBillWiseProfitRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalBillWiseProfit(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildBillWiseProfit(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<BillWiseProfitReportData> _preferLocalBillWiseProfit(
+    BillWiseProfitReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildBillWiseProfit(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<CashFlowReportData> fetchCashFlow(ReportQuery query) async {
     try {
       final payload = await _repository.getCashFlow(query);
-      return CashFlowReportData(
+      final remote = CashFlowReportData(
         rows: payload.rows.map(ReportMapper.toTransactionRow).toList(),
         openingBalance: _amount(payload.openingBalance),
         closingBalance: _amount(payload.closingBalance),
         totalMoneyIn: _amount(payload.totalMoneyIn),
         totalMoneyOut: _amount(payload.totalMoneyOut),
       );
+      return _preferLocalCashFlow(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildCashFlow(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<CashFlowReportData> _preferLocalCashFlow(
+    CashFlowReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildCashFlow(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<PartyWiseProfitLossReportData> fetchPartyWiseProfitLoss(
@@ -746,15 +989,28 @@ class ReportsService {
   ) async {
     try {
       final response = await _repository.getPartyWiseProfitLoss(query);
-      return PartyWiseProfitLossReportData(
+      final remote = PartyWiseProfitLossReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toPartyWiseProfitLossRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalPartyWiseProfitLoss(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildPartyWiseProfitLoss(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<PartyWiseProfitLossReportData> _preferLocalPartyWiseProfitLoss(
+    PartyWiseProfitLossReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildPartyWiseProfitLoss(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<PartyReportByItemReportData> fetchPartyReportByItem(
@@ -762,47 +1018,89 @@ class ReportsService {
   ) async {
     try {
       final response = await _repository.getPartyReportByItem(query);
-      return PartyReportByItemReportData(
+      final remote = PartyReportByItemReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toPartyByItemRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalPartyReportByItem(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildPartyReportByItem(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<PartyReportByItemReportData> _preferLocalPartyReportByItem(
+    PartyReportByItemReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildPartyReportByItem(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<SalePurchaseByPartyReportData> fetchSalePurchaseByParty(
     ReportQuery query,
   ) async {
+    final localFuture = _localMetrics?.buildSalePurchaseByParty(query);
     try {
       final response = await _repository.getSalePurchaseByParty(query);
-      return SalePurchaseByPartyReportData(
+      final remote = SalePurchaseByPartyReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toSalePurchaseByPartyRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalSalePurchaseByParty(remote, localFuture);
     } on DioException catch (error) {
+      final local = await localFuture;
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<SalePurchaseByPartyReportData> _preferLocalSalePurchaseByParty(
+    SalePurchaseByPartyReportData remote,
+    Future<SalePurchaseByPartyReportData?>? localFuture,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await localFuture;
+    if (local == null) return remote;
+    return local;
   }
 
   Future<SalePurchaseByPartyGroupReportData> fetchSalePurchaseByPartyGroup(
     ReportQuery query,
   ) async {
+    final localFuture = _localMetrics?.buildSalePurchaseByPartyGroup(query);
     try {
       final response = await _repository.getSalePurchaseByPartyGroup(query);
-      return SalePurchaseByPartyGroupReportData(
+      final remote = SalePurchaseByPartyGroupReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toSalePurchaseByPartyGroupRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalSalePurchaseByPartyGroup(remote, localFuture);
     } on DioException catch (error) {
+      final local = await localFuture;
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<SalePurchaseByPartyGroupReportData>
+  _preferLocalSalePurchaseByPartyGroup(
+    SalePurchaseByPartyGroupReportData remote,
+    Future<SalePurchaseByPartyGroupReportData?>? localFuture,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await localFuture;
+    if (local == null) return remote;
+    return local;
   }
 
   Future<Gstr9ReportData> fetchGstr9(ReportQuery query) async {
@@ -845,15 +1143,28 @@ class ReportsService {
   ) async {
     try {
       final response = await _repository.getItemReportByParty(query);
-      return ItemReportByPartyReportData(
+      final remote = ItemReportByPartyReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toItemByPartyRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalItemReportByParty(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildItemReportByParty(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<ItemReportByPartyReportData> _preferLocalItemReportByParty(
+    ItemReportByPartyReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildItemReportByParty(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<ItemWiseProfitLossReportData> fetchItemWiseProfitLoss(
@@ -861,43 +1172,100 @@ class ReportsService {
   ) async {
     try {
       final response = await _repository.getItemWiseProfitLoss(query);
-      return ItemWiseProfitLossReportData(
+      final remote = ItemWiseProfitLossReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toItemWiseProfitLossRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalItemWiseProfitLoss(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildItemWiseProfitLoss(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<ItemWiseProfitLossReportData> _preferLocalItemWiseProfitLoss(
+    ItemWiseProfitLossReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildItemWiseProfitLoss(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<StockDetailReportData> fetchStockDetail(ReportQuery query) async {
     try {
       final response = await _repository.getStockDetail(query);
-      return StockDetailReportData(
+      final remote = StockDetailReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toStockDetailRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalStockDetail(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildStockDetail(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<StockDetailReportData> _preferLocalStockDetail(
+    StockDetailReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildStockDetail(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<ItemDetailReportData> fetchItemDetail(ReportQuery query) async {
     try {
       final response = await _repository.getItemDetail(query);
-      return ItemDetailReportData(
-        rows: response.data.rows
-            .map(ReportExtendedMapper.toItemDetailRow)
-            .toList(),
+      final rows = response.data.rows
+          .map(ReportExtendedMapper.toItemDetailRow)
+          .toList();
+      final remote = _enrichItemDetailReportData(
+        rows: rows,
         meta: response.meta,
       );
+      return _preferLocalItemDetail(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildItemDetail(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<ItemDetailReportData> _preferLocalItemDetail(
+    ItemDetailReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildItemDetail(query);
+    if (local == null) return remote;
+    return local;
+  }
+
+  ItemDetailReportData _enrichItemDetailReportData({
+    required List<ReportItemDetailRow> rows,
+    required ReportPaginationMeta meta,
+    double openingQuantity = 0,
+  }) {
+    return ItemDetailReportData(
+      rows: rows,
+      meta: meta,
+      openingQuantity: openingQuantity,
+      ledgerRows: buildItemDetailLedgerRows(
+        rows,
+        openingQty: openingQuantity,
+        newestFirst: true,
+      ),
+    );
   }
 
   Future<CategoryAmountReportData> fetchSalePurchaseByItemCategory(
@@ -905,14 +1273,27 @@ class ReportsService {
   ) async {
     try {
       final payload = await _repository.getSalePurchaseByItemCategory(query);
-      return CategoryAmountReportData(
+      final remote = CategoryAmountReportData(
         rows: payload.rows
             .map(ReportExtendedMapper.toCategoryAmountRow)
             .toList(),
       );
+      return _preferLocalSalePurchaseByItemCategory(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildSalePurchaseByItemCategory(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<CategoryAmountReportData> _preferLocalSalePurchaseByItemCategory(
+    CategoryAmountReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildSalePurchaseByItemCategory(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<CategoryAmountReportData> fetchStockSummaryByItemCategory(
@@ -920,14 +1301,27 @@ class ReportsService {
   ) async {
     try {
       final payload = await _repository.getStockSummaryByItemCategory(query);
-      return CategoryAmountReportData(
+      final remote = CategoryAmountReportData(
         rows: payload.rows
             .map(ReportExtendedMapper.toCategoryAmountRow)
             .toList(),
       );
+      return _preferLocalStockSummaryByItemCategory(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildStockSummaryByItemCategory(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<CategoryAmountReportData> _preferLocalStockSummaryByItemCategory(
+    CategoryAmountReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildStockSummaryByItemCategory(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<CategoryAmountReportData> fetchItemCategoryWiseProfitLoss(
@@ -935,72 +1329,198 @@ class ReportsService {
   ) async {
     try {
       final payload = await _repository.getItemCategoryWiseProfitLoss(query);
-      return CategoryAmountReportData(
+      final remote = CategoryAmountReportData(
         rows: payload.rows
             .map(ReportExtendedMapper.toCategoryAmountRow)
             .toList(),
       );
+      return _preferLocalItemCategoryWiseProfitLoss(remote, query);
     } on DioException catch (error) {
+      final local =
+          await _localMetrics?.buildItemCategoryWiseProfitLoss(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<CategoryAmountReportData> _preferLocalItemCategoryWiseProfitLoss(
+    CategoryAmountReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local =
+        await _localMetrics?.buildItemCategoryWiseProfitLoss(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<ItemWiseDiscountReportData> fetchItemWiseDiscount(
     ReportQuery query,
   ) async {
+    final localFuture = _localMetrics?.buildItemWiseDiscount(query);
     try {
       final response = await _repository.getItemWiseDiscount(query);
-      return ItemWiseDiscountReportData(
+      final remote = ItemWiseDiscountReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toItemDiscountRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalItemWiseDiscount(remote, localFuture);
     } on DioException catch (error) {
+      final local = await localFuture;
+      if (local != null) return local;
       throw mapReportsError(error);
     }
   }
 
+  Future<ItemWiseDiscountReportData> _preferLocalItemWiseDiscount(
+    ItemWiseDiscountReportData remote,
+    Future<ItemWiseDiscountReportData?>? localFuture,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await localFuture;
+    if (local == null) return remote;
+    return local;
+  }
+
   Future<ManufacturingReportData> fetchManufacturing(ReportQuery query) async {
+    final localFuture = buildManufacturingReportFromJobWork(
+      repository: _jobWorkRepository,
+      query: query,
+    );
     try {
       final response = await _repository.getManufacturing(query);
-      return ManufacturingReportData(
+      final remote = ManufacturingReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toManufacturingRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalManufacturing(remote, localFuture);
     } on DioException catch (error) {
+      final local = _mapManufacturingBuild(await localFuture);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
   }
 
+  Future<ManufacturingReportData> _preferLocalManufacturing(
+    ManufacturingReportData remote,
+    Future<ManufacturingReportBuildResult?> localFuture,
+  ) async {
+    final build = await localFuture;
+    final fromJobWork = _mapManufacturingBuild(build);
+    if (remote.rows.isEmpty) {
+      return fromJobWork ?? remote;
+    }
+    if (fromJobWork == null) return remote;
+    return ManufacturingReportData(
+      rows: remote.rows,
+      meta: remote.meta,
+      totalQtyManufactured: fromJobWork.totalQtyManufactured,
+      totalAmount: fromJobWork.totalAmount,
+    );
+  }
+
+  ManufacturingReportData? _mapManufacturingBuild(
+    ManufacturingReportBuildResult? result,
+  ) {
+    if (result == null) return null;
+    return ManufacturingReportData(
+      rows: result.rows,
+      meta: result.meta,
+      totalQtyManufactured: result.totalQtyManufactured,
+      totalAmount: result.totalAmount,
+    );
+  }
+
   Future<ConsumptionReportData> fetchConsumption(ReportQuery query) async {
+    final localFuture = buildConsumptionReportFromJobWork(
+      repository: _jobWorkRepository,
+      query: query,
+      itemNameById: () async =>
+          await _localMetrics?.activeItemNameById() ?? {},
+    );
     try {
       final response = await _repository.getConsumption(query);
-      return ConsumptionReportData(
+      final remote = ConsumptionReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toConsumptionRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalConsumption(remote, localFuture);
     } on DioException catch (error) {
+      final local = _mapConsumptionBuild(await localFuture);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
   }
 
+  Future<ConsumptionReportData> _preferLocalConsumption(
+    ConsumptionReportData remote,
+    Future<ConsumptionReportBuildResult?> localFuture,
+  ) async {
+    final build = await localFuture;
+    final fromJobWork = _mapConsumptionBuild(build);
+    if (remote.rows.isEmpty) {
+      return fromJobWork ?? remote;
+    }
+    if (fromJobWork == null) return remote;
+    return ConsumptionReportData(
+      rows: remote.rows,
+      meta: remote.meta,
+      totalQtyConsumed: fromJobWork.totalQtyConsumed,
+      totalAmount: fromJobWork.totalAmount,
+    );
+  }
+
+  ConsumptionReportData? _mapConsumptionBuild(
+    ConsumptionReportBuildResult? result,
+  ) {
+    if (result == null) return null;
+    return ConsumptionReportData(
+      rows: result.rows,
+      meta: result.meta,
+      totalQtyConsumed: result.totalQtyConsumed,
+      totalAmount: result.totalAmount,
+    );
+  }
+
   Future<StockTransferReportData> fetchStockTransfer(ReportQuery query) async {
+    final localFuture = _localMetrics?.buildStockTransfer(query);
     try {
       final response = await _repository.getStockTransfer(query);
-      return StockTransferReportData(
+      final remote = StockTransferReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toStockTransferRow)
             .toList(),
         meta: response.meta,
       );
+      return _preferLocalStockTransfer(remote, localFuture);
     } on DioException catch (error) {
+      final local = await localFuture;
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<StockTransferReportData> _preferLocalStockTransfer(
+    StockTransferReportData remote,
+    Future<StockTransferReportData?>? localFuture,
+  ) async {
+    final local = await localFuture;
+    if (remote.rows.isEmpty) {
+      return local ?? remote;
+    }
+    if (local == null) return remote;
+    return StockTransferReportData(
+      rows: remote.rows,
+      meta: remote.meta,
+      totalQtyTransferred: local.totalQtyTransferred,
+      totalValue: local.totalValue,
+    );
   }
 
   Future<BankStatementReportData> fetchBankStatement(ReportQuery query) async {
@@ -1100,16 +1620,29 @@ class ReportsService {
   Future<ExpensesReportData> fetchExpenses(ReportQuery query) async {
     try {
       final response = await _repository.getExpenses(query);
-      return ExpensesReportData(
+      final remote = ExpensesReportData(
         rows: response.data.rows
             .map(ReportExtendedMapper.toExpenseRow)
             .toList(),
         totalAmount: _amount(response.data.totalAmount),
         meta: response.meta,
       );
+      return _preferLocalExpensesReport(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildExpensesReport(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<ExpensesReportData> _preferLocalExpensesReport(
+    ExpensesReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty || remote.totalAmount > 0) return remote;
+    final local = await _localMetrics?.buildExpensesReport(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<ExpenseByCategoryReportData> fetchExpenseByCategory(
@@ -1117,25 +1650,51 @@ class ReportsService {
   ) async {
     try {
       final payload = await _repository.getExpenseByCategory(query);
-      return ExpenseByCategoryReportData(
+      final remote = ExpenseByCategoryReportData(
         rows: payload.rows
             .map(ReportExtendedMapper.toExpenseCategoryRow)
             .toList(),
       );
+      return _preferLocalExpenseByCategoryReport(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildExpenseByCategoryReport(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<ExpenseByCategoryReportData> _preferLocalExpenseByCategoryReport(
+    ExpenseByCategoryReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildExpenseByCategoryReport(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<ExpenseByItemReportData> fetchExpenseByItem(ReportQuery query) async {
     try {
       final payload = await _repository.getExpenseByItem(query);
-      return ExpenseByItemReportData(
+      final remote = ExpenseByItemReportData(
         rows: payload.rows.map(ReportExtendedMapper.toExpenseItemRow).toList(),
       );
+      return _preferLocalExpenseByItemReport(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildExpenseByItemReport(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<ExpenseByItemReportData> _preferLocalExpenseByItemReport(
+    ExpenseByItemReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty) return remote;
+    final local = await _localMetrics?.buildExpenseByItemReport(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<SalePurchaseOrdersReportData> fetchSalePurchaseOrders(
@@ -1143,14 +1702,27 @@ class ReportsService {
   ) async {
     try {
       final response = await _repository.getSalePurchaseOrders(query);
-      return SalePurchaseOrdersReportData(
+      final remote = SalePurchaseOrdersReportData(
         rows: response.data.rows.map(ReportExtendedMapper.toOrderRow).toList(),
         totalAmount: _amount(response.data.totalAmount),
         meta: response.meta,
       );
+      return _preferLocalSalePurchaseOrdersReport(remote, query);
     } on DioException catch (error) {
+      final local = await _localMetrics?.buildSalePurchaseOrdersReport(query);
+      if (local != null) return local;
       throw mapReportsError(error);
     }
+  }
+
+  Future<SalePurchaseOrdersReportData> _preferLocalSalePurchaseOrdersReport(
+    SalePurchaseOrdersReportData remote,
+    ReportQuery query,
+  ) async {
+    if (remote.rows.isNotEmpty || remote.totalAmount > 0) return remote;
+    final local = await _localMetrics?.buildSalePurchaseOrdersReport(query);
+    if (local == null) return remote;
+    return local;
   }
 
   Future<SalePurchaseOrderItemsReportData> fetchSalePurchaseOrderItems(

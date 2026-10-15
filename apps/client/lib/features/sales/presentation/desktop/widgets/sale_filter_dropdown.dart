@@ -103,6 +103,12 @@ class SaleFilterDropdownState extends State<SaleFilterDropdown> {
         .toList();
   }
 
+  String get _triggerLabel {
+    final selected = widget.selected.trim();
+    if (selected.isNotEmpty) return selected;
+    return widget.label;
+  }
+
   void _showSearchOverlay() {
     final renderBox =
         _triggerKey.currentContext?.findRenderObject() as RenderBox?;
@@ -217,10 +223,10 @@ class SaleFilterDropdownState extends State<SaleFilterDropdown> {
           key: _triggerKey,
           onTap: _toggleMenu,
           behavior: HitTestBehavior.opaque,
-          child: widget.label.isEmpty
+          child: _triggerLabel.isEmpty
               ? const SizedBox.shrink()
               : _FilterChipTrigger(
-                  label: widget.label,
+                  label: _triggerLabel,
                   backgroundColor: widget.chipBackgroundColor,
                   borderColor: widget.chipBorderColor,
                   leadingIcon: widget.leadingIcon,
@@ -255,10 +261,10 @@ class SaleFilterDropdownState extends State<SaleFilterDropdown> {
         return GestureDetector(
           onTap: _toggleMenu,
           behavior: HitTestBehavior.opaque,
-          child: widget.label.isEmpty
+          child: _triggerLabel.isEmpty
               ? const SizedBox.shrink()
               : _FilterChipTrigger(
-                  label: widget.label,
+                  label: _triggerLabel,
                   backgroundColor: widget.chipBackgroundColor,
                   borderColor: widget.chipBorderColor,
                   leadingIcon: widget.leadingIcon,

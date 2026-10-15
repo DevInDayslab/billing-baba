@@ -46,6 +46,16 @@ class PartyLedgerService {
   }) {
     return _projection.buildOutstandingIndex(businessId: businessId);
   }
+
+  Future<({double receivable, double payable})> fetchOutstandingTotalsAsOf({
+    required String businessId,
+    required DateTime asOfInclusive,
+  }) {
+    return _projection.buildOutstandingTotalsAsOf(
+      businessId: businessId,
+      asOfInclusive: asOfInclusive,
+    );
+  }
 }
 
 @Riverpod(keepAlive: true)

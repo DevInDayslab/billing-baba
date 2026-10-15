@@ -32,8 +32,10 @@ abstract final class ReportExtendedMapper {
   static ReportPartyByItemRow toPartyByItemRow(ReportPartyByItemRowDto dto) {
     return ReportPartyByItemRow(
       partyName: dto.partyName,
-      quantity: _parseAmount(dto.quantity),
-      amount: _parseAmount(dto.amount),
+      saleQuantity: _parseAmount(dto.saleQuantity),
+      saleAmount: _parseAmount(dto.saleAmount),
+      purchaseQuantity: _parseAmount(dto.purchaseQuantity),
+      purchaseAmount: _parseAmount(dto.purchaseAmount),
     );
   }
 
@@ -154,6 +156,7 @@ abstract final class ReportExtendedMapper {
     return ReportItemDiscountRow(
       itemName: dto.itemName,
       saleQty: _parseAmount(dto.saleQty),
+      saleAmount: _parseAmount(dto.saleAmount),
       discountAmount: _parseAmount(dto.discountAmount),
       discountPercent: _parseAmount(dto.discountPercent),
     );
@@ -191,6 +194,7 @@ abstract final class ReportExtendedMapper {
       toGodown: dto.toGodown,
       itemName: dto.itemName,
       quantity: _parseAmount(dto.quantity),
+      value: _parseAmount(dto.value),
     );
   }
 
@@ -243,22 +247,51 @@ abstract final class ReportExtendedMapper {
   }
 
   static ReportExpenseRow toExpenseRow(ReportExpenseRowDto dto) {
+    final paymentMode = dto.paymentMode?.trim();
     return ReportExpenseRow(
+      id: dto.id,
       date: DateTime.tryParse(dto.date) ?? DateTime.now(),
       expenseNo: dto.expenseNo,
       partyName: dto.partyName,
       category: dto.category,
+      paymentType: paymentMode != null && paymentMode.isNotEmpty
+          ? _expensePaymentTypeLabel(paymentMode)
+          : null,
       amount: _parseAmount(dto.amount),
-      dueDate: DateTime.tryParse(dto.dueDate) ?? DateTime.now(),
-      status: dto.status,
+      balanceDue: _parseAmount(dto.balanceDue),
+      dueDate: dto.dueDate != null && dto.dueDate!.isNotEmpty
+          ? DateTime.tryParse(dto.dueDate!)
+          : null,
+      status: _expenseReportStatus(dto.status),
     );
+  }
+
+  static ExpenseReportPaymentStatus _expenseReportStatus(String raw) {
+    return switch (raw.trim().toLowerCase()) {
+      'paid' => ExpenseReportPaymentStatus.paid,
+      'partial' => ExpenseReportPaymentStatus.partial,
+      _ => ExpenseReportPaymentStatus.pending,
+    };
+  }
+
+  static String _expensePaymentTypeLabel(String apiValue) {
+    return switch (apiValue.toLowerCase()) {
+      'cash' => 'Cash',
+      'upi' => 'UPI',
+      'cheque' => 'Cheque',
+      'bank_transfer' => 'Bank Transfer',
+      'card' => 'Card',
+      _ => apiValue,
+    };
   }
 
   static ReportExpenseCategoryRow toExpenseCategoryRow(
     ReportExpenseCategoryRowDto dto,
   ) {
     return ReportExpenseCategoryRow(
+      categoryId: dto.categoryId,
       category: dto.category,
+      categoryType: dto.categoryType,
       amount: _parseAmount(dto.amount),
       count: dto.count,
     );
@@ -270,6 +303,7 @@ abstract final class ReportExtendedMapper {
       category: dto.category,
       amount: _parseAmount(dto.amount),
       count: dto.count,
+      categoryId: dto.categoryId,
     );
   }
 

@@ -51,4 +51,28 @@ class ExpenseRepository {
 
   Future<void> deleteCategory(String id) =>
       _master?.deleteCategory(id) ?? _remote.deleteCategory(id);
+
+  Future<PaginatedExpenseItemsDto> listExpenseItems({
+    int page = 1,
+    int limit = 100,
+  }) =>
+      _master?.listExpenseItems(page: page, limit: limit) ??
+      _remote.listExpenseItems(page: page, limit: limit);
+
+  Future<ExpenseItemDto> getExpenseItem(String id) =>
+      _master?.getExpenseItem(id) ?? _remote.getExpenseItem(id);
+
+  Future<ExpenseItemDto> createExpenseItem(CreateExpenseItemRequest request) =>
+      _master?.createExpenseItem(request) ??
+      _remote.createExpenseItem(request);
+
+  Future<ExpenseItemDto> updateExpenseItem(
+    String id,
+    UpdateExpenseItemRequest request,
+  ) =>
+      _master?.updateExpenseItem(id, request) ??
+      _remote.updateExpenseItem(id, request);
+
+  Future<void> deleteExpenseItem(String id) =>
+      _master?.deleteExpenseItem(id) ?? _remote.deleteExpenseItem(id);
 }

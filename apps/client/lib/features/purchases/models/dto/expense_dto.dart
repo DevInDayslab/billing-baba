@@ -35,6 +35,47 @@ class ExpenseCategoryDto {
   final String updatedAt;
 }
 
+class ExpenseItemDto {
+  const ExpenseItemDto({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.priceIsTaxInclusive,
+    required this.taxRate,
+    required this.expenseCount,
+    required this.totalAmount,
+    required this.createdAt,
+    required this.updatedAt,
+    this.hsnSac,
+  });
+
+  factory ExpenseItemDto.fromJson(Map<String, dynamic> json) {
+    return ExpenseItemDto(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      hsnSac: json['hsn_sac'] as String?,
+      price: json['price'] as String? ?? '0',
+      priceIsTaxInclusive: json['price_is_tax_inclusive'] as bool? ?? false,
+      taxRate: json['tax_rate'] as String? ?? '0',
+      expenseCount: json['expense_count'] as int? ?? 0,
+      totalAmount: json['total_amount'] as String? ?? '0',
+      createdAt: json['created_at'] as String,
+      updatedAt: json['updated_at'] as String,
+    );
+  }
+
+  final String id;
+  final String name;
+  final String? hsnSac;
+  final String price;
+  final bool priceIsTaxInclusive;
+  final String taxRate;
+  final int expenseCount;
+  final String totalAmount;
+  final String createdAt;
+  final String updatedAt;
+}
+
 class ExpenseDto {
   const ExpenseDto({
     required this.id,
@@ -44,6 +85,7 @@ class ExpenseDto {
     required this.createdAt,
     required this.updatedAt,
     this.categoryName,
+    this.expenseItemId,
     this.partyId,
     this.partyName,
     this.description,
@@ -65,6 +107,7 @@ class ExpenseDto {
       id: json['id'] as String,
       categoryId: json['category_id'] as String,
       categoryName: json['category_name'] as String?,
+      expenseItemId: json['expense_item_id'] as String?,
       amount: json['amount'] as String,
       expenseDate: json['expense_date'] as String,
       partyId: json['party_id'] as String?,
@@ -93,6 +136,7 @@ class ExpenseDto {
   final String id;
   final String categoryId;
   final String? categoryName;
+  final String? expenseItemId;
   final String amount;
   final String expenseDate;
   final String? partyId;
@@ -133,6 +177,29 @@ class PaginatedExpensesDto {
   }
 
   final List<ExpenseDto> expenses;
+  final PaginationMetaDto meta;
+}
+
+class PaginatedExpenseItemsDto {
+  const PaginatedExpenseItemsDto({required this.items, required this.meta});
+
+  factory PaginatedExpenseItemsDto.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    final meta = json['meta'];
+    return PaginatedExpenseItemsDto(
+      items: data is List
+          ? data
+                .whereType<Map<String, dynamic>>()
+                .map(ExpenseItemDto.fromJson)
+                .toList()
+          : const [],
+      meta: meta is Map<String, dynamic>
+          ? PaginationMetaDto.fromJson(meta)
+          : const PaginationMetaDto(page: 1, limit: 20, total: 0),
+    );
+  }
+
+  final List<ExpenseItemDto> items;
   final PaginationMetaDto meta;
 }
 

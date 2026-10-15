@@ -666,7 +666,7 @@ class SalesService {
     }
 
     final receivedAmount = form.saleType == SaleType.cash
-        ? form.paymentAmount
+        ? form.totalPaymentsAmount
         : (form.receivedEnabled ? form.receivedAmount : 0);
 
     if (_commandRepository != null) {
@@ -712,17 +712,57 @@ class SalesService {
       );
       final finalized = await _repository.getDocument(draft.id);
 
-      if (receivedAmount > 0) {
-        final paymentMode = SalesPaymentModes.toApi(form.paymentType);
+      final paymentEntries = form.payments
+          .where((payment) => payment.amount > 0)
+          .toList(growable: false);
+      if (paymentEntries.isNotEmpty) {
         final routeToHiddenLedger =
             shortPaymentHandling == 'unrecovered' &&
             shortfallAmount != null &&
             shortfallAmount > 0;
         final payableTotal = form.invoiceTotal;
-        final allocationAmount = routeToHiddenLedger
-            ? payableTotal
-            : receivedAmount;
+        final paymentDate = DateTimeUtils.toApiIso(
+          DateTimeUtils.mergeDateAndTime(
+            date: form.invoiceDate,
+            time: form.invoiceTime,
+          ),
+        );
 
+        for (var i = 0; i < paymentEntries.length; i++) {
+          final entry = paymentEntries[i];
+          final typeLabel = entry.type.trim().isEmpty ? 'Cash' : entry.type;
+          final paymentMode = SalesPaymentModes.toApi(typeLabel);
+          final isLast = i == paymentEntries.length - 1;
+          final allocationAmount = routeToHiddenLedger && isLast
+              ? payableTotal
+              : entry.amount;
+
+          await _repository.createPayment(
+            CreatePaymentRequest(
+              partyId: partyId,
+              direction: 'received',
+              amount: entry.amount.toStringAsFixed(4),
+              paymentMode: paymentMode,
+              source: 'document_finalize',
+              paymentDate: paymentDate,
+              shortPaymentHandling:
+                  isLast ? shortPaymentHandling : null,
+              shortfallAmount: isLast &&
+                      shortfallAmount != null &&
+                      shortfallAmount > 0
+                  ? shortfallAmount.toStringAsFixed(4)
+                  : null,
+              allocations: [
+                PaymentAllocationRequest(
+                  salesDocumentId: finalized.id,
+                  allocatedAmount: allocationAmount.toStringAsFixed(4),
+                ),
+              ],
+            ),
+          );
+        }
+      } else if (receivedAmount > 0) {
+        final paymentMode = SalesPaymentModes.toApi(form.paymentType);
         await _repository.createPayment(
           CreatePaymentRequest(
             partyId: partyId,
@@ -743,7 +783,7 @@ class SalesService {
             allocations: [
               PaymentAllocationRequest(
                 salesDocumentId: finalized.id,
-                allocatedAmount: allocationAmount.toStringAsFixed(4),
+                allocatedAmount: receivedAmount.toStringAsFixed(4),
               ),
             ],
           ),

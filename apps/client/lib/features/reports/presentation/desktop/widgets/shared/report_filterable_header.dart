@@ -70,13 +70,12 @@ class ReportFilterableHeaderCell extends ConsumerWidget {
       );
     }
 
-    final aligned = Align(alignment: alignment, child: header);
     if (width != null) {
-      return SizedBox(width: width, child: aligned);
+      return SizedBox(width: width, child: header);
     }
     if (flex > 0) {
-      return Expanded(flex: flex, child: aligned);
+      return Expanded(flex: flex, child: header);
     }
-    return aligned;
+    return header;
   }
 }
