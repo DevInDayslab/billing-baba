@@ -18,6 +18,8 @@ import { PartyReportsRepository } from './repositories/party-reports.repository'
 import { Phase1ReportsRepository } from './repositories/phase1-reports.repository';
 import { TaxReportsRepository } from './repositories/tax-reports.repository';
 import { TransactionReportsRepository } from './repositories/transaction-reports.repository';
+import { BankStatementService } from '../bank-accounts/bank-statement.service';
+import type { BusinessBankStatementQuery } from './reports.schema';
 
 export class ReportsRepository {
   private readonly phase1: Phase1ReportsRepository;
@@ -32,8 +34,10 @@ export class ReportsRepository {
   private readonly otherIncome: OtherIncomeReportsRepository;
   private readonly loan: LoanReportsRepository;
   private readonly accounting: AccountingReportsRepository;
+  private readonly db: Database;
 
   constructor(db: Database) {
+    this.db = db;
     this.phase1 = new Phase1ReportsRepository(db);
     this.transaction = new TransactionReportsRepository(db);
     this.party = new PartyReportsRepository(db);
@@ -187,6 +191,16 @@ export class ReportsRepository {
 
   getBankStatement(businessId: string, query: ReportExtendedQuery) {
     return this.business.getBankStatement(businessId, query);
+  }
+
+  getBusinessBankStatement(
+    businessId: string,
+    query: BusinessBankStatementQuery,
+  ) {
+    return new BankStatementService(this.db).getBusinessBankStatement(
+      businessId,
+      query,
+    );
   }
 
   getGstReport(businessId: string, query: ReportExtendedQuery) {

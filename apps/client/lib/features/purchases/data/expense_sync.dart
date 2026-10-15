@@ -209,6 +209,9 @@ class ExpenseSync {
             paymentMode: Value(
               _str(payload, 'payment_mode') ?? existing?.paymentMode,
             ),
+            bankAccountId: Value(
+              _str(payload, 'bank_account_id') ?? existing?.bankAccountId,
+            ),
             syncVersion: Value(syncVersion),
             isDeleted: Value(isDeleted),
             createdAt: existing?.createdAt ?? updatedAt.toUtc(),

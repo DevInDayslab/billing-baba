@@ -57,6 +57,7 @@ abstract final class DashboardMapper {
         cashIn: _money(dto.finance.cashIn),
         cashOut: _money(dto.finance.cashOut),
         expenses: _money(dto.finance.expenses),
+        bankBalance: _money(dto.finance.bankBalance),
       ),
       inventory: DashboardInventoryModel(
         totalStockValue: _money(dto.inventory.totalStockValue),

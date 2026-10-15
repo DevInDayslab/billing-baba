@@ -71,6 +71,7 @@ class ReportQuery {
     this.documentType,
     this.partyGroup,
     this.bankName,
+    this.bankAccountId,
     this.taxRate,
     this.loanAccount,
     this.status,
@@ -79,6 +80,10 @@ class ReportQuery {
     this.format,
     this.sort,
     this.order,
+    this.financialYear,
+    this.month,
+    this.quarter,
+    this.nonTaxAsExempt = false,
   });
 
   final ReportPeriod period;
@@ -96,6 +101,7 @@ class ReportQuery {
   final String? documentType;
   final String? partyGroup;
   final String? bankName;
+  final String? bankAccountId;
   final String? taxRate;
   final String? loanAccount;
   final String? status;
@@ -104,6 +110,10 @@ class ReportQuery {
   final String? format;
   final String? sort;
   final String? order;
+  final String? financialYear;
+  final String? month;
+  final String? quarter;
+  final bool nonTaxAsExempt;
 
   Map<String, String> toQueryParameters() {
     final params = <String, String>{
@@ -136,8 +146,8 @@ class ReportQuery {
     if (partyGroup != null && partyGroup!.isNotEmpty) {
       params['party_group'] = partyGroup!;
     }
-    if (bankName != null && bankName!.isNotEmpty) {
-      params['bank_name'] = bankName!;
+    if (bankAccountId != null && bankAccountId!.isNotEmpty) {
+      params['bank_account_id'] = bankAccountId!;
     }
     if (taxRate != null && taxRate!.isNotEmpty) {
       params['tax_rate'] = taxRate!;
@@ -153,6 +163,18 @@ class ReportQuery {
     if (format != null && format!.isNotEmpty) params['format'] = format!;
     if (sort != null) params['sort'] = sort!;
     if (order != null) params['order'] = order!;
+    if (financialYear != null && financialYear!.isNotEmpty) {
+      params['financial_year'] = financialYear!;
+    }
+    if (month != null && month!.isNotEmpty) {
+      params['month'] = month!;
+    }
+    if (quarter != null && quarter!.isNotEmpty) {
+      params['quarter'] = quarter!;
+    }
+    if (nonTaxAsExempt) {
+      params['non_tax_as_exempt'] = 'true';
+    }
     return params;
   }
 
@@ -172,6 +194,7 @@ class ReportQuery {
     String? documentType,
     String? partyGroup,
     String? bankName,
+    String? bankAccountId,
     String? taxRate,
     String? loanAccount,
     String? status,
@@ -180,6 +203,13 @@ class ReportQuery {
     String? format,
     String? sort,
     String? order,
+    String? financialYear,
+    String? month,
+    String? quarter,
+    bool? nonTaxAsExempt,
+    bool clearFinancialYear = false,
+    bool clearMonth = false,
+    bool clearQuarter = false,
     bool clearPartyId = false,
     bool clearGodownId = false,
     bool clearItemId = false,
@@ -188,6 +218,7 @@ class ReportQuery {
     bool clearDocumentType = false,
     bool clearPartyGroup = false,
     bool clearBankName = false,
+    bool clearBankAccountId = false,
     bool clearTaxRate = false,
     bool clearLoanAccount = false,
     bool clearStatus = false,
@@ -213,6 +244,9 @@ class ReportQuery {
           : (documentType ?? this.documentType),
       partyGroup: clearPartyGroup ? null : (partyGroup ?? this.partyGroup),
       bankName: clearBankName ? null : (bankName ?? this.bankName),
+      bankAccountId: clearBankAccountId
+          ? null
+          : (bankAccountId ?? this.bankAccountId),
       taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),
       loanAccount: clearLoanAccount ? null : (loanAccount ?? this.loanAccount),
       status: clearStatus ? null : (status ?? this.status),
@@ -221,6 +255,12 @@ class ReportQuery {
       format: clearFormat ? null : (format ?? this.format),
       sort: sort ?? this.sort,
       order: order ?? this.order,
+      financialYear: clearFinancialYear
+          ? null
+          : (financialYear ?? this.financialYear),
+      month: clearMonth ? null : (month ?? this.month),
+      quarter: clearQuarter ? null : (quarter ?? this.quarter),
+      nonTaxAsExempt: nonTaxAsExempt ?? this.nonTaxAsExempt,
     );
   }
 }
@@ -238,6 +278,7 @@ class ReportFiltersState {
     this.documentType,
     this.partyGroup,
     this.bankName,
+    this.bankAccountId,
     this.taxRate,
     this.loanAccount,
     this.status,
@@ -248,6 +289,10 @@ class ReportFiltersState {
     this.currentPage = 1,
     this.pageSize = 20,
     this.isTableLoading = false,
+    this.financialYear,
+    this.month,
+    this.quarter,
+    this.nonTaxAsExempt = false,
   });
 
   final ReportPeriod period;
@@ -261,6 +306,7 @@ class ReportFiltersState {
   final String? documentType;
   final String? partyGroup;
   final String? bankName;
+  final String? bankAccountId;
   final String? taxRate;
   final String? loanAccount;
   final String? status;
@@ -271,6 +317,10 @@ class ReportFiltersState {
   final int currentPage;
   final int pageSize;
   final bool isTableLoading;
+  final String? financialYear;
+  final String? month;
+  final String? quarter;
+  final bool nonTaxAsExempt;
 
   String get periodLabel => period.label;
 
@@ -360,12 +410,17 @@ class ReportFiltersState {
       documentType: documentType,
       partyGroup: partyGroup,
       bankName: bankName,
+      bankAccountId: bankAccountId,
       taxRate: taxRate,
       loanAccount: loanAccount,
       status: status,
       partyType: partyType,
       inStockOnly: inStockOnly,
       format: format ?? this.format,
+      financialYear: financialYear,
+      month: month,
+      quarter: quarter,
+      nonTaxAsExempt: nonTaxAsExempt,
     );
   }
 
@@ -383,6 +438,7 @@ class ReportFiltersState {
     String? documentType,
     String? partyGroup,
     String? bankName,
+    String? bankAccountId,
     String? taxRate,
     String? loanAccount,
     String? status,
@@ -393,6 +449,13 @@ class ReportFiltersState {
     int? currentPage,
     int? pageSize,
     bool? isTableLoading,
+    String? financialYear,
+    String? month,
+    String? quarter,
+    bool? nonTaxAsExempt,
+    bool clearFinancialYear = false,
+    bool clearMonth = false,
+    bool clearQuarter = false,
     bool clearPartyId = false,
     bool clearGodownId = false,
     bool clearItemId = false,
@@ -401,6 +464,7 @@ class ReportFiltersState {
     bool clearDocumentType = false,
     bool clearPartyGroup = false,
     bool clearBankName = false,
+    bool clearBankAccountId = false,
     bool clearTaxRate = false,
     bool clearLoanAccount = false,
     bool clearStatus = false,
@@ -425,6 +489,9 @@ class ReportFiltersState {
           : (documentType ?? this.documentType),
       partyGroup: clearPartyGroup ? null : (partyGroup ?? this.partyGroup),
       bankName: clearBankName ? null : (bankName ?? this.bankName),
+      bankAccountId: clearBankAccountId
+          ? null
+          : (bankAccountId ?? this.bankAccountId),
       taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),
       loanAccount: clearLoanAccount ? null : (loanAccount ?? this.loanAccount),
       status: clearStatus ? null : (status ?? this.status),
@@ -435,6 +502,12 @@ class ReportFiltersState {
       currentPage: currentPage ?? this.currentPage,
       pageSize: pageSize ?? this.pageSize,
       isTableLoading: isTableLoading ?? this.isTableLoading,
+      financialYear: clearFinancialYear
+          ? null
+          : (financialYear ?? this.financialYear),
+      month: clearMonth ? null : (month ?? this.month),
+      quarter: clearQuarter ? null : (quarter ?? this.quarter),
+      nonTaxAsExempt: nonTaxAsExempt ?? this.nonTaxAsExempt,
     );
   }
 }

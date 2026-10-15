@@ -25,11 +25,15 @@ import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/loans/data/loan_sync.dart';
+import 'package:billing_baba/features/other_income/data/other_income_sync.dart';
 import 'package:billing_baba/features/purchases/data/expense_sync.dart';
 import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart';
 import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
+import 'package:billing_baba/features/bank_accounts/data/bank_account_sync.dart';
 import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
+import 'package:billing_baba/features/settings/data/withholding_tax_sync.dart';
 import 'package:billing_baba/features/tasks/data/todo_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -117,6 +121,10 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     itemTierPriceSync: ItemTierPriceSync(db),
     unitSync: UnitSync(db),
     taxRateSync: TaxRateSync(db),
+    bankAccountSync: BankAccountSync(db),
+    withholdingTaxSectionSync: WithholdingTaxSectionSync(db),
+    withholdingTaxEntrySync: WithholdingTaxEntrySync(db),
+    taxDepositSync: TaxDepositSync(db),
     godownSync: GodownSync(db),
     businessSettingsSync: BusinessSettingsSync(db),
     salesDocumentSync: SalesDocumentSync(db),
@@ -129,6 +137,11 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     expenseSync: ExpenseSync(db),
     expenseCategorySync: ExpenseCategorySync(db),
     expenseItemSync: ExpenseItemSync(db),
+    otherIncomeSync: OtherIncomeSync(db),
+    incomeCategorySync: IncomeCategorySync(db),
+    incomeItemSync: IncomeItemSync(db),
+    loanAccountSync: LoanAccountSync(db),
+    loanTransactionSync: LoanTransactionSync(db),
     stockLevelSync: StockLevelSync(
       InventoryStockLocalDataSource(db),
       metadata,

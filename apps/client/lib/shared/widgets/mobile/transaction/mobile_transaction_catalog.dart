@@ -178,6 +178,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
     AppRoutes.saleFa => AppRoutes.addSaleFa,
     AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
+    AppRoutes.otherIncome => AppRoutes.addOtherIncome,
     AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
     AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
     _ => null,
@@ -190,6 +191,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleDeliveryChallan => 'Add Challan',
     AppRoutes.saleReturnCreditNote => 'Add Credit Note',
     AppRoutes.saleFa => 'Add Sale FA',
+    AppRoutes.otherIncome => 'Add Other Income',
     _ => 'Add',
   };
 
@@ -198,6 +200,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleEstimateQuotation => LucideIcons.fileText,
     AppRoutes.saleProformaInvoice => LucideIcons.fileText,
     AppRoutes.salePaymentIn => LucideIcons.banknote,
+    AppRoutes.otherIncome => LucideIcons.circlePlus,
     AppRoutes.saleOrder => LucideIcons.shoppingBag,
     AppRoutes.saleDeliveryChallan => LucideIcons.truck,
     AppRoutes.saleJobWorkOut => LucideIcons.factory,
@@ -213,6 +216,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.purchaseReturnDebitNote => AppRoutes.addDebitNote,
     AppRoutes.purchaseFa => AppRoutes.addPurchaseFa,
     AppRoutes.purchasePaymentOut => AppRoutes.addPaymentOut,
+    AppRoutes.loanAccounts => AppRoutes.addLoanAccount,
     _ => null,
   };
 
@@ -232,6 +236,7 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.purchaseOrder => LucideIcons.clipboardList,
     AppRoutes.purchaseReturnDebitNote => LucideIcons.undo2,
     AppRoutes.purchaseFa => LucideIcons.landmark,
+    AppRoutes.loanAccounts => LucideIcons.landmark,
     _ => LucideIcons.shoppingCart,
   };
 }

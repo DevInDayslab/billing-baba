@@ -15,6 +15,7 @@ import {
   type FinalizePurchasePaymentInput,
   recordPurchaseFinalizePayment,
 } from './purchase-finalize-payment.service';
+import { WithholdingTaxEntryService } from '../withholding-tax/withholding-tax-entry.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -218,6 +219,12 @@ export async function finalizePurchaseDocument(
       });
     }
 
+    await new WithholdingTaxEntryService(db).syncFromPurchaseDocument(tx, {
+      businessId: params.businessId,
+      documentId: params.documentId,
+      userId: params.userId,
+    });
+
     const [finalized] = await tx
       .update(purchaseDocuments)
       .set({
@@ -265,6 +272,33 @@ export async function finalizePurchaseDocument(
       paidAmount,
       paymentMode,
     };
+  });
+}
+
+export async function postPurchaseLedgerReversal(
+  tx: DbTransaction,
+  params: {
+    businessId: string;
+    partyId: string;
+    documentId: string;
+    documentType: PurchaseDocumentType;
+    totalAmount: string;
+    entryDate: string;
+  },
+): Promise<void> {
+  const isReturn = params.documentType === 'purchase_return';
+
+  await tx.insert(ledgerEntries).values({
+    businessId: params.businessId,
+    partyId: params.partyId,
+    entryType: isReturn ? 'return' : 'purchase',
+    debit: isReturn ? '0' : params.totalAmount,
+    credit: isReturn ? params.totalAmount : '0',
+    balanceAfter: '0',
+    referenceId: params.documentId,
+    referenceType: 'purchase_documents',
+    entryDate: params.entryDate,
+    description: `${params.documentType} deleted`,
   });
 }
 

@@ -1,5 +1,8 @@
 import 'package:billing_baba/core/network/api_endpoints.dart';
+import 'package:billing_baba/features/reports/models/dto/gst_report_v2_dto.dart';
 import 'package:billing_baba/features/reports/models/dto/report_dto.dart';
+import 'package:billing_baba/features/reports/models/gst_report_type.dart';
+import 'package:billing_baba/features/reports/models/tax_report_kind.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:dio/dio.dart';
 
@@ -83,14 +86,41 @@ class ReportsRemoteDataSource {
     BalanceSheetPayloadDto.fromJson,
   );
 
-  Future<GstrReportPayloadDto> getGstr1(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsGstr1, query, GstrReportPayloadDto.fromJson);
+  Future<GstReportEnvelopeDto> getGstFilingReport(
+    GstReportType type,
+    ReportQuery query,
+  ) {
+    final endpoint = switch (type) {
+      GstReportType.gstr1 => ApiEndpoints.reportsGstGstr1,
+      GstReportType.gstr2 => ApiEndpoints.reportsGstGstr2,
+      GstReportType.gstr3b => ApiEndpoints.reportsGstGstr3b,
+      GstReportType.gstr9 => ApiEndpoints.reportsGstGstr9,
+      GstReportType.hsnSummary => ApiEndpoints.reportsGstHsnSummary,
+      GstReportType.sacReport => ApiEndpoints.reportsGstSacReport,
+    };
+    return _getData(endpoint, query, GstReportEnvelopeDto.fromJson);
+  }
 
-  Future<GstrReportPayloadDto> getGstr2(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsGstr2, query, GstrReportPayloadDto.fromJson);
-
-  Future<Gstr3bPayloadDto> getGstr3b(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsGstr3b, query, Gstr3bPayloadDto.fromJson);
+  Future<Map<String, dynamic>> getGstReportGstnJson(
+    GstReportType type,
+    ReportQuery query,
+  ) async {
+    final endpoint = switch (type) {
+      GstReportType.gstr1 => ApiEndpoints.reportsGstGstr1,
+      GstReportType.gstr3b => ApiEndpoints.reportsGstGstr3b,
+      _ => throw UnsupportedError('GSTN JSON not supported for $type'),
+    };
+    final response = await _dio.get<Map<String, dynamic>>(
+      endpoint,
+      queryParameters: {
+        ...query.toQueryParameters(),
+        'format': 'gstn_json',
+      },
+    );
+    return Map<String, dynamic>.from(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
 
   Future<PaginatedReportResponse<BillWiseProfitPayloadDto>> getBillWiseProfit(
     ReportQuery query,
@@ -134,21 +164,6 @@ class ReportsRemoteDataSource {
     SalePurchaseByPartyGroupPayloadDto.fromJson,
   );
 
-  Future<Gstr9PayloadDto> getGstr9(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsGstr9, query, Gstr9PayloadDto.fromJson);
-
-  Future<SaleSummaryByHsnPayloadDto> getSaleSummaryByHsn(ReportQuery query) =>
-      _getData(
-        ApiEndpoints.reportsSaleSummaryByHsn,
-        query,
-        SaleSummaryByHsnPayloadDto.fromJson,
-      );
-
-  Future<SacReportPayloadDto> getSacReport(ReportQuery query) => _getData(
-    ApiEndpoints.reportsSacReport,
-    query,
-    SacReportPayloadDto.fromJson,
-  );
 
   Future<PaginatedReportResponse<ItemReportByPartyPayloadDto>>
   getItemReportByParty(ReportQuery query) => _getPaginated(
@@ -237,7 +252,7 @@ class ReportsRemoteDataSource {
 
   Future<BankStatementPayloadDto> getBankStatement(ReportQuery query) =>
       _getData(
-        ApiEndpoints.reportsBankStatement,
+        ApiEndpoints.reportsBusinessBankStatement,
         query,
         BankStatementPayloadDto.fromJson,
       );
@@ -256,6 +271,36 @@ class ReportsRemoteDataSource {
         query,
         GstTaxRateReportPayloadDto.fromJson,
       );
+
+  Future<PaginatedReportResponse<GstReportEnvelopeDto>> getTaxGstRegister(
+    ReportQuery query,
+  ) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.reportsTaxGstRegister,
+      queryParameters: query.toQueryParameters(),
+    );
+    final json = response.data ?? {};
+    return PaginatedReportResponse(
+      data: GstReportEnvelopeDto.fromJson(
+        (json['data'] as Map<String, dynamic>?) ?? {},
+      ),
+      meta: ReportPaginationMeta.fromJson(
+        (json['meta'] as Map<String, dynamic>?) ?? {},
+      ),
+    );
+  }
+
+  Future<GstReportEnvelopeDto> getTaxGstRateSummary(ReportQuery query) =>
+      _getData(
+        ApiEndpoints.reportsTaxGstRateSummary,
+        query,
+        GstReportEnvelopeDto.fromJson,
+      );
+
+  Future<GstReportEnvelopeDto> getTaxReportEnvelope(
+    String endpoint,
+    ReportQuery query,
+  ) => _getData(endpoint, query, GstReportEnvelopeDto.fromJson);
 
   Future<PaginatedReportResponse<TaxInvoiceReportPayloadDto>> getForm27eq(
     ReportQuery query,

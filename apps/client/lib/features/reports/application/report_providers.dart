@@ -159,63 +159,6 @@ class SalePurchaseByPartyGroupReport extends _$SalePurchaseByPartyGroupReport {
 }
 
 @riverpod
-class Gstr9Report extends _$Gstr9Report {
-  @override
-  Future<Gstr9ReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<Gstr9ReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchGstr9(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class SaleSummaryByHsnReport extends _$SaleSummaryByHsnReport {
-  @override
-  Future<SaleSummaryByHsnReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<SaleSummaryByHsnReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchSaleSummaryByHsn(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class SacReportReport extends _$SacReportReport {
-  @override
-  Future<SacReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<SacReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchSacReport(_currentQuery(ref));
-  }
-}
-
-@riverpod
 class ItemReportByPartyReport extends _$ItemReportByPartyReport {
   @override
   Future<ItemReportByPartyReportData> build() async {
@@ -479,7 +422,7 @@ class BankStatementReport extends _$BankStatementReport {
   Future<BankStatementReportData?> build() async {
     watchReportListReload(ref);
     final value = ref.watch(
-      reportFiltersProvider.select((state) => state.bankName),
+      reportFiltersProvider.select((state) => state.bankAccountId),
     );
     if (value == null || value.isEmpty) return null;
     return runReportLoad(ref, _load);
@@ -491,149 +434,10 @@ class BankStatementReport extends _$BankStatementReport {
 
   Future<BankStatementReportData?> _load() async {
     final filters = ref.read(reportFiltersProvider);
-    final value = filters.bankName;
+    final value = filters.bankAccountId;
     if (value == null || value.isEmpty) return null;
     final service = await ref.read(reportsServiceProvider.future);
     return service.fetchBankStatement(filters.toQuery());
-  }
-}
-
-@riverpod
-class GstTaxReport extends _$GstTaxReport {
-  @override
-  Future<GstTaxReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<void> goToPage(int page) async {
-    ref.read(reportFiltersProvider.notifier).setPage(page);
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<GstTaxReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchGstReport(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class GstTaxRateReport extends _$GstTaxRateReport {
-  @override
-  Future<GstTaxRateReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<GstTaxRateReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchGstRateReport(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class Form27eqReport extends _$Form27eqReport {
-  @override
-  Future<TaxInvoiceReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<void> goToPage(int page) async {
-    ref.read(reportFiltersProvider.notifier).setPage(page);
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<TaxInvoiceReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchForm27eq(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class TcsReceivableReport extends _$TcsReceivableReport {
-  @override
-  Future<TaxInvoiceReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<void> goToPage(int page) async {
-    ref.read(reportFiltersProvider.notifier).setPage(page);
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<TaxInvoiceReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchTcsReceivable(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class TdsPayableReport extends _$TdsPayableReport {
-  @override
-  Future<TaxInvoiceReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<void> goToPage(int page) async {
-    ref.read(reportFiltersProvider.notifier).setPage(page);
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<TaxInvoiceReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchTdsPayable(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class TdsReceivableReport extends _$TdsReceivableReport {
-  @override
-  Future<TaxInvoiceReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<void> goToPage(int page) async {
-    ref.read(reportFiltersProvider.notifier).setPage(page);
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<TaxInvoiceReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchTdsReceivable(_currentQuery(ref));
   }
 }
 

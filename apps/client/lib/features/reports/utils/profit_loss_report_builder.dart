@@ -21,10 +21,13 @@ class ProfitLossReportBuilder {
     required double netPurchases,
     required double expenseTotal,
     double stockValue = 0,
+    double otherDirectIncome = 0,
+    double otherIndirectIncome = 0,
+    double costOfFinancing = 0,
   }) {
     final saleAccountsTotal = netSales;
-    const otherDirectTotal = 0.0;
-    const otherIndirectTotal = 0.0;
+    final otherDirectTotal = otherDirectIncome;
+    final otherIndirectTotal = otherIndirectIncome;
     final totalIncomes =
         saleAccountsTotal + otherDirectTotal + otherIndirectTotal;
 
@@ -32,10 +35,10 @@ class ProfitLossReportBuilder {
     final closingStock = stockValue;
     final costOfGoodsSold = openingStock + netPurchases - closingStock;
     const directExpenses = 0.0;
-    final indirectExpenses = expenseTotal;
+    final indirectExpenses = expenseTotal + costOfFinancing;
     final totalExpenses = costOfGoodsSold + directExpenses + indirectExpenses;
 
-    final netProfit = netSales - netPurchases - expenseTotal;
+    final netProfit = totalIncomes - totalExpenses;
 
     ReportProfitLossItem row(
       String particular,
@@ -58,7 +61,7 @@ class ProfitLossReportBuilder {
       row('Additional Charges on Sale', 0, indent: 2),
       row('Other Incomes (Direct)', otherDirectTotal, isHeader: true, indent: 1),
       row('Payment-out Discount', 0, indent: 2),
-      row('Other Direct Incomes', 0, indent: 2),
+      row('Other Direct Incomes', otherDirectTotal, indent: 2),
       row(
         'Other Incomes (Indirect)',
         otherIndirectTotal,
@@ -66,7 +69,7 @@ class ProfitLossReportBuilder {
         indent: 1,
       ),
       row('Interest Received', 0, indent: 2),
-      row('Other Indirect Incomes', 0, indent: 2),
+      row('Other Indirect Incomes', otherIndirectTotal, indent: 2),
       row('Expenses', totalExpenses, isHeader: true),
       row('Cost of Goods Sold', costOfGoodsSold, isHeader: true, indent: 1),
       row('Purchase Accounts', netPurchases, indent: 2),
@@ -74,7 +77,7 @@ class ProfitLossReportBuilder {
       row('Closing Stock', closingStock, indent: 2),
       row('Direct Expenses', directExpenses, isHeader: true, indent: 1),
       row('Indirect Expenses', indirectExpenses, isHeader: true, indent: 1),
-      row('Cost of Financing', 0, indent: 2),
+      row('Cost of Financing', costOfFinancing, indent: 2),
       row('Other Expenses', expenseTotal, indent: 2),
       row('Net Profit (Incomes - Expenses)', netProfit, isHeader: true),
     ];

@@ -87,6 +87,7 @@ abstract final class DashboardModelMerger {
       cashIn: remote.cashIn,
       cashOut: remote.cashOut,
       expenses: local.expensesTotal,
+      bankBalance: remote.bankBalance,
     );
   }
 

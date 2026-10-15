@@ -16,6 +16,8 @@ import 'package:billing_baba/shared/attachments/document_attachment_entity_type.
 import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
 import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/shared/widgets/payment_account_field.dart';
 import 'package:billing_baba/shared/widgets/share_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -273,6 +275,13 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                     onSelected: notifier.updatePaymentType,
                                   ),
                                 ),
+                              ),
+                              PaymentAccountField(
+                                paymentMode: PurchasePaymentModes.toApi(
+                                  form.paymentType,
+                                ),
+                                selectedAccountId: form.bankAccountId,
+                                onChanged: notifier.updateBankAccountId,
                               ),
                               const SizedBox(height: AppSpacing.sm),
                               TextButton.icon(

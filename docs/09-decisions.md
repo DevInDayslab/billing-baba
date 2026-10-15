@@ -1817,24 +1817,121 @@ Promote todos to a first-class row-sync entity:
 
 ### ADR-<ID>: <Title>
 
+## ADR-045: Account movements passbook projection
+
 | Field | Value |
 |-------|-------|
-| **Date** | `<DATE>` |
-| **Status** | Proposed / Accepted / Deprecated / Superseded |
-| **Author** | `<TEAM_MEMBER>` |
+| **Date** | 2026-03-15 |
+| **Status** | Accepted |
 
 #### Context
 
-What problem or situation requires a decision?
+Bank/cash passbook needs a single authoritative timeline per `bank_accounts` row without duplicating party ledger logic or scanning payments by ad-hoc `bank_name` filters.
 
 #### Decision
 
-What was decided?
+- Sync **`bank_accounts`** to clients; keep **`account_movements`** server-only.
+- All money writers call **`AccountMovementService`** in the same transaction as the source row.
+- Statement API reads movements + opening balance (IST), not a SQL union of payments/expenses.
 
 #### Consequences
 
-What becomes easier or harder?
+- Consistent balances and statement rows; backfill required for history.
+- Movements are online-only on the client (not in Drift sync).
+
+See [bank-accounts-architecture.md](bank-accounts-architecture.md).
+
+---
+
+### Other income and loan accounts (Vyapar-aligned)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-03-26 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Vyapar tracks non-invoice cash inflows as **Other Income** and bank borrowings as **Loan Accounts** with increase / repayment / charges. Billing Baba already had expense and bank-account movement patterns; reports and loan statement were stubbed or party-ledger based.
+
+#### Decision
+
+- **Separate synced tables** (`income_categories`, `income_items`, `other_incomes`, `loan_accounts`, `loan_transactions`) — not a `kind` column on `expenses`.
+- **Other income:** receipt posts `account_movements` (`other_income`, deposit). **No** `ledger_entries` or party outstanding.
+- **Loans:** `increase` → deposit (`loan_received`); `repayment` → single withdrawal of principal + interest (`loan_repayment`); `charges` → withdrawal (`loan_charges`). P&amp;L includes **interest + charges** from `loan_transactions` only; principal affects loan statement and balance sheet liability.
+- **Loan statement** is built from `loan_transactions` + opening outstanding (`buildLoanStatement`); API `loan_account` is a **loan_accounts UUID**, not a supplier party.
+- **`account_movement_type`** extended via migration; clients sync masters/transactions, not movements.
+
+#### Consequences
+
+- Expense and party-ledger flows unchanged when features unused.
+- Financial reports (P&amp;L, balance sheet, day book, all transactions) include other income and loan cash legs additively.
+- Legacy party-based loan statement is replaced; optional data migration from parties is out of scope for v1.
 
 #### Alternatives Considered
 
-What else was evaluated and why rejected?
+- Reuse `expenses` with a type flag — rejected (high regression risk, wrong semantics for P&amp;L and party ledger).
+- Model loans as supplier parties — rejected (conflates payable with financing).
+
+---
+
+## ADR-032: Ephemeral Party Contact Import Sessions
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-03-26 |
+| **Status** | Accepted |
+
+#### Context
+
+Desktop cannot read phone address books. Vyapar-style “import from phone” needs a paired handoff (QR / SMS link → mobile contact picker → parties on the business) without bypassing offline-first party creation on the desktop client.
+
+#### Decision
+
+- Add **server-only** tables `party_contact_import_sessions` and `party_contact_import_staging_rows` (not sync entities).
+- Phone uploads normalized contact rows to a short-lived session; **desktop** previews and commits using the existing local `createParty` path (same as Excel import).
+- `POST .../commit` only marks the session completed after the client has created parties locally.
+
+#### Consequences
+
+- No sync schema churn; staging data expires with the session.
+- Import handoff requires network on desktop and phone for the session API only.
+
+#### Alternatives Considered
+
+- Phone creates parties via API immediately — rejected for this release (desktop review/commit chosen).
+- Sync staging rows as `parties` drafts — rejected (unnecessary complexity and conflict with local-first writes).
+
+---
+
+## ADR-033: Utilities Recycle Bin (90-day retention)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-10-15 |
+| **Status** | Accepted |
+
+#### Context
+
+Users delete invoices, bills, payments, expenses, other income, and loan transactions. Finalized sales and purchases affect stock and party ledger; deletes must reverse those effects while keeping a restorable tombstone for a limited time.
+
+#### Decision
+
+- Soft-delete supported transaction types into a **recycle bin** with **90-day** retention (`deleted_at` + `is_deleted`).
+- **Draft** sales/purchase documents: soft-delete only (no stock/ledger reversal).
+- **Finalized** sales/purchase documents: reverse inventory movements and post ledger reversal, then soft-delete.
+- Payments, expenses, other income, and loan transactions use existing delete side-effects; **restore** re-applies movements/ledger where applicable; **purge** hard-deletes tombstones.
+- Offline sync uses `delete_transaction` and `restore_transaction` **commands** (idempotent) delegating to the same server lifecycle service.
+- REST: `GET /api/v1/recycle-bin`, `POST .../restore`, `DELETE ...` (purge).
+
+#### Consequences
+
+- Cancelled-document status remains distinct from recycle-bin deletion.
+- Retention enforcement is server-side; expired items cannot be restored.
+- Client lists merge remote API results with a local Drift union when offline.
+
+#### Alternatives Considered
+
+- Hard-delete finalized documents immediately — rejected (no recovery, higher support risk).
+- Row-only sync deletes for finalized invoices — rejected (cannot safely reverse stock/ledger in row applier alone).

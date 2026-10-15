@@ -1,5 +1,7 @@
 import type { Database } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { BankAccountService } from '../bank-accounts/bank-account.service';
+import { recordPaymentMovement } from '../bank-accounts/payment-movement.helper';
 import { PaymentRepository } from '../accounting/payment.repository';
 import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import type { PurchaseDocumentType } from './purchase-document.types';
@@ -18,6 +20,7 @@ const PAYMENT_MODES = new Set([
 export type FinalizePurchasePaymentInput = {
   amount: string;
   paymentMode: string;
+  bankAccountId?: string | null;
   shortPaymentHandling?: 'official_balance' | 'unrecovered' | null;
   shortfallAmount?: string | null;
   paymentDate?: string;
@@ -73,6 +76,20 @@ export async function recordPurchaseFinalizePayment(
     : params.documentDate;
 
   const repo = new PaymentRepository(tx as unknown as Database);
+  const bankAccountId = await new BankAccountService(
+    tx as unknown as Database,
+  ).resolveAccountId(
+    params.businessId,
+    params.payment.paymentMode as
+      | 'cash'
+      | 'upi'
+      | 'card'
+      | 'cheque'
+      | 'bank_transfer'
+      | 'other',
+    params.payment.bankAccountId ?? null,
+    params.userId,
+  );
 
   const payment = await repo.create({
     businessId: params.businessId,
@@ -88,6 +105,7 @@ export async function recordPurchaseFinalizePayment(
       | 'bank_transfer'
       | 'other',
     paymentDate,
+    bankAccountId,
     referenceNumber: null,
     notes: null,
     shortPaymentHandling: params.payment.shortPaymentHandling ?? null,
@@ -117,6 +135,18 @@ export async function recordPurchaseFinalizePayment(
     referenceType: 'payments',
     entryDate: paymentDate.toISOString().slice(0, 10),
     description: isReturn ? 'Refund received' : 'Payment paid',
+  });
+
+  await recordPaymentMovement(tx as unknown as Database, {
+    businessId: params.businessId,
+    paymentId: payment.id,
+    partyId: params.partyId,
+    direction: isReturn ? 'received' : 'paid',
+    amount: params.payment.amount,
+    paymentMode: params.payment.paymentMode,
+    paymentDate,
+    bankAccountId,
+    userId: params.userId,
   });
 
   return {

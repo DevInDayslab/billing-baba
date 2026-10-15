@@ -12,6 +12,13 @@ export type DocumentStatus = 'draft' | 'finalized' | 'cancelled' | 'converted';
 
 export type TaxType = 'cgst_sgst' | 'igst' | 'exempt' | 'none';
 
+export type SupplyType =
+  | 'domestic'
+  | 'export_with_payment'
+  | 'export_without_payment'
+  | 'sez_with_payment'
+  | 'sez_without_payment';
+
 export type SalesDocumentLineRecord = {
   id: string;
   item_id: string;
@@ -25,6 +32,8 @@ export type SalesDocumentLineRecord = {
   cgst_amount: string;
   sgst_amount: string;
   igst_amount: string;
+  cess_rate: string;
+  cess_amount: string;
   line_total: string;
   sort_order: number;
 };
@@ -46,6 +55,10 @@ export type SalesDocumentRecord = {
   payment_mode: string | null;
   document_date: string;
   converted_from_id: string | null;
+  original_document_id: string | null;
+  original_document_number: string | null;
+  original_document_date: string | null;
+  supply_type: SupplyType;
   pos_session_id: string | null;
   notes: string | null;
   created_by: string | null;
@@ -90,6 +103,10 @@ export type SalesDocumentInsertValues = {
   partyStateCode?: string | null;
   documentDate?: Date;
   convertedFromId?: string | null;
+  originalDocumentId?: string | null;
+  originalDocumentNumber?: string | null;
+  originalDocumentDate?: Date;
+  supplyType?: SupplyType;
   posSessionId?: string | null;
   notes?: string | null;
   createdBy?: string | null;
@@ -120,6 +137,8 @@ export type SalesLineInsertValues = {
   cgstAmount?: string;
   sgstAmount?: string;
   igstAmount?: string;
+  cessRate?: string;
+  cessAmount?: string;
   lineTotal: string;
   sortOrder?: number;
   createdBy?: string | null;

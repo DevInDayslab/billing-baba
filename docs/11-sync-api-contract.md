@@ -18,7 +18,7 @@ Authoritative synchronization contract between the Flutter client (Drift + Sync 
 
 | Decision | Rule |
 |----------|------|
-| **Hybrid push** | Masters and drafts use **row** mutations. Financial / inventory-invariant operations use **commands**. |
+| **Hybrid push** | Masters and drafts use **row** mutations. Financial / inventory-invariant operations use **commands** (including `delete_transaction` / `restore_transaction` for the recycle bin). |
 | **Document numbers (MVP)** | Entity `id` (UUID) never changes. Display number may be `LOCAL-######` offline. Server assigns the real number on finalize and returns a **remap** in the ack. |
 | **Command idempotency** | Every command includes a client-generated `command_id` (UUID). Server stores `(business_id, command_id)` → result and returns the original success payload on replay. |
 
@@ -1241,7 +1241,26 @@ GET .../chunks/11 → _bootstrap_complete + initial_cursor=C
 Store C; subsequent GET /sync/pull?cursor=C
 ```
 
-### 16.6 Offline sale lifecycle
+### 16.6 Transaction recycle bin commands
+
+**`delete_transaction`** — moves a supported entity to the recycle bin (reverses stock/ledger for finalized sales/purchase documents).
+
+Payload:
+
+```json
+{
+  "entity_type": "sales_document",
+  "entity_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+`entity_type` is one of: `sales_document`, `purchase_document`, `payment`, `expense`, `other_income`, `loan_transaction`.
+
+**`restore_transaction`** — same payload shape; restores within the 90-day retention window.
+
+Ack `result` includes `entity_type`, `entity_id`, and `action` (`deleted` | `restored`).
+
+### 16.7 Offline sale lifecycle
 
 ```text
 Offline:

@@ -22,6 +22,7 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_p
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_editor.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_settings_side_panel.dart';
+import 'package:billing_baba/features/parties/presentation/mobile/party_contact_import_session_page.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/device_contact_picker_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/gstin_verification_dialogs.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
@@ -337,6 +338,13 @@ Future<AddPartyResult?> showAddPartyEntry(
         icon: Icons.contacts_outlined,
         iconColor: AppColors.primary,
         onTap: () => _openAddPartyFromContactImport(context, ref),
+      ),
+      MobileAddOption(
+        label: 'Import multiple from contacts',
+        subtitle: 'Create several parties at once',
+        icon: Icons.contact_page_outlined,
+        iconColor: AppColors.primary,
+        onTap: () => openMobileBulkContactImport(context, ref),
       ),
     ],
   );

@@ -510,6 +510,7 @@ class PaymentInFormState {
     this.partyId,
     this.party = '',
     this.paymentType = 'Cash',
+    this.bankAccountId,
     this.receiptNo = '',
     this.date,
     this.time,
@@ -528,6 +529,7 @@ class PaymentInFormState {
   final String? partyId;
   final String party;
   final String paymentType;
+  final String? bankAccountId;
   final String receiptNo;
   final DateTime? date;
   final TimeOfDay? time;
@@ -570,6 +572,8 @@ class PaymentInFormState {
     bool clearPartyId = false,
     String? party,
     String? paymentType,
+    String? bankAccountId,
+    bool clearBankAccountId = false,
     String? receiptNo,
     DateTime? date,
     TimeOfDay? time,
@@ -589,6 +593,9 @@ class PaymentInFormState {
       partyId: clearPartyId ? null : (partyId ?? this.partyId),
       party: party ?? this.party,
       paymentType: paymentType ?? this.paymentType,
+      bankAccountId: clearBankAccountId
+          ? null
+          : (bankAccountId ?? this.bankAccountId),
       receiptNo: receiptNo ?? this.receiptNo,
       date: date ?? this.date,
       time: time ?? this.time,
@@ -693,7 +700,20 @@ class PaymentInForm extends _$PaymentInForm {
   }
 
   void updatePaymentType(String value) {
-    state = state.copyWith(paymentType: value, clearSaveError: true);
+    final isCash = value.toLowerCase() == 'cash';
+    state = state.copyWith(
+      paymentType: value,
+      clearBankAccountId: isCash,
+      clearSaveError: true,
+    );
+  }
+
+  void updateBankAccountId(String? id) {
+    state = state.copyWith(
+      bankAccountId: id,
+      clearBankAccountId: id == null || id.isEmpty,
+      clearSaveError: true,
+    );
   }
 
   void updateReceiptNo(String value) {
@@ -873,6 +893,7 @@ class PaymentInForm extends _$PaymentInForm {
               ? shortfallAmount.toStringAsFixed(4)
               : null,
           allocations: allocations,
+          bankAccountId: state.bankAccountId,
         ),
       );
 

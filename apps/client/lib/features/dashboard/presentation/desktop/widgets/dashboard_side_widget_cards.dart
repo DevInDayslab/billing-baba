@@ -264,16 +264,18 @@ class DashboardCashInHandSideWidget extends StatelessWidget {
 }
 
 class DashboardBankBalanceSideWidget extends StatelessWidget {
-  const DashboardBankBalanceSideWidget({super.key});
+  const DashboardBankBalanceSideWidget({required this.bankBalance, super.key});
+
+  final double bankBalance;
 
   @override
   Widget build(BuildContext context) {
-    return const _SideWidgetBlock(
+    return _SideWidgetBlock(
       alignTop: true,
       child: _SideMetricContent(
         title: 'Total Bank Balance',
         subtitle: 'As of Now',
-        value: '—',
+        value: _currencyFormat.format(bankBalance),
       ),
     );
   }

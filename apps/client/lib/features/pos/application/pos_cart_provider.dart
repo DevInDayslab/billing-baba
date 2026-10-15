@@ -231,6 +231,14 @@ class PosCart extends _$PosCart {
     state = state.copyWith(payments: updated);
   }
 
+  void updatePaymentBankAccount(PaymentMode mode, String? bankAccountId) {
+    final index = state.payments.indexWhere((payment) => payment.mode == mode);
+    if (index < 0) return;
+    final updated = [...state.payments];
+    updated[index] = updated[index].copyWith(bankAccountId: bankAccountId);
+    state = state.copyWith(payments: updated);
+  }
+
   void togglePaymentMode(PaymentMode mode) {
     final exists = state.payments.any((p) => p.mode == mode);
     if (exists) {

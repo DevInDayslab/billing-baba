@@ -13,26 +13,19 @@ import 'package:billing_baba/features/reports/presentation/desktop/widgets/share
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
+import 'package:billing_baba/shared/widgets/bank_account_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BankStatementReportContent extends ConsumerWidget {
   const BankStatementReportContent({super.key});
 
-  static const _selectBankLabel = 'Select bank account';
-  static const List<String> _bankOptions = [
-    _selectBankLabel,
-    'HDFC Bank',
-    'ICICI Bank',
-    'SBI',
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(reportFiltersProvider);
-    final selectedBank = filters.bankName ?? _selectBankLabel;
-    final bankSelected = selectedBank != _selectBankLabel;
+    final selectedAccountId = filters.bankAccountId;
+    final bankSelected =
+        selectedAccountId != null && selectedAccountId.isNotEmpty;
     final reportAsync = ref.watch(bankStatementReportProvider);
 
     return ReportAsyncBody(
@@ -153,7 +146,7 @@ class BankStatementReportContent extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Text(
-                            'Bank name',
+                            'Account',
                             style: TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary,
@@ -161,16 +154,13 @@ class BankStatementReportContent extends ConsumerWidget {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           SizedBox(
-                            width: 200,
-                            child: SaleFilterDropdown(
-                              label: selectedBank,
-                              options: _bankOptions,
-                              selected: selectedBank,
-                              onSelected: (value) => ref
+                            width: 240,
+                            child: BankAccountPicker(
+                              includeCash: false,
+                              selectedAccountId: selectedAccountId,
+                              onChanged: (id) => ref
                                   .read(reportFiltersProvider.notifier)
-                                  .setBankName(
-                                    value == _selectBankLabel ? null : value,
-                                  ),
+                                  .setBankAccountId(id),
                             ),
                           ),
                         ],

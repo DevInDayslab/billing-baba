@@ -26,6 +26,7 @@ final class ReportsNavIntent {
     this.salePurchaseOrderSub,
     this.otherIncomeSub,
     this.loanAccountsSub,
+    this.bankAccountId,
   });
 
   factory ReportsNavIntent.transaction(TransactionReportSubSection sub) {
@@ -57,11 +58,13 @@ final class ReportsNavIntent {
   }
 
   factory ReportsNavIntent.businessStatus(
-    BusinessStatusReportSubSection sub,
-  ) {
+    BusinessStatusReportSubSection sub, {
+    String? bankAccountId,
+  }) {
     return ReportsNavIntent._(
       group: ReportNavGroup.businessStatus,
       businessStatusSub: sub,
+      bankAccountId: bankAccountId,
     );
   }
 
@@ -121,4 +124,5 @@ final class ReportsNavIntent {
   final SalePurchaseOrderReportSubSection? salePurchaseOrderSub;
   final OtherIncomeReportSubSection? otherIncomeSub;
   final LoanAccountsReportSubSection? loanAccountsSub;
+  final String? bankAccountId;
 }

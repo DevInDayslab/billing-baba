@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/features/other_income/application/other_incomes_provider.dart';
+import 'package:billing_baba/features/other_income/models/other_income_model.dart';
 import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
@@ -89,6 +91,10 @@ AsyncValue<List<MobileTransactionListItem>> _itemsForRoute(
     ),
     AppRoutes.saleFa => _mapSaleFa(
       ref.watch(saleFaProvider),
+      icon,
+    ),
+    AppRoutes.otherIncome => _mapOtherIncomes(
+      ref.watch(otherIncomeTransactionsProvider),
       icon,
     ),
     AppRoutes.purchaseBills => _mapPurchaseBills(
@@ -325,6 +331,26 @@ AsyncValue<List<MobileTransactionListItem>> _mapExpenses(
   );
 }
 
+AsyncValue<List<MobileTransactionListItem>> _mapOtherIncomes(
+  AsyncValue<List<OtherIncomeTransactionModel>> asyncValue,
+  IconData? icon,
+) {
+  return asyncValue.when(
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+    data: (incomes) => AsyncValue.data(
+      incomes
+          .map(
+            (income) => MobileTransactionMapper.fromOtherIncome(
+              income,
+              leadingIcon: icon,
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
 /// Refreshes the backend provider backing a mobile transaction list scope.
 Future<void> refreshMobileTransactionItems(
   WidgetRef ref,
@@ -360,6 +386,8 @@ Future<void> _refreshRoute(WidgetRef ref, String route) async {
       await ref.read(saleReturnsProvider.notifier).refresh();
     case AppRoutes.saleFa:
       await ref.read(saleFaProvider.notifier).refresh();
+    case AppRoutes.otherIncome:
+      await ref.read(otherIncomeTransactionsProvider.notifier).refresh();
     case AppRoutes.purchaseBills:
       await ref.read(purchaseBillsProvider.notifier).refresh();
     case AppRoutes.purchasePaymentOut:

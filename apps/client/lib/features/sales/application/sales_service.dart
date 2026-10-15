@@ -680,6 +680,9 @@ class SalesService {
         payment = FinalizeSalePaymentCommand(
           amount: receivedAmount.toStringAsFixed(4),
           paymentMode: SalesPaymentModes.toApi(form.paymentType),
+          bankAccountId: form.payments.isNotEmpty
+              ? form.payments.first.bankAccountId
+              : null,
           shortPaymentHandling: shortPaymentHandling,
           shortfallAmount: shortfallAmount != null && shortfallAmount > 0
               ? shortfallAmount.toStringAsFixed(4)
@@ -758,6 +761,7 @@ class SalesService {
                   allocatedAmount: allocationAmount.toStringAsFixed(4),
                 ),
               ],
+              bankAccountId: entry.bankAccountId,
             ),
           );
         }
@@ -769,6 +773,9 @@ class SalesService {
             direction: 'received',
             amount: receivedAmount.toStringAsFixed(4),
             paymentMode: paymentMode,
+            bankAccountId: form.payments.isNotEmpty
+                ? form.payments.first.bankAccountId
+                : null,
             source: 'document_finalize',
             paymentDate: DateTimeUtils.toApiIso(
               DateTimeUtils.mergeDateAndTime(

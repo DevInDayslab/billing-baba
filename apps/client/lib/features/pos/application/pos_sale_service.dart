@@ -72,7 +72,7 @@ class PosSaleService {
       itemNameToId: itemNameToId,
     );
 
-    final payment = mapPosPaymentsToFinalizeCommand(
+    final paymentLines = mapPosPaymentsToFinalizeCommands(
       payments: cart.payments,
       totalPayable: cart.totalPayable,
     );
@@ -83,7 +83,12 @@ class PosSaleService {
       documentId: draft.id,
       localDocumentNumber: draft.documentNumber,
       godownId: defaultGodownId,
-      payment: payment,
+      payments: paymentLines != null && paymentLines.length > 1
+          ? paymentLines
+          : null,
+      payment: paymentLines != null && paymentLines.length == 1
+          ? paymentLines.first
+          : null,
     );
 
     final finalizedDto =

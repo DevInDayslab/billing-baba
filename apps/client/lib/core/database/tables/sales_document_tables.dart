@@ -17,11 +17,20 @@ class SalesDocumentsLocal extends Table {
   TextColumn get subtotal => text().withDefault(const Constant('0'))();
   TextColumn get discountTotal => text().withDefault(const Constant('0'))();
   TextColumn get taxAmount => text().withDefault(const Constant('0'))();
+  TextColumn get tcsSectionId => text().nullable()();
+  TextColumn get tcsRate => text().nullable()();
+  TextColumn get tcsBaseAmount => text().withDefault(const Constant('0'))();
+  TextColumn get tcsAmount => text().withDefault(const Constant('0'))();
   TextColumn get totalAmount => text().withDefault(const Constant('0'))();
   TextColumn get paidAmount => text().withDefault(const Constant('0'))();
   TextColumn get paymentMode => text().nullable()();
   TextColumn get documentDate => text()();
   TextColumn get convertedFromId => text().nullable()();
+  TextColumn get originalDocumentId => text().nullable()();
+  TextColumn get originalDocumentNumber => text().nullable()();
+  TextColumn get originalDocumentDate => text().nullable()();
+  TextColumn get supplyType =>
+      text().withDefault(const Constant('domestic'))();
   TextColumn get notes => text().nullable()();
   TextColumn get godownId => text().nullable()();
   IntColumn get syncVersion => integer().withDefault(const Constant(0))();
@@ -54,6 +63,8 @@ class SalesDocumentLinesLocal extends Table {
   TextColumn get cgstAmount => text().withDefault(const Constant('0'))();
   TextColumn get sgstAmount => text().withDefault(const Constant('0'))();
   TextColumn get igstAmount => text().withDefault(const Constant('0'))();
+  TextColumn get cessRate => text().withDefault(const Constant('0'))();
+  TextColumn get cessAmount => text().withDefault(const Constant('0'))();
   TextColumn get lineTotal => text()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   IntColumn get syncVersion => integer().withDefault(const Constant(0))();

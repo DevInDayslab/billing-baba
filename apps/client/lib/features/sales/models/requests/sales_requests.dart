@@ -129,6 +129,10 @@ class CreatePaymentRequest {
     this.shortfallAmount,
     this.allocations = const [],
     this.source = 'manual',
+    this.tdsSectionId,
+    this.tdsRate,
+    this.tdsAmount,
+    this.bankAccountId,
   });
 
   final String partyId;
@@ -144,6 +148,10 @@ class CreatePaymentRequest {
   final String? shortfallAmount;
   final List<PaymentAllocationRequest> allocations;
   final String source;
+  final String? tdsSectionId;
+  final String? tdsRate;
+  final String? tdsAmount;
+  final String? bankAccountId;
 
   Map<String, dynamic> toJson() => {
     'party_id': partyId,
@@ -162,6 +170,11 @@ class CreatePaymentRequest {
     if (shortfallAmount != null) 'shortfall_amount': shortfallAmount,
     'source': source,
     'allocations': allocations.map((a) => a.toJson()).toList(),
+    if (tdsSectionId != null) 'tds_section_id': tdsSectionId,
+    if (tdsRate != null) 'tds_rate': tdsRate,
+    if (tdsAmount != null) 'tds_amount': tdsAmount,
+    if (bankAccountId != null && bankAccountId!.isNotEmpty)
+      'bank_account_id': bankAccountId,
   };
 }
 

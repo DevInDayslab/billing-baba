@@ -2,12 +2,19 @@ import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/reports/application/gst_report_provider.dart';
+import 'package:billing_baba/features/reports/application/tax_report_provider.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_providers.dart';
+import 'package:billing_baba/features/reports/models/dto/gst_report_v2_dto.dart';
+import 'package:billing_baba/features/reports/models/gst_report_type.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
+import 'package:billing_baba/features/reports/models/tax_report_kind.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_formatters.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_tax_report_data_loader.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_other_income_loan_report_mapper.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/application/mobile_report_subsection_registry.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/mobile_report_view_model.dart';
 import 'package:billing_baba/features/reports/utils/expense_export.dart';
@@ -100,30 +107,12 @@ abstract final class MobileReportDataLoader {
         ref
             .watch(salePurchaseByPartyGroupReportProvider)
             .whenData((data) => _fromSalePurchaseByPartyGroup(data, config)),
-      (ReportNavGroup.gst, 'gstr1') =>
+      (ReportNavGroup.gst, _) when _gstTypeForSubsection(subsectionId) != null =>
         ref
-            .watch(gstr1ReportProvider)
-            .whenData((data) => _fromGstr(data.rows, config)),
-      (ReportNavGroup.gst, 'gstr2') =>
-        ref
-            .watch(gstr2ReportProvider)
-            .whenData((data) => _fromGstr(data.rows, config)),
-      (ReportNavGroup.gst, 'gstr3b') =>
-        ref
-            .watch(gstr3bReportProvider)
-            .whenData((data) => _fromGstr3b(data, config)),
-      (ReportNavGroup.gst, 'gstr9') =>
-        ref
-            .watch(gstr9ReportProvider)
-            .whenData((data) => _fromGstr9(data, config)),
-      (ReportNavGroup.gst, 'saleSummaryByHsn') =>
-        ref
-            .watch(saleSummaryByHsnReportProvider)
-            .whenData((data) => _fromHsn(data, config)),
-      (ReportNavGroup.gst, 'sacReport') =>
-        ref
-            .watch(sacReportReportProvider)
-            .whenData((data) => _fromSac(data, config)),
+            .watch(gstReportProvider(_gstTypeForSubsection(subsectionId)!))
+            .whenData(
+              (data) => MobileTaxReportDataLoader.mapGstEnvelope(data, config),
+            ),
       (ReportNavGroup.itemStock, 'itemReportByParty') =>
         ref
             .watch(itemReportByPartyReportProvider)
@@ -176,30 +165,12 @@ abstract final class MobileReportDataLoader {
                   ? _empty(config)
                   : _fromBankStatement(data, config),
             ),
-      (ReportNavGroup.taxes, 'gstReport') =>
+      (ReportNavGroup.taxes, _) when _taxKindForSubsection(subsectionId) != null =>
         ref
-            .watch(gstTaxReportProvider)
-            .whenData((data) => _fromGstTax(data, config)),
-      (ReportNavGroup.taxes, 'gstRateReport') =>
-        ref
-            .watch(gstTaxRateReportProvider)
-            .whenData((data) => _fromGstTaxRate(data, config)),
-      (ReportNavGroup.taxes, 'formNo27Eq') =>
-        ref
-            .watch(form27eqReportProvider)
-            .whenData((data) => _fromTaxInvoices(data, config)),
-      (ReportNavGroup.taxes, 'tcsReceivable') =>
-        ref
-            .watch(tcsReceivableReportProvider)
-            .whenData((data) => _fromTaxInvoices(data, config)),
-      (ReportNavGroup.taxes, 'tdsPayable') =>
-        ref
-            .watch(tdsPayableReportProvider)
-            .whenData((data) => _fromTaxInvoices(data, config)),
-      (ReportNavGroup.taxes, 'tdsReceivable') =>
-        ref
-            .watch(tdsReceivableReportProvider)
-            .whenData((data) => _fromTaxInvoices(data, config)),
+            .watch(taxReportProvider(_taxKindForSubsection(subsectionId)!))
+            .whenData(
+              (data) => MobileTaxReportDataLoader.mapGstEnvelope(data, config),
+            ),
       (ReportNavGroup.expenseReport, 'expense') =>
         ref
             .watch(expensesReportProvider)
@@ -223,22 +194,38 @@ abstract final class MobileReportDataLoader {
       (ReportNavGroup.otherIncomeReport, 'otherIncome') =>
         ref
             .watch(otherIncomeReportProvider)
-            .whenData((data) => _fromOtherIncome(data, config)),
+            .whenData(
+              (data) =>
+                  MobileOtherIncomeLoanReportMapper.fromOtherIncome(data, config),
+            ),
       (ReportNavGroup.otherIncomeReport, 'otherIncomeCategoryReport') =>
         ref
             .watch(otherIncomeByCategoryReportProvider)
-            .whenData((data) => _fromOtherIncomeCategories(data, config)),
+            .whenData(
+              (data) => MobileOtherIncomeLoanReportMapper.fromOtherIncomeCategories(
+                data,
+                config,
+              ),
+            ),
       (ReportNavGroup.otherIncomeReport, 'otherIncomeItemReport') =>
         ref
             .watch(otherIncomeByItemReportProvider)
-            .whenData((data) => _fromOtherIncomeItems(data, config)),
+            .whenData(
+              (data) => MobileOtherIncomeLoanReportMapper.fromOtherIncomeItems(
+                data,
+                config,
+              ),
+            ),
       (ReportNavGroup.loanAccounts, 'loanStatement') =>
         ref
             .watch(loanStatementReportProvider)
             .whenData(
               (data) => data == null
                   ? _empty(config)
-                  : _fromLoanStatement(data, config),
+                  : MobileOtherIncomeLoanReportMapper.fromLoanStatement(
+                      data,
+                      config,
+                    ),
             ),
       _ => AsyncData(_empty(config)),
     };
@@ -306,18 +293,11 @@ abstract final class MobileReportDataLoader {
         ref.read(salePurchaseByPartyReportProvider.notifier).refresh();
       case (ReportNavGroup.party, 'salePurchaseByPartyGroup'):
         ref.read(salePurchaseByPartyGroupReportProvider.notifier).refresh();
-      case (ReportNavGroup.gst, 'gstr1'):
-        ref.read(gstr1ReportProvider.notifier).refresh();
-      case (ReportNavGroup.gst, 'gstr2'):
-        ref.read(gstr2ReportProvider.notifier).refresh();
-      case (ReportNavGroup.gst, 'gstr3b'):
-        ref.read(gstr3bReportProvider.notifier).refresh();
-      case (ReportNavGroup.gst, 'gstr9'):
-        ref.read(gstr9ReportProvider.notifier).refresh();
-      case (ReportNavGroup.gst, 'saleSummaryByHsn'):
-        ref.read(saleSummaryByHsnReportProvider.notifier).refresh();
-      case (ReportNavGroup.gst, 'sacReport'):
-        ref.read(sacReportReportProvider.notifier).refresh();
+      case (ReportNavGroup.gst, _):
+        final gstType = _gstTypeForSubsection(id);
+        if (gstType != null) {
+          ref.read(gstReportProvider(gstType).notifier).refresh();
+        }
       case (ReportNavGroup.itemStock, 'itemReportByParty'):
         ref.read(itemReportByPartyReportProvider.notifier).refresh();
       case (ReportNavGroup.itemStock, 'itemWiseProfitLoss'):
@@ -342,18 +322,11 @@ abstract final class MobileReportDataLoader {
         ref.read(stockTransferReportProvider.notifier).refresh();
       case (ReportNavGroup.businessStatus, 'bankStatement'):
         ref.read(bankStatementReportProvider.notifier).refresh();
-      case (ReportNavGroup.taxes, 'gstReport'):
-        ref.read(gstTaxReportProvider.notifier).refresh();
-      case (ReportNavGroup.taxes, 'gstRateReport'):
-        ref.read(gstTaxRateReportProvider.notifier).refresh();
-      case (ReportNavGroup.taxes, 'formNo27Eq'):
-        ref.read(form27eqReportProvider.notifier).refresh();
-      case (ReportNavGroup.taxes, 'tcsReceivable'):
-        ref.read(tcsReceivableReportProvider.notifier).refresh();
-      case (ReportNavGroup.taxes, 'tdsPayable'):
-        ref.read(tdsPayableReportProvider.notifier).refresh();
-      case (ReportNavGroup.taxes, 'tdsReceivable'):
-        ref.read(tdsReceivableReportProvider.notifier).refresh();
+      case (ReportNavGroup.taxes, _):
+        final taxKind = _taxKindForSubsection(id);
+        if (taxKind != null) {
+          ref.read(taxReportProvider(taxKind).notifier).refresh();
+        }
       case (ReportNavGroup.expenseReport, 'expense'):
         ref.read(expensesReportProvider.notifier).refresh();
       case (ReportNavGroup.expenseReport, 'expenseCategoryReport'):
@@ -1058,6 +1031,29 @@ abstract final class MobileReportDataLoader {
     );
   }
 
+  static TaxReportKind? _taxKindForSubsection(String id) => switch (id) {
+    'gstReport' => TaxReportKind.gstRegister,
+    'gstRateReport' => TaxReportKind.gstRateSummary,
+    'formNo27Eq' => TaxReportKind.form27eq,
+    'tcsReceivable' => TaxReportKind.tcsReceivable,
+    'tdsPayable' => TaxReportKind.tdsPayable,
+    'tdsReceivable' => TaxReportKind.tdsReceivable,
+    _ => null,
+  };
+
+  static GstReportType? _gstTypeForSubsection(String id) => switch (id) {
+    'gstr1' => GstReportType.gstr1,
+    'gstr2' => GstReportType.gstr2,
+    'gstr3b' => GstReportType.gstr3b,
+    'gstr9' => GstReportType.gstr9,
+    'saleSummaryByHsn' => GstReportType.hsnSummary,
+    'sacReport' => GstReportType.sacReport,
+    _ => null,
+  };
+
+  static double _gstRowAmount(Map<String, dynamic> row, String key) =>
+      double.tryParse(row[key]?.toString() ?? '') ?? 0;
+
   static MobileReportViewData _fromGstr(
     List<ReportGstrRow> rows,
     MobileReportSubsectionConfig config,
@@ -1489,7 +1485,9 @@ abstract final class MobileReportDataLoader {
       metrics: [
         MobileReportSummaryMetric(
           label: config.summaryLabels[0],
-          value: '${data.rows.length}',
+          value: data.openingBalance != null
+              ? formatReportCurrency(double.tryParse(data.openingBalance!) ?? 0)
+              : '${data.rows.length}',
         ),
         MobileReportSummaryMetric(
           label: config.summaryLabels[1],
@@ -1503,6 +1501,13 @@ abstract final class MobileReportDataLoader {
             data.rows.fold<double>(0, (sum, row) => sum + row.moneyOut),
           ),
         ),
+        if (data.closingBalance != null)
+          MobileReportSummaryMetric(
+            label: 'Closing',
+            value: formatReportCurrency(
+              double.tryParse(data.closingBalance!) ?? 0,
+            ),
+          ),
       ],
       rows: [
         for (final row in data.rows)
@@ -1515,94 +1520,6 @@ abstract final class MobileReportDataLoader {
               formatReportCurrency(row.moneyIn),
               formatReportCurrency(row.moneyOut),
               formatReportCurrency(row.balance),
-            ],
-          ),
-      ],
-    );
-  }
-
-  static MobileReportViewData _fromGstTax(
-    GstTaxReportData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    return _build(
-      config: config,
-      count: data.meta.total,
-      metrics: _countTotalMetrics(
-        data.meta.total,
-        data.rows,
-        (row) => row.saleTax + row.purchaseExpenseTax,
-        config: config,
-      ),
-      rows: [
-        for (final row in data.rows)
-          _row(
-            config,
-            title: row.partyName,
-            reference: config.referencePrefix,
-            values: [
-              formatReportCurrency(row.saleTax),
-              formatReportCurrency(row.purchaseExpenseTax),
-              formatReportCurrency(row.saleTax - row.purchaseExpenseTax),
-            ],
-          ),
-      ],
-    );
-  }
-
-  static MobileReportViewData _fromGstTaxRate(
-    GstTaxRateReportData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    return _build(
-      config: config,
-      count: data.rows.length,
-      metrics: _countTotalMetrics(
-        data.rows.length,
-        data.rows,
-        (row) => row.taxIn + row.taxOut,
-        config: config,
-      ),
-      rows: [
-        for (final row in data.rows)
-          _row(
-            config,
-            title: row.taxName,
-            reference: '${row.taxPercent.toStringAsFixed(1)}%',
-            values: [
-              formatReportCurrency(row.taxableSaleAmount),
-              formatReportCurrency(row.taxIn),
-              formatReportCurrency(row.taxOut),
-            ],
-          ),
-      ],
-    );
-  }
-
-  static MobileReportViewData _fromTaxInvoices(
-    TaxInvoiceReportData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    return _build(
-      config: config,
-      count: data.meta.total,
-      metrics: _countTotalMetrics(
-        data.meta.total,
-        data.rows,
-        (row) => row.totalTaxCollected,
-        config: config,
-      ),
-      rows: [
-        for (final row in data.rows)
-          _row(
-            config,
-            title: row.partyName,
-            reference: '${config.referencePrefix} ${row.invoiceNo}',
-            dateTime: row.collectionDate,
-            values: [
-              formatReportCurrency(row.totalValue),
-              formatReportCurrency(row.totalTaxCollected),
-              formatMobileReportDueDate(row.collectionDate),
             ],
           ),
       ],
@@ -1766,144 +1683,6 @@ abstract final class MobileReportDataLoader {
               '${row.quantity}',
               formatReportCurrency(row.amount),
               row.partyName,
-            ],
-          ),
-      ],
-    );
-  }
-
-  static MobileReportViewData _fromOtherIncome(
-    OtherIncomeReportData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    return _build(
-      config: config,
-      count: data.meta.total,
-      metrics: [
-        MobileReportSummaryMetric(
-          label: config.summaryLabels[0],
-          value: '${data.meta.total}',
-        ),
-        MobileReportSummaryMetric(
-          label: config.summaryLabels[1],
-          value: formatReportCurrency(data.totalAmount),
-        ),
-        MobileReportSummaryMetric(
-          label: config.summaryLabels[2],
-          value: formatReportCurrency(data.totalAmount),
-        ),
-      ],
-      rows: [
-        for (final row in data.rows)
-          _row(
-            config,
-            title: row.partyName.isEmpty ? row.category : row.partyName,
-            reference: '${config.referencePrefix} ${row.incomeNo}',
-            dateTime: row.date,
-            values: [
-              formatReportCurrency(row.amount),
-              row.status,
-              formatMobileReportDueDate(row.dueDate),
-            ],
-          ),
-      ],
-    );
-  }
-
-  static MobileReportViewData _fromOtherIncomeCategories(
-    OtherIncomeByCategoryReportData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    return _build(
-      config: config,
-      count: data.rows.length,
-      metrics: _countTotalMetrics(
-        data.rows.length,
-        data.rows,
-        (row) => row.amount,
-        config: config,
-      ),
-      rows: [
-        for (final row in data.rows)
-          _row(
-            config,
-            title: row.category,
-            reference: config.referencePrefix,
-            values: [
-              formatReportCurrency(row.amount),
-              '${row.count}',
-              '-',
-            ],
-          ),
-      ],
-    );
-  }
-
-  static MobileReportViewData _fromOtherIncomeItems(
-    OtherIncomeByItemReportData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    return _build(
-      config: config,
-      count: data.rows.length,
-      metrics: _countTotalMetrics(
-        data.rows.length,
-        data.rows,
-        (row) => row.amount,
-        config: config,
-      ),
-      rows: [
-        for (final row in data.rows)
-          _row(
-            config,
-            title: row.itemName,
-            reference: row.category,
-            values: [
-              formatReportCurrency(row.amount),
-              '${row.count}',
-              '-',
-            ],
-          ),
-      ],
-    );
-  }
-
-  static MobileReportViewData _fromLoanStatement(
-    LoanStatementReportData data,
-    MobileReportSubsectionConfig config,
-  ) {
-    return _build(
-      config: config,
-      count: data.rows.length,
-      metrics: [
-        MobileReportSummaryMetric(
-          label: config.summaryLabels[0],
-          value: '${data.rows.length}',
-        ),
-        MobileReportSummaryMetric(
-          label: config.summaryLabels[1],
-          value: formatReportCurrency(
-            data.rows.fold<double>(0, (sum, row) => sum + row.debit),
-          ),
-        ),
-        MobileReportSummaryMetric(
-          label: config.summaryLabels[2],
-          value: formatReportCurrency(
-            data.rows.fold<double>(0, (sum, row) => sum + row.credit),
-          ),
-        ),
-      ],
-      rows: [
-        for (final row in data.rows)
-          _row(
-            config,
-            title: row.description,
-            reference: '${config.referencePrefix} ${row.refNo}',
-            dateTime: row.date,
-            values: [
-              formatReportCurrency(row.debit),
-              formatReportCurrency(row.credit),
-              formatReportCurrency(row.balance),
             ],
           ),
       ],

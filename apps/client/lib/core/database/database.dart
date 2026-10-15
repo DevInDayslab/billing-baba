@@ -1,11 +1,14 @@
 import 'package:billing_baba/core/database/database_corruption_exception.dart';
 import 'package:billing_baba/core/database/drift_database_paths.dart';
+import 'package:billing_baba/core/database/tables/bank_accounts_table.dart';
 import 'package:billing_baba/core/database/tables/brands_table.dart';
 import 'package:billing_baba/core/database/tables/business_settings_table.dart';
 import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
 import 'package:billing_baba/core/database/tables/expenses_tables.dart';
+import 'package:billing_baba/core/database/tables/loans_tables.dart';
+import 'package:billing_baba/core/database/tables/other_income_tables.dart';
 import 'package:billing_baba/core/database/tables/gateway_payment_sessions_table.dart';
 import 'package:billing_baba/core/database/tables/godowns_table.dart';
 import 'package:billing_baba/core/database/tables/inventory_stock_tables.dart';
@@ -25,6 +28,7 @@ import 'package:billing_baba/core/database/tables/sync_queue_table.dart';
 import 'package:billing_baba/core/database/tables/tax_rates_table.dart';
 import 'package:billing_baba/core/database/tables/todos_table.dart';
 import 'package:billing_baba/core/database/tables/unit_definitions_table.dart';
+import 'package:billing_baba/core/database/tables/withholding_tax_tables.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
@@ -53,6 +57,7 @@ part 'database.g.dart';
     ItemTierPricesLocal,
     UnitDefinitionsLocal,
     TaxRatesLocal,
+    BankAccountsLocal,
     GodownsLocal,
     BusinessSettingsLocal,
     SalesDocumentsLocal,
@@ -65,16 +70,24 @@ part 'database.g.dart';
     ExpenseCategoriesLocal,
     ExpenseItemsLocal,
     ExpensesLocal,
+    IncomeCategoriesLocal,
+    IncomeItemsLocal,
+    OtherIncomesLocal,
+    LoanAccountsLocal,
+    LoanTransactionsLocal,
     GatewayPaymentSessionsLocal,
     NotificationsLocal,
     TodosLocal,
+    WithholdingTaxSectionsLocal,
+    WithholdingTaxEntriesLocal,
+    TaxDepositsLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Drift schema version — keep in sync with [schemaVersion].
-  static const currentSchemaVersion = 28;
+  static const currentSchemaVersion = 32;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -283,6 +296,110 @@ class AppDatabase extends _$AppDatabase {
           expensesLocal,
           expensesLocal.expenseItemId,
         );
+      }
+      if (from < 29) {
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.originalDocumentId,
+        );
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.originalDocumentNumber,
+        );
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.originalDocumentDate,
+        );
+        await _addColumnIfMissing(
+          m,
+          salesDocumentsLocal,
+          salesDocumentsLocal.supplyType,
+        );
+        await _addColumnIfMissing(
+          m,
+          salesDocumentLinesLocal,
+          salesDocumentLinesLocal.cessRate,
+        );
+        await _addColumnIfMissing(
+          m,
+          salesDocumentLinesLocal,
+          salesDocumentLinesLocal.cessAmount,
+        );
+        await _addColumnIfMissing(
+          m,
+          purchaseDocumentsLocal,
+          purchaseDocumentsLocal.originalDocumentId,
+        );
+        await _addColumnIfMissing(
+          m,
+          purchaseDocumentsLocal,
+          purchaseDocumentsLocal.originalDocumentNumber,
+        );
+        await _addColumnIfMissing(
+          m,
+          purchaseDocumentsLocal,
+          purchaseDocumentsLocal.originalDocumentDate,
+        );
+        await _addColumnIfMissing(
+          m,
+          purchaseDocumentLinesLocal,
+          purchaseDocumentLinesLocal.cessRate,
+        );
+        await _addColumnIfMissing(
+          m,
+          purchaseDocumentLinesLocal,
+          purchaseDocumentLinesLocal.cessAmount,
+        );
+      }
+      if (from < 30) {
+        await m.createTable(withholdingTaxSectionsLocal);
+        await m.createTable(withholdingTaxEntriesLocal);
+        await m.createTable(taxDepositsLocal);
+        await _addColumnIfMissing(m, partiesLocal, partiesLocal.pan);
+        await _addColumnIfMissing(
+          m,
+          businessSettingsLocal,
+          businessSettingsLocal.enableTds,
+        );
+        await _addColumnIfMissing(
+          m,
+          businessSettingsLocal,
+          businessSettingsLocal.enableTcs,
+        );
+        for (final column in [
+          salesDocumentsLocal.tcsSectionId,
+          salesDocumentsLocal.tcsRate,
+          salesDocumentsLocal.tcsBaseAmount,
+          salesDocumentsLocal.tcsAmount,
+        ]) {
+          await _addColumnIfMissing(m, salesDocumentsLocal, column);
+        }
+        for (final column in [
+          purchaseDocumentsLocal.tcsSectionId,
+          purchaseDocumentsLocal.tcsRate,
+          purchaseDocumentsLocal.tcsBaseAmount,
+          purchaseDocumentsLocal.tcsAmount,
+        ]) {
+          await _addColumnIfMissing(m, purchaseDocumentsLocal, column);
+        }
+      }
+      if (from < 31) {
+        await m.createTable(bankAccountsLocal);
+        await _addColumnIfMissing(
+          m,
+          expensesLocal,
+          expensesLocal.bankAccountId,
+        );
+      }
+      if (from < 32) {
+        await m.createTable(incomeCategoriesLocal);
+        await m.createTable(incomeItemsLocal);
+        await m.createTable(otherIncomesLocal);
+        await m.createTable(loanAccountsLocal);
+        await m.createTable(loanTransactionsLocal);
       }
     },
   );

@@ -1,5 +1,7 @@
 import type { Database } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { BankAccountService } from '../bank-accounts/bank-account.service';
+import { recordPaymentMovement } from '../bank-accounts/payment-movement.helper';
 import { PaymentRepository } from '../accounting/payment.repository';
 import { HiddenLedgerService } from '../hidden-ledger/hidden-ledger.service';
 import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
@@ -19,6 +21,7 @@ const PAYMENT_MODES = new Set([
 export type FinalizeSalePaymentInput = {
   amount: string;
   paymentMode: string;
+  bankAccountId?: string | null;
   shortPaymentHandling?: 'official_balance' | 'unrecovered' | null;
   shortfallAmount?: string | null;
   paymentDate?: string;
@@ -35,6 +38,7 @@ export async function recordSaleFinalizePayment(
     documentType?: SalesDocumentType;
     userId?: string;
     payment: FinalizeSalePaymentInput;
+    skipDocumentTotalCap?: boolean;
   },
 ): Promise<{ paidAmount: string; paymentMode: string }> {
   const paymentAmount = parseMoney(params.payment.amount);
@@ -51,7 +55,7 @@ export async function recordSaleFinalizePayment(
   }
 
   const documentTotal = parseMoney(params.documentTotal);
-  if (paymentAmount > documentTotal) {
+  if (!params.skipDocumentTotalCap && paymentAmount > documentTotal) {
     throw new AppError(
       'VALIDATION_ERROR',
       'Payment amount exceeds document total',
@@ -89,6 +93,20 @@ export async function recordSaleFinalizePayment(
     : params.documentDate;
 
   const repo = new PaymentRepository(tx as unknown as Database);
+  const bankAccountId = await new BankAccountService(
+    tx as unknown as Database,
+  ).resolveAccountId(
+    params.businessId,
+    params.payment.paymentMode as
+      | 'cash'
+      | 'upi'
+      | 'card'
+      | 'cheque'
+      | 'bank_transfer'
+      | 'other',
+    params.payment.bankAccountId ?? null,
+    params.userId,
+  );
 
   const payment = await repo.create({
     businessId: params.businessId,
@@ -104,6 +122,7 @@ export async function recordSaleFinalizePayment(
       | 'bank_transfer'
       | 'other',
     paymentDate,
+    bankAccountId,
     referenceNumber: null,
     notes: null,
     shortPaymentHandling: params.payment.shortPaymentHandling ?? null,
@@ -133,6 +152,18 @@ export async function recordSaleFinalizePayment(
     referenceType: 'payments',
     entryDate: paymentDate.toISOString().slice(0, 10),
     description: isReturn ? 'Refund paid' : 'Payment received',
+  });
+
+  await recordPaymentMovement(tx as unknown as Database, {
+    businessId: params.businessId,
+    paymentId: payment.id,
+    partyId: params.partyId,
+    direction: isReturn ? 'paid' : 'received',
+    amount: params.payment.amount,
+    paymentMode: params.payment.paymentMode,
+    paymentDate,
+    bankAccountId,
+    userId: params.userId,
   });
 
   if (isHiddenLedgerRoute && shortfallAmount > 0) {
@@ -177,5 +208,56 @@ export async function recordSaleFinalizePayment(
   return {
     paidAmount: params.payment.amount,
     paymentMode: params.payment.paymentMode,
+  };
+}
+
+export async function recordSaleFinalizePayments(
+  tx: DbTransaction,
+  params: {
+    businessId: string;
+    documentId: string;
+    partyId: string;
+    documentTotal: string;
+    documentDate: Date;
+    documentType?: SalesDocumentType;
+    userId?: string;
+    payments: FinalizeSalePaymentInput[];
+  },
+): Promise<{ paidAmount: string; paymentMode: string }> {
+  const documentTotal = parseMoney(params.documentTotal);
+  let sum = 0;
+  for (const line of params.payments) {
+    sum += parseMoney(line.amount);
+  }
+  if (sum <= 0) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'Payment amount must be greater than zero',
+      422,
+    );
+  }
+  if (sum > documentTotal) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'Total payment amount exceeds document total',
+      422,
+    );
+  }
+
+  let paidTotal = 0;
+  let lastMode = params.payments[0]?.paymentMode ?? 'cash';
+  for (const payment of params.payments) {
+    const result = await recordSaleFinalizePayment(tx, {
+      ...params,
+      payment,
+      skipDocumentTotalCap: true,
+    });
+    paidTotal += parseMoney(result.paidAmount);
+    lastMode = result.paymentMode;
+  }
+
+  return {
+    paidAmount: normalizeMoney(paidTotal),
+    paymentMode: lastMode,
   };
 }

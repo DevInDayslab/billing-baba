@@ -12,37 +12,11 @@ import type {
   ReportExpenseItemRow,
   ReportExpenseRow,
 } from '../reports.types';
+import {
+  resolveMoneyEntryBalanceDue,
+  resolveMoneyEntryStatus,
+} from './money-entry-report.helpers';
 import { paginateSlice, resolveRange, toPeriodMeta } from './reports.helpers';
-
-function resolveExpenseBalanceDue(
-  amount: string | null,
-  balanceDue: string | null,
-  paymentMode: string | null,
-): number {
-  const parsedAmount = Number(amount ?? 0);
-  if (balanceDue != null && balanceDue !== '') {
-    return Number(balanceDue);
-  }
-  if (paymentMode) {
-    return 0;
-  }
-  return parsedAmount;
-}
-
-function resolveExpenseStatus(
-  amount: string | null,
-  balanceDue: string | null,
-  paymentMode: string | null,
-): ReportExpenseRow['status'] {
-  const balance = resolveExpenseBalanceDue(amount, balanceDue, paymentMode);
-  if (balance <= 0) {
-    return 'paid';
-  }
-  if (paymentMode) {
-    return 'partial';
-  }
-  return 'pending';
-}
 
 export class ExpenseReportsRepository {
   constructor(private readonly db: Database) {}
@@ -103,7 +77,7 @@ export class ExpenseReportsRepository {
       .orderBy(desc(expenses.expenseDate));
 
     const mapped = rows.map((row) => {
-      const balanceDue = resolveExpenseBalanceDue(
+      const balanceDue = resolveMoneyEntryBalanceDue(
         row.amount,
         row.balanceDue,
         row.paymentMode,
@@ -120,7 +94,7 @@ export class ExpenseReportsRepository {
         due_date: row.dueDate
           ? new Date(row.dueDate).toISOString()
           : null,
-        status: resolveExpenseStatus(
+        status: resolveMoneyEntryStatus(
           row.amount,
           row.balanceDue,
           row.paymentMode,

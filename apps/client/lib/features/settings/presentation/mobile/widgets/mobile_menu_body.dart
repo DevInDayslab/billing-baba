@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/mobile_menu_catalog.dart';
 import 'package:billing_baba/features/settings/application/mobile_menu_expansion_provider.dart';
 import 'package:billing_baba/features/settings/models/mobile_menu_item.dart';
@@ -17,6 +18,8 @@ class MobileMenuBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final permissions = ref.watch(permissionServiceProvider);
+    final enableOtherIncome =
+        ref.watch(generalSettingsProvider).value?.enableOtherIncome ?? true;
     final expandedSectionId = ref.watch(mobileMenuExpandedSectionProvider);
 
     final children = <Widget>[];
@@ -24,6 +27,7 @@ class MobileMenuBody extends ConsumerWidget {
       final items = MobileMenuCatalog.visibleItemsForSection(
         section,
         permissions,
+        enableOtherIncome: enableOtherIncome,
       );
       if (items.isEmpty) continue;
 

@@ -20,16 +20,22 @@ import {
   createPublicInvoiceRoutes,
 } from './invoice-share';
 import { jobWorkModule } from './job-work';
+import { loansModule } from './loans';
 import { createNotificationsModule } from './notifications/notifications.routes';
+import { createPublicPartyContactImportRoutes } from './party-contact-import';
 import { partiesModule } from './parties';
 import { createPaymentGatewayModule } from './payment-gateway';
+import { otherIncomeModule } from './other-income';
 import { purchasesModule } from './purchases';
+import { gstReportsModule } from './gst-reports';
 import { reportsModule } from './reports';
+import { taxReportingModule } from './tax-reporting';
 import { createSalesModule } from './sales';
 import { settingsModule } from './settings';
 import { createStorageModule } from './storage';
 import { createSubscriptionModule } from './subscription';
 import { syncModule } from './sync';
+import { recycleBinModule } from './recycle-bin';
 import { createTodoRoutes } from './todos/todo.routes';
 
 export async function registerModules(
@@ -53,12 +59,16 @@ export async function registerModules(
       await api.register(createSalesModule(config), { prefix: '/sales' });
       await api.register(jobWorkModule, { prefix: '/job-work' });
       await api.register(purchasesModule, { prefix: '/purchases' });
+      await api.register(otherIncomeModule, { prefix: '/other-income' });
+      await api.register(loansModule, { prefix: '/loans' });
       await api.register(createAccountingModule(config), {
         prefix: '/accounting',
       });
       await api.register(hiddenLedgerModule, { prefix: '/hidden-ledger' });
       await api.register(dashboardModule, { prefix: '/dashboard' });
       await api.register(reportsModule, { prefix: '/reports' });
+      await api.register(gstReportsModule, { prefix: '/reports/gst' });
+      await api.register(taxReportingModule, { prefix: '/reports/tax' });
       await api.register(settingsModule, { prefix: '/settings' });
       await api.register(createStorageModule(config), { prefix: '/storage' });
       await api.register(documentAttachmentsModule(config), {
@@ -74,6 +84,9 @@ export async function registerModules(
       await api.register(createPublicInvoiceRoutes(config), {
         prefix: '/public/invoices',
       });
+      await api.register(createPublicPartyContactImportRoutes(config), {
+        prefix: '/public/party-contact-import',
+      });
       await api.register(publicGeneratedDocumentsModule(config), {
         prefix: '/public/generated-documents',
       });
@@ -88,6 +101,7 @@ export async function registerModules(
         prefix: '/payments',
       });
       await api.register(gstinModule(config), { prefix: '/gstin' });
+      await api.register(recycleBinModule, { prefix: '/recycle-bin' });
     },
     { prefix: config.apiPrefix },
   );

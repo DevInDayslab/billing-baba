@@ -2,6 +2,7 @@ import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/recycle_bin/application/transaction_lifecycle_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
@@ -450,6 +451,31 @@ class PurchaseBills extends _$PurchaseBills {
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
     }
+  }
+
+  Future<String?> deleteBill(String documentId) async {
+    final current = state.value;
+    PurchaseBillModel? bill;
+    for (final item in current?.items ?? const <PurchaseBillModel>[]) {
+      if (item.id == documentId) {
+        bill = item;
+        break;
+      }
+    }
+    if (bill != null && !bill.isDraft) {
+      try {
+        await ref.read(transactionLifecycleServiceProvider).deleteTransaction(
+              entityType: 'purchase_document',
+              entityId: documentId,
+            );
+        await refresh();
+        await refreshAfterPurchaseMutation(ref);
+        return null;
+      } catch (error) {
+        return PurchaseErrorMapper.messageFor(error);
+      }
+    }
+    return deleteDraft(documentId);
   }
 
   Future<({String? error, String? returnId})> convertToReturn(

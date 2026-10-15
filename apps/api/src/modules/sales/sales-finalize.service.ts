@@ -18,7 +18,9 @@ import type { SalesDocumentType } from './sales-document.types';
 import {
   type FinalizeSalePaymentInput,
   recordSaleFinalizePayment,
+  recordSaleFinalizePayments,
 } from './sales-finalize-payment.service';
+import { WithholdingTaxEntryService } from '../withholding-tax/withholding-tax-entry.service';
 import { assignDocumentNumber } from './sales-numbering.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -40,7 +42,7 @@ const LEDGER_ON_FINALIZE_TYPES: SalesDocumentType[] = [
   'sales_return',
 ];
 
-function movementTypeForDocument(
+export function movementTypeForDocument(
   documentType: SalesDocumentType,
 ): 'sale' | 'sales_return' | 'challan' | null {
   switch (documentType) {
@@ -58,7 +60,7 @@ function movementTypeForDocument(
   }
 }
 
-function shouldSkipStockDeduction(
+export function shouldSkipStockDeduction(
   documentType: SalesDocumentType,
   convertedFromType: SalesDocumentType | null,
 ): boolean {
@@ -100,6 +102,7 @@ export async function finalizeSalesDocument(
     godownId?: string;
     loyaltyPointsRedeemed?: string;
     payment?: FinalizeSalePaymentInput;
+    payments?: FinalizeSalePaymentInput[];
   },
 ): Promise<{
   documentNumber: string | null;
@@ -234,6 +237,12 @@ export async function finalizeSalesDocument(
       });
     }
 
+    await new WithholdingTaxEntryService(db).syncFromSaleDocument(tx, {
+      businessId: params.businessId,
+      documentId: params.documentId,
+      userId: params.userId,
+    });
+
     const [finalized] = await tx
       .update(salesDocuments)
       .set({
@@ -317,19 +326,34 @@ export async function finalizeSalesDocument(
     let paidAmount = '0';
     let paymentMode: string | null = null;
 
-    if (params.payment && document.partyId) {
-      const paymentResult = await recordSaleFinalizePayment(tx, {
-        businessId: params.businessId,
-        documentId: params.documentId,
-        partyId: document.partyId,
-        documentTotal: document.totalAmount,
-        documentDate: document.documentDate,
-        documentType: document.documentType as SalesDocumentType,
-        userId: params.userId,
-        payment: params.payment,
-      });
-      paidAmount = paymentResult.paidAmount;
-      paymentMode = paymentResult.paymentMode;
+    if (document.partyId) {
+      if (params.payments?.length) {
+        const paymentResult = await recordSaleFinalizePayments(tx, {
+          businessId: params.businessId,
+          documentId: params.documentId,
+          partyId: document.partyId,
+          documentTotal: document.totalAmount,
+          documentDate: document.documentDate,
+          documentType: document.documentType as SalesDocumentType,
+          userId: params.userId,
+          payments: params.payments,
+        });
+        paidAmount = paymentResult.paidAmount;
+        paymentMode = paymentResult.paymentMode;
+      } else if (params.payment) {
+        const paymentResult = await recordSaleFinalizePayment(tx, {
+          businessId: params.businessId,
+          documentId: params.documentId,
+          partyId: document.partyId,
+          documentTotal: document.totalAmount,
+          documentDate: document.documentDate,
+          documentType: document.documentType as SalesDocumentType,
+          userId: params.userId,
+          payment: params.payment,
+        });
+        paidAmount = paymentResult.paidAmount;
+        paymentMode = paymentResult.paymentMode;
+      }
     }
 
     return {

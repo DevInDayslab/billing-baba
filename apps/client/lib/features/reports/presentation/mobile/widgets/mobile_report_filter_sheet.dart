@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/bank_accounts/application/bank_account_providers.dart';
+import 'package:billing_baba/features/loans/application/loan_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_theme.dart';
@@ -9,10 +11,14 @@ import 'package:gap/gap.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+enum MobileReportAccountFilterKind { none, bankAccount, loanAccount }
+
 enum _MobileReportFilterSection {
   partyType,
   paymentMode,
   status,
+  bankAccount,
+  loanAccount,
 }
 
 extension on _MobileReportFilterSection {
@@ -20,6 +26,8 @@ extension on _MobileReportFilterSection {
     _MobileReportFilterSection.partyType => 'Party type',
     _MobileReportFilterSection.paymentMode => 'Payment mode',
     _MobileReportFilterSection.status => 'Status',
+    _MobileReportFilterSection.bankAccount => 'Bank account',
+    _MobileReportFilterSection.loanAccount => 'Loan account',
   };
 }
 
@@ -29,6 +37,8 @@ class MobileReportFilterDraft {
     this.partyType,
     this.paymentMode,
     this.status,
+    this.bankAccountId,
+    this.loanAccountId,
   });
 
   factory MobileReportFilterDraft.fromState(ReportFiltersState state) {
@@ -36,18 +46,24 @@ class MobileReportFilterDraft {
       partyType: state.partyType,
       paymentMode: state.paymentMode,
       status: state.status,
+      bankAccountId: state.bankAccountId,
+      loanAccountId: state.loanAccount,
     );
   }
 
   final String? partyType;
   final String? paymentMode;
   final String? status;
+  final String? bankAccountId;
+  final String? loanAccountId;
 }
 
 /// Opens the common mobile report filters bottom sheet.
 Future<MobileReportFilterDraft?> showMobileReportFilterSheet({
   required BuildContext context,
   required ReportFiltersState initial,
+  MobileReportAccountFilterKind accountFilterKind =
+      MobileReportAccountFilterKind.none,
 }) {
   return showMobileBottomSheet<MobileReportFilterDraft>(
     context: context,
@@ -88,6 +104,7 @@ Future<MobileReportFilterDraft?> showMobileReportFilterSheet({
           _MobileReportFilterBody(
             initial: MobileReportFilterDraft.fromState(initial),
             sheetContext: sheetContext,
+            accountFilterKind: accountFilterKind,
           ),
         ],
       );
@@ -105,12 +122,16 @@ bool applyMobileReportFilterDraft(
   final changed =
       current.partyType != draft.partyType ||
       current.paymentMode != draft.paymentMode ||
-      current.status != draft.status;
+      current.status != draft.status ||
+      current.bankAccountId != draft.bankAccountId ||
+      current.loanAccount != draft.loanAccountId;
 
   notifier
     ..setPartyType(draft.partyType)
     ..setPaymentMode(draft.paymentMode)
-    ..setStatus(draft.status);
+    ..setStatus(draft.status)
+    ..setBankAccountId(draft.bankAccountId)
+    ..setLoanAccount(draft.loanAccountId);
   return changed;
 }
 
@@ -118,7 +139,33 @@ bool applyMobileReportFilterDraft(
 List<String> buildMobileReportFilterChips(
   ReportFiltersState filters, {
   List<String> extraChips = const [],
+  WidgetRef? ref,
 }) {
+  String? bankLabel;
+  String? loanLabel;
+  if (ref != null) {
+    if (filters.bankAccountId != null && filters.bankAccountId!.isNotEmpty) {
+      final accounts =
+          ref.watch(bankAccountsStreamProvider).asData?.value ?? const [];
+      for (final account in accounts) {
+        if (account.id == filters.bankAccountId) {
+          bankLabel = account.label;
+          break;
+        }
+      }
+    }
+    if (filters.loanAccount != null && filters.loanAccount!.isNotEmpty) {
+      final loans =
+          ref.watch(loanAccountsStreamProvider).asData?.value ?? const [];
+      for (final loan in loans) {
+        if (loan.id == filters.loanAccount) {
+          loanLabel = loan.name;
+          break;
+        }
+      }
+    }
+  }
+
   final chips = <String>[
     switch (filters.partyType) {
       'customer' => 'Party - Customers',
@@ -133,6 +180,10 @@ List<String> buildMobileReportFilterChips(
     },
     if (filters.partyGroup != null && filters.partyGroup!.isNotEmpty)
       'Group - ${filters.partyGroup}',
+    if (filters.bankAccountId != null && filters.bankAccountId!.isNotEmpty)
+      'Bank - ${bankLabel ?? filters.bankAccountId}',
+    if (filters.loanAccount != null && filters.loanAccount!.isNotEmpty)
+      'Loan - ${loanLabel ?? filters.loanAccount}',
     ...extraChips,
   ];
   return chips;
@@ -153,10 +204,12 @@ class _MobileReportFilterBody extends StatefulWidget {
   const _MobileReportFilterBody({
     required this.initial,
     required this.sheetContext,
+    required this.accountFilterKind,
   });
 
   final MobileReportFilterDraft initial;
   final BuildContext sheetContext;
+  final MobileReportAccountFilterKind accountFilterKind;
 
   @override
   State<_MobileReportFilterBody> createState() =>
@@ -168,22 +221,48 @@ class _MobileReportFilterBodyState extends State<_MobileReportFilterBody> {
   late String? _partyType;
   late String? _paymentMode;
   late String? _status;
+  late String? _bankAccountId;
+  late String? _loanAccountId;
+  late List<_MobileReportFilterSection> _sections;
 
   @override
   void initState() {
     super.initState();
-    _section = _MobileReportFilterSection.partyType;
+    _sections = _buildSections(widget.accountFilterKind);
+    _section = _sections.first;
     _partyType = widget.initial.partyType;
     _paymentMode = widget.initial.paymentMode;
     _status = widget.initial.status;
+    _bankAccountId = widget.initial.bankAccountId;
+    _loanAccountId = widget.initial.loanAccountId;
+  }
+
+  static List<_MobileReportFilterSection> _buildSections(
+    MobileReportAccountFilterKind kind,
+  ) {
+    final accountSection = switch (kind) {
+      MobileReportAccountFilterKind.bankAccount =>
+        _MobileReportFilterSection.bankAccount,
+      MobileReportAccountFilterKind.loanAccount =>
+        _MobileReportFilterSection.loanAccount,
+      MobileReportAccountFilterKind.none => null,
+    };
+    return [
+      if (accountSection != null) accountSection,
+      _MobileReportFilterSection.partyType,
+      _MobileReportFilterSection.paymentMode,
+      _MobileReportFilterSection.status,
+    ];
   }
 
   void _reset() {
     setState(() {
-      _section = _MobileReportFilterSection.partyType;
+      _section = _sections.first;
       _partyType = null;
       _paymentMode = null;
       _status = null;
+      _bankAccountId = null;
+      _loanAccountId = null;
     });
   }
 
@@ -193,6 +272,8 @@ class _MobileReportFilterBodyState extends State<_MobileReportFilterBody> {
         partyType: _partyType,
         paymentMode: _paymentMode,
         status: _status,
+        bankAccountId: _bankAccountId,
+        loanAccountId: _loanAccountId,
       ),
     );
   }
@@ -208,6 +289,7 @@ class _MobileReportFilterBodyState extends State<_MobileReportFilterBody> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _FilterSectionNav(
+                sections: _sections,
                 selected: _section,
                 onSelected: (section) => setState(() => _section = section),
               ),
@@ -251,16 +333,78 @@ class _MobileReportFilterBodyState extends State<_MobileReportFilterBody> {
         selected: _status,
         onSelected: (value) => setState(() => _status = value),
       ),
+      _MobileReportFilterSection.bankAccount => _AccountOptionList(
+        selectedId: _bankAccountId,
+        onSelected: (id) => setState(() => _bankAccountId = id),
+        accountsProvider: bankAccountsStreamProvider,
+        labelFor: (account) => account.label,
+        idFor: (account) => account.id,
+        allLabel: 'All bank accounts',
+      ),
+      _MobileReportFilterSection.loanAccount => _AccountOptionList(
+        selectedId: _loanAccountId,
+        onSelected: (id) => setState(() => _loanAccountId = id),
+        accountsProvider: loanAccountsStreamProvider,
+        labelFor: (account) => account.name,
+        idFor: (account) => account.id,
+        allLabel: 'All loan accounts',
+      ),
     };
+  }
+}
+
+class _AccountOptionList<T> extends ConsumerWidget {
+  const _AccountOptionList({
+    required this.selectedId,
+    required this.onSelected,
+    required this.accountsProvider,
+    required this.labelFor,
+    required this.idFor,
+    required this.allLabel,
+  });
+
+  final String? selectedId;
+  final ValueChanged<String?> onSelected;
+  final StreamProvider<List<T>> accountsProvider;
+  final String Function(T account) labelFor;
+  final String Function(T account) idFor;
+  final String allLabel;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accountsAsync = ref.watch(accountsProvider);
+
+    return accountsAsync.when(
+      data: (accounts) {
+        final options = <_RadioOption<String?>>[
+          _RadioOption(value: null, label: allLabel),
+          for (final account in accounts)
+            _RadioOption(value: idFor(account), label: labelFor(account)),
+        ];
+        return _RadioOptionList<String?>(
+          options: options,
+          selected: selectedId,
+          onSelected: onSelected,
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => _RadioOptionList<String?>(
+        options: [_RadioOption(value: null, label: allLabel)],
+        selected: null,
+        onSelected: onSelected,
+      ),
+    );
   }
 }
 
 class _FilterSectionNav extends StatelessWidget {
   const _FilterSectionNav({
+    required this.sections,
     required this.selected,
     required this.onSelected,
   });
 
+  final List<_MobileReportFilterSection> sections;
   final _MobileReportFilterSection selected;
   final ValueChanged<_MobileReportFilterSection> onSelected;
 
@@ -277,7 +421,7 @@ class _FilterSectionNav extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final section in _MobileReportFilterSection.values)
+          for (final section in sections)
             InkWell(
               onTap: () => onSelected(section),
               child: Container(

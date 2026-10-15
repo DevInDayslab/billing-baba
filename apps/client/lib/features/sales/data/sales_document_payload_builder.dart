@@ -20,6 +20,10 @@ Map<String, dynamic> buildSalesDocumentRowPayload({
   String? convertedFromId,
   String? notes,
   String? posSessionId,
+  String? tcsSectionId,
+  String? tcsRate,
+  String? tcsBaseAmount,
+  String? tcsAmount,
 }) {
   return {
     'document_type': documentType,
@@ -36,6 +40,10 @@ Map<String, dynamic> buildSalesDocumentRowPayload({
     'discount_total': discountTotal,
     'tax_amount': taxAmount,
     'total_amount': totalAmount,
+    if (tcsSectionId != null) 'tcs_section_id': tcsSectionId,
+    if (tcsRate != null) 'tcs_rate': tcsRate,
+    if (tcsBaseAmount != null) 'tcs_base_amount': tcsBaseAmount,
+    if (tcsAmount != null) 'tcs_amount': tcsAmount,
   };
 }
 

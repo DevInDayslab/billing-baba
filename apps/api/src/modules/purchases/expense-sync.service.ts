@@ -10,6 +10,10 @@ import {
   SYSTEM_EXPENSE_CATEGORY_NAMES,
 } from './expense-category.constants';
 import {
+  syncExpenseMovement,
+  voidExpenseMovement,
+} from '../bank-accounts/expense-movement.helper';
+import {
   postExpenseLedgerEntry,
   reverseExpenseLedgerEntry,
 } from './expense-ledger.service';
@@ -147,6 +151,7 @@ async function upsertLinkedExpense(
       businessId: params.businessId,
       expense: updated,
     });
+    await syncExpenseMovement(db, params.businessId, updated, params.userId);
     return updated;
   }
 
@@ -172,6 +177,7 @@ async function upsertLinkedExpense(
     businessId: params.businessId,
     expense: created,
   });
+  await syncExpenseMovement(db, params.businessId, created, params.userId);
 
   return created;
 }
@@ -257,6 +263,7 @@ async function removeLinkedExpense(
 
   await reverseExpenseLedgerEntry(db, params.businessId, existing);
   await repo.softDelete(params.businessId, existing.id, params.userId ?? null);
+  await voidExpenseMovement(db, params.businessId, existing.id);
 }
 
 export async function deleteLinkedExpense(

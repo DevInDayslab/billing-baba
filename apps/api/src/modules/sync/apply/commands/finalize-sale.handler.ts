@@ -8,7 +8,10 @@ import {
   walkInPartyIdForBusiness,
 } from '../../../../shared/parties/walk-in-party';
 import { SalesDocumentRepository } from '../../../sales/sales-document.repository';
-import { finalizeSalePaymentBodySchema } from '../../../sales/sales-document.schema';
+import {
+  finalizeSalePaymentBodySchema,
+  finalizeSalePaymentLineSchema,
+} from '../../../sales/sales-document.schema';
 import { finalizeSalesDocument } from '../../../sales/sales-finalize.service';
 import type { FinalizeSalePaymentInput } from '../../../sales/sales-finalize-payment.service';
 import type {
@@ -41,10 +44,38 @@ function parseFinalizePayment(
   return {
     amount: parsed.data.amount,
     paymentMode: parsed.data.payment_mode,
+    bankAccountId: parsed.data.bank_account_id ?? null,
     shortPaymentHandling: parsed.data.short_payment_handling ?? null,
     shortfallAmount: parsed.data.shortfall_amount ?? null,
     paymentDate: parsed.data.payment_date,
   };
+}
+
+function parseFinalizePayments(
+  payload: Record<string, unknown>,
+): FinalizeSalePaymentInput[] | undefined {
+  const block = payload.payments;
+  if (!Array.isArray(block) || block.length === 0) {
+    return undefined;
+  }
+  const lines: FinalizeSalePaymentInput[] = [];
+  for (const entry of block) {
+    const parsed = finalizeSalePaymentLineSchema.safeParse(entry);
+    if (!parsed.success) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        parsed.error.issues[0]?.message ?? 'Invalid payments payload',
+        422,
+      );
+    }
+    lines.push({
+      amount: parsed.data.amount,
+      paymentMode: parsed.data.payment_mode,
+      bankAccountId: parsed.data.bank_account_id ?? null,
+      paymentDate: parsed.data.payment_date,
+    });
+  }
+  return lines;
 }
 
 export const finalizeSaleHandler: CommandHandler = async (db, input) => {
@@ -60,8 +91,10 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
       : undefined;
 
   let payment: FinalizeSalePaymentInput | undefined;
+  let payments: FinalizeSalePaymentInput[] | undefined;
   try {
     payment = parseFinalizePayment(input.payload);
+    payments = parseFinalizePayments(input.payload);
   } catch (error) {
     if (error instanceof AppError) {
       return {
@@ -125,7 +158,8 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
       documentId,
       userId: input.userId,
       godownId,
-      payment,
+      payment: payments?.length ? undefined : payment,
+      payments,
     });
 
     const serverDocumentNumber = finalized.documentNumber;

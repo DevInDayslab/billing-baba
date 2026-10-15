@@ -12,6 +12,8 @@ abstract final class AppRoutes {
   static const partyDetails = '/parties/party-details';
   static const partyGroups = '/parties/groups';
   static const partyHiddenLedger = '/parties/hidden-ledger';
+  static String partyContactImport(String token) =>
+      '/parties/import-contacts/$token';
   static const crm = '/crm';
   static const crmLeads = '/crm/leads';
   static const crmContacts = '/crm/contacts';
@@ -30,6 +32,7 @@ abstract final class AppRoutes {
   static const saleEstimateQuotation = '/sale/estimate-quotation';
   static const saleProformaInvoice = '/sale/proforma-invoice';
   static const salePaymentIn = '/sale/payment-in';
+  static const saleCashAndBank = '/sale/cash-and-bank';
   static const addPaymentIn = '/sale/add-payment-in';
   static const saleOrder = '/sale/order';
   static const addSaleOrder = '/sale/add-order';
@@ -41,6 +44,9 @@ abstract final class AppRoutes {
   static const addJobWork = '/sale/add-job-work';
   static const editJobWork = '/sale/edit-job-work';
   static const saleReturnCreditNote = '/sale/return-credit-note';
+  static const otherIncome = '/sale/other-income';
+  static const addOtherIncome = '/sale/add-other-income';
+  static const editOtherIncome = '/sale/edit-other-income';
   static const saleFa = '/sale/fa';
   static const addSaleFa = '/sale/add-fa';
   static const editSaleFa = '/sale/edit-fa';
@@ -74,6 +80,11 @@ abstract final class AppRoutes {
   static const addExpense = '/purchase/add-expense';
   static const editExpense = '/purchase/edit-expense';
   static const editDebitNote = '/purchase/edit-debit-note';
+  static const loanAccounts = '/purchase/loan-accounts';
+  static const loanAccountDetail = '/purchase/loan-accounts/detail';
+  static const addLoanAccount = '/purchase/add-loan-account';
+  static const editLoanAccount = '/purchase/edit-loan-account';
+  static const addLoanTransaction = '/purchase/add-loan-transaction';
   static const reports = '/reports';
   static const reportsDashboard = '/reports/dashboard';
   static const reportsSales = '/reports/sales';
@@ -92,6 +103,7 @@ abstract final class AppRoutes {
   static const utilitiesAddItemsBarcode = '/utilities/import-items/barcode';
   static const utilitiesBulkUpdateItems = '/utilities/bulk-update-items';
   static const utilitiesBarcodeGenerator = '/utilities/barcode-generator';
+  static const utilitiesRecycleBin = '/utilities/recycle-bin';
   static const developer = '/developer';
   static const developerDiagnostics = '/developer/diagnostics';
   static const developerComponents = '/developer/components';

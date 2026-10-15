@@ -63,6 +63,7 @@ class ExpensesLocal extends Table {
   TextColumn get referenceNumber => text().nullable()();
   TextColumn get expenseDate => text()();
   TextColumn get paymentMode => text().nullable()();
+  TextColumn get bankAccountId => text().nullable()();
   IntColumn get syncVersion => integer().withDefault(const Constant(0))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();

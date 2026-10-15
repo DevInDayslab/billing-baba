@@ -9,6 +9,10 @@ import { resolveRange, toPeriodMeta } from './reports.helpers';
 export class BusinessReportsRepository {
   constructor(private readonly db: Database) {}
 
+  /**
+   * @deprecated Use `GET /reports/business/bank-statement` with `bank_account_id` instead.
+   * Legacy payment-name filter; kept for older clients.
+   */
   async getBankStatement(
     businessId: string,
     query: ReportExtendedQuery,

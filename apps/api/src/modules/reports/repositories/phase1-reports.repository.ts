@@ -18,6 +18,11 @@ import {
 } from '../../../db/schema/accounting/tables';
 import { parties } from '../../../db/schema/crm/tables';
 import { items } from '../../../db/schema/inventory/tables';
+import { otherIncomes } from '../../../db/schema/other-income/tables';
+import {
+  loanAccounts,
+  loanTransactions,
+} from '../../../db/schema/loans/tables';
 import {
   expenses,
   purchaseDocumentLines,
@@ -568,8 +573,11 @@ export class Phase1ReportsRepository {
       ? this.mapDocumentTypeFilter(query.document_type)
       : null;
     const includeExpenses = !typeFilter || typeFilter === 'Expense';
+    const includeOtherIncome = !typeFilter || typeFilter === 'Other Income';
+    const includeLoans = this.includesLoanUnionType(typeFilter);
 
-    const [transactionRows, expenseRows] = await Promise.all([
+    const [transactionRows, expenseRows, otherIncomeRows, loanRows] =
+      await Promise.all([
       this.buildTransactionUnion(
         businessId,
         dayStart,
@@ -597,6 +605,49 @@ export class Phase1ReportsRepository {
               ),
             )
         : Promise.resolve([]),
+      includeOtherIncome
+        ? this.db
+            .select({
+              id: otherIncomes.id,
+              date: otherIncomes.incomeDate,
+              amount: otherIncomes.amount,
+              description: otherIncomes.description,
+            })
+            .from(otherIncomes)
+            .where(
+              and(
+                eq(otherIncomes.businessId, businessId),
+                eq(otherIncomes.isDeleted, false),
+                eq(otherIncomes.incomeDate, dateKey),
+              ),
+            )
+        : Promise.resolve([]),
+      includeLoans
+        ? this.db
+            .select({
+              id: loanTransactions.id,
+              date: loanTransactions.transactionDate,
+              transactionType: loanTransactions.transactionType,
+              principalAmount: loanTransactions.principalAmount,
+              interestAmount: loanTransactions.interestAmount,
+              chargesAmount: loanTransactions.chargesAmount,
+              description: loanTransactions.description,
+              referenceNumber: loanTransactions.referenceNumber,
+              loanName: loanAccounts.name,
+            })
+            .from(loanTransactions)
+            .innerJoin(
+              loanAccounts,
+              eq(loanTransactions.loanAccountId, loanAccounts.id),
+            )
+            .where(
+              and(
+                eq(loanTransactions.businessId, businessId),
+                eq(loanTransactions.isDeleted, false),
+                eq(loanTransactions.transactionDate, dateKey),
+              ),
+            )
+        : Promise.resolve([]),
     ]);
 
     const expenseMapped = expenseRows.map((row) => ({
@@ -616,7 +667,35 @@ export class Phase1ReportsRepository {
       payment_type: null,
     }));
 
-    const rows = [...transactionRows, ...expenseMapped].sort(
+    const otherIncomeMapped = otherIncomeRows.map((row) => ({
+      id: row.id,
+      date: new Date(row.date).toISOString(),
+      ref_no: row.description ?? row.id,
+      party_id: null,
+      party_name: null,
+      category: 'Other Income',
+      type: 'Other Income',
+      total: row.amount ?? '0',
+      received: '0',
+      balance: '0',
+      money_in: row.amount ?? '0',
+      money_out: '0',
+      status: 'paid',
+      payment_type: null,
+    }));
+
+    const loanMapped = loanRows
+      .map((row) =>
+        this.mapLoanTransactionUnionRow(row, typeFilter),
+      )
+      .filter((row): row is NonNullable<typeof row> => row != null);
+
+    const rows = [
+      ...transactionRows,
+      ...expenseMapped,
+      ...otherIncomeMapped,
+      ...loanMapped,
+    ].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
 
@@ -643,18 +722,29 @@ export class Phase1ReportsRepository {
     query: ReportExtendedQuery,
   ): Promise<{ payload: AllTransactionsPayload; total: number }> {
     const range = resolveRange(query);
-    const dayBookStyle = await this.buildTransactionUnion(
-      businessId,
-      range.from,
-      range.to,
-      query.party_id,
-      query.q,
-      query.document_type,
+    const [dayBookStyle, miscRows] = await Promise.all([
+      this.buildTransactionUnion(
+        businessId,
+        range.from,
+        range.to,
+        query.party_id,
+        query.q,
+        query.document_type,
+      ),
+      this.fetchExpenseAndIncomeUnionRows(
+        businessId,
+        range.from,
+        range.to,
+        query.document_type,
+      ),
+    ]);
+    const merged = [...dayBookStyle, ...miscRows].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
 
-    const total = dayBookStyle.length;
+    const total = merged.length;
     const offset = (query.page - 1) * query.limit;
-    const rows = dayBookStyle.slice(offset, offset + query.limit);
+    const rows = merged.slice(offset, offset + query.limit);
 
     return {
       total,
@@ -699,7 +789,7 @@ export class Phase1ReportsRepository {
         refNo: salesDocuments.documentNumber,
         partyId: salesDocuments.partyId,
         partyName: parties.name,
-        total: salesDocuments.totalAmount,
+        total: sql<string>`(${salesDocuments.totalAmount}::numeric - COALESCE(${salesDocuments.tcsAmount}::numeric, 0))`,
       })
       .from(salesDocuments)
       .leftJoin(parties, eq(salesDocuments.partyId, parties.id))
@@ -723,7 +813,7 @@ export class Phase1ReportsRepository {
         refNo: purchaseDocuments.documentNumber,
         partyId: purchaseDocuments.partyId,
         partyName: parties.name,
-        total: purchaseDocuments.totalAmount,
+        total: sql<string>`(${purchaseDocuments.totalAmount}::numeric - COALESCE(${purchaseDocuments.tcsAmount}::numeric, 0))`,
       })
       .from(purchaseDocuments)
       .innerJoin(parties, eq(purchaseDocuments.partyId, parties.id))
@@ -828,8 +918,200 @@ export class Phase1ReportsRepository {
         payment_in: 'Payment In',
         payment_out: 'Payment Out',
         expense: 'Expense',
+        other_income: 'Other Income',
+        loan_received: 'Loan Received',
+        loan_repayment: 'Loan Repayment',
+        loan_charges: 'Loan Charges',
       }[documentType] ?? null
     );
+  }
+
+  private includesLoanUnionType(typeFilter: string | null): boolean {
+    if (!typeFilter) return true;
+    return (
+      typeFilter === 'Loan Received' ||
+      typeFilter === 'Loan Repayment' ||
+      typeFilter === 'Loan Charges'
+    );
+  }
+
+  private mapLoanTransactionUnionRow(
+    row: {
+      id: string;
+      date: string;
+      transactionType: 'increase' | 'repayment' | 'charges';
+      principalAmount: string | null;
+      interestAmount: string | null;
+      chargesAmount: string | null;
+      description: string | null;
+      referenceNumber: string | null;
+      loanName: string | null;
+    },
+    typeFilter: string | null,
+  ) {
+    const principal = Number(row.principalAmount ?? 0);
+    const interest = Number(row.interestAmount ?? 0);
+    const charges = Number(row.chargesAmount ?? 0);
+    let type: string;
+    let moneyIn = '0';
+    let moneyOut = '0';
+    let total = '0';
+    if (row.transactionType === 'increase') {
+      type = 'Loan Received';
+      moneyIn = String(principal);
+      total = String(principal);
+    } else if (row.transactionType === 'repayment') {
+      type = 'Loan Repayment';
+      moneyOut = String(principal + interest);
+      total = moneyOut;
+    } else {
+      type = 'Loan Charges';
+      moneyOut = String(charges);
+      total = moneyOut;
+    }
+    if (typeFilter && type !== typeFilter) {
+      return null;
+    }
+    return {
+      id: row.id,
+      date: new Date(row.date).toISOString(),
+      ref_no: row.referenceNumber ?? row.description ?? row.id,
+      party_id: null,
+      party_name: row.loanName,
+      category: 'Loan',
+      type,
+      total,
+      received: '0',
+      balance: '0',
+      money_in: moneyIn,
+      money_out: moneyOut,
+      status: 'paid',
+      payment_type: null,
+    };
+  }
+
+  private async fetchExpenseAndIncomeUnionRows(
+    businessId: string,
+    from: Date,
+    to: Date,
+    documentType?: string,
+  ) {
+    const typeFilter = documentType
+      ? this.mapDocumentTypeFilter(documentType)
+      : null;
+    const fromKey = from.toISOString().slice(0, 10);
+    const toKey = to.toISOString().slice(0, 10);
+    const includeExpenses = !typeFilter || typeFilter === 'Expense';
+    const includeOtherIncome = !typeFilter || typeFilter === 'Other Income';
+    const includeLoans = this.includesLoanUnionType(typeFilter);
+
+    const [expenseRows, otherIncomeRows, loanRows] = await Promise.all([
+      includeExpenses
+        ? this.db
+            .select({
+              id: expenses.id,
+              date: expenses.expenseDate,
+              amount: expenses.amount,
+              description: expenses.description,
+              partyName: parties.name,
+            })
+            .from(expenses)
+            .leftJoin(parties, eq(expenses.partyId, parties.id))
+            .where(
+              and(
+                eq(expenses.businessId, businessId),
+                eq(expenses.isDeleted, false),
+                gte(expenses.expenseDate, fromKey),
+                lt(expenses.expenseDate, toKey),
+              ),
+            )
+        : Promise.resolve([]),
+      includeOtherIncome
+        ? this.db
+            .select({
+              id: otherIncomes.id,
+              date: otherIncomes.incomeDate,
+              amount: otherIncomes.amount,
+              description: otherIncomes.description,
+            })
+            .from(otherIncomes)
+            .where(
+              and(
+                eq(otherIncomes.businessId, businessId),
+                eq(otherIncomes.isDeleted, false),
+                gte(otherIncomes.incomeDate, fromKey),
+                lt(otherIncomes.incomeDate, toKey),
+              ),
+            )
+        : Promise.resolve([]),
+      includeLoans
+        ? this.db
+            .select({
+              id: loanTransactions.id,
+              date: loanTransactions.transactionDate,
+              transactionType: loanTransactions.transactionType,
+              principalAmount: loanTransactions.principalAmount,
+              interestAmount: loanTransactions.interestAmount,
+              chargesAmount: loanTransactions.chargesAmount,
+              description: loanTransactions.description,
+              referenceNumber: loanTransactions.referenceNumber,
+              loanName: loanAccounts.name,
+            })
+            .from(loanTransactions)
+            .innerJoin(
+              loanAccounts,
+              eq(loanTransactions.loanAccountId, loanAccounts.id),
+            )
+            .where(
+              and(
+                eq(loanTransactions.businessId, businessId),
+                eq(loanTransactions.isDeleted, false),
+                gte(loanTransactions.transactionDate, fromKey),
+                lt(loanTransactions.transactionDate, toKey),
+              ),
+            )
+        : Promise.resolve([]),
+    ]);
+
+    return [
+      ...expenseRows.map((row) => ({
+        id: row.id,
+        date: new Date(row.date).toISOString(),
+        ref_no: row.description ?? row.id,
+        party_id: null,
+        party_name: row.partyName,
+        category: 'Expense',
+        type: 'Expense',
+        total: row.amount ?? '0',
+        received: '0',
+        balance: '0',
+        money_in: '0',
+        money_out: row.amount ?? '0',
+        status: 'paid',
+        payment_type: null,
+      })),
+      ...otherIncomeRows.map((row) => ({
+        id: row.id,
+        date: new Date(row.date).toISOString(),
+        ref_no: row.description ?? row.id,
+        party_id: null,
+        party_name: null,
+        category: 'Other Income',
+        type: 'Other Income',
+        total: row.amount ?? '0',
+        received: '0',
+        balance: '0',
+        money_in: row.amount ?? '0',
+        money_out: '0',
+        status: 'paid',
+        payment_type: null,
+      })),
+      ...loanRows
+        .map((row) =>
+          this.mapLoanTransactionUnionRow(row, typeFilter),
+        )
+        .filter((row): row is NonNullable<typeof row> => row != null),
+    ];
   }
 
   async getProfitLoss(
@@ -923,7 +1205,7 @@ export class Phase1ReportsRepository {
   ): Promise<number> {
     const [row] = await this.db
       .select({
-        total: sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`,
+        total: sql<string>`COALESCE(SUM((${salesDocuments.totalAmount}::numeric - COALESCE(${salesDocuments.tcsAmount}::numeric, 0))), 0)`,
       })
       .from(salesDocuments)
       .where(
@@ -946,7 +1228,7 @@ export class Phase1ReportsRepository {
   ): Promise<number> {
     const [row] = await this.db
       .select({
-        total: sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`,
+        total: sql<string>`COALESCE(SUM((${purchaseDocuments.totalAmount}::numeric - COALESCE(${purchaseDocuments.tcsAmount}::numeric, 0))), 0)`,
       })
       .from(purchaseDocuments)
       .where(

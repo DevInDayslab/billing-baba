@@ -5,6 +5,12 @@ import { purchaseDocuments } from '../../../db/schema/purchases/tables';
 import { salesDocuments } from '../../../db/schema/sales/tables';
 import { ensureWalkInParty } from '../../../shared/parties/walk-in-party';
 import type { RowEntityDef, SyncedRowBase } from './row-entities';
+import {
+  afterExpenseRowMutation,
+  afterExpenseRowRevive,
+} from '../../bank-accounts/sync-expense-movement';
+import { afterLoanTransactionRowMutation } from '../../bank-accounts/sync-loan-movement';
+import { afterOtherIncomeRowMutation } from '../../bank-accounts/sync-other-income-movement';
 import { getRowEntity, listRowEntities } from './row-entities';
 import type { ApplyOutcome, RowMutationInput } from './sync-apply.types';
 
@@ -63,6 +69,9 @@ export class RowApplier {
       input.businessId,
       input.entityId,
     );
+    const revivingTombstone =
+      Boolean(existing?.isDeleted) &&
+      (input.operation === 'update' || input.operation === 'create');
     if (input.entityType === 'sales_document_lines') {
       const lineGuard = await this.guardSalesLineParentDraft(input, existing);
       if (lineGuard) return lineGuard;
@@ -86,14 +95,44 @@ export class RowApplier {
       }
     }
 
+    let outcome: ApplyOutcome;
     switch (input.operation) {
       case 'create':
-        return this.applyCreate(definition, input, existing);
+        outcome = await this.applyCreate(definition, input, existing);
+        break;
       case 'update':
-        return this.applyUpdate(definition, input, existing);
+        outcome = await this.applyUpdate(definition, input, existing);
+        break;
       case 'delete':
-        return this.applyDelete(definition, input, existing);
+        outcome = await this.applyDelete(definition, input, existing);
+        break;
     }
+
+    if (outcome.status === 'accepted') {
+      if (input.entityType === 'expenses') {
+        if (revivingTombstone) {
+          await afterExpenseRowRevive(this.db, input);
+        } else {
+          await afterExpenseRowMutation(this.db, input, input.operation);
+        }
+      }
+      if (input.entityType === 'other_incomes') {
+        if (!revivingTombstone) {
+          await afterOtherIncomeRowMutation(this.db, input, input.operation);
+        } else {
+          await afterOtherIncomeRowMutation(this.db, input, 'update');
+        }
+      }
+      if (input.entityType === 'loan_transactions') {
+        if (!revivingTombstone) {
+          await afterLoanTransactionRowMutation(this.db, input, input.operation);
+        } else {
+          await afterLoanTransactionRowMutation(this.db, input, 'update');
+        }
+      }
+    }
+
+    return outcome;
   }
 
   async pullChanges(input: {
@@ -220,6 +259,12 @@ export class RowApplier {
           message: 'Row not found',
         },
       };
+    }
+    if (existing.isDeleted) {
+      if (input.baseSyncVersion !== existing.syncVersion) {
+        return this.conflict(input, existing, definition);
+      }
+      return this.writeUpdate(definition, input, existing, { softDelete: false });
     }
     if (input.baseSyncVersion !== existing.syncVersion) {
       return this.conflict(input, existing, definition);

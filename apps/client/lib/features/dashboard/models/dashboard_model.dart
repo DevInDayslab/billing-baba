@@ -47,11 +47,13 @@ class DashboardFinanceModel {
     required this.cashIn,
     required this.cashOut,
     required this.expenses,
+    required this.bankBalance,
   });
 
   final double cashIn;
   final double cashOut;
   final double expenses;
+  final double bankBalance;
 }
 
 class DashboardLowStockItemModel {

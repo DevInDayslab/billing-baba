@@ -22,6 +22,7 @@ import type {
 } from '../reports.types';
 import { paginateSlice, resolveRange, toPeriodMeta } from './reports.helpers';
 
+/** @deprecated Use `/reports/tax/*` via tax-reporting module. Kept for legacy `/reports/gst-report` clients. */
 export class TaxReportsRepository {
   constructor(private readonly db: Database) {}
 

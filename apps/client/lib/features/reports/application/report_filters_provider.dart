@@ -138,6 +138,14 @@ class ReportFilters extends _$ReportFilters {
     );
   }
 
+  void setBankAccountId(String? bankAccountId) {
+    state = state.copyWith(
+      bankAccountId: bankAccountId,
+      clearBankAccountId: bankAccountId == null || bankAccountId.isEmpty,
+      currentPage: 1,
+    );
+  }
+
   void setTaxRate(String? taxRate) {
     state = state.copyWith(
       taxRate: taxRate,
@@ -185,6 +193,10 @@ class ReportFilters extends _$ReportFilters {
       format: format,
       clearFormat: format == null || format.isEmpty,
     );
+  }
+
+  void setNonTaxAsExempt(bool value) {
+    state = state.copyWith(nonTaxAsExempt: value, isTableLoading: true);
   }
 
   /// Clears report-specific filters when navigating between reports.

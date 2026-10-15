@@ -97,6 +97,11 @@ class _ReportsPageState extends ConsumerState<DesktopReportsPage> {
           .read(expenseColumnFiltersProvider.notifier)
           .setCategoryColumnFilter(SelectColumnFilter(value: categoryName));
     }
+    if (intent.bankAccountId != null && intent.bankAccountId!.isNotEmpty) {
+      ref
+          .read(reportFiltersProvider.notifier)
+          .setBankAccountId(intent.bankAccountId);
+    }
     setState(() {
       _navGroup = intent.group;
       if (intent.transactionSub != null) {

@@ -125,6 +125,8 @@ class SalesReturnCommandRepository {
           cgstAmount: money(item.lineTax / 2),
           sgstAmount: money(item.lineTax / 2),
           igstAmount: '0',
+          cessRate: '0',
+          cessAmount: '0',
           lineTotal: money(item.amount),
           sortOrder: sortOrder++,
           syncVersion: 0,

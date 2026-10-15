@@ -324,6 +324,94 @@ export class SalesDocumentRepository {
     return row ?? null;
   }
 
+  async findRowByIdIncludingDeleted(
+    businessId: string,
+    documentId: string,
+  ): Promise<typeof salesDocuments.$inferSelect | null> {
+    const [row] = await this.db
+      .select()
+      .from(salesDocuments)
+      .where(
+        and(
+          eq(salesDocuments.id, documentId),
+          eq(salesDocuments.businessId, businessId),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  async softDeleteToRecycle(
+    businessId: string,
+    documentId: string,
+    updatedBy?: string | null,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .update(salesDocuments)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedBy: updatedBy ?? null,
+        updatedAt: new Date(),
+        syncVersion: sql`${salesDocuments.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(salesDocuments.id, documentId),
+          eq(salesDocuments.businessId, businessId),
+          eq(salesDocuments.isDeleted, false),
+        ),
+      )
+      .returning({ id: salesDocuments.id });
+
+    return Boolean(row);
+  }
+
+  async restoreFromRecycle(
+    businessId: string,
+    documentId: string,
+    updatedBy?: string | null,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .update(salesDocuments)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        updatedBy: updatedBy ?? null,
+        updatedAt: new Date(),
+        syncVersion: sql`${salesDocuments.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(salesDocuments.id, documentId),
+          eq(salesDocuments.businessId, businessId),
+          eq(salesDocuments.isDeleted, true),
+        ),
+      )
+      .returning({ id: salesDocuments.id });
+
+    return Boolean(row);
+  }
+
+  async purgeFromRecycle(
+    businessId: string,
+    documentId: string,
+  ): Promise<boolean> {
+    const result = await this.db
+      .delete(salesDocuments)
+      .where(
+        and(
+          eq(salesDocuments.id, documentId),
+          eq(salesDocuments.businessId, businessId),
+          eq(salesDocuments.isDeleted, true),
+        ),
+      )
+      .returning({ id: salesDocuments.id });
+
+    return result.length > 0;
+  }
+
   async create(
     values: SalesDocumentInsertValues,
   ): Promise<SalesDocumentRecord> {
@@ -338,6 +426,10 @@ export class SalesDocumentRepository {
         partyStateCode: values.partyStateCode ?? null,
         documentDate: values.documentDate ?? new Date(),
         convertedFromId: values.convertedFromId ?? null,
+        originalDocumentId: values.originalDocumentId ?? null,
+        originalDocumentNumber: values.originalDocumentNumber ?? null,
+        originalDocumentDate: values.originalDocumentDate ?? null,
+        supplyType: values.supplyType ?? 'domestic',
         posSessionId: values.posSessionId ?? null,
         notes: values.notes ?? null,
         createdBy: values.createdBy ?? null,
@@ -572,6 +664,8 @@ export class SalesDocumentRepository {
         cgstAmount: values.cgstAmount ?? '0',
         sgstAmount: values.sgstAmount ?? '0',
         igstAmount: values.igstAmount ?? '0',
+        cessRate: values.cessRate ?? '0',
+        cessAmount: values.cessAmount ?? '0',
         lineTotal: values.lineTotal,
         sortOrder: values.sortOrder ?? 0,
         createdBy: values.createdBy ?? null,

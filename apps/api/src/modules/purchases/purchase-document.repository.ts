@@ -229,6 +229,94 @@ export class PurchaseDocumentRepository {
     return row ?? null;
   }
 
+  async findRowByIdIncludingDeleted(
+    businessId: string,
+    documentId: string,
+  ): Promise<typeof purchaseDocuments.$inferSelect | null> {
+    const [row] = await this.db
+      .select()
+      .from(purchaseDocuments)
+      .where(
+        and(
+          eq(purchaseDocuments.id, documentId),
+          eq(purchaseDocuments.businessId, businessId),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  async softDeleteToRecycle(
+    businessId: string,
+    documentId: string,
+    updatedBy?: string | null,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .update(purchaseDocuments)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedBy: updatedBy ?? null,
+        updatedAt: new Date(),
+        syncVersion: sql`${purchaseDocuments.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(purchaseDocuments.id, documentId),
+          eq(purchaseDocuments.businessId, businessId),
+          eq(purchaseDocuments.isDeleted, false),
+        ),
+      )
+      .returning({ id: purchaseDocuments.id });
+
+    return Boolean(row);
+  }
+
+  async restoreFromRecycle(
+    businessId: string,
+    documentId: string,
+    updatedBy?: string | null,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .update(purchaseDocuments)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        updatedBy: updatedBy ?? null,
+        updatedAt: new Date(),
+        syncVersion: sql`${purchaseDocuments.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(purchaseDocuments.id, documentId),
+          eq(purchaseDocuments.businessId, businessId),
+          eq(purchaseDocuments.isDeleted, true),
+        ),
+      )
+      .returning({ id: purchaseDocuments.id });
+
+    return Boolean(row);
+  }
+
+  async purgeFromRecycle(
+    businessId: string,
+    documentId: string,
+  ): Promise<boolean> {
+    const result = await this.db
+      .delete(purchaseDocuments)
+      .where(
+        and(
+          eq(purchaseDocuments.id, documentId),
+          eq(purchaseDocuments.businessId, businessId),
+          eq(purchaseDocuments.isDeleted, true),
+        ),
+      )
+      .returning({ id: purchaseDocuments.id });
+
+    return result.length > 0;
+  }
+
   async create(
     values: PurchaseDocumentInsertValues,
   ): Promise<PurchaseDocumentRecord> {

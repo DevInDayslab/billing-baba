@@ -249,6 +249,7 @@ class PosLocalDataSource {
   Map<String, dynamic> _paymentToJson(PaymentEntry payment) => {
     'mode': payment.mode.name,
     'amount': payment.amount,
+    if (payment.bankAccountId != null) 'bank_account_id': payment.bankAccountId,
   };
 
   PaymentEntry _paymentFromJson(Map<String, dynamic> json) {
@@ -260,6 +261,7 @@ class PosLocalDataSource {
     return PaymentEntry(
       mode: mode,
       amount: (json['amount'] as num).toDouble(),
+      bankAccountId: json['bank_account_id'] as String?,
     );
   }
 

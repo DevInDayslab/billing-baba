@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
@@ -13,6 +14,7 @@ import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_contact_import_flow.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_name_stack.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
@@ -203,6 +205,12 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
             onDebouncedChanged: _onSearchChanged,
           ),
         ),
+        if (AppPlatform.current.isDesktop) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _PartyContactImportBanner(
+            onTap: () => startDesktopPartyContactImport(context, ref),
+          ),
+        ],
         const SizedBox(height: 14),
         InventoryListHeader(
           height: inventoryListHeaderCompactHeight,
@@ -421,6 +429,43 @@ class _PartyListSkeleton extends StatelessWidget {
             border: Border(bottom: BorderSide(color: inventoryCardBorder)),
           ),
           margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        ),
+      ),
+    );
+  }
+}
+
+class _PartyContactImportBanner extends StatelessWidget {
+  const _PartyContactImportBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF2E7D32),
+      child: InkWell(
+        onTap: onTap,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Easily convert your phone contacts into parties',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: Colors.white),
+            ],
+          ),
         ),
       ),
     );

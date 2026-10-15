@@ -923,7 +923,11 @@ class AddSaleForm extends _$AddSaleForm {
     while (payments.length <= index) {
       payments.add(const SalePaymentEntry(type: 'Cash'));
     }
-    payments[index] = payments[index].copyWith(type: type);
+    final isCash = type.toLowerCase() == 'cash';
+    payments[index] = payments[index].copyWith(
+      type: type,
+      clearBankAccountId: isCash,
+    );
     state = state.copyWith(payments: payments, isDirty: true);
   }
 
@@ -934,6 +938,19 @@ class AddSaleForm extends _$AddSaleForm {
       payments.add(const SalePaymentEntry(type: 'Cash'));
     }
     payments[index] = payments[index].copyWith(amount: amount);
+    state = state.copyWith(payments: payments, isDirty: true);
+  }
+
+  void updatePaymentBankAccountAt(int index, String? bankAccountId) {
+    if (index < 0) return;
+    final payments = [...state.payments];
+    while (payments.length <= index) {
+      payments.add(const SalePaymentEntry(type: 'Cash'));
+    }
+    payments[index] = payments[index].copyWith(
+      bankAccountId: bankAccountId,
+      clearBankAccountId: bankAccountId == null || bankAccountId.isEmpty,
+    );
     state = state.copyWith(payments: payments, isDirty: true);
   }
 

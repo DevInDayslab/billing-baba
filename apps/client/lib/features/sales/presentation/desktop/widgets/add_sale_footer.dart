@@ -6,6 +6,8 @@ import 'package:billing_baba/features/sales/utils/sale_invoice_totals.dart';
 import 'package:billing_baba/features/settings/application/gst_tax_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/shared/widgets/payment_account_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/compact_number_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -470,6 +472,7 @@ class _TotalsSection extends StatelessWidget {
             onPaymentTypeSelected: notifier.updatePaymentTypeAt,
             onPaymentNameChanged: notifier.updatePaymentTypeAt,
             onPaymentAmountChanged: notifier.updatePaymentAmountAt,
+            onPaymentBankAccountChanged: notifier.updatePaymentBankAccountAt,
             onRemovePayment: notifier.removePaymentAt,
             onAddPayment: notifier.addPaymentType,
           ),
@@ -479,12 +482,13 @@ class _TotalsSection extends StatelessWidget {
   }
 }
 
-class _CashPaymentRows extends StatelessWidget {
+class _CashPaymentRows extends ConsumerWidget {
   const _CashPaymentRows({
     required this.payments,
     required this.onPaymentTypeSelected,
     required this.onPaymentNameChanged,
     required this.onPaymentAmountChanged,
+    required this.onPaymentBankAccountChanged,
     required this.onRemovePayment,
     required this.onAddPayment,
   });
@@ -493,11 +497,12 @@ class _CashPaymentRows extends StatelessWidget {
   final void Function(int index, String type) onPaymentTypeSelected;
   final void Function(int index, String type) onPaymentNameChanged;
   final void Function(int index, double amount) onPaymentAmountChanged;
+  final void Function(int index, String? bankAccountId) onPaymentBankAccountChanged;
   final void Function(int index) onRemovePayment;
   final VoidCallback onAddPayment;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -544,6 +549,11 @@ class _CashPaymentRows extends StatelessWidget {
                 ),
               ],
             ],
+          ),
+          PaymentAccountField(
+            paymentMode: SalesPaymentModes.toApi(payments[i].type),
+            selectedAccountId: payments[i].bankAccountId,
+            onChanged: (id) => onPaymentBankAccountChanged(i, id),
           ),
         ],
         const SizedBox(height: 4),

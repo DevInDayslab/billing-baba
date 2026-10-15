@@ -43,8 +43,50 @@ const idParam = {
   description: 'Item UUID.',
 };
 
+export function buildPartyContactImportPaths() {
+  const tag = 'Parties';
+  return {
+    '/parties/contact-import-sessions': {
+      post: securedOperation({
+        tags: [tag],
+        summary: 'Start phone contact import session',
+        operationId: 'createPartyContactImportSession',
+        responses: {
+          201: {
+            description: 'Import session created',
+          },
+          ...standardErrorResponses,
+        },
+      }),
+    },
+    '/public/party-contact-import/{token}': {
+      get: {
+        tags: [tag],
+        summary: 'Public import session metadata',
+        operationId: 'getPublicPartyContactImportSession',
+        parameters: [
+          {
+            name: 'token',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Session metadata',
+          },
+          ...standardErrorResponses,
+        },
+      },
+    },
+  };
+}
+
 export function buildPartiesPaths() {
-  return crudPaths({
+  return {
+    ...buildPartyContactImportPaths(),
+    ...crudPaths({
     basePath: '/parties',
     tag: 'Parties',
     singular: 'Party',
@@ -61,7 +103,8 @@ export function buildPartiesPaths() {
     },
     listDescription:
       'Lists customers and suppliers. Filter by `party_type`, search by name/mobile, sort by name or balance.',
-  });
+    }),
+  };
 }
 
 export function buildInventoryPaths() {

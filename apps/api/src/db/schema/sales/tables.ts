@@ -17,6 +17,7 @@ import {
   paymentModeEnum,
   saleFaStatusEnum,
   salesDocumentTypeEnum,
+  supplyTypeEnum,
   taxTypeEnum,
 } from '../enums';
 import { users } from '../identity/tables';
@@ -54,11 +55,21 @@ export const salesDocuments = pgTable(
     subtotal: money('subtotal').notNull().default('0'),
     discountTotal: money('discount_total').notNull().default('0'),
     taxAmount: money('tax_amount').notNull().default('0'),
+    tcsSectionId: uuid('tcs_section_id'),
+    tcsRate: money('tcs_rate'),
+    tcsBaseAmount: money('tcs_base_amount').default('0'),
+    tcsAmount: money('tcs_amount').default('0'),
     totalAmount: money('total_amount').notNull().default('0'),
     documentDate: timestamptz('document_date').notNull().defaultNow(),
     convertedFromId: uuid('converted_from_id').references(
       (): AnyPgColumn => salesDocuments.id,
     ),
+    originalDocumentId: uuid('original_document_id').references(
+      (): AnyPgColumn => salesDocuments.id,
+    ),
+    originalDocumentNumber: text('original_document_number'),
+    originalDocumentDate: timestamptz('original_document_date'),
+    supplyType: supplyTypeEnum('supply_type').notNull().default('domestic'),
     posSessionId: uuid('pos_session_id').references(() => posSessions.id),
     notes: text('notes'),
   },
@@ -96,6 +107,8 @@ export const salesDocumentLines = pgTable(
     cgstAmount: money('cgst_amount').notNull().default('0'),
     sgstAmount: money('sgst_amount').notNull().default('0'),
     igstAmount: money('igst_amount').notNull().default('0'),
+    cessRate: money('cess_rate').notNull().default('0'),
+    cessAmount: money('cess_amount').notNull().default('0'),
     lineTotal: money('line_total').notNull(),
     sortOrder: integer('sort_order').notNull().default(0),
   },

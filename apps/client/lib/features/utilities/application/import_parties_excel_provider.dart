@@ -1,7 +1,7 @@
-import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/utilities/application/import_parties_commit.dart';
 import 'package:billing_baba/features/utilities/application/import_parties_excel_parser.dart';
 import 'package:billing_baba/features/utilities/application/import_parties_excel_service.dart';
 import 'package:billing_baba/features/utilities/models/import_item_preview_row.dart';
@@ -171,60 +171,17 @@ class ImportPartiesExcelNotifier extends Notifier<ImportPartiesExcelState> {
       clearImportError: true,
     );
 
-    var successCount = 0;
-    var failedCount = 0;
-    final errors = <String>[];
-
     try {
-      final partyListNotifier = ref.read(partyListProvider.notifier);
-
-      for (var i = 0; i < rowsToImport.length; i++) {
-        final row = rowsToImport[i];
-        state = state.copyWith(
-          importCompleted: i,
-          importTotal: rowsToImport.length,
-        );
-
-        try {
-          final result = row.importResult;
-          if (result == null) {
-            throw const PartyException('Party data is incomplete.');
-          }
-          await partyListNotifier.createParty(
-            result,
-            selectCreated: false,
-          );
-          successCount++;
-        } on ApiValidationException catch (error) {
-          failedCount++;
-          final nameError = error.fieldErrors['name'];
-          final mobileError = error.fieldErrors['mobile'];
-          errors.add(
-            '${row.partyName}: ${nameError ?? mobileError ?? error.message}',
-          );
-        } on PartyException catch (error) {
-          failedCount++;
-          errors.add('${row.partyName}: ${error.message}');
-        } on Object catch (error) {
-          failedCount++;
-          errors.add(
-            '${row.partyName}: ${PartyErrorMapper.messageFor(error)}',
-          );
-        }
-
-        state = state.copyWith(
-          importCompleted: i + 1,
-          importTotal: rowsToImport.length,
-        );
-      }
-
-      state = state.copyWith(isImporting: false);
-      return ImportPartiesResult(
-        successCount: successCount,
-        failedCount: failedCount,
-        skippedCount: state.rows.length - rowsToImport.length,
-        errors: errors,
+      final result = await commitImportPartyRows(
+        ref.read(partyListProvider.notifier),
+        state.rows,
       );
+      state = state.copyWith(
+        isImporting: false,
+        importCompleted: rowsToImport.length,
+        importTotal: rowsToImport.length,
+      );
+      return result;
     } on Object catch (error) {
       state = state.copyWith(
         isImporting: false,

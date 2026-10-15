@@ -1,5 +1,7 @@
 import 'package:billing_baba/features/reports/data/reports_remote_data_source.dart';
+import 'package:billing_baba/features/reports/models/dto/gst_report_v2_dto.dart';
 import 'package:billing_baba/features/reports/models/dto/report_dto.dart';
+import 'package:billing_baba/features/reports/models/gst_report_type.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 
 class ReportsRepository {
@@ -45,14 +47,10 @@ class ReportsRepository {
   Future<BalanceSheetPayloadDto> getBalanceSheet(ReportQuery query) =>
       _remote.getBalanceSheet(query);
 
-  Future<GstrReportPayloadDto> getGstr1(ReportQuery query) =>
-      _remote.getGstr1(query);
-
-  Future<GstrReportPayloadDto> getGstr2(ReportQuery query) =>
-      _remote.getGstr2(query);
-
-  Future<Gstr3bPayloadDto> getGstr3b(ReportQuery query) =>
-      _remote.getGstr3b(query);
+  Future<GstReportEnvelopeDto> getGstFilingReport(
+    GstReportType type,
+    ReportQuery query,
+  ) => _remote.getGstFilingReport(type, query);
 
   Future<PaginatedReportResponse<BillWiseProfitPayloadDto>> getBillWiseProfit(
     ReportQuery query,
@@ -76,15 +74,6 @@ class ReportsRepository {
   Future<PaginatedReportResponse<SalePurchaseByPartyGroupPayloadDto>>
   getSalePurchaseByPartyGroup(ReportQuery query) =>
       _remote.getSalePurchaseByPartyGroup(query);
-
-  Future<Gstr9PayloadDto> getGstr9(ReportQuery query) =>
-      _remote.getGstr9(query);
-
-  Future<SaleSummaryByHsnPayloadDto> getSaleSummaryByHsn(ReportQuery query) =>
-      _remote.getSaleSummaryByHsn(query);
-
-  Future<SacReportPayloadDto> getSacReport(ReportQuery query) =>
-      _remote.getSacReport(query);
 
   Future<PaginatedReportResponse<ItemReportByPartyPayloadDto>>
   getItemReportByParty(ReportQuery query) =>
@@ -138,6 +127,18 @@ class ReportsRepository {
 
   Future<GstTaxRateReportPayloadDto> getGstRateReport(ReportQuery query) =>
       _remote.getGstRateReport(query);
+
+  Future<PaginatedReportResponse<GstReportEnvelopeDto>> getTaxGstRegister(
+    ReportQuery query,
+  ) => _remote.getTaxGstRegister(query);
+
+  Future<GstReportEnvelopeDto> getTaxGstRateSummary(ReportQuery query) =>
+      _remote.getTaxGstRateSummary(query);
+
+  Future<GstReportEnvelopeDto> getTaxReportEnvelope(
+    String endpoint,
+    ReportQuery query,
+  ) => _remote.getTaxReportEnvelope(endpoint, query);
 
   Future<PaginatedReportResponse<TaxInvoiceReportPayloadDto>> getForm27eq(
     ReportQuery query,

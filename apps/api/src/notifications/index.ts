@@ -11,6 +11,10 @@ export {
   type SaleInvoiceNotificationInput,
 } from './sale-invoice-notification';
 export {
+  buildPartyContactImportNotification,
+  type PartyContactImportNotificationInput,
+} from './party-contact-import-notification';
+export {
   buildSyncShareInviteNotification,
   type SyncShareInviteNotificationInput,
 } from './sync-share-invite-notification';
@@ -18,6 +22,7 @@ export {
   PAYMENT_RECEIVED_TEMPLATE,
   PAYMENT_REMINDER_TEMPLATE,
   SALE_INVOICE_TEMPLATE,
+  PARTY_CONTACT_IMPORT_TEMPLATE,
   SYNC_SHARE_INVITE_TEMPLATE,
 } from './templates';
 export {

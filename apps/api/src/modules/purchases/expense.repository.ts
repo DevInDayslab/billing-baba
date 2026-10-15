@@ -42,6 +42,7 @@ export class ExpenseRepository {
       attachments: expenses.attachments,
       expenseDate: expenses.expenseDate,
       paymentMode: expenses.paymentMode,
+      bankAccountId: expenses.bankAccountId,
       sourceReferenceId: expenses.sourceReferenceId,
       sourceReferenceType: expenses.sourceReferenceType,
       loyaltyPoints: expenses.loyaltyPoints,
@@ -180,6 +181,7 @@ export class ExpenseRepository {
         paymentMode: (values.paymentMode ?? null) as
           | (typeof expenses.paymentMode.enumValues)[number]
           | null,
+        bankAccountId: values.bankAccountId ?? null,
         sourceReferenceId: values.sourceReferenceId ?? null,
         sourceReferenceType: values.sourceReferenceType ?? null,
         loyaltyPoints: values.loyaltyPoints ?? null,
@@ -241,6 +243,9 @@ export class ExpenseRepository {
                 | null,
             }
           : {}),
+        ...(values.bankAccountId !== undefined
+          ? { bankAccountId: values.bankAccountId }
+          : {}),
         ...(values.sourceReferenceId !== undefined
           ? { sourceReferenceId: values.sourceReferenceId }
           : {}),
@@ -271,6 +276,51 @@ export class ExpenseRepository {
 
     if (!row) return null;
     return this.findById(businessId, expenseId);
+  }
+
+  async restoreFromRecycle(
+    businessId: string,
+    expenseId: string,
+    userId: string | null,
+  ): Promise<ExpenseRecord | null> {
+    const [row] = await this.db
+      .update(expenses)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        updatedBy: userId,
+        updatedAt: new Date(),
+        syncVersion: sql`${expenses.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(expenses.id, expenseId),
+          eq(expenses.businessId, businessId),
+          eq(expenses.isDeleted, true),
+        ),
+      )
+      .returning({ id: expenses.id });
+
+    if (!row) return null;
+    return this.findById(businessId, expenseId);
+  }
+
+  async purgeFromRecycle(
+    businessId: string,
+    expenseId: string,
+  ): Promise<boolean> {
+    const result = await this.db
+      .delete(expenses)
+      .where(
+        and(
+          eq(expenses.id, expenseId),
+          eq(expenses.businessId, businessId),
+          eq(expenses.isDeleted, true),
+        ),
+      )
+      .returning({ id: expenses.id });
+
+    return result.length > 0;
   }
 
   async softDelete(

@@ -5,7 +5,7 @@ export const SYNC_PROTOCOL_VERSION = 1;
 export const SYNC_MIN_CLIENT_VERSION = '1.4.0';
 
 /** Fallback when schema_version table is empty */
-export const SYNC_SCHEMA_VERSION_FALLBACK = 42;
+export const SYNC_SCHEMA_VERSION_FALLBACK = 43;
 
 export const SYNC_MAX_PUSH_MUTATIONS = 100;
 

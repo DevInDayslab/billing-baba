@@ -51,6 +51,7 @@ export const createExpenseBodySchema = z.object({
   attachments: z.array(z.string().url()).optional(),
   expense_date: z.string().date('Invalid expense date'),
   payment_mode: z.enum(paymentModeValues).optional().nullable(),
+  bank_account_id: z.string().uuid().optional().nullable(),
 });
 
 export type CreateExpenseBody = z.infer<typeof createExpenseBodySchema>;

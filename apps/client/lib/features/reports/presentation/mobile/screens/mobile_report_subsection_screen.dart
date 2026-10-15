@@ -5,6 +5,7 @@ import 'package:billing_baba/features/reports/presentation/mobile/application/mo
 import 'package:billing_baba/features/reports/presentation/mobile/models/mobile_report_view_model.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_export_chips.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_filter_header.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_filter_sheet.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_row_card.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_scaffold.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_stat_cards.dart';
@@ -68,6 +69,7 @@ class MobileReportSubsectionScreen extends ConsumerWidget {
         ),
         data: (data) => _ReportBody(
           data: data,
+          accountFilterKind: config.accountFilterKind,
           onFiltersChanged: () => MobileReportDataLoader.refresh(
             ref,
             group,
@@ -146,10 +148,12 @@ class _ReportBody extends StatelessWidget {
   const _ReportBody({
     required this.data,
     required this.onFiltersChanged,
+    required this.accountFilterKind,
   });
 
   final MobileReportViewData data;
   final VoidCallback onFiltersChanged;
+  final MobileReportAccountFilterKind accountFilterKind;
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +164,7 @@ class _ReportBody extends StatelessWidget {
       children: [
         MobileReportFilterHeader(
           extraChips: data.filterChips,
+          accountFilterKind: accountFilterKind,
           onFiltersChanged: onFiltersChanged,
         ),
         if (data.usingMock)

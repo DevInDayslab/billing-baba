@@ -182,10 +182,18 @@ const finalizePaymentModeValues = [
 
 const shortPaymentHandlingValues = ['official_balance', 'unrecovered'] as const;
 
+export const finalizeSalePaymentLineSchema = z.object({
+  amount: moneyString,
+  payment_mode: z.enum(finalizePaymentModeValues),
+  bank_account_id: z.string().uuid().optional().nullable(),
+  payment_date: z.iso.datetime().optional(),
+});
+
 export const finalizeSalePaymentBodySchema = z
   .object({
     amount: moneyString,
     payment_mode: z.enum(finalizePaymentModeValues),
+    bank_account_id: z.string().uuid().optional().nullable(),
     short_payment_handling: z.enum(shortPaymentHandlingValues).optional(),
     shortfall_amount: moneyString.optional(),
     payment_date: z.iso.datetime().optional(),
@@ -228,6 +236,7 @@ export const finalizeSalesDocumentBodySchema = z.object({
       'Loyalty points must be >= 0',
     ),
   payment: finalizeSalePaymentBodySchema.optional(),
+  payments: z.array(finalizeSalePaymentLineSchema).min(1).optional(),
 });
 
 export type FinalizeSalesDocumentBody = z.infer<

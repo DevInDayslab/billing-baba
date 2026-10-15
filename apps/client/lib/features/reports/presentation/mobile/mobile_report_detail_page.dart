@@ -1,6 +1,9 @@
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/gst_report_provider.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/models/dto/gst_report_v2_dto.dart';
+import 'package:billing_baba/features/reports/models/gst_report_type.dart';
 import 'package:billing_baba/shared/chart/chart_axis_formatters.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
 import 'package:billing_baba/shared/widgets/mobile/mobile_app_bar.dart';
@@ -55,7 +58,7 @@ class MobileReportDetailPage extends ConsumerWidget {
           onRetry: () => ref.invalidate(profitLossReportProvider),
         ),
         MobileReportDetailType.gstr1 => _Gstr1Body(
-          onRetry: () => ref.invalidate(gstr1ReportProvider),
+          onRetry: () => ref.invalidate(gstReportProvider(GstReportType.gstr1)),
         ),
       },
     );
@@ -266,7 +269,7 @@ class _Gstr1Body extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reportAsync = ref.watch(gstr1ReportProvider);
+    final reportAsync = ref.watch(gstReportProvider(GstReportType.gstr1));
 
     return reportAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -274,28 +277,38 @@ class _Gstr1Body extends ConsumerWidget {
         message: OfflineUiMessages.messageFor(error),
         onRetry: onRetry,
       ),
-      data: (data) => ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
-          for (final row in data.rows.take(50))
-            Card(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: ListTile(
-                title: Text(row.partyName),
-                subtitle: Text(
-                  '${row.invoiceNo} · ${_dateFormat.format(row.date)}',
-                ),
-                trailing: Text(
-                  ChartAxisFormatters.formatCurrency(row.value),
-                  style: AppTypography.inter(
-                    fontSize: AppTypography.bodySize,
-                    fontWeight: FontWeight.w600,
+      data: (envelope) {
+        final section = envelope.sections.firstWhere(
+          (s) => s.rows.isNotEmpty,
+          orElse: () => envelope.sections.isNotEmpty
+              ? envelope.sections.first
+              : const GstReportSectionDto(key: '', title: '', rows: []),
+        );
+        return ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            for (final row in section.rows.take(50))
+              Card(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: ListTile(
+                  title: Text(row['party_name']?.toString() ?? '—'),
+                  subtitle: Text(
+                    '${row['invoice_no'] ?? ''} · ${_dateFormat.format(DateTime.tryParse(row['invoice_date']?.toString() ?? '') ?? DateTime.now())}',
+                  ),
+                  trailing: Text(
+                    ChartAxisFormatters.formatCurrency(
+                      double.tryParse(row['value']?.toString() ?? '0') ?? 0,
+                    ),
+                    style: AppTypography.inter(
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

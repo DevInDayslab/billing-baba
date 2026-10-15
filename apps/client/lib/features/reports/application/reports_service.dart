@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/features/dashboard/application/local_business_metrics_provider.dart';
 import 'package:billing_baba/features/dashboard/application/local_business_metrics_service.dart';
@@ -7,6 +8,9 @@ import 'package:billing_baba/features/reports/data/reports_remote_data_source.da
 import 'package:billing_baba/features/reports/data/reports_repository.dart';
 import 'package:billing_baba/features/reports/models/mappers/report_extended_mapper.dart';
 import 'package:billing_baba/features/reports/models/mappers/report_mapper.dart';
+import 'package:billing_baba/features/reports/models/dto/gst_report_v2_dto.dart';
+import 'package:billing_baba/features/reports/models/gst_report_type.dart';
+import 'package:billing_baba/features/reports/models/tax_report_kind.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/utils/item_detail_ledger.dart';
@@ -445,9 +449,17 @@ class StockTransferReportData {
 }
 
 class BankStatementReportData {
-  const BankStatementReportData({required this.rows});
+  const BankStatementReportData({
+    required this.rows,
+    this.accountName,
+    this.openingBalance,
+    this.closingBalance,
+  });
 
   final List<ReportBankStatementRow> rows;
+  final String? accountName;
+  final String? openingBalance;
+  final String? closingBalance;
 }
 
 class GstTaxReportData {
@@ -894,34 +906,44 @@ class ReportsService {
     return remote;
   }
 
-  Future<GstrReportData> fetchGstr1(ReportQuery query) async {
+  Future<GstReportEnvelopeDto> fetchGstFilingReport(
+    GstReportType type,
+    ReportQuery query,
+  ) async {
     try {
-      final payload = await _repository.getGstr1(query);
-      return GstrReportData(
-        rows: payload.rows.map(ReportMapper.toGstrRow).toList(),
-      );
+      return await _repository.getGstFilingReport(type, query);
     } on DioException catch (error) {
       throw mapReportsError(error);
     }
   }
 
-  Future<GstrReportData> fetchGstr2(ReportQuery query) async {
+  Future<GstReportEnvelopeDto> fetchTaxReport(
+    TaxReportKind kind,
+    ReportQuery query,
+  ) async {
     try {
-      final payload = await _repository.getGstr2(query);
-      return GstrReportData(
-        rows: payload.rows.map(ReportMapper.toGstrRow).toList(),
-      );
-    } on DioException catch (error) {
-      throw mapReportsError(error);
-    }
-  }
-
-  Future<Gstr3bReportData> fetchGstr3b(ReportQuery query) async {
-    try {
-      final payload = await _repository.getGstr3b(query);
-      return Gstr3bReportData(
-        rows: payload.rows.map(ReportMapper.toGstr3bRow).toList(),
-      );
+      return switch (kind) {
+        TaxReportKind.gstRegister =>
+          (await _repository.getTaxGstRegister(query)).data,
+        TaxReportKind.gstRateSummary =>
+          await _repository.getTaxGstRateSummary(query),
+        TaxReportKind.form27eq => await _repository.getTaxReportEnvelope(
+          ApiEndpoints.reportsTaxForm27eq,
+          query,
+        ),
+        TaxReportKind.tcsReceivable => await _repository.getTaxReportEnvelope(
+          ApiEndpoints.reportsTaxTcsReceivable,
+          query,
+        ),
+        TaxReportKind.tdsPayable => await _repository.getTaxReportEnvelope(
+          ApiEndpoints.reportsTaxTdsPayable,
+          query,
+        ),
+        TaxReportKind.tdsReceivable => await _repository.getTaxReportEnvelope(
+          ApiEndpoints.reportsTaxTdsReceivable,
+          query,
+        ),
+      };
     } on DioException catch (error) {
       throw mapReportsError(error);
     }
@@ -1101,41 +1123,6 @@ class ReportsService {
     final local = await localFuture;
     if (local == null) return remote;
     return local;
-  }
-
-  Future<Gstr9ReportData> fetchGstr9(ReportQuery query) async {
-    try {
-      final payload = await _repository.getGstr9(query);
-      return Gstr9ReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toGstr9SupplyRow).toList(),
-      );
-    } on DioException catch (error) {
-      throw mapReportsError(error);
-    }
-  }
-
-  Future<SaleSummaryByHsnReportData> fetchSaleSummaryByHsn(
-    ReportQuery query,
-  ) async {
-    try {
-      final payload = await _repository.getSaleSummaryByHsn(query);
-      return SaleSummaryByHsnReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toHsnRow).toList(),
-      );
-    } on DioException catch (error) {
-      throw mapReportsError(error);
-    }
-  }
-
-  Future<SacReportData> fetchSacReport(ReportQuery query) async {
-    try {
-      final payload = await _repository.getSacReport(query);
-      return SacReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toSacRow).toList(),
-      );
-    } on DioException catch (error) {
-      throw mapReportsError(error);
-    }
   }
 
   Future<ItemReportByPartyReportData> fetchItemReportByParty(
@@ -1530,6 +1517,9 @@ class ReportsService {
         rows: payload.rows
             .map(ReportExtendedMapper.toBankStatementRow)
             .toList(),
+        accountName: payload.accountName,
+        openingBalance: payload.summary?.openingBalance,
+        closingBalance: payload.summary?.closingBalance,
       );
     } on DioException catch (error) {
       throw mapReportsError(error);

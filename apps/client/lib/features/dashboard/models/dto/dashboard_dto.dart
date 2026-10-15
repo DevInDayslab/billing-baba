@@ -158,6 +158,7 @@ class DashboardFinanceDto {
     required this.cashIn,
     required this.cashOut,
     required this.expenses,
+    required this.bankBalance,
   });
 
   factory DashboardFinanceDto.fromJson(Map<String, dynamic> json) {
@@ -165,12 +166,14 @@ class DashboardFinanceDto {
       cashIn: json['cash_in'] as String? ?? '0',
       cashOut: json['cash_out'] as String? ?? '0',
       expenses: json['expenses'] as String? ?? '0',
+      bankBalance: json['bank_balance'] as String? ?? '0',
     );
   }
 
   final String cashIn;
   final String cashOut;
   final String expenses;
+  final String bankBalance;
 }
 
 class DashboardInventoryDto {

@@ -159,15 +159,24 @@ class SalePaymentEntry {
   const SalePaymentEntry({
     required this.type,
     this.amount = 0,
+    this.bankAccountId,
   });
 
   final String type;
   final double amount;
+  final String? bankAccountId;
 
-  SalePaymentEntry copyWith({String? type, double? amount}) {
+  SalePaymentEntry copyWith({
+    String? type,
+    double? amount,
+    String? bankAccountId,
+    bool clearBankAccountId = false,
+  }) {
     return SalePaymentEntry(
       type: type ?? this.type,
       amount: amount ?? this.amount,
+      bankAccountId:
+          clearBankAccountId ? null : (bankAccountId ?? this.bankAccountId),
     );
   }
 }

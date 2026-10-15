@@ -5,6 +5,7 @@ export type PaymentRecord = {
   amount: string;
   discount_amount: string;
   payment_mode: string;
+  bank_account_id: string | null;
   payment_date: string;
   reference_number: string | null;
   notes: string | null;
@@ -29,11 +30,15 @@ export type PaymentInsertValues = {
   amount: string;
   discountAmount?: string;
   paymentMode: 'cash' | 'upi' | 'card' | 'cheque' | 'bank_transfer' | 'other';
+  bankAccountId?: string | null;
   paymentDate?: Date;
   referenceNumber?: string | null;
   notes?: string | null;
   shortPaymentHandling?: string | null;
   source?: 'manual' | 'document_finalize' | 'razorpay_gateway';
+  tdsSectionId?: string | null;
+  tdsRate?: string | null;
+  tdsAmount?: string | null;
   createdBy?: string | null;
   updatedBy?: string | null;
 };

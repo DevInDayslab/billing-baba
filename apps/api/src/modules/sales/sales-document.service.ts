@@ -133,6 +133,11 @@ export class SalesDocumentService extends SalesServiceBase {
       await this.assertPartyValid(businessId, input.party_id);
     }
 
+    let originalFromSource: {
+      originalDocumentId: string;
+      originalDocumentNumber: string | null;
+      originalDocumentDate: Date;
+    } | null = null;
     if (input.converted_from_id) {
       const source = await this.repository.findRowById(
         businessId,
@@ -141,6 +146,11 @@ export class SalesDocumentService extends SalesServiceBase {
       if (!source) {
         throw new AppError('NOT_FOUND', 'Source document not found', 404);
       }
+      originalFromSource = {
+        originalDocumentId: source.id,
+        originalDocumentNumber: source.documentNumber,
+        originalDocumentDate: source.documentDate,
+      };
     }
 
     if (input.pos_session_id) {
@@ -165,6 +175,9 @@ export class SalesDocumentService extends SalesServiceBase {
         ? new Date(input.document_date)
         : undefined,
       convertedFromId: input.converted_from_id ?? null,
+      originalDocumentId: originalFromSource?.originalDocumentId ?? null,
+      originalDocumentNumber: originalFromSource?.originalDocumentNumber ?? null,
+      originalDocumentDate: originalFromSource?.originalDocumentDate,
       posSessionId: input.pos_session_id ?? null,
       notes: input.notes ?? null,
       createdBy: userId ?? null,
@@ -251,6 +264,8 @@ export class SalesDocumentService extends SalesServiceBase {
       cgst_amount: line.cgstAmount,
       sgst_amount: line.sgstAmount,
       igst_amount: line.igstAmount,
+      cess_rate: line.cessRate ?? '0',
+      cess_amount: line.cessAmount ?? '0',
       line_total: line.lineTotal,
       sort_order: line.sortOrder,
     }));
@@ -408,11 +423,18 @@ export class SalesDocumentService extends SalesServiceBase {
         ? {
             amount: input.payment.amount,
             paymentMode: input.payment.payment_mode,
+            bankAccountId: input.payment.bank_account_id ?? null,
             shortPaymentHandling: input.payment.short_payment_handling ?? null,
             shortfallAmount: input.payment.shortfall_amount ?? null,
             paymentDate: input.payment.payment_date,
           }
         : undefined,
+      payments: input.payments?.map((line) => ({
+        amount: line.amount,
+        paymentMode: line.payment_mode,
+        bankAccountId: line.bank_account_id ?? null,
+        paymentDate: line.payment_date,
+      })),
     });
 
     return {
@@ -522,6 +544,7 @@ export class SalesDocumentService extends SalesServiceBase {
     const newDocId = await this.db.transaction(async (tx) => {
       const repo = new SalesDocumentRepository(tx as unknown as typeof this.db);
 
+      const sourceRow = await repo.findRowById(businessId, documentId);
       const newDoc = await repo.create({
         businessId,
         documentType: input.target_type,
@@ -531,6 +554,9 @@ export class SalesDocumentService extends SalesServiceBase {
         partyStateCode: source.party_state_code,
         documentDate: new Date(),
         convertedFromId: documentId,
+        originalDocumentId: sourceRow?.id ?? documentId,
+        originalDocumentNumber: sourceRow?.documentNumber ?? source.document_number,
+        originalDocumentDate: sourceRow?.documentDate ?? new Date(source.document_date),
         notes: source.notes,
         createdBy: userId ?? null,
         updatedBy: userId ?? null,

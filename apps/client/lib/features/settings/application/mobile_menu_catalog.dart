@@ -36,9 +36,13 @@ abstract final class MobileMenuCatalog {
 
   static List<MobileMenuItem> visibleItemsForSection(
     MobileMenuSection section,
-    PermissionService permissions,
-  ) {
+    PermissionService permissions, {
+    bool enableOtherIncome = true,
+  }) {
     var items = itemsForSection(section);
+    if (!enableOtherIncome) {
+      items = items.where((item) => item.id != 'other-income').toList();
+    }
     if (section == MobileMenuSection.utilities &&
         SearchRegistryVisibility.hideUtilities) {
       items = items
@@ -135,6 +139,14 @@ abstract final class MobileMenuCatalog {
       icon: LucideIcons.banknote,
       action: MobileMenuAction.openReport,
       reportIntent: ReportsNavIntent.expense(ExpenseReportSubSection.expense),
+      section: MobileMenuSection.business,
+    ),
+    MobileMenuItem(
+      id: 'other-income',
+      title: 'Other Income',
+      subtitle: 'Record and manage other income',
+      icon: LucideIcons.circlePlus,
+      route: AppRoutes.otherIncome,
       section: MobileMenuSection.business,
     ),
     const MobileMenuItem(
@@ -234,6 +246,14 @@ abstract final class MobileMenuCatalog {
       subtitle: 'Update price, HSN, and category for many items',
       icon: LucideIcons.pencil,
       route: AppRoutes.utilitiesBulkUpdateItems,
+      section: MobileMenuSection.utilities,
+    ),
+    const MobileMenuItem(
+      id: 'recycle-bin',
+      title: 'Recycle Bin',
+      subtitle: 'Restore or permanently delete removed transactions',
+      icon: LucideIcons.trash2,
+      route: AppRoutes.utilitiesRecycleBin,
       section: MobileMenuSection.utilities,
     ),
     const MobileMenuItem(

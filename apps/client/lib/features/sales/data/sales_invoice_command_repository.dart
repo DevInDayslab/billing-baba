@@ -20,12 +20,14 @@ class FinalizeSalePaymentCommand {
   const FinalizeSalePaymentCommand({
     required this.amount,
     required this.paymentMode,
+    this.bankAccountId,
     this.shortPaymentHandling,
     this.shortfallAmount,
   });
 
   final String amount;
   final String paymentMode;
+  final String? bankAccountId;
   final String? shortPaymentHandling;
   final String? shortfallAmount;
 }
@@ -116,6 +118,8 @@ class SalesInvoiceCommandRepository {
           cgstAmount: money(item.lineTax / 2),
           sgstAmount: money(item.lineTax / 2),
           igstAmount: '0',
+          cessRate: '0',
+          cessAmount: '0',
           lineTotal: money(item.amount),
           sortOrder: sortOrder++,
           syncVersion: 0,
@@ -242,6 +246,7 @@ class SalesInvoiceCommandRepository {
     String? localDocumentNumber,
     String? godownId,
     FinalizeSalePaymentCommand? payment,
+    List<FinalizeSalePaymentCommand>? payments,
   }) async {
     final businessId = _requireBusinessId();
     final document = await _local.getDocument(documentId);
@@ -285,12 +290,24 @@ class SalesInvoiceCommandRepository {
       if (godownId != null && godownId.isNotEmpty) 'godown_id': godownId,
     };
 
-    if (payment != null &&
+    if (payments != null && payments.isNotEmpty) {
+      commandPayload['payments'] = payments
+          .map(
+            (p) => {
+              'amount': p.amount,
+              'payment_mode': p.paymentMode,
+              if (p.bankAccountId != null) 'bank_account_id': p.bankAccountId,
+            },
+          )
+          .toList();
+    } else if (payment != null &&
         double.tryParse(payment.amount) != null &&
         double.parse(payment.amount) > 0) {
       commandPayload['payment'] = {
         'amount': payment.amount,
         'payment_mode': payment.paymentMode,
+        if (payment.bankAccountId != null)
+          'bank_account_id': payment.bankAccountId,
         if (payment.shortPaymentHandling != null)
           'short_payment_handling': payment.shortPaymentHandling,
         if (payment.shortfallAmount != null)

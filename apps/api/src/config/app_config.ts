@@ -63,6 +63,10 @@ const envSchema = z.object({
     if (value === '' || value === undefined) return 7;
     return Number(value);
   }, z.number().int().positive().default(7)),
+  PARTY_CONTACT_IMPORT_EXPIRY_MINUTES: z.preprocess((value) => {
+    if (value === '' || value === undefined) return 30;
+    return Number(value);
+  }, z.number().int().positive().default(30)),
   NOTIFICATION_PROVIDER: z.preprocess(
     emptyToUndefined,
     z.enum(['console', 'twilio']).optional(),
@@ -160,6 +164,7 @@ export type AppConfig = {
   corsOrigins: string[];
   websiteUrl: string;
   invitationExpiryDays: number;
+  partyContactImportExpiryMinutes: number;
   notificationProvider: 'console' | 'twilio';
   twilioAccountSid?: string;
   twilioAuthToken?: string;
@@ -275,6 +280,7 @@ export function loadAppConfig(): AppConfig {
         .filter(Boolean) ?? [],
     websiteUrl: env.WEBSITE_URL ?? 'https://billingbaba.com',
     invitationExpiryDays: env.INVITATION_EXPIRY_DAYS,
+    partyContactImportExpiryMinutes: env.PARTY_CONTACT_IMPORT_EXPIRY_MINUTES,
     notificationProvider: env.NOTIFICATION_PROVIDER ?? 'console',
     twilioAccountSid: env.TWILIO_ACCOUNT_SID,
     twilioAuthToken: env.TWILIO_AUTH_TOKEN,

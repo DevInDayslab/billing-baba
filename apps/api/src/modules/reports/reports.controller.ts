@@ -8,6 +8,7 @@ import {
   partyStatementQuerySchema,
   reportBaseQuerySchema,
   reportDateQuerySchema,
+  businessBankStatementQuerySchema,
   reportExtendedQuerySchema,
 } from './reports.schema';
 import { ReportsService } from './reports.service';
@@ -315,6 +316,17 @@ export function createReportsController() {
         reply,
         reportExtendedQuerySchema,
         service.getBankStatement.bind(service),
+      ),
+
+    getBusinessBankStatement: (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) =>
+      handleDataReport(
+        request,
+        reply,
+        businessBankStatementQuerySchema,
+        service.getBusinessBankStatement.bind(service),
       ),
 
     getGstReport: (request: FastifyRequest, reply: FastifyReply) =>

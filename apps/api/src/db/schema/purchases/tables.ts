@@ -12,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns, timestamptz } from '../columns';
+import { bankAccounts } from '../bank-accounts/tables';
 import { parties } from '../crm/tables';
 import {
   documentStatusEnum,
@@ -94,11 +95,20 @@ export const purchaseDocuments = pgTable(
     subtotal: money('subtotal').notNull().default('0'),
     discountTotal: money('discount_total').notNull().default('0'),
     taxAmount: money('tax_amount').notNull().default('0'),
+    tcsSectionId: uuid('tcs_section_id'),
+    tcsRate: money('tcs_rate'),
+    tcsBaseAmount: money('tcs_base_amount').default('0'),
+    tcsAmount: money('tcs_amount').default('0'),
     totalAmount: money('total_amount').notNull().default('0'),
     documentDate: timestamptz('document_date').notNull().defaultNow(),
     convertedFromId: uuid('converted_from_id').references(
       (): AnyPgColumn => purchaseDocuments.id,
     ),
+    originalDocumentId: uuid('original_document_id').references(
+      (): AnyPgColumn => purchaseDocuments.id,
+    ),
+    originalDocumentNumber: text('original_document_number'),
+    originalDocumentDate: timestamptz('original_document_date'),
     supplierInvoiceNumber: text('supplier_invoice_number'),
     dueDate: date('due_date'),
     notes: text('notes'),
@@ -136,6 +146,8 @@ export const purchaseDocumentLines = pgTable(
     cgstAmount: money('cgst_amount').notNull().default('0'),
     sgstAmount: money('sgst_amount').notNull().default('0'),
     igstAmount: money('igst_amount').notNull().default('0'),
+    cessRate: money('cess_rate').notNull().default('0'),
+    cessAmount: money('cess_amount').notNull().default('0'),
     lineTotal: money('line_total').notNull(),
     sortOrder: integer('sort_order').notNull().default(0),
   },
@@ -169,6 +181,7 @@ export const expenses = pgTable(
     attachments: jsonb('attachments').$type<string[]>().default([]),
     expenseDate: date('expense_date').notNull(),
     paymentMode: paymentModeEnum('payment_mode'),
+    bankAccountId: uuid('bank_account_id').references(() => bankAccounts.id),
     sourceReferenceId: uuid('source_reference_id'),
     sourceReferenceType: text('source_reference_type'),
     loyaltyPoints: money('loyalty_points'),

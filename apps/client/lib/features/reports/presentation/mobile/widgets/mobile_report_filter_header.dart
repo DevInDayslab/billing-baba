@@ -20,6 +20,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
     required this.onFiltersChanged,
     super.key,
     this.extraChips = const [],
+    this.accountFilterKind = MobileReportAccountFilterKind.none,
   });
 
   /// Called after period, date range, or sheet filters change so data reloads.
@@ -27,6 +28,8 @@ class MobileReportFilterHeader extends ConsumerWidget {
 
   /// Optional report-specific chips (e.g. "Txns Type - Sale").
   final List<String> extraChips;
+
+  final MobileReportAccountFilterKind accountFilterKind;
 
   static const List<ReportPeriod> _periodOptions = [
     ReportPeriod.thisMonth,
@@ -48,6 +51,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
     final filterChips = buildMobileReportFilterChips(
       filters,
       extraChips: extraChips,
+      ref: ref,
     );
 
     return Padding(
@@ -150,6 +154,7 @@ class MobileReportFilterHeader extends ConsumerWidget {
     final draft = await showMobileReportFilterSheet(
       context: context,
       initial: filters,
+      accountFilterKind: accountFilterKind,
     );
     if (draft == null) return;
     applyMobileReportFilterDraft(ref, draft);
