@@ -5,7 +5,10 @@ import {
   getCashMovement,
   getOutstandingAsOf,
   getStockValue,
+  getLoansOutstandingAsOf,
   sumExpensesAmount,
+  sumLoanFinancingExpense,
+  sumOtherIncomeAmount,
   sumPartyOpeningBalances,
   sumPurchasesAmount,
   sumSalesAmount,
@@ -217,6 +220,7 @@ export class AccountingReportsRepository {
       openingOutstanding,
       openingCash,
       openingStock,
+      loansOutstanding,
     ] = await Promise.all([
       getOutstandingAsOf(this.db, businessId, asOn),
       getCashBalanceAsOf(this.db, businessId, asOn),
@@ -234,10 +238,11 @@ export class AccountingReportsRepository {
         new Date(range.from.getTime() - 1),
       ),
       getStockValue(this.db, businessId),
+      getLoansOutstandingAsOf(this.db, businessId, asOn),
     ]);
 
     const assetsTotal = cash + outstanding.receivable + stockValue;
-    const liabilitiesTotal = outstanding.payable;
+    const liabilitiesTotal = outstanding.payable + loansOutstanding;
     const equityBeforePlug = assetsTotal - liabilitiesTotal;
     const retainedEarnings = equityBeforePlug - partyOpening - netProfit;
 
@@ -268,6 +273,12 @@ export class AccountingReportsRepository {
       {
         name: 'Sundry Creditors',
         amount: money(outstanding.payable),
+        indent: 1,
+        is_header: false,
+      },
+      {
+        name: 'Loans',
+        amount: money(loansOutstanding),
         indent: 1,
         is_header: false,
       },
@@ -336,6 +347,9 @@ export class AccountingReportsRepository {
       expenseTotal,
       stockValue,
       netProfit,
+      otherDirectTotal,
+      otherIndirectTotal,
+      loanFinancing,
     ] = await Promise.all([
       sumSalesAmount(this.db, businessId, range, REVENUE_SALES_TYPES),
       sumSalesAmount(this.db, businessId, range, [SALES_RETURN_TYPE]),
@@ -344,6 +358,9 @@ export class AccountingReportsRepository {
       sumExpensesAmount(this.db, businessId, range),
       getStockValue(this.db, businessId),
       calculateNetProfit(this.db, businessId, range),
+      sumOtherIncomeAmount(this.db, businessId, range, 'direct'),
+      sumOtherIncomeAmount(this.db, businessId, range, 'indirect'),
+      sumLoanFinancingExpense(this.db, businessId, range),
     ]);
 
     const netSales = salesTotal - salesReturnTotal;
@@ -352,8 +369,6 @@ export class AccountingReportsRepository {
     const closingStock = stockValue;
 
     const saleAccountsTotal = netSales;
-    const otherDirectTotal = 0;
-    const otherIndirectTotal = 0;
     const totalIncomes =
       saleAccountsTotal + otherDirectTotal + otherIndirectTotal;
 
@@ -381,10 +396,10 @@ export class AccountingReportsRepository {
       row('Additional Charges on Sale', 0, false, 2),
       row('Other Incomes (Direct)', otherDirectTotal, true, 1),
       row('Payment-out Discount', 0, false, 2),
-      row('Other Direct Incomes', 0, false, 2),
+      row('Other Direct Incomes', otherDirectTotal, false, 2),
       row('Other Incomes (Indirect)', otherIndirectTotal, true, 1),
       row('Interest Received', 0, false, 2),
-      row('Other Indirect Incomes', 0, false, 2),
+      row('Other Indirect Incomes', otherIndirectTotal, false, 2),
       row('Expenses', totalExpenses, true, 0),
       row('Cost of Goods Sold', costOfGoodsSold, true, 1),
       row('Purchase Accounts', netPurchases, false, 2),
@@ -392,7 +407,7 @@ export class AccountingReportsRepository {
       row('Closing Stock', closingStock, false, 2),
       row('Direct Expenses', directExpenses, true, 1),
       row('Indirect Expenses', indirectExpenses, true, 1),
-      row('Cost of Financing', 0, false, 2),
+      row('Cost of Financing', loanFinancing, false, 2),
       row('Other Expenses', expenseTotal, false, 2),
       row('Net Profit (Incomes - Expenses)', netProfit, true, 0),
     ];

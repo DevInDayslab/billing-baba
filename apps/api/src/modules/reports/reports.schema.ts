@@ -79,8 +79,16 @@ export const loanStatementQuerySchema = reportExtendedQuerySchema.extend({
   loan_account: z.string().trim().min(1),
 });
 
+export const businessBankStatementQuerySchema =
+  reportExtendedQuerySchema.extend({
+    bank_account_id: z.string().uuid(),
+  });
+
 export type ReportBaseQuery = z.infer<typeof reportBaseQuerySchema>;
 export type ReportExtendedQuery = z.infer<typeof reportExtendedQuerySchema>;
 export type ReportDateQuery = z.infer<typeof reportDateQuerySchema>;
 export type PartyStatementQuery = z.infer<typeof partyStatementQuerySchema>;
 export type LoanStatementQuery = z.infer<typeof loanStatementQuerySchema>;
+export type BusinessBankStatementQuery = z.infer<
+  typeof businessBankStatementQuerySchema
+>;

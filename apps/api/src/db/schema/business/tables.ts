@@ -17,6 +17,8 @@ export const businesses = pgTable(
     ...tenantRootColumns,
     name: text('name').notNull(),
     gstin: text('gstin'),
+    pan: text('pan'),
+    tan: text('tan'),
     stateCode: text('state_code').notNull(),
     address: text('address'),
     phone: text('phone'),

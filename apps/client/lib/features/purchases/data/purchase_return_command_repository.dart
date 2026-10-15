@@ -125,6 +125,8 @@ class PurchaseReturnCommandRepository {
           cgstAmount: purchaseMoney(item.lineTax / 2),
           sgstAmount: purchaseMoney(item.lineTax / 2),
           igstAmount: '0',
+          cessRate: '0',
+          cessAmount: '0',
           lineTotal: purchaseMoney(item.amount),
           sortOrder: sortOrder++,
           syncVersion: 0,

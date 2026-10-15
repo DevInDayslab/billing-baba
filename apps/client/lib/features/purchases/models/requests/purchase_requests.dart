@@ -241,6 +241,7 @@ class CreateExpenseRequest {
     this.taxRate,
     this.attachments,
     this.paymentMode,
+    this.bankAccountId,
   });
 
   final String categoryId;
@@ -255,6 +256,7 @@ class CreateExpenseRequest {
   final String? taxRate;
   final List<String>? attachments;
   final String? paymentMode;
+  final String? bankAccountId;
 
   Map<String, dynamic> toJson() => {
     'category_id': categoryId,
@@ -270,6 +272,8 @@ class CreateExpenseRequest {
     if (attachments != null && attachments!.isNotEmpty)
       'attachments': attachments,
     if (paymentMode != null) 'payment_mode': paymentMode,
+    if (bankAccountId != null && bankAccountId!.isNotEmpty)
+      'bank_account_id': bankAccountId,
   };
 }
 
@@ -287,6 +291,7 @@ class UpdateExpenseRequest {
     this.taxRate,
     this.attachments,
     this.paymentMode,
+    this.bankAccountId,
   });
 
   final String? categoryId;
@@ -301,6 +306,7 @@ class UpdateExpenseRequest {
   final String? taxRate;
   final List<String>? attachments;
   final String? paymentMode;
+  final String? bankAccountId;
 
   Map<String, dynamic> toJson() => {
     if (categoryId != null) 'category_id': categoryId,
@@ -315,6 +321,8 @@ class UpdateExpenseRequest {
     if (taxRate != null) 'tax_rate': taxRate,
     if (attachments != null) 'attachments': attachments,
     if (paymentMode != null) 'payment_mode': paymentMode,
+    if (bankAccountId != null && bankAccountId!.isNotEmpty)
+      'bank_account_id': bankAccountId,
   };
 }
 

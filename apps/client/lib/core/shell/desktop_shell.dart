@@ -923,6 +923,11 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
               currentLocation.startsWith('${AppRoutes.editJobWork}/'))) {
         return true;
       }
+      if (subRoute == AppRoutes.otherIncome &&
+          (currentLocation == AppRoutes.addOtherIncome ||
+              currentLocation.startsWith('${AppRoutes.editOtherIncome}/'))) {
+        return true;
+      }
     }
 
     if (routePrefix == AppRoutes.purchase) {

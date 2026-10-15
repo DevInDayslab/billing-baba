@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { MarketingLayout } from '../layouts/MarketingLayout';
 import { AcceptedPage } from '../pages/AcceptedPage';
+import { ImportContactsPage } from '../pages/ImportContactsPage';
 import { InvitePage } from '../pages/InvitePage';
 import { InvoicePage } from '../pages/InvoicePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -38,6 +39,10 @@ export function AppRoutes() {
 
       <Route element={<MainLayout subtitle="Shared invoice" maxWidthClassName="max-w-3xl" />}>
         <Route path="/invoice/:token" element={<InvoicePage />} />
+      </Route>
+
+      <Route element={<MainLayout subtitle="Import contacts" maxWidthClassName="max-w-3xl" />}>
+        <Route path="/import-contacts/:token" element={<ImportContactsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

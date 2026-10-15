@@ -49,6 +49,7 @@ abstract final class MobileDashboardMockData {
         cashIn: 198500,
         cashOut: 124300,
         expenses: 68400,
+        bankBalance: 425000,
       ),
       inventory: const DashboardInventoryModel(
         totalStockValue: 890000,

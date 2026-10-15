@@ -67,21 +67,27 @@ class ExpensePaymentEntry {
     required this.type,
     this.amount = 0,
     this.referenceNo = '',
+    this.bankAccountId,
   });
 
   final String type;
   final double amount;
   final String referenceNo;
+  final String? bankAccountId;
 
   ExpensePaymentEntry copyWith({
     String? type,
     double? amount,
     String? referenceNo,
+    String? bankAccountId,
+    bool clearBankAccountId = false,
   }) {
     return ExpensePaymentEntry(
       type: type ?? this.type,
       amount: amount ?? this.amount,
       referenceNo: referenceNo ?? this.referenceNo,
+      bankAccountId:
+          clearBankAccountId ? null : (bankAccountId ?? this.bankAccountId),
     );
   }
 }

@@ -14,6 +14,7 @@ import {
   PRICING_TIER_VALUES,
 } from '../../shared/pricing/pricing-tier';
 import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
+import { seedWithholdingTaxSections } from '../withholding-tax';
 import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
@@ -799,6 +800,12 @@ export class BusinessRepository {
       ]);
 
       await seedWalkInPartyForBusiness(tx, business.id);
+
+      await seedWithholdingTaxSections(
+        tx as unknown as typeof this.db,
+        business.id,
+        accountId,
+      );
 
       return {
         id: business.id,

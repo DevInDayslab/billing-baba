@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/reports/application/reports_nav_catalog.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/widgets/mobile_report_filter_sheet.dart';
 
 /// Display configuration for a mobile report subsection.
 class MobileReportSubsectionConfig {
@@ -16,12 +17,14 @@ class MobileReportSubsectionConfig {
       'Balance',
       'Due Date',
     ],
+    this.accountFilterKind = MobileReportAccountFilterKind.none,
   });
 
   final String title;
   final String referencePrefix;
   final List<String> summaryLabels;
   final List<String> columnLabels;
+  final MobileReportAccountFilterKind accountFilterKind;
 }
 
 /// Resolves titles and labels for every desktop report subsection on mobile.
@@ -68,12 +71,20 @@ abstract final class MobileReportSubsectionRegistry {
     };
 
     final (summaryLabels, columnLabels) = _labelsFor(group, subsectionId);
+    final accountFilterKind = switch ((group, subsectionId)) {
+      (ReportNavGroup.businessStatus, 'bankStatement') =>
+        MobileReportAccountFilterKind.bankAccount,
+      (ReportNavGroup.loanAccounts, 'loanStatement') =>
+        MobileReportAccountFilterKind.loanAccount,
+      _ => MobileReportAccountFilterKind.none,
+    };
 
     return MobileReportSubsectionConfig(
       title: title,
       referencePrefix: prefix,
       summaryLabels: summaryLabels,
       columnLabels: columnLabels,
+      accountFilterKind: accountFilterKind,
     );
   }
 

@@ -19,6 +19,7 @@ class PartiesLocal extends Table {
   TextColumn get partyCategory => text().nullable()();
   TextColumn get pricingTier => text().withDefault(const Constant('tier_1'))();
   TextColumn get gstin => text().nullable()();
+  TextColumn get pan => text().nullable()();
   TextColumn get stateCode => text().nullable()();
   TextColumn get areaId => text().nullable()();
   TextColumn get creditLimit => text().withDefault(const Constant('0'))();

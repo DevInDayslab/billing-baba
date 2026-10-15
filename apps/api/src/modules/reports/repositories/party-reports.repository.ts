@@ -46,7 +46,7 @@ export class PartyReportsRepository {
       .select({
         partyId: salesDocuments.partyId,
         saleAmount:
-          sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`.as(
+          sql<string>`COALESCE(SUM((${salesDocuments.totalAmount}::numeric - COALESCE(${salesDocuments.tcsAmount}::numeric, 0))), 0)`.as(
             'sale_amount',
           ),
         purchaseCost:
@@ -80,7 +80,7 @@ export class PartyReportsRepository {
       .select({
         partyId: purchaseDocuments.partyId,
         purchaseAmount:
-          sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`.as(
+          sql<string>`COALESCE(SUM((${purchaseDocuments.totalAmount}::numeric - COALESCE(${purchaseDocuments.tcsAmount}::numeric, 0))), 0)`.as(
             'purchase_amount',
           ),
       })
@@ -333,7 +333,7 @@ export class PartyReportsRepository {
       .select({
         partyId: salesDocuments.partyId,
         saleAmount:
-          sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`.as(
+          sql<string>`COALESCE(SUM((${salesDocuments.totalAmount}::numeric - COALESCE(${salesDocuments.tcsAmount}::numeric, 0))), 0)`.as(
             'sale_amount',
           ),
       })
@@ -355,7 +355,7 @@ export class PartyReportsRepository {
       .select({
         partyId: purchaseDocuments.partyId,
         purchaseAmount:
-          sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`.as(
+          sql<string>`COALESCE(SUM((${purchaseDocuments.totalAmount}::numeric - COALESCE(${purchaseDocuments.tcsAmount}::numeric, 0))), 0)`.as(
             'purchase_amount',
           ),
       })

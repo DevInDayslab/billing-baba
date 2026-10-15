@@ -27,6 +27,7 @@ export type DashboardFinanceSummary = {
   cash_in: string;
   cash_out: string;
   expenses: string;
+  bank_balance: string;
 };
 
 export type DashboardLowStockItem = {

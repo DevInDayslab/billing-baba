@@ -1,4 +1,5 @@
 import {
+  businessBankStatementQuerySchema,
   loanStatementQuerySchema,
   partyStatementQuerySchema,
   reportBaseQuerySchema,
@@ -341,10 +342,21 @@ const REPORTS: ReportEndpoint[] = [
   {
     path: '/reports/bank-statement',
     summary: 'Bank Statement Report',
-    description: 'Bank account transactions for the period.',
+    description:
+      'Legacy bank statement (payment name filter). Prefer /reports/business/bank-statement.',
     operationId: 'reportBankStatement',
     querySchema: reportExtendedQuerySchema,
     querySchemaName: Schema.ReportExtendedQuery,
+    tag: 'Reports',
+  },
+  {
+    path: '/reports/business/bank-statement',
+    summary: 'Business Bank Statement',
+    description:
+      'Passbook-style statement for a synced bank_accounts row (bank_account_id required).',
+    operationId: 'reportBusinessBankStatement',
+    querySchema: businessBankStatementQuerySchema,
+    querySchemaName: 'BusinessBankStatementQuery',
     tag: 'Reports',
   },
   {
@@ -490,7 +502,8 @@ const REPORTS: ReportEndpoint[] = [
   {
     path: '/reports/loan-statement',
     summary: 'Loan Statement Report',
-    description: 'Loan account transactions. **Requires `loan_account`.**',
+    description:
+      'Loan passbook from `loan_transactions` (opening outstanding + principal running balance). **Requires `loan_account`** as `loan_accounts.id` (UUID). Debit/credit follow Vyapar loan statement convention.',
     operationId: 'reportLoanStatement',
     querySchema: loanStatementQuerySchema,
     querySchemaName: Schema.LoanStatementQuery,

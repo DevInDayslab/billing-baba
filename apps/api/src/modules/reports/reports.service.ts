@@ -8,6 +8,7 @@ import type {
   PartyStatementQuery,
   ReportBaseQuery,
   ReportDateQuery,
+  BusinessBankStatementQuery,
   ReportExtendedQuery,
 } from './reports.schema';
 
@@ -385,6 +386,15 @@ export class ReportsService {
   ) {
     await this.assertBusinessAccess(businessId, accountId);
     return this.repository.getBankStatement(businessId, query);
+  }
+
+  async getBusinessBankStatement(
+    businessId: string,
+    accountId: string,
+    query: BusinessBankStatementQuery,
+  ) {
+    await this.assertBusinessAccess(businessId, accountId);
+    return this.repository.getBusinessBankStatement(businessId, query);
   }
 
   getGstReport(

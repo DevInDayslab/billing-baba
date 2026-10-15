@@ -43,6 +43,8 @@ const COMMAND_MODULE_ACTION: Record<
   finalize_credit_note: { module: 'credit_note', action: 'create' },
   finalize_debit_note: { module: 'debit_note', action: 'create' },
   stock_adjustment: { module: 'stock_transfer', action: 'create' },
+  delete_transaction: { module: 'settings', action: 'delete' },
+  restore_transaction: { module: 'settings', action: 'edit' },
 };
 
 const ROW_OPERATION_ACTION: Record<

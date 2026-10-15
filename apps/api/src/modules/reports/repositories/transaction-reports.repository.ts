@@ -85,7 +85,7 @@ export class TransactionReportsRepository {
         documentDate: salesDocuments.documentDate,
         documentNumber: salesDocuments.documentNumber,
         partyName: parties.name,
-        saleAmount: salesDocuments.totalAmount,
+        saleAmount: sql<string>`(${salesDocuments.totalAmount}::numeric - COALESCE(${salesDocuments.tcsAmount}::numeric, 0))`,
         purchaseAmount: sql<string>`COALESCE(SUM(${salesDocumentLines.quantity}::numeric * ${items.purchasePrice}::numeric), 0)`,
       })
       .from(salesDocuments)
@@ -105,6 +105,7 @@ export class TransactionReportsRepository {
         salesDocuments.documentNumber,
         parties.name,
         salesDocuments.totalAmount,
+        salesDocuments.tcsAmount,
       )
       .orderBy(desc(salesDocuments.documentDate))
       .limit(query.limit)

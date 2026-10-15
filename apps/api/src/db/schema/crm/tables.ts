@@ -53,6 +53,7 @@ export const parties = pgTable(
     partyCategory: partyCategoryEnum('party_category'),
     pricingTier: pricingTierEnum('pricing_tier').notNull().default('tier_1'),
     gstin: text('gstin'),
+    pan: text('pan'),
     stateCode: text('state_code'),
     areaId: uuid('area_id').references(() => areas.id),
     creditLimit: money('credit_limit').notNull().default('0'),

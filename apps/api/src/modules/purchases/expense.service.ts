@@ -7,6 +7,7 @@ import type {
   UpdateExpenseBody,
 } from './expense.schema';
 import type { ExpenseRecord } from './expense.types';
+import { syncExpenseMovement, voidExpenseMovement } from '../bank-accounts/expense-movement.helper';
 import {
   postExpenseLedgerEntry,
   reverseExpenseLedgerEntry,
@@ -99,6 +100,7 @@ export class ExpenseService extends PurchasesServiceBase {
         attachments: input.attachments ?? [],
         expenseDate: input.expense_date,
         paymentMode: input.payment_mode ?? null,
+        bankAccountId: input.bank_account_id ?? null,
         createdBy: userId ?? null,
         updatedBy: userId ?? null,
       });
@@ -107,6 +109,7 @@ export class ExpenseService extends PurchasesServiceBase {
         businessId,
         expense,
       });
+      await syncExpenseMovement(tx as unknown as typeof this.db, businessId, expense, userId);
       return expense;
     });
   }
@@ -174,6 +177,9 @@ export class ExpenseService extends PurchasesServiceBase {
         ...(input.payment_mode !== undefined
           ? { paymentMode: input.payment_mode }
           : {}),
+        ...(input.bank_account_id !== undefined
+          ? { bankAccountId: input.bank_account_id }
+          : {}),
         updatedBy: userId ?? null,
       });
 
@@ -185,6 +191,7 @@ export class ExpenseService extends PurchasesServiceBase {
         businessId,
         expense: updated,
       });
+      await syncExpenseMovement(tx as unknown as typeof this.db, businessId, updated, userId);
       return updated;
     });
   }
@@ -217,6 +224,7 @@ export class ExpenseService extends PurchasesServiceBase {
       if (!deleted) {
         throw new AppError('NOT_FOUND', 'Expense not found', 404);
       }
+      await voidExpenseMovement(tx as unknown as typeof this.db, businessId, expenseId);
     });
   }
 
@@ -258,6 +266,51 @@ export class ExpenseService extends PurchasesServiceBase {
     const exists = await this.repository.partyExists(businessId, partyId);
     if (!exists) {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
+    }
+  }
+
+  async restoreExpense(
+    businessId: string,
+    accountId: string,
+    userId: string | undefined,
+    expenseId: string,
+  ): Promise<ExpenseRecord> {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    return this.db.transaction(async (tx) => {
+      const repo = new ExpenseRepository(tx as unknown as typeof this.db);
+      const restored = await repo.restoreFromRecycle(
+        businessId,
+        expenseId,
+        userId ?? null,
+      );
+      if (!restored) {
+        throw new AppError('NOT_FOUND', 'Deleted expense not found', 404);
+      }
+      await postExpenseLedgerEntry(tx as unknown as typeof this.db, {
+        businessId,
+        expense: restored,
+      });
+      await syncExpenseMovement(
+        tx as unknown as typeof this.db,
+        businessId,
+        restored,
+        userId,
+      );
+      return restored;
+    });
+  }
+
+  async purgeExpense(
+    businessId: string,
+    accountId: string,
+    _userId: string | undefined,
+    expenseId: string,
+  ): Promise<void> {
+    await this.assertBusinessAccess(businessId, accountId);
+    const purged = await this.repository.purgeFromRecycle(businessId, expenseId);
+    if (!purged) {
+      throw new AppError('NOT_FOUND', 'Deleted expense not found', 404);
     }
   }
 }

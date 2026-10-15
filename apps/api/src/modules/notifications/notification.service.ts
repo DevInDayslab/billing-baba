@@ -4,7 +4,9 @@ import {
   buildPaymentReceivedNotification,
   buildPaymentReminderNotification,
   buildSaleInvoiceNotification,
+  buildPartyContactImportNotification,
   buildSyncShareInviteNotification,
+  type PartyContactImportNotificationInput,
   type PaymentReceivedNotificationInput,
   type PaymentReminderNotificationInput,
   type SaleInvoiceNotificationInput,
@@ -74,6 +76,26 @@ export class NotificationService {
       ...input,
       expiryDays: input.expiryDays ?? this.config.invitationExpiryDays,
     });
+
+    return this.safeSend({
+      to: recipient.phone,
+      body: content.body,
+      notificationType: content.type,
+      idempotencyKey: options.idempotencyKey,
+      companyId: options.companyId,
+      metadata: {
+        notificationType: content.type,
+        companyName: input.companyName,
+      },
+    });
+  }
+
+  async sendPartyContactImportLink(
+    recipient: NotifyRecipient,
+    input: PartyContactImportNotificationInput,
+    options: NotifyOptions,
+  ): Promise<NotificationSendResult> {
+    const content = buildPartyContactImportNotification(input);
 
     return this.safeSend({
       to: recipient.phone,

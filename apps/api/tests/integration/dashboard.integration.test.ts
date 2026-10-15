@@ -34,6 +34,8 @@ describe.skipIf(!canRunDbTests)('Dashboard integration', () => {
       expect(body.data.sales).toBeDefined();
       expect(body.data.purchases).toBeDefined();
       expect(body.data.inventory).toBeDefined();
+      const finance = body.data.finance as Record<string, string>;
+      expect(finance.bank_balance).toBeDefined();
     },
     INTEGRATION_TIMEOUT_MS,
   );

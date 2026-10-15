@@ -119,6 +119,10 @@ export class PaymentRepository {
           | null
           | undefined,
         source: values.source ?? 'manual',
+        tdsSectionId: values.tdsSectionId ?? null,
+        tdsRate: values.tdsRate ?? null,
+        tdsAmount: values.tdsAmount ?? '0',
+        bankAccountId: values.bankAccountId ?? null,
         createdBy: values.createdBy ?? null,
         updatedBy: values.updatedBy ?? null,
       })
@@ -163,6 +167,68 @@ export class PaymentRepository {
       .returning();
 
     return row ? toPaymentRecord(row) : null;
+  }
+
+  async findByIdIncludingDeleted(
+    businessId: string,
+    paymentId: string,
+  ): Promise<PaymentRecord | null> {
+    const [row] = await this.db
+      .select()
+      .from(payments)
+      .where(
+        and(
+          eq(payments.id, paymentId),
+          eq(payments.businessId, businessId),
+        ),
+      )
+      .limit(1);
+
+    return row ? toPaymentRecord(row) : null;
+  }
+
+  async restoreFromRecycle(
+    businessId: string,
+    paymentId: string,
+    updatedBy?: string | null,
+  ): Promise<PaymentRecord | null> {
+    const [row] = await this.db
+      .update(payments)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        updatedBy: updatedBy ?? null,
+        updatedAt: new Date(),
+        syncVersion: sql`${payments.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(payments.id, paymentId),
+          eq(payments.businessId, businessId),
+          eq(payments.isDeleted, true),
+        ),
+      )
+      .returning();
+
+    return row ? toPaymentRecord(row) : null;
+  }
+
+  async purgeFromRecycle(
+    businessId: string,
+    paymentId: string,
+  ): Promise<boolean> {
+    const result = await this.db
+      .delete(payments)
+      .where(
+        and(
+          eq(payments.id, paymentId),
+          eq(payments.businessId, businessId),
+          eq(payments.isDeleted, true),
+        ),
+      )
+      .returning({ id: payments.id });
+
+    return result.length > 0;
   }
 
   async softDelete(
@@ -458,7 +524,7 @@ export class PaymentRepository {
   async createLedgerEntry(values: {
     businessId: string;
     partyId: string;
-    entryType: 'payment';
+    entryType: 'payment' | 'tds';
     debit: string;
     credit: string;
     balanceAfter: string;
@@ -511,6 +577,7 @@ function toPaymentRecord(row: typeof payments.$inferSelect): PaymentRecord {
     amount: row.amount,
     discount_amount: row.discountAmount,
     payment_mode: row.paymentMode,
+    bank_account_id: row.bankAccountId ?? null,
     payment_date: row.paymentDate.toISOString(),
     reference_number: row.referenceNumber,
     notes: row.notes,

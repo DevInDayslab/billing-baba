@@ -20,6 +20,8 @@ class BusinessSettingsLocal extends Table {
   /// JSON object string for pricing tier labels.
   TextColumn get pricingTierLabels => text().nullable()();
   TextColumn get defaultInvoiceTaxRate => text().nullable()();
+  BoolColumn get enableTds => boolean().withDefault(const Constant(false))();
+  BoolColumn get enableTcs => boolean().withDefault(const Constant(false))();
   IntColumn get syncVersion => integer().withDefault(const Constant(0))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();

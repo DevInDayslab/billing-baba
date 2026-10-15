@@ -8,18 +8,15 @@ import 'package:billing_baba/features/reports/models/other_income_report_subsect
 import 'package:billing_baba/features/reports/models/party_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/sale_purchase_order_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/tax_report_kind.dart';
 import 'package:billing_baba/features/reports/models/taxes_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/business_status/bank_statement_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/expense/expense_category_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/expense/expense_item_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/expense/expense_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/gstr1_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/gstr2_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/gstr3b_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/gstr9_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/sac_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/sale_summary_by_hsn_report_content.dart';
+import 'package:billing_baba/features/reports/models/gst_report_type.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/gst/gst_report_scaffold.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/item_stock/consumption_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/item_stock/item_category_wise_profit_loss_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/item_stock/item_detail_report_content.dart';
@@ -44,9 +41,7 @@ import 'package:billing_baba/features/reports/presentation/desktop/widgets/party
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/sale_purchase_order/sale_purchase_order_item_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/sale_purchase_order/sale_purchase_orders_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_panel_scope.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/taxes/gst_tax_rate_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/taxes/gst_tax_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/taxes/tax_invoice_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/taxes/tax_report_scaffold.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/transaction/all_transactions_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/transaction/balance_sheet_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/transaction/bill_wise_profit_report_content.dart';
@@ -129,15 +124,7 @@ class ReportContentPanel extends StatelessWidget {
 
     if (navGroup == ReportNavGroup.gst && gstSub != null) {
       return _scoped(
-        switch (gstSub!) {
-          GstReportSubSection.gstr1 => const Gstr1ReportContent(),
-          GstReportSubSection.gstr2 => const Gstr2ReportContent(),
-          GstReportSubSection.gstr3b => const Gstr3bReportContent(),
-          GstReportSubSection.gstr9 => const Gstr9ReportContent(),
-          GstReportSubSection.saleSummaryByHsn =>
-            const SaleSummaryByHsnReportContent(),
-          GstReportSubSection.sacReport => const SacReportContent(),
-        },
+        GstReportScaffold(type: gstSub!.toGstReportType()),
       );
     }
 
@@ -182,20 +169,23 @@ class ReportContentPanel extends StatelessWidget {
     if (navGroup == ReportNavGroup.taxes && taxesSub != null) {
       return _scoped(
         switch (taxesSub!) {
-          TaxesReportSubSection.gstReport => const GstTaxReportContent(),
-          TaxesReportSubSection.gstRateReport =>
-            const GstTaxRateReportContent(),
-          TaxesReportSubSection.formNo27Eq => TaxInvoiceReportContent(
-            subSection: taxesSub!,
+          TaxesReportSubSection.gstReport => const TaxReportScaffold(
+            kind: TaxReportKind.gstRegister,
           ),
-          TaxesReportSubSection.tcsReceivable => TaxInvoiceReportContent(
-            subSection: taxesSub!,
+          TaxesReportSubSection.gstRateReport => const TaxReportScaffold(
+            kind: TaxReportKind.gstRateSummary,
           ),
-          TaxesReportSubSection.tdsPayable => TaxInvoiceReportContent(
-            subSection: taxesSub!,
+          TaxesReportSubSection.formNo27Eq => const TaxReportScaffold(
+            kind: TaxReportKind.form27eq,
           ),
-          TaxesReportSubSection.tdsReceivable => TaxInvoiceReportContent(
-            subSection: taxesSub!,
+          TaxesReportSubSection.tcsReceivable => const TaxReportScaffold(
+            kind: TaxReportKind.tcsReceivable,
+          ),
+          TaxesReportSubSection.tdsPayable => const TaxReportScaffold(
+            kind: TaxReportKind.tdsPayable,
+          ),
+          TaxesReportSubSection.tdsReceivable => const TaxReportScaffold(
+            kind: TaxReportKind.tdsReceivable,
           ),
         },
       );

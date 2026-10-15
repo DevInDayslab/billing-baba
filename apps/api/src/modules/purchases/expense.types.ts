@@ -14,6 +14,7 @@ export type ExpenseRecord = {
   attachments: string[];
   expense_date: string;
   payment_mode: string | null;
+  bank_account_id: string | null;
   source_reference_id: string | null;
   source_reference_type: string | null;
   loyalty_points: string | null;
@@ -37,6 +38,7 @@ export type ExpenseInsertValues = {
   attachments?: string[];
   expenseDate: string;
   paymentMode?: string | null;
+  bankAccountId?: string | null;
   sourceReferenceId?: string | null;
   sourceReferenceType?: string | null;
   loyaltyPoints?: string | null;
@@ -59,6 +61,7 @@ export type ExpenseUpdateValues = {
   attachments?: string[];
   expenseDate?: string;
   paymentMode?: string | null;
+  bankAccountId?: string | null;
   sourceReferenceId?: string | null;
   sourceReferenceType?: string | null;
   loyaltyPoints?: string | null;
@@ -99,6 +102,7 @@ export type ExpenseRow = {
   attachments: string[] | null;
   expenseDate: string;
   paymentMode: string | null;
+  bankAccountId: string | null;
   sourceReferenceId: string | null;
   sourceReferenceType: string | null;
   loyaltyPoints: string | null;

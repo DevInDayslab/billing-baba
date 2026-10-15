@@ -192,11 +192,28 @@ class AddExpenseForm extends _$AddExpenseForm {
   }
 
   void updatePaymentType(String type) {
+    final isCash = type.toLowerCase() == 'cash';
     final payments = [...state.payments];
     if (payments.isEmpty) {
       payments.add(ExpensePaymentEntry(type: type));
     } else {
-      payments[0] = payments[0].copyWith(type: type);
+      payments[0] = payments[0].copyWith(
+        type: type,
+        clearBankAccountId: isCash,
+      );
+    }
+    state = state.copyWith(payments: payments, isDirty: true);
+  }
+
+  void updatePaymentBankAccountId(String? id) {
+    final payments = [...state.payments];
+    if (payments.isEmpty) {
+      payments.add(ExpensePaymentEntry(type: 'Cash', bankAccountId: id));
+    } else {
+      payments[0] = payments[0].copyWith(
+        bankAccountId: id,
+        clearBankAccountId: id == null || id.isEmpty,
+      );
     }
     state = state.copyWith(payments: payments, isDirty: true);
   }
@@ -387,6 +404,9 @@ class AddExpenseForm extends _$AddExpenseForm {
         taxAmount: taxAmount,
         taxRate: taxRate,
         paymentMode: PurchasePaymentModes.toApi(state.paymentType),
+        bankAccountId: state.payments.isNotEmpty
+            ? state.payments.first.bankAccountId
+            : null,
       );
 
       final expenseId = state.expenseId;
@@ -406,6 +426,7 @@ class AddExpenseForm extends _$AddExpenseForm {
             taxAmount: request.taxAmount,
             taxRate: request.taxRate,
             paymentMode: request.paymentMode,
+            bankAccountId: request.bankAccountId,
           ),
         );
         savedExpenseId = expenseId;

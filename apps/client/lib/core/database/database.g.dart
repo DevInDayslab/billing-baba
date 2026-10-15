@@ -8643,6 +8643,15 @@ class $PartiesLocalTable extends PartiesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _panMeta = const VerificationMeta('pan');
+  @override
+  late final GeneratedColumn<String> pan = GeneratedColumn<String>(
+    'pan',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _stateCodeMeta = const VerificationMeta(
     'stateCode',
   );
@@ -8842,6 +8851,7 @@ class $PartiesLocalTable extends PartiesLocal
     partyCategory,
     pricingTier,
     gstin,
+    pan,
     stateCode,
     areaId,
     creditLimit,
@@ -8956,6 +8966,12 @@ class $PartiesLocalTable extends PartiesLocal
       context.handle(
         _gstinMeta,
         gstin.isAcceptableOrUnknown(data['gstin']!, _gstinMeta),
+      );
+    }
+    if (data.containsKey('pan')) {
+      context.handle(
+        _panMeta,
+        pan.isAcceptableOrUnknown(data['pan']!, _panMeta),
       );
     }
     if (data.containsKey('state_code')) {
@@ -9140,6 +9156,10 @@ class $PartiesLocalTable extends PartiesLocal
         DriftSqlType.string,
         data['${effectivePrefix}gstin'],
       ),
+      pan: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pan'],
+      ),
       stateCode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}state_code'],
@@ -9227,6 +9247,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
   final String? partyCategory;
   final String pricingTier;
   final String? gstin;
+  final String? pan;
   final String? stateCode;
   final String? areaId;
   final String creditLimit;
@@ -9257,6 +9278,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
     this.partyCategory,
     required this.pricingTier,
     this.gstin,
+    this.pan,
     this.stateCode,
     this.areaId,
     required this.creditLimit,
@@ -9305,6 +9327,9 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
     map['pricing_tier'] = Variable<String>(pricingTier);
     if (!nullToAbsent || gstin != null) {
       map['gstin'] = Variable<String>(gstin);
+    }
+    if (!nullToAbsent || pan != null) {
+      map['pan'] = Variable<String>(pan);
     }
     if (!nullToAbsent || stateCode != null) {
       map['state_code'] = Variable<String>(stateCode);
@@ -9372,6 +9397,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
       gstin: gstin == null && nullToAbsent
           ? const Value.absent()
           : Value(gstin),
+      pan: pan == null && nullToAbsent ? const Value.absent() : Value(pan),
       stateCode: stateCode == null && nullToAbsent
           ? const Value.absent()
           : Value(stateCode),
@@ -9426,6 +9452,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
       partyCategory: serializer.fromJson<String?>(json['partyCategory']),
       pricingTier: serializer.fromJson<String>(json['pricingTier']),
       gstin: serializer.fromJson<String?>(json['gstin']),
+      pan: serializer.fromJson<String?>(json['pan']),
       stateCode: serializer.fromJson<String?>(json['stateCode']),
       areaId: serializer.fromJson<String?>(json['areaId']),
       creditLimit: serializer.fromJson<String>(json['creditLimit']),
@@ -9465,6 +9492,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
       'partyCategory': serializer.toJson<String?>(partyCategory),
       'pricingTier': serializer.toJson<String>(pricingTier),
       'gstin': serializer.toJson<String?>(gstin),
+      'pan': serializer.toJson<String?>(pan),
       'stateCode': serializer.toJson<String?>(stateCode),
       'areaId': serializer.toJson<String?>(areaId),
       'creditLimit': serializer.toJson<String>(creditLimit),
@@ -9498,6 +9526,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
     Value<String?> partyCategory = const Value.absent(),
     String? pricingTier,
     Value<String?> gstin = const Value.absent(),
+    Value<String?> pan = const Value.absent(),
     Value<String?> stateCode = const Value.absent(),
     Value<String?> areaId = const Value.absent(),
     String? creditLimit,
@@ -9530,6 +9559,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
         : this.partyCategory,
     pricingTier: pricingTier ?? this.pricingTier,
     gstin: gstin.present ? gstin.value : this.gstin,
+    pan: pan.present ? pan.value : this.pan,
     stateCode: stateCode.present ? stateCode.value : this.stateCode,
     areaId: areaId.present ? areaId.value : this.areaId,
     creditLimit: creditLimit ?? this.creditLimit,
@@ -9576,6 +9606,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
           ? data.pricingTier.value
           : this.pricingTier,
       gstin: data.gstin.present ? data.gstin.value : this.gstin,
+      pan: data.pan.present ? data.pan.value : this.pan,
       stateCode: data.stateCode.present ? data.stateCode.value : this.stateCode,
       areaId: data.areaId.present ? data.areaId.value : this.areaId,
       creditLimit: data.creditLimit.present
@@ -9625,6 +9656,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
           ..write('partyCategory: $partyCategory, ')
           ..write('pricingTier: $pricingTier, ')
           ..write('gstin: $gstin, ')
+          ..write('pan: $pan, ')
           ..write('stateCode: $stateCode, ')
           ..write('areaId: $areaId, ')
           ..write('creditLimit: $creditLimit, ')
@@ -9660,6 +9692,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
     partyCategory,
     pricingTier,
     gstin,
+    pan,
     stateCode,
     areaId,
     creditLimit,
@@ -9694,6 +9727,7 @@ class PartyTableData extends DataClass implements Insertable<PartyTableData> {
           other.partyCategory == this.partyCategory &&
           other.pricingTier == this.pricingTier &&
           other.gstin == this.gstin &&
+          other.pan == this.pan &&
           other.stateCode == this.stateCode &&
           other.areaId == this.areaId &&
           other.creditLimit == this.creditLimit &&
@@ -9726,6 +9760,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
   final Value<String?> partyCategory;
   final Value<String> pricingTier;
   final Value<String?> gstin;
+  final Value<String?> pan;
   final Value<String?> stateCode;
   final Value<String?> areaId;
   final Value<String> creditLimit;
@@ -9757,6 +9792,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
     this.partyCategory = const Value.absent(),
     this.pricingTier = const Value.absent(),
     this.gstin = const Value.absent(),
+    this.pan = const Value.absent(),
     this.stateCode = const Value.absent(),
     this.areaId = const Value.absent(),
     this.creditLimit = const Value.absent(),
@@ -9789,6 +9825,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
     this.partyCategory = const Value.absent(),
     this.pricingTier = const Value.absent(),
     this.gstin = const Value.absent(),
+    this.pan = const Value.absent(),
     this.stateCode = const Value.absent(),
     this.areaId = const Value.absent(),
     this.creditLimit = const Value.absent(),
@@ -9825,6 +9862,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
     Expression<String>? partyCategory,
     Expression<String>? pricingTier,
     Expression<String>? gstin,
+    Expression<String>? pan,
     Expression<String>? stateCode,
     Expression<String>? areaId,
     Expression<String>? creditLimit,
@@ -9857,6 +9895,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
       if (partyCategory != null) 'party_category': partyCategory,
       if (pricingTier != null) 'pricing_tier': pricingTier,
       if (gstin != null) 'gstin': gstin,
+      if (pan != null) 'pan': pan,
       if (stateCode != null) 'state_code': stateCode,
       if (areaId != null) 'area_id': areaId,
       if (creditLimit != null) 'credit_limit': creditLimit,
@@ -9893,6 +9932,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
     Value<String?>? partyCategory,
     Value<String>? pricingTier,
     Value<String?>? gstin,
+    Value<String?>? pan,
     Value<String?>? stateCode,
     Value<String?>? areaId,
     Value<String>? creditLimit,
@@ -9925,6 +9965,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
       partyCategory: partyCategory ?? this.partyCategory,
       pricingTier: pricingTier ?? this.pricingTier,
       gstin: gstin ?? this.gstin,
+      pan: pan ?? this.pan,
       stateCode: stateCode ?? this.stateCode,
       areaId: areaId ?? this.areaId,
       creditLimit: creditLimit ?? this.creditLimit,
@@ -9986,6 +10027,9 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
     }
     if (gstin.present) {
       map['gstin'] = Variable<String>(gstin.value);
+    }
+    if (pan.present) {
+      map['pan'] = Variable<String>(pan.value);
     }
     if (stateCode.present) {
       map['state_code'] = Variable<String>(stateCode.value);
@@ -10061,6 +10105,7 @@ class PartiesLocalCompanion extends UpdateCompanion<PartyTableData> {
           ..write('partyCategory: $partyCategory, ')
           ..write('pricingTier: $pricingTier, ')
           ..write('gstin: $gstin, ')
+          ..write('pan: $pan, ')
           ..write('stateCode: $stateCode, ')
           ..write('areaId: $areaId, ')
           ..write('creditLimit: $creditLimit, ')
@@ -16660,6 +16705,1028 @@ class TaxRatesLocalCompanion extends UpdateCompanion<TaxRateTableData> {
   }
 }
 
+class $BankAccountsLocalTable extends BankAccountsLocal
+    with TableInfo<$BankAccountsLocalTable, BankAccountTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BankAccountsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bankNameMeta = const VerificationMeta(
+    'bankName',
+  );
+  @override
+  late final GeneratedColumn<String> bankName = GeneratedColumn<String>(
+    'bank_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountNumberMeta = const VerificationMeta(
+    'accountNumber',
+  );
+  @override
+  late final GeneratedColumn<String> accountNumber = GeneratedColumn<String>(
+    'account_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ifscMeta = const VerificationMeta('ifsc');
+  @override
+  late final GeneratedColumn<String> ifsc = GeneratedColumn<String>(
+    'ifsc',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _upiIdMeta = const VerificationMeta('upiId');
+  @override
+  late final GeneratedColumn<String> upiId = GeneratedColumn<String>(
+    'upi_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _openingBalanceMeta = const VerificationMeta(
+    'openingBalance',
+  );
+  @override
+  late final GeneratedColumn<String> openingBalance = GeneratedColumn<String>(
+    'opening_balance',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _openingBalanceAsOfMeta =
+      const VerificationMeta('openingBalanceAsOf');
+  @override
+  late final GeneratedColumn<String> openingBalanceAsOf =
+      GeneratedColumn<String>(
+        'opening_balance_as_of',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    type,
+    displayName,
+    bankName,
+    accountNumber,
+    ifsc,
+    upiId,
+    openingBalance,
+    openingBalanceAsOf,
+    isDefault,
+    isActive,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bank_accounts_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BankAccountTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('bank_name')) {
+      context.handle(
+        _bankNameMeta,
+        bankName.isAcceptableOrUnknown(data['bank_name']!, _bankNameMeta),
+      );
+    }
+    if (data.containsKey('account_number')) {
+      context.handle(
+        _accountNumberMeta,
+        accountNumber.isAcceptableOrUnknown(
+          data['account_number']!,
+          _accountNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ifsc')) {
+      context.handle(
+        _ifscMeta,
+        ifsc.isAcceptableOrUnknown(data['ifsc']!, _ifscMeta),
+      );
+    }
+    if (data.containsKey('upi_id')) {
+      context.handle(
+        _upiIdMeta,
+        upiId.isAcceptableOrUnknown(data['upi_id']!, _upiIdMeta),
+      );
+    }
+    if (data.containsKey('opening_balance')) {
+      context.handle(
+        _openingBalanceMeta,
+        openingBalance.isAcceptableOrUnknown(
+          data['opening_balance']!,
+          _openingBalanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('opening_balance_as_of')) {
+      context.handle(
+        _openingBalanceAsOfMeta,
+        openingBalanceAsOf.isAcceptableOrUnknown(
+          data['opening_balance_as_of']!,
+          _openingBalanceAsOfMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_openingBalanceAsOfMeta);
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BankAccountTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BankAccountTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      bankName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bank_name'],
+      ),
+      accountNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_number'],
+      ),
+      ifsc: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ifsc'],
+      ),
+      upiId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}upi_id'],
+      ),
+      openingBalance: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opening_balance'],
+      )!,
+      openingBalanceAsOf: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opening_balance_as_of'],
+      )!,
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $BankAccountsLocalTable createAlias(String alias) {
+    return $BankAccountsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class BankAccountTableData extends DataClass
+    implements Insertable<BankAccountTableData> {
+  final String id;
+  final String businessId;
+  final String type;
+  final String displayName;
+  final String? bankName;
+  final String? accountNumber;
+  final String? ifsc;
+  final String? upiId;
+  final String openingBalance;
+  final String openingBalanceAsOf;
+  final bool isDefault;
+  final bool isActive;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const BankAccountTableData({
+    required this.id,
+    required this.businessId,
+    required this.type,
+    required this.displayName,
+    this.bankName,
+    this.accountNumber,
+    this.ifsc,
+    this.upiId,
+    required this.openingBalance,
+    required this.openingBalanceAsOf,
+    required this.isDefault,
+    required this.isActive,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['type'] = Variable<String>(type);
+    map['display_name'] = Variable<String>(displayName);
+    if (!nullToAbsent || bankName != null) {
+      map['bank_name'] = Variable<String>(bankName);
+    }
+    if (!nullToAbsent || accountNumber != null) {
+      map['account_number'] = Variable<String>(accountNumber);
+    }
+    if (!nullToAbsent || ifsc != null) {
+      map['ifsc'] = Variable<String>(ifsc);
+    }
+    if (!nullToAbsent || upiId != null) {
+      map['upi_id'] = Variable<String>(upiId);
+    }
+    map['opening_balance'] = Variable<String>(openingBalance);
+    map['opening_balance_as_of'] = Variable<String>(openingBalanceAsOf);
+    map['is_default'] = Variable<bool>(isDefault);
+    map['is_active'] = Variable<bool>(isActive);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  BankAccountsLocalCompanion toCompanion(bool nullToAbsent) {
+    return BankAccountsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      type: Value(type),
+      displayName: Value(displayName),
+      bankName: bankName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bankName),
+      accountNumber: accountNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountNumber),
+      ifsc: ifsc == null && nullToAbsent ? const Value.absent() : Value(ifsc),
+      upiId: upiId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(upiId),
+      openingBalance: Value(openingBalance),
+      openingBalanceAsOf: Value(openingBalanceAsOf),
+      isDefault: Value(isDefault),
+      isActive: Value(isActive),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory BankAccountTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BankAccountTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      type: serializer.fromJson<String>(json['type']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      bankName: serializer.fromJson<String?>(json['bankName']),
+      accountNumber: serializer.fromJson<String?>(json['accountNumber']),
+      ifsc: serializer.fromJson<String?>(json['ifsc']),
+      upiId: serializer.fromJson<String?>(json['upiId']),
+      openingBalance: serializer.fromJson<String>(json['openingBalance']),
+      openingBalanceAsOf: serializer.fromJson<String>(
+        json['openingBalanceAsOf'],
+      ),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'type': serializer.toJson<String>(type),
+      'displayName': serializer.toJson<String>(displayName),
+      'bankName': serializer.toJson<String?>(bankName),
+      'accountNumber': serializer.toJson<String?>(accountNumber),
+      'ifsc': serializer.toJson<String?>(ifsc),
+      'upiId': serializer.toJson<String?>(upiId),
+      'openingBalance': serializer.toJson<String>(openingBalance),
+      'openingBalanceAsOf': serializer.toJson<String>(openingBalanceAsOf),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'isActive': serializer.toJson<bool>(isActive),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  BankAccountTableData copyWith({
+    String? id,
+    String? businessId,
+    String? type,
+    String? displayName,
+    Value<String?> bankName = const Value.absent(),
+    Value<String?> accountNumber = const Value.absent(),
+    Value<String?> ifsc = const Value.absent(),
+    Value<String?> upiId = const Value.absent(),
+    String? openingBalance,
+    String? openingBalanceAsOf,
+    bool? isDefault,
+    bool? isActive,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => BankAccountTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    type: type ?? this.type,
+    displayName: displayName ?? this.displayName,
+    bankName: bankName.present ? bankName.value : this.bankName,
+    accountNumber: accountNumber.present
+        ? accountNumber.value
+        : this.accountNumber,
+    ifsc: ifsc.present ? ifsc.value : this.ifsc,
+    upiId: upiId.present ? upiId.value : this.upiId,
+    openingBalance: openingBalance ?? this.openingBalance,
+    openingBalanceAsOf: openingBalanceAsOf ?? this.openingBalanceAsOf,
+    isDefault: isDefault ?? this.isDefault,
+    isActive: isActive ?? this.isActive,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  BankAccountTableData copyWithCompanion(BankAccountsLocalCompanion data) {
+    return BankAccountTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      type: data.type.present ? data.type.value : this.type,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      bankName: data.bankName.present ? data.bankName.value : this.bankName,
+      accountNumber: data.accountNumber.present
+          ? data.accountNumber.value
+          : this.accountNumber,
+      ifsc: data.ifsc.present ? data.ifsc.value : this.ifsc,
+      upiId: data.upiId.present ? data.upiId.value : this.upiId,
+      openingBalance: data.openingBalance.present
+          ? data.openingBalance.value
+          : this.openingBalance,
+      openingBalanceAsOf: data.openingBalanceAsOf.present
+          ? data.openingBalanceAsOf.value
+          : this.openingBalanceAsOf,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BankAccountTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('type: $type, ')
+          ..write('displayName: $displayName, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumber: $accountNumber, ')
+          ..write('ifsc: $ifsc, ')
+          ..write('upiId: $upiId, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('openingBalanceAsOf: $openingBalanceAsOf, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    type,
+    displayName,
+    bankName,
+    accountNumber,
+    ifsc,
+    upiId,
+    openingBalance,
+    openingBalanceAsOf,
+    isDefault,
+    isActive,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BankAccountTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.type == this.type &&
+          other.displayName == this.displayName &&
+          other.bankName == this.bankName &&
+          other.accountNumber == this.accountNumber &&
+          other.ifsc == this.ifsc &&
+          other.upiId == this.upiId &&
+          other.openingBalance == this.openingBalance &&
+          other.openingBalanceAsOf == this.openingBalanceAsOf &&
+          other.isDefault == this.isDefault &&
+          other.isActive == this.isActive &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class BankAccountsLocalCompanion extends UpdateCompanion<BankAccountTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> type;
+  final Value<String> displayName;
+  final Value<String?> bankName;
+  final Value<String?> accountNumber;
+  final Value<String?> ifsc;
+  final Value<String?> upiId;
+  final Value<String> openingBalance;
+  final Value<String> openingBalanceAsOf;
+  final Value<bool> isDefault;
+  final Value<bool> isActive;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const BankAccountsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.bankName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
+    this.ifsc = const Value.absent(),
+    this.upiId = const Value.absent(),
+    this.openingBalance = const Value.absent(),
+    this.openingBalanceAsOf = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BankAccountsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String type,
+    required String displayName,
+    this.bankName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
+    this.ifsc = const Value.absent(),
+    this.upiId = const Value.absent(),
+    this.openingBalance = const Value.absent(),
+    required String openingBalanceAsOf,
+    this.isDefault = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       type = Value(type),
+       displayName = Value(displayName),
+       openingBalanceAsOf = Value(openingBalanceAsOf),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<BankAccountTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? type,
+    Expression<String>? displayName,
+    Expression<String>? bankName,
+    Expression<String>? accountNumber,
+    Expression<String>? ifsc,
+    Expression<String>? upiId,
+    Expression<String>? openingBalance,
+    Expression<String>? openingBalanceAsOf,
+    Expression<bool>? isDefault,
+    Expression<bool>? isActive,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (type != null) 'type': type,
+      if (displayName != null) 'display_name': displayName,
+      if (bankName != null) 'bank_name': bankName,
+      if (accountNumber != null) 'account_number': accountNumber,
+      if (ifsc != null) 'ifsc': ifsc,
+      if (upiId != null) 'upi_id': upiId,
+      if (openingBalance != null) 'opening_balance': openingBalance,
+      if (openingBalanceAsOf != null)
+        'opening_balance_as_of': openingBalanceAsOf,
+      if (isDefault != null) 'is_default': isDefault,
+      if (isActive != null) 'is_active': isActive,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BankAccountsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? type,
+    Value<String>? displayName,
+    Value<String?>? bankName,
+    Value<String?>? accountNumber,
+    Value<String?>? ifsc,
+    Value<String?>? upiId,
+    Value<String>? openingBalance,
+    Value<String>? openingBalanceAsOf,
+    Value<bool>? isDefault,
+    Value<bool>? isActive,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return BankAccountsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      type: type ?? this.type,
+      displayName: displayName ?? this.displayName,
+      bankName: bankName ?? this.bankName,
+      accountNumber: accountNumber ?? this.accountNumber,
+      ifsc: ifsc ?? this.ifsc,
+      upiId: upiId ?? this.upiId,
+      openingBalance: openingBalance ?? this.openingBalance,
+      openingBalanceAsOf: openingBalanceAsOf ?? this.openingBalanceAsOf,
+      isDefault: isDefault ?? this.isDefault,
+      isActive: isActive ?? this.isActive,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (bankName.present) {
+      map['bank_name'] = Variable<String>(bankName.value);
+    }
+    if (accountNumber.present) {
+      map['account_number'] = Variable<String>(accountNumber.value);
+    }
+    if (ifsc.present) {
+      map['ifsc'] = Variable<String>(ifsc.value);
+    }
+    if (upiId.present) {
+      map['upi_id'] = Variable<String>(upiId.value);
+    }
+    if (openingBalance.present) {
+      map['opening_balance'] = Variable<String>(openingBalance.value);
+    }
+    if (openingBalanceAsOf.present) {
+      map['opening_balance_as_of'] = Variable<String>(openingBalanceAsOf.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BankAccountsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('type: $type, ')
+          ..write('displayName: $displayName, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumber: $accountNumber, ')
+          ..write('ifsc: $ifsc, ')
+          ..write('upiId: $upiId, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('openingBalanceAsOf: $openingBalanceAsOf, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $GodownsLocalTable extends GodownsLocal
     with TableInfo<$GodownsLocalTable, GodownTableData> {
   @override
@@ -17436,6 +18503,36 @@ class $BusinessSettingsLocalTable extends BusinessSettingsLocal
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _enableTdsMeta = const VerificationMeta(
+    'enableTds',
+  );
+  @override
+  late final GeneratedColumn<bool> enableTds = GeneratedColumn<bool>(
+    'enable_tds',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enable_tds" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _enableTcsMeta = const VerificationMeta(
+    'enableTcs',
+  );
+  @override
+  late final GeneratedColumn<bool> enableTcs = GeneratedColumn<bool>(
+    'enable_tcs',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enable_tcs" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _syncVersionMeta = const VerificationMeta(
     'syncVersion',
   );
@@ -17518,6 +18615,8 @@ class $BusinessSettingsLocalTable extends BusinessSettingsLocal
     creditLimitAction,
     pricingTierLabels,
     defaultInvoiceTaxRate,
+    enableTds,
+    enableTcs,
     syncVersion,
     isDeleted,
     createdAt,
@@ -17613,6 +18712,18 @@ class $BusinessSettingsLocalTable extends BusinessSettingsLocal
         ),
       );
     }
+    if (data.containsKey('enable_tds')) {
+      context.handle(
+        _enableTdsMeta,
+        enableTds.isAcceptableOrUnknown(data['enable_tds']!, _enableTdsMeta),
+      );
+    }
+    if (data.containsKey('enable_tcs')) {
+      context.handle(
+        _enableTcsMeta,
+        enableTcs.isAcceptableOrUnknown(data['enable_tcs']!, _enableTcsMeta),
+      );
+    }
     if (data.containsKey('sync_version')) {
       context.handle(
         _syncVersionMeta,
@@ -17704,6 +18815,14 @@ class $BusinessSettingsLocalTable extends BusinessSettingsLocal
         DriftSqlType.string,
         data['${effectivePrefix}default_invoice_tax_rate'],
       ),
+      enableTds: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enable_tds'],
+      )!,
+      enableTcs: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enable_tcs'],
+      )!,
       syncVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sync_version'],
@@ -17750,6 +18869,8 @@ class BusinessSettingsTableData extends DataClass
   /// JSON object string for pricing tier labels.
   final String? pricingTierLabels;
   final String? defaultInvoiceTaxRate;
+  final bool enableTds;
+  final bool enableTcs;
   final int syncVersion;
   final bool isDeleted;
   final DateTime createdAt;
@@ -17766,6 +18887,8 @@ class BusinessSettingsTableData extends DataClass
     required this.creditLimitAction,
     this.pricingTierLabels,
     this.defaultInvoiceTaxRate,
+    required this.enableTds,
+    required this.enableTcs,
     required this.syncVersion,
     required this.isDeleted,
     required this.createdAt,
@@ -17793,6 +18916,8 @@ class BusinessSettingsTableData extends DataClass
     if (!nullToAbsent || defaultInvoiceTaxRate != null) {
       map['default_invoice_tax_rate'] = Variable<String>(defaultInvoiceTaxRate);
     }
+    map['enable_tds'] = Variable<bool>(enableTds);
+    map['enable_tcs'] = Variable<bool>(enableTcs);
     map['sync_version'] = Variable<int>(syncVersion);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -17823,6 +18948,8 @@ class BusinessSettingsTableData extends DataClass
       defaultInvoiceTaxRate: defaultInvoiceTaxRate == null && nullToAbsent
           ? const Value.absent()
           : Value(defaultInvoiceTaxRate),
+      enableTds: Value(enableTds),
+      enableTcs: Value(enableTcs),
       syncVersion: Value(syncVersion),
       isDeleted: Value(isDeleted),
       createdAt: Value(createdAt),
@@ -17857,6 +18984,8 @@ class BusinessSettingsTableData extends DataClass
       defaultInvoiceTaxRate: serializer.fromJson<String?>(
         json['defaultInvoiceTaxRate'],
       ),
+      enableTds: serializer.fromJson<bool>(json['enableTds']),
+      enableTcs: serializer.fromJson<bool>(json['enableTcs']),
       syncVersion: serializer.fromJson<int>(json['syncVersion']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -17882,6 +19011,8 @@ class BusinessSettingsTableData extends DataClass
       'defaultInvoiceTaxRate': serializer.toJson<String?>(
         defaultInvoiceTaxRate,
       ),
+      'enableTds': serializer.toJson<bool>(enableTds),
+      'enableTcs': serializer.toJson<bool>(enableTcs),
       'syncVersion': serializer.toJson<int>(syncVersion),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -17901,6 +19032,8 @@ class BusinessSettingsTableData extends DataClass
     String? creditLimitAction,
     Value<String?> pricingTierLabels = const Value.absent(),
     Value<String?> defaultInvoiceTaxRate = const Value.absent(),
+    bool? enableTds,
+    bool? enableTcs,
     int? syncVersion,
     bool? isDeleted,
     DateTime? createdAt,
@@ -17922,6 +19055,8 @@ class BusinessSettingsTableData extends DataClass
     defaultInvoiceTaxRate: defaultInvoiceTaxRate.present
         ? defaultInvoiceTaxRate.value
         : this.defaultInvoiceTaxRate,
+    enableTds: enableTds ?? this.enableTds,
+    enableTcs: enableTcs ?? this.enableTcs,
     syncVersion: syncVersion ?? this.syncVersion,
     isDeleted: isDeleted ?? this.isDeleted,
     createdAt: createdAt ?? this.createdAt,
@@ -17958,6 +19093,8 @@ class BusinessSettingsTableData extends DataClass
       defaultInvoiceTaxRate: data.defaultInvoiceTaxRate.present
           ? data.defaultInvoiceTaxRate.value
           : this.defaultInvoiceTaxRate,
+      enableTds: data.enableTds.present ? data.enableTds.value : this.enableTds,
+      enableTcs: data.enableTcs.present ? data.enableTcs.value : this.enableTcs,
       syncVersion: data.syncVersion.present
           ? data.syncVersion.value
           : this.syncVersion,
@@ -17981,6 +19118,8 @@ class BusinessSettingsTableData extends DataClass
           ..write('creditLimitAction: $creditLimitAction, ')
           ..write('pricingTierLabels: $pricingTierLabels, ')
           ..write('defaultInvoiceTaxRate: $defaultInvoiceTaxRate, ')
+          ..write('enableTds: $enableTds, ')
+          ..write('enableTcs: $enableTcs, ')
           ..write('syncVersion: $syncVersion, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
@@ -18002,6 +19141,8 @@ class BusinessSettingsTableData extends DataClass
     creditLimitAction,
     pricingTierLabels,
     defaultInvoiceTaxRate,
+    enableTds,
+    enableTcs,
     syncVersion,
     isDeleted,
     createdAt,
@@ -18022,6 +19163,8 @@ class BusinessSettingsTableData extends DataClass
           other.creditLimitAction == this.creditLimitAction &&
           other.pricingTierLabels == this.pricingTierLabels &&
           other.defaultInvoiceTaxRate == this.defaultInvoiceTaxRate &&
+          other.enableTds == this.enableTds &&
+          other.enableTcs == this.enableTcs &&
           other.syncVersion == this.syncVersion &&
           other.isDeleted == this.isDeleted &&
           other.createdAt == this.createdAt &&
@@ -18041,6 +19184,8 @@ class BusinessSettingsLocalCompanion
   final Value<String> creditLimitAction;
   final Value<String?> pricingTierLabels;
   final Value<String?> defaultInvoiceTaxRate;
+  final Value<bool> enableTds;
+  final Value<bool> enableTcs;
   final Value<int> syncVersion;
   final Value<bool> isDeleted;
   final Value<DateTime> createdAt;
@@ -18058,6 +19203,8 @@ class BusinessSettingsLocalCompanion
     this.creditLimitAction = const Value.absent(),
     this.pricingTierLabels = const Value.absent(),
     this.defaultInvoiceTaxRate = const Value.absent(),
+    this.enableTds = const Value.absent(),
+    this.enableTcs = const Value.absent(),
     this.syncVersion = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -18076,6 +19223,8 @@ class BusinessSettingsLocalCompanion
     this.creditLimitAction = const Value.absent(),
     this.pricingTierLabels = const Value.absent(),
     this.defaultInvoiceTaxRate = const Value.absent(),
+    this.enableTds = const Value.absent(),
+    this.enableTcs = const Value.absent(),
     this.syncVersion = const Value.absent(),
     this.isDeleted = const Value.absent(),
     required DateTime createdAt,
@@ -18097,6 +19246,8 @@ class BusinessSettingsLocalCompanion
     Expression<String>? creditLimitAction,
     Expression<String>? pricingTierLabels,
     Expression<String>? defaultInvoiceTaxRate,
+    Expression<bool>? enableTds,
+    Expression<bool>? enableTcs,
     Expression<int>? syncVersion,
     Expression<bool>? isDeleted,
     Expression<DateTime>? createdAt,
@@ -18117,6 +19268,8 @@ class BusinessSettingsLocalCompanion
       if (pricingTierLabels != null) 'pricing_tier_labels': pricingTierLabels,
       if (defaultInvoiceTaxRate != null)
         'default_invoice_tax_rate': defaultInvoiceTaxRate,
+      if (enableTds != null) 'enable_tds': enableTds,
+      if (enableTcs != null) 'enable_tcs': enableTcs,
       if (syncVersion != null) 'sync_version': syncVersion,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (createdAt != null) 'created_at': createdAt,
@@ -18137,6 +19290,8 @@ class BusinessSettingsLocalCompanion
     Value<String>? creditLimitAction,
     Value<String?>? pricingTierLabels,
     Value<String?>? defaultInvoiceTaxRate,
+    Value<bool>? enableTds,
+    Value<bool>? enableTcs,
     Value<int>? syncVersion,
     Value<bool>? isDeleted,
     Value<DateTime>? createdAt,
@@ -18157,6 +19312,8 @@ class BusinessSettingsLocalCompanion
       pricingTierLabels: pricingTierLabels ?? this.pricingTierLabels,
       defaultInvoiceTaxRate:
           defaultInvoiceTaxRate ?? this.defaultInvoiceTaxRate,
+      enableTds: enableTds ?? this.enableTds,
+      enableTcs: enableTcs ?? this.enableTcs,
       syncVersion: syncVersion ?? this.syncVersion,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
@@ -18201,6 +19358,12 @@ class BusinessSettingsLocalCompanion
         defaultInvoiceTaxRate.value,
       );
     }
+    if (enableTds.present) {
+      map['enable_tds'] = Variable<bool>(enableTds.value);
+    }
+    if (enableTcs.present) {
+      map['enable_tcs'] = Variable<bool>(enableTcs.value);
+    }
     if (syncVersion.present) {
       map['sync_version'] = Variable<int>(syncVersion.value);
     }
@@ -18237,6 +19400,8 @@ class BusinessSettingsLocalCompanion
           ..write('creditLimitAction: $creditLimitAction, ')
           ..write('pricingTierLabels: $pricingTierLabels, ')
           ..write('defaultInvoiceTaxRate: $defaultInvoiceTaxRate, ')
+          ..write('enableTds: $enableTds, ')
+          ..write('enableTcs: $enableTcs, ')
           ..write('syncVersion: $syncVersion, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
@@ -18391,6 +19556,52 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
     requiredDuringInsert: false,
     defaultValue: const Constant('0'),
   );
+  static const VerificationMeta _tcsSectionIdMeta = const VerificationMeta(
+    'tcsSectionId',
+  );
+  @override
+  late final GeneratedColumn<String> tcsSectionId = GeneratedColumn<String>(
+    'tcs_section_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tcsRateMeta = const VerificationMeta(
+    'tcsRate',
+  );
+  @override
+  late final GeneratedColumn<String> tcsRate = GeneratedColumn<String>(
+    'tcs_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tcsBaseAmountMeta = const VerificationMeta(
+    'tcsBaseAmount',
+  );
+  @override
+  late final GeneratedColumn<String> tcsBaseAmount = GeneratedColumn<String>(
+    'tcs_base_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _tcsAmountMeta = const VerificationMeta(
+    'tcsAmount',
+  );
+  @override
+  late final GeneratedColumn<String> tcsAmount = GeneratedColumn<String>(
+    'tcs_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
   static const VerificationMeta _totalAmountMeta = const VerificationMeta(
     'totalAmount',
   );
@@ -18447,6 +19658,51 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _originalDocumentIdMeta =
+      const VerificationMeta('originalDocumentId');
+  @override
+  late final GeneratedColumn<String> originalDocumentId =
+      GeneratedColumn<String>(
+        'original_document_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _originalDocumentNumberMeta =
+      const VerificationMeta('originalDocumentNumber');
+  @override
+  late final GeneratedColumn<String> originalDocumentNumber =
+      GeneratedColumn<String>(
+        'original_document_number',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _originalDocumentDateMeta =
+      const VerificationMeta('originalDocumentDate');
+  @override
+  late final GeneratedColumn<String> originalDocumentDate =
+      GeneratedColumn<String>(
+        'original_document_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _supplyTypeMeta = const VerificationMeta(
+    'supplyType',
+  );
+  @override
+  late final GeneratedColumn<String> supplyType = GeneratedColumn<String>(
+    'supply_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('domestic'),
   );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
@@ -18553,11 +19809,19 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
     subtotal,
     discountTotal,
     taxAmount,
+    tcsSectionId,
+    tcsRate,
+    tcsBaseAmount,
+    tcsAmount,
     totalAmount,
     paidAmount,
     paymentMode,
     documentDate,
     convertedFromId,
+    originalDocumentId,
+    originalDocumentNumber,
+    originalDocumentDate,
+    supplyType,
     notes,
     godownId,
     syncVersion,
@@ -18674,6 +19938,36 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
         taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta),
       );
     }
+    if (data.containsKey('tcs_section_id')) {
+      context.handle(
+        _tcsSectionIdMeta,
+        tcsSectionId.isAcceptableOrUnknown(
+          data['tcs_section_id']!,
+          _tcsSectionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tcs_rate')) {
+      context.handle(
+        _tcsRateMeta,
+        tcsRate.isAcceptableOrUnknown(data['tcs_rate']!, _tcsRateMeta),
+      );
+    }
+    if (data.containsKey('tcs_base_amount')) {
+      context.handle(
+        _tcsBaseAmountMeta,
+        tcsBaseAmount.isAcceptableOrUnknown(
+          data['tcs_base_amount']!,
+          _tcsBaseAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tcs_amount')) {
+      context.handle(
+        _tcsAmountMeta,
+        tcsAmount.isAcceptableOrUnknown(data['tcs_amount']!, _tcsAmountMeta),
+      );
+    }
     if (data.containsKey('total_amount')) {
       context.handle(
         _totalAmountMeta,
@@ -18716,6 +20010,39 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
           data['converted_from_id']!,
           _convertedFromIdMeta,
         ),
+      );
+    }
+    if (data.containsKey('original_document_id')) {
+      context.handle(
+        _originalDocumentIdMeta,
+        originalDocumentId.isAcceptableOrUnknown(
+          data['original_document_id']!,
+          _originalDocumentIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_document_number')) {
+      context.handle(
+        _originalDocumentNumberMeta,
+        originalDocumentNumber.isAcceptableOrUnknown(
+          data['original_document_number']!,
+          _originalDocumentNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_document_date')) {
+      context.handle(
+        _originalDocumentDateMeta,
+        originalDocumentDate.isAcceptableOrUnknown(
+          data['original_document_date']!,
+          _originalDocumentDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('supply_type')) {
+      context.handle(
+        _supplyTypeMeta,
+        supplyType.isAcceptableOrUnknown(data['supply_type']!, _supplyTypeMeta),
       );
     }
     if (data.containsKey('notes')) {
@@ -18830,6 +20157,22 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
         DriftSqlType.string,
         data['${effectivePrefix}tax_amount'],
       )!,
+      tcsSectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_section_id'],
+      ),
+      tcsRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_rate'],
+      ),
+      tcsBaseAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_base_amount'],
+      )!,
+      tcsAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_amount'],
+      )!,
       totalAmount: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}total_amount'],
@@ -18850,6 +20193,22 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
         DriftSqlType.string,
         data['${effectivePrefix}converted_from_id'],
       ),
+      originalDocumentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_document_id'],
+      ),
+      originalDocumentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_document_number'],
+      ),
+      originalDocumentDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_document_date'],
+      ),
+      supplyType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supply_type'],
+      )!,
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -18905,11 +20264,19 @@ class SalesDocumentLocalData extends DataClass
   final String subtotal;
   final String discountTotal;
   final String taxAmount;
+  final String? tcsSectionId;
+  final String? tcsRate;
+  final String tcsBaseAmount;
+  final String tcsAmount;
   final String totalAmount;
   final String paidAmount;
   final String? paymentMode;
   final String documentDate;
   final String? convertedFromId;
+  final String? originalDocumentId;
+  final String? originalDocumentNumber;
+  final String? originalDocumentDate;
+  final String supplyType;
   final String? notes;
   final String? godownId;
   final int syncVersion;
@@ -18931,11 +20298,19 @@ class SalesDocumentLocalData extends DataClass
     required this.subtotal,
     required this.discountTotal,
     required this.taxAmount,
+    this.tcsSectionId,
+    this.tcsRate,
+    required this.tcsBaseAmount,
+    required this.tcsAmount,
     required this.totalAmount,
     required this.paidAmount,
     this.paymentMode,
     required this.documentDate,
     this.convertedFromId,
+    this.originalDocumentId,
+    this.originalDocumentNumber,
+    this.originalDocumentDate,
+    required this.supplyType,
     this.notes,
     this.godownId,
     required this.syncVersion,
@@ -18966,6 +20341,14 @@ class SalesDocumentLocalData extends DataClass
     map['subtotal'] = Variable<String>(subtotal);
     map['discount_total'] = Variable<String>(discountTotal);
     map['tax_amount'] = Variable<String>(taxAmount);
+    if (!nullToAbsent || tcsSectionId != null) {
+      map['tcs_section_id'] = Variable<String>(tcsSectionId);
+    }
+    if (!nullToAbsent || tcsRate != null) {
+      map['tcs_rate'] = Variable<String>(tcsRate);
+    }
+    map['tcs_base_amount'] = Variable<String>(tcsBaseAmount);
+    map['tcs_amount'] = Variable<String>(tcsAmount);
     map['total_amount'] = Variable<String>(totalAmount);
     map['paid_amount'] = Variable<String>(paidAmount);
     if (!nullToAbsent || paymentMode != null) {
@@ -18975,6 +20358,18 @@ class SalesDocumentLocalData extends DataClass
     if (!nullToAbsent || convertedFromId != null) {
       map['converted_from_id'] = Variable<String>(convertedFromId);
     }
+    if (!nullToAbsent || originalDocumentId != null) {
+      map['original_document_id'] = Variable<String>(originalDocumentId);
+    }
+    if (!nullToAbsent || originalDocumentNumber != null) {
+      map['original_document_number'] = Variable<String>(
+        originalDocumentNumber,
+      );
+    }
+    if (!nullToAbsent || originalDocumentDate != null) {
+      map['original_document_date'] = Variable<String>(originalDocumentDate);
+    }
+    map['supply_type'] = Variable<String>(supplyType);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -19014,6 +20409,14 @@ class SalesDocumentLocalData extends DataClass
       subtotal: Value(subtotal),
       discountTotal: Value(discountTotal),
       taxAmount: Value(taxAmount),
+      tcsSectionId: tcsSectionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tcsSectionId),
+      tcsRate: tcsRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tcsRate),
+      tcsBaseAmount: Value(tcsBaseAmount),
+      tcsAmount: Value(tcsAmount),
       totalAmount: Value(totalAmount),
       paidAmount: Value(paidAmount),
       paymentMode: paymentMode == null && nullToAbsent
@@ -19023,6 +20426,16 @@ class SalesDocumentLocalData extends DataClass
       convertedFromId: convertedFromId == null && nullToAbsent
           ? const Value.absent()
           : Value(convertedFromId),
+      originalDocumentId: originalDocumentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalDocumentId),
+      originalDocumentNumber: originalDocumentNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalDocumentNumber),
+      originalDocumentDate: originalDocumentDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalDocumentDate),
+      supplyType: Value(supplyType),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -19060,11 +20473,25 @@ class SalesDocumentLocalData extends DataClass
       subtotal: serializer.fromJson<String>(json['subtotal']),
       discountTotal: serializer.fromJson<String>(json['discountTotal']),
       taxAmount: serializer.fromJson<String>(json['taxAmount']),
+      tcsSectionId: serializer.fromJson<String?>(json['tcsSectionId']),
+      tcsRate: serializer.fromJson<String?>(json['tcsRate']),
+      tcsBaseAmount: serializer.fromJson<String>(json['tcsBaseAmount']),
+      tcsAmount: serializer.fromJson<String>(json['tcsAmount']),
       totalAmount: serializer.fromJson<String>(json['totalAmount']),
       paidAmount: serializer.fromJson<String>(json['paidAmount']),
       paymentMode: serializer.fromJson<String?>(json['paymentMode']),
       documentDate: serializer.fromJson<String>(json['documentDate']),
       convertedFromId: serializer.fromJson<String?>(json['convertedFromId']),
+      originalDocumentId: serializer.fromJson<String?>(
+        json['originalDocumentId'],
+      ),
+      originalDocumentNumber: serializer.fromJson<String?>(
+        json['originalDocumentNumber'],
+      ),
+      originalDocumentDate: serializer.fromJson<String?>(
+        json['originalDocumentDate'],
+      ),
+      supplyType: serializer.fromJson<String>(json['supplyType']),
       notes: serializer.fromJson<String?>(json['notes']),
       godownId: serializer.fromJson<String?>(json['godownId']),
       syncVersion: serializer.fromJson<int>(json['syncVersion']),
@@ -19091,11 +20518,21 @@ class SalesDocumentLocalData extends DataClass
       'subtotal': serializer.toJson<String>(subtotal),
       'discountTotal': serializer.toJson<String>(discountTotal),
       'taxAmount': serializer.toJson<String>(taxAmount),
+      'tcsSectionId': serializer.toJson<String?>(tcsSectionId),
+      'tcsRate': serializer.toJson<String?>(tcsRate),
+      'tcsBaseAmount': serializer.toJson<String>(tcsBaseAmount),
+      'tcsAmount': serializer.toJson<String>(tcsAmount),
       'totalAmount': serializer.toJson<String>(totalAmount),
       'paidAmount': serializer.toJson<String>(paidAmount),
       'paymentMode': serializer.toJson<String?>(paymentMode),
       'documentDate': serializer.toJson<String>(documentDate),
       'convertedFromId': serializer.toJson<String?>(convertedFromId),
+      'originalDocumentId': serializer.toJson<String?>(originalDocumentId),
+      'originalDocumentNumber': serializer.toJson<String?>(
+        originalDocumentNumber,
+      ),
+      'originalDocumentDate': serializer.toJson<String?>(originalDocumentDate),
+      'supplyType': serializer.toJson<String>(supplyType),
       'notes': serializer.toJson<String?>(notes),
       'godownId': serializer.toJson<String?>(godownId),
       'syncVersion': serializer.toJson<int>(syncVersion),
@@ -19120,11 +20557,19 @@ class SalesDocumentLocalData extends DataClass
     String? subtotal,
     String? discountTotal,
     String? taxAmount,
+    Value<String?> tcsSectionId = const Value.absent(),
+    Value<String?> tcsRate = const Value.absent(),
+    String? tcsBaseAmount,
+    String? tcsAmount,
     String? totalAmount,
     String? paidAmount,
     Value<String?> paymentMode = const Value.absent(),
     String? documentDate,
     Value<String?> convertedFromId = const Value.absent(),
+    Value<String?> originalDocumentId = const Value.absent(),
+    Value<String?> originalDocumentNumber = const Value.absent(),
+    Value<String?> originalDocumentDate = const Value.absent(),
+    String? supplyType,
     Value<String?> notes = const Value.absent(),
     Value<String?> godownId = const Value.absent(),
     int? syncVersion,
@@ -19150,6 +20595,10 @@ class SalesDocumentLocalData extends DataClass
     subtotal: subtotal ?? this.subtotal,
     discountTotal: discountTotal ?? this.discountTotal,
     taxAmount: taxAmount ?? this.taxAmount,
+    tcsSectionId: tcsSectionId.present ? tcsSectionId.value : this.tcsSectionId,
+    tcsRate: tcsRate.present ? tcsRate.value : this.tcsRate,
+    tcsBaseAmount: tcsBaseAmount ?? this.tcsBaseAmount,
+    tcsAmount: tcsAmount ?? this.tcsAmount,
     totalAmount: totalAmount ?? this.totalAmount,
     paidAmount: paidAmount ?? this.paidAmount,
     paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
@@ -19157,6 +20606,16 @@ class SalesDocumentLocalData extends DataClass
     convertedFromId: convertedFromId.present
         ? convertedFromId.value
         : this.convertedFromId,
+    originalDocumentId: originalDocumentId.present
+        ? originalDocumentId.value
+        : this.originalDocumentId,
+    originalDocumentNumber: originalDocumentNumber.present
+        ? originalDocumentNumber.value
+        : this.originalDocumentNumber,
+    originalDocumentDate: originalDocumentDate.present
+        ? originalDocumentDate.value
+        : this.originalDocumentDate,
+    supplyType: supplyType ?? this.supplyType,
     notes: notes.present ? notes.value : this.notes,
     godownId: godownId.present ? godownId.value : this.godownId,
     syncVersion: syncVersion ?? this.syncVersion,
@@ -19194,6 +20653,14 @@ class SalesDocumentLocalData extends DataClass
           ? data.discountTotal.value
           : this.discountTotal,
       taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
+      tcsSectionId: data.tcsSectionId.present
+          ? data.tcsSectionId.value
+          : this.tcsSectionId,
+      tcsRate: data.tcsRate.present ? data.tcsRate.value : this.tcsRate,
+      tcsBaseAmount: data.tcsBaseAmount.present
+          ? data.tcsBaseAmount.value
+          : this.tcsBaseAmount,
+      tcsAmount: data.tcsAmount.present ? data.tcsAmount.value : this.tcsAmount,
       totalAmount: data.totalAmount.present
           ? data.totalAmount.value
           : this.totalAmount,
@@ -19209,6 +20676,18 @@ class SalesDocumentLocalData extends DataClass
       convertedFromId: data.convertedFromId.present
           ? data.convertedFromId.value
           : this.convertedFromId,
+      originalDocumentId: data.originalDocumentId.present
+          ? data.originalDocumentId.value
+          : this.originalDocumentId,
+      originalDocumentNumber: data.originalDocumentNumber.present
+          ? data.originalDocumentNumber.value
+          : this.originalDocumentNumber,
+      originalDocumentDate: data.originalDocumentDate.present
+          ? data.originalDocumentDate.value
+          : this.originalDocumentDate,
+      supplyType: data.supplyType.present
+          ? data.supplyType.value
+          : this.supplyType,
       notes: data.notes.present ? data.notes.value : this.notes,
       godownId: data.godownId.present ? data.godownId.value : this.godownId,
       syncVersion: data.syncVersion.present
@@ -19237,11 +20716,19 @@ class SalesDocumentLocalData extends DataClass
           ..write('subtotal: $subtotal, ')
           ..write('discountTotal: $discountTotal, ')
           ..write('taxAmount: $taxAmount, ')
+          ..write('tcsSectionId: $tcsSectionId, ')
+          ..write('tcsRate: $tcsRate, ')
+          ..write('tcsBaseAmount: $tcsBaseAmount, ')
+          ..write('tcsAmount: $tcsAmount, ')
           ..write('totalAmount: $totalAmount, ')
           ..write('paidAmount: $paidAmount, ')
           ..write('paymentMode: $paymentMode, ')
           ..write('documentDate: $documentDate, ')
           ..write('convertedFromId: $convertedFromId, ')
+          ..write('originalDocumentId: $originalDocumentId, ')
+          ..write('originalDocumentNumber: $originalDocumentNumber, ')
+          ..write('originalDocumentDate: $originalDocumentDate, ')
+          ..write('supplyType: $supplyType, ')
           ..write('notes: $notes, ')
           ..write('godownId: $godownId, ')
           ..write('syncVersion: $syncVersion, ')
@@ -19268,11 +20755,19 @@ class SalesDocumentLocalData extends DataClass
     subtotal,
     discountTotal,
     taxAmount,
+    tcsSectionId,
+    tcsRate,
+    tcsBaseAmount,
+    tcsAmount,
     totalAmount,
     paidAmount,
     paymentMode,
     documentDate,
     convertedFromId,
+    originalDocumentId,
+    originalDocumentNumber,
+    originalDocumentDate,
+    supplyType,
     notes,
     godownId,
     syncVersion,
@@ -19298,11 +20793,19 @@ class SalesDocumentLocalData extends DataClass
           other.subtotal == this.subtotal &&
           other.discountTotal == this.discountTotal &&
           other.taxAmount == this.taxAmount &&
+          other.tcsSectionId == this.tcsSectionId &&
+          other.tcsRate == this.tcsRate &&
+          other.tcsBaseAmount == this.tcsBaseAmount &&
+          other.tcsAmount == this.tcsAmount &&
           other.totalAmount == this.totalAmount &&
           other.paidAmount == this.paidAmount &&
           other.paymentMode == this.paymentMode &&
           other.documentDate == this.documentDate &&
           other.convertedFromId == this.convertedFromId &&
+          other.originalDocumentId == this.originalDocumentId &&
+          other.originalDocumentNumber == this.originalDocumentNumber &&
+          other.originalDocumentDate == this.originalDocumentDate &&
+          other.supplyType == this.supplyType &&
           other.notes == this.notes &&
           other.godownId == this.godownId &&
           other.syncVersion == this.syncVersion &&
@@ -19327,11 +20830,19 @@ class SalesDocumentsLocalCompanion
   final Value<String> subtotal;
   final Value<String> discountTotal;
   final Value<String> taxAmount;
+  final Value<String?> tcsSectionId;
+  final Value<String?> tcsRate;
+  final Value<String> tcsBaseAmount;
+  final Value<String> tcsAmount;
   final Value<String> totalAmount;
   final Value<String> paidAmount;
   final Value<String?> paymentMode;
   final Value<String> documentDate;
   final Value<String?> convertedFromId;
+  final Value<String?> originalDocumentId;
+  final Value<String?> originalDocumentNumber;
+  final Value<String?> originalDocumentDate;
+  final Value<String> supplyType;
   final Value<String?> notes;
   final Value<String?> godownId;
   final Value<int> syncVersion;
@@ -19354,11 +20865,19 @@ class SalesDocumentsLocalCompanion
     this.subtotal = const Value.absent(),
     this.discountTotal = const Value.absent(),
     this.taxAmount = const Value.absent(),
+    this.tcsSectionId = const Value.absent(),
+    this.tcsRate = const Value.absent(),
+    this.tcsBaseAmount = const Value.absent(),
+    this.tcsAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
     this.paidAmount = const Value.absent(),
     this.paymentMode = const Value.absent(),
     this.documentDate = const Value.absent(),
     this.convertedFromId = const Value.absent(),
+    this.originalDocumentId = const Value.absent(),
+    this.originalDocumentNumber = const Value.absent(),
+    this.originalDocumentDate = const Value.absent(),
+    this.supplyType = const Value.absent(),
     this.notes = const Value.absent(),
     this.godownId = const Value.absent(),
     this.syncVersion = const Value.absent(),
@@ -19382,11 +20901,19 @@ class SalesDocumentsLocalCompanion
     this.subtotal = const Value.absent(),
     this.discountTotal = const Value.absent(),
     this.taxAmount = const Value.absent(),
+    this.tcsSectionId = const Value.absent(),
+    this.tcsRate = const Value.absent(),
+    this.tcsBaseAmount = const Value.absent(),
+    this.tcsAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
     this.paidAmount = const Value.absent(),
     this.paymentMode = const Value.absent(),
     required String documentDate,
     this.convertedFromId = const Value.absent(),
+    this.originalDocumentId = const Value.absent(),
+    this.originalDocumentNumber = const Value.absent(),
+    this.originalDocumentDate = const Value.absent(),
+    this.supplyType = const Value.absent(),
     this.notes = const Value.absent(),
     this.godownId = const Value.absent(),
     this.syncVersion = const Value.absent(),
@@ -19416,11 +20943,19 @@ class SalesDocumentsLocalCompanion
     Expression<String>? subtotal,
     Expression<String>? discountTotal,
     Expression<String>? taxAmount,
+    Expression<String>? tcsSectionId,
+    Expression<String>? tcsRate,
+    Expression<String>? tcsBaseAmount,
+    Expression<String>? tcsAmount,
     Expression<String>? totalAmount,
     Expression<String>? paidAmount,
     Expression<String>? paymentMode,
     Expression<String>? documentDate,
     Expression<String>? convertedFromId,
+    Expression<String>? originalDocumentId,
+    Expression<String>? originalDocumentNumber,
+    Expression<String>? originalDocumentDate,
+    Expression<String>? supplyType,
     Expression<String>? notes,
     Expression<String>? godownId,
     Expression<int>? syncVersion,
@@ -19444,11 +20979,22 @@ class SalesDocumentsLocalCompanion
       if (subtotal != null) 'subtotal': subtotal,
       if (discountTotal != null) 'discount_total': discountTotal,
       if (taxAmount != null) 'tax_amount': taxAmount,
+      if (tcsSectionId != null) 'tcs_section_id': tcsSectionId,
+      if (tcsRate != null) 'tcs_rate': tcsRate,
+      if (tcsBaseAmount != null) 'tcs_base_amount': tcsBaseAmount,
+      if (tcsAmount != null) 'tcs_amount': tcsAmount,
       if (totalAmount != null) 'total_amount': totalAmount,
       if (paidAmount != null) 'paid_amount': paidAmount,
       if (paymentMode != null) 'payment_mode': paymentMode,
       if (documentDate != null) 'document_date': documentDate,
       if (convertedFromId != null) 'converted_from_id': convertedFromId,
+      if (originalDocumentId != null)
+        'original_document_id': originalDocumentId,
+      if (originalDocumentNumber != null)
+        'original_document_number': originalDocumentNumber,
+      if (originalDocumentDate != null)
+        'original_document_date': originalDocumentDate,
+      if (supplyType != null) 'supply_type': supplyType,
       if (notes != null) 'notes': notes,
       if (godownId != null) 'godown_id': godownId,
       if (syncVersion != null) 'sync_version': syncVersion,
@@ -19474,11 +21020,19 @@ class SalesDocumentsLocalCompanion
     Value<String>? subtotal,
     Value<String>? discountTotal,
     Value<String>? taxAmount,
+    Value<String?>? tcsSectionId,
+    Value<String?>? tcsRate,
+    Value<String>? tcsBaseAmount,
+    Value<String>? tcsAmount,
     Value<String>? totalAmount,
     Value<String>? paidAmount,
     Value<String?>? paymentMode,
     Value<String>? documentDate,
     Value<String?>? convertedFromId,
+    Value<String?>? originalDocumentId,
+    Value<String?>? originalDocumentNumber,
+    Value<String?>? originalDocumentDate,
+    Value<String>? supplyType,
     Value<String?>? notes,
     Value<String?>? godownId,
     Value<int>? syncVersion,
@@ -19502,11 +21056,20 @@ class SalesDocumentsLocalCompanion
       subtotal: subtotal ?? this.subtotal,
       discountTotal: discountTotal ?? this.discountTotal,
       taxAmount: taxAmount ?? this.taxAmount,
+      tcsSectionId: tcsSectionId ?? this.tcsSectionId,
+      tcsRate: tcsRate ?? this.tcsRate,
+      tcsBaseAmount: tcsBaseAmount ?? this.tcsBaseAmount,
+      tcsAmount: tcsAmount ?? this.tcsAmount,
       totalAmount: totalAmount ?? this.totalAmount,
       paidAmount: paidAmount ?? this.paidAmount,
       paymentMode: paymentMode ?? this.paymentMode,
       documentDate: documentDate ?? this.documentDate,
       convertedFromId: convertedFromId ?? this.convertedFromId,
+      originalDocumentId: originalDocumentId ?? this.originalDocumentId,
+      originalDocumentNumber:
+          originalDocumentNumber ?? this.originalDocumentNumber,
+      originalDocumentDate: originalDocumentDate ?? this.originalDocumentDate,
+      supplyType: supplyType ?? this.supplyType,
       notes: notes ?? this.notes,
       godownId: godownId ?? this.godownId,
       syncVersion: syncVersion ?? this.syncVersion,
@@ -19558,6 +21121,18 @@ class SalesDocumentsLocalCompanion
     if (taxAmount.present) {
       map['tax_amount'] = Variable<String>(taxAmount.value);
     }
+    if (tcsSectionId.present) {
+      map['tcs_section_id'] = Variable<String>(tcsSectionId.value);
+    }
+    if (tcsRate.present) {
+      map['tcs_rate'] = Variable<String>(tcsRate.value);
+    }
+    if (tcsBaseAmount.present) {
+      map['tcs_base_amount'] = Variable<String>(tcsBaseAmount.value);
+    }
+    if (tcsAmount.present) {
+      map['tcs_amount'] = Variable<String>(tcsAmount.value);
+    }
     if (totalAmount.present) {
       map['total_amount'] = Variable<String>(totalAmount.value);
     }
@@ -19572,6 +21147,22 @@ class SalesDocumentsLocalCompanion
     }
     if (convertedFromId.present) {
       map['converted_from_id'] = Variable<String>(convertedFromId.value);
+    }
+    if (originalDocumentId.present) {
+      map['original_document_id'] = Variable<String>(originalDocumentId.value);
+    }
+    if (originalDocumentNumber.present) {
+      map['original_document_number'] = Variable<String>(
+        originalDocumentNumber.value,
+      );
+    }
+    if (originalDocumentDate.present) {
+      map['original_document_date'] = Variable<String>(
+        originalDocumentDate.value,
+      );
+    }
+    if (supplyType.present) {
+      map['supply_type'] = Variable<String>(supplyType.value);
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
@@ -19618,11 +21209,19 @@ class SalesDocumentsLocalCompanion
           ..write('subtotal: $subtotal, ')
           ..write('discountTotal: $discountTotal, ')
           ..write('taxAmount: $taxAmount, ')
+          ..write('tcsSectionId: $tcsSectionId, ')
+          ..write('tcsRate: $tcsRate, ')
+          ..write('tcsBaseAmount: $tcsBaseAmount, ')
+          ..write('tcsAmount: $tcsAmount, ')
           ..write('totalAmount: $totalAmount, ')
           ..write('paidAmount: $paidAmount, ')
           ..write('paymentMode: $paymentMode, ')
           ..write('documentDate: $documentDate, ')
           ..write('convertedFromId: $convertedFromId, ')
+          ..write('originalDocumentId: $originalDocumentId, ')
+          ..write('originalDocumentNumber: $originalDocumentNumber, ')
+          ..write('originalDocumentDate: $originalDocumentDate, ')
+          ..write('supplyType: $supplyType, ')
           ..write('notes: $notes, ')
           ..write('godownId: $godownId, ')
           ..write('syncVersion: $syncVersion, ')
@@ -19797,6 +21396,30 @@ class $SalesDocumentLinesLocalTable extends SalesDocumentLinesLocal
     requiredDuringInsert: false,
     defaultValue: const Constant('0'),
   );
+  static const VerificationMeta _cessRateMeta = const VerificationMeta(
+    'cessRate',
+  );
+  @override
+  late final GeneratedColumn<String> cessRate = GeneratedColumn<String>(
+    'cess_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _cessAmountMeta = const VerificationMeta(
+    'cessAmount',
+  );
+  @override
+  late final GeneratedColumn<String> cessAmount = GeneratedColumn<String>(
+    'cess_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
   static const VerificationMeta _lineTotalMeta = const VerificationMeta(
     'lineTotal',
   );
@@ -19907,6 +21530,8 @@ class $SalesDocumentLinesLocalTable extends SalesDocumentLinesLocal
     cgstAmount,
     sgstAmount,
     igstAmount,
+    cessRate,
+    cessAmount,
     lineTotal,
     sortOrder,
     syncVersion,
@@ -20030,6 +21655,18 @@ class $SalesDocumentLinesLocalTable extends SalesDocumentLinesLocal
       context.handle(
         _igstAmountMeta,
         igstAmount.isAcceptableOrUnknown(data['igst_amount']!, _igstAmountMeta),
+      );
+    }
+    if (data.containsKey('cess_rate')) {
+      context.handle(
+        _cessRateMeta,
+        cessRate.isAcceptableOrUnknown(data['cess_rate']!, _cessRateMeta),
+      );
+    }
+    if (data.containsKey('cess_amount')) {
+      context.handle(
+        _cessAmountMeta,
+        cessAmount.isAcceptableOrUnknown(data['cess_amount']!, _cessAmountMeta),
       );
     }
     if (data.containsKey('line_total')) {
@@ -20157,6 +21794,14 @@ class $SalesDocumentLinesLocalTable extends SalesDocumentLinesLocal
         DriftSqlType.string,
         data['${effectivePrefix}igst_amount'],
       )!,
+      cessRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cess_rate'],
+      )!,
+      cessAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cess_amount'],
+      )!,
       lineTotal: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}line_total'],
@@ -20214,6 +21859,8 @@ class SalesDocumentLineLocalData extends DataClass
   final String cgstAmount;
   final String sgstAmount;
   final String igstAmount;
+  final String cessRate;
+  final String cessAmount;
   final String lineTotal;
   final int sortOrder;
   final int syncVersion;
@@ -20237,6 +21884,8 @@ class SalesDocumentLineLocalData extends DataClass
     required this.cgstAmount,
     required this.sgstAmount,
     required this.igstAmount,
+    required this.cessRate,
+    required this.cessAmount,
     required this.lineTotal,
     required this.sortOrder,
     required this.syncVersion,
@@ -20265,6 +21914,8 @@ class SalesDocumentLineLocalData extends DataClass
     map['cgst_amount'] = Variable<String>(cgstAmount);
     map['sgst_amount'] = Variable<String>(sgstAmount);
     map['igst_amount'] = Variable<String>(igstAmount);
+    map['cess_rate'] = Variable<String>(cessRate);
+    map['cess_amount'] = Variable<String>(cessAmount);
     map['line_total'] = Variable<String>(lineTotal);
     map['sort_order'] = Variable<int>(sortOrder);
     map['sync_version'] = Variable<int>(syncVersion);
@@ -20298,6 +21949,8 @@ class SalesDocumentLineLocalData extends DataClass
       cgstAmount: Value(cgstAmount),
       sgstAmount: Value(sgstAmount),
       igstAmount: Value(igstAmount),
+      cessRate: Value(cessRate),
+      cessAmount: Value(cessAmount),
       lineTotal: Value(lineTotal),
       sortOrder: Value(sortOrder),
       syncVersion: Value(syncVersion),
@@ -20333,6 +21986,8 @@ class SalesDocumentLineLocalData extends DataClass
       cgstAmount: serializer.fromJson<String>(json['cgstAmount']),
       sgstAmount: serializer.fromJson<String>(json['sgstAmount']),
       igstAmount: serializer.fromJson<String>(json['igstAmount']),
+      cessRate: serializer.fromJson<String>(json['cessRate']),
+      cessAmount: serializer.fromJson<String>(json['cessAmount']),
       lineTotal: serializer.fromJson<String>(json['lineTotal']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       syncVersion: serializer.fromJson<int>(json['syncVersion']),
@@ -20361,6 +22016,8 @@ class SalesDocumentLineLocalData extends DataClass
       'cgstAmount': serializer.toJson<String>(cgstAmount),
       'sgstAmount': serializer.toJson<String>(sgstAmount),
       'igstAmount': serializer.toJson<String>(igstAmount),
+      'cessRate': serializer.toJson<String>(cessRate),
+      'cessAmount': serializer.toJson<String>(cessAmount),
       'lineTotal': serializer.toJson<String>(lineTotal),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'syncVersion': serializer.toJson<int>(syncVersion),
@@ -20387,6 +22044,8 @@ class SalesDocumentLineLocalData extends DataClass
     String? cgstAmount,
     String? sgstAmount,
     String? igstAmount,
+    String? cessRate,
+    String? cessAmount,
     String? lineTotal,
     int? sortOrder,
     int? syncVersion,
@@ -20410,6 +22069,8 @@ class SalesDocumentLineLocalData extends DataClass
     cgstAmount: cgstAmount ?? this.cgstAmount,
     sgstAmount: sgstAmount ?? this.sgstAmount,
     igstAmount: igstAmount ?? this.igstAmount,
+    cessRate: cessRate ?? this.cessRate,
+    cessAmount: cessAmount ?? this.cessAmount,
     lineTotal: lineTotal ?? this.lineTotal,
     sortOrder: sortOrder ?? this.sortOrder,
     syncVersion: syncVersion ?? this.syncVersion,
@@ -20451,6 +22112,10 @@ class SalesDocumentLineLocalData extends DataClass
       igstAmount: data.igstAmount.present
           ? data.igstAmount.value
           : this.igstAmount,
+      cessRate: data.cessRate.present ? data.cessRate.value : this.cessRate,
+      cessAmount: data.cessAmount.present
+          ? data.cessAmount.value
+          : this.cessAmount,
       lineTotal: data.lineTotal.present ? data.lineTotal.value : this.lineTotal,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       syncVersion: data.syncVersion.present
@@ -20481,6 +22146,8 @@ class SalesDocumentLineLocalData extends DataClass
           ..write('cgstAmount: $cgstAmount, ')
           ..write('sgstAmount: $sgstAmount, ')
           ..write('igstAmount: $igstAmount, ')
+          ..write('cessRate: $cessRate, ')
+          ..write('cessAmount: $cessAmount, ')
           ..write('lineTotal: $lineTotal, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('syncVersion: $syncVersion, ')
@@ -20509,6 +22176,8 @@ class SalesDocumentLineLocalData extends DataClass
     cgstAmount,
     sgstAmount,
     igstAmount,
+    cessRate,
+    cessAmount,
     lineTotal,
     sortOrder,
     syncVersion,
@@ -20536,6 +22205,8 @@ class SalesDocumentLineLocalData extends DataClass
           other.cgstAmount == this.cgstAmount &&
           other.sgstAmount == this.sgstAmount &&
           other.igstAmount == this.igstAmount &&
+          other.cessRate == this.cessRate &&
+          other.cessAmount == this.cessAmount &&
           other.lineTotal == this.lineTotal &&
           other.sortOrder == this.sortOrder &&
           other.syncVersion == this.syncVersion &&
@@ -20562,6 +22233,8 @@ class SalesDocumentLinesLocalCompanion
   final Value<String> cgstAmount;
   final Value<String> sgstAmount;
   final Value<String> igstAmount;
+  final Value<String> cessRate;
+  final Value<String> cessAmount;
   final Value<String> lineTotal;
   final Value<int> sortOrder;
   final Value<int> syncVersion;
@@ -20586,6 +22259,8 @@ class SalesDocumentLinesLocalCompanion
     this.cgstAmount = const Value.absent(),
     this.sgstAmount = const Value.absent(),
     this.igstAmount = const Value.absent(),
+    this.cessRate = const Value.absent(),
+    this.cessAmount = const Value.absent(),
     this.lineTotal = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.syncVersion = const Value.absent(),
@@ -20611,6 +22286,8 @@ class SalesDocumentLinesLocalCompanion
     this.cgstAmount = const Value.absent(),
     this.sgstAmount = const Value.absent(),
     this.igstAmount = const Value.absent(),
+    this.cessRate = const Value.absent(),
+    this.cessAmount = const Value.absent(),
     required String lineTotal,
     this.sortOrder = const Value.absent(),
     this.syncVersion = const Value.absent(),
@@ -20645,6 +22322,8 @@ class SalesDocumentLinesLocalCompanion
     Expression<String>? cgstAmount,
     Expression<String>? sgstAmount,
     Expression<String>? igstAmount,
+    Expression<String>? cessRate,
+    Expression<String>? cessAmount,
     Expression<String>? lineTotal,
     Expression<int>? sortOrder,
     Expression<int>? syncVersion,
@@ -20670,6 +22349,8 @@ class SalesDocumentLinesLocalCompanion
       if (cgstAmount != null) 'cgst_amount': cgstAmount,
       if (sgstAmount != null) 'sgst_amount': sgstAmount,
       if (igstAmount != null) 'igst_amount': igstAmount,
+      if (cessRate != null) 'cess_rate': cessRate,
+      if (cessAmount != null) 'cess_amount': cessAmount,
       if (lineTotal != null) 'line_total': lineTotal,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (syncVersion != null) 'sync_version': syncVersion,
@@ -20697,6 +22378,8 @@ class SalesDocumentLinesLocalCompanion
     Value<String>? cgstAmount,
     Value<String>? sgstAmount,
     Value<String>? igstAmount,
+    Value<String>? cessRate,
+    Value<String>? cessAmount,
     Value<String>? lineTotal,
     Value<int>? sortOrder,
     Value<int>? syncVersion,
@@ -20722,6 +22405,8 @@ class SalesDocumentLinesLocalCompanion
       cgstAmount: cgstAmount ?? this.cgstAmount,
       sgstAmount: sgstAmount ?? this.sgstAmount,
       igstAmount: igstAmount ?? this.igstAmount,
+      cessRate: cessRate ?? this.cessRate,
+      cessAmount: cessAmount ?? this.cessAmount,
       lineTotal: lineTotal ?? this.lineTotal,
       sortOrder: sortOrder ?? this.sortOrder,
       syncVersion: syncVersion ?? this.syncVersion,
@@ -20779,6 +22464,12 @@ class SalesDocumentLinesLocalCompanion
     if (igstAmount.present) {
       map['igst_amount'] = Variable<String>(igstAmount.value);
     }
+    if (cessRate.present) {
+      map['cess_rate'] = Variable<String>(cessRate.value);
+    }
+    if (cessAmount.present) {
+      map['cess_amount'] = Variable<String>(cessAmount.value);
+    }
     if (lineTotal.present) {
       map['line_total'] = Variable<String>(lineTotal.value);
     }
@@ -20826,6 +22517,8 @@ class SalesDocumentLinesLocalCompanion
           ..write('cgstAmount: $cgstAmount, ')
           ..write('sgstAmount: $sgstAmount, ')
           ..write('igstAmount: $igstAmount, ')
+          ..write('cessRate: $cessRate, ')
+          ..write('cessAmount: $cessAmount, ')
           ..write('lineTotal: $lineTotal, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('syncVersion: $syncVersion, ')
@@ -20982,6 +22675,52 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
     requiredDuringInsert: false,
     defaultValue: const Constant('0'),
   );
+  static const VerificationMeta _tcsSectionIdMeta = const VerificationMeta(
+    'tcsSectionId',
+  );
+  @override
+  late final GeneratedColumn<String> tcsSectionId = GeneratedColumn<String>(
+    'tcs_section_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tcsRateMeta = const VerificationMeta(
+    'tcsRate',
+  );
+  @override
+  late final GeneratedColumn<String> tcsRate = GeneratedColumn<String>(
+    'tcs_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tcsBaseAmountMeta = const VerificationMeta(
+    'tcsBaseAmount',
+  );
+  @override
+  late final GeneratedColumn<String> tcsBaseAmount = GeneratedColumn<String>(
+    'tcs_base_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _tcsAmountMeta = const VerificationMeta(
+    'tcsAmount',
+  );
+  @override
+  late final GeneratedColumn<String> tcsAmount = GeneratedColumn<String>(
+    'tcs_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
   static const VerificationMeta _totalAmountMeta = const VerificationMeta(
     'totalAmount',
   );
@@ -21016,6 +22755,39 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _originalDocumentIdMeta =
+      const VerificationMeta('originalDocumentId');
+  @override
+  late final GeneratedColumn<String> originalDocumentId =
+      GeneratedColumn<String>(
+        'original_document_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _originalDocumentNumberMeta =
+      const VerificationMeta('originalDocumentNumber');
+  @override
+  late final GeneratedColumn<String> originalDocumentNumber =
+      GeneratedColumn<String>(
+        'original_document_number',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _originalDocumentDateMeta =
+      const VerificationMeta('originalDocumentDate');
+  @override
+  late final GeneratedColumn<String> originalDocumentDate =
+      GeneratedColumn<String>(
+        'original_document_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _supplierInvoiceNumberMeta =
       const VerificationMeta('supplierInvoiceNumber');
   @override
@@ -21166,9 +22938,16 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
     subtotal,
     discountTotal,
     taxAmount,
+    tcsSectionId,
+    tcsRate,
+    tcsBaseAmount,
+    tcsAmount,
     totalAmount,
     documentDate,
     convertedFromId,
+    originalDocumentId,
+    originalDocumentNumber,
+    originalDocumentDate,
     supplierInvoiceNumber,
     dueDate,
     notes,
@@ -21291,6 +23070,36 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
         taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta),
       );
     }
+    if (data.containsKey('tcs_section_id')) {
+      context.handle(
+        _tcsSectionIdMeta,
+        tcsSectionId.isAcceptableOrUnknown(
+          data['tcs_section_id']!,
+          _tcsSectionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tcs_rate')) {
+      context.handle(
+        _tcsRateMeta,
+        tcsRate.isAcceptableOrUnknown(data['tcs_rate']!, _tcsRateMeta),
+      );
+    }
+    if (data.containsKey('tcs_base_amount')) {
+      context.handle(
+        _tcsBaseAmountMeta,
+        tcsBaseAmount.isAcceptableOrUnknown(
+          data['tcs_base_amount']!,
+          _tcsBaseAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tcs_amount')) {
+      context.handle(
+        _tcsAmountMeta,
+        tcsAmount.isAcceptableOrUnknown(data['tcs_amount']!, _tcsAmountMeta),
+      );
+    }
     if (data.containsKey('total_amount')) {
       context.handle(
         _totalAmountMeta,
@@ -21317,6 +23126,33 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
         convertedFromId.isAcceptableOrUnknown(
           data['converted_from_id']!,
           _convertedFromIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_document_id')) {
+      context.handle(
+        _originalDocumentIdMeta,
+        originalDocumentId.isAcceptableOrUnknown(
+          data['original_document_id']!,
+          _originalDocumentIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_document_number')) {
+      context.handle(
+        _originalDocumentNumberMeta,
+        originalDocumentNumber.isAcceptableOrUnknown(
+          data['original_document_number']!,
+          _originalDocumentNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_document_date')) {
+      context.handle(
+        _originalDocumentDateMeta,
+        originalDocumentDate.isAcceptableOrUnknown(
+          data['original_document_date']!,
+          _originalDocumentDateMeta,
         ),
       );
     }
@@ -21465,6 +23301,22 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
         DriftSqlType.string,
         data['${effectivePrefix}tax_amount'],
       )!,
+      tcsSectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_section_id'],
+      ),
+      tcsRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_rate'],
+      ),
+      tcsBaseAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_base_amount'],
+      )!,
+      tcsAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tcs_amount'],
+      )!,
       totalAmount: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}total_amount'],
@@ -21476,6 +23328,18 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
       convertedFromId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}converted_from_id'],
+      ),
+      originalDocumentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_document_id'],
+      ),
+      originalDocumentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_document_number'],
+      ),
+      originalDocumentDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_document_date'],
       ),
       supplierInvoiceNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -21548,9 +23412,16 @@ class PurchaseDocumentLocalData extends DataClass
   final String subtotal;
   final String discountTotal;
   final String taxAmount;
+  final String? tcsSectionId;
+  final String? tcsRate;
+  final String tcsBaseAmount;
+  final String tcsAmount;
   final String totalAmount;
   final String documentDate;
   final String? convertedFromId;
+  final String? originalDocumentId;
+  final String? originalDocumentNumber;
+  final String? originalDocumentDate;
   final String? supplierInvoiceNumber;
   final String? dueDate;
   final String? notes;
@@ -21576,9 +23447,16 @@ class PurchaseDocumentLocalData extends DataClass
     required this.subtotal,
     required this.discountTotal,
     required this.taxAmount,
+    this.tcsSectionId,
+    this.tcsRate,
+    required this.tcsBaseAmount,
+    required this.tcsAmount,
     required this.totalAmount,
     required this.documentDate,
     this.convertedFromId,
+    this.originalDocumentId,
+    this.originalDocumentNumber,
+    this.originalDocumentDate,
     this.supplierInvoiceNumber,
     this.dueDate,
     this.notes,
@@ -21611,10 +23489,29 @@ class PurchaseDocumentLocalData extends DataClass
     map['subtotal'] = Variable<String>(subtotal);
     map['discount_total'] = Variable<String>(discountTotal);
     map['tax_amount'] = Variable<String>(taxAmount);
+    if (!nullToAbsent || tcsSectionId != null) {
+      map['tcs_section_id'] = Variable<String>(tcsSectionId);
+    }
+    if (!nullToAbsent || tcsRate != null) {
+      map['tcs_rate'] = Variable<String>(tcsRate);
+    }
+    map['tcs_base_amount'] = Variable<String>(tcsBaseAmount);
+    map['tcs_amount'] = Variable<String>(tcsAmount);
     map['total_amount'] = Variable<String>(totalAmount);
     map['document_date'] = Variable<String>(documentDate);
     if (!nullToAbsent || convertedFromId != null) {
       map['converted_from_id'] = Variable<String>(convertedFromId);
+    }
+    if (!nullToAbsent || originalDocumentId != null) {
+      map['original_document_id'] = Variable<String>(originalDocumentId);
+    }
+    if (!nullToAbsent || originalDocumentNumber != null) {
+      map['original_document_number'] = Variable<String>(
+        originalDocumentNumber,
+      );
+    }
+    if (!nullToAbsent || originalDocumentDate != null) {
+      map['original_document_date'] = Variable<String>(originalDocumentDate);
     }
     if (!nullToAbsent || supplierInvoiceNumber != null) {
       map['supplier_invoice_number'] = Variable<String>(supplierInvoiceNumber);
@@ -21663,11 +23560,28 @@ class PurchaseDocumentLocalData extends DataClass
       subtotal: Value(subtotal),
       discountTotal: Value(discountTotal),
       taxAmount: Value(taxAmount),
+      tcsSectionId: tcsSectionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tcsSectionId),
+      tcsRate: tcsRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tcsRate),
+      tcsBaseAmount: Value(tcsBaseAmount),
+      tcsAmount: Value(tcsAmount),
       totalAmount: Value(totalAmount),
       documentDate: Value(documentDate),
       convertedFromId: convertedFromId == null && nullToAbsent
           ? const Value.absent()
           : Value(convertedFromId),
+      originalDocumentId: originalDocumentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalDocumentId),
+      originalDocumentNumber: originalDocumentNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalDocumentNumber),
+      originalDocumentDate: originalDocumentDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalDocumentDate),
       supplierInvoiceNumber: supplierInvoiceNumber == null && nullToAbsent
           ? const Value.absent()
           : Value(supplierInvoiceNumber),
@@ -21715,9 +23629,22 @@ class PurchaseDocumentLocalData extends DataClass
       subtotal: serializer.fromJson<String>(json['subtotal']),
       discountTotal: serializer.fromJson<String>(json['discountTotal']),
       taxAmount: serializer.fromJson<String>(json['taxAmount']),
+      tcsSectionId: serializer.fromJson<String?>(json['tcsSectionId']),
+      tcsRate: serializer.fromJson<String?>(json['tcsRate']),
+      tcsBaseAmount: serializer.fromJson<String>(json['tcsBaseAmount']),
+      tcsAmount: serializer.fromJson<String>(json['tcsAmount']),
       totalAmount: serializer.fromJson<String>(json['totalAmount']),
       documentDate: serializer.fromJson<String>(json['documentDate']),
       convertedFromId: serializer.fromJson<String?>(json['convertedFromId']),
+      originalDocumentId: serializer.fromJson<String?>(
+        json['originalDocumentId'],
+      ),
+      originalDocumentNumber: serializer.fromJson<String?>(
+        json['originalDocumentNumber'],
+      ),
+      originalDocumentDate: serializer.fromJson<String?>(
+        json['originalDocumentDate'],
+      ),
       supplierInvoiceNumber: serializer.fromJson<String?>(
         json['supplierInvoiceNumber'],
       ),
@@ -21750,9 +23677,18 @@ class PurchaseDocumentLocalData extends DataClass
       'subtotal': serializer.toJson<String>(subtotal),
       'discountTotal': serializer.toJson<String>(discountTotal),
       'taxAmount': serializer.toJson<String>(taxAmount),
+      'tcsSectionId': serializer.toJson<String?>(tcsSectionId),
+      'tcsRate': serializer.toJson<String?>(tcsRate),
+      'tcsBaseAmount': serializer.toJson<String>(tcsBaseAmount),
+      'tcsAmount': serializer.toJson<String>(tcsAmount),
       'totalAmount': serializer.toJson<String>(totalAmount),
       'documentDate': serializer.toJson<String>(documentDate),
       'convertedFromId': serializer.toJson<String?>(convertedFromId),
+      'originalDocumentId': serializer.toJson<String?>(originalDocumentId),
+      'originalDocumentNumber': serializer.toJson<String?>(
+        originalDocumentNumber,
+      ),
+      'originalDocumentDate': serializer.toJson<String?>(originalDocumentDate),
       'supplierInvoiceNumber': serializer.toJson<String?>(
         supplierInvoiceNumber,
       ),
@@ -21783,9 +23719,16 @@ class PurchaseDocumentLocalData extends DataClass
     String? subtotal,
     String? discountTotal,
     String? taxAmount,
+    Value<String?> tcsSectionId = const Value.absent(),
+    Value<String?> tcsRate = const Value.absent(),
+    String? tcsBaseAmount,
+    String? tcsAmount,
     String? totalAmount,
     String? documentDate,
     Value<String?> convertedFromId = const Value.absent(),
+    Value<String?> originalDocumentId = const Value.absent(),
+    Value<String?> originalDocumentNumber = const Value.absent(),
+    Value<String?> originalDocumentDate = const Value.absent(),
     Value<String?> supplierInvoiceNumber = const Value.absent(),
     Value<String?> dueDate = const Value.absent(),
     Value<String?> notes = const Value.absent(),
@@ -21815,11 +23758,24 @@ class PurchaseDocumentLocalData extends DataClass
     subtotal: subtotal ?? this.subtotal,
     discountTotal: discountTotal ?? this.discountTotal,
     taxAmount: taxAmount ?? this.taxAmount,
+    tcsSectionId: tcsSectionId.present ? tcsSectionId.value : this.tcsSectionId,
+    tcsRate: tcsRate.present ? tcsRate.value : this.tcsRate,
+    tcsBaseAmount: tcsBaseAmount ?? this.tcsBaseAmount,
+    tcsAmount: tcsAmount ?? this.tcsAmount,
     totalAmount: totalAmount ?? this.totalAmount,
     documentDate: documentDate ?? this.documentDate,
     convertedFromId: convertedFromId.present
         ? convertedFromId.value
         : this.convertedFromId,
+    originalDocumentId: originalDocumentId.present
+        ? originalDocumentId.value
+        : this.originalDocumentId,
+    originalDocumentNumber: originalDocumentNumber.present
+        ? originalDocumentNumber.value
+        : this.originalDocumentNumber,
+    originalDocumentDate: originalDocumentDate.present
+        ? originalDocumentDate.value
+        : this.originalDocumentDate,
     supplierInvoiceNumber: supplierInvoiceNumber.present
         ? supplierInvoiceNumber.value
         : this.supplierInvoiceNumber,
@@ -21865,6 +23821,14 @@ class PurchaseDocumentLocalData extends DataClass
           ? data.discountTotal.value
           : this.discountTotal,
       taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
+      tcsSectionId: data.tcsSectionId.present
+          ? data.tcsSectionId.value
+          : this.tcsSectionId,
+      tcsRate: data.tcsRate.present ? data.tcsRate.value : this.tcsRate,
+      tcsBaseAmount: data.tcsBaseAmount.present
+          ? data.tcsBaseAmount.value
+          : this.tcsBaseAmount,
+      tcsAmount: data.tcsAmount.present ? data.tcsAmount.value : this.tcsAmount,
       totalAmount: data.totalAmount.present
           ? data.totalAmount.value
           : this.totalAmount,
@@ -21874,6 +23838,15 @@ class PurchaseDocumentLocalData extends DataClass
       convertedFromId: data.convertedFromId.present
           ? data.convertedFromId.value
           : this.convertedFromId,
+      originalDocumentId: data.originalDocumentId.present
+          ? data.originalDocumentId.value
+          : this.originalDocumentId,
+      originalDocumentNumber: data.originalDocumentNumber.present
+          ? data.originalDocumentNumber.value
+          : this.originalDocumentNumber,
+      originalDocumentDate: data.originalDocumentDate.present
+          ? data.originalDocumentDate.value
+          : this.originalDocumentDate,
       supplierInvoiceNumber: data.supplierInvoiceNumber.present
           ? data.supplierInvoiceNumber.value
           : this.supplierInvoiceNumber,
@@ -21912,9 +23885,16 @@ class PurchaseDocumentLocalData extends DataClass
           ..write('subtotal: $subtotal, ')
           ..write('discountTotal: $discountTotal, ')
           ..write('taxAmount: $taxAmount, ')
+          ..write('tcsSectionId: $tcsSectionId, ')
+          ..write('tcsRate: $tcsRate, ')
+          ..write('tcsBaseAmount: $tcsBaseAmount, ')
+          ..write('tcsAmount: $tcsAmount, ')
           ..write('totalAmount: $totalAmount, ')
           ..write('documentDate: $documentDate, ')
           ..write('convertedFromId: $convertedFromId, ')
+          ..write('originalDocumentId: $originalDocumentId, ')
+          ..write('originalDocumentNumber: $originalDocumentNumber, ')
+          ..write('originalDocumentDate: $originalDocumentDate, ')
           ..write('supplierInvoiceNumber: $supplierInvoiceNumber, ')
           ..write('dueDate: $dueDate, ')
           ..write('notes: $notes, ')
@@ -21945,9 +23925,16 @@ class PurchaseDocumentLocalData extends DataClass
     subtotal,
     discountTotal,
     taxAmount,
+    tcsSectionId,
+    tcsRate,
+    tcsBaseAmount,
+    tcsAmount,
     totalAmount,
     documentDate,
     convertedFromId,
+    originalDocumentId,
+    originalDocumentNumber,
+    originalDocumentDate,
     supplierInvoiceNumber,
     dueDate,
     notes,
@@ -21977,9 +23964,16 @@ class PurchaseDocumentLocalData extends DataClass
           other.subtotal == this.subtotal &&
           other.discountTotal == this.discountTotal &&
           other.taxAmount == this.taxAmount &&
+          other.tcsSectionId == this.tcsSectionId &&
+          other.tcsRate == this.tcsRate &&
+          other.tcsBaseAmount == this.tcsBaseAmount &&
+          other.tcsAmount == this.tcsAmount &&
           other.totalAmount == this.totalAmount &&
           other.documentDate == this.documentDate &&
           other.convertedFromId == this.convertedFromId &&
+          other.originalDocumentId == this.originalDocumentId &&
+          other.originalDocumentNumber == this.originalDocumentNumber &&
+          other.originalDocumentDate == this.originalDocumentDate &&
           other.supplierInvoiceNumber == this.supplierInvoiceNumber &&
           other.dueDate == this.dueDate &&
           other.notes == this.notes &&
@@ -22008,9 +24002,16 @@ class PurchaseDocumentsLocalCompanion
   final Value<String> subtotal;
   final Value<String> discountTotal;
   final Value<String> taxAmount;
+  final Value<String?> tcsSectionId;
+  final Value<String?> tcsRate;
+  final Value<String> tcsBaseAmount;
+  final Value<String> tcsAmount;
   final Value<String> totalAmount;
   final Value<String> documentDate;
   final Value<String?> convertedFromId;
+  final Value<String?> originalDocumentId;
+  final Value<String?> originalDocumentNumber;
+  final Value<String?> originalDocumentDate;
   final Value<String?> supplierInvoiceNumber;
   final Value<String?> dueDate;
   final Value<String?> notes;
@@ -22037,9 +24038,16 @@ class PurchaseDocumentsLocalCompanion
     this.subtotal = const Value.absent(),
     this.discountTotal = const Value.absent(),
     this.taxAmount = const Value.absent(),
+    this.tcsSectionId = const Value.absent(),
+    this.tcsRate = const Value.absent(),
+    this.tcsBaseAmount = const Value.absent(),
+    this.tcsAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
     this.documentDate = const Value.absent(),
     this.convertedFromId = const Value.absent(),
+    this.originalDocumentId = const Value.absent(),
+    this.originalDocumentNumber = const Value.absent(),
+    this.originalDocumentDate = const Value.absent(),
     this.supplierInvoiceNumber = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.notes = const Value.absent(),
@@ -22067,9 +24075,16 @@ class PurchaseDocumentsLocalCompanion
     this.subtotal = const Value.absent(),
     this.discountTotal = const Value.absent(),
     this.taxAmount = const Value.absent(),
+    this.tcsSectionId = const Value.absent(),
+    this.tcsRate = const Value.absent(),
+    this.tcsBaseAmount = const Value.absent(),
+    this.tcsAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
     required String documentDate,
     this.convertedFromId = const Value.absent(),
+    this.originalDocumentId = const Value.absent(),
+    this.originalDocumentNumber = const Value.absent(),
+    this.originalDocumentDate = const Value.absent(),
     this.supplierInvoiceNumber = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.notes = const Value.absent(),
@@ -22104,9 +24119,16 @@ class PurchaseDocumentsLocalCompanion
     Expression<String>? subtotal,
     Expression<String>? discountTotal,
     Expression<String>? taxAmount,
+    Expression<String>? tcsSectionId,
+    Expression<String>? tcsRate,
+    Expression<String>? tcsBaseAmount,
+    Expression<String>? tcsAmount,
     Expression<String>? totalAmount,
     Expression<String>? documentDate,
     Expression<String>? convertedFromId,
+    Expression<String>? originalDocumentId,
+    Expression<String>? originalDocumentNumber,
+    Expression<String>? originalDocumentDate,
     Expression<String>? supplierInvoiceNumber,
     Expression<String>? dueDate,
     Expression<String>? notes,
@@ -22134,9 +24156,19 @@ class PurchaseDocumentsLocalCompanion
       if (subtotal != null) 'subtotal': subtotal,
       if (discountTotal != null) 'discount_total': discountTotal,
       if (taxAmount != null) 'tax_amount': taxAmount,
+      if (tcsSectionId != null) 'tcs_section_id': tcsSectionId,
+      if (tcsRate != null) 'tcs_rate': tcsRate,
+      if (tcsBaseAmount != null) 'tcs_base_amount': tcsBaseAmount,
+      if (tcsAmount != null) 'tcs_amount': tcsAmount,
       if (totalAmount != null) 'total_amount': totalAmount,
       if (documentDate != null) 'document_date': documentDate,
       if (convertedFromId != null) 'converted_from_id': convertedFromId,
+      if (originalDocumentId != null)
+        'original_document_id': originalDocumentId,
+      if (originalDocumentNumber != null)
+        'original_document_number': originalDocumentNumber,
+      if (originalDocumentDate != null)
+        'original_document_date': originalDocumentDate,
       if (supplierInvoiceNumber != null)
         'supplier_invoice_number': supplierInvoiceNumber,
       if (dueDate != null) 'due_date': dueDate,
@@ -22167,9 +24199,16 @@ class PurchaseDocumentsLocalCompanion
     Value<String>? subtotal,
     Value<String>? discountTotal,
     Value<String>? taxAmount,
+    Value<String?>? tcsSectionId,
+    Value<String?>? tcsRate,
+    Value<String>? tcsBaseAmount,
+    Value<String>? tcsAmount,
     Value<String>? totalAmount,
     Value<String>? documentDate,
     Value<String?>? convertedFromId,
+    Value<String?>? originalDocumentId,
+    Value<String?>? originalDocumentNumber,
+    Value<String?>? originalDocumentDate,
     Value<String?>? supplierInvoiceNumber,
     Value<String?>? dueDate,
     Value<String?>? notes,
@@ -22197,9 +24236,17 @@ class PurchaseDocumentsLocalCompanion
       subtotal: subtotal ?? this.subtotal,
       discountTotal: discountTotal ?? this.discountTotal,
       taxAmount: taxAmount ?? this.taxAmount,
+      tcsSectionId: tcsSectionId ?? this.tcsSectionId,
+      tcsRate: tcsRate ?? this.tcsRate,
+      tcsBaseAmount: tcsBaseAmount ?? this.tcsBaseAmount,
+      tcsAmount: tcsAmount ?? this.tcsAmount,
       totalAmount: totalAmount ?? this.totalAmount,
       documentDate: documentDate ?? this.documentDate,
       convertedFromId: convertedFromId ?? this.convertedFromId,
+      originalDocumentId: originalDocumentId ?? this.originalDocumentId,
+      originalDocumentNumber:
+          originalDocumentNumber ?? this.originalDocumentNumber,
+      originalDocumentDate: originalDocumentDate ?? this.originalDocumentDate,
       supplierInvoiceNumber:
           supplierInvoiceNumber ?? this.supplierInvoiceNumber,
       dueDate: dueDate ?? this.dueDate,
@@ -22256,6 +24303,18 @@ class PurchaseDocumentsLocalCompanion
     if (taxAmount.present) {
       map['tax_amount'] = Variable<String>(taxAmount.value);
     }
+    if (tcsSectionId.present) {
+      map['tcs_section_id'] = Variable<String>(tcsSectionId.value);
+    }
+    if (tcsRate.present) {
+      map['tcs_rate'] = Variable<String>(tcsRate.value);
+    }
+    if (tcsBaseAmount.present) {
+      map['tcs_base_amount'] = Variable<String>(tcsBaseAmount.value);
+    }
+    if (tcsAmount.present) {
+      map['tcs_amount'] = Variable<String>(tcsAmount.value);
+    }
     if (totalAmount.present) {
       map['total_amount'] = Variable<String>(totalAmount.value);
     }
@@ -22264,6 +24323,19 @@ class PurchaseDocumentsLocalCompanion
     }
     if (convertedFromId.present) {
       map['converted_from_id'] = Variable<String>(convertedFromId.value);
+    }
+    if (originalDocumentId.present) {
+      map['original_document_id'] = Variable<String>(originalDocumentId.value);
+    }
+    if (originalDocumentNumber.present) {
+      map['original_document_number'] = Variable<String>(
+        originalDocumentNumber.value,
+      );
+    }
+    if (originalDocumentDate.present) {
+      map['original_document_date'] = Variable<String>(
+        originalDocumentDate.value,
+      );
     }
     if (supplierInvoiceNumber.present) {
       map['supplier_invoice_number'] = Variable<String>(
@@ -22324,9 +24396,16 @@ class PurchaseDocumentsLocalCompanion
           ..write('subtotal: $subtotal, ')
           ..write('discountTotal: $discountTotal, ')
           ..write('taxAmount: $taxAmount, ')
+          ..write('tcsSectionId: $tcsSectionId, ')
+          ..write('tcsRate: $tcsRate, ')
+          ..write('tcsBaseAmount: $tcsBaseAmount, ')
+          ..write('tcsAmount: $tcsAmount, ')
           ..write('totalAmount: $totalAmount, ')
           ..write('documentDate: $documentDate, ')
           ..write('convertedFromId: $convertedFromId, ')
+          ..write('originalDocumentId: $originalDocumentId, ')
+          ..write('originalDocumentNumber: $originalDocumentNumber, ')
+          ..write('originalDocumentDate: $originalDocumentDate, ')
           ..write('supplierInvoiceNumber: $supplierInvoiceNumber, ')
           ..write('dueDate: $dueDate, ')
           ..write('notes: $notes, ')
@@ -22498,6 +24577,30 @@ class $PurchaseDocumentLinesLocalTable extends PurchaseDocumentLinesLocal
     requiredDuringInsert: false,
     defaultValue: const Constant('0'),
   );
+  static const VerificationMeta _cessRateMeta = const VerificationMeta(
+    'cessRate',
+  );
+  @override
+  late final GeneratedColumn<String> cessRate = GeneratedColumn<String>(
+    'cess_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _cessAmountMeta = const VerificationMeta(
+    'cessAmount',
+  );
+  @override
+  late final GeneratedColumn<String> cessAmount = GeneratedColumn<String>(
+    'cess_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
   static const VerificationMeta _lineTotalMeta = const VerificationMeta(
     'lineTotal',
   );
@@ -22607,6 +24710,8 @@ class $PurchaseDocumentLinesLocalTable extends PurchaseDocumentLinesLocal
     cgstAmount,
     sgstAmount,
     igstAmount,
+    cessRate,
+    cessAmount,
     lineTotal,
     sortOrder,
     syncVersion,
@@ -22721,6 +24826,18 @@ class $PurchaseDocumentLinesLocalTable extends PurchaseDocumentLinesLocal
       context.handle(
         _igstAmountMeta,
         igstAmount.isAcceptableOrUnknown(data['igst_amount']!, _igstAmountMeta),
+      );
+    }
+    if (data.containsKey('cess_rate')) {
+      context.handle(
+        _cessRateMeta,
+        cessRate.isAcceptableOrUnknown(data['cess_rate']!, _cessRateMeta),
+      );
+    }
+    if (data.containsKey('cess_amount')) {
+      context.handle(
+        _cessAmountMeta,
+        cessAmount.isAcceptableOrUnknown(data['cess_amount']!, _cessAmountMeta),
       );
     }
     if (data.containsKey('line_total')) {
@@ -22844,6 +24961,14 @@ class $PurchaseDocumentLinesLocalTable extends PurchaseDocumentLinesLocal
         DriftSqlType.string,
         data['${effectivePrefix}igst_amount'],
       )!,
+      cessRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cess_rate'],
+      )!,
+      cessAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cess_amount'],
+      )!,
       lineTotal: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}line_total'],
@@ -22900,6 +25025,8 @@ class PurchaseDocumentLineLocalData extends DataClass
   final String cgstAmount;
   final String sgstAmount;
   final String igstAmount;
+  final String cessRate;
+  final String cessAmount;
   final String lineTotal;
   final int sortOrder;
   final int syncVersion;
@@ -22922,6 +25049,8 @@ class PurchaseDocumentLineLocalData extends DataClass
     required this.cgstAmount,
     required this.sgstAmount,
     required this.igstAmount,
+    required this.cessRate,
+    required this.cessAmount,
     required this.lineTotal,
     required this.sortOrder,
     required this.syncVersion,
@@ -22947,6 +25076,8 @@ class PurchaseDocumentLineLocalData extends DataClass
     map['cgst_amount'] = Variable<String>(cgstAmount);
     map['sgst_amount'] = Variable<String>(sgstAmount);
     map['igst_amount'] = Variable<String>(igstAmount);
+    map['cess_rate'] = Variable<String>(cessRate);
+    map['cess_amount'] = Variable<String>(cessAmount);
     map['line_total'] = Variable<String>(lineTotal);
     map['sort_order'] = Variable<int>(sortOrder);
     map['sync_version'] = Variable<int>(syncVersion);
@@ -22977,6 +25108,8 @@ class PurchaseDocumentLineLocalData extends DataClass
       cgstAmount: Value(cgstAmount),
       sgstAmount: Value(sgstAmount),
       igstAmount: Value(igstAmount),
+      cessRate: Value(cessRate),
+      cessAmount: Value(cessAmount),
       lineTotal: Value(lineTotal),
       sortOrder: Value(sortOrder),
       syncVersion: Value(syncVersion),
@@ -23013,6 +25146,8 @@ class PurchaseDocumentLineLocalData extends DataClass
       cgstAmount: serializer.fromJson<String>(json['cgstAmount']),
       sgstAmount: serializer.fromJson<String>(json['sgstAmount']),
       igstAmount: serializer.fromJson<String>(json['igstAmount']),
+      cessRate: serializer.fromJson<String>(json['cessRate']),
+      cessAmount: serializer.fromJson<String>(json['cessAmount']),
       lineTotal: serializer.fromJson<String>(json['lineTotal']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       syncVersion: serializer.fromJson<int>(json['syncVersion']),
@@ -23040,6 +25175,8 @@ class PurchaseDocumentLineLocalData extends DataClass
       'cgstAmount': serializer.toJson<String>(cgstAmount),
       'sgstAmount': serializer.toJson<String>(sgstAmount),
       'igstAmount': serializer.toJson<String>(igstAmount),
+      'cessRate': serializer.toJson<String>(cessRate),
+      'cessAmount': serializer.toJson<String>(cessAmount),
       'lineTotal': serializer.toJson<String>(lineTotal),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'syncVersion': serializer.toJson<int>(syncVersion),
@@ -23065,6 +25202,8 @@ class PurchaseDocumentLineLocalData extends DataClass
     String? cgstAmount,
     String? sgstAmount,
     String? igstAmount,
+    String? cessRate,
+    String? cessAmount,
     String? lineTotal,
     int? sortOrder,
     int? syncVersion,
@@ -23087,6 +25226,8 @@ class PurchaseDocumentLineLocalData extends DataClass
     cgstAmount: cgstAmount ?? this.cgstAmount,
     sgstAmount: sgstAmount ?? this.sgstAmount,
     igstAmount: igstAmount ?? this.igstAmount,
+    cessRate: cessRate ?? this.cessRate,
+    cessAmount: cessAmount ?? this.cessAmount,
     lineTotal: lineTotal ?? this.lineTotal,
     sortOrder: sortOrder ?? this.sortOrder,
     syncVersion: syncVersion ?? this.syncVersion,
@@ -23125,6 +25266,10 @@ class PurchaseDocumentLineLocalData extends DataClass
       igstAmount: data.igstAmount.present
           ? data.igstAmount.value
           : this.igstAmount,
+      cessRate: data.cessRate.present ? data.cessRate.value : this.cessRate,
+      cessAmount: data.cessAmount.present
+          ? data.cessAmount.value
+          : this.cessAmount,
       lineTotal: data.lineTotal.present ? data.lineTotal.value : this.lineTotal,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       syncVersion: data.syncVersion.present
@@ -23154,6 +25299,8 @@ class PurchaseDocumentLineLocalData extends DataClass
           ..write('cgstAmount: $cgstAmount, ')
           ..write('sgstAmount: $sgstAmount, ')
           ..write('igstAmount: $igstAmount, ')
+          ..write('cessRate: $cessRate, ')
+          ..write('cessAmount: $cessAmount, ')
           ..write('lineTotal: $lineTotal, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('syncVersion: $syncVersion, ')
@@ -23181,6 +25328,8 @@ class PurchaseDocumentLineLocalData extends DataClass
     cgstAmount,
     sgstAmount,
     igstAmount,
+    cessRate,
+    cessAmount,
     lineTotal,
     sortOrder,
     syncVersion,
@@ -23207,6 +25356,8 @@ class PurchaseDocumentLineLocalData extends DataClass
           other.cgstAmount == this.cgstAmount &&
           other.sgstAmount == this.sgstAmount &&
           other.igstAmount == this.igstAmount &&
+          other.cessRate == this.cessRate &&
+          other.cessAmount == this.cessAmount &&
           other.lineTotal == this.lineTotal &&
           other.sortOrder == this.sortOrder &&
           other.syncVersion == this.syncVersion &&
@@ -23232,6 +25383,8 @@ class PurchaseDocumentLinesLocalCompanion
   final Value<String> cgstAmount;
   final Value<String> sgstAmount;
   final Value<String> igstAmount;
+  final Value<String> cessRate;
+  final Value<String> cessAmount;
   final Value<String> lineTotal;
   final Value<int> sortOrder;
   final Value<int> syncVersion;
@@ -23255,6 +25408,8 @@ class PurchaseDocumentLinesLocalCompanion
     this.cgstAmount = const Value.absent(),
     this.sgstAmount = const Value.absent(),
     this.igstAmount = const Value.absent(),
+    this.cessRate = const Value.absent(),
+    this.cessAmount = const Value.absent(),
     this.lineTotal = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.syncVersion = const Value.absent(),
@@ -23279,6 +25434,8 @@ class PurchaseDocumentLinesLocalCompanion
     this.cgstAmount = const Value.absent(),
     this.sgstAmount = const Value.absent(),
     this.igstAmount = const Value.absent(),
+    this.cessRate = const Value.absent(),
+    this.cessAmount = const Value.absent(),
     required String lineTotal,
     this.sortOrder = const Value.absent(),
     this.syncVersion = const Value.absent(),
@@ -23312,6 +25469,8 @@ class PurchaseDocumentLinesLocalCompanion
     Expression<String>? cgstAmount,
     Expression<String>? sgstAmount,
     Expression<String>? igstAmount,
+    Expression<String>? cessRate,
+    Expression<String>? cessAmount,
     Expression<String>? lineTotal,
     Expression<int>? sortOrder,
     Expression<int>? syncVersion,
@@ -23337,6 +25496,8 @@ class PurchaseDocumentLinesLocalCompanion
       if (cgstAmount != null) 'cgst_amount': cgstAmount,
       if (sgstAmount != null) 'sgst_amount': sgstAmount,
       if (igstAmount != null) 'igst_amount': igstAmount,
+      if (cessRate != null) 'cess_rate': cessRate,
+      if (cessAmount != null) 'cess_amount': cessAmount,
       if (lineTotal != null) 'line_total': lineTotal,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (syncVersion != null) 'sync_version': syncVersion,
@@ -23363,6 +25524,8 @@ class PurchaseDocumentLinesLocalCompanion
     Value<String>? cgstAmount,
     Value<String>? sgstAmount,
     Value<String>? igstAmount,
+    Value<String>? cessRate,
+    Value<String>? cessAmount,
     Value<String>? lineTotal,
     Value<int>? sortOrder,
     Value<int>? syncVersion,
@@ -23387,6 +25550,8 @@ class PurchaseDocumentLinesLocalCompanion
       cgstAmount: cgstAmount ?? this.cgstAmount,
       sgstAmount: sgstAmount ?? this.sgstAmount,
       igstAmount: igstAmount ?? this.igstAmount,
+      cessRate: cessRate ?? this.cessRate,
+      cessAmount: cessAmount ?? this.cessAmount,
       lineTotal: lineTotal ?? this.lineTotal,
       sortOrder: sortOrder ?? this.sortOrder,
       syncVersion: syncVersion ?? this.syncVersion,
@@ -23441,6 +25606,12 @@ class PurchaseDocumentLinesLocalCompanion
     if (igstAmount.present) {
       map['igst_amount'] = Variable<String>(igstAmount.value);
     }
+    if (cessRate.present) {
+      map['cess_rate'] = Variable<String>(cessRate.value);
+    }
+    if (cessAmount.present) {
+      map['cess_amount'] = Variable<String>(cessAmount.value);
+    }
     if (lineTotal.present) {
       map['line_total'] = Variable<String>(lineTotal.value);
     }
@@ -23487,6 +25658,8 @@ class PurchaseDocumentLinesLocalCompanion
           ..write('cgstAmount: $cgstAmount, ')
           ..write('sgstAmount: $sgstAmount, ')
           ..write('igstAmount: $igstAmount, ')
+          ..write('cessRate: $cessRate, ')
+          ..write('cessAmount: $cessAmount, ')
           ..write('lineTotal: $lineTotal, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('syncVersion: $syncVersion, ')
@@ -27492,6 +29665,17 @@ class $ExpensesLocalTable extends ExpensesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _bankAccountIdMeta = const VerificationMeta(
+    'bankAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> bankAccountId = GeneratedColumn<String>(
+    'bank_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _syncVersionMeta = const VerificationMeta(
     'syncVersion',
   );
@@ -27578,6 +29762,7 @@ class $ExpensesLocalTable extends ExpensesLocal
     referenceNumber,
     expenseDate,
     paymentMode,
+    bankAccountId,
     syncVersion,
     isDeleted,
     createdAt,
@@ -27697,6 +29882,15 @@ class $ExpensesLocalTable extends ExpensesLocal
         ),
       );
     }
+    if (data.containsKey('bank_account_id')) {
+      context.handle(
+        _bankAccountIdMeta,
+        bankAccountId.isAcceptableOrUnknown(
+          data['bank_account_id']!,
+          _bankAccountIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('sync_version')) {
       context.handle(
         _syncVersionMeta,
@@ -27801,6 +29995,10 @@ class $ExpensesLocalTable extends ExpensesLocal
         DriftSqlType.string,
         data['${effectivePrefix}payment_mode'],
       ),
+      bankAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bank_account_id'],
+      ),
       syncVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sync_version'],
@@ -27849,6 +30047,7 @@ class ExpenseTableData extends DataClass
   final String? referenceNumber;
   final String expenseDate;
   final String? paymentMode;
+  final String? bankAccountId;
   final int syncVersion;
   final bool isDeleted;
   final DateTime createdAt;
@@ -27869,6 +30068,7 @@ class ExpenseTableData extends DataClass
     this.referenceNumber,
     required this.expenseDate,
     this.paymentMode,
+    this.bankAccountId,
     required this.syncVersion,
     required this.isDeleted,
     required this.createdAt,
@@ -27903,6 +30103,9 @@ class ExpenseTableData extends DataClass
     map['expense_date'] = Variable<String>(expenseDate);
     if (!nullToAbsent || paymentMode != null) {
       map['payment_mode'] = Variable<String>(paymentMode);
+    }
+    if (!nullToAbsent || bankAccountId != null) {
+      map['bank_account_id'] = Variable<String>(bankAccountId);
     }
     map['sync_version'] = Variable<int>(syncVersion);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -27944,6 +30147,9 @@ class ExpenseTableData extends DataClass
       paymentMode: paymentMode == null && nullToAbsent
           ? const Value.absent()
           : Value(paymentMode),
+      bankAccountId: bankAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bankAccountId),
       syncVersion: Value(syncVersion),
       isDeleted: Value(isDeleted),
       createdAt: Value(createdAt),
@@ -27976,6 +30182,7 @@ class ExpenseTableData extends DataClass
       referenceNumber: serializer.fromJson<String?>(json['referenceNumber']),
       expenseDate: serializer.fromJson<String>(json['expenseDate']),
       paymentMode: serializer.fromJson<String?>(json['paymentMode']),
+      bankAccountId: serializer.fromJson<String?>(json['bankAccountId']),
       syncVersion: serializer.fromJson<int>(json['syncVersion']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -28001,6 +30208,7 @@ class ExpenseTableData extends DataClass
       'referenceNumber': serializer.toJson<String?>(referenceNumber),
       'expenseDate': serializer.toJson<String>(expenseDate),
       'paymentMode': serializer.toJson<String?>(paymentMode),
+      'bankAccountId': serializer.toJson<String?>(bankAccountId),
       'syncVersion': serializer.toJson<int>(syncVersion),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -28024,6 +30232,7 @@ class ExpenseTableData extends DataClass
     Value<String?> referenceNumber = const Value.absent(),
     String? expenseDate,
     Value<String?> paymentMode = const Value.absent(),
+    Value<String?> bankAccountId = const Value.absent(),
     int? syncVersion,
     bool? isDeleted,
     DateTime? createdAt,
@@ -28048,6 +30257,9 @@ class ExpenseTableData extends DataClass
         : this.referenceNumber,
     expenseDate: expenseDate ?? this.expenseDate,
     paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
+    bankAccountId: bankAccountId.present
+        ? bankAccountId.value
+        : this.bankAccountId,
     syncVersion: syncVersion ?? this.syncVersion,
     isDeleted: isDeleted ?? this.isDeleted,
     createdAt: createdAt ?? this.createdAt,
@@ -28084,6 +30296,9 @@ class ExpenseTableData extends DataClass
       paymentMode: data.paymentMode.present
           ? data.paymentMode.value
           : this.paymentMode,
+      bankAccountId: data.bankAccountId.present
+          ? data.bankAccountId.value
+          : this.bankAccountId,
       syncVersion: data.syncVersion.present
           ? data.syncVersion.value
           : this.syncVersion,
@@ -28111,6 +30326,7 @@ class ExpenseTableData extends DataClass
           ..write('referenceNumber: $referenceNumber, ')
           ..write('expenseDate: $expenseDate, ')
           ..write('paymentMode: $paymentMode, ')
+          ..write('bankAccountId: $bankAccountId, ')
           ..write('syncVersion: $syncVersion, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
@@ -28136,6 +30352,7 @@ class ExpenseTableData extends DataClass
     referenceNumber,
     expenseDate,
     paymentMode,
+    bankAccountId,
     syncVersion,
     isDeleted,
     createdAt,
@@ -28160,6 +30377,7 @@ class ExpenseTableData extends DataClass
           other.referenceNumber == this.referenceNumber &&
           other.expenseDate == this.expenseDate &&
           other.paymentMode == this.paymentMode &&
+          other.bankAccountId == this.bankAccountId &&
           other.syncVersion == this.syncVersion &&
           other.isDeleted == this.isDeleted &&
           other.createdAt == this.createdAt &&
@@ -28182,6 +30400,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
   final Value<String?> referenceNumber;
   final Value<String> expenseDate;
   final Value<String?> paymentMode;
+  final Value<String?> bankAccountId;
   final Value<int> syncVersion;
   final Value<bool> isDeleted;
   final Value<DateTime> createdAt;
@@ -28203,6 +30422,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     this.referenceNumber = const Value.absent(),
     this.expenseDate = const Value.absent(),
     this.paymentMode = const Value.absent(),
+    this.bankAccountId = const Value.absent(),
     this.syncVersion = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -28225,6 +30445,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     this.referenceNumber = const Value.absent(),
     required String expenseDate,
     this.paymentMode = const Value.absent(),
+    this.bankAccountId = const Value.absent(),
     this.syncVersion = const Value.absent(),
     this.isDeleted = const Value.absent(),
     required DateTime createdAt,
@@ -28253,6 +30474,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     Expression<String>? referenceNumber,
     Expression<String>? expenseDate,
     Expression<String>? paymentMode,
+    Expression<String>? bankAccountId,
     Expression<int>? syncVersion,
     Expression<bool>? isDeleted,
     Expression<DateTime>? createdAt,
@@ -28275,6 +30497,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
       if (referenceNumber != null) 'reference_number': referenceNumber,
       if (expenseDate != null) 'expense_date': expenseDate,
       if (paymentMode != null) 'payment_mode': paymentMode,
+      if (bankAccountId != null) 'bank_account_id': bankAccountId,
       if (syncVersion != null) 'sync_version': syncVersion,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (createdAt != null) 'created_at': createdAt,
@@ -28299,6 +30522,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     Value<String?>? referenceNumber,
     Value<String>? expenseDate,
     Value<String?>? paymentMode,
+    Value<String?>? bankAccountId,
     Value<int>? syncVersion,
     Value<bool>? isDeleted,
     Value<DateTime>? createdAt,
@@ -28321,6 +30545,7 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
       referenceNumber: referenceNumber ?? this.referenceNumber,
       expenseDate: expenseDate ?? this.expenseDate,
       paymentMode: paymentMode ?? this.paymentMode,
+      bankAccountId: bankAccountId ?? this.bankAccountId,
       syncVersion: syncVersion ?? this.syncVersion,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
@@ -28373,6 +30598,9 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
     if (paymentMode.present) {
       map['payment_mode'] = Variable<String>(paymentMode.value);
     }
+    if (bankAccountId.present) {
+      map['bank_account_id'] = Variable<String>(bankAccountId.value);
+    }
     if (syncVersion.present) {
       map['sync_version'] = Variable<int>(syncVersion.value);
     }
@@ -28413,6 +30641,4677 @@ class ExpensesLocalCompanion extends UpdateCompanion<ExpenseTableData> {
           ..write('referenceNumber: $referenceNumber, ')
           ..write('expenseDate: $expenseDate, ')
           ..write('paymentMode: $paymentMode, ')
+          ..write('bankAccountId: $bankAccountId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $IncomeCategoriesLocalTable extends IncomeCategoriesLocal
+    with TableInfo<$IncomeCategoriesLocalTable, IncomeCategoryTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IncomeCategoriesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryTypeMeta = const VerificationMeta(
+    'categoryType',
+  );
+  @override
+  late final GeneratedColumn<String> categoryType = GeneratedColumn<String>(
+    'category_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('indirect'),
+  );
+  static const VerificationMeta _isSystemMeta = const VerificationMeta(
+    'isSystem',
+  );
+  @override
+  late final GeneratedColumn<bool> isSystem = GeneratedColumn<bool>(
+    'is_system',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_system" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    categoryType,
+    isSystem,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'income_categories_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IncomeCategoryTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('category_type')) {
+      context.handle(
+        _categoryTypeMeta,
+        categoryType.isAcceptableOrUnknown(
+          data['category_type']!,
+          _categoryTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_system')) {
+      context.handle(
+        _isSystemMeta,
+        isSystem.isAcceptableOrUnknown(data['is_system']!, _isSystemMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  IncomeCategoryTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IncomeCategoryTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      categoryType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_type'],
+      )!,
+      isSystem: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_system'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $IncomeCategoriesLocalTable createAlias(String alias) {
+    return $IncomeCategoriesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class IncomeCategoryTableData extends DataClass
+    implements Insertable<IncomeCategoryTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String categoryType;
+  final bool isSystem;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const IncomeCategoryTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    required this.categoryType,
+    required this.isSystem,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    map['category_type'] = Variable<String>(categoryType);
+    map['is_system'] = Variable<bool>(isSystem);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  IncomeCategoriesLocalCompanion toCompanion(bool nullToAbsent) {
+    return IncomeCategoriesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      categoryType: Value(categoryType),
+      isSystem: Value(isSystem),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory IncomeCategoryTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IncomeCategoryTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      categoryType: serializer.fromJson<String>(json['categoryType']),
+      isSystem: serializer.fromJson<bool>(json['isSystem']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'categoryType': serializer.toJson<String>(categoryType),
+      'isSystem': serializer.toJson<bool>(isSystem),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  IncomeCategoryTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    String? categoryType,
+    bool? isSystem,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => IncomeCategoryTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    categoryType: categoryType ?? this.categoryType,
+    isSystem: isSystem ?? this.isSystem,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  IncomeCategoryTableData copyWithCompanion(
+    IncomeCategoriesLocalCompanion data,
+  ) {
+    return IncomeCategoryTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      categoryType: data.categoryType.present
+          ? data.categoryType.value
+          : this.categoryType,
+      isSystem: data.isSystem.present ? data.isSystem.value : this.isSystem,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeCategoryTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('categoryType: $categoryType, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    categoryType,
+    isSystem,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IncomeCategoryTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.categoryType == this.categoryType &&
+          other.isSystem == this.isSystem &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class IncomeCategoriesLocalCompanion
+    extends UpdateCompanion<IncomeCategoryTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String> categoryType;
+  final Value<bool> isSystem;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const IncomeCategoriesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.categoryType = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IncomeCategoriesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.categoryType = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<IncomeCategoryTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? categoryType,
+    Expression<bool>? isSystem,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (categoryType != null) 'category_type': categoryType,
+      if (isSystem != null) 'is_system': isSystem,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IncomeCategoriesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String>? categoryType,
+    Value<bool>? isSystem,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return IncomeCategoriesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      categoryType: categoryType ?? this.categoryType,
+      isSystem: isSystem ?? this.isSystem,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (categoryType.present) {
+      map['category_type'] = Variable<String>(categoryType.value);
+    }
+    if (isSystem.present) {
+      map['is_system'] = Variable<bool>(isSystem.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeCategoriesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('categoryType: $categoryType, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $IncomeItemsLocalTable extends IncomeItemsLocal
+    with TableInfo<$IncomeItemsLocalTable, IncomeItemTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IncomeItemsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hsnSacMeta = const VerificationMeta('hsnSac');
+  @override
+  late final GeneratedColumn<String> hsnSac = GeneratedColumn<String>(
+    'hsn_sac',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<String> price = GeneratedColumn<String>(
+    'price',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _priceIsTaxInclusiveMeta =
+      const VerificationMeta('priceIsTaxInclusive');
+  @override
+  late final GeneratedColumn<bool> priceIsTaxInclusive = GeneratedColumn<bool>(
+    'price_is_tax_inclusive',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("price_is_tax_inclusive" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _taxRateMeta = const VerificationMeta(
+    'taxRate',
+  );
+  @override
+  late final GeneratedColumn<String> taxRate = GeneratedColumn<String>(
+    'tax_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    hsnSac,
+    price,
+    priceIsTaxInclusive,
+    taxRate,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'income_items_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IncomeItemTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('hsn_sac')) {
+      context.handle(
+        _hsnSacMeta,
+        hsnSac.isAcceptableOrUnknown(data['hsn_sac']!, _hsnSacMeta),
+      );
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
+      );
+    }
+    if (data.containsKey('price_is_tax_inclusive')) {
+      context.handle(
+        _priceIsTaxInclusiveMeta,
+        priceIsTaxInclusive.isAcceptableOrUnknown(
+          data['price_is_tax_inclusive']!,
+          _priceIsTaxInclusiveMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_rate')) {
+      context.handle(
+        _taxRateMeta,
+        taxRate.isAcceptableOrUnknown(data['tax_rate']!, _taxRateMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  IncomeItemTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IncomeItemTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      hsnSac: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hsn_sac'],
+      ),
+      price: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}price'],
+      )!,
+      priceIsTaxInclusive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}price_is_tax_inclusive'],
+      )!,
+      taxRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_rate'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $IncomeItemsLocalTable createAlias(String alias) {
+    return $IncomeItemsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class IncomeItemTableData extends DataClass
+    implements Insertable<IncomeItemTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String? hsnSac;
+  final String price;
+  final bool priceIsTaxInclusive;
+  final String taxRate;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const IncomeItemTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    this.hsnSac,
+    required this.price,
+    required this.priceIsTaxInclusive,
+    required this.taxRate,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || hsnSac != null) {
+      map['hsn_sac'] = Variable<String>(hsnSac);
+    }
+    map['price'] = Variable<String>(price);
+    map['price_is_tax_inclusive'] = Variable<bool>(priceIsTaxInclusive);
+    map['tax_rate'] = Variable<String>(taxRate);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  IncomeItemsLocalCompanion toCompanion(bool nullToAbsent) {
+    return IncomeItemsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      hsnSac: hsnSac == null && nullToAbsent
+          ? const Value.absent()
+          : Value(hsnSac),
+      price: Value(price),
+      priceIsTaxInclusive: Value(priceIsTaxInclusive),
+      taxRate: Value(taxRate),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory IncomeItemTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IncomeItemTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      hsnSac: serializer.fromJson<String?>(json['hsnSac']),
+      price: serializer.fromJson<String>(json['price']),
+      priceIsTaxInclusive: serializer.fromJson<bool>(
+        json['priceIsTaxInclusive'],
+      ),
+      taxRate: serializer.fromJson<String>(json['taxRate']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'hsnSac': serializer.toJson<String?>(hsnSac),
+      'price': serializer.toJson<String>(price),
+      'priceIsTaxInclusive': serializer.toJson<bool>(priceIsTaxInclusive),
+      'taxRate': serializer.toJson<String>(taxRate),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  IncomeItemTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    Value<String?> hsnSac = const Value.absent(),
+    String? price,
+    bool? priceIsTaxInclusive,
+    String? taxRate,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => IncomeItemTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    hsnSac: hsnSac.present ? hsnSac.value : this.hsnSac,
+    price: price ?? this.price,
+    priceIsTaxInclusive: priceIsTaxInclusive ?? this.priceIsTaxInclusive,
+    taxRate: taxRate ?? this.taxRate,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  IncomeItemTableData copyWithCompanion(IncomeItemsLocalCompanion data) {
+    return IncomeItemTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      hsnSac: data.hsnSac.present ? data.hsnSac.value : this.hsnSac,
+      price: data.price.present ? data.price.value : this.price,
+      priceIsTaxInclusive: data.priceIsTaxInclusive.present
+          ? data.priceIsTaxInclusive.value
+          : this.priceIsTaxInclusive,
+      taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeItemTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('hsnSac: $hsnSac, ')
+          ..write('price: $price, ')
+          ..write('priceIsTaxInclusive: $priceIsTaxInclusive, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    hsnSac,
+    price,
+    priceIsTaxInclusive,
+    taxRate,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IncomeItemTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.hsnSac == this.hsnSac &&
+          other.price == this.price &&
+          other.priceIsTaxInclusive == this.priceIsTaxInclusive &&
+          other.taxRate == this.taxRate &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class IncomeItemsLocalCompanion extends UpdateCompanion<IncomeItemTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String?> hsnSac;
+  final Value<String> price;
+  final Value<bool> priceIsTaxInclusive;
+  final Value<String> taxRate;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const IncomeItemsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.hsnSac = const Value.absent(),
+    this.price = const Value.absent(),
+    this.priceIsTaxInclusive = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IncomeItemsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.hsnSac = const Value.absent(),
+    this.price = const Value.absent(),
+    this.priceIsTaxInclusive = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<IncomeItemTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? hsnSac,
+    Expression<String>? price,
+    Expression<bool>? priceIsTaxInclusive,
+    Expression<String>? taxRate,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (hsnSac != null) 'hsn_sac': hsnSac,
+      if (price != null) 'price': price,
+      if (priceIsTaxInclusive != null)
+        'price_is_tax_inclusive': priceIsTaxInclusive,
+      if (taxRate != null) 'tax_rate': taxRate,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IncomeItemsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String?>? hsnSac,
+    Value<String>? price,
+    Value<bool>? priceIsTaxInclusive,
+    Value<String>? taxRate,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return IncomeItemsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      hsnSac: hsnSac ?? this.hsnSac,
+      price: price ?? this.price,
+      priceIsTaxInclusive: priceIsTaxInclusive ?? this.priceIsTaxInclusive,
+      taxRate: taxRate ?? this.taxRate,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (hsnSac.present) {
+      map['hsn_sac'] = Variable<String>(hsnSac.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<String>(price.value);
+    }
+    if (priceIsTaxInclusive.present) {
+      map['price_is_tax_inclusive'] = Variable<bool>(priceIsTaxInclusive.value);
+    }
+    if (taxRate.present) {
+      map['tax_rate'] = Variable<String>(taxRate.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IncomeItemsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('hsnSac: $hsnSac, ')
+          ..write('price: $price, ')
+          ..write('priceIsTaxInclusive: $priceIsTaxInclusive, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $OtherIncomesLocalTable extends OtherIncomesLocal
+    with TableInfo<$OtherIncomesLocalTable, OtherIncomeTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OtherIncomesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _incomeItemIdMeta = const VerificationMeta(
+    'incomeItemId',
+  );
+  @override
+  late final GeneratedColumn<String> incomeItemId = GeneratedColumn<String>(
+    'income_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<String> amount = GeneratedColumn<String>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<String> quantity = GeneratedColumn<String>(
+    'quantity',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _taxAmountMeta = const VerificationMeta(
+    'taxAmount',
+  );
+  @override
+  late final GeneratedColumn<String> taxAmount = GeneratedColumn<String>(
+    'tax_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _taxRateMeta = const VerificationMeta(
+    'taxRate',
+  );
+  @override
+  late final GeneratedColumn<String> taxRate = GeneratedColumn<String>(
+    'tax_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceNumberMeta = const VerificationMeta(
+    'referenceNumber',
+  );
+  @override
+  late final GeneratedColumn<String> referenceNumber = GeneratedColumn<String>(
+    'reference_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _incomeDateMeta = const VerificationMeta(
+    'incomeDate',
+  );
+  @override
+  late final GeneratedColumn<String> incomeDate = GeneratedColumn<String>(
+    'income_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentModeMeta = const VerificationMeta(
+    'paymentMode',
+  );
+  @override
+  late final GeneratedColumn<String> paymentMode = GeneratedColumn<String>(
+    'payment_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bankAccountIdMeta = const VerificationMeta(
+    'bankAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> bankAccountId = GeneratedColumn<String>(
+    'bank_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dueDateMeta = const VerificationMeta(
+    'dueDate',
+  );
+  @override
+  late final GeneratedColumn<String> dueDate = GeneratedColumn<String>(
+    'due_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _balanceDueMeta = const VerificationMeta(
+    'balanceDue',
+  );
+  @override
+  late final GeneratedColumn<String> balanceDue = GeneratedColumn<String>(
+    'balance_due',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    categoryId,
+    incomeItemId,
+    amount,
+    quantity,
+    taxAmount,
+    taxRate,
+    description,
+    notes,
+    referenceNumber,
+    incomeDate,
+    paymentMode,
+    bankAccountId,
+    dueDate,
+    balanceDue,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'other_incomes_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OtherIncomeTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('income_item_id')) {
+      context.handle(
+        _incomeItemIdMeta,
+        incomeItemId.isAcceptableOrUnknown(
+          data['income_item_id']!,
+          _incomeItemIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('tax_amount')) {
+      context.handle(
+        _taxAmountMeta,
+        taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta),
+      );
+    }
+    if (data.containsKey('tax_rate')) {
+      context.handle(
+        _taxRateMeta,
+        taxRate.isAcceptableOrUnknown(data['tax_rate']!, _taxRateMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('reference_number')) {
+      context.handle(
+        _referenceNumberMeta,
+        referenceNumber.isAcceptableOrUnknown(
+          data['reference_number']!,
+          _referenceNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('income_date')) {
+      context.handle(
+        _incomeDateMeta,
+        incomeDate.isAcceptableOrUnknown(data['income_date']!, _incomeDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_incomeDateMeta);
+    }
+    if (data.containsKey('payment_mode')) {
+      context.handle(
+        _paymentModeMeta,
+        paymentMode.isAcceptableOrUnknown(
+          data['payment_mode']!,
+          _paymentModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('bank_account_id')) {
+      context.handle(
+        _bankAccountIdMeta,
+        bankAccountId.isAcceptableOrUnknown(
+          data['bank_account_id']!,
+          _bankAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('due_date')) {
+      context.handle(
+        _dueDateMeta,
+        dueDate.isAcceptableOrUnknown(data['due_date']!, _dueDateMeta),
+      );
+    }
+    if (data.containsKey('balance_due')) {
+      context.handle(
+        _balanceDueMeta,
+        balanceDue.isAcceptableOrUnknown(data['balance_due']!, _balanceDueMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OtherIncomeTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OtherIncomeTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      )!,
+      incomeItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}income_item_id'],
+      ),
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}amount'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quantity'],
+      ),
+      taxAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_amount'],
+      )!,
+      taxRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_rate'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      referenceNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_number'],
+      ),
+      incomeDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}income_date'],
+      )!,
+      paymentMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_mode'],
+      ),
+      bankAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bank_account_id'],
+      ),
+      dueDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}due_date'],
+      ),
+      balanceDue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}balance_due'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $OtherIncomesLocalTable createAlias(String alias) {
+    return $OtherIncomesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class OtherIncomeTableData extends DataClass
+    implements Insertable<OtherIncomeTableData> {
+  final String id;
+  final String businessId;
+  final String categoryId;
+  final String? incomeItemId;
+  final String amount;
+  final String? quantity;
+  final String taxAmount;
+  final String taxRate;
+  final String? description;
+  final String? notes;
+  final String? referenceNumber;
+  final String incomeDate;
+  final String? paymentMode;
+  final String? bankAccountId;
+  final String? dueDate;
+  final String? balanceDue;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const OtherIncomeTableData({
+    required this.id,
+    required this.businessId,
+    required this.categoryId,
+    this.incomeItemId,
+    required this.amount,
+    this.quantity,
+    required this.taxAmount,
+    required this.taxRate,
+    this.description,
+    this.notes,
+    this.referenceNumber,
+    required this.incomeDate,
+    this.paymentMode,
+    this.bankAccountId,
+    this.dueDate,
+    this.balanceDue,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['category_id'] = Variable<String>(categoryId);
+    if (!nullToAbsent || incomeItemId != null) {
+      map['income_item_id'] = Variable<String>(incomeItemId);
+    }
+    map['amount'] = Variable<String>(amount);
+    if (!nullToAbsent || quantity != null) {
+      map['quantity'] = Variable<String>(quantity);
+    }
+    map['tax_amount'] = Variable<String>(taxAmount);
+    map['tax_rate'] = Variable<String>(taxRate);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || referenceNumber != null) {
+      map['reference_number'] = Variable<String>(referenceNumber);
+    }
+    map['income_date'] = Variable<String>(incomeDate);
+    if (!nullToAbsent || paymentMode != null) {
+      map['payment_mode'] = Variable<String>(paymentMode);
+    }
+    if (!nullToAbsent || bankAccountId != null) {
+      map['bank_account_id'] = Variable<String>(bankAccountId);
+    }
+    if (!nullToAbsent || dueDate != null) {
+      map['due_date'] = Variable<String>(dueDate);
+    }
+    if (!nullToAbsent || balanceDue != null) {
+      map['balance_due'] = Variable<String>(balanceDue);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  OtherIncomesLocalCompanion toCompanion(bool nullToAbsent) {
+    return OtherIncomesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      categoryId: Value(categoryId),
+      incomeItemId: incomeItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(incomeItemId),
+      amount: Value(amount),
+      quantity: quantity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(quantity),
+      taxAmount: Value(taxAmount),
+      taxRate: Value(taxRate),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      referenceNumber: referenceNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceNumber),
+      incomeDate: Value(incomeDate),
+      paymentMode: paymentMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentMode),
+      bankAccountId: bankAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bankAccountId),
+      dueDate: dueDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDate),
+      balanceDue: balanceDue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(balanceDue),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory OtherIncomeTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OtherIncomeTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+      incomeItemId: serializer.fromJson<String?>(json['incomeItemId']),
+      amount: serializer.fromJson<String>(json['amount']),
+      quantity: serializer.fromJson<String?>(json['quantity']),
+      taxAmount: serializer.fromJson<String>(json['taxAmount']),
+      taxRate: serializer.fromJson<String>(json['taxRate']),
+      description: serializer.fromJson<String?>(json['description']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      referenceNumber: serializer.fromJson<String?>(json['referenceNumber']),
+      incomeDate: serializer.fromJson<String>(json['incomeDate']),
+      paymentMode: serializer.fromJson<String?>(json['paymentMode']),
+      bankAccountId: serializer.fromJson<String?>(json['bankAccountId']),
+      dueDate: serializer.fromJson<String?>(json['dueDate']),
+      balanceDue: serializer.fromJson<String?>(json['balanceDue']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'categoryId': serializer.toJson<String>(categoryId),
+      'incomeItemId': serializer.toJson<String?>(incomeItemId),
+      'amount': serializer.toJson<String>(amount),
+      'quantity': serializer.toJson<String?>(quantity),
+      'taxAmount': serializer.toJson<String>(taxAmount),
+      'taxRate': serializer.toJson<String>(taxRate),
+      'description': serializer.toJson<String?>(description),
+      'notes': serializer.toJson<String?>(notes),
+      'referenceNumber': serializer.toJson<String?>(referenceNumber),
+      'incomeDate': serializer.toJson<String>(incomeDate),
+      'paymentMode': serializer.toJson<String?>(paymentMode),
+      'bankAccountId': serializer.toJson<String?>(bankAccountId),
+      'dueDate': serializer.toJson<String?>(dueDate),
+      'balanceDue': serializer.toJson<String?>(balanceDue),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  OtherIncomeTableData copyWith({
+    String? id,
+    String? businessId,
+    String? categoryId,
+    Value<String?> incomeItemId = const Value.absent(),
+    String? amount,
+    Value<String?> quantity = const Value.absent(),
+    String? taxAmount,
+    String? taxRate,
+    Value<String?> description = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<String?> referenceNumber = const Value.absent(),
+    String? incomeDate,
+    Value<String?> paymentMode = const Value.absent(),
+    Value<String?> bankAccountId = const Value.absent(),
+    Value<String?> dueDate = const Value.absent(),
+    Value<String?> balanceDue = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => OtherIncomeTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    categoryId: categoryId ?? this.categoryId,
+    incomeItemId: incomeItemId.present ? incomeItemId.value : this.incomeItemId,
+    amount: amount ?? this.amount,
+    quantity: quantity.present ? quantity.value : this.quantity,
+    taxAmount: taxAmount ?? this.taxAmount,
+    taxRate: taxRate ?? this.taxRate,
+    description: description.present ? description.value : this.description,
+    notes: notes.present ? notes.value : this.notes,
+    referenceNumber: referenceNumber.present
+        ? referenceNumber.value
+        : this.referenceNumber,
+    incomeDate: incomeDate ?? this.incomeDate,
+    paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
+    bankAccountId: bankAccountId.present
+        ? bankAccountId.value
+        : this.bankAccountId,
+    dueDate: dueDate.present ? dueDate.value : this.dueDate,
+    balanceDue: balanceDue.present ? balanceDue.value : this.balanceDue,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  OtherIncomeTableData copyWithCompanion(OtherIncomesLocalCompanion data) {
+    return OtherIncomeTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      incomeItemId: data.incomeItemId.present
+          ? data.incomeItemId.value
+          : this.incomeItemId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
+      taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      referenceNumber: data.referenceNumber.present
+          ? data.referenceNumber.value
+          : this.referenceNumber,
+      incomeDate: data.incomeDate.present
+          ? data.incomeDate.value
+          : this.incomeDate,
+      paymentMode: data.paymentMode.present
+          ? data.paymentMode.value
+          : this.paymentMode,
+      bankAccountId: data.bankAccountId.present
+          ? data.bankAccountId.value
+          : this.bankAccountId,
+      dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
+      balanceDue: data.balanceDue.present
+          ? data.balanceDue.value
+          : this.balanceDue,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OtherIncomeTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('incomeItemId: $incomeItemId, ')
+          ..write('amount: $amount, ')
+          ..write('quantity: $quantity, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('description: $description, ')
+          ..write('notes: $notes, ')
+          ..write('referenceNumber: $referenceNumber, ')
+          ..write('incomeDate: $incomeDate, ')
+          ..write('paymentMode: $paymentMode, ')
+          ..write('bankAccountId: $bankAccountId, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('balanceDue: $balanceDue, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    categoryId,
+    incomeItemId,
+    amount,
+    quantity,
+    taxAmount,
+    taxRate,
+    description,
+    notes,
+    referenceNumber,
+    incomeDate,
+    paymentMode,
+    bankAccountId,
+    dueDate,
+    balanceDue,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OtherIncomeTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.categoryId == this.categoryId &&
+          other.incomeItemId == this.incomeItemId &&
+          other.amount == this.amount &&
+          other.quantity == this.quantity &&
+          other.taxAmount == this.taxAmount &&
+          other.taxRate == this.taxRate &&
+          other.description == this.description &&
+          other.notes == this.notes &&
+          other.referenceNumber == this.referenceNumber &&
+          other.incomeDate == this.incomeDate &&
+          other.paymentMode == this.paymentMode &&
+          other.bankAccountId == this.bankAccountId &&
+          other.dueDate == this.dueDate &&
+          other.balanceDue == this.balanceDue &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class OtherIncomesLocalCompanion extends UpdateCompanion<OtherIncomeTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> categoryId;
+  final Value<String?> incomeItemId;
+  final Value<String> amount;
+  final Value<String?> quantity;
+  final Value<String> taxAmount;
+  final Value<String> taxRate;
+  final Value<String?> description;
+  final Value<String?> notes;
+  final Value<String?> referenceNumber;
+  final Value<String> incomeDate;
+  final Value<String?> paymentMode;
+  final Value<String?> bankAccountId;
+  final Value<String?> dueDate;
+  final Value<String?> balanceDue;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const OtherIncomesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.incomeItemId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.description = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.referenceNumber = const Value.absent(),
+    this.incomeDate = const Value.absent(),
+    this.paymentMode = const Value.absent(),
+    this.bankAccountId = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.balanceDue = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OtherIncomesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String categoryId,
+    this.incomeItemId = const Value.absent(),
+    required String amount,
+    this.quantity = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.taxRate = const Value.absent(),
+    this.description = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.referenceNumber = const Value.absent(),
+    required String incomeDate,
+    this.paymentMode = const Value.absent(),
+    this.bankAccountId = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.balanceDue = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       categoryId = Value(categoryId),
+       amount = Value(amount),
+       incomeDate = Value(incomeDate),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<OtherIncomeTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? categoryId,
+    Expression<String>? incomeItemId,
+    Expression<String>? amount,
+    Expression<String>? quantity,
+    Expression<String>? taxAmount,
+    Expression<String>? taxRate,
+    Expression<String>? description,
+    Expression<String>? notes,
+    Expression<String>? referenceNumber,
+    Expression<String>? incomeDate,
+    Expression<String>? paymentMode,
+    Expression<String>? bankAccountId,
+    Expression<String>? dueDate,
+    Expression<String>? balanceDue,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (categoryId != null) 'category_id': categoryId,
+      if (incomeItemId != null) 'income_item_id': incomeItemId,
+      if (amount != null) 'amount': amount,
+      if (quantity != null) 'quantity': quantity,
+      if (taxAmount != null) 'tax_amount': taxAmount,
+      if (taxRate != null) 'tax_rate': taxRate,
+      if (description != null) 'description': description,
+      if (notes != null) 'notes': notes,
+      if (referenceNumber != null) 'reference_number': referenceNumber,
+      if (incomeDate != null) 'income_date': incomeDate,
+      if (paymentMode != null) 'payment_mode': paymentMode,
+      if (bankAccountId != null) 'bank_account_id': bankAccountId,
+      if (dueDate != null) 'due_date': dueDate,
+      if (balanceDue != null) 'balance_due': balanceDue,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OtherIncomesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? categoryId,
+    Value<String?>? incomeItemId,
+    Value<String>? amount,
+    Value<String?>? quantity,
+    Value<String>? taxAmount,
+    Value<String>? taxRate,
+    Value<String?>? description,
+    Value<String?>? notes,
+    Value<String?>? referenceNumber,
+    Value<String>? incomeDate,
+    Value<String?>? paymentMode,
+    Value<String?>? bankAccountId,
+    Value<String?>? dueDate,
+    Value<String?>? balanceDue,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return OtherIncomesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      categoryId: categoryId ?? this.categoryId,
+      incomeItemId: incomeItemId ?? this.incomeItemId,
+      amount: amount ?? this.amount,
+      quantity: quantity ?? this.quantity,
+      taxAmount: taxAmount ?? this.taxAmount,
+      taxRate: taxRate ?? this.taxRate,
+      description: description ?? this.description,
+      notes: notes ?? this.notes,
+      referenceNumber: referenceNumber ?? this.referenceNumber,
+      incomeDate: incomeDate ?? this.incomeDate,
+      paymentMode: paymentMode ?? this.paymentMode,
+      bankAccountId: bankAccountId ?? this.bankAccountId,
+      dueDate: dueDate ?? this.dueDate,
+      balanceDue: balanceDue ?? this.balanceDue,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (incomeItemId.present) {
+      map['income_item_id'] = Variable<String>(incomeItemId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<String>(amount.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<String>(quantity.value);
+    }
+    if (taxAmount.present) {
+      map['tax_amount'] = Variable<String>(taxAmount.value);
+    }
+    if (taxRate.present) {
+      map['tax_rate'] = Variable<String>(taxRate.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (referenceNumber.present) {
+      map['reference_number'] = Variable<String>(referenceNumber.value);
+    }
+    if (incomeDate.present) {
+      map['income_date'] = Variable<String>(incomeDate.value);
+    }
+    if (paymentMode.present) {
+      map['payment_mode'] = Variable<String>(paymentMode.value);
+    }
+    if (bankAccountId.present) {
+      map['bank_account_id'] = Variable<String>(bankAccountId.value);
+    }
+    if (dueDate.present) {
+      map['due_date'] = Variable<String>(dueDate.value);
+    }
+    if (balanceDue.present) {
+      map['balance_due'] = Variable<String>(balanceDue.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OtherIncomesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('incomeItemId: $incomeItemId, ')
+          ..write('amount: $amount, ')
+          ..write('quantity: $quantity, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('taxRate: $taxRate, ')
+          ..write('description: $description, ')
+          ..write('notes: $notes, ')
+          ..write('referenceNumber: $referenceNumber, ')
+          ..write('incomeDate: $incomeDate, ')
+          ..write('paymentMode: $paymentMode, ')
+          ..write('bankAccountId: $bankAccountId, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('balanceDue: $balanceDue, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LoanAccountsLocalTable extends LoanAccountsLocal
+    with TableInfo<$LoanAccountsLocalTable, LoanAccountTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LoanAccountsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lenderNameMeta = const VerificationMeta(
+    'lenderName',
+  );
+  @override
+  late final GeneratedColumn<String> lenderName = GeneratedColumn<String>(
+    'lender_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountNumberMeta = const VerificationMeta(
+    'accountNumber',
+  );
+  @override
+  late final GeneratedColumn<String> accountNumber = GeneratedColumn<String>(
+    'account_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _openingOutstandingMeta =
+      const VerificationMeta('openingOutstanding');
+  @override
+  late final GeneratedColumn<String> openingOutstanding =
+      GeneratedColumn<String>(
+        'opening_outstanding',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('0'),
+      );
+  static const VerificationMeta _openingBalanceAsOfMeta =
+      const VerificationMeta('openingBalanceAsOf');
+  @override
+  late final GeneratedColumn<String> openingBalanceAsOf =
+      GeneratedColumn<String>(
+        'opening_balance_as_of',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _interestRateMeta = const VerificationMeta(
+    'interestRate',
+  );
+  @override
+  late final GeneratedColumn<String> interestRate = GeneratedColumn<String>(
+    'interest_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _termMonthsMeta = const VerificationMeta(
+    'termMonths',
+  );
+  @override
+  late final GeneratedColumn<int> termMonths = GeneratedColumn<int>(
+    'term_months',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _receivedBankAccountIdMeta =
+      const VerificationMeta('receivedBankAccountId');
+  @override
+  late final GeneratedColumn<String> receivedBankAccountId =
+      GeneratedColumn<String>(
+        'received_bank_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    lenderName,
+    accountNumber,
+    description,
+    openingOutstanding,
+    openingBalanceAsOf,
+    interestRate,
+    termMonths,
+    receivedBankAccountId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'loan_accounts_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LoanAccountTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('lender_name')) {
+      context.handle(
+        _lenderNameMeta,
+        lenderName.isAcceptableOrUnknown(data['lender_name']!, _lenderNameMeta),
+      );
+    }
+    if (data.containsKey('account_number')) {
+      context.handle(
+        _accountNumberMeta,
+        accountNumber.isAcceptableOrUnknown(
+          data['account_number']!,
+          _accountNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('opening_outstanding')) {
+      context.handle(
+        _openingOutstandingMeta,
+        openingOutstanding.isAcceptableOrUnknown(
+          data['opening_outstanding']!,
+          _openingOutstandingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('opening_balance_as_of')) {
+      context.handle(
+        _openingBalanceAsOfMeta,
+        openingBalanceAsOf.isAcceptableOrUnknown(
+          data['opening_balance_as_of']!,
+          _openingBalanceAsOfMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_openingBalanceAsOfMeta);
+    }
+    if (data.containsKey('interest_rate')) {
+      context.handle(
+        _interestRateMeta,
+        interestRate.isAcceptableOrUnknown(
+          data['interest_rate']!,
+          _interestRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('term_months')) {
+      context.handle(
+        _termMonthsMeta,
+        termMonths.isAcceptableOrUnknown(data['term_months']!, _termMonthsMeta),
+      );
+    }
+    if (data.containsKey('received_bank_account_id')) {
+      context.handle(
+        _receivedBankAccountIdMeta,
+        receivedBankAccountId.isAcceptableOrUnknown(
+          data['received_bank_account_id']!,
+          _receivedBankAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LoanAccountTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LoanAccountTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      lenderName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lender_name'],
+      ),
+      accountNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_number'],
+      ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      openingOutstanding: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opening_outstanding'],
+      )!,
+      openingBalanceAsOf: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opening_balance_as_of'],
+      )!,
+      interestRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}interest_rate'],
+      ),
+      termMonths: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}term_months'],
+      ),
+      receivedBankAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}received_bank_account_id'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $LoanAccountsLocalTable createAlias(String alias) {
+    return $LoanAccountsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class LoanAccountTableData extends DataClass
+    implements Insertable<LoanAccountTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String? lenderName;
+  final String? accountNumber;
+  final String? description;
+  final String openingOutstanding;
+  final String openingBalanceAsOf;
+  final String? interestRate;
+  final int? termMonths;
+  final String? receivedBankAccountId;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const LoanAccountTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    this.lenderName,
+    this.accountNumber,
+    this.description,
+    required this.openingOutstanding,
+    required this.openingBalanceAsOf,
+    this.interestRate,
+    this.termMonths,
+    this.receivedBankAccountId,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || lenderName != null) {
+      map['lender_name'] = Variable<String>(lenderName);
+    }
+    if (!nullToAbsent || accountNumber != null) {
+      map['account_number'] = Variable<String>(accountNumber);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['opening_outstanding'] = Variable<String>(openingOutstanding);
+    map['opening_balance_as_of'] = Variable<String>(openingBalanceAsOf);
+    if (!nullToAbsent || interestRate != null) {
+      map['interest_rate'] = Variable<String>(interestRate);
+    }
+    if (!nullToAbsent || termMonths != null) {
+      map['term_months'] = Variable<int>(termMonths);
+    }
+    if (!nullToAbsent || receivedBankAccountId != null) {
+      map['received_bank_account_id'] = Variable<String>(receivedBankAccountId);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  LoanAccountsLocalCompanion toCompanion(bool nullToAbsent) {
+    return LoanAccountsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      lenderName: lenderName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lenderName),
+      accountNumber: accountNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountNumber),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      openingOutstanding: Value(openingOutstanding),
+      openingBalanceAsOf: Value(openingBalanceAsOf),
+      interestRate: interestRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(interestRate),
+      termMonths: termMonths == null && nullToAbsent
+          ? const Value.absent()
+          : Value(termMonths),
+      receivedBankAccountId: receivedBankAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivedBankAccountId),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory LoanAccountTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LoanAccountTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      lenderName: serializer.fromJson<String?>(json['lenderName']),
+      accountNumber: serializer.fromJson<String?>(json['accountNumber']),
+      description: serializer.fromJson<String?>(json['description']),
+      openingOutstanding: serializer.fromJson<String>(
+        json['openingOutstanding'],
+      ),
+      openingBalanceAsOf: serializer.fromJson<String>(
+        json['openingBalanceAsOf'],
+      ),
+      interestRate: serializer.fromJson<String?>(json['interestRate']),
+      termMonths: serializer.fromJson<int?>(json['termMonths']),
+      receivedBankAccountId: serializer.fromJson<String?>(
+        json['receivedBankAccountId'],
+      ),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'lenderName': serializer.toJson<String?>(lenderName),
+      'accountNumber': serializer.toJson<String?>(accountNumber),
+      'description': serializer.toJson<String?>(description),
+      'openingOutstanding': serializer.toJson<String>(openingOutstanding),
+      'openingBalanceAsOf': serializer.toJson<String>(openingBalanceAsOf),
+      'interestRate': serializer.toJson<String?>(interestRate),
+      'termMonths': serializer.toJson<int?>(termMonths),
+      'receivedBankAccountId': serializer.toJson<String?>(
+        receivedBankAccountId,
+      ),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  LoanAccountTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    Value<String?> lenderName = const Value.absent(),
+    Value<String?> accountNumber = const Value.absent(),
+    Value<String?> description = const Value.absent(),
+    String? openingOutstanding,
+    String? openingBalanceAsOf,
+    Value<String?> interestRate = const Value.absent(),
+    Value<int?> termMonths = const Value.absent(),
+    Value<String?> receivedBankAccountId = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => LoanAccountTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    lenderName: lenderName.present ? lenderName.value : this.lenderName,
+    accountNumber: accountNumber.present
+        ? accountNumber.value
+        : this.accountNumber,
+    description: description.present ? description.value : this.description,
+    openingOutstanding: openingOutstanding ?? this.openingOutstanding,
+    openingBalanceAsOf: openingBalanceAsOf ?? this.openingBalanceAsOf,
+    interestRate: interestRate.present ? interestRate.value : this.interestRate,
+    termMonths: termMonths.present ? termMonths.value : this.termMonths,
+    receivedBankAccountId: receivedBankAccountId.present
+        ? receivedBankAccountId.value
+        : this.receivedBankAccountId,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  LoanAccountTableData copyWithCompanion(LoanAccountsLocalCompanion data) {
+    return LoanAccountTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      lenderName: data.lenderName.present
+          ? data.lenderName.value
+          : this.lenderName,
+      accountNumber: data.accountNumber.present
+          ? data.accountNumber.value
+          : this.accountNumber,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      openingOutstanding: data.openingOutstanding.present
+          ? data.openingOutstanding.value
+          : this.openingOutstanding,
+      openingBalanceAsOf: data.openingBalanceAsOf.present
+          ? data.openingBalanceAsOf.value
+          : this.openingBalanceAsOf,
+      interestRate: data.interestRate.present
+          ? data.interestRate.value
+          : this.interestRate,
+      termMonths: data.termMonths.present
+          ? data.termMonths.value
+          : this.termMonths,
+      receivedBankAccountId: data.receivedBankAccountId.present
+          ? data.receivedBankAccountId.value
+          : this.receivedBankAccountId,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoanAccountTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('lenderName: $lenderName, ')
+          ..write('accountNumber: $accountNumber, ')
+          ..write('description: $description, ')
+          ..write('openingOutstanding: $openingOutstanding, ')
+          ..write('openingBalanceAsOf: $openingBalanceAsOf, ')
+          ..write('interestRate: $interestRate, ')
+          ..write('termMonths: $termMonths, ')
+          ..write('receivedBankAccountId: $receivedBankAccountId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    lenderName,
+    accountNumber,
+    description,
+    openingOutstanding,
+    openingBalanceAsOf,
+    interestRate,
+    termMonths,
+    receivedBankAccountId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LoanAccountTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.lenderName == this.lenderName &&
+          other.accountNumber == this.accountNumber &&
+          other.description == this.description &&
+          other.openingOutstanding == this.openingOutstanding &&
+          other.openingBalanceAsOf == this.openingBalanceAsOf &&
+          other.interestRate == this.interestRate &&
+          other.termMonths == this.termMonths &&
+          other.receivedBankAccountId == this.receivedBankAccountId &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class LoanAccountsLocalCompanion extends UpdateCompanion<LoanAccountTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String?> lenderName;
+  final Value<String?> accountNumber;
+  final Value<String?> description;
+  final Value<String> openingOutstanding;
+  final Value<String> openingBalanceAsOf;
+  final Value<String?> interestRate;
+  final Value<int?> termMonths;
+  final Value<String?> receivedBankAccountId;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const LoanAccountsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.lenderName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
+    this.description = const Value.absent(),
+    this.openingOutstanding = const Value.absent(),
+    this.openingBalanceAsOf = const Value.absent(),
+    this.interestRate = const Value.absent(),
+    this.termMonths = const Value.absent(),
+    this.receivedBankAccountId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LoanAccountsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.lenderName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
+    this.description = const Value.absent(),
+    this.openingOutstanding = const Value.absent(),
+    required String openingBalanceAsOf,
+    this.interestRate = const Value.absent(),
+    this.termMonths = const Value.absent(),
+    this.receivedBankAccountId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       openingBalanceAsOf = Value(openingBalanceAsOf),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<LoanAccountTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? lenderName,
+    Expression<String>? accountNumber,
+    Expression<String>? description,
+    Expression<String>? openingOutstanding,
+    Expression<String>? openingBalanceAsOf,
+    Expression<String>? interestRate,
+    Expression<int>? termMonths,
+    Expression<String>? receivedBankAccountId,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (lenderName != null) 'lender_name': lenderName,
+      if (accountNumber != null) 'account_number': accountNumber,
+      if (description != null) 'description': description,
+      if (openingOutstanding != null) 'opening_outstanding': openingOutstanding,
+      if (openingBalanceAsOf != null)
+        'opening_balance_as_of': openingBalanceAsOf,
+      if (interestRate != null) 'interest_rate': interestRate,
+      if (termMonths != null) 'term_months': termMonths,
+      if (receivedBankAccountId != null)
+        'received_bank_account_id': receivedBankAccountId,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LoanAccountsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String?>? lenderName,
+    Value<String?>? accountNumber,
+    Value<String?>? description,
+    Value<String>? openingOutstanding,
+    Value<String>? openingBalanceAsOf,
+    Value<String?>? interestRate,
+    Value<int?>? termMonths,
+    Value<String?>? receivedBankAccountId,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return LoanAccountsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      lenderName: lenderName ?? this.lenderName,
+      accountNumber: accountNumber ?? this.accountNumber,
+      description: description ?? this.description,
+      openingOutstanding: openingOutstanding ?? this.openingOutstanding,
+      openingBalanceAsOf: openingBalanceAsOf ?? this.openingBalanceAsOf,
+      interestRate: interestRate ?? this.interestRate,
+      termMonths: termMonths ?? this.termMonths,
+      receivedBankAccountId:
+          receivedBankAccountId ?? this.receivedBankAccountId,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (lenderName.present) {
+      map['lender_name'] = Variable<String>(lenderName.value);
+    }
+    if (accountNumber.present) {
+      map['account_number'] = Variable<String>(accountNumber.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (openingOutstanding.present) {
+      map['opening_outstanding'] = Variable<String>(openingOutstanding.value);
+    }
+    if (openingBalanceAsOf.present) {
+      map['opening_balance_as_of'] = Variable<String>(openingBalanceAsOf.value);
+    }
+    if (interestRate.present) {
+      map['interest_rate'] = Variable<String>(interestRate.value);
+    }
+    if (termMonths.present) {
+      map['term_months'] = Variable<int>(termMonths.value);
+    }
+    if (receivedBankAccountId.present) {
+      map['received_bank_account_id'] = Variable<String>(
+        receivedBankAccountId.value,
+      );
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoanAccountsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('lenderName: $lenderName, ')
+          ..write('accountNumber: $accountNumber, ')
+          ..write('description: $description, ')
+          ..write('openingOutstanding: $openingOutstanding, ')
+          ..write('openingBalanceAsOf: $openingBalanceAsOf, ')
+          ..write('interestRate: $interestRate, ')
+          ..write('termMonths: $termMonths, ')
+          ..write('receivedBankAccountId: $receivedBankAccountId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LoanTransactionsLocalTable extends LoanTransactionsLocal
+    with TableInfo<$LoanTransactionsLocalTable, LoanTransactionTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LoanTransactionsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _loanAccountIdMeta = const VerificationMeta(
+    'loanAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> loanAccountId = GeneratedColumn<String>(
+    'loan_account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _transactionTypeMeta = const VerificationMeta(
+    'transactionType',
+  );
+  @override
+  late final GeneratedColumn<String> transactionType = GeneratedColumn<String>(
+    'transaction_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _transactionDateMeta = const VerificationMeta(
+    'transactionDate',
+  );
+  @override
+  late final GeneratedColumn<String> transactionDate = GeneratedColumn<String>(
+    'transaction_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _principalAmountMeta = const VerificationMeta(
+    'principalAmount',
+  );
+  @override
+  late final GeneratedColumn<String> principalAmount = GeneratedColumn<String>(
+    'principal_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _interestAmountMeta = const VerificationMeta(
+    'interestAmount',
+  );
+  @override
+  late final GeneratedColumn<String> interestAmount = GeneratedColumn<String>(
+    'interest_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _chargesAmountMeta = const VerificationMeta(
+    'chargesAmount',
+  );
+  @override
+  late final GeneratedColumn<String> chargesAmount = GeneratedColumn<String>(
+    'charges_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _bankAccountIdMeta = const VerificationMeta(
+    'bankAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> bankAccountId = GeneratedColumn<String>(
+    'bank_account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceNumberMeta = const VerificationMeta(
+    'referenceNumber',
+  );
+  @override
+  late final GeneratedColumn<String> referenceNumber = GeneratedColumn<String>(
+    'reference_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    loanAccountId,
+    transactionType,
+    transactionDate,
+    principalAmount,
+    interestAmount,
+    chargesAmount,
+    bankAccountId,
+    description,
+    referenceNumber,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'loan_transactions_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LoanTransactionTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('loan_account_id')) {
+      context.handle(
+        _loanAccountIdMeta,
+        loanAccountId.isAcceptableOrUnknown(
+          data['loan_account_id']!,
+          _loanAccountIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_loanAccountIdMeta);
+    }
+    if (data.containsKey('transaction_type')) {
+      context.handle(
+        _transactionTypeMeta,
+        transactionType.isAcceptableOrUnknown(
+          data['transaction_type']!,
+          _transactionTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_transactionTypeMeta);
+    }
+    if (data.containsKey('transaction_date')) {
+      context.handle(
+        _transactionDateMeta,
+        transactionDate.isAcceptableOrUnknown(
+          data['transaction_date']!,
+          _transactionDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_transactionDateMeta);
+    }
+    if (data.containsKey('principal_amount')) {
+      context.handle(
+        _principalAmountMeta,
+        principalAmount.isAcceptableOrUnknown(
+          data['principal_amount']!,
+          _principalAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('interest_amount')) {
+      context.handle(
+        _interestAmountMeta,
+        interestAmount.isAcceptableOrUnknown(
+          data['interest_amount']!,
+          _interestAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('charges_amount')) {
+      context.handle(
+        _chargesAmountMeta,
+        chargesAmount.isAcceptableOrUnknown(
+          data['charges_amount']!,
+          _chargesAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('bank_account_id')) {
+      context.handle(
+        _bankAccountIdMeta,
+        bankAccountId.isAcceptableOrUnknown(
+          data['bank_account_id']!,
+          _bankAccountIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_bankAccountIdMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_number')) {
+      context.handle(
+        _referenceNumberMeta,
+        referenceNumber.isAcceptableOrUnknown(
+          data['reference_number']!,
+          _referenceNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LoanTransactionTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LoanTransactionTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      loanAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}loan_account_id'],
+      )!,
+      transactionType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transaction_type'],
+      )!,
+      transactionDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transaction_date'],
+      )!,
+      principalAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}principal_amount'],
+      )!,
+      interestAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}interest_amount'],
+      )!,
+      chargesAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}charges_amount'],
+      )!,
+      bankAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bank_account_id'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      referenceNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_number'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $LoanTransactionsLocalTable createAlias(String alias) {
+    return $LoanTransactionsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class LoanTransactionTableData extends DataClass
+    implements Insertable<LoanTransactionTableData> {
+  final String id;
+  final String businessId;
+  final String loanAccountId;
+  final String transactionType;
+  final String transactionDate;
+  final String principalAmount;
+  final String interestAmount;
+  final String chargesAmount;
+  final String bankAccountId;
+  final String? description;
+  final String? referenceNumber;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const LoanTransactionTableData({
+    required this.id,
+    required this.businessId,
+    required this.loanAccountId,
+    required this.transactionType,
+    required this.transactionDate,
+    required this.principalAmount,
+    required this.interestAmount,
+    required this.chargesAmount,
+    required this.bankAccountId,
+    this.description,
+    this.referenceNumber,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['loan_account_id'] = Variable<String>(loanAccountId);
+    map['transaction_type'] = Variable<String>(transactionType);
+    map['transaction_date'] = Variable<String>(transactionDate);
+    map['principal_amount'] = Variable<String>(principalAmount);
+    map['interest_amount'] = Variable<String>(interestAmount);
+    map['charges_amount'] = Variable<String>(chargesAmount);
+    map['bank_account_id'] = Variable<String>(bankAccountId);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || referenceNumber != null) {
+      map['reference_number'] = Variable<String>(referenceNumber);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  LoanTransactionsLocalCompanion toCompanion(bool nullToAbsent) {
+    return LoanTransactionsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      loanAccountId: Value(loanAccountId),
+      transactionType: Value(transactionType),
+      transactionDate: Value(transactionDate),
+      principalAmount: Value(principalAmount),
+      interestAmount: Value(interestAmount),
+      chargesAmount: Value(chargesAmount),
+      bankAccountId: Value(bankAccountId),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      referenceNumber: referenceNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceNumber),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory LoanTransactionTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LoanTransactionTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      loanAccountId: serializer.fromJson<String>(json['loanAccountId']),
+      transactionType: serializer.fromJson<String>(json['transactionType']),
+      transactionDate: serializer.fromJson<String>(json['transactionDate']),
+      principalAmount: serializer.fromJson<String>(json['principalAmount']),
+      interestAmount: serializer.fromJson<String>(json['interestAmount']),
+      chargesAmount: serializer.fromJson<String>(json['chargesAmount']),
+      bankAccountId: serializer.fromJson<String>(json['bankAccountId']),
+      description: serializer.fromJson<String?>(json['description']),
+      referenceNumber: serializer.fromJson<String?>(json['referenceNumber']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'loanAccountId': serializer.toJson<String>(loanAccountId),
+      'transactionType': serializer.toJson<String>(transactionType),
+      'transactionDate': serializer.toJson<String>(transactionDate),
+      'principalAmount': serializer.toJson<String>(principalAmount),
+      'interestAmount': serializer.toJson<String>(interestAmount),
+      'chargesAmount': serializer.toJson<String>(chargesAmount),
+      'bankAccountId': serializer.toJson<String>(bankAccountId),
+      'description': serializer.toJson<String?>(description),
+      'referenceNumber': serializer.toJson<String?>(referenceNumber),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  LoanTransactionTableData copyWith({
+    String? id,
+    String? businessId,
+    String? loanAccountId,
+    String? transactionType,
+    String? transactionDate,
+    String? principalAmount,
+    String? interestAmount,
+    String? chargesAmount,
+    String? bankAccountId,
+    Value<String?> description = const Value.absent(),
+    Value<String?> referenceNumber = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => LoanTransactionTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    loanAccountId: loanAccountId ?? this.loanAccountId,
+    transactionType: transactionType ?? this.transactionType,
+    transactionDate: transactionDate ?? this.transactionDate,
+    principalAmount: principalAmount ?? this.principalAmount,
+    interestAmount: interestAmount ?? this.interestAmount,
+    chargesAmount: chargesAmount ?? this.chargesAmount,
+    bankAccountId: bankAccountId ?? this.bankAccountId,
+    description: description.present ? description.value : this.description,
+    referenceNumber: referenceNumber.present
+        ? referenceNumber.value
+        : this.referenceNumber,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  LoanTransactionTableData copyWithCompanion(
+    LoanTransactionsLocalCompanion data,
+  ) {
+    return LoanTransactionTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      loanAccountId: data.loanAccountId.present
+          ? data.loanAccountId.value
+          : this.loanAccountId,
+      transactionType: data.transactionType.present
+          ? data.transactionType.value
+          : this.transactionType,
+      transactionDate: data.transactionDate.present
+          ? data.transactionDate.value
+          : this.transactionDate,
+      principalAmount: data.principalAmount.present
+          ? data.principalAmount.value
+          : this.principalAmount,
+      interestAmount: data.interestAmount.present
+          ? data.interestAmount.value
+          : this.interestAmount,
+      chargesAmount: data.chargesAmount.present
+          ? data.chargesAmount.value
+          : this.chargesAmount,
+      bankAccountId: data.bankAccountId.present
+          ? data.bankAccountId.value
+          : this.bankAccountId,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      referenceNumber: data.referenceNumber.present
+          ? data.referenceNumber.value
+          : this.referenceNumber,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoanTransactionTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('loanAccountId: $loanAccountId, ')
+          ..write('transactionType: $transactionType, ')
+          ..write('transactionDate: $transactionDate, ')
+          ..write('principalAmount: $principalAmount, ')
+          ..write('interestAmount: $interestAmount, ')
+          ..write('chargesAmount: $chargesAmount, ')
+          ..write('bankAccountId: $bankAccountId, ')
+          ..write('description: $description, ')
+          ..write('referenceNumber: $referenceNumber, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    loanAccountId,
+    transactionType,
+    transactionDate,
+    principalAmount,
+    interestAmount,
+    chargesAmount,
+    bankAccountId,
+    description,
+    referenceNumber,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LoanTransactionTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.loanAccountId == this.loanAccountId &&
+          other.transactionType == this.transactionType &&
+          other.transactionDate == this.transactionDate &&
+          other.principalAmount == this.principalAmount &&
+          other.interestAmount == this.interestAmount &&
+          other.chargesAmount == this.chargesAmount &&
+          other.bankAccountId == this.bankAccountId &&
+          other.description == this.description &&
+          other.referenceNumber == this.referenceNumber &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class LoanTransactionsLocalCompanion
+    extends UpdateCompanion<LoanTransactionTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> loanAccountId;
+  final Value<String> transactionType;
+  final Value<String> transactionDate;
+  final Value<String> principalAmount;
+  final Value<String> interestAmount;
+  final Value<String> chargesAmount;
+  final Value<String> bankAccountId;
+  final Value<String?> description;
+  final Value<String?> referenceNumber;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const LoanTransactionsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.loanAccountId = const Value.absent(),
+    this.transactionType = const Value.absent(),
+    this.transactionDate = const Value.absent(),
+    this.principalAmount = const Value.absent(),
+    this.interestAmount = const Value.absent(),
+    this.chargesAmount = const Value.absent(),
+    this.bankAccountId = const Value.absent(),
+    this.description = const Value.absent(),
+    this.referenceNumber = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LoanTransactionsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String loanAccountId,
+    required String transactionType,
+    required String transactionDate,
+    this.principalAmount = const Value.absent(),
+    this.interestAmount = const Value.absent(),
+    this.chargesAmount = const Value.absent(),
+    required String bankAccountId,
+    this.description = const Value.absent(),
+    this.referenceNumber = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       loanAccountId = Value(loanAccountId),
+       transactionType = Value(transactionType),
+       transactionDate = Value(transactionDate),
+       bankAccountId = Value(bankAccountId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<LoanTransactionTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? loanAccountId,
+    Expression<String>? transactionType,
+    Expression<String>? transactionDate,
+    Expression<String>? principalAmount,
+    Expression<String>? interestAmount,
+    Expression<String>? chargesAmount,
+    Expression<String>? bankAccountId,
+    Expression<String>? description,
+    Expression<String>? referenceNumber,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (loanAccountId != null) 'loan_account_id': loanAccountId,
+      if (transactionType != null) 'transaction_type': transactionType,
+      if (transactionDate != null) 'transaction_date': transactionDate,
+      if (principalAmount != null) 'principal_amount': principalAmount,
+      if (interestAmount != null) 'interest_amount': interestAmount,
+      if (chargesAmount != null) 'charges_amount': chargesAmount,
+      if (bankAccountId != null) 'bank_account_id': bankAccountId,
+      if (description != null) 'description': description,
+      if (referenceNumber != null) 'reference_number': referenceNumber,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LoanTransactionsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? loanAccountId,
+    Value<String>? transactionType,
+    Value<String>? transactionDate,
+    Value<String>? principalAmount,
+    Value<String>? interestAmount,
+    Value<String>? chargesAmount,
+    Value<String>? bankAccountId,
+    Value<String?>? description,
+    Value<String?>? referenceNumber,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return LoanTransactionsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      loanAccountId: loanAccountId ?? this.loanAccountId,
+      transactionType: transactionType ?? this.transactionType,
+      transactionDate: transactionDate ?? this.transactionDate,
+      principalAmount: principalAmount ?? this.principalAmount,
+      interestAmount: interestAmount ?? this.interestAmount,
+      chargesAmount: chargesAmount ?? this.chargesAmount,
+      bankAccountId: bankAccountId ?? this.bankAccountId,
+      description: description ?? this.description,
+      referenceNumber: referenceNumber ?? this.referenceNumber,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (loanAccountId.present) {
+      map['loan_account_id'] = Variable<String>(loanAccountId.value);
+    }
+    if (transactionType.present) {
+      map['transaction_type'] = Variable<String>(transactionType.value);
+    }
+    if (transactionDate.present) {
+      map['transaction_date'] = Variable<String>(transactionDate.value);
+    }
+    if (principalAmount.present) {
+      map['principal_amount'] = Variable<String>(principalAmount.value);
+    }
+    if (interestAmount.present) {
+      map['interest_amount'] = Variable<String>(interestAmount.value);
+    }
+    if (chargesAmount.present) {
+      map['charges_amount'] = Variable<String>(chargesAmount.value);
+    }
+    if (bankAccountId.present) {
+      map['bank_account_id'] = Variable<String>(bankAccountId.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (referenceNumber.present) {
+      map['reference_number'] = Variable<String>(referenceNumber.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoanTransactionsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('loanAccountId: $loanAccountId, ')
+          ..write('transactionType: $transactionType, ')
+          ..write('transactionDate: $transactionDate, ')
+          ..write('principalAmount: $principalAmount, ')
+          ..write('interestAmount: $interestAmount, ')
+          ..write('chargesAmount: $chargesAmount, ')
+          ..write('bankAccountId: $bankAccountId, ')
+          ..write('description: $description, ')
+          ..write('referenceNumber: $referenceNumber, ')
           ..write('syncVersion: $syncVersion, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
@@ -30936,6 +37835,2911 @@ class TodosLocalCompanion extends UpdateCompanion<TodoTableData> {
   }
 }
 
+class $WithholdingTaxSectionsLocalTable extends WithholdingTaxSectionsLocal
+    with
+        TableInfo<
+          $WithholdingTaxSectionsLocalTable,
+          WithholdingTaxSectionLocalData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WithholdingTaxSectionsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rateMeta = const VerificationMeta('rate');
+  @override
+  late final GeneratedColumn<String> rate = GeneratedColumn<String>(
+    'rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _applicableOnMeta = const VerificationMeta(
+    'applicableOn',
+  );
+  @override
+  late final GeneratedColumn<String> applicableOn = GeneratedColumn<String>(
+    'applicable_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _isPreloadedMeta = const VerificationMeta(
+    'isPreloaded',
+  );
+  @override
+  late final GeneratedColumn<bool> isPreloaded = GeneratedColumn<bool>(
+    'is_preloaded',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_preloaded" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    kind,
+    code,
+    description,
+    rate,
+    applicableOn,
+    isActive,
+    isPreloaded,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'withholding_tax_sections_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WithholdingTaxSectionLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('rate')) {
+      context.handle(
+        _rateMeta,
+        rate.isAcceptableOrUnknown(data['rate']!, _rateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rateMeta);
+    }
+    if (data.containsKey('applicable_on')) {
+      context.handle(
+        _applicableOnMeta,
+        applicableOn.isAcceptableOrUnknown(
+          data['applicable_on']!,
+          _applicableOnMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_applicableOnMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('is_preloaded')) {
+      context.handle(
+        _isPreloadedMeta,
+        isPreloaded.isAcceptableOrUnknown(
+          data['is_preloaded']!,
+          _isPreloadedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WithholdingTaxSectionLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WithholdingTaxSectionLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      rate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rate'],
+      )!,
+      applicableOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}applicable_on'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      isPreloaded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_preloaded'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $WithholdingTaxSectionsLocalTable createAlias(String alias) {
+    return $WithholdingTaxSectionsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class WithholdingTaxSectionLocalData extends DataClass
+    implements Insertable<WithholdingTaxSectionLocalData> {
+  final String id;
+  final String businessId;
+  final String kind;
+  final String code;
+  final String description;
+  final String rate;
+  final String applicableOn;
+  final bool isActive;
+  final bool isPreloaded;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const WithholdingTaxSectionLocalData({
+    required this.id,
+    required this.businessId,
+    required this.kind,
+    required this.code,
+    required this.description,
+    required this.rate,
+    required this.applicableOn,
+    required this.isActive,
+    required this.isPreloaded,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['kind'] = Variable<String>(kind);
+    map['code'] = Variable<String>(code);
+    map['description'] = Variable<String>(description);
+    map['rate'] = Variable<String>(rate);
+    map['applicable_on'] = Variable<String>(applicableOn);
+    map['is_active'] = Variable<bool>(isActive);
+    map['is_preloaded'] = Variable<bool>(isPreloaded);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  WithholdingTaxSectionsLocalCompanion toCompanion(bool nullToAbsent) {
+    return WithholdingTaxSectionsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      kind: Value(kind),
+      code: Value(code),
+      description: Value(description),
+      rate: Value(rate),
+      applicableOn: Value(applicableOn),
+      isActive: Value(isActive),
+      isPreloaded: Value(isPreloaded),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory WithholdingTaxSectionLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WithholdingTaxSectionLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      code: serializer.fromJson<String>(json['code']),
+      description: serializer.fromJson<String>(json['description']),
+      rate: serializer.fromJson<String>(json['rate']),
+      applicableOn: serializer.fromJson<String>(json['applicableOn']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      isPreloaded: serializer.fromJson<bool>(json['isPreloaded']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'kind': serializer.toJson<String>(kind),
+      'code': serializer.toJson<String>(code),
+      'description': serializer.toJson<String>(description),
+      'rate': serializer.toJson<String>(rate),
+      'applicableOn': serializer.toJson<String>(applicableOn),
+      'isActive': serializer.toJson<bool>(isActive),
+      'isPreloaded': serializer.toJson<bool>(isPreloaded),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  WithholdingTaxSectionLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? kind,
+    String? code,
+    String? description,
+    String? rate,
+    String? applicableOn,
+    bool? isActive,
+    bool? isPreloaded,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => WithholdingTaxSectionLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    kind: kind ?? this.kind,
+    code: code ?? this.code,
+    description: description ?? this.description,
+    rate: rate ?? this.rate,
+    applicableOn: applicableOn ?? this.applicableOn,
+    isActive: isActive ?? this.isActive,
+    isPreloaded: isPreloaded ?? this.isPreloaded,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  WithholdingTaxSectionLocalData copyWithCompanion(
+    WithholdingTaxSectionsLocalCompanion data,
+  ) {
+    return WithholdingTaxSectionLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      code: data.code.present ? data.code.value : this.code,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      rate: data.rate.present ? data.rate.value : this.rate,
+      applicableOn: data.applicableOn.present
+          ? data.applicableOn.value
+          : this.applicableOn,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      isPreloaded: data.isPreloaded.present
+          ? data.isPreloaded.value
+          : this.isPreloaded,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WithholdingTaxSectionLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('kind: $kind, ')
+          ..write('code: $code, ')
+          ..write('description: $description, ')
+          ..write('rate: $rate, ')
+          ..write('applicableOn: $applicableOn, ')
+          ..write('isActive: $isActive, ')
+          ..write('isPreloaded: $isPreloaded, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    kind,
+    code,
+    description,
+    rate,
+    applicableOn,
+    isActive,
+    isPreloaded,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WithholdingTaxSectionLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.kind == this.kind &&
+          other.code == this.code &&
+          other.description == this.description &&
+          other.rate == this.rate &&
+          other.applicableOn == this.applicableOn &&
+          other.isActive == this.isActive &&
+          other.isPreloaded == this.isPreloaded &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class WithholdingTaxSectionsLocalCompanion
+    extends UpdateCompanion<WithholdingTaxSectionLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> kind;
+  final Value<String> code;
+  final Value<String> description;
+  final Value<String> rate;
+  final Value<String> applicableOn;
+  final Value<bool> isActive;
+  final Value<bool> isPreloaded;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const WithholdingTaxSectionsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.code = const Value.absent(),
+    this.description = const Value.absent(),
+    this.rate = const Value.absent(),
+    this.applicableOn = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.isPreloaded = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WithholdingTaxSectionsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String kind,
+    required String code,
+    required String description,
+    required String rate,
+    required String applicableOn,
+    this.isActive = const Value.absent(),
+    this.isPreloaded = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       kind = Value(kind),
+       code = Value(code),
+       description = Value(description),
+       rate = Value(rate),
+       applicableOn = Value(applicableOn),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<WithholdingTaxSectionLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? kind,
+    Expression<String>? code,
+    Expression<String>? description,
+    Expression<String>? rate,
+    Expression<String>? applicableOn,
+    Expression<bool>? isActive,
+    Expression<bool>? isPreloaded,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (kind != null) 'kind': kind,
+      if (code != null) 'code': code,
+      if (description != null) 'description': description,
+      if (rate != null) 'rate': rate,
+      if (applicableOn != null) 'applicable_on': applicableOn,
+      if (isActive != null) 'is_active': isActive,
+      if (isPreloaded != null) 'is_preloaded': isPreloaded,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WithholdingTaxSectionsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? kind,
+    Value<String>? code,
+    Value<String>? description,
+    Value<String>? rate,
+    Value<String>? applicableOn,
+    Value<bool>? isActive,
+    Value<bool>? isPreloaded,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return WithholdingTaxSectionsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      kind: kind ?? this.kind,
+      code: code ?? this.code,
+      description: description ?? this.description,
+      rate: rate ?? this.rate,
+      applicableOn: applicableOn ?? this.applicableOn,
+      isActive: isActive ?? this.isActive,
+      isPreloaded: isPreloaded ?? this.isPreloaded,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (rate.present) {
+      map['rate'] = Variable<String>(rate.value);
+    }
+    if (applicableOn.present) {
+      map['applicable_on'] = Variable<String>(applicableOn.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (isPreloaded.present) {
+      map['is_preloaded'] = Variable<bool>(isPreloaded.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WithholdingTaxSectionsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('kind: $kind, ')
+          ..write('code: $code, ')
+          ..write('description: $description, ')
+          ..write('rate: $rate, ')
+          ..write('applicableOn: $applicableOn, ')
+          ..write('isActive: $isActive, ')
+          ..write('isPreloaded: $isPreloaded, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WithholdingTaxEntriesLocalTable extends WithholdingTaxEntriesLocal
+    with
+        TableInfo<
+          $WithholdingTaxEntriesLocalTable,
+          WithholdingTaxEntryLocalData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WithholdingTaxEntriesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+    'direction',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sectionIdMeta = const VerificationMeta(
+    'sectionId',
+  );
+  @override
+  late final GeneratedColumn<String> sectionId = GeneratedColumn<String>(
+    'section_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sectionCodeMeta = const VerificationMeta(
+    'sectionCode',
+  );
+  @override
+  late final GeneratedColumn<String> sectionCode = GeneratedColumn<String>(
+    'section_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rateMeta = const VerificationMeta('rate');
+  @override
+  late final GeneratedColumn<String> rate = GeneratedColumn<String>(
+    'rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseAmountMeta = const VerificationMeta(
+    'baseAmount',
+  );
+  @override
+  late final GeneratedColumn<String> baseAmount = GeneratedColumn<String>(
+    'base_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _taxAmountMeta = const VerificationMeta(
+    'taxAmount',
+  );
+  @override
+  late final GeneratedColumn<String> taxAmount = GeneratedColumn<String>(
+    'tax_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _partyIdMeta = const VerificationMeta(
+    'partyId',
+  );
+  @override
+  late final GeneratedColumn<String> partyId = GeneratedColumn<String>(
+    'party_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partyPanMeta = const VerificationMeta(
+    'partyPan',
+  );
+  @override
+  late final GeneratedColumn<String> partyPan = GeneratedColumn<String>(
+    'party_pan',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _partyNameMeta = const VerificationMeta(
+    'partyName',
+  );
+  @override
+  late final GeneratedColumn<String> partyName = GeneratedColumn<String>(
+    'party_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceTypeMeta = const VerificationMeta(
+    'sourceType',
+  );
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+    'source_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entryDateMeta = const VerificationMeta(
+    'entryDate',
+  );
+  @override
+  late final GeneratedColumn<String> entryDate = GeneratedColumn<String>(
+    'entry_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _depositIdMeta = const VerificationMeta(
+    'depositId',
+  );
+  @override
+  late final GeneratedColumn<String> depositId = GeneratedColumn<String>(
+    'deposit_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    kind,
+    direction,
+    sectionId,
+    sectionCode,
+    rate,
+    baseAmount,
+    taxAmount,
+    partyId,
+    partyPan,
+    partyName,
+    sourceType,
+    sourceId,
+    entryDate,
+    depositId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'withholding_tax_entries_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WithholdingTaxEntryLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('direction')) {
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('section_id')) {
+      context.handle(
+        _sectionIdMeta,
+        sectionId.isAcceptableOrUnknown(data['section_id']!, _sectionIdMeta),
+      );
+    }
+    if (data.containsKey('section_code')) {
+      context.handle(
+        _sectionCodeMeta,
+        sectionCode.isAcceptableOrUnknown(
+          data['section_code']!,
+          _sectionCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sectionCodeMeta);
+    }
+    if (data.containsKey('rate')) {
+      context.handle(
+        _rateMeta,
+        rate.isAcceptableOrUnknown(data['rate']!, _rateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rateMeta);
+    }
+    if (data.containsKey('base_amount')) {
+      context.handle(
+        _baseAmountMeta,
+        baseAmount.isAcceptableOrUnknown(data['base_amount']!, _baseAmountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_baseAmountMeta);
+    }
+    if (data.containsKey('tax_amount')) {
+      context.handle(
+        _taxAmountMeta,
+        taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_taxAmountMeta);
+    }
+    if (data.containsKey('party_id')) {
+      context.handle(
+        _partyIdMeta,
+        partyId.isAcceptableOrUnknown(data['party_id']!, _partyIdMeta),
+      );
+    }
+    if (data.containsKey('party_pan')) {
+      context.handle(
+        _partyPanMeta,
+        partyPan.isAcceptableOrUnknown(data['party_pan']!, _partyPanMeta),
+      );
+    }
+    if (data.containsKey('party_name')) {
+      context.handle(
+        _partyNameMeta,
+        partyName.isAcceptableOrUnknown(data['party_name']!, _partyNameMeta),
+      );
+    }
+    if (data.containsKey('source_type')) {
+      context.handle(
+        _sourceTypeMeta,
+        sourceType.isAcceptableOrUnknown(data['source_type']!, _sourceTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceTypeMeta);
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceIdMeta);
+    }
+    if (data.containsKey('entry_date')) {
+      context.handle(
+        _entryDateMeta,
+        entryDate.isAcceptableOrUnknown(data['entry_date']!, _entryDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryDateMeta);
+    }
+    if (data.containsKey('deposit_id')) {
+      context.handle(
+        _depositIdMeta,
+        depositId.isAcceptableOrUnknown(data['deposit_id']!, _depositIdMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WithholdingTaxEntryLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WithholdingTaxEntryLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      sectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}section_id'],
+      ),
+      sectionCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}section_code'],
+      )!,
+      rate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rate'],
+      )!,
+      baseAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_amount'],
+      )!,
+      taxAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_amount'],
+      )!,
+      partyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_id'],
+      ),
+      partyPan: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_pan'],
+      ),
+      partyName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}party_name'],
+      ),
+      sourceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_type'],
+      )!,
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_id'],
+      )!,
+      entryDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_date'],
+      )!,
+      depositId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deposit_id'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $WithholdingTaxEntriesLocalTable createAlias(String alias) {
+    return $WithholdingTaxEntriesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class WithholdingTaxEntryLocalData extends DataClass
+    implements Insertable<WithholdingTaxEntryLocalData> {
+  final String id;
+  final String businessId;
+  final String kind;
+  final String direction;
+  final String? sectionId;
+  final String sectionCode;
+  final String rate;
+  final String baseAmount;
+  final String taxAmount;
+  final String? partyId;
+  final String? partyPan;
+  final String? partyName;
+  final String sourceType;
+  final String sourceId;
+  final String entryDate;
+  final String? depositId;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const WithholdingTaxEntryLocalData({
+    required this.id,
+    required this.businessId,
+    required this.kind,
+    required this.direction,
+    this.sectionId,
+    required this.sectionCode,
+    required this.rate,
+    required this.baseAmount,
+    required this.taxAmount,
+    this.partyId,
+    this.partyPan,
+    this.partyName,
+    required this.sourceType,
+    required this.sourceId,
+    required this.entryDate,
+    this.depositId,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['kind'] = Variable<String>(kind);
+    map['direction'] = Variable<String>(direction);
+    if (!nullToAbsent || sectionId != null) {
+      map['section_id'] = Variable<String>(sectionId);
+    }
+    map['section_code'] = Variable<String>(sectionCode);
+    map['rate'] = Variable<String>(rate);
+    map['base_amount'] = Variable<String>(baseAmount);
+    map['tax_amount'] = Variable<String>(taxAmount);
+    if (!nullToAbsent || partyId != null) {
+      map['party_id'] = Variable<String>(partyId);
+    }
+    if (!nullToAbsent || partyPan != null) {
+      map['party_pan'] = Variable<String>(partyPan);
+    }
+    if (!nullToAbsent || partyName != null) {
+      map['party_name'] = Variable<String>(partyName);
+    }
+    map['source_type'] = Variable<String>(sourceType);
+    map['source_id'] = Variable<String>(sourceId);
+    map['entry_date'] = Variable<String>(entryDate);
+    if (!nullToAbsent || depositId != null) {
+      map['deposit_id'] = Variable<String>(depositId);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  WithholdingTaxEntriesLocalCompanion toCompanion(bool nullToAbsent) {
+    return WithholdingTaxEntriesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      kind: Value(kind),
+      direction: Value(direction),
+      sectionId: sectionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sectionId),
+      sectionCode: Value(sectionCode),
+      rate: Value(rate),
+      baseAmount: Value(baseAmount),
+      taxAmount: Value(taxAmount),
+      partyId: partyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyId),
+      partyPan: partyPan == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyPan),
+      partyName: partyName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partyName),
+      sourceType: Value(sourceType),
+      sourceId: Value(sourceId),
+      entryDate: Value(entryDate),
+      depositId: depositId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(depositId),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory WithholdingTaxEntryLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WithholdingTaxEntryLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      direction: serializer.fromJson<String>(json['direction']),
+      sectionId: serializer.fromJson<String?>(json['sectionId']),
+      sectionCode: serializer.fromJson<String>(json['sectionCode']),
+      rate: serializer.fromJson<String>(json['rate']),
+      baseAmount: serializer.fromJson<String>(json['baseAmount']),
+      taxAmount: serializer.fromJson<String>(json['taxAmount']),
+      partyId: serializer.fromJson<String?>(json['partyId']),
+      partyPan: serializer.fromJson<String?>(json['partyPan']),
+      partyName: serializer.fromJson<String?>(json['partyName']),
+      sourceType: serializer.fromJson<String>(json['sourceType']),
+      sourceId: serializer.fromJson<String>(json['sourceId']),
+      entryDate: serializer.fromJson<String>(json['entryDate']),
+      depositId: serializer.fromJson<String?>(json['depositId']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'kind': serializer.toJson<String>(kind),
+      'direction': serializer.toJson<String>(direction),
+      'sectionId': serializer.toJson<String?>(sectionId),
+      'sectionCode': serializer.toJson<String>(sectionCode),
+      'rate': serializer.toJson<String>(rate),
+      'baseAmount': serializer.toJson<String>(baseAmount),
+      'taxAmount': serializer.toJson<String>(taxAmount),
+      'partyId': serializer.toJson<String?>(partyId),
+      'partyPan': serializer.toJson<String?>(partyPan),
+      'partyName': serializer.toJson<String?>(partyName),
+      'sourceType': serializer.toJson<String>(sourceType),
+      'sourceId': serializer.toJson<String>(sourceId),
+      'entryDate': serializer.toJson<String>(entryDate),
+      'depositId': serializer.toJson<String?>(depositId),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  WithholdingTaxEntryLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? kind,
+    String? direction,
+    Value<String?> sectionId = const Value.absent(),
+    String? sectionCode,
+    String? rate,
+    String? baseAmount,
+    String? taxAmount,
+    Value<String?> partyId = const Value.absent(),
+    Value<String?> partyPan = const Value.absent(),
+    Value<String?> partyName = const Value.absent(),
+    String? sourceType,
+    String? sourceId,
+    String? entryDate,
+    Value<String?> depositId = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => WithholdingTaxEntryLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    kind: kind ?? this.kind,
+    direction: direction ?? this.direction,
+    sectionId: sectionId.present ? sectionId.value : this.sectionId,
+    sectionCode: sectionCode ?? this.sectionCode,
+    rate: rate ?? this.rate,
+    baseAmount: baseAmount ?? this.baseAmount,
+    taxAmount: taxAmount ?? this.taxAmount,
+    partyId: partyId.present ? partyId.value : this.partyId,
+    partyPan: partyPan.present ? partyPan.value : this.partyPan,
+    partyName: partyName.present ? partyName.value : this.partyName,
+    sourceType: sourceType ?? this.sourceType,
+    sourceId: sourceId ?? this.sourceId,
+    entryDate: entryDate ?? this.entryDate,
+    depositId: depositId.present ? depositId.value : this.depositId,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  WithholdingTaxEntryLocalData copyWithCompanion(
+    WithholdingTaxEntriesLocalCompanion data,
+  ) {
+    return WithholdingTaxEntryLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      sectionId: data.sectionId.present ? data.sectionId.value : this.sectionId,
+      sectionCode: data.sectionCode.present
+          ? data.sectionCode.value
+          : this.sectionCode,
+      rate: data.rate.present ? data.rate.value : this.rate,
+      baseAmount: data.baseAmount.present
+          ? data.baseAmount.value
+          : this.baseAmount,
+      taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
+      partyId: data.partyId.present ? data.partyId.value : this.partyId,
+      partyPan: data.partyPan.present ? data.partyPan.value : this.partyPan,
+      partyName: data.partyName.present ? data.partyName.value : this.partyName,
+      sourceType: data.sourceType.present
+          ? data.sourceType.value
+          : this.sourceType,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      entryDate: data.entryDate.present ? data.entryDate.value : this.entryDate,
+      depositId: data.depositId.present ? data.depositId.value : this.depositId,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WithholdingTaxEntryLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('kind: $kind, ')
+          ..write('direction: $direction, ')
+          ..write('sectionId: $sectionId, ')
+          ..write('sectionCode: $sectionCode, ')
+          ..write('rate: $rate, ')
+          ..write('baseAmount: $baseAmount, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('partyId: $partyId, ')
+          ..write('partyPan: $partyPan, ')
+          ..write('partyName: $partyName, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('depositId: $depositId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    businessId,
+    kind,
+    direction,
+    sectionId,
+    sectionCode,
+    rate,
+    baseAmount,
+    taxAmount,
+    partyId,
+    partyPan,
+    partyName,
+    sourceType,
+    sourceId,
+    entryDate,
+    depositId,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WithholdingTaxEntryLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.kind == this.kind &&
+          other.direction == this.direction &&
+          other.sectionId == this.sectionId &&
+          other.sectionCode == this.sectionCode &&
+          other.rate == this.rate &&
+          other.baseAmount == this.baseAmount &&
+          other.taxAmount == this.taxAmount &&
+          other.partyId == this.partyId &&
+          other.partyPan == this.partyPan &&
+          other.partyName == this.partyName &&
+          other.sourceType == this.sourceType &&
+          other.sourceId == this.sourceId &&
+          other.entryDate == this.entryDate &&
+          other.depositId == this.depositId &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class WithholdingTaxEntriesLocalCompanion
+    extends UpdateCompanion<WithholdingTaxEntryLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> kind;
+  final Value<String> direction;
+  final Value<String?> sectionId;
+  final Value<String> sectionCode;
+  final Value<String> rate;
+  final Value<String> baseAmount;
+  final Value<String> taxAmount;
+  final Value<String?> partyId;
+  final Value<String?> partyPan;
+  final Value<String?> partyName;
+  final Value<String> sourceType;
+  final Value<String> sourceId;
+  final Value<String> entryDate;
+  final Value<String?> depositId;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const WithholdingTaxEntriesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.sectionId = const Value.absent(),
+    this.sectionCode = const Value.absent(),
+    this.rate = const Value.absent(),
+    this.baseAmount = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.partyId = const Value.absent(),
+    this.partyPan = const Value.absent(),
+    this.partyName = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.entryDate = const Value.absent(),
+    this.depositId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WithholdingTaxEntriesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String kind,
+    required String direction,
+    this.sectionId = const Value.absent(),
+    required String sectionCode,
+    required String rate,
+    required String baseAmount,
+    required String taxAmount,
+    this.partyId = const Value.absent(),
+    this.partyPan = const Value.absent(),
+    this.partyName = const Value.absent(),
+    required String sourceType,
+    required String sourceId,
+    required String entryDate,
+    this.depositId = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       kind = Value(kind),
+       direction = Value(direction),
+       sectionCode = Value(sectionCode),
+       rate = Value(rate),
+       baseAmount = Value(baseAmount),
+       taxAmount = Value(taxAmount),
+       sourceType = Value(sourceType),
+       sourceId = Value(sourceId),
+       entryDate = Value(entryDate),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<WithholdingTaxEntryLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? kind,
+    Expression<String>? direction,
+    Expression<String>? sectionId,
+    Expression<String>? sectionCode,
+    Expression<String>? rate,
+    Expression<String>? baseAmount,
+    Expression<String>? taxAmount,
+    Expression<String>? partyId,
+    Expression<String>? partyPan,
+    Expression<String>? partyName,
+    Expression<String>? sourceType,
+    Expression<String>? sourceId,
+    Expression<String>? entryDate,
+    Expression<String>? depositId,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (kind != null) 'kind': kind,
+      if (direction != null) 'direction': direction,
+      if (sectionId != null) 'section_id': sectionId,
+      if (sectionCode != null) 'section_code': sectionCode,
+      if (rate != null) 'rate': rate,
+      if (baseAmount != null) 'base_amount': baseAmount,
+      if (taxAmount != null) 'tax_amount': taxAmount,
+      if (partyId != null) 'party_id': partyId,
+      if (partyPan != null) 'party_pan': partyPan,
+      if (partyName != null) 'party_name': partyName,
+      if (sourceType != null) 'source_type': sourceType,
+      if (sourceId != null) 'source_id': sourceId,
+      if (entryDate != null) 'entry_date': entryDate,
+      if (depositId != null) 'deposit_id': depositId,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WithholdingTaxEntriesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? kind,
+    Value<String>? direction,
+    Value<String?>? sectionId,
+    Value<String>? sectionCode,
+    Value<String>? rate,
+    Value<String>? baseAmount,
+    Value<String>? taxAmount,
+    Value<String?>? partyId,
+    Value<String?>? partyPan,
+    Value<String?>? partyName,
+    Value<String>? sourceType,
+    Value<String>? sourceId,
+    Value<String>? entryDate,
+    Value<String?>? depositId,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return WithholdingTaxEntriesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      kind: kind ?? this.kind,
+      direction: direction ?? this.direction,
+      sectionId: sectionId ?? this.sectionId,
+      sectionCode: sectionCode ?? this.sectionCode,
+      rate: rate ?? this.rate,
+      baseAmount: baseAmount ?? this.baseAmount,
+      taxAmount: taxAmount ?? this.taxAmount,
+      partyId: partyId ?? this.partyId,
+      partyPan: partyPan ?? this.partyPan,
+      partyName: partyName ?? this.partyName,
+      sourceType: sourceType ?? this.sourceType,
+      sourceId: sourceId ?? this.sourceId,
+      entryDate: entryDate ?? this.entryDate,
+      depositId: depositId ?? this.depositId,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (sectionId.present) {
+      map['section_id'] = Variable<String>(sectionId.value);
+    }
+    if (sectionCode.present) {
+      map['section_code'] = Variable<String>(sectionCode.value);
+    }
+    if (rate.present) {
+      map['rate'] = Variable<String>(rate.value);
+    }
+    if (baseAmount.present) {
+      map['base_amount'] = Variable<String>(baseAmount.value);
+    }
+    if (taxAmount.present) {
+      map['tax_amount'] = Variable<String>(taxAmount.value);
+    }
+    if (partyId.present) {
+      map['party_id'] = Variable<String>(partyId.value);
+    }
+    if (partyPan.present) {
+      map['party_pan'] = Variable<String>(partyPan.value);
+    }
+    if (partyName.present) {
+      map['party_name'] = Variable<String>(partyName.value);
+    }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
+    if (entryDate.present) {
+      map['entry_date'] = Variable<String>(entryDate.value);
+    }
+    if (depositId.present) {
+      map['deposit_id'] = Variable<String>(depositId.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WithholdingTaxEntriesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('kind: $kind, ')
+          ..write('direction: $direction, ')
+          ..write('sectionId: $sectionId, ')
+          ..write('sectionCode: $sectionCode, ')
+          ..write('rate: $rate, ')
+          ..write('baseAmount: $baseAmount, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('partyId: $partyId, ')
+          ..write('partyPan: $partyPan, ')
+          ..write('partyName: $partyName, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('depositId: $depositId, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TaxDepositsLocalTable extends TaxDepositsLocal
+    with TableInfo<$TaxDepositsLocalTable, TaxDepositLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TaxDepositsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bsrCodeMeta = const VerificationMeta(
+    'bsrCode',
+  );
+  @override
+  late final GeneratedColumn<String> bsrCode = GeneratedColumn<String>(
+    'bsr_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _challanSerialMeta = const VerificationMeta(
+    'challanSerial',
+  );
+  @override
+  late final GeneratedColumn<String> challanSerial = GeneratedColumn<String>(
+    'challan_serial',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _depositDateMeta = const VerificationMeta(
+    'depositDate',
+  );
+  @override
+  late final GeneratedColumn<String> depositDate = GeneratedColumn<String>(
+    'deposit_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<String> amount = GeneratedColumn<String>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    kind,
+    bsrCode,
+    challanSerial,
+    depositDate,
+    amount,
+    notes,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tax_deposits_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaxDepositLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('bsr_code')) {
+      context.handle(
+        _bsrCodeMeta,
+        bsrCode.isAcceptableOrUnknown(data['bsr_code']!, _bsrCodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bsrCodeMeta);
+    }
+    if (data.containsKey('challan_serial')) {
+      context.handle(
+        _challanSerialMeta,
+        challanSerial.isAcceptableOrUnknown(
+          data['challan_serial']!,
+          _challanSerialMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_challanSerialMeta);
+    }
+    if (data.containsKey('deposit_date')) {
+      context.handle(
+        _depositDateMeta,
+        depositDate.isAcceptableOrUnknown(
+          data['deposit_date']!,
+          _depositDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_depositDateMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TaxDepositLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaxDepositLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      bsrCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bsr_code'],
+      )!,
+      challanSerial: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}challan_serial'],
+      )!,
+      depositDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deposit_date'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}amount'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $TaxDepositsLocalTable createAlias(String alias) {
+    return $TaxDepositsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class TaxDepositLocalData extends DataClass
+    implements Insertable<TaxDepositLocalData> {
+  final String id;
+  final String businessId;
+  final String kind;
+  final String bsrCode;
+  final String challanSerial;
+  final String depositDate;
+  final String amount;
+  final String? notes;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const TaxDepositLocalData({
+    required this.id,
+    required this.businessId,
+    required this.kind,
+    required this.bsrCode,
+    required this.challanSerial,
+    required this.depositDate,
+    required this.amount,
+    this.notes,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['kind'] = Variable<String>(kind);
+    map['bsr_code'] = Variable<String>(bsrCode);
+    map['challan_serial'] = Variable<String>(challanSerial);
+    map['deposit_date'] = Variable<String>(depositDate);
+    map['amount'] = Variable<String>(amount);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  TaxDepositsLocalCompanion toCompanion(bool nullToAbsent) {
+    return TaxDepositsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      kind: Value(kind),
+      bsrCode: Value(bsrCode),
+      challanSerial: Value(challanSerial),
+      depositDate: Value(depositDate),
+      amount: Value(amount),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory TaxDepositLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaxDepositLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      bsrCode: serializer.fromJson<String>(json['bsrCode']),
+      challanSerial: serializer.fromJson<String>(json['challanSerial']),
+      depositDate: serializer.fromJson<String>(json['depositDate']),
+      amount: serializer.fromJson<String>(json['amount']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'kind': serializer.toJson<String>(kind),
+      'bsrCode': serializer.toJson<String>(bsrCode),
+      'challanSerial': serializer.toJson<String>(challanSerial),
+      'depositDate': serializer.toJson<String>(depositDate),
+      'amount': serializer.toJson<String>(amount),
+      'notes': serializer.toJson<String?>(notes),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  TaxDepositLocalData copyWith({
+    String? id,
+    String? businessId,
+    String? kind,
+    String? bsrCode,
+    String? challanSerial,
+    String? depositDate,
+    String? amount,
+    Value<String?> notes = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => TaxDepositLocalData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    kind: kind ?? this.kind,
+    bsrCode: bsrCode ?? this.bsrCode,
+    challanSerial: challanSerial ?? this.challanSerial,
+    depositDate: depositDate ?? this.depositDate,
+    amount: amount ?? this.amount,
+    notes: notes.present ? notes.value : this.notes,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  TaxDepositLocalData copyWithCompanion(TaxDepositsLocalCompanion data) {
+    return TaxDepositLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      bsrCode: data.bsrCode.present ? data.bsrCode.value : this.bsrCode,
+      challanSerial: data.challanSerial.present
+          ? data.challanSerial.value
+          : this.challanSerial,
+      depositDate: data.depositDate.present
+          ? data.depositDate.value
+          : this.depositDate,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaxDepositLocalData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('kind: $kind, ')
+          ..write('bsrCode: $bsrCode, ')
+          ..write('challanSerial: $challanSerial, ')
+          ..write('depositDate: $depositDate, ')
+          ..write('amount: $amount, ')
+          ..write('notes: $notes, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    kind,
+    bsrCode,
+    challanSerial,
+    depositDate,
+    amount,
+    notes,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaxDepositLocalData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.kind == this.kind &&
+          other.bsrCode == this.bsrCode &&
+          other.challanSerial == this.challanSerial &&
+          other.depositDate == this.depositDate &&
+          other.amount == this.amount &&
+          other.notes == this.notes &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class TaxDepositsLocalCompanion extends UpdateCompanion<TaxDepositLocalData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> kind;
+  final Value<String> bsrCode;
+  final Value<String> challanSerial;
+  final Value<String> depositDate;
+  final Value<String> amount;
+  final Value<String?> notes;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const TaxDepositsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.bsrCode = const Value.absent(),
+    this.challanSerial = const Value.absent(),
+    this.depositDate = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TaxDepositsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String kind,
+    required String bsrCode,
+    required String challanSerial,
+    required String depositDate,
+    required String amount,
+    this.notes = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       kind = Value(kind),
+       bsrCode = Value(bsrCode),
+       challanSerial = Value(challanSerial),
+       depositDate = Value(depositDate),
+       amount = Value(amount),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TaxDepositLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? kind,
+    Expression<String>? bsrCode,
+    Expression<String>? challanSerial,
+    Expression<String>? depositDate,
+    Expression<String>? amount,
+    Expression<String>? notes,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (kind != null) 'kind': kind,
+      if (bsrCode != null) 'bsr_code': bsrCode,
+      if (challanSerial != null) 'challan_serial': challanSerial,
+      if (depositDate != null) 'deposit_date': depositDate,
+      if (amount != null) 'amount': amount,
+      if (notes != null) 'notes': notes,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TaxDepositsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? kind,
+    Value<String>? bsrCode,
+    Value<String>? challanSerial,
+    Value<String>? depositDate,
+    Value<String>? amount,
+    Value<String?>? notes,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return TaxDepositsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      kind: kind ?? this.kind,
+      bsrCode: bsrCode ?? this.bsrCode,
+      challanSerial: challanSerial ?? this.challanSerial,
+      depositDate: depositDate ?? this.depositDate,
+      amount: amount ?? this.amount,
+      notes: notes ?? this.notes,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (bsrCode.present) {
+      map['bsr_code'] = Variable<String>(bsrCode.value);
+    }
+    if (challanSerial.present) {
+      map['challan_serial'] = Variable<String>(challanSerial.value);
+    }
+    if (depositDate.present) {
+      map['deposit_date'] = Variable<String>(depositDate.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<String>(amount.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaxDepositsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('kind: $kind, ')
+          ..write('bsrCode: $bsrCode, ')
+          ..write('challanSerial: $challanSerial, ')
+          ..write('depositDate: $depositDate, ')
+          ..write('amount: $amount, ')
+          ..write('notes: $notes, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -30968,6 +40772,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UnitDefinitionsLocalTable unitDefinitionsLocal =
       $UnitDefinitionsLocalTable(this);
   late final $TaxRatesLocalTable taxRatesLocal = $TaxRatesLocalTable(this);
+  late final $BankAccountsLocalTable bankAccountsLocal =
+      $BankAccountsLocalTable(this);
   late final $GodownsLocalTable godownsLocal = $GodownsLocalTable(this);
   late final $BusinessSettingsLocalTable businessSettingsLocal =
       $BusinessSettingsLocalTable(this);
@@ -30991,11 +40797,29 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExpenseItemsLocalTable expenseItemsLocal =
       $ExpenseItemsLocalTable(this);
   late final $ExpensesLocalTable expensesLocal = $ExpensesLocalTable(this);
+  late final $IncomeCategoriesLocalTable incomeCategoriesLocal =
+      $IncomeCategoriesLocalTable(this);
+  late final $IncomeItemsLocalTable incomeItemsLocal = $IncomeItemsLocalTable(
+    this,
+  );
+  late final $OtherIncomesLocalTable otherIncomesLocal =
+      $OtherIncomesLocalTable(this);
+  late final $LoanAccountsLocalTable loanAccountsLocal =
+      $LoanAccountsLocalTable(this);
+  late final $LoanTransactionsLocalTable loanTransactionsLocal =
+      $LoanTransactionsLocalTable(this);
   late final $GatewayPaymentSessionsLocalTable gatewayPaymentSessionsLocal =
       $GatewayPaymentSessionsLocalTable(this);
   late final $NotificationsLocalTable notificationsLocal =
       $NotificationsLocalTable(this);
   late final $TodosLocalTable todosLocal = $TodosLocalTable(this);
+  late final $WithholdingTaxSectionsLocalTable withholdingTaxSectionsLocal =
+      $WithholdingTaxSectionsLocalTable(this);
+  late final $WithholdingTaxEntriesLocalTable withholdingTaxEntriesLocal =
+      $WithholdingTaxEntriesLocalTable(this);
+  late final $TaxDepositsLocalTable taxDepositsLocal = $TaxDepositsLocalTable(
+    this,
+  );
   late final Index idxSyncQueueStatus = Index(
     'idx_sync_queue_status',
     'CREATE INDEX idx_sync_queue_status ON sync_queue (status)',
@@ -31057,6 +40881,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     itemTierPricesLocal,
     unitDefinitionsLocal,
     taxRatesLocal,
+    bankAccountsLocal,
     godownsLocal,
     businessSettingsLocal,
     salesDocumentsLocal,
@@ -31069,9 +40894,17 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     expenseCategoriesLocal,
     expenseItemsLocal,
     expensesLocal,
+    incomeCategoriesLocal,
+    incomeItemsLocal,
+    otherIncomesLocal,
+    loanAccountsLocal,
+    loanTransactionsLocal,
     gatewayPaymentSessionsLocal,
     notificationsLocal,
     todosLocal,
+    withholdingTaxSectionsLocal,
+    withholdingTaxEntriesLocal,
+    taxDepositsLocal,
     idxSyncQueueStatus,
     idxSyncQueueBusinessId,
     idxSyncQueueStatusBusinessId,
@@ -35365,6 +45198,7 @@ typedef $$PartiesLocalTableCreateCompanionBuilder =
       Value<String?> partyCategory,
       Value<String> pricingTier,
       Value<String?> gstin,
+      Value<String?> pan,
       Value<String?> stateCode,
       Value<String?> areaId,
       Value<String> creditLimit,
@@ -35398,6 +45232,7 @@ typedef $$PartiesLocalTableUpdateCompanionBuilder =
       Value<String?> partyCategory,
       Value<String> pricingTier,
       Value<String?> gstin,
+      Value<String?> pan,
       Value<String?> stateCode,
       Value<String?> areaId,
       Value<String> creditLimit,
@@ -35488,6 +45323,11 @@ class $$PartiesLocalTableFilterComposer
 
   ColumnFilters<String> get gstin => $composableBuilder(
     column: $table.gstin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pan => $composableBuilder(
+    column: $table.pan,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -35646,6 +45486,11 @@ class $$PartiesLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get pan => $composableBuilder(
+    column: $table.pan,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get stateCode => $composableBuilder(
     column: $table.stateCode,
     builder: (column) => ColumnOrderings(column),
@@ -35783,6 +45628,9 @@ class $$PartiesLocalTableAnnotationComposer
   GeneratedColumn<String> get gstin =>
       $composableBuilder(column: $table.gstin, builder: (column) => column);
 
+  GeneratedColumn<String> get pan =>
+      $composableBuilder(column: $table.pan, builder: (column) => column);
+
   GeneratedColumn<String> get stateCode =>
       $composableBuilder(column: $table.stateCode, builder: (column) => column);
 
@@ -35890,6 +45738,7 @@ class $$PartiesLocalTableTableManager
                 Value<String?> partyCategory = const Value.absent(),
                 Value<String> pricingTier = const Value.absent(),
                 Value<String?> gstin = const Value.absent(),
+                Value<String?> pan = const Value.absent(),
                 Value<String?> stateCode = const Value.absent(),
                 Value<String?> areaId = const Value.absent(),
                 Value<String> creditLimit = const Value.absent(),
@@ -35921,6 +45770,7 @@ class $$PartiesLocalTableTableManager
                 partyCategory: partyCategory,
                 pricingTier: pricingTier,
                 gstin: gstin,
+                pan: pan,
                 stateCode: stateCode,
                 areaId: areaId,
                 creditLimit: creditLimit,
@@ -35954,6 +45804,7 @@ class $$PartiesLocalTableTableManager
                 Value<String?> partyCategory = const Value.absent(),
                 Value<String> pricingTier = const Value.absent(),
                 Value<String?> gstin = const Value.absent(),
+                Value<String?> pan = const Value.absent(),
                 Value<String?> stateCode = const Value.absent(),
                 Value<String?> areaId = const Value.absent(),
                 Value<String> creditLimit = const Value.absent(),
@@ -35985,6 +45836,7 @@ class $$PartiesLocalTableTableManager
                 partyCategory: partyCategory,
                 pricingTier: pricingTier,
                 gstin: gstin,
+                pan: pan,
                 stateCode: stateCode,
                 areaId: areaId,
                 creditLimit: creditLimit,
@@ -39175,6 +49027,478 @@ typedef $$TaxRatesLocalTableProcessedTableManager =
       TaxRateTableData,
       PrefetchHooks Function()
     >;
+typedef $$BankAccountsLocalTableCreateCompanionBuilder =
+    BankAccountsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String type,
+      required String displayName,
+      Value<String?> bankName,
+      Value<String?> accountNumber,
+      Value<String?> ifsc,
+      Value<String?> upiId,
+      Value<String> openingBalance,
+      required String openingBalanceAsOf,
+      Value<bool> isDefault,
+      Value<bool> isActive,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$BankAccountsLocalTableUpdateCompanionBuilder =
+    BankAccountsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> type,
+      Value<String> displayName,
+      Value<String?> bankName,
+      Value<String?> accountNumber,
+      Value<String?> ifsc,
+      Value<String?> upiId,
+      Value<String> openingBalance,
+      Value<String> openingBalanceAsOf,
+      Value<bool> isDefault,
+      Value<bool> isActive,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$BankAccountsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $BankAccountsLocalTable> {
+  $$BankAccountsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ifsc => $composableBuilder(
+    column: $table.ifsc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get upiId => $composableBuilder(
+    column: $table.upiId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openingBalance => $composableBuilder(
+    column: $table.openingBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openingBalanceAsOf => $composableBuilder(
+    column: $table.openingBalanceAsOf,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BankAccountsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $BankAccountsLocalTable> {
+  $$BankAccountsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ifsc => $composableBuilder(
+    column: $table.ifsc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get upiId => $composableBuilder(
+    column: $table.upiId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openingBalance => $composableBuilder(
+    column: $table.openingBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openingBalanceAsOf => $composableBuilder(
+    column: $table.openingBalanceAsOf,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BankAccountsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BankAccountsLocalTable> {
+  $$BankAccountsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bankName =>
+      $composableBuilder(column: $table.bankName, builder: (column) => column);
+
+  GeneratedColumn<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get ifsc =>
+      $composableBuilder(column: $table.ifsc, builder: (column) => column);
+
+  GeneratedColumn<String> get upiId =>
+      $composableBuilder(column: $table.upiId, builder: (column) => column);
+
+  GeneratedColumn<String> get openingBalance => $composableBuilder(
+    column: $table.openingBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get openingBalanceAsOf => $composableBuilder(
+    column: $table.openingBalanceAsOf,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$BankAccountsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BankAccountsLocalTable,
+          BankAccountTableData,
+          $$BankAccountsLocalTableFilterComposer,
+          $$BankAccountsLocalTableOrderingComposer,
+          $$BankAccountsLocalTableAnnotationComposer,
+          $$BankAccountsLocalTableCreateCompanionBuilder,
+          $$BankAccountsLocalTableUpdateCompanionBuilder,
+          (
+            BankAccountTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $BankAccountsLocalTable,
+              BankAccountTableData
+            >,
+          ),
+          BankAccountTableData,
+          PrefetchHooks Function()
+        > {
+  $$BankAccountsLocalTableTableManager(
+    _$AppDatabase db,
+    $BankAccountsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BankAccountsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BankAccountsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BankAccountsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String?> bankName = const Value.absent(),
+                Value<String?> accountNumber = const Value.absent(),
+                Value<String?> ifsc = const Value.absent(),
+                Value<String?> upiId = const Value.absent(),
+                Value<String> openingBalance = const Value.absent(),
+                Value<String> openingBalanceAsOf = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BankAccountsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                type: type,
+                displayName: displayName,
+                bankName: bankName,
+                accountNumber: accountNumber,
+                ifsc: ifsc,
+                upiId: upiId,
+                openingBalance: openingBalance,
+                openingBalanceAsOf: openingBalanceAsOf,
+                isDefault: isDefault,
+                isActive: isActive,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String type,
+                required String displayName,
+                Value<String?> bankName = const Value.absent(),
+                Value<String?> accountNumber = const Value.absent(),
+                Value<String?> ifsc = const Value.absent(),
+                Value<String?> upiId = const Value.absent(),
+                Value<String> openingBalance = const Value.absent(),
+                required String openingBalanceAsOf,
+                Value<bool> isDefault = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BankAccountsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                type: type,
+                displayName: displayName,
+                bankName: bankName,
+                accountNumber: accountNumber,
+                ifsc: ifsc,
+                upiId: upiId,
+                openingBalance: openingBalance,
+                openingBalanceAsOf: openingBalanceAsOf,
+                isDefault: isDefault,
+                isActive: isActive,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BankAccountsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BankAccountsLocalTable,
+      BankAccountTableData,
+      $$BankAccountsLocalTableFilterComposer,
+      $$BankAccountsLocalTableOrderingComposer,
+      $$BankAccountsLocalTableAnnotationComposer,
+      $$BankAccountsLocalTableCreateCompanionBuilder,
+      $$BankAccountsLocalTableUpdateCompanionBuilder,
+      (
+        BankAccountTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $BankAccountsLocalTable,
+          BankAccountTableData
+        >,
+      ),
+      BankAccountTableData,
+      PrefetchHooks Function()
+    >;
 typedef $$GodownsLocalTableCreateCompanionBuilder =
     GodownsLocalCompanion Function({
       required String id,
@@ -39504,6 +49828,8 @@ typedef $$BusinessSettingsLocalTableCreateCompanionBuilder =
       Value<String> creditLimitAction,
       Value<String?> pricingTierLabels,
       Value<String?> defaultInvoiceTaxRate,
+      Value<bool> enableTds,
+      Value<bool> enableTcs,
       Value<int> syncVersion,
       Value<bool> isDeleted,
       required DateTime createdAt,
@@ -39523,6 +49849,8 @@ typedef $$BusinessSettingsLocalTableUpdateCompanionBuilder =
       Value<String> creditLimitAction,
       Value<String?> pricingTierLabels,
       Value<String?> defaultInvoiceTaxRate,
+      Value<bool> enableTds,
+      Value<bool> enableTcs,
       Value<int> syncVersion,
       Value<bool> isDeleted,
       Value<DateTime> createdAt,
@@ -39583,6 +49911,16 @@ class $$BusinessSettingsLocalTableFilterComposer
 
   ColumnFilters<String> get defaultInvoiceTaxRate => $composableBuilder(
     column: $table.defaultInvoiceTaxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get enableTds => $composableBuilder(
+    column: $table.enableTds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get enableTcs => $composableBuilder(
+    column: $table.enableTcs,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -39671,6 +50009,16 @@ class $$BusinessSettingsLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get enableTds => $composableBuilder(
+    column: $table.enableTds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get enableTcs => $composableBuilder(
+    column: $table.enableTcs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get syncVersion => $composableBuilder(
     column: $table.syncVersion,
     builder: (column) => ColumnOrderings(column),
@@ -39754,6 +50102,12 @@ class $$BusinessSettingsLocalTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get enableTds =>
+      $composableBuilder(column: $table.enableTds, builder: (column) => column);
+
+  GeneratedColumn<bool> get enableTcs =>
+      $composableBuilder(column: $table.enableTcs, builder: (column) => column);
+
   GeneratedColumn<int> get syncVersion => $composableBuilder(
     column: $table.syncVersion,
     builder: (column) => column,
@@ -39830,6 +50184,8 @@ class $$BusinessSettingsLocalTableTableManager
                 Value<String> creditLimitAction = const Value.absent(),
                 Value<String?> pricingTierLabels = const Value.absent(),
                 Value<String?> defaultInvoiceTaxRate = const Value.absent(),
+                Value<bool> enableTds = const Value.absent(),
+                Value<bool> enableTcs = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -39847,6 +50203,8 @@ class $$BusinessSettingsLocalTableTableManager
                 creditLimitAction: creditLimitAction,
                 pricingTierLabels: pricingTierLabels,
                 defaultInvoiceTaxRate: defaultInvoiceTaxRate,
+                enableTds: enableTds,
+                enableTcs: enableTcs,
                 syncVersion: syncVersion,
                 isDeleted: isDeleted,
                 createdAt: createdAt,
@@ -39866,6 +50224,8 @@ class $$BusinessSettingsLocalTableTableManager
                 Value<String> creditLimitAction = const Value.absent(),
                 Value<String?> pricingTierLabels = const Value.absent(),
                 Value<String?> defaultInvoiceTaxRate = const Value.absent(),
+                Value<bool> enableTds = const Value.absent(),
+                Value<bool> enableTcs = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 required DateTime createdAt,
@@ -39883,6 +50243,8 @@ class $$BusinessSettingsLocalTableTableManager
                 creditLimitAction: creditLimitAction,
                 pricingTierLabels: pricingTierLabels,
                 defaultInvoiceTaxRate: defaultInvoiceTaxRate,
+                enableTds: enableTds,
+                enableTcs: enableTcs,
                 syncVersion: syncVersion,
                 isDeleted: isDeleted,
                 createdAt: createdAt,
@@ -39934,11 +50296,19 @@ typedef $$SalesDocumentsLocalTableCreateCompanionBuilder =
       Value<String> subtotal,
       Value<String> discountTotal,
       Value<String> taxAmount,
+      Value<String?> tcsSectionId,
+      Value<String?> tcsRate,
+      Value<String> tcsBaseAmount,
+      Value<String> tcsAmount,
       Value<String> totalAmount,
       Value<String> paidAmount,
       Value<String?> paymentMode,
       required String documentDate,
       Value<String?> convertedFromId,
+      Value<String?> originalDocumentId,
+      Value<String?> originalDocumentNumber,
+      Value<String?> originalDocumentDate,
+      Value<String> supplyType,
       Value<String?> notes,
       Value<String?> godownId,
       Value<int> syncVersion,
@@ -39963,11 +50333,19 @@ typedef $$SalesDocumentsLocalTableUpdateCompanionBuilder =
       Value<String> subtotal,
       Value<String> discountTotal,
       Value<String> taxAmount,
+      Value<String?> tcsSectionId,
+      Value<String?> tcsRate,
+      Value<String> tcsBaseAmount,
+      Value<String> tcsAmount,
       Value<String> totalAmount,
       Value<String> paidAmount,
       Value<String?> paymentMode,
       Value<String> documentDate,
       Value<String?> convertedFromId,
+      Value<String?> originalDocumentId,
+      Value<String?> originalDocumentNumber,
+      Value<String?> originalDocumentDate,
+      Value<String> supplyType,
       Value<String?> notes,
       Value<String?> godownId,
       Value<int> syncVersion,
@@ -40048,6 +50426,26 @@ class $$SalesDocumentsLocalTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get tcsSectionId => $composableBuilder(
+    column: $table.tcsSectionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tcsRate => $composableBuilder(
+    column: $table.tcsRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tcsBaseAmount => $composableBuilder(
+    column: $table.tcsBaseAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tcsAmount => $composableBuilder(
+    column: $table.tcsAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get totalAmount => $composableBuilder(
     column: $table.totalAmount,
     builder: (column) => ColumnFilters(column),
@@ -40070,6 +50468,26 @@ class $$SalesDocumentsLocalTableFilterComposer
 
   ColumnFilters<String> get convertedFromId => $composableBuilder(
     column: $table.convertedFromId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalDocumentId => $composableBuilder(
+    column: $table.originalDocumentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalDocumentNumber => $composableBuilder(
+    column: $table.originalDocumentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalDocumentDate => $composableBuilder(
+    column: $table.originalDocumentDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplyType => $composableBuilder(
+    column: $table.supplyType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -40183,6 +50601,26 @@ class $$SalesDocumentsLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tcsSectionId => $composableBuilder(
+    column: $table.tcsSectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tcsRate => $composableBuilder(
+    column: $table.tcsRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tcsBaseAmount => $composableBuilder(
+    column: $table.tcsBaseAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tcsAmount => $composableBuilder(
+    column: $table.tcsAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get totalAmount => $composableBuilder(
     column: $table.totalAmount,
     builder: (column) => ColumnOrderings(column),
@@ -40205,6 +50643,26 @@ class $$SalesDocumentsLocalTableOrderingComposer
 
   ColumnOrderings<String> get convertedFromId => $composableBuilder(
     column: $table.convertedFromId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalDocumentId => $composableBuilder(
+    column: $table.originalDocumentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalDocumentNumber => $composableBuilder(
+    column: $table.originalDocumentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalDocumentDate => $composableBuilder(
+    column: $table.originalDocumentDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get supplyType => $composableBuilder(
+    column: $table.supplyType,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -40308,6 +50766,22 @@ class $$SalesDocumentsLocalTableAnnotationComposer
   GeneratedColumn<String> get taxAmount =>
       $composableBuilder(column: $table.taxAmount, builder: (column) => column);
 
+  GeneratedColumn<String> get tcsSectionId => $composableBuilder(
+    column: $table.tcsSectionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tcsRate =>
+      $composableBuilder(column: $table.tcsRate, builder: (column) => column);
+
+  GeneratedColumn<String> get tcsBaseAmount => $composableBuilder(
+    column: $table.tcsBaseAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tcsAmount =>
+      $composableBuilder(column: $table.tcsAmount, builder: (column) => column);
+
   GeneratedColumn<String> get totalAmount => $composableBuilder(
     column: $table.totalAmount,
     builder: (column) => column,
@@ -40330,6 +50804,26 @@ class $$SalesDocumentsLocalTableAnnotationComposer
 
   GeneratedColumn<String> get convertedFromId => $composableBuilder(
     column: $table.convertedFromId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalDocumentId => $composableBuilder(
+    column: $table.originalDocumentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalDocumentNumber => $composableBuilder(
+    column: $table.originalDocumentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalDocumentDate => $composableBuilder(
+    column: $table.originalDocumentDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get supplyType => $composableBuilder(
+    column: $table.supplyType,
     builder: (column) => column,
   );
 
@@ -40415,11 +50909,19 @@ class $$SalesDocumentsLocalTableTableManager
                 Value<String> subtotal = const Value.absent(),
                 Value<String> discountTotal = const Value.absent(),
                 Value<String> taxAmount = const Value.absent(),
+                Value<String?> tcsSectionId = const Value.absent(),
+                Value<String?> tcsRate = const Value.absent(),
+                Value<String> tcsBaseAmount = const Value.absent(),
+                Value<String> tcsAmount = const Value.absent(),
                 Value<String> totalAmount = const Value.absent(),
                 Value<String> paidAmount = const Value.absent(),
                 Value<String?> paymentMode = const Value.absent(),
                 Value<String> documentDate = const Value.absent(),
                 Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> originalDocumentId = const Value.absent(),
+                Value<String?> originalDocumentNumber = const Value.absent(),
+                Value<String?> originalDocumentDate = const Value.absent(),
+                Value<String> supplyType = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> godownId = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
@@ -40442,11 +50944,19 @@ class $$SalesDocumentsLocalTableTableManager
                 subtotal: subtotal,
                 discountTotal: discountTotal,
                 taxAmount: taxAmount,
+                tcsSectionId: tcsSectionId,
+                tcsRate: tcsRate,
+                tcsBaseAmount: tcsBaseAmount,
+                tcsAmount: tcsAmount,
                 totalAmount: totalAmount,
                 paidAmount: paidAmount,
                 paymentMode: paymentMode,
                 documentDate: documentDate,
                 convertedFromId: convertedFromId,
+                originalDocumentId: originalDocumentId,
+                originalDocumentNumber: originalDocumentNumber,
+                originalDocumentDate: originalDocumentDate,
+                supplyType: supplyType,
                 notes: notes,
                 godownId: godownId,
                 syncVersion: syncVersion,
@@ -40471,11 +50981,19 @@ class $$SalesDocumentsLocalTableTableManager
                 Value<String> subtotal = const Value.absent(),
                 Value<String> discountTotal = const Value.absent(),
                 Value<String> taxAmount = const Value.absent(),
+                Value<String?> tcsSectionId = const Value.absent(),
+                Value<String?> tcsRate = const Value.absent(),
+                Value<String> tcsBaseAmount = const Value.absent(),
+                Value<String> tcsAmount = const Value.absent(),
                 Value<String> totalAmount = const Value.absent(),
                 Value<String> paidAmount = const Value.absent(),
                 Value<String?> paymentMode = const Value.absent(),
                 required String documentDate,
                 Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> originalDocumentId = const Value.absent(),
+                Value<String?> originalDocumentNumber = const Value.absent(),
+                Value<String?> originalDocumentDate = const Value.absent(),
+                Value<String> supplyType = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> godownId = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
@@ -40498,11 +51016,19 @@ class $$SalesDocumentsLocalTableTableManager
                 subtotal: subtotal,
                 discountTotal: discountTotal,
                 taxAmount: taxAmount,
+                tcsSectionId: tcsSectionId,
+                tcsRate: tcsRate,
+                tcsBaseAmount: tcsBaseAmount,
+                tcsAmount: tcsAmount,
                 totalAmount: totalAmount,
                 paidAmount: paidAmount,
                 paymentMode: paymentMode,
                 documentDate: documentDate,
                 convertedFromId: convertedFromId,
+                originalDocumentId: originalDocumentId,
+                originalDocumentNumber: originalDocumentNumber,
+                originalDocumentDate: originalDocumentDate,
+                supplyType: supplyType,
                 notes: notes,
                 godownId: godownId,
                 syncVersion: syncVersion,
@@ -40558,6 +51084,8 @@ typedef $$SalesDocumentLinesLocalTableCreateCompanionBuilder =
       Value<String> cgstAmount,
       Value<String> sgstAmount,
       Value<String> igstAmount,
+      Value<String> cessRate,
+      Value<String> cessAmount,
       required String lineTotal,
       Value<int> sortOrder,
       Value<int> syncVersion,
@@ -40584,6 +51112,8 @@ typedef $$SalesDocumentLinesLocalTableUpdateCompanionBuilder =
       Value<String> cgstAmount,
       Value<String> sgstAmount,
       Value<String> igstAmount,
+      Value<String> cessRate,
+      Value<String> cessAmount,
       Value<String> lineTotal,
       Value<int> sortOrder,
       Value<int> syncVersion,
@@ -40671,6 +51201,16 @@ class $$SalesDocumentLinesLocalTableFilterComposer
 
   ColumnFilters<String> get igstAmount => $composableBuilder(
     column: $table.igstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cessRate => $composableBuilder(
+    column: $table.cessRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cessAmount => $composableBuilder(
+    column: $table.cessAmount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -40794,6 +51334,16 @@ class $$SalesDocumentLinesLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cessRate => $composableBuilder(
+    column: $table.cessRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cessAmount => $composableBuilder(
+    column: $table.cessAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get lineTotal => $composableBuilder(
     column: $table.lineTotal,
     builder: (column) => ColumnOrderings(column),
@@ -40900,6 +51450,14 @@ class $$SalesDocumentLinesLocalTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get cessRate =>
+      $composableBuilder(column: $table.cessRate, builder: (column) => column);
+
+  GeneratedColumn<String> get cessAmount => $composableBuilder(
+    column: $table.cessAmount,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get lineTotal =>
       $composableBuilder(column: $table.lineTotal, builder: (column) => column);
 
@@ -40987,6 +51545,8 @@ class $$SalesDocumentLinesLocalTableTableManager
                 Value<String> cgstAmount = const Value.absent(),
                 Value<String> sgstAmount = const Value.absent(),
                 Value<String> igstAmount = const Value.absent(),
+                Value<String> cessRate = const Value.absent(),
+                Value<String> cessAmount = const Value.absent(),
                 Value<String> lineTotal = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
@@ -41011,6 +51571,8 @@ class $$SalesDocumentLinesLocalTableTableManager
                 cgstAmount: cgstAmount,
                 sgstAmount: sgstAmount,
                 igstAmount: igstAmount,
+                cessRate: cessRate,
+                cessAmount: cessAmount,
                 lineTotal: lineTotal,
                 sortOrder: sortOrder,
                 syncVersion: syncVersion,
@@ -41037,6 +51599,8 @@ class $$SalesDocumentLinesLocalTableTableManager
                 Value<String> cgstAmount = const Value.absent(),
                 Value<String> sgstAmount = const Value.absent(),
                 Value<String> igstAmount = const Value.absent(),
+                Value<String> cessRate = const Value.absent(),
+                Value<String> cessAmount = const Value.absent(),
                 required String lineTotal,
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
@@ -41061,6 +51625,8 @@ class $$SalesDocumentLinesLocalTableTableManager
                 cgstAmount: cgstAmount,
                 sgstAmount: sgstAmount,
                 igstAmount: igstAmount,
+                cessRate: cessRate,
+                cessAmount: cessAmount,
                 lineTotal: lineTotal,
                 sortOrder: sortOrder,
                 syncVersion: syncVersion,
@@ -41114,9 +51680,16 @@ typedef $$PurchaseDocumentsLocalTableCreateCompanionBuilder =
       Value<String> subtotal,
       Value<String> discountTotal,
       Value<String> taxAmount,
+      Value<String?> tcsSectionId,
+      Value<String?> tcsRate,
+      Value<String> tcsBaseAmount,
+      Value<String> tcsAmount,
       Value<String> totalAmount,
       required String documentDate,
       Value<String?> convertedFromId,
+      Value<String?> originalDocumentId,
+      Value<String?> originalDocumentNumber,
+      Value<String?> originalDocumentDate,
       Value<String?> supplierInvoiceNumber,
       Value<String?> dueDate,
       Value<String?> notes,
@@ -41145,9 +51718,16 @@ typedef $$PurchaseDocumentsLocalTableUpdateCompanionBuilder =
       Value<String> subtotal,
       Value<String> discountTotal,
       Value<String> taxAmount,
+      Value<String?> tcsSectionId,
+      Value<String?> tcsRate,
+      Value<String> tcsBaseAmount,
+      Value<String> tcsAmount,
       Value<String> totalAmount,
       Value<String> documentDate,
       Value<String?> convertedFromId,
+      Value<String?> originalDocumentId,
+      Value<String?> originalDocumentNumber,
+      Value<String?> originalDocumentDate,
       Value<String?> supplierInvoiceNumber,
       Value<String?> dueDate,
       Value<String?> notes,
@@ -41232,6 +51812,26 @@ class $$PurchaseDocumentsLocalTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get tcsSectionId => $composableBuilder(
+    column: $table.tcsSectionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tcsRate => $composableBuilder(
+    column: $table.tcsRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tcsBaseAmount => $composableBuilder(
+    column: $table.tcsBaseAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tcsAmount => $composableBuilder(
+    column: $table.tcsAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get totalAmount => $composableBuilder(
     column: $table.totalAmount,
     builder: (column) => ColumnFilters(column),
@@ -41244,6 +51844,21 @@ class $$PurchaseDocumentsLocalTableFilterComposer
 
   ColumnFilters<String> get convertedFromId => $composableBuilder(
     column: $table.convertedFromId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalDocumentId => $composableBuilder(
+    column: $table.originalDocumentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalDocumentNumber => $composableBuilder(
+    column: $table.originalDocumentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalDocumentDate => $composableBuilder(
+    column: $table.originalDocumentDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -41377,6 +51992,26 @@ class $$PurchaseDocumentsLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tcsSectionId => $composableBuilder(
+    column: $table.tcsSectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tcsRate => $composableBuilder(
+    column: $table.tcsRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tcsBaseAmount => $composableBuilder(
+    column: $table.tcsBaseAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tcsAmount => $composableBuilder(
+    column: $table.tcsAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get totalAmount => $composableBuilder(
     column: $table.totalAmount,
     builder: (column) => ColumnOrderings(column),
@@ -41389,6 +52024,21 @@ class $$PurchaseDocumentsLocalTableOrderingComposer
 
   ColumnOrderings<String> get convertedFromId => $composableBuilder(
     column: $table.convertedFromId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalDocumentId => $composableBuilder(
+    column: $table.originalDocumentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalDocumentNumber => $composableBuilder(
+    column: $table.originalDocumentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalDocumentDate => $composableBuilder(
+    column: $table.originalDocumentDate,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -41512,6 +52162,22 @@ class $$PurchaseDocumentsLocalTableAnnotationComposer
   GeneratedColumn<String> get taxAmount =>
       $composableBuilder(column: $table.taxAmount, builder: (column) => column);
 
+  GeneratedColumn<String> get tcsSectionId => $composableBuilder(
+    column: $table.tcsSectionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tcsRate =>
+      $composableBuilder(column: $table.tcsRate, builder: (column) => column);
+
+  GeneratedColumn<String> get tcsBaseAmount => $composableBuilder(
+    column: $table.tcsBaseAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tcsAmount =>
+      $composableBuilder(column: $table.tcsAmount, builder: (column) => column);
+
   GeneratedColumn<String> get totalAmount => $composableBuilder(
     column: $table.totalAmount,
     builder: (column) => column,
@@ -41524,6 +52190,21 @@ class $$PurchaseDocumentsLocalTableAnnotationComposer
 
   GeneratedColumn<String> get convertedFromId => $composableBuilder(
     column: $table.convertedFromId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalDocumentId => $composableBuilder(
+    column: $table.originalDocumentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalDocumentNumber => $composableBuilder(
+    column: $table.originalDocumentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalDocumentDate => $composableBuilder(
+    column: $table.originalDocumentDate,
     builder: (column) => column,
   );
 
@@ -41630,9 +52311,16 @@ class $$PurchaseDocumentsLocalTableTableManager
                 Value<String> subtotal = const Value.absent(),
                 Value<String> discountTotal = const Value.absent(),
                 Value<String> taxAmount = const Value.absent(),
+                Value<String?> tcsSectionId = const Value.absent(),
+                Value<String?> tcsRate = const Value.absent(),
+                Value<String> tcsBaseAmount = const Value.absent(),
+                Value<String> tcsAmount = const Value.absent(),
                 Value<String> totalAmount = const Value.absent(),
                 Value<String> documentDate = const Value.absent(),
                 Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> originalDocumentId = const Value.absent(),
+                Value<String?> originalDocumentNumber = const Value.absent(),
+                Value<String?> originalDocumentDate = const Value.absent(),
                 Value<String?> supplierInvoiceNumber = const Value.absent(),
                 Value<String?> dueDate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -41659,9 +52347,16 @@ class $$PurchaseDocumentsLocalTableTableManager
                 subtotal: subtotal,
                 discountTotal: discountTotal,
                 taxAmount: taxAmount,
+                tcsSectionId: tcsSectionId,
+                tcsRate: tcsRate,
+                tcsBaseAmount: tcsBaseAmount,
+                tcsAmount: tcsAmount,
                 totalAmount: totalAmount,
                 documentDate: documentDate,
                 convertedFromId: convertedFromId,
+                originalDocumentId: originalDocumentId,
+                originalDocumentNumber: originalDocumentNumber,
+                originalDocumentDate: originalDocumentDate,
                 supplierInvoiceNumber: supplierInvoiceNumber,
                 dueDate: dueDate,
                 notes: notes,
@@ -41690,9 +52385,16 @@ class $$PurchaseDocumentsLocalTableTableManager
                 Value<String> subtotal = const Value.absent(),
                 Value<String> discountTotal = const Value.absent(),
                 Value<String> taxAmount = const Value.absent(),
+                Value<String?> tcsSectionId = const Value.absent(),
+                Value<String?> tcsRate = const Value.absent(),
+                Value<String> tcsBaseAmount = const Value.absent(),
+                Value<String> tcsAmount = const Value.absent(),
                 Value<String> totalAmount = const Value.absent(),
                 required String documentDate,
                 Value<String?> convertedFromId = const Value.absent(),
+                Value<String?> originalDocumentId = const Value.absent(),
+                Value<String?> originalDocumentNumber = const Value.absent(),
+                Value<String?> originalDocumentDate = const Value.absent(),
                 Value<String?> supplierInvoiceNumber = const Value.absent(),
                 Value<String?> dueDate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -41719,9 +52421,16 @@ class $$PurchaseDocumentsLocalTableTableManager
                 subtotal: subtotal,
                 discountTotal: discountTotal,
                 taxAmount: taxAmount,
+                tcsSectionId: tcsSectionId,
+                tcsRate: tcsRate,
+                tcsBaseAmount: tcsBaseAmount,
+                tcsAmount: tcsAmount,
                 totalAmount: totalAmount,
                 documentDate: documentDate,
                 convertedFromId: convertedFromId,
+                originalDocumentId: originalDocumentId,
+                originalDocumentNumber: originalDocumentNumber,
+                originalDocumentDate: originalDocumentDate,
                 supplierInvoiceNumber: supplierInvoiceNumber,
                 dueDate: dueDate,
                 notes: notes,
@@ -41780,6 +52489,8 @@ typedef $$PurchaseDocumentLinesLocalTableCreateCompanionBuilder =
       Value<String> cgstAmount,
       Value<String> sgstAmount,
       Value<String> igstAmount,
+      Value<String> cessRate,
+      Value<String> cessAmount,
       required String lineTotal,
       Value<int> sortOrder,
       Value<int> syncVersion,
@@ -41805,6 +52516,8 @@ typedef $$PurchaseDocumentLinesLocalTableUpdateCompanionBuilder =
       Value<String> cgstAmount,
       Value<String> sgstAmount,
       Value<String> igstAmount,
+      Value<String> cessRate,
+      Value<String> cessAmount,
       Value<String> lineTotal,
       Value<int> sortOrder,
       Value<int> syncVersion,
@@ -41887,6 +52600,16 @@ class $$PurchaseDocumentLinesLocalTableFilterComposer
 
   ColumnFilters<String> get igstAmount => $composableBuilder(
     column: $table.igstAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cessRate => $composableBuilder(
+    column: $table.cessRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cessAmount => $composableBuilder(
+    column: $table.cessAmount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -42005,6 +52728,16 @@ class $$PurchaseDocumentLinesLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cessRate => $composableBuilder(
+    column: $table.cessRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cessAmount => $composableBuilder(
+    column: $table.cessAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get lineTotal => $composableBuilder(
     column: $table.lineTotal,
     builder: (column) => ColumnOrderings(column),
@@ -42106,6 +52839,14 @@ class $$PurchaseDocumentLinesLocalTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get cessRate =>
+      $composableBuilder(column: $table.cessRate, builder: (column) => column);
+
+  GeneratedColumn<String> get cessAmount => $composableBuilder(
+    column: $table.cessAmount,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get lineTotal =>
       $composableBuilder(column: $table.lineTotal, builder: (column) => column);
 
@@ -42192,6 +52933,8 @@ class $$PurchaseDocumentLinesLocalTableTableManager
                 Value<String> cgstAmount = const Value.absent(),
                 Value<String> sgstAmount = const Value.absent(),
                 Value<String> igstAmount = const Value.absent(),
+                Value<String> cessRate = const Value.absent(),
+                Value<String> cessAmount = const Value.absent(),
                 Value<String> lineTotal = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
@@ -42215,6 +52958,8 @@ class $$PurchaseDocumentLinesLocalTableTableManager
                 cgstAmount: cgstAmount,
                 sgstAmount: sgstAmount,
                 igstAmount: igstAmount,
+                cessRate: cessRate,
+                cessAmount: cessAmount,
                 lineTotal: lineTotal,
                 sortOrder: sortOrder,
                 syncVersion: syncVersion,
@@ -42240,6 +52985,8 @@ class $$PurchaseDocumentLinesLocalTableTableManager
                 Value<String> cgstAmount = const Value.absent(),
                 Value<String> sgstAmount = const Value.absent(),
                 Value<String> igstAmount = const Value.absent(),
+                Value<String> cessRate = const Value.absent(),
+                Value<String> cessAmount = const Value.absent(),
                 required String lineTotal,
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
@@ -42263,6 +53010,8 @@ class $$PurchaseDocumentLinesLocalTableTableManager
                 cgstAmount: cgstAmount,
                 sgstAmount: sgstAmount,
                 igstAmount: igstAmount,
+                cessRate: cessRate,
+                cessAmount: cessAmount,
                 lineTotal: lineTotal,
                 sortOrder: sortOrder,
                 syncVersion: syncVersion,
@@ -44192,6 +54941,7 @@ typedef $$ExpensesLocalTableCreateCompanionBuilder =
       Value<String?> referenceNumber,
       required String expenseDate,
       Value<String?> paymentMode,
+      Value<String?> bankAccountId,
       Value<int> syncVersion,
       Value<bool> isDeleted,
       required DateTime createdAt,
@@ -44215,6 +54965,7 @@ typedef $$ExpensesLocalTableUpdateCompanionBuilder =
       Value<String?> referenceNumber,
       Value<String> expenseDate,
       Value<String?> paymentMode,
+      Value<String?> bankAccountId,
       Value<int> syncVersion,
       Value<bool> isDeleted,
       Value<DateTime> createdAt,
@@ -44295,6 +55046,11 @@ class $$ExpensesLocalTableFilterComposer
 
   ColumnFilters<String> get paymentMode => $composableBuilder(
     column: $table.paymentMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -44403,6 +55159,11 @@ class $$ExpensesLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get syncVersion => $composableBuilder(
     column: $table.syncVersion,
     builder: (column) => ColumnOrderings(column),
@@ -44496,6 +55257,11 @@ class $$ExpensesLocalTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get syncVersion => $composableBuilder(
     column: $table.syncVersion,
     builder: (column) => column,
@@ -44565,6 +55331,7 @@ class $$ExpensesLocalTableTableManager
                 Value<String?> referenceNumber = const Value.absent(),
                 Value<String> expenseDate = const Value.absent(),
                 Value<String?> paymentMode = const Value.absent(),
+                Value<String?> bankAccountId = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -44586,6 +55353,7 @@ class $$ExpensesLocalTableTableManager
                 referenceNumber: referenceNumber,
                 expenseDate: expenseDate,
                 paymentMode: paymentMode,
+                bankAccountId: bankAccountId,
                 syncVersion: syncVersion,
                 isDeleted: isDeleted,
                 createdAt: createdAt,
@@ -44609,6 +55377,7 @@ class $$ExpensesLocalTableTableManager
                 Value<String?> referenceNumber = const Value.absent(),
                 required String expenseDate,
                 Value<String?> paymentMode = const Value.absent(),
+                Value<String?> bankAccountId = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 required DateTime createdAt,
@@ -44630,6 +55399,7 @@ class $$ExpensesLocalTableTableManager
                 referenceNumber: referenceNumber,
                 expenseDate: expenseDate,
                 paymentMode: paymentMode,
+                bankAccountId: bankAccountId,
                 syncVersion: syncVersion,
                 isDeleted: isDeleted,
                 createdAt: createdAt,
@@ -44661,6 +55431,2199 @@ typedef $$ExpensesLocalTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $ExpensesLocalTable, ExpenseTableData>,
       ),
       ExpenseTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$IncomeCategoriesLocalTableCreateCompanionBuilder =
+    IncomeCategoriesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<String> categoryType,
+      Value<bool> isSystem,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$IncomeCategoriesLocalTableUpdateCompanionBuilder =
+    IncomeCategoriesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String> categoryType,
+      Value<bool> isSystem,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$IncomeCategoriesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $IncomeCategoriesLocalTable> {
+  $$IncomeCategoriesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryType => $composableBuilder(
+    column: $table.categoryType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$IncomeCategoriesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $IncomeCategoriesLocalTable> {
+  $$IncomeCategoriesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryType => $composableBuilder(
+    column: $table.categoryType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IncomeCategoriesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $IncomeCategoriesLocalTable> {
+  $$IncomeCategoriesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryType => $composableBuilder(
+    column: $table.categoryType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isSystem =>
+      $composableBuilder(column: $table.isSystem, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$IncomeCategoriesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $IncomeCategoriesLocalTable,
+          IncomeCategoryTableData,
+          $$IncomeCategoriesLocalTableFilterComposer,
+          $$IncomeCategoriesLocalTableOrderingComposer,
+          $$IncomeCategoriesLocalTableAnnotationComposer,
+          $$IncomeCategoriesLocalTableCreateCompanionBuilder,
+          $$IncomeCategoriesLocalTableUpdateCompanionBuilder,
+          (
+            IncomeCategoryTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $IncomeCategoriesLocalTable,
+              IncomeCategoryTableData
+            >,
+          ),
+          IncomeCategoryTableData,
+          PrefetchHooks Function()
+        > {
+  $$IncomeCategoriesLocalTableTableManager(
+    _$AppDatabase db,
+    $IncomeCategoriesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IncomeCategoriesLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$IncomeCategoriesLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$IncomeCategoriesLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> categoryType = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IncomeCategoriesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                categoryType: categoryType,
+                isSystem: isSystem,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<String> categoryType = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IncomeCategoriesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                categoryType: categoryType,
+                isSystem: isSystem,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$IncomeCategoriesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $IncomeCategoriesLocalTable,
+      IncomeCategoryTableData,
+      $$IncomeCategoriesLocalTableFilterComposer,
+      $$IncomeCategoriesLocalTableOrderingComposer,
+      $$IncomeCategoriesLocalTableAnnotationComposer,
+      $$IncomeCategoriesLocalTableCreateCompanionBuilder,
+      $$IncomeCategoriesLocalTableUpdateCompanionBuilder,
+      (
+        IncomeCategoryTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $IncomeCategoriesLocalTable,
+          IncomeCategoryTableData
+        >,
+      ),
+      IncomeCategoryTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$IncomeItemsLocalTableCreateCompanionBuilder =
+    IncomeItemsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<String?> hsnSac,
+      Value<String> price,
+      Value<bool> priceIsTaxInclusive,
+      Value<String> taxRate,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$IncomeItemsLocalTableUpdateCompanionBuilder =
+    IncomeItemsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String?> hsnSac,
+      Value<String> price,
+      Value<bool> priceIsTaxInclusive,
+      Value<String> taxRate,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$IncomeItemsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $IncomeItemsLocalTable> {
+  $$IncomeItemsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hsnSac => $composableBuilder(
+    column: $table.hsnSac,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get priceIsTaxInclusive => $composableBuilder(
+    column: $table.priceIsTaxInclusive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$IncomeItemsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $IncomeItemsLocalTable> {
+  $$IncomeItemsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hsnSac => $composableBuilder(
+    column: $table.hsnSac,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get priceIsTaxInclusive => $composableBuilder(
+    column: $table.priceIsTaxInclusive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IncomeItemsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $IncomeItemsLocalTable> {
+  $$IncomeItemsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get hsnSac =>
+      $composableBuilder(column: $table.hsnSac, builder: (column) => column);
+
+  GeneratedColumn<String> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<bool> get priceIsTaxInclusive => $composableBuilder(
+    column: $table.priceIsTaxInclusive,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxRate =>
+      $composableBuilder(column: $table.taxRate, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$IncomeItemsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $IncomeItemsLocalTable,
+          IncomeItemTableData,
+          $$IncomeItemsLocalTableFilterComposer,
+          $$IncomeItemsLocalTableOrderingComposer,
+          $$IncomeItemsLocalTableAnnotationComposer,
+          $$IncomeItemsLocalTableCreateCompanionBuilder,
+          $$IncomeItemsLocalTableUpdateCompanionBuilder,
+          (
+            IncomeItemTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $IncomeItemsLocalTable,
+              IncomeItemTableData
+            >,
+          ),
+          IncomeItemTableData,
+          PrefetchHooks Function()
+        > {
+  $$IncomeItemsLocalTableTableManager(
+    _$AppDatabase db,
+    $IncomeItemsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IncomeItemsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IncomeItemsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IncomeItemsLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> hsnSac = const Value.absent(),
+                Value<String> price = const Value.absent(),
+                Value<bool> priceIsTaxInclusive = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IncomeItemsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                hsnSac: hsnSac,
+                price: price,
+                priceIsTaxInclusive: priceIsTaxInclusive,
+                taxRate: taxRate,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<String?> hsnSac = const Value.absent(),
+                Value<String> price = const Value.absent(),
+                Value<bool> priceIsTaxInclusive = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IncomeItemsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                hsnSac: hsnSac,
+                price: price,
+                priceIsTaxInclusive: priceIsTaxInclusive,
+                taxRate: taxRate,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$IncomeItemsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $IncomeItemsLocalTable,
+      IncomeItemTableData,
+      $$IncomeItemsLocalTableFilterComposer,
+      $$IncomeItemsLocalTableOrderingComposer,
+      $$IncomeItemsLocalTableAnnotationComposer,
+      $$IncomeItemsLocalTableCreateCompanionBuilder,
+      $$IncomeItemsLocalTableUpdateCompanionBuilder,
+      (
+        IncomeItemTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $IncomeItemsLocalTable,
+          IncomeItemTableData
+        >,
+      ),
+      IncomeItemTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$OtherIncomesLocalTableCreateCompanionBuilder =
+    OtherIncomesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String categoryId,
+      Value<String?> incomeItemId,
+      required String amount,
+      Value<String?> quantity,
+      Value<String> taxAmount,
+      Value<String> taxRate,
+      Value<String?> description,
+      Value<String?> notes,
+      Value<String?> referenceNumber,
+      required String incomeDate,
+      Value<String?> paymentMode,
+      Value<String?> bankAccountId,
+      Value<String?> dueDate,
+      Value<String?> balanceDue,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$OtherIncomesLocalTableUpdateCompanionBuilder =
+    OtherIncomesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> categoryId,
+      Value<String?> incomeItemId,
+      Value<String> amount,
+      Value<String?> quantity,
+      Value<String> taxAmount,
+      Value<String> taxRate,
+      Value<String?> description,
+      Value<String?> notes,
+      Value<String?> referenceNumber,
+      Value<String> incomeDate,
+      Value<String?> paymentMode,
+      Value<String?> bankAccountId,
+      Value<String?> dueDate,
+      Value<String?> balanceDue,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$OtherIncomesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $OtherIncomesLocalTable> {
+  $$OtherIncomesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get incomeItemId => $composableBuilder(
+    column: $table.incomeItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get incomeDate => $composableBuilder(
+    column: $table.incomeDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get balanceDue => $composableBuilder(
+    column: $table.balanceDue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OtherIncomesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $OtherIncomesLocalTable> {
+  $$OtherIncomesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get incomeItemId => $composableBuilder(
+    column: $table.incomeItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxRate => $composableBuilder(
+    column: $table.taxRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get incomeDate => $composableBuilder(
+    column: $table.incomeDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueDate => $composableBuilder(
+    column: $table.dueDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get balanceDue => $composableBuilder(
+    column: $table.balanceDue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OtherIncomesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OtherIncomesLocalTable> {
+  $$OtherIncomesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get incomeItemId => $composableBuilder(
+    column: $table.incomeItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get taxAmount =>
+      $composableBuilder(column: $table.taxAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get taxRate =>
+      $composableBuilder(column: $table.taxRate, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get incomeDate => $composableBuilder(
+    column: $table.incomeDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dueDate =>
+      $composableBuilder(column: $table.dueDate, builder: (column) => column);
+
+  GeneratedColumn<String> get balanceDue => $composableBuilder(
+    column: $table.balanceDue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$OtherIncomesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OtherIncomesLocalTable,
+          OtherIncomeTableData,
+          $$OtherIncomesLocalTableFilterComposer,
+          $$OtherIncomesLocalTableOrderingComposer,
+          $$OtherIncomesLocalTableAnnotationComposer,
+          $$OtherIncomesLocalTableCreateCompanionBuilder,
+          $$OtherIncomesLocalTableUpdateCompanionBuilder,
+          (
+            OtherIncomeTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $OtherIncomesLocalTable,
+              OtherIncomeTableData
+            >,
+          ),
+          OtherIncomeTableData,
+          PrefetchHooks Function()
+        > {
+  $$OtherIncomesLocalTableTableManager(
+    _$AppDatabase db,
+    $OtherIncomesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OtherIncomesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OtherIncomesLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OtherIncomesLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> categoryId = const Value.absent(),
+                Value<String?> incomeItemId = const Value.absent(),
+                Value<String> amount = const Value.absent(),
+                Value<String?> quantity = const Value.absent(),
+                Value<String> taxAmount = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> referenceNumber = const Value.absent(),
+                Value<String> incomeDate = const Value.absent(),
+                Value<String?> paymentMode = const Value.absent(),
+                Value<String?> bankAccountId = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<String?> balanceDue = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OtherIncomesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                categoryId: categoryId,
+                incomeItemId: incomeItemId,
+                amount: amount,
+                quantity: quantity,
+                taxAmount: taxAmount,
+                taxRate: taxRate,
+                description: description,
+                notes: notes,
+                referenceNumber: referenceNumber,
+                incomeDate: incomeDate,
+                paymentMode: paymentMode,
+                bankAccountId: bankAccountId,
+                dueDate: dueDate,
+                balanceDue: balanceDue,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String categoryId,
+                Value<String?> incomeItemId = const Value.absent(),
+                required String amount,
+                Value<String?> quantity = const Value.absent(),
+                Value<String> taxAmount = const Value.absent(),
+                Value<String> taxRate = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> referenceNumber = const Value.absent(),
+                required String incomeDate,
+                Value<String?> paymentMode = const Value.absent(),
+                Value<String?> bankAccountId = const Value.absent(),
+                Value<String?> dueDate = const Value.absent(),
+                Value<String?> balanceDue = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OtherIncomesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                categoryId: categoryId,
+                incomeItemId: incomeItemId,
+                amount: amount,
+                quantity: quantity,
+                taxAmount: taxAmount,
+                taxRate: taxRate,
+                description: description,
+                notes: notes,
+                referenceNumber: referenceNumber,
+                incomeDate: incomeDate,
+                paymentMode: paymentMode,
+                bankAccountId: bankAccountId,
+                dueDate: dueDate,
+                balanceDue: balanceDue,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OtherIncomesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OtherIncomesLocalTable,
+      OtherIncomeTableData,
+      $$OtherIncomesLocalTableFilterComposer,
+      $$OtherIncomesLocalTableOrderingComposer,
+      $$OtherIncomesLocalTableAnnotationComposer,
+      $$OtherIncomesLocalTableCreateCompanionBuilder,
+      $$OtherIncomesLocalTableUpdateCompanionBuilder,
+      (
+        OtherIncomeTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $OtherIncomesLocalTable,
+          OtherIncomeTableData
+        >,
+      ),
+      OtherIncomeTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$LoanAccountsLocalTableCreateCompanionBuilder =
+    LoanAccountsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<String?> lenderName,
+      Value<String?> accountNumber,
+      Value<String?> description,
+      Value<String> openingOutstanding,
+      required String openingBalanceAsOf,
+      Value<String?> interestRate,
+      Value<int?> termMonths,
+      Value<String?> receivedBankAccountId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$LoanAccountsLocalTableUpdateCompanionBuilder =
+    LoanAccountsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String?> lenderName,
+      Value<String?> accountNumber,
+      Value<String?> description,
+      Value<String> openingOutstanding,
+      Value<String> openingBalanceAsOf,
+      Value<String?> interestRate,
+      Value<int?> termMonths,
+      Value<String?> receivedBankAccountId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$LoanAccountsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $LoanAccountsLocalTable> {
+  $$LoanAccountsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lenderName => $composableBuilder(
+    column: $table.lenderName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openingOutstanding => $composableBuilder(
+    column: $table.openingOutstanding,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openingBalanceAsOf => $composableBuilder(
+    column: $table.openingBalanceAsOf,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get interestRate => $composableBuilder(
+    column: $table.interestRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get termMonths => $composableBuilder(
+    column: $table.termMonths,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receivedBankAccountId => $composableBuilder(
+    column: $table.receivedBankAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LoanAccountsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $LoanAccountsLocalTable> {
+  $$LoanAccountsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lenderName => $composableBuilder(
+    column: $table.lenderName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openingOutstanding => $composableBuilder(
+    column: $table.openingOutstanding,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openingBalanceAsOf => $composableBuilder(
+    column: $table.openingBalanceAsOf,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get interestRate => $composableBuilder(
+    column: $table.interestRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get termMonths => $composableBuilder(
+    column: $table.termMonths,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get receivedBankAccountId => $composableBuilder(
+    column: $table.receivedBankAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LoanAccountsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LoanAccountsLocalTable> {
+  $$LoanAccountsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get lenderName => $composableBuilder(
+    column: $table.lenderName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get openingOutstanding => $composableBuilder(
+    column: $table.openingOutstanding,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get openingBalanceAsOf => $composableBuilder(
+    column: $table.openingBalanceAsOf,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get interestRate => $composableBuilder(
+    column: $table.interestRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get termMonths => $composableBuilder(
+    column: $table.termMonths,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get receivedBankAccountId => $composableBuilder(
+    column: $table.receivedBankAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$LoanAccountsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LoanAccountsLocalTable,
+          LoanAccountTableData,
+          $$LoanAccountsLocalTableFilterComposer,
+          $$LoanAccountsLocalTableOrderingComposer,
+          $$LoanAccountsLocalTableAnnotationComposer,
+          $$LoanAccountsLocalTableCreateCompanionBuilder,
+          $$LoanAccountsLocalTableUpdateCompanionBuilder,
+          (
+            LoanAccountTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $LoanAccountsLocalTable,
+              LoanAccountTableData
+            >,
+          ),
+          LoanAccountTableData,
+          PrefetchHooks Function()
+        > {
+  $$LoanAccountsLocalTableTableManager(
+    _$AppDatabase db,
+    $LoanAccountsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LoanAccountsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LoanAccountsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LoanAccountsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> lenderName = const Value.absent(),
+                Value<String?> accountNumber = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> openingOutstanding = const Value.absent(),
+                Value<String> openingBalanceAsOf = const Value.absent(),
+                Value<String?> interestRate = const Value.absent(),
+                Value<int?> termMonths = const Value.absent(),
+                Value<String?> receivedBankAccountId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoanAccountsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                lenderName: lenderName,
+                accountNumber: accountNumber,
+                description: description,
+                openingOutstanding: openingOutstanding,
+                openingBalanceAsOf: openingBalanceAsOf,
+                interestRate: interestRate,
+                termMonths: termMonths,
+                receivedBankAccountId: receivedBankAccountId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<String?> lenderName = const Value.absent(),
+                Value<String?> accountNumber = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> openingOutstanding = const Value.absent(),
+                required String openingBalanceAsOf,
+                Value<String?> interestRate = const Value.absent(),
+                Value<int?> termMonths = const Value.absent(),
+                Value<String?> receivedBankAccountId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoanAccountsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                lenderName: lenderName,
+                accountNumber: accountNumber,
+                description: description,
+                openingOutstanding: openingOutstanding,
+                openingBalanceAsOf: openingBalanceAsOf,
+                interestRate: interestRate,
+                termMonths: termMonths,
+                receivedBankAccountId: receivedBankAccountId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LoanAccountsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LoanAccountsLocalTable,
+      LoanAccountTableData,
+      $$LoanAccountsLocalTableFilterComposer,
+      $$LoanAccountsLocalTableOrderingComposer,
+      $$LoanAccountsLocalTableAnnotationComposer,
+      $$LoanAccountsLocalTableCreateCompanionBuilder,
+      $$LoanAccountsLocalTableUpdateCompanionBuilder,
+      (
+        LoanAccountTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $LoanAccountsLocalTable,
+          LoanAccountTableData
+        >,
+      ),
+      LoanAccountTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$LoanTransactionsLocalTableCreateCompanionBuilder =
+    LoanTransactionsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String loanAccountId,
+      required String transactionType,
+      required String transactionDate,
+      Value<String> principalAmount,
+      Value<String> interestAmount,
+      Value<String> chargesAmount,
+      required String bankAccountId,
+      Value<String?> description,
+      Value<String?> referenceNumber,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$LoanTransactionsLocalTableUpdateCompanionBuilder =
+    LoanTransactionsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> loanAccountId,
+      Value<String> transactionType,
+      Value<String> transactionDate,
+      Value<String> principalAmount,
+      Value<String> interestAmount,
+      Value<String> chargesAmount,
+      Value<String> bankAccountId,
+      Value<String?> description,
+      Value<String?> referenceNumber,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$LoanTransactionsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $LoanTransactionsLocalTable> {
+  $$LoanTransactionsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get loanAccountId => $composableBuilder(
+    column: $table.loanAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transactionType => $composableBuilder(
+    column: $table.transactionType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transactionDate => $composableBuilder(
+    column: $table.transactionDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get principalAmount => $composableBuilder(
+    column: $table.principalAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get interestAmount => $composableBuilder(
+    column: $table.interestAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get chargesAmount => $composableBuilder(
+    column: $table.chargesAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LoanTransactionsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $LoanTransactionsLocalTable> {
+  $$LoanTransactionsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get loanAccountId => $composableBuilder(
+    column: $table.loanAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transactionType => $composableBuilder(
+    column: $table.transactionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transactionDate => $composableBuilder(
+    column: $table.transactionDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get principalAmount => $composableBuilder(
+    column: $table.principalAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get interestAmount => $composableBuilder(
+    column: $table.interestAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get chargesAmount => $composableBuilder(
+    column: $table.chargesAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LoanTransactionsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LoanTransactionsLocalTable> {
+  $$LoanTransactionsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get loanAccountId => $composableBuilder(
+    column: $table.loanAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transactionType => $composableBuilder(
+    column: $table.transactionType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transactionDate => $composableBuilder(
+    column: $table.transactionDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get principalAmount => $composableBuilder(
+    column: $table.principalAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get interestAmount => $composableBuilder(
+    column: $table.interestAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get chargesAmount => $composableBuilder(
+    column: $table.chargesAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bankAccountId => $composableBuilder(
+    column: $table.bankAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceNumber => $composableBuilder(
+    column: $table.referenceNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$LoanTransactionsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LoanTransactionsLocalTable,
+          LoanTransactionTableData,
+          $$LoanTransactionsLocalTableFilterComposer,
+          $$LoanTransactionsLocalTableOrderingComposer,
+          $$LoanTransactionsLocalTableAnnotationComposer,
+          $$LoanTransactionsLocalTableCreateCompanionBuilder,
+          $$LoanTransactionsLocalTableUpdateCompanionBuilder,
+          (
+            LoanTransactionTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $LoanTransactionsLocalTable,
+              LoanTransactionTableData
+            >,
+          ),
+          LoanTransactionTableData,
+          PrefetchHooks Function()
+        > {
+  $$LoanTransactionsLocalTableTableManager(
+    _$AppDatabase db,
+    $LoanTransactionsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LoanTransactionsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$LoanTransactionsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$LoanTransactionsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> loanAccountId = const Value.absent(),
+                Value<String> transactionType = const Value.absent(),
+                Value<String> transactionDate = const Value.absent(),
+                Value<String> principalAmount = const Value.absent(),
+                Value<String> interestAmount = const Value.absent(),
+                Value<String> chargesAmount = const Value.absent(),
+                Value<String> bankAccountId = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> referenceNumber = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoanTransactionsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                loanAccountId: loanAccountId,
+                transactionType: transactionType,
+                transactionDate: transactionDate,
+                principalAmount: principalAmount,
+                interestAmount: interestAmount,
+                chargesAmount: chargesAmount,
+                bankAccountId: bankAccountId,
+                description: description,
+                referenceNumber: referenceNumber,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String loanAccountId,
+                required String transactionType,
+                required String transactionDate,
+                Value<String> principalAmount = const Value.absent(),
+                Value<String> interestAmount = const Value.absent(),
+                Value<String> chargesAmount = const Value.absent(),
+                required String bankAccountId,
+                Value<String?> description = const Value.absent(),
+                Value<String?> referenceNumber = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoanTransactionsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                loanAccountId: loanAccountId,
+                transactionType: transactionType,
+                transactionDate: transactionDate,
+                principalAmount: principalAmount,
+                interestAmount: interestAmount,
+                chargesAmount: chargesAmount,
+                bankAccountId: bankAccountId,
+                description: description,
+                referenceNumber: referenceNumber,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LoanTransactionsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LoanTransactionsLocalTable,
+      LoanTransactionTableData,
+      $$LoanTransactionsLocalTableFilterComposer,
+      $$LoanTransactionsLocalTableOrderingComposer,
+      $$LoanTransactionsLocalTableAnnotationComposer,
+      $$LoanTransactionsLocalTableCreateCompanionBuilder,
+      $$LoanTransactionsLocalTableUpdateCompanionBuilder,
+      (
+        LoanTransactionTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $LoanTransactionsLocalTable,
+          LoanTransactionTableData
+        >,
+      ),
+      LoanTransactionTableData,
       PrefetchHooks Function()
     >;
 typedef $$GatewayPaymentSessionsLocalTableCreateCompanionBuilder =
@@ -45844,6 +58807,1366 @@ typedef $$TodosLocalTableProcessedTableManager =
       TodoTableData,
       PrefetchHooks Function()
     >;
+typedef $$WithholdingTaxSectionsLocalTableCreateCompanionBuilder =
+    WithholdingTaxSectionsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String kind,
+      required String code,
+      required String description,
+      required String rate,
+      required String applicableOn,
+      Value<bool> isActive,
+      Value<bool> isPreloaded,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$WithholdingTaxSectionsLocalTableUpdateCompanionBuilder =
+    WithholdingTaxSectionsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> kind,
+      Value<String> code,
+      Value<String> description,
+      Value<String> rate,
+      Value<String> applicableOn,
+      Value<bool> isActive,
+      Value<bool> isPreloaded,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$WithholdingTaxSectionsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $WithholdingTaxSectionsLocalTable> {
+  $$WithholdingTaxSectionsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get applicableOn => $composableBuilder(
+    column: $table.applicableOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPreloaded => $composableBuilder(
+    column: $table.isPreloaded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WithholdingTaxSectionsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $WithholdingTaxSectionsLocalTable> {
+  $$WithholdingTaxSectionsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get applicableOn => $composableBuilder(
+    column: $table.applicableOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isPreloaded => $composableBuilder(
+    column: $table.isPreloaded,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WithholdingTaxSectionsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WithholdingTaxSectionsLocalTable> {
+  $$WithholdingTaxSectionsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rate =>
+      $composableBuilder(column: $table.rate, builder: (column) => column);
+
+  GeneratedColumn<String> get applicableOn => $composableBuilder(
+    column: $table.applicableOn,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<bool> get isPreloaded => $composableBuilder(
+    column: $table.isPreloaded,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$WithholdingTaxSectionsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WithholdingTaxSectionsLocalTable,
+          WithholdingTaxSectionLocalData,
+          $$WithholdingTaxSectionsLocalTableFilterComposer,
+          $$WithholdingTaxSectionsLocalTableOrderingComposer,
+          $$WithholdingTaxSectionsLocalTableAnnotationComposer,
+          $$WithholdingTaxSectionsLocalTableCreateCompanionBuilder,
+          $$WithholdingTaxSectionsLocalTableUpdateCompanionBuilder,
+          (
+            WithholdingTaxSectionLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $WithholdingTaxSectionsLocalTable,
+              WithholdingTaxSectionLocalData
+            >,
+          ),
+          WithholdingTaxSectionLocalData,
+          PrefetchHooks Function()
+        > {
+  $$WithholdingTaxSectionsLocalTableTableManager(
+    _$AppDatabase db,
+    $WithholdingTaxSectionsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WithholdingTaxSectionsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$WithholdingTaxSectionsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$WithholdingTaxSectionsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> rate = const Value.absent(),
+                Value<String> applicableOn = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> isPreloaded = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WithholdingTaxSectionsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                kind: kind,
+                code: code,
+                description: description,
+                rate: rate,
+                applicableOn: applicableOn,
+                isActive: isActive,
+                isPreloaded: isPreloaded,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String kind,
+                required String code,
+                required String description,
+                required String rate,
+                required String applicableOn,
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> isPreloaded = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WithholdingTaxSectionsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                kind: kind,
+                code: code,
+                description: description,
+                rate: rate,
+                applicableOn: applicableOn,
+                isActive: isActive,
+                isPreloaded: isPreloaded,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WithholdingTaxSectionsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WithholdingTaxSectionsLocalTable,
+      WithholdingTaxSectionLocalData,
+      $$WithholdingTaxSectionsLocalTableFilterComposer,
+      $$WithholdingTaxSectionsLocalTableOrderingComposer,
+      $$WithholdingTaxSectionsLocalTableAnnotationComposer,
+      $$WithholdingTaxSectionsLocalTableCreateCompanionBuilder,
+      $$WithholdingTaxSectionsLocalTableUpdateCompanionBuilder,
+      (
+        WithholdingTaxSectionLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $WithholdingTaxSectionsLocalTable,
+          WithholdingTaxSectionLocalData
+        >,
+      ),
+      WithholdingTaxSectionLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$WithholdingTaxEntriesLocalTableCreateCompanionBuilder =
+    WithholdingTaxEntriesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String kind,
+      required String direction,
+      Value<String?> sectionId,
+      required String sectionCode,
+      required String rate,
+      required String baseAmount,
+      required String taxAmount,
+      Value<String?> partyId,
+      Value<String?> partyPan,
+      Value<String?> partyName,
+      required String sourceType,
+      required String sourceId,
+      required String entryDate,
+      Value<String?> depositId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$WithholdingTaxEntriesLocalTableUpdateCompanionBuilder =
+    WithholdingTaxEntriesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> kind,
+      Value<String> direction,
+      Value<String?> sectionId,
+      Value<String> sectionCode,
+      Value<String> rate,
+      Value<String> baseAmount,
+      Value<String> taxAmount,
+      Value<String?> partyId,
+      Value<String?> partyPan,
+      Value<String?> partyName,
+      Value<String> sourceType,
+      Value<String> sourceId,
+      Value<String> entryDate,
+      Value<String?> depositId,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$WithholdingTaxEntriesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $WithholdingTaxEntriesLocalTable> {
+  $$WithholdingTaxEntriesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sectionId => $composableBuilder(
+    column: $table.sectionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sectionCode => $composableBuilder(
+    column: $table.sectionCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyPan => $composableBuilder(
+    column: $table.partyPan,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partyName => $composableBuilder(
+    column: $table.partyName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryDate => $composableBuilder(
+    column: $table.entryDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get depositId => $composableBuilder(
+    column: $table.depositId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WithholdingTaxEntriesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $WithholdingTaxEntriesLocalTable> {
+  $$WithholdingTaxEntriesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sectionId => $composableBuilder(
+    column: $table.sectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sectionCode => $composableBuilder(
+    column: $table.sectionCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxAmount => $composableBuilder(
+    column: $table.taxAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyId => $composableBuilder(
+    column: $table.partyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyPan => $composableBuilder(
+    column: $table.partyPan,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partyName => $composableBuilder(
+    column: $table.partyName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryDate => $composableBuilder(
+    column: $table.entryDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get depositId => $composableBuilder(
+    column: $table.depositId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WithholdingTaxEntriesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WithholdingTaxEntriesLocalTable> {
+  $$WithholdingTaxEntriesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<String> get sectionId =>
+      $composableBuilder(column: $table.sectionId, builder: (column) => column);
+
+  GeneratedColumn<String> get sectionCode => $composableBuilder(
+    column: $table.sectionCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rate =>
+      $composableBuilder(column: $table.rate, builder: (column) => column);
+
+  GeneratedColumn<String> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxAmount =>
+      $composableBuilder(column: $table.taxAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get partyId =>
+      $composableBuilder(column: $table.partyId, builder: (column) => column);
+
+  GeneratedColumn<String> get partyPan =>
+      $composableBuilder(column: $table.partyPan, builder: (column) => column);
+
+  GeneratedColumn<String> get partyName =>
+      $composableBuilder(column: $table.partyName, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<String> get entryDate =>
+      $composableBuilder(column: $table.entryDate, builder: (column) => column);
+
+  GeneratedColumn<String> get depositId =>
+      $composableBuilder(column: $table.depositId, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$WithholdingTaxEntriesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WithholdingTaxEntriesLocalTable,
+          WithholdingTaxEntryLocalData,
+          $$WithholdingTaxEntriesLocalTableFilterComposer,
+          $$WithholdingTaxEntriesLocalTableOrderingComposer,
+          $$WithholdingTaxEntriesLocalTableAnnotationComposer,
+          $$WithholdingTaxEntriesLocalTableCreateCompanionBuilder,
+          $$WithholdingTaxEntriesLocalTableUpdateCompanionBuilder,
+          (
+            WithholdingTaxEntryLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $WithholdingTaxEntriesLocalTable,
+              WithholdingTaxEntryLocalData
+            >,
+          ),
+          WithholdingTaxEntryLocalData,
+          PrefetchHooks Function()
+        > {
+  $$WithholdingTaxEntriesLocalTableTableManager(
+    _$AppDatabase db,
+    $WithholdingTaxEntriesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WithholdingTaxEntriesLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$WithholdingTaxEntriesLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$WithholdingTaxEntriesLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<String?> sectionId = const Value.absent(),
+                Value<String> sectionCode = const Value.absent(),
+                Value<String> rate = const Value.absent(),
+                Value<String> baseAmount = const Value.absent(),
+                Value<String> taxAmount = const Value.absent(),
+                Value<String?> partyId = const Value.absent(),
+                Value<String?> partyPan = const Value.absent(),
+                Value<String?> partyName = const Value.absent(),
+                Value<String> sourceType = const Value.absent(),
+                Value<String> sourceId = const Value.absent(),
+                Value<String> entryDate = const Value.absent(),
+                Value<String?> depositId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WithholdingTaxEntriesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                kind: kind,
+                direction: direction,
+                sectionId: sectionId,
+                sectionCode: sectionCode,
+                rate: rate,
+                baseAmount: baseAmount,
+                taxAmount: taxAmount,
+                partyId: partyId,
+                partyPan: partyPan,
+                partyName: partyName,
+                sourceType: sourceType,
+                sourceId: sourceId,
+                entryDate: entryDate,
+                depositId: depositId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String kind,
+                required String direction,
+                Value<String?> sectionId = const Value.absent(),
+                required String sectionCode,
+                required String rate,
+                required String baseAmount,
+                required String taxAmount,
+                Value<String?> partyId = const Value.absent(),
+                Value<String?> partyPan = const Value.absent(),
+                Value<String?> partyName = const Value.absent(),
+                required String sourceType,
+                required String sourceId,
+                required String entryDate,
+                Value<String?> depositId = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WithholdingTaxEntriesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                kind: kind,
+                direction: direction,
+                sectionId: sectionId,
+                sectionCode: sectionCode,
+                rate: rate,
+                baseAmount: baseAmount,
+                taxAmount: taxAmount,
+                partyId: partyId,
+                partyPan: partyPan,
+                partyName: partyName,
+                sourceType: sourceType,
+                sourceId: sourceId,
+                entryDate: entryDate,
+                depositId: depositId,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WithholdingTaxEntriesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WithholdingTaxEntriesLocalTable,
+      WithholdingTaxEntryLocalData,
+      $$WithholdingTaxEntriesLocalTableFilterComposer,
+      $$WithholdingTaxEntriesLocalTableOrderingComposer,
+      $$WithholdingTaxEntriesLocalTableAnnotationComposer,
+      $$WithholdingTaxEntriesLocalTableCreateCompanionBuilder,
+      $$WithholdingTaxEntriesLocalTableUpdateCompanionBuilder,
+      (
+        WithholdingTaxEntryLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $WithholdingTaxEntriesLocalTable,
+          WithholdingTaxEntryLocalData
+        >,
+      ),
+      WithholdingTaxEntryLocalData,
+      PrefetchHooks Function()
+    >;
+typedef $$TaxDepositsLocalTableCreateCompanionBuilder =
+    TaxDepositsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String kind,
+      required String bsrCode,
+      required String challanSerial,
+      required String depositDate,
+      required String amount,
+      Value<String?> notes,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$TaxDepositsLocalTableUpdateCompanionBuilder =
+    TaxDepositsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> kind,
+      Value<String> bsrCode,
+      Value<String> challanSerial,
+      Value<String> depositDate,
+      Value<String> amount,
+      Value<String?> notes,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$TaxDepositsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $TaxDepositsLocalTable> {
+  $$TaxDepositsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bsrCode => $composableBuilder(
+    column: $table.bsrCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get challanSerial => $composableBuilder(
+    column: $table.challanSerial,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get depositDate => $composableBuilder(
+    column: $table.depositDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TaxDepositsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $TaxDepositsLocalTable> {
+  $$TaxDepositsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bsrCode => $composableBuilder(
+    column: $table.bsrCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get challanSerial => $composableBuilder(
+    column: $table.challanSerial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get depositDate => $composableBuilder(
+    column: $table.depositDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TaxDepositsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TaxDepositsLocalTable> {
+  $$TaxDepositsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get bsrCode =>
+      $composableBuilder(column: $table.bsrCode, builder: (column) => column);
+
+  GeneratedColumn<String> get challanSerial => $composableBuilder(
+    column: $table.challanSerial,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get depositDate => $composableBuilder(
+    column: $table.depositDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$TaxDepositsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TaxDepositsLocalTable,
+          TaxDepositLocalData,
+          $$TaxDepositsLocalTableFilterComposer,
+          $$TaxDepositsLocalTableOrderingComposer,
+          $$TaxDepositsLocalTableAnnotationComposer,
+          $$TaxDepositsLocalTableCreateCompanionBuilder,
+          $$TaxDepositsLocalTableUpdateCompanionBuilder,
+          (
+            TaxDepositLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $TaxDepositsLocalTable,
+              TaxDepositLocalData
+            >,
+          ),
+          TaxDepositLocalData,
+          PrefetchHooks Function()
+        > {
+  $$TaxDepositsLocalTableTableManager(
+    _$AppDatabase db,
+    $TaxDepositsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TaxDepositsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TaxDepositsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TaxDepositsLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> bsrCode = const Value.absent(),
+                Value<String> challanSerial = const Value.absent(),
+                Value<String> depositDate = const Value.absent(),
+                Value<String> amount = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaxDepositsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                kind: kind,
+                bsrCode: bsrCode,
+                challanSerial: challanSerial,
+                depositDate: depositDate,
+                amount: amount,
+                notes: notes,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String kind,
+                required String bsrCode,
+                required String challanSerial,
+                required String depositDate,
+                required String amount,
+                Value<String?> notes = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaxDepositsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                kind: kind,
+                bsrCode: bsrCode,
+                challanSerial: challanSerial,
+                depositDate: depositDate,
+                amount: amount,
+                notes: notes,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TaxDepositsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TaxDepositsLocalTable,
+      TaxDepositLocalData,
+      $$TaxDepositsLocalTableFilterComposer,
+      $$TaxDepositsLocalTableOrderingComposer,
+      $$TaxDepositsLocalTableAnnotationComposer,
+      $$TaxDepositsLocalTableCreateCompanionBuilder,
+      $$TaxDepositsLocalTableUpdateCompanionBuilder,
+      (
+        TaxDepositLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $TaxDepositsLocalTable,
+          TaxDepositLocalData
+        >,
+      ),
+      TaxDepositLocalData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -45888,6 +60211,8 @@ class $AppDatabaseManager {
       $$UnitDefinitionsLocalTableTableManager(_db, _db.unitDefinitionsLocal);
   $$TaxRatesLocalTableTableManager get taxRatesLocal =>
       $$TaxRatesLocalTableTableManager(_db, _db.taxRatesLocal);
+  $$BankAccountsLocalTableTableManager get bankAccountsLocal =>
+      $$BankAccountsLocalTableTableManager(_db, _db.bankAccountsLocal);
   $$GodownsLocalTableTableManager get godownsLocal =>
       $$GodownsLocalTableTableManager(_db, _db.godownsLocal);
   $$BusinessSettingsLocalTableTableManager get businessSettingsLocal =>
@@ -45928,6 +60253,16 @@ class $AppDatabaseManager {
       $$ExpenseItemsLocalTableTableManager(_db, _db.expenseItemsLocal);
   $$ExpensesLocalTableTableManager get expensesLocal =>
       $$ExpensesLocalTableTableManager(_db, _db.expensesLocal);
+  $$IncomeCategoriesLocalTableTableManager get incomeCategoriesLocal =>
+      $$IncomeCategoriesLocalTableTableManager(_db, _db.incomeCategoriesLocal);
+  $$IncomeItemsLocalTableTableManager get incomeItemsLocal =>
+      $$IncomeItemsLocalTableTableManager(_db, _db.incomeItemsLocal);
+  $$OtherIncomesLocalTableTableManager get otherIncomesLocal =>
+      $$OtherIncomesLocalTableTableManager(_db, _db.otherIncomesLocal);
+  $$LoanAccountsLocalTableTableManager get loanAccountsLocal =>
+      $$LoanAccountsLocalTableTableManager(_db, _db.loanAccountsLocal);
+  $$LoanTransactionsLocalTableTableManager get loanTransactionsLocal =>
+      $$LoanTransactionsLocalTableTableManager(_db, _db.loanTransactionsLocal);
   $$GatewayPaymentSessionsLocalTableTableManager
   get gatewayPaymentSessionsLocal =>
       $$GatewayPaymentSessionsLocalTableTableManager(
@@ -45938,4 +60273,18 @@ class $AppDatabaseManager {
       $$NotificationsLocalTableTableManager(_db, _db.notificationsLocal);
   $$TodosLocalTableTableManager get todosLocal =>
       $$TodosLocalTableTableManager(_db, _db.todosLocal);
+  $$WithholdingTaxSectionsLocalTableTableManager
+  get withholdingTaxSectionsLocal =>
+      $$WithholdingTaxSectionsLocalTableTableManager(
+        _db,
+        _db.withholdingTaxSectionsLocal,
+      );
+  $$WithholdingTaxEntriesLocalTableTableManager
+  get withholdingTaxEntriesLocal =>
+      $$WithholdingTaxEntriesLocalTableTableManager(
+        _db,
+        _db.withholdingTaxEntriesLocal,
+      );
+  $$TaxDepositsLocalTableTableManager get taxDepositsLocal =>
+      $$TaxDepositsLocalTableTableManager(_db, _db.taxDepositsLocal);
 }

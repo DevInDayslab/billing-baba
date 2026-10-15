@@ -495,6 +495,11 @@ Generic object-storage foundation. Clients upload bytes **directly** to Railway 
 | GET | `/parties/{id}/loyalty` | Loyalty balance |
 | GET | `/parties/{id}/items/{itemId}/price-check` | Historical price conflict check (`unit_price` query) |
 | POST | `/parties/{id}/reminders` | Trigger payment reminder (WhatsApp/SMS) |
+| POST | `/parties/contact-import-sessions` | Start phone contact import (QR + notify) |
+| GET | `/parties/contact-import-sessions/{id}` | Poll import session (`?include_staging=true`) |
+| PUT | `/parties/contact-import-sessions/by-token/{token}/staging` | Upload contacts from phone |
+| POST | `/parties/contact-import-sessions/{id}/commit` | Mark import session completed |
+| GET | `/public/party-contact-import/{token}` | Public session metadata (website handoff) |
 | GET | `/party-tags` | List tags |
 | POST | `/party-tags` | Create tag |
 | PATCH | `/party-tags/{id}` | Update tag |

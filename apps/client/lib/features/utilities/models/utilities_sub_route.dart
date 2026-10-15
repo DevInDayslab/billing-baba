@@ -34,6 +34,10 @@ abstract final class UtilitiesSubRoutes {
       route: AppRoutes.utilitiesBarcodeGenerator,
       label: 'Barcode Generator',
     ),
+    UtilitiesSubRoute(
+      route: AppRoutes.utilitiesRecycleBin,
+      label: 'Recycle Bin',
+    ),
   ];
 
   static String labelForRoute(String route) {

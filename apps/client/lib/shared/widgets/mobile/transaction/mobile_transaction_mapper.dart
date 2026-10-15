@@ -3,6 +3,7 @@ import 'package:billing_baba/core/routing/mobile_document_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/application/mobile_home_models.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
+import 'package:billing_baba/features/other_income/models/other_income_model.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
@@ -292,6 +293,32 @@ abstract final class MobileTransactionMapper {
       sortAmount: fa.amount,
       sortDate: fa.date,
       sortTitle: fa.invoiceNo,
+    );
+  }
+
+  static MobileTransactionListItem fromOtherIncome(
+    OtherIncomeTransactionModel income, {
+    IconData? leadingIcon,
+  }) {
+    final amount = income.amount ?? 0;
+    final (statusLabel, statusColor) = switch (income.status) {
+      OtherIncomeStatus.paid => ('Paid', const Color(0xFF2E7D32)),
+      OtherIncomeStatus.partial => ('Partial', const Color(0xFFE65100)),
+      OtherIncomeStatus.pending => ('Pending', const Color(0xFFF9A825)),
+      null => ('Recorded', AppColors.textSecondary),
+    };
+    return MobileTransactionListItem(
+      id: income.id,
+      title: income.transactionNo,
+      subtitle: income.party,
+      dateLabel: _listDateFormat.format(income.date),
+      amountLabel: formatAmount(amount),
+      statusLabel: statusLabel,
+      statusColor: statusColor,
+      leadingIcon: leadingIcon,
+      sortAmount: amount,
+      sortDate: income.date,
+      sortTitle: income.transactionNo,
     );
   }
 
@@ -947,6 +974,7 @@ abstract final class MobileTransactionMapper {
       AppRoutes.saleJobWorkOut => '${AppRoutes.editJobWork}/$itemId',
       AppRoutes.purchaseBills => '${AppRoutes.editPurchase}/$itemId',
       AppRoutes.purchaseExpenses => '${AppRoutes.editExpense}/$itemId',
+      AppRoutes.otherIncome => '${AppRoutes.editOtherIncome}/$itemId',
       AppRoutes.purchaseOrder => '${AppRoutes.editPurchaseOrder}/$itemId',
       AppRoutes.purchaseReturnDebitNote => '${AppRoutes.editDebitNote}/$itemId',
       AppRoutes.purchaseFa => '${AppRoutes.editPurchaseFa}/$itemId',

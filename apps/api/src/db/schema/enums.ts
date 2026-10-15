@@ -122,6 +122,14 @@ export const taxTypeEnum = pgEnum('tax_type', [
   'none',
 ]);
 
+export const supplyTypeEnum = pgEnum('supply_type', [
+  'domestic',
+  'export_with_payment',
+  'export_without_payment',
+  'sez_with_payment',
+  'sez_without_payment',
+]);
+
 export const paymentModeEnum = pgEnum('payment_mode', [
   'cash',
   'upi',
@@ -196,7 +204,27 @@ export const ledgerEntryTypeEnum = pgEnum('ledger_entry_type', [
   'return',
   'expense',
   'opening',
+  'tds',
 ]);
+
+export const withholdingTaxKindEnum = pgEnum('withholding_tax_kind', [
+  'tds',
+  'tcs',
+]);
+
+export const withholdingTaxDirectionEnum = pgEnum('withholding_tax_direction', [
+  'payable',
+  'receivable',
+]);
+
+export const withholdingApplicableOnEnum = pgEnum('withholding_applicable_on', [
+  'sale',
+  'purchase',
+  'payment_in',
+  'payment_out',
+]);
+
+export const taxDepositKindEnum = pgEnum('tax_deposit_kind', ['tds', 'tcs']);
 
 export const valuationMethodEnum = pgEnum('valuation_method', [
   'fifo',
@@ -337,3 +365,48 @@ export const paymentStatusEnum = pgEnum('payment_status', [
   'failed',
   'refunded',
 ]);
+
+export const bankAccountTypeEnum = pgEnum('bank_account_type', ['cash', 'bank']);
+
+export const accountMovementDirectionEnum = pgEnum(
+  'account_movement_direction',
+  ['deposit', 'withdrawal'],
+);
+
+export const accountMovementTypeEnum = pgEnum('account_movement_type', [
+  'payment_in',
+  'payment_out',
+  'expense',
+  'transfer_in',
+  'transfer_out',
+  'adjustment_increase',
+  'adjustment_decrease',
+  'tax_deposit',
+  'other_income',
+  'loan_received',
+  'loan_repayment',
+  'loan_charges',
+]);
+
+export const loanTransactionTypeEnum = pgEnum('loan_transaction_type', [
+  'increase',
+  'repayment',
+  'charges',
+]);
+
+export const accountAdjustmentKindEnum = pgEnum('account_adjustment_kind', [
+  'increase',
+  'decrease',
+]);
+
+export const partyContactImportStatusEnum = pgEnum(
+  'party_contact_import_status',
+  [
+    'pending',
+    'opened',
+    'submitted',
+    'completed',
+    'expired',
+    'cancelled',
+  ],
+);

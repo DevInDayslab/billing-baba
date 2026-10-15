@@ -1,6 +1,7 @@
 import type {
   SalesDocumentLineRecord,
   SalesDocumentRecord,
+  SupplyType,
   TaxType,
 } from './sales-document.types';
 
@@ -19,6 +20,10 @@ type DocumentRow = {
   totalAmount: string;
   documentDate: Date;
   convertedFromId: string | null;
+  originalDocumentId: string | null;
+  originalDocumentNumber: string | null;
+  originalDocumentDate: Date | null;
+  supplyType: SupplyType;
   posSessionId: string | null;
   notes: string | null;
   createdBy: string | null;
@@ -44,6 +49,8 @@ type LineRow = {
   cgstAmount: string;
   sgstAmount: string;
   igstAmount: string;
+  cessRate: string;
+  cessAmount: string;
   lineTotal: string;
   sortOrder: number;
 };
@@ -64,6 +71,8 @@ export function toSalesDocumentLineRecord(
     cgst_amount: row.cgstAmount,
     sgst_amount: row.sgstAmount,
     igst_amount: row.igstAmount,
+    cess_rate: row.cessRate ?? '0',
+    cess_amount: row.cessAmount ?? '0',
     line_total: row.lineTotal,
     sort_order: row.sortOrder,
   };
@@ -96,6 +105,10 @@ export function toSalesDocumentRecord(
     payment_mode: row.paymentMode ?? null,
     document_date: row.documentDate.toISOString(),
     converted_from_id: row.convertedFromId,
+    original_document_id: row.originalDocumentId,
+    original_document_number: row.originalDocumentNumber,
+    original_document_date: row.originalDocumentDate?.toISOString() ?? null,
+    supply_type: row.supplyType ?? 'domestic',
     pos_session_id: row.posSessionId,
     notes: row.notes,
     created_by: row.createdBy,

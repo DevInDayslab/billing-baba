@@ -7,6 +7,7 @@ import 'package:billing_baba/features/collaboration/domain/models/permission_mod
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/manage_party_groups_dialog.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_contact_import_flow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -131,13 +132,13 @@ class _AddPartyButton extends StatelessWidget {
   }
 }
 
-class _MoreMenu extends StatelessWidget {
+class _MoreMenu extends ConsumerWidget {
   const _MoreMenu({this.onMoreSelected});
 
   final ValueChanged<String>? onMoreSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
       tooltip: 'More options',
       padding: EdgeInsets.zero,
@@ -160,6 +161,10 @@ class _MoreMenu extends StatelessWidget {
               context.push(AppRoutes.utilitiesImportParties);
               return;
             }
+            if (value == 'Import from phone') {
+              unawaited(startDesktopPartyContactImport(context, ref));
+              return;
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('$value coming soon')),
             );
@@ -172,6 +177,10 @@ class _MoreMenu extends StatelessWidget {
         PopupMenuItem(
           value: 'Import Parties',
           child: Text('Import Parties'),
+        ),
+        PopupMenuItem(
+          value: 'Import from phone',
+          child: Text('Import from phone'),
         ),
         PopupMenuItem(
           value: 'Export Parties',

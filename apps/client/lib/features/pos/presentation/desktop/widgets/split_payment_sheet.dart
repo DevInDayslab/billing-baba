@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
+import 'package:billing_baba/shared/widgets/payment_account_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -85,37 +86,48 @@ class _SplitPaymentSheetState extends ConsumerState<SplitPaymentSheet> {
           final (icon, label) = _modeDisplay(entry.mode);
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(icon, size: 18, color: AppColors.textSecondary),
-                const SizedBox(width: AppSpacing.sm),
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    label,
-                    style: PosStyles.metadataStyle.copyWith(fontSize: 12),
-                  ),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: _controllerFor(entry.mode),
-                    focusNode: _focusNodeFor(entry.mode),
-                    style: saleFieldTextStyle,
-                    decoration: buildPosFieldDecoration().copyWith(
-                      prefixText: '₹ ',
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.sm,
+                Row(
+                  children: [
+                    Icon(icon, size: 18, color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(
+                      width: 60,
+                      child: Text(
+                        label,
+                        style: PosStyles.metadataStyle.copyWith(fontSize: 12),
                       ),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+                    Expanded(
+                      child: TextField(
+                        controller: _controllerFor(entry.mode),
+                        focusNode: _focusNodeFor(entry.mode),
+                        style: saleFieldTextStyle,
+                        decoration: buildPosFieldDecoration().copyWith(
+                          prefixText: '₹ ',
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.sm,
+                          ),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        onChanged: (value) {
+                          final amount = double.tryParse(value) ?? 0;
+                          notifier.updatePaymentAmount(entry.mode, amount);
+                        },
+                      ),
                     ),
-                    onChanged: (value) {
-                      final amount = double.tryParse(value) ?? 0;
-                      notifier.updatePaymentAmount(entry.mode, amount);
-                    },
-                  ),
+                  ],
+                ),
+                PaymentAccountField(
+                  paymentMode: entry.mode.name,
+                  selectedAccountId: entry.bankAccountId,
+                  onChanged: (id) =>
+                      notifier.updatePaymentBankAccount(entry.mode, id),
                 ),
               ],
             ),

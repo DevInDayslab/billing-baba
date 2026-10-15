@@ -2,6 +2,11 @@ import { and, eq, gte, inArray, lt, lte, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { ledgerEntries, payments } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
+import {
+  incomeCategories,
+  otherIncomes,
+} from '../../db/schema/other-income/tables';
+import { loanAccounts, loanTransactions } from '../../db/schema/loans/tables';
 import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
 import { OutstandingRepository } from '../../modules/accounting/outstanding.repository';
@@ -256,6 +261,108 @@ export async function sumPurchasesAmount(
   return Number(row?.total ?? 0);
 }
 
+export async function sumOtherIncomeAmount(
+  db: Database,
+  businessId: string,
+  range: ResolvedReportPeriod,
+  categoryType?: 'direct' | 'indirect',
+): Promise<number> {
+  const filters = [
+    eq(otherIncomes.businessId, businessId),
+    eq(otherIncomes.isDeleted, false),
+    gte(otherIncomes.incomeDate, toDateKey(range.from)),
+    lt(otherIncomes.incomeDate, toDateKey(range.to)),
+  ];
+  const [row] = await db
+    .select({
+      total: sql<string>`COALESCE(SUM(${otherIncomes.amount}::numeric), 0)`,
+    })
+    .from(otherIncomes)
+    .innerJoin(
+      incomeCategories,
+      eq(otherIncomes.categoryId, incomeCategories.id),
+    )
+    .where(
+      and(
+        ...filters,
+        categoryType
+          ? eq(incomeCategories.categoryType, categoryType)
+          : undefined,
+      ),
+    );
+  return Number(row?.total ?? 0);
+}
+
+export async function sumLoanFinancingExpense(
+  db: Database,
+  businessId: string,
+  range: ResolvedReportPeriod,
+): Promise<number> {
+  const [row] = await db
+    .select({
+      total: sql<string>`COALESCE(SUM(
+        (${loanTransactions.interestAmount}::numeric) +
+        (${loanTransactions.chargesAmount}::numeric)
+      ), 0)`,
+    })
+    .from(loanTransactions)
+    .where(
+      and(
+        eq(loanTransactions.businessId, businessId),
+        eq(loanTransactions.isDeleted, false),
+        gte(loanTransactions.transactionDate, toDateKey(range.from)),
+        lt(loanTransactions.transactionDate, toDateKey(range.to)),
+      ),
+    );
+  return Number(row?.total ?? 0);
+}
+
+export async function getLoansOutstandingAsOf(
+  db: Database,
+  businessId: string,
+  asOf: Date,
+): Promise<number> {
+  const asOfKey = toDateKey(asOf);
+  const accounts = await db
+    .select({
+      id: loanAccounts.id,
+      opening: loanAccounts.openingOutstanding,
+      asOf: loanAccounts.openingBalanceAsOf,
+    })
+    .from(loanAccounts)
+    .where(
+      and(eq(loanAccounts.businessId, businessId), eq(loanAccounts.isDeleted, false)),
+    );
+
+  let total = 0;
+  for (const account of accounts) {
+    let balance = Number(account.opening ?? 0);
+    const txns = await db
+      .select({
+        date: loanTransactions.transactionDate,
+        type: loanTransactions.transactionType,
+        principal: loanTransactions.principalAmount,
+      })
+      .from(loanTransactions)
+      .where(
+        and(
+          eq(loanTransactions.businessId, businessId),
+          eq(loanTransactions.loanAccountId, account.id),
+          eq(loanTransactions.isDeleted, false),
+          gte(loanTransactions.transactionDate, account.asOf),
+          lte(loanTransactions.transactionDate, asOfKey),
+        ),
+      );
+    for (const txn of txns) {
+      const principal = Number(txn.principal ?? 0);
+      if (txn.type === 'increase') balance += principal;
+      if (txn.type === 'repayment') balance -= principal;
+    }
+    total += Math.max(0, balance);
+  }
+  return total;
+}
+
 export async function sumExpensesAmount(
   db: Database,
   businessId: string,
@@ -288,17 +395,24 @@ export async function calculateNetProfit(
     purchaseTotal,
     purchaseReturnTotal,
     expenseTotal,
+    otherIncomeDirect,
+    otherIncomeIndirect,
+    loanFinancing,
   ] = await Promise.all([
     sumSalesAmount(db, businessId, range, REVENUE_SALES_TYPES),
     sumSalesAmount(db, businessId, range, [SALES_RETURN_TYPE]),
     sumPurchasesAmount(db, businessId, range, PURCHASE_BILL_TYPE),
     sumPurchasesAmount(db, businessId, range, PURCHASE_RETURN_TYPE),
     sumExpensesAmount(db, businessId, range),
+    sumOtherIncomeAmount(db, businessId, range, 'direct'),
+    sumOtherIncomeAmount(db, businessId, range, 'indirect'),
+    sumLoanFinancingExpense(db, businessId, range),
   ]);
 
   const grossProfit =
     salesTotal - salesReturnTotal - (purchaseTotal - purchaseReturnTotal);
-  return grossProfit - expenseTotal;
+  const otherIncome = otherIncomeDirect + otherIncomeIndirect;
+  return grossProfit - expenseTotal - loanFinancing + otherIncome;
 }
 
 export async function getDashboardOutstanding(

@@ -57,7 +57,7 @@ final class PosCartProvider extends $NotifierProvider<PosCart, PosCartState> {
   }
 }
 
-String _$posCartHash() => r'5b999166722b4cdbdf531608dc560d234864a465';
+String _$posCartHash() => r'e94ffb04cf4cbff1334c68dba7e044fd5c3272db';
 
 final class PosCartFamily extends $Family
     with

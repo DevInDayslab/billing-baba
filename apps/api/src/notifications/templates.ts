@@ -3,6 +3,16 @@
  * Do not hardcode message text in providers or business services.
  */
 
+export const PARTY_CONTACT_IMPORT_TEMPLATE = `📇 Billing Baba
+
+Import phone contacts as parties for {{company_name}}.
+
+Open this link on your phone:
+
+{{import_url}}
+
+This link expires in {{expiry_minutes}} minutes.`;
+
 export const SYNC_SHARE_INVITE_TEMPLATE = `🏢 Billing Baba
 
 {{company_name}} has invited you to collaborate.

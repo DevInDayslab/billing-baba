@@ -44,6 +44,8 @@ export const businessSettings = pgTable(
       Record<string, string>
     >(),
     defaultInvoiceTaxRate: money('default_invoice_tax_rate'),
+    enableTds: boolean('enable_tds').notNull().default(false),
+    enableTcs: boolean('enable_tcs').notNull().default(false),
   },
   (table) => [
     syncPullIndex(

@@ -820,8 +820,8 @@ class ReportBankStatementRowDto {
       date: json['date'] as String? ?? '',
       description: json['description'] as String? ?? '',
       refNo: json['ref_no'] as String? ?? '',
-      moneyIn: json['money_in'] as String? ?? '0',
-      moneyOut: json['money_out'] as String? ?? '0',
+      moneyIn: (json['deposit'] ?? json['money_in']) as String? ?? '0',
+      moneyOut: (json['withdrawal'] ?? json['money_out']) as String? ?? '0',
       balance: json['balance'] as String? ?? '0',
       isOpening: json['is_opening'] as bool? ?? false,
     );
@@ -836,19 +836,53 @@ class ReportBankStatementRowDto {
   final bool isOpening;
 }
 
+class BankStatementSummaryDto {
+  const BankStatementSummaryDto({
+    required this.openingBalance,
+    required this.totalDeposits,
+    required this.totalWithdrawals,
+    required this.closingBalance,
+  });
+
+  factory BankStatementSummaryDto.fromJson(Map<String, dynamic> json) {
+    return BankStatementSummaryDto(
+      openingBalance: json['opening_balance'] as String? ?? '0',
+      totalDeposits: json['total_deposits'] as String? ?? '0',
+      totalWithdrawals: json['total_withdrawals'] as String? ?? '0',
+      closingBalance: json['closing_balance'] as String? ?? '0',
+    );
+  }
+
+  final String openingBalance;
+  final String totalDeposits;
+  final String totalWithdrawals;
+  final String closingBalance;
+}
+
 class BankStatementPayloadDto {
   const BankStatementPayloadDto({
     required this.period,
-    required this.bankName,
+    required this.accountName,
     required this.rows,
+    this.summary,
   });
 
   factory BankStatementPayloadDto.fromJson(Map<String, dynamic> json) {
+    final meta = json['meta'] as Map<String, dynamic>?;
+    final account = json['account'] as Map<String, dynamic>?;
+    final summaryJson = json['summary'] as Map<String, dynamic>?;
     return BankStatementPayloadDto(
       period: ReportPeriodDto.fromJson(
-        (json['period'] as Map<String, dynamic>?) ?? {},
+        (meta?['period'] as Map<String, dynamic>?) ??
+            (json['period'] as Map<String, dynamic>?) ??
+            {},
       ),
-      bankName: json['bank_name'] as String? ?? '',
+      accountName: account?['display_name'] as String? ??
+          json['bank_name'] as String? ??
+          '',
+      summary: summaryJson == null
+          ? null
+          : BankStatementSummaryDto.fromJson(summaryJson),
       rows: (json['rows'] as List<dynamic>? ?? [])
           .map(
             (e) =>
@@ -859,7 +893,8 @@ class BankStatementPayloadDto {
   }
 
   final ReportPeriodDto period;
-  final String bankName;
+  final String accountName;
+  final BankStatementSummaryDto? summary;
   final List<ReportBankStatementRowDto> rows;
 }
 

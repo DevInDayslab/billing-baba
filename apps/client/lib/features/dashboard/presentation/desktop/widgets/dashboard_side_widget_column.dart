@@ -100,7 +100,9 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
       DashboardSideWidget.cashInHand => DashboardCashInHandSideWidget(
         cashIn: dashboard.finance.cashIn,
       ),
-      DashboardSideWidget.bankBalance => const DashboardBankBalanceSideWidget(),
+      DashboardSideWidget.bankBalance => DashboardBankBalanceSideWidget(
+        bankBalance: dashboard.finance.bankBalance,
+      ),
     };
   }
 }

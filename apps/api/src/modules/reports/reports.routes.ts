@@ -22,10 +22,6 @@ export const createReportsRoutes = (): FastifyPluginAsync => {
     app.get('/day-book', { preHandler }, controller.getDayBook);
     app.get('/all-transactions', { preHandler }, controller.getAllTransactions);
     app.get('/profit-loss', { preHandler }, controller.getProfitLoss);
-    app.get('/gstr-1', { preHandler }, controller.getGstr1);
-    app.get('/gstr-2', { preHandler }, controller.getGstr2);
-    app.get('/gstr-3b', { preHandler }, controller.getGstr3b);
-
     app.get('/bill-wise-profit', { preHandler }, controller.getBillWiseProfit);
     app.get('/cash-flow', { preHandler }, controller.getCashFlow);
 
@@ -49,14 +45,6 @@ export const createReportsRoutes = (): FastifyPluginAsync => {
       { preHandler },
       controller.getSalePurchaseByPartyGroup,
     );
-
-    app.get('/gstr-9', { preHandler }, controller.getGstr9);
-    app.get(
-      '/sale-summary-by-hsn',
-      { preHandler },
-      controller.getSaleSummaryByHsn,
-    );
-    app.get('/sac-report', { preHandler }, controller.getSacReport);
 
     app.get(
       '/item-report-by-party',
@@ -95,6 +83,11 @@ export const createReportsRoutes = (): FastifyPluginAsync => {
     app.get('/stock-transfer', { preHandler }, controller.getStockTransfer);
 
     app.get('/bank-statement', { preHandler }, controller.getBankStatement);
+    app.get(
+      '/business/bank-statement',
+      { preHandler },
+      controller.getBusinessBankStatement,
+    );
 
     app.get('/gst-report', { preHandler }, controller.getGstReport);
     app.get('/gst-rate-report', { preHandler }, controller.getGstRateReport);

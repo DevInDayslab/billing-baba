@@ -5,6 +5,7 @@ import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_paginated_async_helpers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/features/recycle_bin/application/transaction_lifecycle_service.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
@@ -596,11 +597,14 @@ class SaleInvoices extends _$SaleInvoices {
 
   Future<String?> deleteSale(SaleInvoiceModel invoice) async {
     try {
-      final service = await ref.read(salesServiceProvider.future);
       if (invoice.isDraft) {
+        final service = await ref.read(salesServiceProvider.future);
         await service.deleteDraft(invoice.id);
       } else {
-        await service.cancelSale(invoice.id);
+        await ref.read(transactionLifecycleServiceProvider).deleteTransaction(
+              entityType: 'sales_document',
+              entityId: invoice.id,
+            );
       }
       await refreshAfterSaleMutation(ref);
       return null;
@@ -610,6 +614,26 @@ class SaleInvoices extends _$SaleInvoices {
   }
 
   Future<String?> deleteInvoice(String documentId) async {
+    final current = state.value;
+    SaleInvoiceModel? invoice;
+    for (final item in current?.items ?? const <SaleInvoiceModel>[]) {
+      if (item.id == documentId) {
+        invoice = item;
+        break;
+      }
+    }
+    if (invoice != null && !invoice.isDraft) {
+      try {
+        await ref.read(transactionLifecycleServiceProvider).deleteTransaction(
+              entityType: 'sales_document',
+              entityId: documentId,
+            );
+        await refreshAfterSaleMutation(ref);
+        return null;
+      } catch (error) {
+        return SalesErrorMapper.messageFor(error);
+      }
+    }
     return deleteDraft(documentId);
   }
 

@@ -7,6 +7,12 @@ import {
   deleteLinkedExpense,
   syncPaymentInDiscountExpense,
 } from '../purchases/expense-sync.service';
+import { WithholdingTaxEntryService } from '../withholding-tax/withholding-tax-entry.service';
+import {
+  recordPaymentMovement,
+  voidPaymentMovement,
+} from '../bank-accounts/payment-movement.helper';
+import { BankAccountService } from '../bank-accounts/bank-account.service';
 import { PaymentRepository } from './payment.repository';
 import type {
   CreateAllocationBody,
@@ -151,6 +157,19 @@ export class PaymentService {
         );
       }
 
+      const bankAccountId = await new BankAccountService(
+        tx as unknown as typeof this.db,
+      ).resolveAccountId(
+        businessId,
+        input.payment_mode,
+        input.bank_account_id ?? null,
+        userId,
+      );
+
+      const paymentDate = input.payment_date
+        ? new Date(input.payment_date)
+        : new Date();
+
       const payment = await repo.create({
         businessId,
         partyId: input.party_id,
@@ -158,13 +177,15 @@ export class PaymentService {
         amount: input.amount,
         discountAmount: input.discount_amount ?? '0',
         paymentMode: input.payment_mode,
-        paymentDate: input.payment_date
-          ? new Date(input.payment_date)
-          : undefined,
+        bankAccountId,
+        paymentDate,
         referenceNumber: input.reference_number ?? null,
         notes: input.notes ?? null,
         shortPaymentHandling: input.short_payment_handling ?? null,
         source: input.source ?? 'manual',
+        tdsSectionId: input.tds_section_id ?? null,
+        tdsRate: input.tds_rate ?? null,
+        tdsAmount: input.tds_amount ?? '0',
         createdBy: userId ?? null,
         updatedBy: userId ?? null,
       });
@@ -198,6 +219,49 @@ export class PaymentService {
           10,
         ),
         description: `Payment ${input.direction}`,
+      });
+
+      const tdsAmount = parseMoney(input.tds_amount ?? '0');
+      if (tdsAmount > 0) {
+        const tdsDebit = input.direction === 'paid' ? normalizeMoney(tdsAmount) : '0';
+        const tdsCredit =
+          input.direction === 'received' ? normalizeMoney(tdsAmount) : '0';
+        await repo.createLedgerEntry({
+          businessId,
+          partyId: input.party_id,
+          entryType: 'tds',
+          debit: tdsDebit,
+          credit: tdsCredit,
+          balanceAfter: normalizeMoney(tdsAmount),
+          referenceId: payment.id,
+          referenceType: 'payments',
+          entryDate: (input.payment_date ?? new Date().toISOString()).slice(
+            0,
+            10,
+          ),
+          description: 'TDS withheld',
+        });
+      }
+
+      await new WithholdingTaxEntryService(tx as unknown as typeof this.db)
+        .syncFromPayment(tx, {
+          businessId,
+          paymentId: payment.id,
+          userId,
+        });
+
+      await recordPaymentMovement(tx as unknown as typeof this.db, {
+        businessId,
+        paymentId: payment.id,
+        partyId: input.party_id,
+        direction: input.direction,
+        amount: input.amount,
+        paymentMode: input.payment_mode,
+        paymentDate,
+        referenceNumber: input.reference_number,
+        notes: input.notes,
+        bankAccountId,
+        userId,
       });
 
       if (isHiddenLedgerRoute && shortfallAmount > 0) {
@@ -291,6 +355,65 @@ export class PaymentService {
     return updated;
   }
 
+  async restorePayment(
+    businessId: string,
+    accountId: string,
+    userId: string | undefined,
+    paymentId: string,
+  ): Promise<PaymentRecord> {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    const existing = await this.repository.findByIdIncludingDeleted(
+      businessId,
+      paymentId,
+    );
+    if (!existing) {
+      throw new AppError('NOT_FOUND', 'Deleted payment not found', 404);
+    }
+
+    return this.db.transaction(async (tx) => {
+      const repo = new PaymentRepository(tx as unknown as typeof this.db);
+      const restored = await repo.restoreFromRecycle(
+        businessId,
+        paymentId,
+        userId ?? null,
+      );
+      if (!restored) {
+        throw new AppError('NOT_FOUND', 'Deleted payment not found', 404);
+      }
+
+      await recordPaymentMovement(tx as unknown as typeof this.db, {
+        businessId,
+        paymentId: restored.id,
+        partyId: restored.party_id,
+        direction: restored.direction,
+        amount: restored.amount,
+        paymentMode: restored.payment_mode,
+        paymentDate: new Date(restored.payment_date),
+        referenceNumber: restored.reference_number,
+        notes: restored.notes,
+        bankAccountId: restored.bank_account_id,
+        userId,
+      });
+
+      return restored;
+    });
+  }
+
+  async purgePayment(
+    businessId: string,
+    accountId: string,
+    _userId: string | undefined,
+    paymentId: string,
+  ): Promise<void> {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    const purged = await this.repository.purgeFromRecycle(businessId, paymentId);
+    if (!purged) {
+      throw new AppError('NOT_FOUND', 'Deleted payment not found', 404);
+    }
+  }
+
   async deletePayment(
     businessId: string,
     accountId: string,
@@ -306,15 +429,17 @@ export class PaymentService {
       sourceReferenceType: EXPENSE_SOURCE_TYPES.paymentInDiscount,
     });
 
-    const deleted = await this.repository.softDelete(
-      businessId,
-      paymentId,
-      userId ?? null,
-    );
+    await this.db.transaction(async (tx) => {
+      const deleted = await new PaymentRepository(
+        tx as unknown as typeof this.db,
+      ).softDelete(businessId, paymentId, userId ?? null);
 
-    if (!deleted) {
-      throw new AppError('NOT_FOUND', 'Payment not found', 404);
-    }
+      if (!deleted) {
+        throw new AppError('NOT_FOUND', 'Payment not found', 404);
+      }
+
+      await voidPaymentMovement(tx as unknown as typeof this.db, businessId, paymentId);
+    });
   }
 
   async listAllocations(

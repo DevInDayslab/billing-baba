@@ -10,6 +10,7 @@ import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/payments/application/payment_recovery_service.dart';
+import 'package:billing_baba/features/parties/application/party_contact_import_deep_link.dart';
 import 'package:billing_baba/features/payments/presentation/mobile/widgets/payment_recovery_banner.dart';
 import 'package:billing_baba/shared/image/image_memory_handler.dart';
 import 'package:flutter/material.dart';
@@ -42,10 +43,14 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
         unawaited(ensureDesktopWindowMaximized());
       });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(PartyContactImportDeepLinkListener.instance.start());
+    });
   }
 
   @override
   void dispose() {
+    PartyContactImportDeepLinkListener.instance.dispose();
     WidgetsBinding.instance.removeObserver(_imageMemoryHandler);
     super.dispose();
   }

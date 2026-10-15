@@ -21,6 +21,7 @@ import {
 } from '../../shared/reporting/inventory-summary';
 import { validLedgerEntrySql } from '../../shared/reporting/party-ledger';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
+import { AccountBalanceService } from '../bank-accounts/account-balance.service';
 import type {
   DashboardCharts,
   DashboardFinanceSummary,
@@ -192,10 +193,15 @@ export class DashboardRepository {
       ? cashOutPayments + expenseAmount
       : cashOutPayments;
 
+    const bankBalance = await new AccountBalanceService(
+      this.db,
+    ).totalBankBalance(businessId);
+
     return {
       cash_in: String(cashInAmount),
       cash_out: String(cashOutTotal),
       expenses: String(expenseAmount),
+      bank_balance: bankBalance,
     };
   }
 
@@ -233,7 +239,7 @@ export class DashboardRepository {
     const rows = await this.db
       .select({
         bucket: sql<string>`date_trunc('day', ${salesDocuments.documentDate})::date`,
-        amount: sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`,
+        amount: sql<string>`COALESCE(SUM((${salesDocuments.totalAmount}::numeric - COALESCE(${salesDocuments.tcsAmount}::numeric, 0))), 0)`,
       })
       .from(salesDocuments)
       .where(
@@ -265,7 +271,7 @@ export class DashboardRepository {
     const rows = await this.db
       .select({
         bucket: sql<string>`date_trunc('day', ${purchaseDocuments.documentDate})::date`,
-        amount: sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`,
+        amount: sql<string>`COALESCE(SUM((${purchaseDocuments.totalAmount}::numeric - COALESCE(${purchaseDocuments.tcsAmount}::numeric, 0))), 0)`,
       })
       .from(purchaseDocuments)
       .where(

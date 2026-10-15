@@ -9,6 +9,7 @@ enum DocumentAttachmentEntityType {
   paymentIn('payment_in'),
   paymentOut('payment_out'),
   expense('expense'),
+  otherIncome('other_income'),
   jobWork('job_work');
 
   const DocumentAttachmentEntityType(this.apiValue);

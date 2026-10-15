@@ -70,7 +70,7 @@ SaleLineItem _mapCartItemToSaleLine(
   );
 }
 
-FinalizeSalePaymentCommand? mapPosPaymentsToFinalizeCommand({
+List<FinalizeSalePaymentCommand>? mapPosPaymentsToFinalizeCommands({
   required List<PaymentEntry> payments,
   required double totalPayable,
 }) {
@@ -80,17 +80,43 @@ FinalizeSalePaymentCommand? mapPosPaymentsToFinalizeCommand({
       ? payments
       : [PaymentEntry(mode: PaymentMode.cash, amount: totalPayable)];
 
-  final totalPaid = resolved.fold<double>(
-    0,
-    (sum, entry) => sum + entry.amount,
-  );
-  final amount = totalPaid > 0 ? totalPaid : totalPayable;
-  final primaryMode = resolved.first.mode;
+  if (resolved.length == 1) {
+    final entry = resolved.first;
+    return [
+      FinalizeSalePaymentCommand(
+        amount: entry.amount.toStringAsFixed(4),
+        paymentMode: _paymentModeToApi(entry.mode),
+        bankAccountId: entry.bankAccountId,
+      ),
+    ];
+  }
 
-  return FinalizeSalePaymentCommand(
-    amount: amount.toStringAsFixed(4),
-    paymentMode: _paymentModeToApi(primaryMode),
+  return resolved
+      .where((e) => e.amount > 0)
+      .map(
+        (e) => FinalizeSalePaymentCommand(
+          amount: e.amount.toStringAsFixed(4),
+          paymentMode: _paymentModeToApi(e.mode),
+          bankAccountId: e.bankAccountId,
+        ),
+      )
+      .toList();
+}
+
+@Deprecated('Use mapPosPaymentsToFinalizeCommands')
+FinalizeSalePaymentCommand? mapPosPaymentsToFinalizeCommand({
+  required List<PaymentEntry> payments,
+  required double totalPayable,
+}) {
+  final lines = mapPosPaymentsToFinalizeCommands(
+    payments: payments,
+    totalPayable: totalPayable,
   );
+  return lines?.firstOrNull;
+}
+
+extension _FirstOrNull<E> on List<E> {
+  E? get firstOrNull => isEmpty ? null : first;
 }
 
 String _paymentModeToApi(PaymentMode mode) => switch (mode) {

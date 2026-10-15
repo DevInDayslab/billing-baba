@@ -227,7 +227,7 @@ class GeneralSettings {
       AppRoutes.saleDeliveryChallan => enableDeliveryChallan,
       AppRoutes.saleFa => enableFixedAssets,
       AppRoutes.purchaseFa => enableFixedAssets,
-      AppRoutes.purchaseExpenses => enableOtherIncome,
+      AppRoutes.otherIncome => enableOtherIncome,
       _ => true,
     };
   }

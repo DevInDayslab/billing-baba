@@ -7,6 +7,8 @@ export const SUPPORTED_SYNC_COMMANDS = [
   'finalize_credit_note',
   'finalize_debit_note',
   'stock_adjustment',
+  'delete_transaction',
+  'restore_transaction',
 ] as const;
 
 export type SupportedSyncCommand = string;

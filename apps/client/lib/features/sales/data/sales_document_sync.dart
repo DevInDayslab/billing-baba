@@ -184,6 +184,21 @@ class SalesDocumentSync {
             convertedFromId: Value(
               _str(payload, 'converted_from_id') ?? existing?.convertedFromId,
             ),
+            originalDocumentId: Value(
+              _str(payload, 'original_document_id') ??
+                  existing?.originalDocumentId,
+            ),
+            originalDocumentNumber: Value(
+              _str(payload, 'original_document_number') ??
+                  existing?.originalDocumentNumber,
+            ),
+            originalDocumentDate: Value(
+              _str(payload, 'original_document_date') ??
+                  existing?.originalDocumentDate,
+            ),
+            supplyType: Value(
+              _str(payload, 'supply_type') ?? existing?.supplyType ?? 'domestic',
+            ),
             godownId: Value(_str(payload, 'godown_id') ?? existing?.godownId),
             notes: Value(_str(payload, 'notes') ?? existing?.notes),
             syncVersion: Value(syncVersion),
@@ -282,6 +297,12 @@ class SalesDocumentSync {
             ),
             igstAmount: Value(
               _str(payload, 'igst_amount') ?? existing?.igstAmount ?? '0',
+            ),
+            cessRate: Value(
+              _str(payload, 'cess_rate') ?? existing?.cessRate ?? '0',
+            ),
+            cessAmount: Value(
+              _str(payload, 'cess_amount') ?? existing?.cessAmount ?? '0',
             ),
             lineTotal:
                 _str(payload, 'line_total') ?? existing?.lineTotal ?? '0',

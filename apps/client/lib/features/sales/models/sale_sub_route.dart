@@ -26,6 +26,8 @@ abstract final class SaleSubRoutes {
       label: 'Proforma Invoice',
     ),
     SaleSubRoute(route: AppRoutes.salePaymentIn, label: 'Payment-In'),
+    SaleSubRoute(route: AppRoutes.otherIncome, label: 'Other Income'),
+    SaleSubRoute(route: AppRoutes.saleCashAndBank, label: 'Cash & Bank'),
     SaleSubRoute(route: AppRoutes.saleOrder, label: 'Sale Order'),
     SaleSubRoute(
       route: AppRoutes.saleDeliveryChallan,

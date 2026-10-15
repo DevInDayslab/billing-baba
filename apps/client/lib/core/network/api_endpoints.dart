@@ -14,6 +14,16 @@ abstract final class ApiEndpoints {
   static const authAvatar = '/api/v1/auth/me/avatar';
   static const gstinVerify = '/api/v1/gstin/verify';
   static const parties = '/api/v1/parties';
+  static const partyContactImportSessions =
+      '/api/v1/parties/contact-import-sessions';
+  static String partyContactImportSession(String id) =>
+      '$partyContactImportSessions/$id';
+  static String partyContactImportSessionCommit(String id) =>
+      '${partyContactImportSession(id)}/commit';
+  static String partyContactImportSessionByToken(String token) =>
+      '$partyContactImportSessions/by-token/$token';
+  static String partyContactImportStagingByToken(String token) =>
+      '${partyContactImportSessionByToken(token)}/staging';
   static String party(String id) => '/api/v1/parties/$id';
   static String partyDeleteStatus(String id) =>
       '/api/v1/parties/$id/delete-status';
@@ -171,10 +181,26 @@ abstract final class ApiEndpoints {
 
   static const accounting = '/api/v1/accounting';
   static const payments = '$accounting/payments';
+  static const bankAccounts = '$accounting/bank-accounts';
+  static const bankAccountBalances = '$accounting/bank-accounts/balances';
+  static const accountTransfers = '$accounting/account-transfers';
+  static const accountAdjustments = '$accounting/account-adjustments';
+
+  static const loans = '/api/v1/loans';
+  static const loanAccounts = '$loans/loan-accounts';
+  static const loanTransactions = '$loans/loan-transactions';
+  static String loanAccount(String id) => '$loanAccounts/$id';
+  static String loanTransaction(String id) => '$loanTransactions/$id';
   static String payment(String id) => '$payments/$id';
   static String paymentAllocations(String id) => '${payment(id)}/allocations';
   static String paymentAllocation(String id, String allocationId) =>
       '${paymentAllocations(id)}/$allocationId';
+
+  static const recycleBin = '/api/v1/recycle-bin';
+  static String recycleBinEntity(String entityType, String entityId) =>
+      '$recycleBin/$entityType/$entityId';
+  static String recycleBinRestore(String entityType, String entityId) =>
+      '${recycleBinEntity(entityType, entityId)}/restore';
 
   static const hiddenLedger = '/api/v1/hidden-ledger';
   static const hiddenLedgerEntries = '$hiddenLedger/entries';
@@ -208,6 +234,14 @@ abstract final class ApiEndpoints {
   static const expenseItems = '$purchases/expense-items';
   static String expenseItem(String id) => '$expenseItems/$id';
 
+  static const otherIncomeBase = '/api/v1/other-income';
+  static const otherIncomes = '$otherIncomeBase/other-incomes';
+  static String otherIncome(String id) => '$otherIncomes/$id';
+  static const incomeCategories = '$otherIncomeBase/income-categories';
+  static String incomeCategory(String id) => '$incomeCategories/$id';
+  static const incomeItems = '$otherIncomeBase/income-items';
+  static String incomeItem(String id) => '$incomeItems/$id';
+
   static const fixedAssetPurchases = '$purchases/fixed-asset-purchases';
   static String fixedAssetPurchase(String batchId) =>
       '$fixedAssetPurchases/$batchId';
@@ -228,9 +262,13 @@ abstract final class ApiEndpoints {
   static const reportsDayBook = '$reports/day-book';
   static const reportsAllTransactions = '$reports/all-transactions';
   static const reportsProfitLoss = '$reports/profit-loss';
-  static const reportsGstr1 = '$reports/gstr-1';
-  static const reportsGstr2 = '$reports/gstr-2';
-  static const reportsGstr3b = '$reports/gstr-3b';
+  static const reportsGst = '$reports/gst';
+  static const reportsGstHsnSummary = '$reportsGst/hsn-summary';
+  static const reportsGstSacReport = '$reportsGst/sac-report';
+  static const reportsGstGstr1 = '$reportsGst/gstr1';
+  static const reportsGstGstr2 = '$reportsGst/gstr2';
+  static const reportsGstGstr3b = '$reportsGst/gstr3b';
+  static const reportsGstGstr9 = '$reportsGst/gstr9';
   static const reportsBillWiseProfit = '$reports/bill-wise-profit';
   static const reportsCashFlow = '$reports/cash-flow';
   static const reportsPartyWiseProfitLoss = '$reports/party-wise-profit-loss';
@@ -238,9 +276,6 @@ abstract final class ApiEndpoints {
   static const reportsSalePurchaseByParty = '$reports/sale-purchase-by-party';
   static const reportsSalePurchaseByPartyGroup =
       '$reports/sale-purchase-by-party-group';
-  static const reportsGstr9 = '$reports/gstr-9';
-  static const reportsSaleSummaryByHsn = '$reports/sale-summary-by-hsn';
-  static const reportsSacReport = '$reports/sac-report';
   static const reportsItemReportByParty = '$reports/item-report-by-party';
   static const reportsItemWiseProfitLoss = '$reports/item-wise-profit-loss';
   static const reportsStockDetail = '$reports/stock-detail';
@@ -256,6 +291,15 @@ abstract final class ApiEndpoints {
   static const reportsConsumption = '$reports/consumption';
   static const reportsStockTransfer = '$reports/stock-transfer';
   static const reportsBankStatement = '$reports/bank-statement';
+  static const reportsBusinessBankStatement = '$reports/business/bank-statement';
+  static const reportsTax = '$reports/tax';
+  static const reportsTaxGstRegister = '$reportsTax/gst-register';
+  static const reportsTaxGstRateSummary = '$reportsTax/gst-rate-summary';
+  static const reportsTaxForm27eq = '$reportsTax/form-27eq';
+  static const reportsTaxTcsReceivable = '$reportsTax/tcs-receivable';
+  static const reportsTaxTdsPayable = '$reportsTax/tds-payable';
+  static const reportsTaxTdsReceivable = '$reportsTax/tds-receivable';
+  static const reportsTaxDeposits = '$reportsTax/deposits';
   static const reportsGstReport = '$reports/gst-report';
   static const reportsGstRateReport = '$reports/gst-rate-report';
   static const reportsForm27eq = '$reports/form-27eq';

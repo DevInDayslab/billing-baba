@@ -220,63 +220,6 @@ class ProfitLossReport extends _$ProfitLossReport {
 }
 
 @riverpod
-class Gstr1Report extends _$Gstr1Report {
-  @override
-  Future<GstrReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<GstrReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchGstr1(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class Gstr2Report extends _$Gstr2Report {
-  @override
-  Future<GstrReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<GstrReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchGstr2(_currentQuery(ref));
-  }
-}
-
-@riverpod
-class Gstr3bReport extends _$Gstr3bReport {
-  @override
-  Future<Gstr3bReportData> build() async {
-    watchReportListReload(ref);
-    ref.watch(reportDataEpochProvider);
-    return runReportLoad(ref, _load);
-  }
-
-  Future<void> refresh() async {
-    await guardedReportRefresh(state, (value) => state = value, _load);
-  }
-
-  Future<Gstr3bReportData> _load() async {
-    final service = await ref.read(reportsServiceProvider.future);
-    return service.fetchGstr3b(_currentQuery(ref));
-  }
-}
-
-@riverpod
 class TrialBalanceReport extends _$TrialBalanceReport {
   @override
   Future<TrialBalanceReportData> build() async {

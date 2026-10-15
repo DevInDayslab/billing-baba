@@ -13,26 +13,19 @@ import 'package:billing_baba/features/reports/presentation/desktop/widgets/share
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
+import 'package:billing_baba/shared/widgets/loan_account_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LoanStatementReportContent extends ConsumerWidget {
   const LoanStatementReportContent({super.key});
 
-  static const _selectLoanLabel = 'Select loan account';
-  static const List<String> _loanOptions = [
-    _selectLoanLabel,
-    'Business Term Loan',
-    'Working Capital Loan',
-    'Vehicle Loan',
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(reportFiltersProvider);
-    final selectedLoan = filters.loanAccount ?? _selectLoanLabel;
-    final loanSelected = selectedLoan != _selectLoanLabel;
+    final selectedId = filters.loanAccount;
+    final loanSelected =
+        selectedId != null && selectedId.isNotEmpty;
     final reportAsync = ref.watch(loanStatementReportProvider);
 
     return ReportAsyncBody(
@@ -159,16 +152,13 @@ class LoanStatementReportContent extends ConsumerWidget {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           SizedBox(
-                            width: 220,
-                            child: SaleFilterDropdown(
-                              label: selectedLoan,
-                              options: _loanOptions,
-                              selected: selectedLoan,
-                              onSelected: (value) => ref
+                            width: 240,
+                            child: LoanAccountPicker(
+                              hint: 'Select loan account',
+                              selectedAccountId: selectedId,
+                              onChanged: (id) => ref
                                   .read(reportFiltersProvider.notifier)
-                                  .setLoanAccount(
-                                    value == _selectLoanLabel ? null : value,
-                                  ),
+                                  .setLoanAccount(id),
                             ),
                           ),
                         ],

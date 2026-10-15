@@ -191,7 +191,7 @@ Future<void> _confirmDelete(
   final notifier = ref.read(purchaseBillsProvider.notifier);
   final error = bill.isDraft
       ? await notifier.deleteDraft(bill.id)
-      : await notifier.cancelBill(bill.id);
+      : await notifier.deleteBill(bill.id);
 
   if (!context.mounted) return;
   if (error != null) {

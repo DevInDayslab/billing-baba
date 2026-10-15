@@ -7,6 +7,7 @@ import {
   timestamptz,
   uuidPrimaryKey,
 } from '../columns';
+import { bankAccounts } from '../bank-accounts/tables';
 import { parties } from '../crm/tables';
 import {
   ledgerEntryTypeEnum,
@@ -56,11 +57,15 @@ export const payments = pgTable('payments', {
   direction: paymentDirectionEnum('direction').notNull(),
   amount: money('amount').notNull(),
   paymentMode: paymentModeEnum('payment_mode').notNull(),
+  bankAccountId: uuid('bank_account_id').references(() => bankAccounts.id),
   paymentDate: timestamptz('payment_date').notNull().defaultNow(),
   source: paymentSourceEnum('source').notNull().default('manual'),
   referenceNumber: text('reference_number'),
   notes: text('notes'),
   discountAmount: money('discount_amount').notNull().default('0'),
+  tdsSectionId: uuid('tds_section_id'),
+  tdsRate: money('tds_rate'),
+  tdsAmount: money('tds_amount').default('0'),
   shortPaymentHandling: shortPaymentHandlingEnum('short_payment_handling'),
 });
 

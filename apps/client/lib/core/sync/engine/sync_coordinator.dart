@@ -24,11 +24,15 @@ import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/inventory/data/stock_level_sync.dart';
 import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/loans/data/loan_sync.dart';
+import 'package:billing_baba/features/other_income/data/other_income_sync.dart';
 import 'package:billing_baba/features/purchases/data/expense_sync.dart';
 import 'package:billing_baba/features/purchases/data/purchase_document_sync.dart';
 import 'package:billing_baba/features/sales/data/sales_document_sync.dart';
 import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
+import 'package:billing_baba/features/bank_accounts/data/bank_account_sync.dart';
 import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
+import 'package:billing_baba/features/settings/data/withholding_tax_sync.dart';
 import 'package:billing_baba/features/tasks/data/todo_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
@@ -57,6 +61,10 @@ class SyncCoordinator {
     this._itemTierPriceSync,
     this._unitSync,
     this._taxRateSync,
+    this._bankAccountSync,
+    this._withholdingTaxSectionSync,
+    this._withholdingTaxEntrySync,
+    this._taxDepositSync,
     this._godownSync,
     this._businessSettingsSync,
     this._salesDocumentSync,
@@ -69,6 +77,11 @@ class SyncCoordinator {
     this._expenseSync,
     this._expenseCategorySync,
     this._expenseItemSync,
+    this._otherIncomeSync,
+    this._incomeCategorySync,
+    this._incomeItemSync,
+    this._loanAccountSync,
+    this._loanTransactionSync,
     this._stockLevelSync,
     this._todoSync,
     Uuid? uuid,
@@ -83,6 +96,10 @@ class SyncCoordinator {
     this.itemTierPricesEntityType = 'item_tier_prices',
     this.unitEntityType = 'unit_definitions',
     this.taxRateEntityType = 'tax_rates',
+    this.bankAccountsEntityType = 'bank_accounts',
+    this.withholdingTaxSectionsEntityType = 'withholding_tax_sections',
+    this.withholdingTaxEntriesEntityType = 'withholding_tax_entries',
+    this.taxDepositsEntityType = 'tax_deposits',
     this.godownEntityType = 'godowns',
     this.businessSettingsEntityType = 'business_settings',
     this.salesDocumentsEntityType = 'sales_documents',
@@ -97,6 +114,11 @@ class SyncCoordinator {
     this.expensesEntityType = 'expenses',
     this.expenseCategoriesEntityType = 'expense_categories',
     this.expenseItemsEntityType = 'expense_items',
+    this.otherIncomesEntityType = 'other_incomes',
+    this.incomeCategoriesEntityType = 'income_categories',
+    this.incomeItemsEntityType = 'income_items',
+    this.loanAccountsEntityType = 'loan_accounts',
+    this.loanTransactionsEntityType = 'loan_transactions',
     this.stockLevelsEntityType = 'stock_levels',
     this.todosEntityType = 'todos',
   }) : _uuid = uuid ?? const Uuid();
@@ -117,6 +139,10 @@ class SyncCoordinator {
   final ItemTierPriceSync? _itemTierPriceSync;
   final UnitSync? _unitSync;
   final TaxRateSync? _taxRateSync;
+  final BankAccountSync? _bankAccountSync;
+  final WithholdingTaxSectionSync? _withholdingTaxSectionSync;
+  final WithholdingTaxEntrySync? _withholdingTaxEntrySync;
+  final TaxDepositSync? _taxDepositSync;
   final GodownSync? _godownSync;
   final BusinessSettingsSync? _businessSettingsSync;
   final SalesDocumentSync? _salesDocumentSync;
@@ -129,6 +155,11 @@ class SyncCoordinator {
   final ExpenseSync? _expenseSync;
   final ExpenseCategorySync? _expenseCategorySync;
   final ExpenseItemSync? _expenseItemSync;
+  final OtherIncomeSync? _otherIncomeSync;
+  final IncomeCategorySync? _incomeCategorySync;
+  final IncomeItemSync? _incomeItemSync;
+  final LoanAccountSync? _loanAccountSync;
+  final LoanTransactionSync? _loanTransactionSync;
   final StockLevelSync? _stockLevelSync;
   final TodoSync? _todoSync;
   final Uuid _uuid;
@@ -143,6 +174,10 @@ class SyncCoordinator {
   final String itemTierPricesEntityType;
   final String unitEntityType;
   final String taxRateEntityType;
+  final String bankAccountsEntityType;
+  final String withholdingTaxSectionsEntityType;
+  final String withholdingTaxEntriesEntityType;
+  final String taxDepositsEntityType;
   final String godownEntityType;
   final String businessSettingsEntityType;
   final String salesDocumentsEntityType;
@@ -157,18 +192,25 @@ class SyncCoordinator {
   final String expensesEntityType;
   final String expenseCategoriesEntityType;
   final String expenseItemsEntityType;
+  final String otherIncomesEntityType;
+  final String incomeCategoriesEntityType;
+  final String incomeItemsEntityType;
+  final String loanAccountsEntityType;
+  final String loanTransactionsEntityType;
   final String stockLevelsEntityType;
   final String todosEntityType;
 
   String get _pullEntityTypes =>
       '$categoryEntityType,$brandEntityType,$partyEntityType,$itemEntityType,'
-      '$itemSuppliersEntityType,$itemBomMaterialsEntityType,$itemBomCostsEntityType,$itemAlternativesEntityType,$itemTierPricesEntityType,$unitEntityType,$taxRateEntityType,$godownEntityType,'
+      '$itemSuppliersEntityType,$itemBomMaterialsEntityType,$itemBomCostsEntityType,$itemAlternativesEntityType,$itemTierPricesEntityType,$unitEntityType,$taxRateEntityType,$bankAccountsEntityType,$withholdingTaxSectionsEntityType,$withholdingTaxEntriesEntityType,$taxDepositsEntityType,$godownEntityType,'
       '$businessSettingsEntityType,$salesDocumentsEntityType,'
       '$salesDocumentLinesEntityType,$purchaseDocumentsEntityType,'
       '$purchaseDocumentLinesEntityType,$leadsEntityType,'
       '$leadActivitiesEntityType,$contactsEntityType,'
       '$contactActivitiesEntityType,$dealsEntityType,'
       '$expensesEntityType,$expenseCategoriesEntityType,$expenseItemsEntityType,'
+      '$otherIncomesEntityType,$incomeCategoriesEntityType,$incomeItemsEntityType,'
+      '$loanAccountsEntityType,$loanTransactionsEntityType,'
       '$stockLevelsEntityType,$todosEntityType';
 
   bool _isRowEntity(String? type) =>
@@ -183,6 +225,10 @@ class SyncCoordinator {
       type == itemTierPricesEntityType ||
       type == unitEntityType ||
       type == taxRateEntityType ||
+      type == bankAccountsEntityType ||
+      type == withholdingTaxSectionsEntityType ||
+      type == withholdingTaxEntriesEntityType ||
+      type == taxDepositsEntityType ||
       type == godownEntityType ||
       type == businessSettingsEntityType ||
       type == salesDocumentsEntityType ||
@@ -197,6 +243,11 @@ class SyncCoordinator {
       type == expensesEntityType ||
       type == expenseCategoriesEntityType ||
       type == expenseItemsEntityType ||
+      type == otherIncomesEntityType ||
+      type == incomeCategoriesEntityType ||
+      type == incomeItemsEntityType ||
+      type == loanAccountsEntityType ||
+      type == loanTransactionsEntityType ||
       type == todosEntityType;
 
   bool _busy = false;
@@ -874,6 +925,50 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'bank_accounts':
+        await _bankAccountSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'withholding_tax_sections':
+        await _withholdingTaxSectionSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'withholding_tax_entries':
+        await _withholdingTaxEntrySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'tax_deposits':
+        await _taxDepositSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       case 'godowns':
         await _godownSync?.applyChange(
           businessId: businessId,
@@ -1010,6 +1105,61 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'other_incomes':
+        await _otherIncomeSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'income_categories':
+        await _incomeCategorySync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'income_items':
+        await _incomeItemSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'loan_accounts':
+        await _loanAccountSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'loan_transactions':
+        await _loanTransactionSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       case 'stock_levels':
         await _stockLevelSync?.applyChange(
           businessId: businessId,
@@ -1123,6 +1273,13 @@ class SyncCoordinator {
           updatedAt: updatedAt,
           deviceId: deviceId,
         );
+      case 'bank_accounts':
+        await _bankAccountSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
       case 'godowns':
         await _godownSync?.updateAckMeta(
           entityId: entityId,
@@ -1206,6 +1363,41 @@ class SyncCoordinator {
         );
       case 'expense_items':
         await _expenseItemSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'other_incomes':
+        await _otherIncomeSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'income_categories':
+        await _incomeCategorySync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'income_items':
+        await _incomeItemSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'loan_accounts':
+        await _loanAccountSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'loan_transactions':
+        await _loanTransactionSync?.updateAckMeta(
           entityId: entityId,
           syncVersion: syncVersion,
           updatedAt: updatedAt,
@@ -1321,6 +1513,7 @@ class SyncCoordinator {
     'item_alternatives',
     'unit_definitions',
     'tax_rates',
+    'bank_accounts',
     'godowns',
     'leads',
     'lead_activities',
@@ -1330,6 +1523,11 @@ class SyncCoordinator {
     'expense_categories',
     'expense_items',
     'expenses',
+    'income_categories',
+    'income_items',
+    'other_incomes',
+    'loan_accounts',
+    'loan_transactions',
     'business_settings',
     'sales_documents',
     'sales_document_lines',

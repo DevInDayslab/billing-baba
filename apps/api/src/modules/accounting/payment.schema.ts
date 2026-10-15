@@ -46,12 +46,16 @@ export const createPaymentBodySchema = z
     discount_amount: moneyString.optional(),
     balance_after_payment: moneyString.optional(),
     payment_mode: z.enum(paymentModeValues),
+    bank_account_id: z.string().uuid().optional().nullable(),
     payment_date: z.iso.datetime().optional(),
     reference_number: z.string().trim().max(100).optional().nullable(),
     notes: z.string().trim().max(2000).optional().nullable(),
     short_payment_handling: z.enum(shortPaymentHandlingValues).optional(),
     shortfall_amount: moneyString.optional(),
     allocations: z.array(allocationSchema).optional().default([]),
+    tds_section_id: z.uuid().optional().nullable(),
+    tds_rate: moneyString.optional().nullable(),
+    tds_amount: moneyString.optional().nullable(),
     source: z
       .enum(['manual', 'document_finalize', 'razorpay_gateway'] as const)
       .optional()
