@@ -297,8 +297,9 @@ class _MobileAddOtherIncomePageState extends ConsumerState<MobileAddOtherIncomeP
                 MobileDocumentLineDisplay(
                   name: item.itemName,
                   qtyLabel:
-                      '${item.qty} × ₹${MobileDocumentItemsSection.formatAmount(item.pricePerUnit)}',
+                      '${item.qty} × ${MobileDocumentItemsSection.formatAmount(ref, item.pricePerUnit)}',
                   amountLabel: MobileDocumentItemsSection.formatAmount(
+                    ref,
                     item.amount,
                   ),
                 ),
