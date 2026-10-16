@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import type { AppConfig } from '../../config/app_config';
+import { resolvePublicWebsiteUrl } from '../../shared/utils/public-website-url';
 import { generateInvoiceShareToken } from '../invoice-share/invoice-share.utils';
 
 export const MAX_PARTY_CONTACT_IMPORT_ROWS = 500;
@@ -12,7 +13,7 @@ export function buildPartyContactImportWebUrl(
   config: Pick<AppConfig, 'websiteUrl'>,
   token: string,
 ): string {
-  const base = config.websiteUrl.replace(/\/$/, '');
+  const base = resolvePublicWebsiteUrl(config.websiteUrl);
   return `${base}/import-contacts/${token}`;
 }
 

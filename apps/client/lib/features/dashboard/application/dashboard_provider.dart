@@ -124,6 +124,8 @@ class Dashboard extends _$Dashboard {
     final query = DashboardQuery(period: period);
     final localOverview = await metricsService.loadOutstandingOverview();
     final localPeriod = await metricsService.loadPeriodMetrics(query);
+    final localSalesTrend = await metricsService.loadSalesTrend(query);
+    final localPurchasesTrend = await metricsService.loadPurchasesTrend(query);
     final inventoryItems = ref.read(inventoryItemListProvider);
     return viewState.copyWith(
       dashboard: DashboardModelMerger.merge(
@@ -132,6 +134,9 @@ class Dashboard extends _$Dashboard {
         localPeriod: localPeriod,
         inventoryItems: inventoryItems,
         metrics: metricsService,
+        query: query,
+        localSalesTrend: localSalesTrend,
+        localPurchasesTrend: localPurchasesTrend,
       ),
     );
   }

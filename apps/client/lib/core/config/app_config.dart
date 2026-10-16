@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/config/api_base_url_resolver.dart';
+import 'package:billing_baba/core/config/public_website_url.dart';
 import 'package:billing_baba/core/logging/log_level.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
@@ -119,6 +120,13 @@ abstract final class AppConfig {
   }
 
   static String get _websiteBase => websiteUrl.replaceAll(RegExp(r'/+$'), '');
+
+  /// Marketing site reachable from a phone (never localhost).
+  static String get publicWebsiteUrl => PublicWebsiteUrl.resolve(websiteUrl);
+
+  /// Web page opened when scanning the party contact import QR code.
+  static String partyContactImportWebUrl(String token) =>
+      '$publicWebsiteUrl/import-contacts/$token';
 
   /// Mobile notifications center.
   static const showMobileNotifications = true;

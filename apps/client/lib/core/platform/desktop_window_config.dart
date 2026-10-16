@@ -14,12 +14,10 @@ class _ResolvedWindowLayout {
   const _ResolvedWindowLayout({
     required this.initialSize,
     required this.minimumSize,
-    this.origin,
   });
 
   final Size initialSize;
   final Size minimumSize;
-  final Offset? origin;
 }
 
 /// Configures the desktop window on macOS, Windows, and Linux.
@@ -37,22 +35,17 @@ Future<void> configureDesktopWindow() async {
   final windowOptions = WindowOptions(
     size: layout.initialSize,
     minimumSize: layout.minimumSize,
-    center: layout.origin == null,
+    center: true,
     titleBarStyle: TitleBarStyle.normal,
     windowButtonVisibility: true,
   );
 
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
-    if (layout.origin != null) {
-      await windowManager.setPosition(layout.origin!);
-    }
+    await windowManager.setFullScreen(false);
+    await windowManager.maximize();
     await windowManager.focus();
   });
-
-  // `waitUntilReadyToShow` applies [WindowOptions] after the ready callback.
-  await windowManager.setFullScreen(false);
-  await windowManager.maximize();
 }
 
 /// Re-applies maximize on the first frame if startup sizing raced the engine.
@@ -93,7 +86,6 @@ Future<_ResolvedWindowLayout> _resolveWindowLayout() async {
     return _ResolvedWindowLayout(
       initialSize: Size(workArea.width, workArea.height),
       minimumSize: minimumSize,
-      origin: display.visiblePosition,
     );
   } on Object catch (error, stackTrace) {
     debugPrint('desktop_window_config: screen size lookup failed: $error');

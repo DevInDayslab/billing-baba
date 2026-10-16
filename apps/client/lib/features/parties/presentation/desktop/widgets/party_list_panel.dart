@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_async_list.dart';
@@ -23,6 +24,7 @@ import 'package:billing_baba/shared/widgets/table_filters/filter_result.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_types.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
 enum PartyListSortColumn { name, amount }
@@ -87,6 +89,40 @@ class PartyListPanel extends ConsumerStatefulWidget {
 class _PartyListPanelState extends ConsumerState<PartyListPanel> {
   Timer? _debounce;
   _PartyListSortState _sort = const _PartyListSortState();
+  var _contactImportBannerVisible = false;
+  var _contactImportBannerLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (AppPlatform.current.isDesktop) {
+      unawaited(_loadContactImportBannerVisibility());
+    }
+  }
+
+  Future<void> _loadContactImportBannerVisibility() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dismissed =
+        prefs.getBool(StorageKeys.partyContactImportBannerDismissed) ?? false;
+    if (!mounted) return;
+    setState(() {
+      _contactImportBannerVisible = !dismissed;
+      _contactImportBannerLoaded = true;
+    });
+  }
+
+  Future<void> _dismissContactImportBanner() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(StorageKeys.partyContactImportBannerDismissed, true);
+    if (!mounted) return;
+    setState(() => _contactImportBannerVisible = false);
+  }
+
+  Future<void> _openPartyContactImport() async {
+    await _dismissContactImportBanner();
+    if (!mounted) return;
+    await startDesktopPartyContactImport(context, ref);
+  }
 
   @override
   void dispose() {
@@ -205,10 +241,13 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
             onDebouncedChanged: _onSearchChanged,
           ),
         ),
-        if (AppPlatform.current.isDesktop) ...[
+        if (AppPlatform.current.isDesktop &&
+            _contactImportBannerLoaded &&
+            _contactImportBannerVisible) ...[
           const SizedBox(height: AppSpacing.sm),
           _PartyContactImportBanner(
-            onTap: () => startDesktopPartyContactImport(context, ref),
+            onTap: () => unawaited(_openPartyContactImport()),
+            onDismiss: () => unawaited(_dismissContactImportBanner()),
           ),
         ],
         const SizedBox(height: 14),
@@ -436,24 +475,30 @@ class _PartyListSkeleton extends StatelessWidget {
 }
 
 class _PartyContactImportBanner extends StatelessWidget {
-  const _PartyContactImportBanner({required this.onTap});
+  const _PartyContactImportBanner({
+    required this.onTap,
+    required this.onDismiss,
+  });
 
   final VoidCallback onTap;
+  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: const Color(0xFF2E7D32),
-      child: InkWell(
-        onTap: onTap,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Expanded(
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onTap,
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.xs,
+                  AppSpacing.sm,
+                ),
                 child: Text(
                   'Easily convert your phone contacts into parties',
                   style: TextStyle(
@@ -463,10 +508,16 @@ class _PartyContactImportBanner extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.white),
-            ],
+            ),
           ),
-        ),
+          IconButton(
+            onPressed: onDismiss,
+            tooltip: 'Dismiss',
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            icon: const Icon(Icons.close, color: Colors.white, size: 20),
+          ),
+        ],
       ),
     );
   }

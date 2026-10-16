@@ -34,20 +34,14 @@ class _DashboardTrendChartState extends State<DashboardTrendChart> {
   @override
   void initState() {
     super.initState();
-    _config = _ChartConfig.from(
-      points: widget.points,
-      showZeroBaseline: widget.minimal,
-    );
+    _config = _ChartConfig.from(points: widget.points);
   }
 
   @override
   void didUpdateWidget(covariant DashboardTrendChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.points != widget.points) {
-      _config = _ChartConfig.from(
-        points: widget.points,
-        showZeroBaseline: widget.minimal,
-      );
+    if (oldWidget.points != widget.points || oldWidget.period != widget.period) {
+      _config = _ChartConfig.from(points: widget.points);
     }
   }
 
@@ -297,12 +291,11 @@ class _ChartConfig {
 
   factory _ChartConfig.from({
     required List<DashboardTrendPointModel> points,
-    bool showZeroBaseline = false,
   }) {
     final hasPositiveAmount =
         points.isNotEmpty && points.any((point) => point.amount > 0);
     final hasPlottableData =
-        hasPositiveAmount || (showZeroBaseline && points.length >= 2);
+        hasPositiveAmount || points.length >= 2;
     final amounts = points.map((point) => point.amount);
     final yScale = ChartAxisFormatters.calculateYAxis(
       hasPlottableData ? amounts : const [0],

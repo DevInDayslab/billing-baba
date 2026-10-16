@@ -274,11 +274,6 @@ class _CarouselContent extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final page = pages[index];
                   final growth = _growthPercent(page.trendPoints);
-                  final chartPoints = _chartDisplayPoints(
-                    page.trendPoints,
-                    period,
-                  );
-
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -343,7 +338,7 @@ class _CarouselContent extends StatelessWidget {
                         flex: 14,
                         child: RepaintBoundary(
                           child: DashboardTrendChart(
-                            points: chartPoints,
+                            points: page.trendPoints,
                             lineColor: primary,
                             period: period,
                             minimal: true,
@@ -409,48 +404,6 @@ class _CarouselContent extends StatelessWidget {
     return ((last - prev) / prev) * 100;
   }
 
-  /// Ensures the chart always has enough points to render, even with no data.
-  static List<DashboardTrendPointModel> _chartDisplayPoints(
-    List<DashboardTrendPointModel> points,
-    DashboardPeriod period,
-  ) {
-    if (points.length >= 2) return points;
-
-    final today = DateTime.now();
-    final normalizedToday = DateTime(today.year, today.month, today.day);
-
-    if (period == DashboardPeriod.today) {
-      const hours = [6, 9, 12, 15, 18, 21];
-      return List.generate(hours.length, (index) {
-        final date = DateTime(
-          normalizedToday.year,
-          normalizedToday.month,
-          normalizedToday.day,
-          hours[index],
-        );
-        if (points.length == 1 && index == hours.length - 1) {
-          return points.first;
-        }
-        return DashboardTrendPointModel(date: date, amount: 0);
-      });
-    }
-
-    final slotCount = switch (period) {
-      DashboardPeriod.thisWeek => 7,
-      DashboardPeriod.thisMonth => 7,
-      _ => 7,
-    };
-
-    return List.generate(slotCount, (index) {
-      final date = normalizedToday.subtract(
-        Duration(days: slotCount - 1 - index),
-      );
-      if (points.length == 1 && index == slotCount - 1) {
-        return points.first;
-      }
-      return DashboardTrendPointModel(date: date, amount: 0);
-    });
-  }
 }
 
 class _CarouselPageData {

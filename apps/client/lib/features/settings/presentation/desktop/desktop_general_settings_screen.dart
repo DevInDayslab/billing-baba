@@ -8,6 +8,7 @@ import 'package:billing_baba/features/business/presentation/desktop/widgets/edit
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
 import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
+import 'package:billing_baba/features/settings/models/desktop_ui_scale.dart';
 import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/settings/models/general_settings_info_catalog.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/widgets/general_settings_form_widgets.dart';
@@ -22,8 +23,6 @@ import 'package:intl/intl.dart';
 class DesktopGeneralSettingsScreen extends ConsumerStatefulWidget {
   const DesktopGeneralSettingsScreen({super.key});
 
-  static const _uiScaleSteps = [70, 80, 90, 100, 110, 115, 120, 130];
-
   @override
   ConsumerState<DesktopGeneralSettingsScreen> createState() =>
       _DesktopGeneralSettingsScreenState();
@@ -31,22 +30,6 @@ class DesktopGeneralSettingsScreen extends ConsumerStatefulWidget {
 
 class _DesktopGeneralSettingsScreenState
     extends ConsumerState<DesktopGeneralSettingsScreen> {
-  int _scaleStepIndex(int percent) {
-    final steps = DesktopGeneralSettingsScreen._uiScaleSteps;
-    final exact = steps.indexOf(percent);
-    if (exact >= 0) return exact;
-    var best = 0;
-    var bestDelta = (steps[0] - percent).abs();
-    for (var i = 1; i < steps.length; i++) {
-      final delta = (steps[i] - percent).abs();
-      if (delta < bestDelta) {
-        best = i;
-        bestDelta = delta;
-      }
-    }
-    return best;
-  }
-
   Future<void> _patch(GeneralSettingsUpdater update) {
     return ref.read(generalSettingsProvider.notifier).patch(update);
   }
@@ -90,23 +73,12 @@ class _DesktopGeneralSettingsScreenState
     }
   }
 
-  void _previewUiScale(int percent) {
-    ref
-        .read(desktopUiScalePreviewPercentProvider.notifier)
-        .setPreview(percent);
-  }
-
-  Future<void> _commitUiScale(int percent) async {
+  Future<void> _commitUiScaleStepIndex(int stepIndex) async {
+    final percent = DesktopUiScale.percentForStepIndex(stepIndex);
     await ref.read(generalSettingsProvider.notifier).patch(
       (s) => s.copyWith(desktopUiScalePercent: percent),
       silent: true,
     );
-    ref.read(desktopUiScalePreviewPercentProvider.notifier).setPreview(null);
-  }
-
-  int _activeScalePercent(GeneralSettings settings) {
-    return ref.watch(desktopUiScalePreviewPercentProvider) ??
-        settings.desktopUiScalePercent;
   }
 
   @override
@@ -148,8 +120,10 @@ class _DesktopGeneralSettingsScreenState
               ]
             : firms;
 
-        final scalePercent = _activeScalePercent(settings);
-        final scaleIndex = _scaleStepIndex(scalePercent);
+        final scalePercent = DesktopUiScale.normalizePercent(
+          settings.desktopUiScalePercent,
+        );
+        final scaleIndex = DesktopUiScale.stepIndexForPercent(scalePercent);
         final lastBackup = lastBackupAsync.asData?.value;
 
         return ColoredBox(
@@ -219,14 +193,8 @@ class _DesktopGeneralSettingsScreenState
                     _CustomizeColumn(
                       scaleIndex: scaleIndex,
                       scalePercent: scalePercent,
-                      onScalePreview: (index) => _previewUiScale(
-                        DesktopGeneralSettingsScreen._uiScaleSteps[index],
-                      ),
-                      onScaleCommit: (index) => unawaited(
-                        _commitUiScale(
-                          DesktopGeneralSettingsScreen._uiScaleSteps[index],
-                        ),
-                      ),
+                      onScaleCommit: (index) =>
+                          unawaited(_commitUiScaleStepIndex(index)),
                     ),
                   ],
                 );
@@ -257,7 +225,7 @@ class _DesktopGeneralSettingsScreenState
               };
 
               return SingleChildScrollView(
-                primary: true,
+                primary: false,
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: columns,
               );
@@ -797,21 +765,57 @@ class _BackupColumn extends StatelessWidget {
   }
 }
 
-class _CustomizeColumn extends StatelessWidget {
+class _CustomizeColumn extends StatefulWidget {
   const _CustomizeColumn({
     required this.scaleIndex,
     required this.scalePercent,
-    required this.onScalePreview,
     required this.onScaleCommit,
   });
 
   final int scaleIndex;
   final int scalePercent;
-  final ValueChanged<int> onScalePreview;
   final ValueChanged<int> onScaleCommit;
 
   @override
+  State<_CustomizeColumn> createState() => _CustomizeColumnState();
+}
+
+class _CustomizeColumnState extends State<_CustomizeColumn> {
+  int? _dragStepIndex;
+
+  int get _activeStepIndex => _dragStepIndex ?? widget.scaleIndex;
+
+  int get _activeScalePercent =>
+      DesktopUiScale.percentForStepIndex(_activeStepIndex);
+
+  @override
+  void didUpdateWidget(covariant _CustomizeColumn oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scaleIndex != widget.scaleIndex) {
+      _dragStepIndex = null;
+    }
+  }
+
+  void _onSliderChanged(double value) {
+    final index = value
+        .round()
+        .clamp(0, DesktopUiScale.steps.length - 1);
+    setState(() => _dragStepIndex = index);
+  }
+
+  void _onSliderCommit(double value) {
+    final index = value
+        .round()
+        .clamp(0, DesktopUiScale.steps.length - 1);
+    setState(() => _dragStepIndex = null);
+    widget.onScaleCommit(index);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final steps = DesktopUiScale.steps;
+    final displayPercent = _activeScalePercent;
+
     return GeneralSettingsSectionCard(
       title: 'Customize Your View',
       children: [
@@ -833,56 +837,50 @@ class _CustomizeColumn extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         Slider(
-          value: scaleIndex.toDouble(),
+          value: _activeStepIndex.toDouble(),
           min: 0,
-          max: (DesktopGeneralSettingsScreen._uiScaleSteps.length - 1)
-              .toDouble(),
-          divisions: DesktopGeneralSettingsScreen._uiScaleSteps.length - 1,
-          label: '$scalePercent%',
-          onChanged: (v) => onScalePreview(v.round()),
-          onChangeEnd: (v) => onScaleCommit(v.round()),
+          max: (steps.length - 1).toDouble(),
+          divisions: steps.length - 1,
+          label: '$displayPercent%',
+          onChanged: _onSliderChanged,
+          onChangeEnd: _onSliderCommit,
         ),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final steps = DesktopGeneralSettingsScreen._uiScaleSteps;
-            return Row(
-              children: [
-                for (var i = 0; i < steps.length; i++)
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () {
-                        onScalePreview(i);
-                        onScaleCommit(i);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            '${steps[i]}%',
-                            textAlign: TextAlign.center,
-                            style: AppTypography.inter(
-                              fontSize: AppTypography.bodySmallSize,
-                              color: steps[i] == scalePercent
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
-                              fontWeight: steps[i] == scalePercent
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                          ),
+        Row(
+          children: [
+            for (var i = 0; i < steps.length; i++)
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () {
+                    setState(() => _dragStepIndex = null);
+                    widget.onScaleCommit(i);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${steps[i]}%',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.inter(
+                          fontSize: AppTypography.bodySmallSize,
+                          color: steps[i] == displayPercent
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                          fontWeight: steps[i] == displayPercent
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ),
                   ),
-              ],
-            );
-          },
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Zoom updates as you move the slider and saves when you release it.',
+          'Preview the percentage while dragging; the app zoom applies when you release the slider or tap a value.',
           style: AppTypography.inter(
             fontSize: AppTypography.bodySmallSize,
             color: AppColors.textSecondary,

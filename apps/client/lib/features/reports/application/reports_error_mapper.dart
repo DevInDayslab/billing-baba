@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/offline_ui_messages.dart';
+import 'package:billing_baba/core/providers/async_provider_guard.dart';
 import 'package:dio/dio.dart';
 
 class ReportsException implements Exception {
@@ -39,5 +40,10 @@ abstract final class ReportsErrorMapper {
   static String messageFor(Object error) {
     if (error is ReportsException) return error.message;
     return mapReportsError(error).message;
+  }
+
+  /// Brief Riverpod invalidation races while opening reports — not real failures.
+  static bool isTransientLoadError(Object error) {
+    return isAsyncProviderStaleError(error);
   }
 }
